@@ -11,7 +11,7 @@
 
 use std::sync::Arc;
 
-use deckcraft_color::Rgba;
+use seho_color::Rgba;
 use kurbo::{Affine, BezPath, PathEl, Point, Rect};
 use vello_cpu::{Pixmap, RenderContext, peniko};
 

@@ -14,7 +14,7 @@
 use std::borrow::Cow;
 use std::collections::{BinaryHeap, HashMap, HashSet};
 
-use pdfcraft_cos::{Dict, Document, Object};
+use taratasy_cos::{Dict, Document, Object};
 
 /// How the bytes of a string map to codes.
 #[derive(Clone, Debug, PartialEq)]
@@ -1211,7 +1211,7 @@ fn unicode_map(doc: &Document, font: &Dict, composite: bool) -> Unicode {
 
 #[cfg(test)]
 mod tests {
-    use pdfcraft_cos::{Dict, Document, Object, Stream};
+    use taratasy_cos::{Dict, Document, Object, Stream};
 
     use super::*;
 
@@ -1242,7 +1242,7 @@ mod tests {
 
     #[test]
     fn embedded_editor_fonts_are_validated_without_installing_or_exporting() {
-        use pdfcraft_cos::Stream;
+        use taratasy_cos::Stream;
         let mut doc = Document::new_empty();
         let bytes = include_bytes!("../../../assets/fonts/Inter-Regular.ttf");
         let program = doc.add(Object::Stream(Stream::flate(Dict::new(), bytes)));
@@ -1263,7 +1263,7 @@ mod tests {
     /// ("Mono" would mean Courier, 600 units for every glyph).
     #[test]
     fn a_font_without_widths_measures_with_its_embedded_program() {
-        use pdfcraft_cos::Stream;
+        use taratasy_cos::Stream;
         use skrifa::MetadataProvider as _;
         let mut doc = Document::new_empty();
         let bytes = include_bytes!("../../../assets/fonts/Inter-Regular.ttf");
@@ -1816,7 +1816,7 @@ mod tests {
 
 #[cfg(test)]
 mod encoding_tests {
-    use pdfcraft_cos::{Dict, Document, Object};
+    use taratasy_cos::{Dict, Document, Object};
 
     use super::*;
 

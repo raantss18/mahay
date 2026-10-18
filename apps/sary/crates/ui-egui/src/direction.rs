@@ -10,7 +10,7 @@
 //! Rows nested in a [`row`] follow it on their own: egui starts a `ui.horizontal*` row from the
 //! right when its parent layout runs right-to-left.
 //!
-//! `PHOTOCRAFT_UI_DIRECTION=rtl` (or `ltr`) forces a direction whatever the language, so the
+//! `SARY_UI_DIRECTION=rtl` (or `ltr`) forces a direction whatever the language, so the
 //! mirrored layout can be checked before a right-to-left catalog is installed. It is read once
 //! per process; the web build has no environment and always follows the language.
 
@@ -55,7 +55,7 @@ pub fn direction_scope(dir: Dir) -> impl Drop {
 
 fn env_override() -> Option<Dir> {
     static ENV: OnceLock<Option<Dir>> = OnceLock::new();
-    *ENV.get_or_init(|| parse_dir(&std::env::var("PHOTOCRAFT_UI_DIRECTION").ok()?))
+    *ENV.get_or_init(|| parse_dir(&std::env::var("SARY_UI_DIRECTION").ok()?))
 }
 
 /// `rtl` / `ltr`, any case; anything else (including empty) follows the language.

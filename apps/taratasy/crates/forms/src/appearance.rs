@@ -12,17 +12,17 @@
 //! can't hold (outside WinAnsi in Helvetica, or beyond U+FFFF in a UCS-2 CMap) is drawn as `?`, as
 //! Acrobat keeps a value its field font can't show: the value itself is stored as typed,
 //! [`field_appearance_drawn`] returns the first such character, and the caller marks the widget
-//! (`pdfcraft_fonts::UNDRAWN_MARK`) and asks other viewers to redraw the field
-//! (`/NeedAppearances`). Widths use the approximate metrics of `pdfcraft-fonts` (Helvetica, or one
+//! (`taratasy_fonts::UNDRAWN_MARK`) and asks other viewers to redraw the field
+//! (`/NeedAppearances`). Widths use the approximate metrics of `taratasy-fonts` (Helvetica, or one
 //! em per full-width character in composite fonts).
 //!
 //! `/MK /R` (0, 90, 180, 270, counterclockwise) lays the content out in the upright box and sets
 //! the appearance `/Matrix` so that box lands on the widget rectangle. Any other value is 0, and
 //! rotation 0 leaves `/Matrix` off.
 
-use pdfcraft_cos::{Dict, Document, Object, Stream};
-use pdfcraft_fonts::pdf::Metrics;
-use pdfcraft_fonts::{UnicodeCMap, cjk_width, helvetica_width, literal, win_ansi, wrap_with};
+use taratasy_cos::{Dict, Document, Object, Stream};
+use taratasy_fonts::pdf::Metrics;
+use taratasy_fonts::{UnicodeCMap, cjk_width, helvetica_width, literal, win_ansi, wrap_with};
 
 use crate::{Field, FieldKind, Widget, acroform, flags};
 
@@ -181,7 +181,7 @@ impl FontText {
     /// [`field_appearance_drawn`], so that `?` is never silent (AGENTS.md §4).
     fn first_unencodable(&self, s: &str) -> Option<char> {
         match self {
-            Self::WinAnsi => pdfcraft_fonts::first_undrawable(s),
+            Self::WinAnsi => taratasy_fonts::first_undrawable(s),
             Self::Simple(metrics) => {
                 s.chars().map(|c| if c == '\t' { ' ' } else { c }).find(|c| metrics.encode(c.encode_utf8(&mut [0; 4])).is_none())
             }
@@ -332,7 +332,7 @@ fn border_width(doc: &Document, wd: &Dict) -> f64 {
 }
 
 /// Where a list box draws its options: one row per option from the top, starting with option
-/// `top` (`/TI`, §12.7.4.4). The appearance PdfCraft writes and the viewer's in-place list share
+/// `top` (`/TI`, §12.7.4.4). The appearance Taratasy writes and the viewer's in-place list share
 /// it, so a click picks the option drawn under the pointer (#1524).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ListRows {
@@ -418,7 +418,7 @@ pub fn field_appearance_as(doc: &Document, f: &Field, w: &Widget, values: &[Stri
 }
 
 /// [`field_appearance_as`] with the first character it drew as `?` because the field's font can't
-/// hold it: the form's font is a simple (WinAnsi) font, Helvetica stands in for one PdfCraft can't
+/// hold it: the form's font is a simple (WinAnsi) font, Helvetica stands in for one Taratasy can't
 /// write with (an embedded subset, `Identity-H`), or a UCS-2 CMap meets a character beyond U+FFFF.
 pub fn field_appearance_drawn(doc: &Document, f: &Field, w: &Widget, values: &[String], format: bool) -> (Stream, Option<char>) {
     // The Format event: what is shown, not what is stored.

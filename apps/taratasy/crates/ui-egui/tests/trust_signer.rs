@@ -5,8 +5,8 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_engine::SignatureStatus;
-use pdfcraft_ui_egui::{PdfCraftApp, SignStep};
+use taratasy_engine::SignatureStatus;
+use taratasy_ui_egui::{TaratasyApp, SignStep};
 
 const FIXTURE: &[u8] = b"%PDF-1.7
 1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
@@ -22,15 +22,15 @@ trailer << /Root 1 0 R >>
 fn dir() -> std::path::PathBuf {
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let d = std::env::temp_dir().join(format!("pdfcraft-trust-signer-{}-{n}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("taratasy-trust-signer-{}-{n}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
 }
 
-fn harness(dir: std::path::PathBuf) -> Harness<'static, PdfCraftApp> {
+fn harness(dir: std::path::PathBuf) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("contract.pdf", None, FIXTURE.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -48,7 +48,7 @@ fn one_click_trust_stores_the_displayed_signer_not_the_embedded_root() {
     let mut h = harness(dir);
     // Sign with chain.p12, whose CMS embeds the signer's issuer chain (signer + self-signed root).
     let p12 = concat!(env!("CARGO_MANIFEST_DIR"), "/../sign/tests/data/chain.p12");
-    let id = pdfcraft_engine::sign::pkcs12::open(&std::fs::read(p12).unwrap(), "test").unwrap();
+    let id = taratasy_engine::sign::pkcs12::open(&std::fs::read(p12).unwrap(), "test").unwrap();
     let entry = h.state_mut().add_digital_id(p12, &id.certificate);
     h.state_mut().start_signing(0, None, None, None);
     {

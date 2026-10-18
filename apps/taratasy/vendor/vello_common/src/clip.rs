@@ -219,7 +219,7 @@ pub fn intersect(
     dispatch!(level, simd => intersect_impl(simd, path_1, path_2, target));
 }
 
-// PdfCraft patch: rows walked by `intersect_impl` on this thread (tests only).
+// Taratasy patch: rows walked by `intersect_impl` on this thread (tests only).
 #[cfg(test)]
 std::thread_local! {
     static ROWS_WALKED: core::cell::Cell<usize> = const { core::cell::Cell::new(0) };
@@ -249,7 +249,7 @@ fn intersect_impl<S: Simd>(
 
     // Ignore any y values that are outside the bounding box of either of the two paths, as
     // those are guaranteed to have neither fill nor strip regions.
-    // PdfCraft patch: start at the later first row. Above it one path has no strips, so no row
+    // Taratasy patch: start at the later first row. Above it one path has no strips, so no row
     // there yields output, but the walk visited each of them, from the top of the clip, for every
     // path drawn (on the A1 sample's full-page canvas, about half its strip rows per stroke).
     let mut cur_y = path_1.strips[0].strip_y().max(path_2.strips[0].strip_y());
@@ -263,7 +263,7 @@ fn intersect_impl<S: Simd>(
 
     // Iterate over each strip row and handle them.
     while cur_y <= end_y {
-        // PdfCraft patch: counts the rows walked, for the test that pins where the walk starts.
+        // Taratasy patch: counts the rows walked, for the test that pins where the walk starts.
         #[cfg(test)]
         ROWS_WALKED.with(|rows| rows.set(rows.get() + 1));
         // For each row, we create two iterators that alternatingly yield the strips and fill
@@ -644,7 +644,7 @@ mod tests {
         run_test(expected, path_1, path_2);
     }
 
-    // PdfCraft patch: the walk starts at the first row both paths have strips in. Starting at the
+    // Taratasy patch: the walk starts at the first row both paths have strips in. Starting at the
     // earlier first row walked every row between the top of the clip and this one for each path.
     #[test]
     fn intersect_walks_only_rows_both_paths_have_strips() {

@@ -1,15 +1,15 @@
 # Building
 
-PhotoCraft uses the Rust workspace at the repository root. Install the stable Rust toolchain, clone the repository, and run commands from that root.
+Sary uses the Rust workspace at the repository root. Install the stable Rust toolchain, clone the repository, and run commands from that root.
 
 On Linux, install the windowing, GL and GTK development packages first. The development guide's
-[Prerequisites](https://github.com/storytold/photocraft/blob/main/docs/development.md#prerequisites)
+[Prerequisites](https://github.com/raantss18/mahay/blob/main/docs/development.md#prerequisites)
 list them for Debian/Ubuntu, Fedora, Arch and openSUSE.
 
 ```sh
 cargo build --workspace
-cargo run --release -p photocraft -- image.psd
-cargo run -p photocraft-cli -- --help
+cargo run --release -p sary -- image.psd
+cargo run -p sary-cli -- --help
 ```
 
 The standard repository gates are:
@@ -22,7 +22,7 @@ cargo xtask layers
 cargo xtask wasm
 ```
 
-`cargo xtask wasm` requires the `wasm32-unknown-unknown` target. UI work should also be checked using the offscreen snapshot example described in the [development guide](https://github.com/storytold/photocraft/blob/main/docs/development.md).
+`cargo xtask wasm` requires the `wasm32-unknown-unknown` target. UI work should also be checked using the offscreen snapshot example described in the [development guide](https://github.com/raantss18/mahay/blob/main/docs/development.md).
 
 ## Build the documentation
 

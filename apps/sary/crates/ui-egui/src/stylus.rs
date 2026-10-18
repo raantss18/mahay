@@ -13,14 +13,14 @@
 //!   to `pointerdown`/`pointermove` itself and writes `pressure`, `tiltX`, `tiltY`, `twist` and
 //!   the eraser button of `pointerType == "pen"` events into the [`StylusFeed`].
 //! - **macOS**: winit 0.30 drops `NSEvent` tablet data, so the desktop app installs an AppKit
-//!   local event monitor (the `photocraft-tablet` crate) that writes pressure, tilt, rotation and
+//!   local event monitor (the `sary-tablet` crate) that writes pressure, tilt, rotation and
 //!   the eraser end into the [`StylusFeed`] before winit handles each event.
 //! - **Linux X11**: the desktop app reads XInput2 raw valuator events on its own X connection
-//!   (`photocraft-tablet`, x11rb) and writes them into the [`StylusFeed`].
+//!   (`sary-tablet`, x11rb) and writes them into the [`StylusFeed`].
 //! - **Linux Wayland**: compositors give a pen only to clients that bind `zwp_tablet_v2`, which
 //!   winit doesn't (it would have to share winit's connection), so with a pen attached the
 //!   desktop app opens its window through Xwayland, which reports tablet valuators to the X11
-//!   reader. `PHOTOCRAFT_NATIVE_WAYLAND=1` keeps native Wayland, where the pen has no input.
+//!   reader. `SARY_NATIVE_WAYLAND=1` keeps native Wayland, where the pen has no input.
 //!
 //! Preferences › Tools › Use Tablet Pressure off makes a pen paint like a mouse. Flipping the pen
 //! to its eraser end selects the Eraser tool and flipping back restores the previous tool, as in
@@ -114,7 +114,7 @@ pub struct Stylus {
     /// Preferences › Tools › Use Tablet Pressure: off, a pen paints like a mouse.
     pub use_pressure: bool,
     /// Preferences › Tools › Pressure Curve (`None`: linear), with the points it was built from.
-    pressure_curve: Option<photocraft_engine::prefs::PressureCurve>,
+    pressure_curve: Option<sary_engine::prefs::PressureCurve>,
     curve_points: Vec<[f32; 2]>,
     /// The pen end last seen (`Some(true)` = eraser), for the eraser tool switch.
     end: Option<bool>,
@@ -276,7 +276,7 @@ impl Stylus {
     pub fn set_pressure_curve(&mut self, points: &[[f32; 2]]) {
         if self.curve_points != points {
             self.curve_points = points.to_vec();
-            let c = photocraft_engine::prefs::PressureCurve::new(points);
+            let c = sary_engine::prefs::PressureCurve::new(points);
             self.pressure_curve = (!c.is_linear()).then_some(c);
         }
     }
@@ -327,7 +327,7 @@ impl Stylus {
 
     /// Switch to the Eraser when the pen's eraser end comes in, and back to the previous tool when
     /// the tip does (Photoshop). Not during a drag. Returns whether the tool changed.
-    pub fn sync_eraser_tool(app: &mut crate::PhotocraftApp) -> bool {
+    pub fn sync_eraser_tool(app: &mut crate::SaryApp) -> bool {
         use crate::state::Tool;
         if app.drag.is_some() {
             return false;
@@ -764,7 +764,7 @@ mod tests {
     fn pen_samples_reach_the_brush_stroke() {
         use crate::canvas::{ToolEvent, tool_event};
         use serde_json::json;
-        let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = crate::SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 120, "height": 80})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.ui.tool = crate::state::Tool::Brush;
@@ -817,7 +817,7 @@ mod tests {
     fn eraser_end_switches_tools_once_and_never_mid_drag() {
         use crate::canvas::{ToolEvent, tool_event};
         use crate::state::Tool;
-        let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = crate::SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", serde_json::json!({"width": 60, "height": 60})).unwrap();
         app.ui.tool = Tool::Brush;
         let pen = |eraser| Some(PenSample { pressure: 0.5, eraser, ..Default::default() });

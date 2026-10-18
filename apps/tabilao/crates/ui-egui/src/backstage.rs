@@ -332,7 +332,7 @@ fn new_tiles(app: &mut SheetApp, ui: &mut Ui, out: &mut Outcome) {
             app.run_or_alert("file.new", json!({}));
             out.close = true;
         }
-        for (i, (name, title)) in gridcraft_engine::sample::SAMPLES.iter().enumerate() {
+        for (i, (name, title)) in tabilao_engine::sample::SAMPLES.iter().enumerate() {
             if tile(ui, title, Some(i)).clicked() {
                 app.run_or_alert("file.new", json!({"sample": name}));
                 out.close = true;
@@ -457,7 +457,7 @@ fn ask(ctx: egui::Context, paths: Vec<String>, found: Arc<Mutex<HashMap<String, 
             ASKING.store(false, Ordering::SeqCst);
         }
     }
-    let asking = std::thread::Builder::new().name("gridcraft-recent-files".into()).spawn(move || {
+    let asking = std::thread::Builder::new().name("tabilao-recent-files".into()).spawn(move || {
         let _done = Done;
         for path in paths {
             let changed = std::fs::metadata(&path).and_then(|m| m.modified()).ok().and_then(|at| at.duration_since(std::time::UNIX_EPOCH).ok());
@@ -786,8 +786,8 @@ const PREVIEW_COLS: u32 = 60;
 
 /// Draws one printed page in miniature: the cells' displayed text at the page's print scale,
 /// inside the sheet's margins. `paper_w` is the page width in points.
-fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &gridcraft_engine::model::Workbook, t: &Tokens) {
-    let Some(range) = page.get("range").and_then(Json::as_str).and_then(gridcraft_engine::core::RangeRef::parse) else { return };
+fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &tabilao_engine::model::Workbook, t: &Tokens) {
+    let Some(range) = page.get("range").and_then(Json::as_str).and_then(tabilao_engine::core::RangeRef::parse) else { return };
     let Some(sh) = page.get("sheet").and_then(Json::as_str).and_then(|n| wb.sheet_index(n)).and_then(|i| wb.sheets.get(i)) else { return };
     // Preview pixels per point, and per sheet pixel (sheet geometry is 96 dpi: 0.75 pt per pixel).
     let per_pt = rect.width() / paper_w;
@@ -824,15 +824,15 @@ fn paint_page(p: &egui::Painter, rect: Rect, paper_w: f32, page: &Json, wb: &gri
             if x >= body.right() {
                 break;
             }
-            let cell = gridcraft_engine::core::CellRef::new(row, col);
-            let text = gridcraft_engine::display::cell_text(wb, sh, cell);
+            let cell = tabilao_engine::core::CellRef::new(row, col);
+            let text = tabilao_engine::display::cell_text(wb, sh, cell);
             if !text.is_empty() {
                 let numeric = sh.value(cell).as_f64().is_some();
                 // Text runs on over empty neighbours, as on the sheet; numbers stay in their cell.
                 let mut span = w;
                 if !numeric {
                     let mut next = col.saturating_add(1);
-                    while next <= last_col && x + span < body.right() && sh.value(gridcraft_engine::core::CellRef::new(row, next)).is_empty() {
+                    while next <= last_col && x + span < body.right() && sh.value(tabilao_engine::core::CellRef::new(row, next)).is_empty() {
                         span += sh.col_width(next) * per_px;
                         next = next.saturating_add(1);
                     }
@@ -888,13 +888,13 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
         return match app.run(id, json!({"path": path})) {
             Ok(_) => true,
             Err(e) => {
-                app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+                app.message = Some(("Tabilao".into(), crate::clean_error(&e)));
                 false
             }
         };
     }
     if app.services.download.is_none() {
-        app.message = Some(("GridCraft".into(), "Exporting needs a file picker, which this window doesn't have.".into()));
+        app.message = Some(("Tabilao".into(), "Exporting needs a file picker, which this window doesn't have.".into()));
         return false;
     }
     if fmt == "pdf" {
@@ -902,7 +902,7 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
         return match app.run(id, json!({})) {
             Ok(_) => true,
             Err(e) => {
-                app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+                app.message = Some(("Tabilao".into(), crate::clean_error(&e)));
                 false
             }
         };
@@ -910,7 +910,7 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
     app.store_view_state();
     match app.session.run("file.saveBytes", json!({"format": fmt})) {
         Ok(r) => {
-            let bytes = r.get("base64").and_then(Json::as_str).and_then(gridcraft_engine::io::base64_decode);
+            let bytes = r.get("base64").and_then(Json::as_str).and_then(tabilao_engine::io::base64_decode);
             let name = r.get("name").and_then(Json::as_str).map_or_else(|| format!("{stem}.{fmt}"), str::to_string);
             match (bytes, &app.services.download) {
                 (Some(b), Some(dl)) => {
@@ -921,7 +921,7 @@ pub fn export_as(app: &mut SheetApp, fmt: &str) -> bool {
             }
         }
         Err(e) => {
-            app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+            app.message = Some(("Tabilao".into(), crate::clean_error(&e)));
             false
         }
     }
@@ -977,7 +977,7 @@ fn options(app: &mut SheetApp, ui: &mut Ui) {
     ui.add_space(18.0);
     section(ui, lang, "Formulas");
     ui.label(lang.tr("Workbook calculation"));
-    use gridcraft_engine::model::CalcMode;
+    use tabilao_engine::model::CalcMode;
     for (mode, id, label) in [
         (CalcMode::Automatic, "automatic", "Automatic"),
         (CalcMode::AutomaticExceptTables, "automaticExceptTables", "Automatic Except for Data Tables"),
@@ -1044,7 +1044,7 @@ mod tests {
 
     #[test]
     fn the_recent_list_learns_when_its_files_were_last_changed() {
-        let dir = std::env::temp_dir().join(format!("gridcraft-recent-files-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tabilao-recent-files-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let there = dir.join("There.xlsx").to_string_lossy().into_owned();

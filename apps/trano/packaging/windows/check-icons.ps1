@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Check MSI icon references without building or installing ArtCraft Launcher.
+  Check MSI icon references without building or installing Mahay Trano.
 
 .DESCRIPTION
   Windows Installer caches each <Icon> under its Id as a file name, so a shortcut icon Id needs an
@@ -10,10 +10,10 @@
   carries the app's AppUserModelID (toast notifications need it).
 #>
 param(
-  [string] $WxsPath = (Join-Path $PSScriptRoot 'artcraft-launcher.wxs')
+  [string] $WxsPath = (Join-Path $PSScriptRoot 'trano.wxs')
 )
 $ErrorActionPreference = 'Stop'
-$AppId = 'ai.storyteller.artcraft-launcher'
+$AppId = 'ai.storyteller.trano'
 [xml] $Wxs = Get-Content -LiteralPath $WxsPath -Raw
 $Ns = [Xml.XmlNamespaceManager]::new($Wxs.NameTable)
 $Ns.AddNamespace('w', 'http://wixtoolset.org/schemas/v4/wxs')

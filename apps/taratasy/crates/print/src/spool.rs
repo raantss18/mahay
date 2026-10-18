@@ -1,7 +1,7 @@
-//! System print spooler supplied by craft-print. PDF composition and permission checks
-//! stay in PdfCraft; these adapters retain the application's print-error surface.
+//! System print spooler supplied by mahay-print. PDF composition and permission checks
+//! stay in Taratasy; these adapters retain the application's print-error surface.
 
-pub use craft_print::{
+pub use mahay_print::{
     Duplex, HANDLED_OPTIONS, HAS_PRINTER_PREFERENCES, Job, Printer, PrinterOption, Scaling, lp_args, lpstat_command, parse_lpoptions, parse_lpstat,
     parse_lpstat_e, parse_ppd, parse_windows_printers, ppd_text, printers, printers_parsed,
 };
@@ -16,7 +16,7 @@ pub fn printer_options(printer: &str) -> Vec<PrinterOption> {
     }
     #[cfg(not(all(unix, not(target_arch = "wasm32"))))]
     {
-        craft_print::printer_options(printer)
+        mahay_print::printer_options(printer)
     }
 }
 
@@ -56,15 +56,15 @@ pub(crate) fn printer_options_via(printer: &str, ppd_dir: &std::path::Path, mut 
 }
 
 pub fn submit(pdf: &[u8], job: &Job) -> Result<String, crate::PrintError> {
-    craft_print::submit(pdf, job).map_err(|e| crate::PrintError::Spool(e.to_string()))
+    mahay_print::submit(pdf, job).map_err(|e| crate::PrintError::Spool(e.to_string()))
 }
 
 /// [`submit`], told `(sent, sheets)` as each sheet reaches the spooler (Windows; CUPS takes the
 /// whole PDF at once and reports nothing).
 pub fn submit_with_progress(pdf: &[u8], job: &Job, progress: &mut dyn FnMut(usize, usize)) -> Result<String, crate::PrintError> {
-    craft_print::submit_with_progress(pdf, job, progress).map_err(|e| crate::PrintError::Spool(e.to_string()))
+    mahay_print::submit_with_progress(pdf, job, progress).map_err(|e| crate::PrintError::Spool(e.to_string()))
 }
 
 pub fn open_printer_preferences(printer: &str) -> Result<(), crate::PrintError> {
-    craft_print::open_printer_preferences(printer).map_err(|e| crate::PrintError::Spool(e.to_string()))
+    mahay_print::open_printer_preferences(printer).map_err(|e| crate::PrintError::Spool(e.to_string()))
 }

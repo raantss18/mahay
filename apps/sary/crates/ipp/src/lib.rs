@@ -1,4 +1,4 @@
-//! `photocraft-ipp`: a small IPP client for CUPS, in pure Rust with no dependencies.
+//! `sary-ipp`: a small IPP client for CUPS, in pure Rust with no dependencies.
 //!
 //! Talks to the local print server the way `lp` does, but in-process: over the CUPS domain
 //! socket (`/run/cups/cups.sock`, or `CUPS_SERVER` when it names a path) or TCP (`localhost:631`,

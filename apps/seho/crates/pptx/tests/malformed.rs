@@ -2,7 +2,7 @@
 
 use std::io::{Cursor, Write};
 
-use deckcraft_model::defaults;
+use seho_model::defaults;
 
 fn zip_of(files: &[(&str, &[u8])]) -> Vec<u8> {
     let mut z = zip::ZipWriter::new(Cursor::new(Vec::new()));
@@ -15,7 +15,7 @@ fn zip_of(files: &[(&str, &[u8])]) -> Vec<u8> {
 }
 
 fn valid() -> Vec<u8> {
-    deckcraft_pptx::export(&defaults::new_presentation(None)).expect("export")
+    seho_pptx::export(&defaults::new_presentation(None)).expect("export")
 }
 
 /// Every entry of a valid export, as (name, bytes).
@@ -38,8 +38,8 @@ fn rezip(es: &[(String, Vec<u8>)]) -> Vec<u8> {
 
 #[test]
 fn random_bytes_and_empty() {
-    assert!(deckcraft_pptx::import(&[]).is_err());
-    assert!(deckcraft_pptx::import(b"PK\x03\x04garbage").is_err());
+    assert!(seho_pptx::import(&[]).is_err());
+    assert!(seho_pptx::import(b"PK\x03\x04garbage").is_err());
     let mut seed = 7u64;
     for len in [1usize, 10, 100, 1000, 10_000] {
         let v: Vec<u8> = (0..len)
@@ -48,7 +48,7 @@ fn random_bytes_and_empty() {
                 (seed >> 33) as u8
             })
             .collect();
-        assert!(deckcraft_pptx::import(&v).is_err());
+        assert!(seho_pptx::import(&v).is_err());
     }
 }
 
@@ -56,14 +56,14 @@ fn random_bytes_and_empty() {
 fn truncated_zip() {
     let v = valid();
     for cut in [10, v.len() / 4, v.len() / 2, v.len() - 30, v.len() - 1] {
-        let _ = deckcraft_pptx::import(&v[..cut]);
+        let _ = seho_pptx::import(&v[..cut]);
     }
 }
 
 #[test]
 fn zip_without_presentation() {
     let z = zip_of(&[("[Content_Types].xml", b"<Types/>"), ("hello.txt", b"hi")]);
-    assert!(deckcraft_pptx::import(&z).is_err());
+    assert!(seho_pptx::import(&z).is_err());
 }
 
 #[test]
@@ -73,13 +73,13 @@ fn missing_parts_still_import() {
     for i in 0..es.len() {
         let mut v = es.clone();
         let (name, _) = v.remove(i);
-        let r = deckcraft_pptx::import(&rezip(&v));
+        let r = seho_pptx::import(&rezip(&v));
         if name == "ppt/presentation.xml" {
             assert!(r.is_err());
         } else if let Ok(p) = r {
             assert!(p.validate().is_empty(), "dropping {name}: {:?}", p.validate());
             // Whatever we read must export again.
-            deckcraft_pptx::export(&p).expect("re-export");
+            seho_pptx::export(&p).expect("re-export");
         }
     }
 }
@@ -91,8 +91,8 @@ fn bad_xml_in_each_part() {
         for bad in [&b"<p:sld><unclosed"[..], b"\xff\xfe\x00garbage", b"", b"<?xml version=\"1.0\"?>", b"<a:b c='1' c='2'/>"] {
             let mut v = es.clone();
             v[i].1 = bad.to_vec();
-            if let Ok(p) = deckcraft_pptx::import(&rezip(&v)) {
-                deckcraft_pptx::export(&p).expect("re-export");
+            if let Ok(p) = seho_pptx::import(&rezip(&v)) {
+                seho_pptx::export(&p).expect("re-export");
             }
         }
     }
@@ -114,15 +114,15 @@ fn huge_numbers_and_nonsense_attributes() {
             *d = s.into_bytes();
         }
     }
-    if let Ok(p) = deckcraft_pptx::import(&rezip(&v)) {
+    if let Ok(p) = seho_pptx::import(&rezip(&v)) {
         for s in &p.slides {
-            deckcraft_model::walk(&s.shapes, &mut |sh, _| {
+            seho_model::walk(&s.shapes, &mut |sh, _| {
                 if let Some(x) = sh.xfrm {
                     assert!(x.is_finite());
                 }
             });
         }
-        deckcraft_pptx::export(&p).expect("re-export");
+        seho_pptx::export(&p).expect("re-export");
     }
 }
 
@@ -138,14 +138,14 @@ fn deep_nesting_is_bounded() {
     if let Some(e) = v.iter_mut().find(|(n, _)| n == "ppt/slides/slide1.xml") {
         e.1 = deep.into_bytes();
     }
-    let p = deckcraft_pptx::import(&rezip(&v)).expect("import");
-    deckcraft_pptx::export(&p).expect("re-export");
+    let p = seho_pptx::import(&rezip(&v)).expect("import");
+    seho_pptx::export(&p).expect("re-export");
     // Beyond the XML depth limit the part is rejected, the deck still loads.
     let deeper = format!("<p:sld>{}</p:sld>", "<a>".repeat(5000));
     if let Some(e) = v.iter_mut().find(|(n, _)| n == "ppt/slides/slide1.xml") {
         e.1 = deeper.into_bytes();
     }
-    let _ = deckcraft_pptx::import(&rezip(&v));
+    let _ = seho_pptx::import(&rezip(&v));
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn relationship_cycles_and_bad_targets() {
     if let Some(e) = v.iter_mut().find(|(n, _)| n == "ppt/slides/_rels/slide1.xml.rels") {
         e.1 = br#"<Relationships xmlns="x"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../../../../../etc/passwd"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slide1.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="slide1.xml"/></Relationships>"#.to_vec();
     }
-    let p = deckcraft_pptx::import(&rezip(&v)).expect("import");
+    let p = seho_pptx::import(&rezip(&v)).expect("import");
     assert_eq!(p.slides.len(), 1);
     assert!(p.validate().is_empty());
 }
@@ -164,11 +164,11 @@ fn relationship_cycles_and_bad_targets() {
 #[test]
 fn fuzz_mutations() {
     let p = {
-        let mut s = deckcraft_engine::Session::new();
-        deckcraft_engine::sample::open_sample(&mut s).expect("sample");
+        let mut s = seho_engine::Session::new();
+        seho_engine::sample::open_sample(&mut s).expect("sample");
         s.doc().expect("doc").doc.as_ref().clone()
     };
-    let es = entries(&deckcraft_pptx::export(&p).expect("export"));
+    let es = entries(&seho_pptx::export(&p).expect("export"));
     let mut seed = 0x5eed_u64;
     let mut rnd = |n: usize| {
         seed ^= seed << 13;
@@ -198,20 +198,20 @@ fn fuzz_mutations() {
                 }
             }
         }
-        if let Ok(q) = deckcraft_pptx::import(&rezip(&v)) {
+        if let Ok(q) = seho_pptx::import(&rezip(&v)) {
             assert!(q.validate().is_empty());
-            deckcraft_pptx::export(&q).expect("re-export");
+            seho_pptx::export(&q).expect("re-export");
         }
     }
     // Raw byte flips of the whole zip, too.
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     for _ in 0..iters {
         let mut b = bytes.clone();
         for _ in 0..1 + rnd(16) {
             let at = rnd(b.len());
             b[at] = rnd(256) as u8;
         }
-        let _ = deckcraft_pptx::import(&b);
+        let _ = seho_pptx::import(&b);
     }
 }
 
@@ -229,13 +229,13 @@ fn zip_bomb_entry_is_capped() {
     }
     let bytes = z.finish().expect("finish").into_inner();
     assert!(bytes.len() < 2 * 1024 * 1024);
-    let p = deckcraft_pptx::import(&bytes).expect("import");
+    let p = seho_pptx::import(&bytes).expect("import");
     assert_eq!(p.slides.len(), 1);
 }
 
 #[test]
 fn export_of_odd_models_is_valid() {
-    use deckcraft_model::{LayoutId, Shape, ShapeId, ShapeKind, Slide, SlideId};
+    use seho_model::{LayoutId, Shape, ShapeId, ShapeKind, Slide, SlideId};
     use std::sync::Arc;
     // No masters, dangling layout, duplicate and zero shape ids, NaN geometry, control characters.
     let mut p = defaults::new_presentation(None);
@@ -244,8 +244,8 @@ fn export_of_odd_models_is_valid() {
         s.shapes.push(Shape {
             id: ShapeId(id),
             name: "bad\u{0}name\u{b}".into(),
-            xfrm: Some(deckcraft_geom::Xfrm::new(f64::NAN, f64::INFINITY, -5.0, 1e300)),
-            text: Some(deckcraft_model::TextBody::from_text("tab\tand\u{1}control\nnew line")),
+            xfrm: Some(seho_geom::Xfrm::new(f64::NAN, f64::INFINITY, -5.0, 1e300)),
+            text: Some(seho_model::TextBody::from_text("tab\tand\u{1}control\nnew line")),
             ..Default::default()
         });
     }
@@ -255,12 +255,12 @@ fn export_of_odd_models_is_valid() {
         ..Default::default()
     });
     p.slides.push(Arc::new(s));
-    let bytes = deckcraft_pptx::export(&p).expect("export");
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let bytes = seho_pptx::export(&p).expect("export");
+    let q = seho_pptx::import(&bytes).expect("import");
     assert_eq!(q.slides.len(), 2);
     assert!(q.validate().is_empty(), "{:?}", q.validate());
     let mut empty = p.clone();
     empty.masters.clear();
-    let q = deckcraft_pptx::import(&deckcraft_pptx::export(&empty).expect("export")).expect("import");
+    let q = seho_pptx::import(&seho_pptx::export(&empty).expect("export")).expect("import");
     assert!(!q.masters.is_empty());
 }

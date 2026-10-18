@@ -19,13 +19,13 @@
 //! The rule under test throughout: hostile input returns `Err`, never a panic and never an
 //! unbounded allocation.
 
-use photocraft_psd::aco::{AcoColor, AcoSwatch};
-use photocraft_psd::grd::{GrdColor, GrdGradient, GrdStop};
-use photocraft_psd::{PsdError, aco, ase, grd};
+use sary_psd::aco::{AcoColor, AcoSwatch};
+use sary_psd::grd::{GrdColor, GrdGradient, GrdStop};
+use sary_psd::{PsdError, aco, ase, grd};
 use std::panic::{RefUnwindSafe, UnwindSafe, catch_unwind};
 
 fn sample_ase() -> Vec<u8> {
-    use photocraft_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch as Sw, write};
+    use sary_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch as Sw, write};
     let sw = |name: &str| Sw { name: name.into(), color: AseColor::Rgb([1.0, 0.0, 0.0]), kind: AseKind::Process };
     write(&AseFile { entries: vec![AseEntry::Group { name: "Brand".into(), swatches: vec![sw("Red"), sw("Blue")] }, AseEntry::Swatch(sw("Loose"))] })
         .expect("writing a sample .ase")
@@ -46,7 +46,7 @@ fn sample_aco() -> Vec<u8> {
 }
 
 fn sample_grd() -> Vec<u8> {
-    use photocraft_psd::grd::write;
+    use sary_psd::grd::write;
     write(&[
         GrdGradient {
             name: "Sunset".into(),
@@ -220,7 +220,7 @@ fn grd_non_finite_opacity_and_midpoint_do_not_survive() {
 /// otherwise removing that guard changes nothing any test can see.
 #[test]
 fn grd_midpoint_stored_as_a_double_is_still_sanitised() {
-    use photocraft_psd::descriptor::{Descriptor, Value, VersionedDescriptor};
+    use sary_psd::descriptor::{Descriptor, Value, VersionedDescriptor};
     for v in [f64::NAN, f64::INFINITY, 1e300, 3.0e38] {
         // Driven through `Trns`, where the reader keeps the midpoint, rather than through `Clrs`,
         // where a colour stop also needs a colour this descriptor does not carry.
@@ -331,7 +331,7 @@ fn aco_and_ase_never_split_a_surrogate_pair() {
     assert_eq!(back.swatches[0].name, expected, "the capped name must be whole characters only");
     assert_eq!(aco::write(&back.swatches).unwrap(), once, "the file must be stable across a round trip");
 
-    use photocraft_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch, write};
+    use sary_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch, write};
     let file = AseFile { entries: vec![AseEntry::Swatch(AseSwatch { name, color: AseColor::Rgb([1.0, 0.0, 0.0]), kind: AseKind::Process })] };
     let a1 = write(&file).expect("writing a long non-ASCII name is capped, not refused");
     let ab = ase::parse(&a1).expect("the written file parses");
@@ -403,7 +403,7 @@ fn grd_non_finite_numbers_do_not_survive_the_reader() {
 /// colours, so an import never silently drops or invents entries.
 #[test]
 fn ase_round_trip_preserves_swatch_count() {
-    use photocraft_psd::ase::write;
+    use sary_psd::ase::write;
     let f = ase::parse(&sample_ase()).expect("sample .ase parses");
     // No cap assertion: three swatches cannot exceed a cap of 100 000. `ase_swatch_cap_is_enforced_
     // on_hostile_input` drives a file that does.
@@ -501,7 +501,7 @@ fn ase_over_long_name_is_truncated_on_read() {
 /// An `.aco` that parses must re-serialize to the same swatch count, with no name over the cap.
 #[test]
 fn aco_round_trip_preserves_swatch_count() {
-    use photocraft_psd::aco::write;
+    use sary_psd::aco::write;
     // No cap assertion here. `aco::MAX_SWATCHES` is `u16::MAX` against a `u16` on-disk count, so it
     // is unfalsifiable by construction, and the sample names are far shorter than the name cap;
     // `aco_over_long_name_is_truncated_on_read` is where that cap is actually driven.
@@ -557,7 +557,7 @@ fn aco_write_caps_the_name() {
 /// 65 535 units — so the case that proves it uses 70 000, not merely "long".
 #[test]
 fn ase_write_caps_the_name() {
-    use photocraft_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch, write};
+    use sary_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch, write};
     let sw = AseSwatch { name: "x".repeat(70_000), color: AseColor::Rgb([1.0, 0.0, 0.0]), kind: AseKind::Process };
     let bytes = write(&AseFile { entries: vec![AseEntry::Swatch(sw)] }).expect("an over-long name is capped, not refused");
     let run = [0u8, b'x'];
@@ -629,7 +629,7 @@ fn truncate_aco_inside_first_section_is_an_error() {
 /// never a panic and never a read past the block.
 #[test]
 fn ase_structurally_hostile_blocks() {
-    use photocraft_psd::ase::{AseColor, AseEntry};
+    use sary_psd::ase::{AseColor, AseEntry};
     let header = |count: u32| {
         let mut f = b"ASEF".to_vec();
         f.extend_from_slice(&1u16.to_be_bytes());
@@ -766,7 +766,7 @@ fn aco_mismatched_section_counts_do_not_panic() {
 /// nothing ever recursed. It passed for the wrong reason.
 #[test]
 fn grd_deeply_nested_descriptor_hits_the_depth_limit() {
-    use photocraft_psd::descriptor::{Descriptor, MAX_DEPTH, Value, VersionedDescriptor};
+    use sary_psd::descriptor::{Descriptor, MAX_DEPTH, Value, VersionedDescriptor};
     let mut d = Descriptor::new("null");
     for _ in 0..(MAX_DEPTH + 5) {
         d = Descriptor::new("null").with("in  ", Value::Descriptor(d));
@@ -805,7 +805,7 @@ fn grd_deeply_nested_descriptor_hits_the_depth_limit() {
 /// guard on the Lab a*/b* channels — have no test and can be removed unnoticed.
 #[test]
 fn grd_every_colour_model_is_clamped_and_finite() {
-    use photocraft_psd::descriptor::{Descriptor, Value, VersionedDescriptor};
+    use sary_psd::descriptor::{Descriptor, Value, VersionedDescriptor};
 
     // Build a one-stop gradient whose colour is `class_id` with the given (key, value) components.
     let build = |class_id: &str, comps: &[(&str, f64)]| -> Vec<u8> {
@@ -815,7 +815,7 @@ fn grd_every_colour_model_is_clamped_and_finite() {
         }
         let stop = Descriptor::new("Clrt")
             .with("Clr ", Value::Descriptor(colour))
-            .with("Type", Value::Enumerated { type_id: photocraft_psd::descriptor::Id::new("Clry"), value: photocraft_psd::descriptor::Id::new("UsrS") })
+            .with("Type", Value::Enumerated { type_id: sary_psd::descriptor::Id::new("Clry"), value: sary_psd::descriptor::Id::new("UsrS") })
             .with("Lctn", Value::Integer(0))
             .with("Mdpn", Value::Integer(50));
         let grad = Descriptor::new("Grdn").with("Clrs", Value::List(vec![Value::Descriptor(stop)]));
@@ -890,7 +890,7 @@ fn grd_every_colour_model_is_clamped_and_finite() {
 /// regression to `clamp` is caught (both produce in-range values, so a range check alone would not).
 #[test]
 fn grd_hue_wraps_rather_than_clamping() {
-    use photocraft_psd::descriptor::{Descriptor, Id, Value, VersionedDescriptor};
+    use sary_psd::descriptor::{Descriptor, Id, Value, VersionedDescriptor};
     let build = |hue: f64| {
         let colour = Descriptor::new("HSBC").with("H   ", Value::Double(hue)).with("Strt", Value::Double(50.0)).with("Brgh", Value::Double(50.0));
         let stop = Descriptor::new("Clrt")

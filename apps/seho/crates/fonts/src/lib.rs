@@ -1,9 +1,9 @@
-//! DeckCraft fonts: the font database (craft-fonts families, user and system fonts, and open
+//! Seho fonts: the font database (mahay-fonts families, user and system fonts, and open
 //! substitutes for the Office fonts presentations ask for), vertical metrics, glyph outlines and
 //! OpenType shaping, script/slot classification and per-cluster fallback.
 //!
 //! Shaping here is style-agnostic: [`shape`] and [`shape_range`] turn text in one face into glyph
-//! ids, clusters and advances in font units. `deckcraft-text` applies sizes, tracking, scaling and
+//! ids, clusters and advances in font units. `seho-text` applies sizes, tracking, scaling and
 //! justification on top.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
@@ -23,9 +23,9 @@ pub use kurbo::BezPath;
 pub use script::{FontSlot, ScriptTag};
 pub use shape::{ShapeParams, ShapedGlyph, shape_range};
 
-/// A font from the optional craft-fonts build input (https://github.com/storytold/craft-fonts;
-/// empty unless built with `CRAFT_FONTS_DIR`, see `build.rs`).
-pub struct CraftFont {
+/// A font from the optional mahay-fonts build input (https://github.com/raantss18/mahay;
+/// empty unless built with `MAHAY_FONTS_DIR`, see `build.rs`).
+pub struct MahayFont {
     pub family: &'static str,
     pub style: &'static str,
     /// ISO 15924 scripts the font is for, e.g. `"Jpan"`.
@@ -33,11 +33,11 @@ pub struct CraftFont {
     pub bytes: &'static [u8],
 }
 
-include!(concat!(env!("OUT_DIR"), "/craft_fonts.rs"));
+include!(concat!(env!("OUT_DIR"), "/mahay_fonts.rs"));
 
-/// The craft-fonts faces for Japanese (`"Jpan"`), in manifest order. Empty without craft-fonts.
-pub fn japanese_fonts() -> impl Iterator<Item = &'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.scripts.contains(&"Jpan"))
+/// The mahay-fonts faces for Japanese (`"Jpan"`), in manifest order. Empty without mahay-fonts.
+pub fn japanese_fonts() -> impl Iterator<Item = &'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.scripts.contains(&"Jpan"))
 }
 
 /// The TrueType or OpenType font inside a PresentationML embedded-font part
@@ -79,7 +79,7 @@ fn eot_payload(b: &[u8]) -> Option<&[u8]> {
 
 /// Japanese faces in document-fallback order: Mincho (serif) families first, matching the
 /// serif default text font, then the others; Regular before other styles.
-pub fn japanese_document_fonts() -> Vec<&'static CraftFont> {
+pub fn japanese_document_fonts() -> Vec<&'static MahayFont> {
     let mut v: Vec<_> = japanese_fonts().collect();
     v.sort_by_key(|f| (!f.family.contains("Mincho"), f.style != "Regular"));
     v
@@ -87,7 +87,7 @@ pub fn japanese_document_fonts() -> Vec<&'static CraftFont> {
 
 /// Japanese faces in UI order: BIZ UDPGothic first (the UI face), then the others; `bold` puts
 /// bold styles before regular ones.
-pub fn japanese_ui_fonts(bold: bool) -> Vec<&'static CraftFont> {
+pub fn japanese_ui_fonts(bold: bool) -> Vec<&'static MahayFont> {
     let mut v: Vec<_> = japanese_fonts().collect();
     v.sort_by_key(|f| (f.family != "BIZ UDPGothic", (f.style == "Bold") != bold));
     v
@@ -195,7 +195,7 @@ mod tests {
     fn colour_fonts_are_recognised() {
         let db = FontDb::with_font_dirs(Vec::new());
         assert!(db.add_font(include_bytes!("../../render/tests/fixtures/colr-squares.ttf").to_vec()) > 0);
-        assert!(db.face("DeckCraft Colr Squares", "Regular").is_color());
+        assert!(db.face("Seho Colr Squares", "Regular").is_color());
         assert!(!fontdb::last_resort_face().is_color());
     }
 
@@ -232,7 +232,7 @@ mod tests {
         db.set_system_fallback(false);
         assert_eq!(db.add_font(include_bytes!("../tests/fixtures/legacy-regular.ttf").to_vec()), 1);
         let first = db.fallback_for('A', u32::MAX).unwrap();
-        let accepted_family = if first.family == LAST_RESORT_FAMILY { "DeckCraft Legacy" } else { LAST_RESORT_FAMILY };
+        let accepted_family = if first.family == LAST_RESORT_FAMILY { "Seho Legacy" } else { LAST_RESORT_FAMILY };
         let fallback = db.fallback_for_filtered('A', u32::MAX, |f| f.family == accepted_family).unwrap();
         assert_eq!(fallback.family, accepted_family);
         assert!(fallback.covers('A'));
@@ -247,11 +247,11 @@ mod tests {
         let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
         let db = FontDb::with_font_dirs(vec![dir]);
         let first = db.fallback_for('A', u32::MAX).unwrap();
-        assert_ne!(first.family, "DeckCraft Legacy");
+        assert_ne!(first.family, "Seho Legacy");
         assert!(db.fallback_for_filtered('A', u32::MAX, |_| false).is_none());
         assert!(db.fallback_for('A', u32::MAX).is_some(), "an interface policy miss does not hide document glyphs");
-        let accepted = db.fallback_for_filtered('A', u32::MAX, |f| f.family == "DeckCraft Legacy").unwrap();
-        assert_eq!(accepted.family, "DeckCraft Legacy");
+        let accepted = db.fallback_for_filtered('A', u32::MAX, |f| f.family == "Seho Legacy").unwrap();
+        assert_eq!(accepted.family, "Seho Legacy");
         assert!(accepted.covers('A'));
     }
 
@@ -260,7 +260,7 @@ mod tests {
         // Threads resolving an installed family nobody had loaded yet used to fall back to
         // another face when a different thread finished loading it first, so the same text was
         // laid out in different fonts depending on timing.
-        let dir = std::env::temp_dir().join(format!("deckcraft-fonts-concurrent-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("seho-fonts-concurrent-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("Hack-Regular.ttf"), epaint_default_fonts::HACK_REGULAR).unwrap();
         for _ in 0..20 {
@@ -288,14 +288,14 @@ mod tests {
         // Documents name fonts by their Windows family ("Segoe UI Semibold"); the font's
         // typographic family is "Segoe UI" with a "Semibold" style. The fixture is named the same way.
         let check = |db: &FontDb| {
-            assert!(db.has_family("DeckCraft Legacy Semibold"));
+            assert!(db.has_family("Seho Legacy Semibold"));
             for style in ["Regular", "Bold"] {
-                let f = db.face("DeckCraft Legacy Semibold", style);
-                assert_eq!((f.family.as_str(), f.style.as_str()), ("DeckCraft Legacy", "Semibold"), "{style}");
+                let f = db.face("Seho Legacy Semibold", style);
+                assert_eq!((f.family.as_str(), f.style.as_str()), ("Seho Legacy", "Semibold"), "{style}");
             }
-            assert_eq!(db.document_face("DeckCraft Legacy Semibold", "Regular").family, "DeckCraft Legacy", "installed, so not Calibri");
+            assert_eq!(db.document_face("Seho Legacy Semibold", "Regular").family, "Seho Legacy", "installed, so not Calibri");
             // The typographic name still works.
-            assert_eq!(db.face("DeckCraft Legacy", "Semibold").style, "Semibold");
+            assert_eq!(db.face("Seho Legacy", "Semibold").style, "Semibold");
         };
         // Loaded directly…
         let db = FontDb::with_font_dirs(Vec::new());
@@ -313,8 +313,8 @@ mod tests {
             // family's Regular must still load and pick the Regular file, not settle for Semibold.
             let db = FontDb::with_font_dirs(vec![dir]);
             db.set_system_fallback(false);
-            assert_eq!(db.face("DeckCraft Legacy Semibold", "Regular").style, "Semibold");
-            let regular = db.face("DeckCraft Legacy", "Regular");
+            assert_eq!(db.face("Seho Legacy Semibold", "Regular").style, "Semibold");
+            let regular = db.face("Seho Legacy", "Regular");
             assert_eq!((regular.style.as_str(), regular.weight), ("Regular", 400.0));
         }
     }
@@ -330,21 +330,21 @@ mod tests {
         semibold[glyf..glyf + 4].copy_from_slice(b"gxyz");
         let loaded = FontDb::with_font_dirs(Vec::new());
         assert_eq!(loaded.add_font(semibold.clone()), 1);
-        let face = loaded.face("DeckCraft Legacy", "Semibold");
+        let face = loaded.face("Seho Legacy", "Semibold");
         assert!(face.covers('A'));
         assert!(loaded.outline(&face, face.glyph_for('A')).elements().is_empty());
         // The system font scan lists the Regular, which has outlines, and leaves out the Semibold
         // under both of its names.
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let dir = std::env::temp_dir().join(format!("deckcraft-fonts-outlines-{}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("seho-fonts-outlines-{}", std::process::id()));
             std::fs::create_dir_all(&dir).unwrap();
             std::fs::write(dir.join("legacy-semibold.ttf"), &semibold).unwrap();
             std::fs::write(dir.join("legacy-regular.ttf"), include_bytes!("../tests/fixtures/legacy-regular.ttf")).unwrap();
             let db = FontDb::with_font_dirs(vec![dir.clone()]);
             db.set_system_fallback(false);
-            assert_eq!(db.styles("DeckCraft Legacy"), ["Regular"]);
-            assert!(!db.has_family("DeckCraft Legacy Semibold"));
+            assert_eq!(db.styles("Seho Legacy"), ["Regular"]);
+            assert!(!db.has_family("Seho Legacy Semibold"));
             let _ = std::fs::remove_dir_all(&dir);
         }
     }
@@ -365,7 +365,7 @@ mod tests {
                 assert_eq!(db.document_face(missing, "Regular").family, db.face(twin, "Regular").family, "{missing}");
             }
         }
-        // Metric-compatible stand-ins and DeckCraft's default keep their own fallbacks.
+        // Metric-compatible stand-ins and Seho's default keep their own fallbacks.
         // So do Office's cloud fonts, which PowerPoint downloads and draws as themselves.
         for kept in ["Arial", "Times New Roman", "Cambria", "Courier New", FALLBACK_FAMILY, "Aptos", "Aptos Display", "Grandview"] {
             assert_eq!(db.document_face(kept, "Regular").family, db.face(kept, "Regular").family, "{kept}");
@@ -410,16 +410,16 @@ mod tests {
     }
 
     #[test]
-    fn craft_fonts_latin_when_present() {
-        if !CRAFT_FONTS.iter().any(|f| f.family == "Inter") {
-            eprintln!("skipped: built without craft-fonts' Latin manifest (set CRAFT_FONTS_DIR)");
+    fn mahay_fonts_latin_when_present() {
+        if !MAHAY_FONTS.iter().any(|f| f.family == "Inter") {
+            eprintln!("skipped: built without mahay-fonts' Latin manifest (set MAHAY_FONTS_DIR)");
             return;
         }
         let db = FontDb::with_font_dirs(Vec::new());
         db.set_system_fallback(false);
         assert_eq!(db.face("Inter", "Regular").family, "Inter");
         assert_eq!(db.face("Aptos", "Regular").family, "Inter");
-        if CRAFT_FONTS.iter().any(|f| f.family == "Carlito") {
+        if MAHAY_FONTS.iter().any(|f| f.family == "Carlito") {
             assert_eq!(db.face("Calibri", "Bold").family, "Carlito");
         }
     }
@@ -455,7 +455,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn the_font_scan_skips_fifos_folders_and_link_loops() {
-        let dir = std::env::temp_dir().join(format!("deckcraft-fontscan-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("seho-fontscan-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("sub")).unwrap();
         std::fs::copy(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/legacy-semibold.ttf"), dir.join("sub/real.ttf")).unwrap();

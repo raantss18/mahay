@@ -1,13 +1,13 @@
 # AGENTS.md — rules for every agent and contributor
 
-DeckCraft is a clean-room, open-source, pure-Rust presentation application targeting Microsoft
+Seho is a clean-room, open-source, pure-Rust presentation application targeting Microsoft
 PowerPoint parity — and superiority (speed, openness, agent control). It runs natively on macOS,
 Windows, Linux and FreeBSD, and on the web via WASM. Siblings with the same conventions:
-PhotoCraft, VectorCraft, FilmCraft, LightCraft, PdfCraft, EffectCraft, DesignCraft
+Sary, Tsipika, Hetsika, Hazavana, Taratasy, Tselatra, Pejy
 (`../<app>`).
 
-Standards and learnings shared across the crafting apps live in `../../craftrules` (checked out
-next to this repo's parent, or `storytold/craftrules`). Read its `AGENTS.md` at the start of a
+Standards and learnings shared across the crafting apps live in `../../mahay-rules` (checked out
+next to this repo's parent, or `raantss18/mahay-rules`). Read its `AGENTS.md` at the start of a
 session, follow its standards, and contribute reusable learnings back there. Never code: repos
 don't share code.
 
@@ -32,7 +32,7 @@ the app renders from those.
   product" includes PowerPoint, Office, Windows and the fonts they install (Aptos, Calibri,
   Cambria, Segoe, Consolas, Wingdings…).
 - This holds even when the vendor publishes the material under an open licence, if it is **visual
-  design**: DeckCraft does not embed or reference Adobe's Source Sans/Serif/Han families or Noto
+  design**: Seho does not embed or reference Adobe's Source Sans/Serif/Han families or Noto
   CJK (Source Han rebranded); `crates/fonts/build.rs` excludes them.
 - **Never** recreate, trace, redraw or closely imitate a vendor icon, theme or graphic. Our icons
   are drawn in code or come from openly licensed sets (Lucide, ISC), and our themes, colours,
@@ -50,28 +50,28 @@ Ubuntu-Font-1.0, Bitstream-Vera); Creative Commons (CC0-1.0, CC-BY-4.0, CC-BY-SA
 domain; or contributor-original (created by a contributor who licenses it under
 `MIT OR Apache-2.0`).
 
-One narrow exception: the ArtCraft name, wordmark and logos in `docs/brand/` are trademarks of the
-ArtCraft Team (not open source, terms in `docs/brand/LICENSE-brand.txt`), used only unmodified to
+One narrow exception: the Mahay name, wordmark and logos in `docs/brand/` are trademarks of the
+Mahay Team (not open source, terms in `docs/brand/LICENSE-brand.txt`), used only unmodified to
 identify the project.
 
 Forbidden: system fonts that are not openly licensed, vendor emoji artwork, stock photos, "free
 for personal use" material, screenshots of other people's software, anything whose licence you
 cannot prove from its original source.
 
-**Screenshots of DeckCraft** are contributor-original. Everything visible in them must itself be
+**Screenshots of Seho** are contributor-original. Everything visible in them must itself be
 allowed: our UI, our/Lucide icons, OFL fonts, and decks built only from allowed assets.
 
 ### 1.3 Every asset is attributed
 
 - **`ATTRIBUTION.md`** (repo root) lists every asset file — committed, fetched at build time
-  (craft-fonts) or bundled through a Cargo dependency — with author, source (URL + version or
+  (mahay-fonts) or bundled through a Cargo dependency — with author, source (URL + version or
   commit), licence and use. `cargo xtask assets` fails if a file under `assets/`, `docs/images/`
   or `docs/brand/` has no row.
 - **`NOTICE`** keeps the notices the licences require.
-- Fonts live in [storytold/craft-fonts](https://github.com/storytold/craft-fonts), never in this
-  repo (craftrules `standards/fonts.md`). DeckCraft embeds its `fonts/latin-manifest.txt` and
-  `fonts/manifest.txt` when built with `CRAFT_FONTS_DIR` (local dev: `.cargo/config.toml` points at
-  `../craft-fonts`).
+- Fonts live in [raantss18/mahay-fonts](https://github.com/raantss18/mahay), never in this
+  repo (mahay-rules `standards/fonts.md`). Seho embeds its `fonts/latin-manifest.txt` and
+  `fonts/manifest.txt` when built with `MAHAY_FONTS_DIR` (local dev: `.cargo/config.toml` points at
+  `../mahay-fonts`).
 
 ### 1.4 Adding or changing an asset
 
@@ -94,12 +94,12 @@ once and tell the user.
 - File formats come from public standards: ECMA-376 / ISO/IEC 29500 (Office Open XML), ISO 32000
   (PDF). Preset shape geometry is re-derived by us in `crates/geom/src/preset.rs`.
 - Never copy GPL/AGPL/LGPL/MPL code (LibreOffice, Calligra…). Permissive crates are fine as
-  dependencies. Code may be copied (not depended on) from sibling Craft apps.
+  dependencies. Code may be copied (not depended on) from sibling Mahay apps.
 
 ## 3. Never crash
 
-People trust DeckCraft with their talks; a crash loses work. **This outranks feature work.**
-Standard: craftrules `standards/never-crash.md`.
+People trust Seho with their talks; a crash loses work. **This outranks feature work.**
+Standard: mahay-rules `standards/never-crash.md`.
 - No `unwrap()`, `expect()`, `panic!`, `unreachable!`, `todo!`, `unimplemented!` in non-test
   code; no `unsafe` (`unsafe_code = "forbid"`). Every production crate root carries
   `#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]`.
@@ -118,11 +118,11 @@ Standard: craftrules `standards/never-crash.md`.
 | L1 | `model` (presentation, masters, layouts, slides, shapes, text, themes, inheritance, text edit ops) |
 | L2 | `fonts`, `text` (layout), |
 | L3 | `render` (vello_cpu) |
-| L4 | `format` (.deckcraft), `pptx` |
+| L4 | `format` (.seho), `pptx` |
 | L5 | `engine` (session, history, commands, tools, keys, sample) |
 | L6 | `mcp` |
 | L7 | `ui-egui` (swappable; nothing below depends on egui/eframe/winit/rfd) |
-| apps | `deckcraft` (desktop), `deckcraft-cli`, `deckcraft-web` |
+| apps | `seho` (desktop), `seho-cli`, `seho-web` |
 
 - **Everything is a command** (`crates/engine/src/cmd/*`): id, label, ribbon/menu place,
   shortcut, params doc, `enabled`, `run`, plus tests. Ids follow PowerPoint's ribbon and menus
@@ -141,16 +141,16 @@ to `main`.
 
 ## 6. Running and looking at the app
 
-- `cargo run --release -p deckcraft -- --sample --control 7990` (sample deck + control channel).
+- `cargo run --release -p seho -- --sample --control 7990` (sample deck + control channel).
 - Drive it: JSON lines on `127.0.0.1:7990`, e.g.
   `{"id":1,"method":"engine.execute","params":{"command":"shape.insert","params":{"preset":"star5","rect":[100,100,200,200]}}}`
   then `{"id":2,"method":"ui.screenshot","params":{"path":"/tmp/shot.png"}}`. Methods:
   `crates/ui-egui/src/control.rs`, docs: `docs/control-protocol.md`.
 - **For UI work, look at the result** (screenshot, read the PNG) and compare with the observations
   in `plan/powerpoint/01-observed-ui.md`.
-- Headless: `deckcraft-cli render --sample --all --scale 1 out/`,
-  `deckcraft-cli run --sample --cmd 'slide.new={"title":"Hi"}' --export out.png`.
-- MCP: `deckcraft-cli mcp` (headless) or `deckcraft-cli mcp --connect 7990` (drive the app).
+- Headless: `seho-cli render --sample --all --scale 1 out/`,
+  `seho-cli run --sample --cmd 'slide.new={"title":"Hi"}' --export out.png`.
+- MCP: `seho-cli mcp` (headless) or `seho-cli mcp --connect 7990` (drive the app).
   See `docs/mcp.md`.
 - Shell gotcha on the dev machine: `mv`/`cp` are aliased interactive; use `/bin/mv -f`, `/bin/cp -f`.
 - Parallel agents: separate `CARGO_TARGET_DIR` per agent; edit only the crates you own.
@@ -159,7 +159,7 @@ to `main`.
 
 `plan/` (gitignored) holds the local plan: `README.md`, `architecture.md`, `execution-plan.md`,
 `STATUS.md` (start every session there) and `powerpoint/` observations. The committed progress
-docs follow craftrules `standards/progress-docs.md`:
+docs follow mahay-rules `standards/progress-docs.md`:
 
 | File | Holds |
 |---|---|
@@ -169,7 +169,7 @@ docs follow craftrules `standards/progress-docs.md`:
 | `docs/roadmap.md` | Current focus, the beta plan, milestones |
 | `docs/parity-checklist.md` | Feature rows scored D/P/M; `cargo xtask parity` regenerates its summary |
 | `docs/file-format-parity.md`, `ui-parity.md`, `hardware-parity.md`, `localization-parity.md`, `animation-parity.md`, `slideshow-parity.md` | Per-dimension and per-feature detail |
-| `docs/architecture.md` | How DeckCraft is built today |
+| `docs/architecture.md` | How Seho is built today |
 
 When a task lands, re-score its checklist row, delete or update its `gaps.md` entry, add a line to
 the `ROADMAP.md` progress log, and update each touched doc's status line and revision history.
@@ -184,10 +184,10 @@ the `ROADMAP.md` progress log, and update each touched doc's status line and rev
   whether they want to be credited by more than their username: a real name, a display name, and/or
   their public GitHub profile name (`sync_github_name = true`). If yes, add **only their own** entry
   (copy the template at the top of the file, or run
-  `python3 ../../craftrules/scripts/contributors.py --add-me . --real-name "…" --sync-github-name`)
+  `python3 ../../mahay-rules/scripts/contributors.py --add-me . --real-name "…" --sync-github-name`)
   and include it in their PR, committed as them. If no, change nothing: they are credited as
   `@username` anyway.
 - Never add, edit, guess or copy anyone else's entry or name (not from git config, commit authors or
   GitHub profiles). Never hand-edit `contributors.json`.
-- Maintainers refresh the stats with `python3 ../../craftrules/scripts/contributors.py .` (it also
+- Maintainers refresh the stats with `python3 ../../mahay-rules/scripts/contributors.py .` (it also
   re-verifies who wrote each `people.toml` entry; `--check` only verifies).

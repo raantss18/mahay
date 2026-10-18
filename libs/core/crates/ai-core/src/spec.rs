@@ -4,7 +4,7 @@
 //! A spec runs no code. It names the calls to make, where the key goes and where in each reply to
 //! find the result. This module holds the types and the pure checker, so it compiles for wasm and
 //! a launcher can validate a spec as it is pasted. The runner that makes the calls lives in the
-//! native crate `craft-ai-declarative`.
+//! native crate `mahay-ai-declarative`.
 //!
 //! Invariants, all enforced by [`Spec::parse`]:
 //! - the file is at most [`MAX_SPEC_BYTES`], and every list and string has a bound;

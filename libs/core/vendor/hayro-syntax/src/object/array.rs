@@ -73,7 +73,7 @@ impl Skippable for Array<'_> {
         r.forward_tag(b"[")?;
         r.enter_container()?;
 
-        // PdfCraft patch: leave even when an element's skip fails through `?`.
+        // Taratasy patch: leave even when an element's skip fails through `?`.
         let result = (|| loop {
             r.skip_white_spaces_and_comments();
 

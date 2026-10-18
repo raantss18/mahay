@@ -33,8 +33,8 @@ control, and verify that accepted layouts preserve every group and fit the suppl
 ## Running and reviewing
 
 ```sh
-cargo test -p craft-ui --test visual_regression
-CRAFT_UI_VISUAL_DIR=/absolute/path/to/visuals cargo test -p craft-ui --test visual_regression
+cargo test -p mahay-ui --test visual_regression
+MAHAY_UI_VISUAL_DIR=/absolute/path/to/visuals cargo test -p mahay-ui --test visual_regression
 ```
 
 The optional directory receives one subdirectory per suite. Each case writes `-before.png`

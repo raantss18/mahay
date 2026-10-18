@@ -3,7 +3,7 @@
 //! reads them. Colored Pencil (background) and Neon Glow (both) read the
 //! colours in their pixel code but omit them from their params notation, so
 //! the injection was skipped and they always ran with the defaults.
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 fn px(s: &mut Session, x: i32, y: i32) -> Vec<f32> {

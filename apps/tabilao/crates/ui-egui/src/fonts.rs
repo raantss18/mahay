@@ -372,7 +372,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn the_scan_catalogs_fonts_and_reads_each_folder_once() {
-        let dir = std::env::temp_dir().join(format!("gridcraft-fonts-scan-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tabilao-fonts-scan-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Sub")).expect("temp dir");
         std::fs::write(dir.join("Ubuntu-Light.ttf"), epaint_default_fonts::UBUNTU_LIGHT).expect("write");
@@ -390,7 +390,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn a_link_back_to_a_parent_folder_ends_the_scan() {
-        let dir = std::env::temp_dir().join(format!("gridcraft-fonts-loop-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tabilao-fonts-loop-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("Sub")).expect("temp dir");
         std::fs::write(dir.join("Sub/Ubuntu-Light.ttf"), epaint_default_fonts::UBUNTU_LIGHT).expect("write");
@@ -402,7 +402,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn binding_a_family_binds_all_four_roles_and_never_stores_missing_data() {
-        let dir = std::env::temp_dir().join(format!("gridcraft-fonts-bind-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tabilao-fonts-bind-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("temp dir");
         let path = dir.join("Ubuntu-Light.ttf");

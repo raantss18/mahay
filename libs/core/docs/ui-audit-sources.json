@@ -2,267 +2,267 @@
   "snapshot_date": "2026-10-09",
   "sources": [
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/icons.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/dock.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/rulers.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/color_picker_ui.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/menu_nav.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/menu_nav_tests.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/dock_tests.rs"
     },
     {
-      "repository": "storytold/photocraft",
+      "repository": "raantss18/sary",
       "revision": "e7a83ca342cdff568254f85f442b9cc8afb08066",
       "path": "crates/ui-egui/src/dialogs.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/icons.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/dock.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/canvas.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/dialogs/color_picker.rs"
     },
     {
-      "repository": "storytold/vectorcraft",
+      "repository": "raantss18/tsipika",
       "revision": "825d4fdb8b527c597855d273fb4bcc1971855b6a",
       "path": "crates/ui-egui/src/menus.rs"
     },
     {
-      "repository": "storytold/designcraft",
+      "repository": "raantss18/pejy",
       "revision": "66c7ce7e96ec286a091878cc2541ee8369aa79d6",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/designcraft",
+      "repository": "raantss18/pejy",
       "revision": "66c7ce7e96ec286a091878cc2541ee8369aa79d6",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/designcraft",
+      "repository": "raantss18/pejy",
       "revision": "66c7ce7e96ec286a091878cc2541ee8369aa79d6",
       "path": "crates/ui-egui/src/icons.rs"
     },
     {
-      "repository": "storytold/designcraft",
+      "repository": "raantss18/pejy",
       "revision": "66c7ce7e96ec286a091878cc2541ee8369aa79d6",
       "path": "crates/ui-egui/src/dock.rs"
     },
     {
-      "repository": "storytold/designcraft",
+      "repository": "raantss18/pejy",
       "revision": "66c7ce7e96ec286a091878cc2541ee8369aa79d6",
       "path": "crates/ui-egui/src/canvas.rs"
     },
     {
-      "repository": "storytold/pdfcraft",
+      "repository": "raantss18/taratasy",
       "revision": "f626db25cca2c89f8fa3f7e30d22bf59faea65ec",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/pdfcraft",
+      "repository": "raantss18/taratasy",
       "revision": "f626db25cca2c89f8fa3f7e30d22bf59faea65ec",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/pdfcraft",
+      "repository": "raantss18/taratasy",
       "revision": "f626db25cca2c89f8fa3f7e30d22bf59faea65ec",
       "path": "crates/ui-egui/src/icons.rs"
     },
     {
-      "repository": "storytold/pdfcraft",
+      "repository": "raantss18/taratasy",
       "revision": "f626db25cca2c89f8fa3f7e30d22bf59faea65ec",
       "path": "crates/ui-egui/src/dialogs.rs"
     },
     {
-      "repository": "storytold/lightcraft",
+      "repository": "raantss18/hazavana",
       "revision": "88ea1a804b35709e1fe436e3792adf0428b97daa",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/lightcraft",
+      "repository": "raantss18/hazavana",
       "revision": "88ea1a804b35709e1fe436e3792adf0428b97daa",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/lightcraft",
+      "repository": "raantss18/hazavana",
       "revision": "88ea1a804b35709e1fe436e3792adf0428b97daa",
       "path": "crates/ui-egui/src/menubar.rs"
     },
     {
-      "repository": "storytold/lightcraft",
+      "repository": "raantss18/hazavana",
       "revision": "88ea1a804b35709e1fe436e3792adf0428b97daa",
       "path": "crates/ui-egui/src/menu_level.rs"
     },
     {
-      "repository": "storytold/filmcraft",
+      "repository": "raantss18/hetsika",
       "revision": "7b6c134472287db4367fca80bcb498240ba36567",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/filmcraft",
+      "repository": "raantss18/hetsika",
       "revision": "7b6c134472287db4367fca80bcb498240ba36567",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/filmcraft",
+      "repository": "raantss18/hetsika",
       "revision": "7b6c134472287db4367fca80bcb498240ba36567",
       "path": "crates/ui-egui/src/dock.rs"
     },
     {
-      "repository": "storytold/effectcraft",
+      "repository": "raantss18/tselatra",
       "revision": "2a460986ee7a4b32656a3d434849693904b486bc",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/effectcraft",
+      "repository": "raantss18/tselatra",
       "revision": "2a460986ee7a4b32656a3d434849693904b486bc",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/effectcraft",
+      "repository": "raantss18/tselatra",
       "revision": "2a460986ee7a4b32656a3d434849693904b486bc",
       "path": "crates/ui-egui/src/dock.rs"
     },
     {
-      "repository": "storytold/wordcraft",
+      "repository": "raantss18/soratra",
       "revision": "d7d9702bda1fe626952024dc37fd2624323dad0f",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/wordcraft",
+      "repository": "raantss18/soratra",
       "revision": "d7d9702bda1fe626952024dc37fd2624323dad0f",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/wordcraft",
+      "repository": "raantss18/soratra",
       "revision": "d7d9702bda1fe626952024dc37fd2624323dad0f",
       "path": "crates/ui-egui/src/canvas.rs"
     },
     {
-      "repository": "storytold/gridcraft",
+      "repository": "raantss18/tabilao",
       "revision": "51b531be3e8b3f5a19d2b7714a4780a79569ca92",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/gridcraft",
+      "repository": "raantss18/tabilao",
       "revision": "51b531be3e8b3f5a19d2b7714a4780a79569ca92",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/gridcraft",
+      "repository": "raantss18/tabilao",
       "revision": "51b531be3e8b3f5a19d2b7714a4780a79569ca92",
       "path": "crates/ui-egui/src/dialogs.rs"
     },
     {
-      "repository": "storytold/deckcraft",
+      "repository": "raantss18/seho",
       "revision": "4b09f35c1d6fa50e2d94243a5d65d98fe49558e0",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/deckcraft",
+      "repository": "raantss18/seho",
       "revision": "4b09f35c1d6fa50e2d94243a5d65d98fe49558e0",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/deckcraft",
+      "repository": "raantss18/seho",
       "revision": "4b09f35c1d6fa50e2d94243a5d65d98fe49558e0",
       "path": "crates/ui-egui/src/canvas.rs"
     },
     {
-      "repository": "storytold/cadcraft",
+      "repository": "raantss18/drafitra",
       "revision": "86f3199b400c271a1166103519b3785e4ac88e72",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/cadcraft",
+      "repository": "raantss18/drafitra",
       "revision": "86f3199b400c271a1166103519b3785e4ac88e72",
       "path": "crates/ui-egui/src/chrome.rs"
     },
     {
-      "repository": "storytold/cadcraft",
+      "repository": "raantss18/drafitra",
       "revision": "86f3199b400c271a1166103519b3785e4ac88e72",
       "path": "crates/ui-egui/src/palettes.rs"
     },
     {
-      "repository": "storytold/cadcraft",
+      "repository": "raantss18/drafitra",
       "revision": "86f3199b400c271a1166103519b3785e4ac88e72",
       "path": "crates/ui-egui/src/dialogs.rs"
     },
     {
-      "repository": "storytold/soundcraft",
+      "repository": "raantss18/feo",
       "revision": "eac0edd896cd6bdf27c0cdd0f9f9158c8956248a",
       "path": "crates/ui-egui/src/theme.rs"
     },
     {
-      "repository": "storytold/soundcraft",
+      "repository": "raantss18/feo",
       "revision": "eac0edd896cd6bdf27c0cdd0f9f9158c8956248a",
       "path": "crates/ui-egui/src/widgets.rs"
     },
     {
-      "repository": "storytold/soundcraft",
+      "repository": "raantss18/feo",
       "revision": "eac0edd896cd6bdf27c0cdd0f9f9158c8956248a",
       "path": "crates/ui-egui/src/toolbar.rs"
     },
     {
-      "repository": "storytold/soundcraft",
+      "repository": "raantss18/feo",
       "revision": "eac0edd896cd6bdf27c0cdd0f9f9158c8956248a",
       "path": "crates/ui-egui/src/edit_window.rs"
     }

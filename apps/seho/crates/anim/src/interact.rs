@@ -11,8 +11,8 @@
 //! - with "advance on click" off a click never leaves the slide, but it still plays animation steps;
 //! - a slide the show returns to (link or arrow keys) looks as it was left.
 
-use deckcraft_model::text::Action;
-use deckcraft_model::{Presentation, ShapeId};
+use seho_model::text::Action;
+use seho_model::{Presentation, ShapeId};
 
 use crate::{AnimState, LinkJump, ShowAction, ShowState, StepStamp, Timeline, TriggerPlay};
 

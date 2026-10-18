@@ -1,6 +1,6 @@
 [package]
-name = "pdfcraft-render"
-description = "Page rendering (bootstrap: hayro) and document inspection for PdfCraft"
+name = "taratasy-render"
+description = "Page rendering (bootstrap: hayro) and document inspection for Taratasy"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,8 +9,8 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-fonts = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-fonts = { workspace = true }
 hayro = { workspace = true }
 hayro-syntax = { workspace = true }
 lopdf = { workspace = true }
@@ -27,7 +27,7 @@ bytemuck = { version = "1" }
 getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [dev-dependencies]
-# Checks the Japanese substitute's character coverage; the version pdfcraft-fonts already uses.
+# Checks the Japanese substitute's character coverage; the version taratasy-fonts already uses.
 skrifa = "0.44"
 # Builds the decompression-bomb streams in the raster tests.
 flate2 = { workspace = true }

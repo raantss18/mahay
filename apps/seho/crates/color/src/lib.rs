@@ -1,4 +1,4 @@
-//! DeckCraft colour: sRGB colours, theme colour slots and DrawingML-style colour transforms
+//! Seho colour: sRGB colours, theme colour slots and DrawingML-style colour transforms
 //! (tint, shade, luminance modulation/offset, alpha…), so theme-relative colours resolve the way
 //! presentation files expect.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]

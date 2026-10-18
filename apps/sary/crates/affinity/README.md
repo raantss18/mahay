@@ -1,16 +1,16 @@
-# photocraft-affinity
+# sary-affinity
 
 An independent, bounded Rust reader for native Affinity documents: `.af` from Affinity 3 and
 `.afdesign`, `.afphoto` and `.afpub` from Affinity 1 and 2 (container versions 8 to 12). It reads
 the archive, the tagged object stream in `doc.dat` and the part of the document model listed below,
-and hands `photocraft-io` a document in pixels with every transform composed. It does not write
+and hands `sary-io` a document in pixels with every transform composed. It does not write
 Affinity files.
 
 ## What is imported
 
-`photocraft-io` maps the model to an 8-bit RGB document at the Affinity document's resolution:
+`sary-io` maps the model to an 8-bit RGB document at the Affinity document's resolution:
 
-| Affinity | PhotoCraft |
+| Affinity | Sary |
 |---|---|
 | Pages, Publisher spreads | one artboard per spread, spreads side by side 64 px apart |
 | Artboards (legacy `ABEn`, or current `.af` `phrp`/`aprp` properties, including converted curves), with name, solid background, any transform | artboards (nested ones as groups with a vector mask; rotated/curved boards use their bounding rectangle) |
@@ -41,7 +41,7 @@ outline, grey/Lab/32-bit pixels, CMYK and Lab colour (converted to RGB without t
 profile), facing pages and the Average, Negation, Reflect, Glow and Erase blend modes (as Normal).
 
 Opened Affinity documents start without a save path: Save asks for a new copy and never writes
-back over the Affinity file. When the native document can't be read at all, `photocraft-io` opens
+back over the Affinity file. When the native document can't be read at all, `sary-io` opens
 the embedded PNG preview instead, as one pixel layer named “Affinity preview”, with a warning
 that names the reason. That preview can't be placed or used by imports that can't show the
 warning (smart-object decoding, stacks, batch, displacement maps, variables).
@@ -71,8 +71,8 @@ are rejected. The I/O adapter decodes it with a 128 MiB allocation limit.
 
 Affinity has no published file-format specification, so this reader is built only from a public
 description of the format and from public files, never from Affinity itself. This is how
-PhotoCraft already treats formats that are only partly documented: `photocraft-psd` fills the gaps
-in Adobe's specification from the MIT-licensed psd-tools and ag-psd, and `photocraft-raw` recovered
+Sary already treats formats that are only partly documented: `sary-psd` fills the gaps
+in Adobe's specification from the MIT-licensed psd-tools and ag-psd, and `sary-raw` recovered
 Nikon's compression tables by black-box analysis of CC0 sample files (see their READMEs).
 
 * **No Affinity software.** Affinity was never downloaded, installed, run, scripted, screenshotted or
@@ -102,17 +102,17 @@ Nikon's compression tables by black-box analysis of CC0 sample files (see their 
 * **Read-only.** Nothing is written in Affinity's format; export waits until someone can check
   written files in Affinity itself.
 
-The same reader is shared, as an independent copy, with VectorCraft's `vectorcraft-affinity`.
+The same reader is shared, as an independent copy, with Tsipika's `tsipika-affinity`.
 
 ## Validation
 
 * Unit tests on synthetic containers built by the `synth` feature (stored, zlib and zstd entries,
   checksums, budgets, cycles, hostile streams, every truncation) and property tests of random
-  mutations, here and in `photocraft-io`'s `tests/affinity.rs`.
+  mutations, here and in `sary-io`'s `tests/affinity.rs`.
 * `cargo xtask corpus --affinity` fetches 21 public CC0/MIT documents, including the four
   Affinity 3 `.af` files of [samuel-etver/vector-art](https://github.com/samuel-etver/vector-art)
   (CC0), at pinned commits, each checked against `xtask/affinity-corpus.sha256`. `tests/real_files.rs`
-  parses them; `photocraft-io`'s `tests/affinity_corpus.rs` imports and flattens each one and
+  parses them; `sary-io`'s `tests/affinity_corpus.rs` imports and flattens each one and
   compares it with the thumbnail Affinity saved in it (mean difference 0–4.6 of 255, with a
   ceiling per file).
 * `fuzz/` has `cargo-fuzz` targets for the whole reader (`preview`), the object stream (`stream`)
@@ -140,7 +140,7 @@ bytes left, 16 777 216 decoded values per document stream (fields and array elem
 anything is allocated: a value takes about 40 bytes in memory however few it took in the file; the largest of
 those 189 public documents uses 3.3 million), 384 levels of object nesting, 128 levels of layers, 500 000 layers, four million curve
 nodes per curve, 64 megapixels per pixel layer (cropped to its content first) and 1024 gradient
-stops; `photocraft-io` adds 300 000 pixels a side per document and 64 megapixels per image on the
+stops; `sary-io` adds 300 000 pixels a side per document and 64 megapixels per image on the
 canvas. Every archive entry's CRC-32 and size must match. Malformed input returns an `Error`; the
 crate has no panics outside tests.
 

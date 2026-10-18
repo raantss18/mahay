@@ -1,7 +1,7 @@
 //! Sheet features beyond cells: tables, conditional formatting, data validation, comments,
 //! hyperlinks, charts, images, autofilter, print settings.
 
-use gridcraft_core::{CellRef, RangeRef};
+use tabilao_core::{CellRef, RangeRef};
 use serde::{Deserialize, Serialize};
 
 use crate::style::{Color, Style};
@@ -525,7 +525,7 @@ pub enum ShapeKind {
     Line,
     Arrow,
     TextBox,
-    /// An icon from GridCraft's own icon set; `Shape::text` holds the icon name.
+    /// An icon from Tabilao's own icon set; `Shape::text` holds the icon name.
     Icon,
     /// A freehand ink stroke; `Shape::text` holds the points as `x,y;x,y;…` relative to the
     /// anchor (sheet points), `Shape::line` the ink colour and `fill` unused.
@@ -816,7 +816,7 @@ pub struct SheetProtection {
     /// password itself).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub password: Option<crate::PasswordHash>,
-    /// The internal hash older GridCraft JSON workbooks stored ([`password_hash`]); still
+    /// The internal hash older Tabilao JSON workbooks stored ([`password_hash`]); still
     /// verified when unprotecting, never written for new passwords.
     #[serde(rename = "password_hash", default, skip_serializing_if = "Option::is_none")]
     pub legacy_password_hash: Option<u64>,
@@ -851,7 +851,7 @@ impl EditRange {
     }
 }
 
-/// The non-cryptographic password hash older GridCraft versions stored for sheet protection
+/// The non-cryptographic password hash older Tabilao versions stored for sheet protection
 /// (only verified now, see [`SheetProtection::legacy_password_hash`]).
 pub fn password_hash(pw: &str) -> u64 {
     let mut h: u64 = 0xcbf29ce484222325 ^ 0x5348_4545_5443;

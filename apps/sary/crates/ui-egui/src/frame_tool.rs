@@ -5,11 +5,11 @@
 //! module only turns the drag into it.
 
 use egui::{Pos2, Stroke};
-use photocraft_doc::LayerContent;
+use sary_doc::LayerContent;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::Tool;
 use crate::theme::Tokens;
@@ -50,7 +50,7 @@ fn drawn(d: &FrameDrag) -> [i64; 4] {
 
 /// The selected pixel, type, shape or smart object layer the frame `r` takes in: one whose content
 /// it overlaps and that can move (not the Background or a position-locked layer).
-fn content_layer(app: &PhotocraftApp, r: [i64; 4]) -> Option<u64> {
+fn content_layer(app: &SaryApp, r: [i64; 4]) -> Option<u64> {
     let st = app.session.active()?;
     let l = st.doc.layer(st.active_layer?)?;
     let framable = matches!(l.content, LayerContent::Raster(_) | LayerContent::Text(_) | LayerContent::Shape(_) | LayerContent::Smart(_));
@@ -63,7 +63,7 @@ fn content_layer(app: &PhotocraftApp, r: [i64; 4]) -> Option<u64> {
 }
 
 /// Pointer input for the Frame tool. Returns true when the event was its own.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
     if app.ui.tool != Tool::Frame {
         return false;
     }
@@ -104,7 +104,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) ->
 }
 
 /// The frame a drag in progress would leave.
-pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_overlay(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let Some(d) = app.ui.frame_tool.drag.filter(|_| app.ui.tool == Tool::Frame) else { return };
     let t = Tokens::get(painter.ctx());
     let r = drawn(&d).map(|v| v as f32);
@@ -119,7 +119,7 @@ pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform
 }
 
 /// The Frame tool's options bar: Create a new rectangular frame / elliptical frame.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bool {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui, tool: Tool) -> bool {
     if tool != Tool::Frame {
         return false;
     }
@@ -137,9 +137,9 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bo
 mod tests {
     use super::*;
     use crate::canvas::tool_event;
-    use photocraft_doc::LayerId;
+    use sary_doc::LayerId;
 
-    fn drag(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2]) {
+    fn drag(app: &mut SaryApp, from: [f64; 2], to: [f64; 2]) {
         let m = egui::Modifiers::NONE;
         tool_event(app, ToolEvent::Down { x: from[0], y: from[1], pressure: 1.0 }, m);
         tool_event(app, ToolEvent::Move { x: to[0], y: to[1], pressure: 1.0 }, m);
@@ -150,7 +150,7 @@ mod tests {
     /// drawn rect; with the elliptical button the frame's corners are hidden.
     #[test]
     fn frame_tool_draws_rectangular_and_elliptical_frames() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.sync_views();
         app.ui.extras.snap = false;
@@ -164,7 +164,7 @@ mod tests {
         ctx.end_pass().textures_delta.clear();
         assert_eq!(app.ui.tool, Tool::Frame);
 
-        let frame = |app: &PhotocraftApp| {
+        let frame = |app: &SaryApp| {
             let st = app.session.active().unwrap();
             let l = st.doc.layer(st.active_layer.unwrap()).unwrap();
             assert!(matches!(l.content, LayerContent::Group(_)) && l.name.starts_with("Frame"), "the new frame is selected");

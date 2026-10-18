@@ -409,7 +409,7 @@ pub fn fmt_bytes(v: Option<u64>) -> String {
 }
 
 pub fn issue_link(n: Option<u32>) -> String {
-    n.map_or_else(String::new, |n| format!("[#{n}](https://github.com/storytold/photocraft/issues/{n})"))
+    n.map_or_else(String::new, |n| format!("[#{n}](https://github.com/raantss18/mahay/issues/{n})"))
 }
 
 /// The scenario table (Markdown); `with_baseline` adds the change against the baseline.

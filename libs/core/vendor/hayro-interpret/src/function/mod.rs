@@ -20,11 +20,11 @@ use std::sync::Arc;
 
 /// The input/output type of functions.
 pub(crate) type Values = SmallVec<[f32; 4]>;
-/// PdfCraft patch (backport of hayro 0.8): interior breakpoints of stitching functions.
+/// Taratasy patch (backport of hayro 0.8): interior breakpoints of stitching functions.
 pub(crate) type StitchingBounds = SmallVec<[f32; 3]>;
 type TupleVec = SmallVec<[(f32, f32); 4]>;
 
-// PdfCraft patch: PDF functions are untrusted object graphs. A normal color/transfer function
+// Taratasy patch: PDF functions are untrusted object graphs. A normal color/transfer function
 // has only a few nodes; cap both nesting and total construction work, including repeated
 // references, before creating their children. These are resource limits, not PDF format limits.
 const MAX_FUNCTION_DEPTH: usize = 64;
@@ -103,7 +103,7 @@ impl Function {
         }
     }
 
-    /// PdfCraft patch (backport of hayro 0.8): inputs where a stitching function switches
+    /// Taratasy patch (backport of hayro 0.8): inputs where a stitching function switches
     /// sub-function, so a gradient approximation can place a stop exactly there.
     pub(crate) fn stitching_bounds(&self) -> StitchingBounds {
         match self.0.as_ref() {

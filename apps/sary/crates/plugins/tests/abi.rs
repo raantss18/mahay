@@ -3,10 +3,10 @@
 
 use std::time::{Duration, Instant};
 
-use photocraft_color::{PixelFormat, SampleType};
-use photocraft_geom::Rect;
-use photocraft_plugins::{Error, Limits, Plugin};
-use photocraft_raster::Surface;
+use sary_color::{PixelFormat, SampleType};
+use sary_geom::Rect;
+use sary_plugins::{Error, Limits, Plugin};
+use sary_raster::Surface;
 use serde_json::json;
 
 const INVERT: &[u8] = include_bytes!("fixtures/invert.wasm");
@@ -68,9 +68,9 @@ fn run_err(bytes: &[u8], limits: Limits) -> (Error, Duration) {
 fn example_invert_loads_and_reports_its_manifest() {
     let p = Plugin::load(INVERT, Limits::default()).unwrap();
     let m = p.manifest();
-    assert_eq!(m.id, "org.photocraft.example.invert");
+    assert_eq!(m.id, "org.sary.example.invert");
     assert_eq!(m.name, "Invert (WebAssembly)");
-    assert_eq!(m.kind, photocraft_plugins::Kind::Filter);
+    assert_eq!(m.kind, sary_plugins::Kind::Filter);
     assert!(m.params.is_empty());
     assert!(p.size() < 4096, "the example stays tiny: {} bytes", p.size());
 }
@@ -291,29 +291,29 @@ fn memory_cap_limits_bands() {
 fn registry_install_list_remove() {
     // Its own id: the registry is process-wide and tests run in parallel.
     let id = "test.registry";
-    let p = photocraft_plugins::registry::install_bytes(&module(r#"{"id":"test.registry","name":"R","kind":"filter"}"#, 1, "(i32.const 0)", "")).unwrap();
+    let p = sary_plugins::registry::install_bytes(&module(r#"{"id":"test.registry","name":"R","kind":"filter"}"#, 1, "(i32.const 0)", "")).unwrap();
     assert_eq!(p.id(), id);
-    let rev = photocraft_plugins::registry::revision();
-    assert!(photocraft_plugins::registry::list().iter().any(|p| p.id() == id));
-    assert!(photocraft_plugins::registry::get(id).is_some());
-    assert!(photocraft_plugins::registry::remove(id));
-    assert!(!photocraft_plugins::registry::remove(id));
-    assert!(photocraft_plugins::registry::get(id).is_none());
-    assert!(photocraft_plugins::registry::revision() > rev);
+    let rev = sary_plugins::registry::revision();
+    assert!(sary_plugins::registry::list().iter().any(|p| p.id() == id));
+    assert!(sary_plugins::registry::get(id).is_some());
+    assert!(sary_plugins::registry::remove(id));
+    assert!(!sary_plugins::registry::remove(id));
+    assert!(sary_plugins::registry::get(id).is_none());
+    assert!(sary_plugins::registry::revision() > rev);
 }
 
 #[test]
 fn folder_loading_skips_bad_files() {
-    let dir = std::env::temp_dir().join(format!("photocraft-plugins-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-plugins-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("a-invert.wasm"), INVERT).unwrap();
     std::fs::write(dir.join("b-broken.wasm"), b"\0asm junk").unwrap();
     std::fs::write(dir.join("notes.txt"), b"ignored").unwrap();
-    let r = photocraft_plugins::registry::load_folder(&dir).unwrap();
-    assert_eq!(r.loaded, ["org.photocraft.example.invert"]);
+    let r = sary_plugins::registry::load_folder(&dir).unwrap();
+    assert_eq!(r.loaded, ["org.sary.example.invert"]);
     assert_eq!(r.failed.len(), 1);
     assert!(r.failed[0].0.ends_with("b-broken.wasm"));
-    assert!(photocraft_plugins::registry::load_folder(&dir.join("missing")).is_err());
-    assert!(photocraft_plugins::registry::load_file(&dir, Limits::default()).is_err(), "a directory is not a module");
+    assert!(sary_plugins::registry::load_folder(&dir.join("missing")).is_err());
+    assert!(sary_plugins::registry::load_file(&dir, Limits::default()).is_err(), "a directory is not a module");
     std::fs::remove_dir_all(&dir).ok();
 }

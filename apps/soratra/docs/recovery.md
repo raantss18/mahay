@@ -1,6 +1,6 @@
 # Local document recovery
 
-Desktop WordCraft periodically keeps a local copy of unsaved work, including new drafts.
+Desktop Soratra periodically keeps a local copy of unsaved work, including new drafts.
 File › Recover lists available copies. The page opens at startup when copies are found.
 Restore opens an unsaved document with no file path. Save As chooses where to keep it.
 Recovery never writes to the original document. AutoSave's permission to write to an earlier
@@ -19,9 +19,9 @@ disabled for that session. Removing the password allows future recovery again.
 
 ## Storage and timing
 
-Copies live in `recovery/` under the app's profile folder. `WORDCRAFT_PROFILE_DIR` selects a
+Copies live in `recovery/` under the app's profile folder. `SORATRA_PROFILE_DIR` selects a
 separate profile for isolated runs, including preferences, logs and control keys.
-`WORDCRAFT_NO_PREFS` disables recovery as well as preferences. Headless engine/CLI sessions
+`SORATRA_NO_PREFS` disables recovery as well as preferences. Headless engine/CLI sessions
 and the browser do not create recovery files implicitly.
 
 The desktop host checks for a dirty document every frame but snapshots at most once per ten
@@ -64,9 +64,9 @@ user restores over dirty work use the existing Save Changes prompt.
 `ui.recoveryDiscard={"id":"id"}` opens confirmation; `{"answer":"discard"}` or
 `{"answer":"cancel"}` answers it.
 
-Focused tests are `cargo test -p wordcraft-engine recovery`,
-`cargo test -p wordcraft-engine --test recovery_format`, and
-`cargo test -p wordcraft-ui-egui recovery`. They cover lifecycle, preservation, original-file
+Focused tests are `cargo test -p soratra-engine recovery`,
+`cargo test -p soratra-engine --test recovery_format`, and
+`cargo test -p soratra-ui-egui recovery`. They cover lifecycle, preservation, original-file
 protection, failed writes, corruption, locks, password cleanup and the actual recovery buttons.
 The contribution also uses a native SIGKILL/restart replay in temporary profiles for both new
 drafts and edited existing files. It uses synthetic inputs and hashes the original before and

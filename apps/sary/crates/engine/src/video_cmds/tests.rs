@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_doc::LayerId;
+use sary_doc::LayerId;
 use serde_json::json;
 
 fn session() -> Session {
@@ -59,7 +59,7 @@ fn scrub_keeps_content_a_raster() {
 fn write_png(path: &str, w: u32, h: u32, color: &str) {
     let mut s = Session::new();
     s.execute("file.new", json!({"width": w, "height": h, "background": color})).unwrap();
-    let bytes = photocraft_io::export(&s.active().unwrap().doc, "png", &photocraft_io::ExportOptions::default()).unwrap().bytes;
+    let bytes = sary_io::export(&s.active().unwrap().doc, "png", &sary_io::ExportOptions::default()).unwrap().bytes;
     std::fs::write(path, bytes).unwrap();
 }
 
@@ -138,7 +138,7 @@ fn animated_gif_keeps_transparency() {
     // Each frame has a transparent index and is cleared before the next (disposal 2).
     let packed: Vec<u8> = gif.windows(4).filter(|w| w[..3] == [0x21, 0xF9, 0x04]).map(|w| w[3]).collect();
     assert_eq!(packed, [0x09, 0x09]);
-    let px = photocraft_compose::flatten(&photocraft_io::import("t.gif", &gif).unwrap().document).px;
+    let px = sary_compose::flatten(&sary_io::import("t.gif", &gif).unwrap().document).px;
     assert_eq!(px[0][3], 0.0, "the corner stays transparent");
     assert_eq!(px[3 * 8 + 3], [1.0, 0.0, 0.0, 1.0], "the square stays red");
 }
@@ -204,7 +204,7 @@ fn edits_to_a_frame_survive_scrubbing_and_render() {
     s.execute("file.export.renderVideo", json!({"dir": out, "format": "png"})).unwrap();
     let stem = s.active().unwrap().doc.name.rsplit_once('.').map_or(s.active().unwrap().doc.name.clone(), |(a, _)| a.to_string());
     let f1 = std::fs::read(format!("{out}/{stem}_0001.png")).unwrap();
-    let doc = photocraft_io::import("f1.png", &f1).unwrap().document;
+    let doc = sary_io::import("f1.png", &f1).unwrap().document;
     let flat = crate::file_cmds::flattened(&doc, doc.pixel_format());
     let q = flat.pixel(2, 2);
     assert!(q[2] > 0.99 && q[0] < 0.01, "rendered frame 1 is blue: {q:?}");
@@ -259,7 +259,7 @@ fn tga_sequence_frames_keep_their_transparency() {
     write_tga(&format!("{dir}/f01.tga"));
     write_tga(&format!("{dir}/f02.tga"));
     let frames =
-        load_frames(&dir, photocraft_color::PixelFormat::new(photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8, true)).unwrap().frames;
+        load_frames(&dir, sary_color::PixelFormat::new(sary_color::ColorMode::Rgb, sary_color::SampleType::U8, true)).unwrap().frames;
     assert_eq!(frames.len(), 2);
     for f in &frames {
         assert_eq!(f.pixel(2, 6), vec![1.0, 0.0, 0.0, 1.0]);
@@ -272,7 +272,7 @@ fn tga_sequence_frames_keep_their_transparency() {
 
 /// An animated GIF of solid `w`x`h` frames: one `(colour, delay in centiseconds)` each.
 fn write_gif(path: &str, w: u32, h: u32, frames: &[([u8; 3], u16)]) {
-    use photocraft_codecs::web::{GifFrame, encode_gif_animated};
+    use sary_codecs::web::{GifFrame, encode_gif_animated};
     let list: Vec<GifFrame> =
         frames.iter().map(|&(c, delay_cs)| GifFrame { indices: vec![0; (w * h) as usize], palette: vec![c], transparent: None, delay_cs }).collect();
     std::fs::write(path, encode_gif_animated(w, h, &list, true).unwrap()).unwrap();

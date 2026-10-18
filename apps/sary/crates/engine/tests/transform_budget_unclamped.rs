@@ -1,6 +1,6 @@
 //! #6430: integration tests use the production pixel budget, not the unit tests' reduced one.
-use photocraft_engine::Session;
-use photocraft_geom::Rect;
+use sary_engine::Session;
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
 fn painted() -> Session {

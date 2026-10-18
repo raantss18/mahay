@@ -1,13 +1,13 @@
 //! An in-process engine session that answers the engine-level control-channel methods itself.
 
-use gridcraft_engine::Session;
+use tabilao_engine::Session;
 use serde_json::{Value, json};
 
 use crate::backend::Backend;
 
 /// Error for methods that need a window.
-pub(crate) const NO_UI: &str = "no UI in headless mode: start the app with `gridcraft --control 7979` and run the MCP server \
-with `gridcraft-cli mcp --connect 7979`";
+pub(crate) const NO_UI: &str = "no UI in headless mode: start the app with `tabilao --control 7979` and run the MCP server \
+with `tabilao-cli mcp --connect 7979`";
 
 /// Headless backend: a [`Session`] with one blank workbook to start with.
 pub struct Headless {
@@ -75,7 +75,7 @@ impl Backend for Headless {
             m if m.starts_with("ui.") || m.starts_with("app.screenshot") => Err(format!("{m}: {NO_UI}")),
             // Read-only engine methods (`document.inspect`, `sheet.read`, `cell.get`, …) are
             // commands with the same id.
-            m if gridcraft_engine::find_command(m).is_some() => self.execute(m, params),
+            m if tabilao_engine::find_command(m).is_some() => self.execute(m, params),
             other => Err(format!("unknown method `{other}`")),
         }
     }

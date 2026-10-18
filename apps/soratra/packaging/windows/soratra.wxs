@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Soratra MSI (WiX Toolset v5: `dotnet tool install -g wix`, plus its UI and Util extensions:
+  `wix extension add -g WixToolset.UI.wixext/5.0.2` and the same for WixToolset.Util.wixext).
+  Built by package.ps1:
+
+    wix build soratra.wxs -arch x64 -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext
+      -d Version=1.2.3 -d BinDir=... -d IconPath=... -d LicenseRtf=... -o out.msi
+
+  Per-machine install into Program Files with a Start Menu shortcut. The installer shows the
+  standard WiX dialogs: welcome + license, progress, and a finish page.
+
+  UpgradeCode and the component GUIDs below belong to Soratra alone. Never copy them from (or
+  into) a sibling Mahay app: Windows Installer treats every package sharing an UpgradeCode as one
+  product, so a shared code makes one app's installer refuse to install ("a newer version is
+  already installed") or silently uninstall the other. packaging-lint.yml checks this.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package
+      Name="Soratra"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="075497F9-E861-45D0-9C7F-A74F8C34E6BA"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Soratra word processor" Manufacturer="Learning Machines LLC" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Soratra is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="SoratraIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="SoratraIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+
+    <!-- Installer UI (#198): WixUI_Minimal is welcome + license, progress, then a finish page so
+         people can see the install worked. Its dialogs and bitmaps are WiX's own
+         (WixToolset.UI.wixext); package.ps1 builds the license RTF from LICENSE-MIT and
+         LICENSE-APACHE. The finish page offers to launch Soratra (ticked by default) through
+         WixShellExec (WixToolset.Util.wixext); silent installs (/qn) never show it. -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Soratra" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#SoratraExe]" />
+    <CustomAction Id="LaunchSoratra" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec"
+        Impersonate="yes" Return="ignore" />
+    <UI>
+      <ui:WixUI Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchSoratra"
+          Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Soratra" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="Soratra" Level="1">
+      <ComponentGroupRef Id="SoratraFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="SoratraFiles" Directory="INSTALLFOLDER">
+      <Component Id="SoratraApp" Guid="855DCEC6-9285-444F-9382-9654B83B34F6">
+        <File Id="SoratraExe" Source="$(var.BinDir)\soratra.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Soratra"
+              Description="Soratra word processor" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
+              Icon="SoratraIcon.ico" IconIndex="0" />
+        </File>
+
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\soratra.exe" Value="[#SoratraExe]" Type="string" />
+      </Component>
+
+      <!-- File associations (#295). Each document type gets a Soratra ProgId (name, icon, open
+           command) and is listed under the extension's OpenWithProgids, so Soratra shows in
+           Explorer's "Open with". The Word, RTF and ODT types are also Soratra's Capabilities
+           (RegisteredApplications), so it appears in Settings › Default apps, where the user
+           makes it the default (File › Options › General opens that page). Nothing here sets an
+           extension's default: the installer never takes over .docx from another app. Markdown and
+           plain text are only "Open with" candidates. Removed again on uninstall. -->
+      <Component Id="SoratraFileTypes" Guid="EFF89E6A-F9B8-49F9-B3AE-E243347484B4">
+        <RegistryValue Root="HKLM" Key="Software\RegisteredApplications" Name="Soratra" Value="Software\Soratra\Capabilities" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities" Name="ApplicationName" Value="Soratra" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities" Name="ApplicationDescription" Value="Write and design documents; open and save Word files." Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities" Name="ApplicationIcon" Value="&quot;[#SoratraExe]&quot;,0" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe" Name="FriendlyAppName" Value="Soratra" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+
+        <ProgId Id="Soratra.Document" Description="Word Document" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.Document\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.docx\OpenWithProgids" Name="Soratra.Document" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".docx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".docx" Value="Soratra.Document" Type="string" />
+
+        <ProgId Id="Soratra.DocumentMacroEnabled" Description="Word Macro-Enabled Document" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.DocumentMacroEnabled\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.docm\OpenWithProgids" Name="Soratra.DocumentMacroEnabled" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".docm" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".docm" Value="Soratra.DocumentMacroEnabled" Type="string" />
+
+        <ProgId Id="Soratra.Template" Description="Word Template" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.Template\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.dotx\OpenWithProgids" Name="Soratra.Template" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".dotx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".dotx" Value="Soratra.Template" Type="string" />
+
+        <ProgId Id="Soratra.TemplateMacroEnabled" Description="Word Macro-Enabled Template" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.TemplateMacroEnabled\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.dotm\OpenWithProgids" Name="Soratra.TemplateMacroEnabled" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".dotm" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".dotm" Value="Soratra.TemplateMacroEnabled" Type="string" />
+
+        <ProgId Id="Soratra.LegacyDocument" Description="Legacy Word Document" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.LegacyDocument\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.doc\OpenWithProgids" Name="Soratra.LegacyDocument" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".doc" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".doc" Value="Soratra.LegacyDocument" Type="string" />
+
+        <ProgId Id="Soratra.LegacyTemplate" Description="Legacy Word Template" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.LegacyTemplate\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.dot\OpenWithProgids" Name="Soratra.LegacyTemplate" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".dot" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".dot" Value="Soratra.LegacyTemplate" Type="string" />
+
+        <ProgId Id="Soratra.RichText" Description="Rich Text Document" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.RichText\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.rtf\OpenWithProgids" Name="Soratra.RichText" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".rtf" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".rtf" Value="Soratra.RichText" Type="string" />
+
+        <ProgId Id="Soratra.OpenDocumentText" Description="OpenDocument Text" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.OpenDocumentText\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.odt\OpenWithProgids" Name="Soratra.OpenDocumentText" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".odt" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Soratra\Capabilities\FileAssociations" Name=".odt" Value="Soratra.OpenDocumentText" Type="string" />
+
+        <ProgId Id="Soratra.Markdown" Description="Markdown Document" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.Markdown\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.md\OpenWithProgids" Name="Soratra.Markdown" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".md" Value="" Type="string" />
+
+        <ProgId Id="Soratra.PlainText" Description="Text Document" Icon="SoratraExe" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Soratra.PlainText\shell\open\command" Value="&quot;[#SoratraExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.txt\OpenWithProgids" Name="Soratra.PlainText" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\soratra.exe\SupportedTypes" Name=".txt" Value="" Type="string" />
+      </Component>
+
+      <Component Id="SoratraCli">
+        <File Id="SoratraCliExe" Source="$(var.BinDir)\soratra-cli.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

@@ -1,7 +1,7 @@
 //! History panel actions beyond stepping (#1117): Delete (the trash button) and New Document (the
 //! "Create new document from current state" button). Stepping to a state is Edit › Undo / Redo.
 //!
-//! States are indexed like [`photocraft_ops::History::entries`]: 0 is the oldest state still
+//! States are indexed like [`sary_ops::History::entries`]: 0 is the oldest state still
 //! held, the last index is the current document.
 //!
 //! Snapshots (#2966, the camera button) are named copies of the document that outlive the
@@ -15,8 +15,8 @@
 
 use std::sync::Arc;
 
-use photocraft_doc::{Document, Layer, LayerContent};
-use photocraft_ops::LayerTarget;
+use sary_doc::{Document, Layer, LayerContent};
+use sary_ops::LayerTarget;
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, int};
@@ -82,7 +82,7 @@ fn new_document(s: &mut Session, p: &Value) -> Result<Value> {
     let src = src.ok_or_else(|| bad(CMD, format!("state {i} is not held")))?;
     let label = st.history.entries().get(i).cloned().unwrap_or_default();
     let mut doc = (*src).clone();
-    doc.id = photocraft_doc::DocId::fresh();
+    doc.id = sary_doc::DocId::fresh();
     doc.name = match p.get("name").and_then(Value::as_str) {
         Some(n) if !n.trim().is_empty() => n.to_string(),
         _ if !label.trim().is_empty() => label,

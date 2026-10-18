@@ -4,7 +4,7 @@
 
 use std::io::Write;
 
-use wordcraft_doc::{InlineObject, StoryRef};
+use soratra_doc::{InlineObject, StoryRef};
 
 fn zip(entries: &[(&str, &str)]) -> Vec<u8> {
     let mut zw = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
@@ -32,16 +32,16 @@ fn field(instr: &str, cached: &str, locked: bool) -> String {
     )
 }
 
-fn open_body(body: &str) -> wordcraft_doc::Document {
+fn open_body(body: &str) -> soratra_doc::Document {
     let rels = r#"<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>"#;
     let doc = format!(
         r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>{body}</w:body></w:document>"#
     );
-    wordcraft_engine::io::open_bytes("d.docx", &zip(&[("_rels/.rels", rels), ("word/document.xml", &doc)])).expect("opens")
+    soratra_engine::io::open_bytes("d.docx", &zip(&[("_rels/.rels", rels), ("word/document.xml", &doc)])).expect("opens")
 }
 
 /// Every field of the body, as (code, result).
-fn fields(d: &wordcraft_doc::Document) -> Vec<(String, String)> {
+fn fields(d: &soratra_doc::Document) -> Vec<(String, String)> {
     let mut out = Vec::new();
     for path in d.para_paths(StoryRef::Body) {
         let Some(p) = d.para(StoryRef::Body, &path) else { continue };
@@ -65,8 +65,8 @@ fn unlocked_date_and_time_fields_are_refreshed_on_open() {
     let got = fields(&d);
     assert_eq!(got.len(), 2);
     // Compared against the same clock the refresh used, so the test does not age.
-    assert_eq!(got[0].1, wordcraft_engine::cmd::insert::format_date("yyyy-MM-dd"), "DATE is today");
-    assert_eq!(got[1].1, wordcraft_engine::cmd::insert::format_date("dddd, d MMMM yyyy"), "TIME is today");
+    assert_eq!(got[0].1, soratra_engine::cmd::insert::format_date("yyyy-MM-dd"), "DATE is today");
+    assert_eq!(got[1].1, soratra_engine::cmd::insert::format_date("dddd, d MMMM yyyy"), "TIME is today");
     assert_ne!(got[0].1, "2020-01-01", "not the stored result");
     // The code itself is untouched, so a save writes the field back as it was.
     assert_eq!(got[0].0, r#"DATE \@ "yyyy-MM-dd""#);
@@ -76,8 +76,8 @@ fn unlocked_date_and_time_fields_are_refreshed_on_open() {
 fn a_date_field_with_no_picture_uses_words_default() {
     let d = open_body(&format!("<w:p>{}</w:p><w:p>{}</w:p>", field("DATE", "2020-01-01", false), field("TIME", "00:00", false)));
     let got = fields(&d);
-    assert_eq!(got[0].1, wordcraft_engine::cmd::insert::format_date("M/d/yyyy"));
-    assert_eq!(got[1].1, wordcraft_engine::cmd::insert::format_date("h:mm am/pm"));
+    assert_eq!(got[0].1, soratra_engine::cmd::insert::format_date("M/d/yyyy"));
+    assert_eq!(got[1].1, soratra_engine::cmd::insert::format_date("h:mm am/pm"));
 }
 
 #[test]
@@ -112,12 +112,12 @@ fn a_date_field_in_a_header_is_refreshed_too() {
         field(r#"DATE \@ "yyyy-MM-dd""#, "2020-01-01", false)
     );
     let doc = r#"<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body><w:p><w:r><w:t>Body</w:t></w:r></w:p><w:sectPr><w:headerReference w:type="default" r:id="rH1"/></w:sectPr></w:body></w:document>"#;
-    let d = wordcraft_engine::io::open_bytes(
+    let d = soratra_engine::io::open_bytes(
         "d.docx",
         &zip(&[("_rels/.rels", rels), ("word/document.xml", doc), ("word/_rels/document.xml.rels", drels), ("word/header1.xml", &header)]),
     )
     .expect("opens");
-    let today = wordcraft_engine::cmd::insert::format_date("yyyy-MM-dd");
+    let today = soratra_engine::cmd::insert::format_date("yyyy-MM-dd");
     let found: Vec<String> = d
         .parts
         .values()
@@ -178,11 +178,11 @@ fn binary_doc_with_stale_date() -> Vec<u8> {
 fn binary_doc_opened_by_extension_refreshes_date_fields() {
     let bytes = binary_doc_with_stale_date();
     // The same bytes under a `.docx` name are read by content, which refreshes the field.
-    let expected = fields(&wordcraft_engine::io::open_bytes("d.docx", &bytes).expect("opens by content"));
+    let expected = fields(&soratra_engine::io::open_bytes("d.docx", &bytes).expect("opens by content"));
     assert_eq!(expected.len(), 1);
     assert!(!expected[0].1.contains("2001"), "reference should be refreshed: {expected:?}");
     for name in ["d.doc", "d.dot"] {
-        let got = fields(&wordcraft_engine::io::open_bytes(name, &bytes).expect("opens"));
+        let got = fields(&soratra_engine::io::open_bytes(name, &bytes).expect("opens"));
         assert_eq!(got, expected, "{name}: DATE field stale after opening");
     }
 }

@@ -1,8 +1,8 @@
-# Settings storage across the Craft apps
+# Settings storage across the Mahay apps
 
-How every Craft app stores its settings, and what goes where. The shared code is
-[`craft-settings`](../crates/settings/README.md); this page is the policy it implements.
-Discussion: [storytold/craft-libs#12](https://github.com/storytold/craft-libs/issues/12).
+How every Mahay app stores its settings, and what goes where. The shared code is
+[`mahay-settings`](../crates/settings/README.md); this page is the policy it implements.
+Discussion: [raantss18/mahay-libs#12](https://github.com/storytold/craft-libs/issues/12).
 
 ## What goes where
 
@@ -12,7 +12,7 @@ Discussion: [storytold/craft-libs#12](https://github.com/storytold/craft-libs/is
 | Window and UI state | `ui.ron` / `app.ron` beside `config.toml` | Changes every session; not worth comments or hand edits |
 | Caches and models | Platform cache folder (`paths::cache_dir`); `%LOCALAPPDATA%` on Windows so it does not roam | Disposable, large |
 | Recovery and autosave files | Platform data folder (`paths::data_dir`) | Not settings; must survive a settings reset |
-| Settings that belong to a library or project (LightCraft) | Inside that folder, via `SettingsStore::open_at` | Travels with the library |
+| Settings that belong to a library or project (Hazavana) | Inside that folder, via `SettingsStore::open_at` | Travels with the library |
 | API keys and tokens | The OS keychain | Never in a plain-text file |
 
 ## The config folder
@@ -21,17 +21,17 @@ First match wins. The store reports which rule applied, so apps can show the pat
 about or settings screen.
 
 1. An override passed by the app, such as a `--config-dir` flag
-2. `<APP>_CONFIG_DIR`, for example `PHOTOCRAFT_CONFIG_DIR` (one per app, so redirecting one
+2. `<APP>_CONFIG_DIR`, for example `SARY_CONFIG_DIR` (one per app, so redirecting one
    app does not move the others). Set but **empty** means isolated: nothing is read or written
-   anywhere, the same as DesignCraft's existing behaviour, so tests and agents can never touch a
+   anywhere, the same as Pejy's existing behaviour, so tests and agents can never touch a
    user's real settings
 3. Portable mode: a marker file next to the executable (next to the `.app` on macOS, since
    writing inside a signed bundle breaks its signature). The default is a file named `portable`
    with settings in `config/` beside it; apps that already ship portable builds keep their own
-   names (PhotoCraft: `portable.txt` or `PhotoCraft.portable`, folder `PhotoCraftData`)
+   names (Sary: `portable.txt` or `Sary.portable`, folder `SaryData`)
 4. The platform default:
 
-Apps can also open a store with `Location::Memory` (for a switch like `DESIGNCRAFT_NO_PREFS`):
+Apps can also open a store with `Location::Memory` (for a switch like `PEJY_NO_PREFS`):
 settings work in memory and nothing touches the disk.
 
 | Platform | Folder |
@@ -40,9 +40,9 @@ settings work in memory and nothing touches the disk.
 | macOS | `~/Library/Application Support/<app>/` |
 | Windows | `%APPDATA%\<app>\` (Roaming) |
 
-`<app>` is the app's lowercase id (`photocraft`, `designcraft`, …) on every platform, macOS
+`<app>` is the app's lowercase id (`sary`, `pejy`, …) on every platform, macOS
 included (decided in #12). Existing Linux folder names do not change; the Launcher moves from
-`ai.storyteller.artcraft-launcher` to `artcraft-launcher`.
+`ai.storyteller.trano` to `trano`.
 
 If the folder cannot be created or written (a portable marker in `/Applications`, an AppImage
 mount), the store opens read-only and says so at startup.
@@ -57,7 +57,7 @@ mount), the store opens read-only and says so at startup.
 ## Saving and recovery
 
 - Saves happen during use, half a second after the last change, atomically through
-  `craft-atomic`. A failed save leaves the old file intact and is retried with backoff; the app
+  `mahay-atomic`. A failed save leaves the old file intact and is retried with backoff; the app
   shows the error.
 - A file with a TOML syntax error is moved aside and defaults are used. A file that parses but
   has a value that no longer fits (a renamed theme, a typo in a hand edit) is not treated as
@@ -81,18 +81,18 @@ From the audit in #12 (Linux defaults, from source; overrides and portable mode 
 Before an app moves over, check where it saves on macOS and Windows so the importer finds the old
 files there too.
 
-| App | Today | Moving to `craft-settings` |
+| App | Today | Moving to `mahay-settings` |
 |---|---|---|
-| PhotoCraft | `~/.config/photocraft/preferences.json` + eframe `ui.ron`; atomic saves with retries; portable via `portable.txt`/`PhotoCraft.portable` → `PhotoCraftData/` | Import `preferences.json`; keep `ui.ron`; keep its portable names via `PORTABLE_MARKERS`/`PORTABLE_DIR` |
-| DesignCraft | `~/.config/designcraft/prefs.json` + `ui.json`; saves on exit, ignores failures; empty `DESIGNCRAFT_CONFIG_DIR` and `DESIGNCRAFT_NO_PREFS` touch nothing | Import `prefs.json`; keep `ui.json`; gain save-during-use and error reporting; `DESIGNCRAFT_NO_PREFS` → `Location::Memory` |
-| EffectCraft | `~/.config/effectcraft/prefs.json`, `shortcuts.json`, `script_settings.json`; atomic | Import all three into sections of one `config.toml` |
-| FilmCraft | `~/.local/share/filmcraft/preferences.json`; atomic | Import from the data folder; settings move to the config folder |
-| GridCraft | `~/.config/gridcraft/prefs.json` + `ui.json`; saves on exit, ignores failures | Same as DesignCraft |
-| LightCraft | global `ui.json`; library `prefs.json`, `presets.json`, `view.json`; atomic, backups, overwrite protection | Global settings via `open`; library settings via `open_at(library_dir)` |
-| VectorCraft | `~/.config/vectorcraft/ui.json` with engine preferences inside; atomic, ignores failures | Split engine preferences out into `config.toml`; keep UI state in `ui.json` |
-| ArtCraft Launcher | `~/.local/share/ai.storyteller.artcraft-launcher/app.ron` (eframe) | Import from `app.ron`; needs its own tick timer while in the tray |
+| Sary | `~/.config/sary/preferences.json` + eframe `ui.ron`; atomic saves with retries; portable via `portable.txt`/`Sary.portable` → `SaryData/` | Import `preferences.json`; keep `ui.ron`; keep its portable names via `PORTABLE_MARKERS`/`PORTABLE_DIR` |
+| Pejy | `~/.config/pejy/prefs.json` + `ui.json`; saves on exit, ignores failures; empty `PEJY_CONFIG_DIR` and `PEJY_NO_PREFS` touch nothing | Import `prefs.json`; keep `ui.json`; gain save-during-use and error reporting; `PEJY_NO_PREFS` → `Location::Memory` |
+| Tselatra | `~/.config/tselatra/prefs.json`, `shortcuts.json`, `script_settings.json`; atomic | Import all three into sections of one `config.toml` |
+| Hetsika | `~/.local/share/hetsika/preferences.json`; atomic | Import from the data folder; settings move to the config folder |
+| Tabilao | `~/.config/tabilao/prefs.json` + `ui.json`; saves on exit, ignores failures | Same as Pejy |
+| Hazavana | global `ui.json`; library `prefs.json`, `presets.json`, `view.json`; atomic, backups, overwrite protection | Global settings via `open`; library settings via `open_at(library_dir)` |
+| Tsipika | `~/.config/tsipika/ui.json` with engine preferences inside; atomic, ignores failures | Split engine preferences out into `config.toml`; keep UI state in `ui.json` |
+| Mahay Trano | `~/.local/share/ai.storyteller.trano/app.ron` (eframe) | Import from `app.ron`; needs its own tick timer while in the tray |
 
-Adoption order: PhotoCraft and DesignCraft first (closest to and furthest from the target
+Adoption order: Sary and Pejy first (closest to and furthest from the target
 behaviour), then the rest.
 
 ## Not yet

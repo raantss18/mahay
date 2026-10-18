@@ -59,7 +59,7 @@ pub(crate) fn ticket_xml(job: &Job, landscape: bool) -> String {
 
 /// Standard paper sizes (points, portrait) and the names drivers give them. A driver can list
 /// one size twice, a plotter's "ARCH D" next to a custom 24 × 36 in entry; the named one is
-/// preferred (from storytold/pdfcraft#599).
+/// preferred (from raantss18/taratasy#599).
 const NAMED_PAPERS: &[((f64, f64), &[&str])] = &[
     ((612.0, 792.0), &["Letter", "US Letter"]),
     ((612.0, 1008.0), &["Legal", "US Legal"]),

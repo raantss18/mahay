@@ -1,6 +1,6 @@
-# pdfcraft-model
+# taratasy-model
 
-Layer L2: typed views over the `pdfcraft-cos` object graph. It starts small, with what several
+Layer L2: typed views over the `taratasy-cos` object graph. It starts small, with what several
 L3/L4 crates need:
 
 - `pages(doc)`: leaf pages in order, each with its inherited attributes (`Resources`,

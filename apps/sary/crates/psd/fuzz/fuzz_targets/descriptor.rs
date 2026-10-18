@@ -3,7 +3,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::descriptor::Descriptor;
+use sary_psd::descriptor::Descriptor;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(d) = Descriptor::from_bytes(data) {

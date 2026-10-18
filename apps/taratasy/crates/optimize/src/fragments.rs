@@ -8,7 +8,7 @@
 //! - consecutive `q … cm /Name Do Q` groups in a page's content stream, with nothing else
 //!   between them, each drawing an image upright (no rotation, skew or flip);
 //! - the images are 8-bit grey or RGB in the same colour space, without masks or a decode array
-//!   that changes anything, in a codec PdfCraft decodes;
+//!   that changes anything, in a codec Taratasy decodes;
 //! - they share their left and right edges and are stacked edge to edge with no gap or overlap
 //!   (in any drawing order), at least [`MIN_FRAGMENTS`] of them.
 //!
@@ -17,8 +17,8 @@
 //! stream can't be read back exactly is left alone. The fragments are then unused, and Clean Up
 //! drops them.
 
-use pdfcraft_content::{Matrix, Op, parse, serialize_ops};
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, Stream};
+use taratasy_content::{Matrix, Op, parse, serialize_ops};
+use taratasy_cos::{Dict, Document, ObjRef, Object, Stream};
 
 use crate::images::{components, content_bytes, decodable, page_resources, pixels, resample};
 use crate::{OptimizeError, Report, Stage};

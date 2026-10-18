@@ -1,11 +1,11 @@
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
-use photocraft_doc::{Fill, LayerContent, LayerId};
+use sary_doc::{Fill, LayerContent, LayerId};
 use serde_json::json;
 
 use super::*;
 
-fn double_click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
+fn double_click(h: &mut Harness<'_, SaryApp>, at: Pos2) {
     h.run_steps(40);
     for _ in 0..2 {
         h.hover_at(at);
@@ -18,7 +18,7 @@ fn double_click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
     }
 }
 
-fn fill(app: &PhotocraftApp, id: LayerId) -> Option<Fill> {
+fn fill(app: &SaryApp, id: LayerId) -> Option<Fill> {
     match &app.session.active().unwrap().doc.layer(id).unwrap().content {
         LayerContent::Shape(sh) => sh.fill.clone(),
         _ => None,
@@ -29,13 +29,13 @@ fn fill(app: &PhotocraftApp, id: LayerId) -> Option<Fill> {
 /// canvas previews the pick, Cancel changes nothing and OK is one undoable `shape.edit`.
 #[test]
 fn shape_thumbnail_double_click_picks_the_fill_colour() {
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 64, "height": 48})).unwrap();
     let id = LayerId(s.execute("shape.create", json!({"rect": [8, 8, 40, 30], "fill": "#336699"})).unwrap()["layer"].as_u64().unwrap());
     s.execute("layer.new.layer", json!({"name": "Other"})).unwrap();
     let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_step_dt(1.0 / 60.0).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(s, crate::Services::default())
     });
     let ctx = h.ctx.clone();
     let (r, _) = crate::control::ControlRequest::new("ui.set", json!({"dock": {"collapsed": ["color", "properties", "history", "navigator"]}}));

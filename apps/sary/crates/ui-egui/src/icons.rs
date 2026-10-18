@@ -6,8 +6,8 @@
 
 use std::sync::OnceLock;
 
-use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
-use craft_ui::icons::{SvgIconSet, SvgStyle};
+use mahay_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
+use mahay_ui::icons::{SvgIconSet, SvgStyle};
 use egui::{Color32, Rect, Response, Sense, Vec2};
 
 use crate::icon_data::ICONS;
@@ -333,7 +333,7 @@ mod tests {
     #[test]
     fn shared_button_preserves_theme_painting_and_pointer_responses() {
         // The unchanged chrome helper is the pre-extraction paint oracle. Keyboard focus
-        // and accessibility metadata are deliberate additions, covered in craft-ui.
+        // and accessibility metadata are deliberate additions, covered in mahay-ui.
         fn frame(
             ctx: &egui::Context,
             events: Vec<egui::Event>,

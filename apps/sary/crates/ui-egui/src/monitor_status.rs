@@ -11,14 +11,14 @@
 //! trigger inside that window is deferred, not dropped).
 //!
 //! There is deliberately no periodic re-read (#569 decision): a read costs about 0.2 s of CPU,
-//! and a profile reassigned while PhotoCraft stays in front with no window moving practically
+//! and a profile reassigned while Sary stays in front with no window moving practically
 //! doesn't happen; it is picked up at the next return to the front or Color Settings.
 
 use std::sync::mpsc::Receiver;
 
-use photocraft_engine::display_color::{Display, MonitorDetection, display_at};
+use sary_engine::display_color::{Display, MonitorDetection, display_at};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// A platform reading: the displays, or why there are none.
 pub type Detection = Result<Vec<Display>, String>;
@@ -32,7 +32,7 @@ pub const FALLBACK_TITLE: &str = "Display profile not used";
 /// Minimum time between two readings started by the automatic triggers above.
 pub const REREAD_SECS: f64 = 30.0;
 
-/// The shell's reading state (`PhotocraftApp::monitors`).
+/// The shell's reading state (`SaryApp::monitors`).
 #[derive(Default)]
 pub struct State {
     pending: Option<Receiver<Detection>>,
@@ -44,7 +44,7 @@ pub struct State {
     now: bool,
     /// When the last reading started (egui time).
     started: Option<f64>,
-    /// Whether any PhotoCraft window had the focus last frame (macOS reports focus per window:
+    /// Whether any Sary window had the focus last frame (macOS reports focus per window:
     /// the user can come back to a document window while the main window stays unfocused).
     focused: Option<bool>,
     /// A document window had the focus this frame ([`check_window`]); counted at the next
@@ -56,7 +56,7 @@ pub struct State {
 
 /// A reading started before the shell existed (the desktop app starts one at launch and waits
 /// for it briefly so the first frames already use the right profile): applied when it arrives.
-pub fn pending(app: &mut PhotocraftApp, rx: Receiver<Detection>) {
+pub fn pending(app: &mut SaryApp, rx: Receiver<Detection>) {
     if app.session.color.displays.is_empty() {
         app.session.color.monitor_detection = MonitorDetection::Pending;
     }
@@ -65,22 +65,22 @@ pub fn pending(app: &mut PhotocraftApp, rx: Receiver<Detection>) {
 
 /// Per-frame (main window): apply a reading that arrived, track the main window's display, and
 /// start a new reading when the displays may have changed.
-pub fn poll(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn poll(app: &mut SaryApp, ctx: &egui::Context) {
     poll_with_output_name(app, ctx, None);
 }
 
 #[cfg(target_os = "linux")]
-pub fn poll_frame(app: &mut PhotocraftApp, ctx: &egui::Context, frame: &eframe::Frame) {
+pub fn poll_frame(app: &mut SaryApp, ctx: &egui::Context, frame: &eframe::Frame) {
     let output_name = frame.winit_window().and_then(|window| window.current_monitor()).and_then(|monitor| monitor.name());
     poll_with_output_name(app, ctx, output_name);
 }
 
 #[cfg(not(target_os = "linux"))]
-pub fn poll_frame(app: &mut PhotocraftApp, ctx: &egui::Context, _frame: &eframe::Frame) {
+pub fn poll_frame(app: &mut SaryApp, ctx: &egui::Context, _frame: &eframe::Frame) {
     poll(app, ctx);
 }
 
-fn poll_with_output_name(app: &mut PhotocraftApp, ctx: &egui::Context, output_name: Option<String>) {
+fn poll_with_output_name(app: &mut SaryApp, ctx: &egui::Context, output_name: Option<String>) {
     set_root_output_name(app, output_name);
     if let Some(rx) = &app.monitors.pending {
         let r = match rx.try_recv() {
@@ -124,11 +124,11 @@ fn poll_with_output_name(app: &mut PhotocraftApp, ctx: &egui::Context, output_na
     }
 }
 
-/// A document window's part of [`poll`] (`ctx` draws it): its focus counts as PhotoCraft
+/// A document window's part of [`poll`] (`ctx` draws it): its focus counts as Sary
 /// being in front, and a display it is on that the last reading didn't know (or whose size
 /// changed) asks for a new reading. Either wakes the main window, whose frame starts the read
 /// (r2: without that, nothing happens until other input arrives).
-pub fn check_window(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn check_window(app: &mut SaryApp, ctx: &egui::Context) {
     let mut wake = false;
     if ctx.input(|i| i.focused) {
         app.monitors.window_focused = true;
@@ -145,13 +145,13 @@ pub fn check_window(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// Read the displays at the next frame regardless of the interval (a user action that shows
 /// the result: opening Color Settings).
-pub fn read_now(app: &mut PhotocraftApp) {
+pub fn read_now(app: &mut SaryApp) {
     app.monitors.now = true;
 }
 
 /// The Color Settings dialog's line: the monitor profile in use for the main window, as it is
 /// now (the dialog asks again each time it draws).
-pub fn note(app: &PhotocraftApp) -> String {
+pub fn note(app: &SaryApp) -> String {
     let st = app.session.color.monitor_status();
     let template = if st.display.is_some() { "Monitor profile in use on {display}: {profile}" } else { "Monitor profile in use: {profile}" };
     let profile = profile_summary(&st);
@@ -163,7 +163,7 @@ pub fn note(app: &PhotocraftApp) -> String {
 }
 
 /// Display-only counterpart of the engine's English monitor summary.
-fn profile_summary(st: &photocraft_engine::display_color::MonitorStatus) -> String {
+fn profile_summary(st: &sary_engine::display_color::MonitorStatus) -> String {
     let name = match (&st.profile_name, st.source) {
         (Some(name), "auto") => name.as_str(),
         _ => st.profile.as_str(),
@@ -176,7 +176,7 @@ fn profile_summary(st: &photocraft_engine::display_color::MonitorStatus) -> Stri
 }
 
 /// When the last re-read failed and an earlier reading is shown: why.
-fn retained(app: &PhotocraftApp) -> Option<String> {
+fn retained(app: &SaryApp) -> Option<String> {
     match &app.session.color.monitor_detection {
         MonitorDetection::Retained { reason } => Some({
             let template = "previous reading kept; the last re-read failed: {reason}";
@@ -186,7 +186,7 @@ fn retained(app: &PhotocraftApp) -> Option<String> {
     }
 }
 
-fn start(app: &mut PhotocraftApp, now: f64) {
+fn start(app: &mut SaryApp, now: f64) {
     app.monitors.again = false;
     app.monitors.now = false;
     let Some(read) = app.services.read_displays.clone() else { return };
@@ -198,7 +198,7 @@ fn start(app: &mut PhotocraftApp, now: f64) {
 /// once per display and reason (an unusable profile must not look like working colour
 /// management). Manual monitor profiles don't depend on the reading. A failed re-read keeps the
 /// previous reading and says so in the status.
-pub fn apply(app: &mut PhotocraftApp, r: Detection) {
+pub fn apply(app: &mut SaryApp, r: Detection) {
     if let Some(e) = app.session.color.set_displays(r) {
         log::warn!("re-reading the display profiles failed: {e}; keeping the previous ones");
     }
@@ -250,11 +250,11 @@ fn window_frame(ctx: &egui::Context) -> Option<[f64; 4]> {
 
 /// The display showing most of the window `ctx` draws (`None`: unknown, e.g. no displays read
 /// or no window position, as on Wayland).
-pub fn view_display(app: &PhotocraftApp, ctx: &egui::Context) -> Option<u32> {
+pub fn view_display(app: &SaryApp, ctx: &egui::Context) -> Option<u32> {
     display_for_view(app, ctx)
 }
 
-fn display_for_view(app: &PhotocraftApp, ctx: &egui::Context) -> Option<u32> {
+fn display_for_view(app: &SaryApp, ctx: &egui::Context) -> Option<u32> {
     if let Some(display) = root_output_display(app, ctx) {
         return display;
     }
@@ -262,15 +262,15 @@ fn display_for_view(app: &PhotocraftApp, ctx: &egui::Context) -> Option<u32> {
 }
 
 #[cfg(target_os = "linux")]
-fn set_root_output_name(app: &mut PhotocraftApp, name: Option<String>) {
+fn set_root_output_name(app: &mut SaryApp, name: Option<String>) {
     app.monitors.root_output_name = name;
 }
 
 #[cfg(not(target_os = "linux"))]
-fn set_root_output_name(_app: &mut PhotocraftApp, _name: Option<String>) {}
+fn set_root_output_name(_app: &mut SaryApp, _name: Option<String>) {}
 
 #[cfg(target_os = "linux")]
-fn root_output_display(app: &PhotocraftApp, ctx: &egui::Context) -> Option<Option<u32>> {
+fn root_output_display(app: &SaryApp, ctx: &egui::Context) -> Option<Option<u32>> {
     if ctx.viewport_id() != egui::ViewportId::ROOT {
         return None;
     }
@@ -279,22 +279,22 @@ fn root_output_display(app: &PhotocraftApp, ctx: &egui::Context) -> Option<Optio
 }
 
 #[cfg(not(target_os = "linux"))]
-fn root_output_display(_app: &PhotocraftApp, _ctx: &egui::Context) -> Option<Option<u32>> {
+fn root_output_display(_app: &SaryApp, _ctx: &egui::Context) -> Option<Option<u32>> {
     None
 }
 
 #[cfg(target_os = "linux")]
-fn root_output_name_known(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
+fn root_output_name_known(app: &SaryApp, ctx: &egui::Context) -> bool {
     ctx.viewport_id() == egui::ViewportId::ROOT && app.monitors.root_output_name.is_some()
 }
 
 #[cfg(not(target_os = "linux"))]
-fn root_output_name_known(_app: &PhotocraftApp, _ctx: &egui::Context) -> bool {
+fn root_output_name_known(_app: &SaryApp, _ctx: &egui::Context) -> bool {
     false
 }
 
 /// The window is on no display we know, or on one whose size differs from what was read.
-fn displays_changed(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
+fn displays_changed(app: &SaryApp, ctx: &egui::Context) -> bool {
     let c = &app.session.color;
     if c.displays.is_empty() || !matches!(c.monitor_detection, MonitorDetection::Found | MonitorDetection::Retained { .. }) {
         return false;
@@ -318,7 +318,7 @@ fn displays_changed(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
 }
 
 /// Help › System Info's lines: the monitor profile of each display.
-pub fn summary_lines(app: &PhotocraftApp) -> Vec<String> {
+pub fn summary_lines(app: &SaryApp) -> Vec<String> {
     let c = &app.session.color;
     if c.displays.is_empty() {
         return vec![{
@@ -345,15 +345,15 @@ pub fn summary_lines(app: &PhotocraftApp) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_engine::Session;
+    use sary_engine::Session;
     use std::sync::Arc;
 
-    fn app() -> PhotocraftApp {
-        PhotocraftApp::new(Session::new(), Default::default())
+    fn app() -> SaryApp {
+        SaryApp::new(Session::new(), Default::default())
     }
 
     fn p3() -> Option<Arc<Vec<u8>>> {
-        Some(photocraft_engine::color_cmds::resolve_profile("display-p3", None, None).unwrap().to_bytes())
+        Some(sary_engine::color_cmds::resolve_profile("display-p3", None, None).unwrap().to_bytes())
     }
 
     /// The #569 setup: built-in display (primary) without a usable profile here, a P3 one to its
@@ -367,7 +367,7 @@ mod tests {
 
     /// One frame of the main window at `pos` (points; UI zoom 1) with `focused`; returns when
     /// egui is asked to draw the next one.
-    fn frame(app: &mut PhotocraftApp, ctx: &egui::Context, t: f64, pos: [f32; 2], monitor: [f32; 2], focused: bool) -> std::time::Duration {
+    fn frame(app: &mut SaryApp, ctx: &egui::Context, t: f64, pos: [f32; 2], monitor: [f32; 2], focused: bool) -> std::time::Duration {
         let mut input = egui::RawInput { time: Some(t), focused, ..Default::default() };
         let vp = input.viewports.entry(egui::ViewportId::ROOT).or_default();
         vp.native_pixels_per_point = Some(1.0);
@@ -380,7 +380,7 @@ mod tests {
     }
 
     /// A reader whose readings arrive only when the test sends them (on `tx`).
-    fn manual_reader(app: &mut PhotocraftApp) -> (Arc<std::sync::atomic::AtomicUsize>, std::sync::mpsc::Receiver<std::sync::mpsc::Sender<Detection>>) {
+    fn manual_reader(app: &mut SaryApp) -> (Arc<std::sync::atomic::AtomicUsize>, std::sync::mpsc::Receiver<std::sync::mpsc::Sender<Detection>>) {
         let n = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let count = n.clone();
         let (give, take) = std::sync::mpsc::channel();
@@ -395,7 +395,7 @@ mod tests {
     }
 
     /// A reader that counts its readings and returns `displays` each time.
-    fn reader(app: &mut PhotocraftApp, displays: Vec<Display>) -> Arc<std::sync::atomic::AtomicUsize> {
+    fn reader(app: &mut SaryApp, displays: Vec<Display>) -> Arc<std::sync::atomic::AtomicUsize> {
         let n = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let count = n.clone();
         app.services.read_displays = Some(Arc::new(move || {
@@ -508,7 +508,7 @@ mod tests {
 
     /// One frame of a document window at `pos` with `focused` (its part of the shell is
     /// [`check_window`]); returns when the main window is asked to draw next.
-    fn doc_window(app: &mut PhotocraftApp, ctx: &egui::Context, pos: [f32; 2], focused: bool) -> std::time::Duration {
+    fn doc_window(app: &mut SaryApp, ctx: &egui::Context, pos: [f32; 2], focused: bool) -> std::time::Duration {
         let mut input = egui::RawInput { focused, ..Default::default() };
         let vp = input.viewports.entry(egui::ViewportId::ROOT).or_default();
         vp.native_pixels_per_point = Some(1.0);
@@ -547,7 +547,7 @@ mod tests {
         app.session.color.set_displays(Ok(displays(p3())));
         let reads = reader(&mut app, displays(p3()));
         let count = || reads.load(std::sync::atomic::Ordering::SeqCst);
-        // Working in the document window: PhotoCraft is in front, no reading.
+        // Working in the document window: Sary is in front, no reading.
         for _ in 0..3 {
             doc_window(&mut app, &doc, [100.0, 100.0], true);
         }
@@ -555,7 +555,7 @@ mod tests {
         doc_window(&mut app, &doc, [100.0, 100.0], true);
         frame(&mut app, &main, 101.0, [100.0, 100.0], [1728.0, 1117.0], false);
         assert_eq!(count(), 0);
-        // Another app in front: no PhotoCraft window has the focus.
+        // Another app in front: no Sary window has the focus.
         doc_window(&mut app, &doc, [100.0, 100.0], false);
         frame(&mut app, &main, 102.0, [100.0, 100.0], [1728.0, 1117.0], false);
         frame(&mut app, &main, 150.0, [100.0, 100.0], [1728.0, 1117.0], false);
@@ -580,12 +580,12 @@ mod tests {
         app.session.color.set_displays(Ok(displays(None)));
         app.session.color.main_display = Some(1);
         let d = crate::prefs_ui::invoke(&mut app, &ctx, "edit.colorSettings", &serde_json::json!({})).unwrap().unwrap()["dialog"].as_u64().unwrap();
-        let shown = |app: &PhotocraftApp| app.ui.dialogs.iter().find(|x| x.id == d).unwrap().fields["__note"].as_str().unwrap().to_string();
+        let shown = |app: &SaryApp| app.ui.dialogs.iter().find(|x| x.id == d).unwrap().fields["__note"].as_str().unwrap().to_string();
         assert!(shown(&app).contains("on Built-in Retina Display: sRGB") && shown(&app).contains("fallback"), "{}", shown(&app));
         apply(&mut app, Ok(displays(p3())));
         app.session.color.main_display = Some(4);
         // Drawing the dialog refreshes the line.
-        PhotocraftApp::setup_context(&ctx, Default::default());
+        SaryApp::setup_context(&ctx, Default::default());
         let mut out = ctx.run_ui(Default::default(), |ui| crate::dialogs::show(&mut app, ui.ctx()));
         out.textures_delta.clear();
         assert_eq!(shown(&app), "Monitor profile in use on ROG PG32UQX: Apple_Display (auto)");

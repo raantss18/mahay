@@ -1,10 +1,10 @@
 //! Content-Aware family: timings of the perf scenarios P21, P22 and P49 (the same documents and
-//! steps as `photocraft-ui-egui`'s `perf_scenarios`, without the canvas refresh), and a hash of
+//! steps as `sary-ui-egui`'s `perf_scenarios`, without the canvas refresh), and a hash of
 //! every tool's output, to check that a speed-up leaves the result bit for bit as it was.
 //!
 //! ```text
-//! cargo run --release -p photocraft-engine --example content_aware_bench -- bench caf|heal|spot|cancel|cancelscan|full24 [reps]
-//! cargo run --release -p photocraft-engine --example content_aware_bench -- hash|hash-big
+//! cargo run --release -p sary-engine --example content_aware_bench -- bench caf|heal|spot|cancel|cancelscan|full24 [reps]
+//! cargo run --release -p sary-engine --example content_aware_bench -- hash|hash-big
 //! ```
 //!
 //! `bench` prints one line per sample (`<scenario> <ms>`), so runs of two builds can be
@@ -14,11 +14,11 @@
 //! directly on synthetic buffers (1, 3 and 4 channels).
 use std::time::{Duration, Instant};
 
-use photocraft_algo::content_aware::{self, FillOptions};
-use photocraft_algo::inpaint::{self, Adapt, CompleteParams};
-use photocraft_engine::Session;
-use photocraft_engine::jobs::{JobId, Started};
-use photocraft_geom::Rect;
+use sary_algo::content_aware::{self, FillOptions};
+use sary_algo::inpaint::{self, Adapt, CompleteParams};
+use sary_engine::Session;
+use sary_engine::jobs::{JobId, Started};
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
 type Res<T> = Result<T, String>;
@@ -56,9 +56,9 @@ fn open_photo(w: u32, h: u32) -> Res<Session> {
         }
     });
     let img =
-        photocraft_codecs::Image::from_raw(w, h, photocraft_codecs::ChannelLayout::Rgb, photocraft_codecs::SampleType::U8, px).map_err(|e| e.to_string())?;
-    let jpeg = photocraft_codecs::encode(&img, photocraft_codecs::Format::Jpeg, &Default::default()).map_err(|e| e.to_string())?;
-    let doc = photocraft_io::import("photo.jpg", &jpeg).map_err(|e| e.to_string())?.document;
+        sary_codecs::Image::from_raw(w, h, sary_codecs::ChannelLayout::Rgb, sary_codecs::SampleType::U8, px).map_err(|e| e.to_string())?;
+    let jpeg = sary_codecs::encode(&img, sary_codecs::Format::Jpeg, &Default::default()).map_err(|e| e.to_string())?;
+    let doc = sary_io::import("photo.jpg", &jpeg).map_err(|e| e.to_string())?.document;
     let mut s = Session::new();
     s.open_document(doc, Some("photo.jpg".into()));
     Ok(s)
@@ -179,7 +179,7 @@ fn bench(which: &str, reps: usize) -> Res<()> {
                         } else {
                             [0.3 + 0.0002 * x as f32 + n, 0.4 + ((x + y) as f32 * 0.01).sin() * 0.1 + n, 0.5 + n, 1.0]
                         };
-                        data.extend(photocraft_raster::from_rgba(&fmt, v));
+                        data.extend(sary_raster::from_rgba(&fmt, v));
                     }
                 }
                 surf.write_region(area, &data);
@@ -250,7 +250,7 @@ fn textured(w: u32, h: u32, depth: u64) -> Res<Session> {
                 let band = if (x - y / 2).rem_euclid(400) < 40 { 0.25 } else { 0.0 };
                 let blob = (-(((x as f32 / w as f32 - 0.6) * 4.0).powi(2) + ((y as f32 / h as f32 - 0.4) * 5.0).powi(2))).exp() * 0.2;
                 let v = [0.25 + 0.0002 * x as f32 + stripe + band + n, 0.4 + ((x + y) as f32 * 0.02).sin() * 0.1 + blob + n, 0.5 + band * 0.5 - blob + n, 1.0];
-                data.extend(photocraft_raster::from_rgba(&fmt, v.map(|c| c.clamp(0.0, 1.0))));
+                data.extend(sary_raster::from_rgba(&fmt, v.map(|c| c.clamp(0.0, 1.0))));
             }
         }
         surf.write_region(area, &data);
@@ -403,7 +403,7 @@ fn algo_cases(out: &mut Vec<(String, String)>) {
         })
         .collect();
     let p = CompleteParams { adapt: content_aware::color_level("high"), seed: 11, ..Default::default() };
-    let r = inpaint::complete_masked(w, h, ch, &img, &px, &p, &photocraft_raster::Interrupt::NONE);
+    let r = inpaint::complete_masked(w, h, ch, &img, &px, &p, &sary_raster::Interrupt::NONE);
     out.push((
         "masked/roles/high".into(),
         match r {

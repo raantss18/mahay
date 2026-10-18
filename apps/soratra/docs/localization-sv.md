@@ -1,10 +1,10 @@
 # Swedish interface
 
-> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (Swedish interface catalog and regression checks) · **Target:** WordCraft 0.6.1
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (Swedish interface catalog and regression checks) · **Target:** Soratra 0.6.1
 
 Choose **File › Options › Interface language › Svenska**, or follow a Swedish system display
 language (`sv-SE`, `sv_SE.UTF-8`, and `sv-FI` for Swedish in Finland). The catalog code is `sv`;
-`ui.language` with `{"value":"sv"}` selects it explicitly, and `WORDCRAFT_LANGUAGE=sv-SE` does the
+`ui.language` with `{"value":"sv"}` selects it explicitly, and `SORATRA_LANGUAGE=sv-SE` does the
 same for a headless screenshot or a launch while the preference is `auto`. The choice is saved with
 the other interface settings. Document text, command ids, CLI/MCP/control responses and file paths
 do not change.
@@ -36,7 +36,7 @@ wording choice, and reviewed the running app.
   where the group gives the context: the button `Framhäv\nfält`, the command `Framhäv kopplingsfält`.
 - Decimal comma in fixed labels (`Radavstånd 1,5`, `8,5" × 11"`), Swedish quotation marks (”…”),
   and a spaced en dash where English has an em dash (`Redigering – redigera dokumentet direkt`).
-- Names stay as they are: WordCraft, Zotero, SmartArt, WordArt, the Craft theme, paper sizes
+- Names stay as they are: Soratra, Zotero, SmartArt, WordArt, the Mahay theme, paper sizes
   (Letter, Legal …) and citation styles (APA, MLA …). Loanwords Swedish speakers use stay too:
   `community`, `commit`.
 
@@ -78,7 +78,7 @@ quotes); they are translated as written and still act on English text.
 
 ## Verification and remaining scope
 
-`cargo test -p wordcraft-ui-egui --lib i18n::tests` covers Swedish locale tags (`sv`, `sv-SE`,
+`cargo test -p soratra-ui-egui --lib i18n::tests` covers Swedish locale tags (`sv`, `sv-SE`,
 `sv_SE.UTF-8`, `SV-se`, `sv-FI`) and preference order, saving and restoring `sv`, unchanged
 document content, every key of the reference catalog, no catalog errors, the search hint's example
 (`infoga tabell`), page and count wording, English fallback, and the glyphs `ÅÄÖåäöÉé` plus every

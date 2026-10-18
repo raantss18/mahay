@@ -33,7 +33,7 @@ Light, Texture/Clarity/Dehaze/Vibrance/Saturation, the parametric curve, four po
 all eight HSL bands, all four Color Grading wheels and Blending/Balance, sharpening,
 noise amounts/detail, grain and the numeric post-crop vignette controls. Point curves contain
 2–16 points with integer Input/Output levels; resetting one writes the linear endpoints.
-PSD stores slider levels and curve coordinates as integers while PhotoCraft's sliders are
+PSD stores slider levels and curve coordinates as integers while Sary's sliders are
 continuous: PSD export rounds them to the nearest level (hues of 360° are written as 0°),
 so a re-opened PSD shows whole numbers. Exposure and sharpening radius stay fractional.
 The mapping comes from two revisions of a user-supplied Photoshop PSD written by Camera Raw
@@ -42,9 +42,9 @@ corresponding version pair is also recognized; other versions remain opaque.
 
 Imported filters keep their original descriptor in `params.__cameraRawPsd`. Unchanged settings,
 including the exact stored exposure double, are preserved; editing patches only changed mapped
-fields. The template survives `.pcraft`, undo and reopening the Camera Raw dialog. Descriptors
+fields. The template survives `.sary`, undo and reopening the Camera Raw dialog. Descriptors
 with unrecognized processing fields remain `psd.unsupportedFilter`: their data survives a PSD
-save, but their settings cannot be edited or re-rendered by PhotoCraft. Non-default PhotoCraft
+save, but their settings cannot be edited or re-rendered by Sary. Non-default Sary
 settings without a verified PSD mapping cause the existing export warning and omission of that
 filter; they are never silently written as default Camera Raw settings.
 
@@ -53,18 +53,18 @@ post-crop vignette style (`PCVS`, still unverified) and highlights, RAW Kelvin w
 masks and HDR still need mapping and/or rendering support. Observed neutral-only controls are
 retained in the template; non-neutral values keep the filter opaque. In the updated fixture,
 Distortion −28, Lens Vignetting 28 and `PCVS=1` keep the entire filter opaque, while all settings
-survive PSD and `.pcraft` saves. Its supported controls are also checked as a descriptor-only
+survive PSD and `.sary` saves. Its supported controls are also checked as a descriptor-only
 projection with those three fields removed; that projection does not replace the source filter.
 
 Matching settings does not
-claim matching pixels: PhotoCraft uses its own develop pipeline. PSD round trips and descriptor
-patching are checked locally; reopening PhotoCraft-generated exports in Photoshop is a separate
+claim matching pixels: Sary uses its own develop pipeline. PSD round trips and descriptor
+patching are checked locally; reopening Sary-generated exports in Photoshop is a separate
 acceptance check.
 
 ## Layering and bounds
 
-Analysis lives in L2 `photocraft-algo` (`histogram`, `vectorscope`), colour transforms in L0
-`photocraft-cms`, view state in `state.rs`, interaction and painting in `camera_raw_scope_ui.rs`
+Analysis lives in L2 `sary-algo` (`histogram`, `vectorscope`), colour transforms in L0
+`sary-cms`, view state in `state.rs`, interaction and painting in `camera_raw_scope_ui.rs`
 and `rgb_histogram.rs`. No engine commands or document fields were added.
 
 - The preview and histogram use the existing proxy, capped at 900 px on the longest side. Each

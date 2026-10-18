@@ -2,7 +2,7 @@
 //! group nesting limit, which only the edit checks)
 //! (`PRECHECKED`): Free Transform applies its box before them only when they will run (#5859).
 
-use photocraft_engine::{PRECHECKED, Session};
+use sary_engine::{PRECHECKED, Session};
 use serde_json::{Value, json};
 
 /// Documents in different states: a Background only, a pixel layer active, a group active, a

@@ -1,7 +1,7 @@
 //! PNG text survives open, native save/reopen and PNG save without a false loss warning.
 
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType, decode, encode};
-use photocraft_io::{ExportOptions, XmpEmbed, export, import};
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType, decode, encode};
+use sary_io::{ExportOptions, XmpEmbed, export, import};
 
 fn source(sample: SampleType) -> Image {
     let mut image = Image::from_u8(1, 1, ChannelLayout::Rgb, vec![31, 127, 223]).unwrap().convert(ChannelLayout::Rgb, sample);
@@ -25,8 +25,8 @@ fn png_text_survives_native_and_png_saves_at_both_depths() {
         let original = decode(&png).unwrap();
         let opened = import("synthetic.png", &png).unwrap();
         assert!(opened.warnings.is_empty(), "{:?}", opened.warnings);
-        let native = export(&opened.document, "pcraft", &ExportOptions::default()).unwrap();
-        let reopened = import("synthetic.pcraft", &native.bytes).unwrap();
+        let native = export(&opened.document, "sary", &ExportOptions::default()).unwrap();
+        let reopened = import("synthetic.sary", &native.bytes).unwrap();
         let saved = export(&reopened.document, "png", &ExportOptions::default()).unwrap();
         assert!(saved.warnings.is_empty(), "{:?}", saved.warnings);
         let back = decode(&saved.bytes).unwrap();
@@ -72,8 +72,8 @@ fn palette_png_reports_unsupported_text_only_when_embedding_is_requested() {
     let image = source(SampleType::U8);
     let png = encode(&image, Format::Png, &EncodeOptions::default()).unwrap();
     let mut doc = import("synthetic.png", &png).unwrap().document;
-    doc.mode = photocraft_color::ColorMode::Indexed;
-    doc.color_table = Some(photocraft_doc::ColorTable { colors: vec![[31, 127, 223]], transparent: None });
+    doc.mode = sary_color::ColorMode::Indexed;
+    doc.color_table = Some(sary_doc::ColorTable { colors: vec![[31, 127, 223]], transparent: None });
     let saved = export(&doc, "png", &ExportOptions::default()).unwrap();
     assert!(saved.warnings.iter().any(|w| w.contains("text metadata")));
     let opts = ExportOptions { xmp: XmpEmbed::None, ..Default::default() };
@@ -89,7 +89,7 @@ fn tiff_text_survives_flat_and_layered_saves_and_respects_metadata_none() {
     // TIFF's supported ASCII tag names, rather than arbitrary PNG keywords.
     doc.metadata.text = vec![("Description".into(), "Synthetic description".into()), ("Artist".into(), "Synthetic author".into())];
     let mut overlay = doc.layers[0].clone();
-    overlay.id = photocraft_doc::LayerId::fresh();
+    overlay.id = sary_doc::LayerId::fresh();
     doc.layers.push(overlay);
     for tiff_layers in [false, true] {
         let opts = ExportOptions { tiff_layers, ..Default::default() };

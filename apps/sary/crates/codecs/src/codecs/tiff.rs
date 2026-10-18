@@ -51,7 +51,7 @@ const TAG_PHOTOSHOP: u16 = 34377;
 const TAG_IMAGE_SOURCE_DATA: u16 = 37724;
 
 /// `true` when [`encode`] writes little-endian (`II`) files: the `tiff` encoder writes the
-/// running target's byte order, and every target PhotoCraft builds for is little-endian.
+/// running target's byte order, and every target Sary builds for is little-endian.
 /// Byte-order-sensitive payloads (Photoshop layer data) must be produced to match.
 pub fn writes_little_endian() -> bool {
     cfg!(target_endian = "little")
@@ -235,7 +235,7 @@ pub(crate) fn decode(bytes: &[u8], limits: &Limits) -> Result<Image, CodecError>
 /// full-resolution pages, and a [`DecodeWarning::Truncated`] when image data is cut off.
 pub(crate) fn decode_page(bytes: &[u8], page: Option<usize>, limits: &Limits) -> Result<Image, CodecError> {
     if camera_raw(bytes) {
-        return Err(CodecError::unsupported(F, "camera raw files (such as CR2, NEF, ARW or DNG) are not flat images; decode them with photocraft-raw"));
+        return Err(CodecError::unsupported(F, "camera raw files (such as CR2, NEF, ARW or DNG) are not flat images; decode them with sary-raw"));
     }
     let file = File::parse(bytes).ok_or_else(|| err("not a TIFF or BigTIFF header"))?;
     let info = ifd::info_of(&file)?;
@@ -533,7 +533,7 @@ fn decode_ifd(f: &File<'_>, dir: &Ifd, limits: &Limits) -> Result<Image, CodecEr
         None
     };
     // CIE L*a*b*: CIELab (8; a* and b* signed) and ICCLab (9; a* and b* offset) are handed to the
-    // `tiff` crate as RGB, then labelled Lab with a* and b* in PhotoCraft's encoding
+    // `tiff` crate as RGB, then labelled Lab with a* and b* in Sary's encoding
     // (`convert_ab`).
     let lab = matches!(photometric, 8 | 9);
     if lab && (spp < 3 || !matches!(src, Src::U8 | Src::U16)) {
@@ -700,7 +700,7 @@ fn decode_ifd(f: &File<'_>, dir: &Ifd, limits: &Limits) -> Result<Image, CodecEr
 }
 
 /// The a* and b* samples (1 and 2 of every pixel) of a Lab image between the file's encoding and
-/// PhotoCraft's (8 bits: `a + 128`; 16 bits: `(a + 128) · 257`). In the file, CIELab holds them
+/// Sary's (8 bits: `a + 128`; 16 bits: `(a + 128) · 257`). In the file, CIELab holds them
 /// signed (8 bits: `a`; 16 bits: `a · 256`) and ICCLab offset (8 bits: `a + 128`; 16 bits:
 /// `(a + 128) · 256`). `to_file` picks the direction; samples are native-endian.
 fn convert_ab(data: &mut [u8], channels: usize, sample: SampleType, signed: bool, to_file: bool) {

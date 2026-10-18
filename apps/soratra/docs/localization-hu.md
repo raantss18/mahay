@@ -1,10 +1,10 @@
 # Hungarian interface
 
-> **Last reviewed:** 2026-10-11 · **Last updated:** 2026-10-11 · **Change:** minor (Hungarian interface catalog and regression checks) · **Target:** WordCraft 0.5.0
+> **Last reviewed:** 2026-10-11 · **Last updated:** 2026-10-11 · **Change:** minor (Hungarian interface catalog and regression checks) · **Target:** Soratra 0.5.0
 
 Choose **File › Options › Interface language › Magyar**, or follow a Hungarian system display
 language (`hu-HU`, `hu_HU.UTF-8`). The catalog code is `hu`; `ui.language` with `{"value":"hu"}`
-selects it explicitly, and `WORDCRAFT_LANGUAGE=hu-HU` does the same for a headless screenshot or a
+selects it explicitly, and `SORATRA_LANGUAGE=hu-HU` does the same for a headless screenshot or a
 launch while the preference is `auto`. The choice is saved with the other interface settings.
 Document text, command ids, CLI/MCP/control responses and file paths do not change.
 
@@ -52,13 +52,13 @@ kept, and strings added later fall back to English until they are translated.
 | Ribbon / Pane / Quick Access Toolbar | Menüszalag / Panel / Gyorselérési eszköztár |
 | Proofing / Word Count | Nyelvi ellenőrzés / Szavak száma |
 
-Product and format names stay as they are (WordCraft, PDF, DOCX, Markdown, MCP, Zotero). The Font
+Product and format names stay as they are (Soratra, PDF, DOCX, Markdown, MCP, Zotero). The Font
 dialog's preview sample is `AaBbYyZz ŐőŰű`, so the All Caps preview shows the Hungarian double
 acute capitals.
 
 ## Verification and remaining scope
 
-`cargo test -p wordcraft-ui-egui --lib i18n::tests` covers Hungarian locale tags and preference
+`cargo test -p soratra-ui-egui --lib i18n::tests` covers Hungarian locale tags and preference
 order, saving and restoring `hu`, unchanged document content, every key of the Russian catalog,
 built-in style names, placeholders, count wording, the font sample's capitals, English fallback,
 and the glyphs `ÁáÉéÍíÓóÖöŐőÚúÜüŰű` in the bundled Inter (Regular, Medium, SemiBold) and JetBrains Mono. The shared catalog checks

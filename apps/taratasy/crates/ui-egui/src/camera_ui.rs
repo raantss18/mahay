@@ -6,14 +6,14 @@ use egui::{Align2, Color32, CornerRadius, Pos2, Rect, Shape, Stroke, vec2};
 
 use crate::canvas::{DocView, PageXform, ViewAction};
 use crate::theme::Tokens;
-pub use pdfcraft_engine::camera_clean::Look;
+pub use taratasy_engine::camera_clean::Look;
 
 /// How far in from the page's edges the corners start, as a share of its size.
 const INSET: f32 = 0.05;
 /// How close (screen points) the pointer must be to pick up a corner.
 const GRAB: f32 = 12.0;
 /// The slider's top.
-pub const MAX_LEVEL: u8 = pdfcraft_engine::camera_clean::MAX_LEVEL;
+pub const MAX_LEVEL: u8 = taratasy_engine::camera_clean::MAX_LEVEL;
 const BLUE: Color32 = Color32::from_rgb(0x14, 0x73, 0xE6);
 
 /// The quadrilateral being placed: its page, its corners in view space (points, y down) and the

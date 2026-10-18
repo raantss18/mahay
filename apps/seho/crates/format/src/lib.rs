@@ -1,4 +1,4 @@
-//! The native `.deckcraft` format: a zip holding `presentation.json` (the model, minus media
+//! The native `.seho` format: a zip holding `presentation.json` (the model, minus media
 //! bytes), `media/<id>` files with the embedded media, and `mimetype`. Readers ignore unknown
 //! fields, so newer files open in older builds with what those builds understand.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -9,13 +9,13 @@ mod finite;
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_model::text::{Paragraph, TextBody};
-use deckcraft_model::{LayoutType, Presentation, ShapeKind, defaults};
+use seho_model::text::{Paragraph, TextBody};
+use seho_model::{LayoutType, Presentation, ShapeKind, defaults};
 
-pub const MIMETYPE: &str = "application/vnd.storyteller.deckcraft+zip";
-/// Files written before the SlideCraft → DeckCraft rename (`.slidecraft`) are still read.
+pub const MIMETYPE: &str = "application/vnd.storyteller.seho+zip";
+/// Files written before the SlideCraft → Seho rename (`.slidecraft`) are still read.
 pub const LEGACY_MIMETYPE: &str = concat!("application/vnd.storyteller.", "slide", "craft+zip");
-pub const EXTENSION: &str = "deckcraft";
+pub const EXTENSION: &str = "seho";
 /// Format version written into the manifest.
 pub const VERSION: u32 = 1;
 /// Largest entry we will inflate (guards against zip bombs).
@@ -34,7 +34,7 @@ struct Budget {
 
 #[derive(Debug, thiserror::Error)]
 pub enum FormatError {
-    #[error("not a DeckCraft file: {0}")]
+    #[error("not a Seho file: {0}")]
     NotOurs(String),
     #[error("damaged file: {0}")]
     Damaged(String),
@@ -63,9 +63,9 @@ pub fn save(p: &Presentation) -> Result<Vec<u8>> {
         z.start_file("mimetype", stored).map_err(w)?;
         z.write_all(MIMETYPE.as_bytes()).map_err(|e| FormatError::Write(e.to_string()))?;
         let m = Manifest {
-            format: "deckcraft".into(),
+            format: "seho".into(),
             version: VERSION,
-            generator: format!("DeckCraft {}", env!("CARGO_PKG_VERSION")),
+            generator: format!("Seho {}", env!("CARGO_PKG_VERSION")),
             presentation: p.clone(),
         };
         let json = serde_json::to_vec(&finite::Finite(&m)).map_err(|e| FormatError::Write(e.to_string()))?;
@@ -94,7 +94,7 @@ fn is_compressed(ct: &str) -> bool {
         || ct.contains("zip")
 }
 
-/// Does this look like a `.deckcraft` file?
+/// Does this look like a `.seho` file?
 pub fn sniff(bytes: &[u8]) -> bool {
     bytes.starts_with(b"PK") && [MIMETYPE, LEGACY_MIMETYPE].iter().any(|m| bytes.windows(m.len()).take(200).any(|w| w == m.as_bytes()))
 }
@@ -135,7 +135,7 @@ fn load_within(bytes: &[u8], budget: Budget) -> Result<(Presentation, Vec<String
     let mut z = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| FormatError::NotOurs(e.to_string()))?;
     let json = read_entry(&mut z, "presentation.json").map_err(|_| FormatError::NotOurs("no presentation.json".into()))?;
     let m = parse_manifest(&json)?;
-    if m.format != "deckcraft" {
+    if m.format != "seho" {
         return Err(FormatError::NotOurs(m.format));
     }
     let mut p = m.presentation;
@@ -152,7 +152,7 @@ fn load_within(bytes: &[u8], budget: Budget) -> Result<(Presentation, Vec<String
         let name = format!("media/{}", item.id.0);
         let linked_only = item.link.is_some() && z.index_for_name(&name).is_none();
         if z.by_name(&name).is_ok_and(|f| f.size() > left) {
-            return Err(FormatError::Damaged("embedded media is larger than DeckCraft can open".into()));
+            return Err(FormatError::Damaged("embedded media is larger than Seho can open".into()));
         }
         match read_entry_max(&mut z, &name, left.min(MAX_ENTRY)) {
             Ok(data) => {
@@ -185,7 +185,7 @@ pub fn repair(p: &mut Presentation) {
             // An exhausted id space leaves a duplicate slide as it is: the engine refuses to
             // grow such a deck (edits by id stay ambiguous for the duplicate), and the duplicate
             // stays visible rather than the file failing to open (#407).
-            let new_id = if dup { p.alloc_id().map(deckcraft_model::SlideId) } else { None };
+            let new_id = if dup { p.alloc_id().map(seho_model::SlideId) } else { None };
             if let Some(s) = p.slides.get_mut(i) {
                 let s = Arc::make_mut(s);
                 if needs_layout {
@@ -210,12 +210,12 @@ pub const SLIDE_SIDE: std::ops::RangeInclusive<f64> = 72.0..=4032.0;
 
 /// A slide size the views and renderer can always lay out: a missing, zero, negative or
 /// non-finite side gives the 16:9 default, and each side is brought into [`SLIDE_SIDE`].
-pub fn sane_slide_size(s: deckcraft_model::Size) -> deckcraft_model::Size {
+pub fn sane_slide_size(s: seho_model::Size) -> seho_model::Size {
     let ok = |v: f64| v.is_finite() && v > 0.0;
     if !(ok(s.width) && ok(s.height)) {
         return defaults::WIDE;
     }
-    deckcraft_model::Size::new(s.width.clamp(*SLIDE_SIDE.start(), *SLIDE_SIDE.end()), s.height.clamp(*SLIDE_SIDE.start(), *SLIDE_SIDE.end()))
+    seho_model::Size::new(s.width.clamp(*SLIDE_SIDE.start(), *SLIDE_SIDE.end()), s.height.clamp(*SLIDE_SIDE.start(), *SLIDE_SIDE.end()))
 }
 
 /// Slides read from an outline: each title with its body paragraphs (level 0–8, text).
@@ -259,7 +259,7 @@ fn failure(src: &[u8]) -> std::result::Result<Manifest, (String, (usize, usize))
 }
 
 /// Parse `presentation.json`. serde_json writes a NaN or infinite number as `null`, which then
-/// fails to read back as a number ("invalid type: null, expected f64"), so DeckCraft could save
+/// fails to read back as a number ("invalid type: null, expected f64"), so Seho could save
 /// a file it couldn't open. Each such `null` is read as 0 instead ([`repair`] then brings the
 /// value into range); anything else that doesn't parse is damage.
 ///
@@ -336,7 +336,7 @@ const MAX_COORD: f64 = 1.0e6;
 /// Numbers no view can draw or no file should keep: non-finite positions, sizes and angles become
 /// 0, huge ones are clamped, angles are brought into 0–360, crops into a sane range, font sizes
 /// into 1–4000 pt and line widths into 0–1584 pt (PowerPoint's limits).
-fn sane_xfrm(x: &mut deckcraft_model::Xfrm) {
+fn sane_xfrm(x: &mut seho_model::Xfrm) {
     let fin = |v: f64| if v.is_finite() { v } else { 0.0 };
     x.x = fin(x.x).clamp(-MAX_COORD, MAX_COORD);
     x.y = fin(x.y).clamp(-MAX_COORD, MAX_COORD);
@@ -348,11 +348,11 @@ fn sane_xfrm(x: &mut deckcraft_model::Xfrm) {
     }
 }
 
-fn sane_run(p: &mut deckcraft_model::text::RunProps) {
+fn sane_run(p: &mut seho_model::text::RunProps) {
     p.size = p.size.filter(|v| v.is_finite() && *v > 0.0).map(|v| v.clamp(1.0, 4000.0));
 }
 
-fn sane_shapes(shapes: &mut [deckcraft_model::Shape], depth: usize) {
+fn sane_shapes(shapes: &mut [seho_model::Shape], depth: usize) {
     if depth > 64 {
         return;
     }
@@ -372,12 +372,12 @@ fn sane_shapes(shapes: &mut [deckcraft_model::Shape], depth: usize) {
             }
         }
         match &mut sh.kind {
-            deckcraft_model::ShapeKind::Picture { fill } => {
+            seho_model::ShapeKind::Picture { fill } => {
                 for c in &mut fill.crop {
                     *c = if c.is_finite() { c.clamp(-10.0, 1.0) } else { 0.0 };
                 }
             }
-            deckcraft_model::ShapeKind::Group { children, child } => {
+            seho_model::ShapeKind::Group { children, child } => {
                 sane_xfrm(child);
                 sane_shapes(children, depth + 1);
             }
@@ -636,17 +636,17 @@ mod tests {
     /// such number repaired (it failed as "invalid type: null, expected f64").
     #[test]
     fn a_file_saved_with_non_finite_numbers_reopens() {
-        use deckcraft_model::{Shape, ShapeKind, Xfrm};
+        use seho_model::{Shape, ShapeKind, Xfrm};
         let mut p = Presentation::default();
         let nan = f64::NAN;
         let inf = f64::INFINITY;
         let mut pic = Shape { xfrm: Some(Xfrm { x: nan, y: -inf, w: 1e300, h: -4.0, rot: 725.0, ..Default::default() }), ..Default::default() };
-        pic.kind = ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { crop: [nan, inf, 0.25, -1e9], ..Default::default() } };
-        pic.line = Some(deckcraft_model::Line { width: Some(1e9), ..Default::default() });
+        pic.kind = ShapeKind::Picture { fill: seho_model::style::PictureFill { crop: [nan, inf, 0.25, -1e9], ..Default::default() } };
+        pic.line = Some(seho_model::Line { width: Some(1e9), ..Default::default() });
         let mut text = Shape { xfrm: Some(Xfrm { rot: inf, w: 100.0, h: 50.0, ..Default::default() }), ..Default::default() };
-        let mut body = deckcraft_model::text::TextBody::default();
-        let mut para = deckcraft_model::text::Paragraph::default();
-        para.runs.push(deckcraft_model::text::Run::with("x", deckcraft_model::text::RunProps { size: Some(-3.0), ..Default::default() }));
+        let mut body = seho_model::text::TextBody::default();
+        let mut para = seho_model::text::Paragraph::default();
+        para.runs.push(seho_model::text::Run::with("x", seho_model::text::RunProps { size: Some(-3.0), ..Default::default() }));
         para.end_props.size = Some(1e9);
         body.paragraphs.push(para);
         text.text = Some(body);
@@ -678,7 +678,7 @@ mod tests {
     /// including a `null` inside a tagged enum, where serde reports only the enclosing object.
     #[test]
     fn older_files_with_null_numbers_open() {
-        use deckcraft_model::{Shape, ShapeKind, Xfrm};
+        use seho_model::{Shape, ShapeKind, Xfrm};
         let nan = f64::NAN;
         for case in 0..3 {
             let mut p = Presentation::default();
@@ -689,12 +689,12 @@ mod tests {
                     ..Default::default()
                 },
                 _ => Shape {
-                    kind: ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { crop: [0.1, nan, 0.0, 0.0], ..Default::default() } },
+                    kind: ShapeKind::Picture { fill: seho_model::style::PictureFill { crop: [0.1, nan, 0.0, 0.0], ..Default::default() } },
                     ..Default::default()
                 },
             };
             Arc::make_mut(&mut p.slides[0]).shapes.push(sh);
-            let m = Manifest { format: "deckcraft".into(), version: VERSION, generator: "old".into(), presentation: p };
+            let m = Manifest { format: "seho".into(), version: VERSION, generator: "old".into(), presentation: p };
             let json = serde_json::to_vec(&m).unwrap();
             assert!(json.windows(4).any(|w| w == b"null"));
             let back = parse_manifest(&json).unwrap_or_else(|e| panic!("case {case}: {e}"));
@@ -706,11 +706,11 @@ mod tests {
     /// native format: it is drawn at 100 % and only fitted when its text changes (#724).
     #[test]
     fn a_bare_normautofit_body_round_trips() {
-        use deckcraft_model::text::{AutoFit, TextBody};
+        use seho_model::text::{AutoFit, TextBody};
         let mut p = Presentation::default();
         let mut body = TextBody::from_text("Overflowing");
         body.body.autofit = Some(AutoFit::Shrink { font_scale: None, line_reduction: 0.0 });
-        let sh = deckcraft_model::Shape { text: Some(body), ..Default::default() };
+        let sh = seho_model::Shape { text: Some(body), ..Default::default() };
         Arc::make_mut(&mut p.slides[0]).shapes.push(sh);
         let back = load(&save(&p).unwrap()).unwrap_or_else(|e| panic!("{e}"));
         let body = back.slides[0].shapes.last().unwrap().text.clone().unwrap();
@@ -718,7 +718,7 @@ mod tests {
         // A scale the file saved round-trips as itself.
         let mut body = TextBody::from_text("Overflowing");
         body.body.autofit = Some(AutoFit::Shrink { font_scale: Some(0.62), line_reduction: 0.2 });
-        let sh = deckcraft_model::Shape { text: Some(body), ..Default::default() };
+        let sh = seho_model::Shape { text: Some(body), ..Default::default() };
         Arc::make_mut(&mut p.slides[0]).shapes.push(sh);
         let back = load(&save(&p).unwrap()).unwrap_or_else(|e| panic!("{e}"));
         let body = back.slides[0].shapes.last().unwrap().text.clone().unwrap();
@@ -728,21 +728,21 @@ mod tests {
     /// Only `null`s where numbers belong are patched: other damage still fails.
     #[test]
     fn other_damage_is_still_reported() {
-        let ok = serde_json::to_vec(&serde_json::json!({"format": "deckcraft", "version": 1, "generator": "t", "presentation": {}})).unwrap();
+        let ok = serde_json::to_vec(&serde_json::json!({"format": "seho", "version": 1, "generator": "t", "presentation": {}})).unwrap();
         assert!(parse_manifest(&ok).is_ok());
         let bad = br#"{"format": null, "version": 1, "generator": "t", "presentation": {}}"#;
         assert!(parse_manifest(bad).is_err());
         let truncated = &ok[..ok.len() - 3];
         assert!(parse_manifest(truncated).is_err());
         // A null number on a later line (pretty-printed by another tool) is found too.
-        let pretty = b"{\n  \"format\": \"deckcraft\",\n  \"version\": 1,\n  \"generator\": \"t\",\n  \"presentation\": {\"slides\": [{\"shapes\": [{\"xfrm\": {\"x\": null, \"y\": 1, \"w\": 2, \"h\": 3}}]}]}\n}";
+        let pretty = b"{\n  \"format\": \"seho\",\n  \"version\": 1,\n  \"generator\": \"t\",\n  \"presentation\": {\"slides\": [{\"shapes\": [{\"xfrm\": {\"x\": null, \"y\": 1, \"w\": 2, \"h\": 3}}]}]}\n}";
         let m = parse_manifest(pretty).unwrap_or_else(|e| panic!("{e}"));
         assert_eq!(m.presentation.slides[0].shapes[0].xfrm.unwrap().x, 0.0);
     }
 
     #[test]
     fn degenerate_slide_sizes_are_repaired() {
-        use deckcraft_model::Size;
+        use seho_model::Size;
         let cases = [
             ((0.0, 0.0), (960.0, 540.0)),
             ((-5.0, 540.0), (960.0, 540.0)),
@@ -796,7 +796,7 @@ mod tests {
     #[test]
     fn repair_fixes_missing_layout_and_size() {
         let mut p = Presentation::default();
-        Arc::make_mut(&mut p.slides[0]).layout = deckcraft_model::LayoutId(99999);
+        Arc::make_mut(&mut p.slides[0]).layout = seho_model::LayoutId(99999);
         p.slide_size.width = f64::NAN;
         repair(&mut p);
         assert!(p.validate().is_empty());
@@ -855,8 +855,8 @@ mod tests {
 /// #814: slides_to_outline includes table cell text, which it used to skip.
 #[test]
 fn outline_includes_table_text() {
-    use deckcraft_model::table::{Cell, Row, Table};
-    use deckcraft_model::{Shape, ShapeKind, Xfrm};
+    use seho_model::table::{Cell, Row, Table};
+    use seho_model::{Shape, ShapeKind, Xfrm};
     let mut p = defaults::new_presentation(None);
     let layout = defaults::layout_of_kind(&p, LayoutType::TitleAndContent).unwrap();
     let mut s = defaults::new_slide(&mut p, layout).expect("slide");

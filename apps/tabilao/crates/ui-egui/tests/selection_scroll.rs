@@ -1,9 +1,9 @@
 //! Extending the selection from the keyboard scrolls its moving end into view, not the anchor.
 
 use egui::{Event, Key, Modifiers};
-use gridcraft_engine::Session;
-use gridcraft_engine::core::{CellRef, RangeRef};
-use gridcraft_ui_egui::{SheetApp, grid::Geo};
+use tabilao_engine::Session;
+use tabilao_engine::core::{CellRef, RangeRef};
+use tabilao_ui_egui::{SheetApp, grid::Geo};
 use serde_json::json;
 
 type Harness = egui_kittest::Harness<'static, SheetApp>;

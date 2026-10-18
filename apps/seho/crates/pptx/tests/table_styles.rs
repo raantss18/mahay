@@ -2,9 +2,9 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::style::Fill;
-use deckcraft_model::{Shape, ShapeId, defaults};
+use seho_geom::Xfrm;
+use seho_model::style::Fill;
+use seho_model::{Shape, ShapeId, defaults};
 
 const STYLE_GUID: &str = "{ABCDEF01-2345-4678-9ABC-DEF012345678}";
 
@@ -22,16 +22,16 @@ fn table_deck() -> Vec<u8> {
     let mut p = defaults::new_presentation(None);
     let id = ShapeId(p.alloc_id().expect("ids"));
     let first = p.slides[0].id;
-    let mut t = deckcraft_model::Table::new(3, 2, 300.0, 30.0);
+    let mut t = seho_model::Table::new(3, 2, 300.0, 30.0);
     t.style = "medium2-accent1".into();
     p.slide_mut(first).expect("slide").shapes.push(Shape {
         id,
         name: "Styled".into(),
         xfrm: Some(Xfrm::new(10.0, 10.0, 300.0, 90.0)),
-        kind: deckcraft_model::ShapeKind::Table(t),
+        kind: seho_model::ShapeKind::Table(t),
         ..Default::default()
     });
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     // Point the table at the probe style and replace the style part.
     let mut z = zip::ZipArchive::new(Cursor::new(bytes)).expect("zip");
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
@@ -60,8 +60,8 @@ fn table_deck() -> Vec<u8> {
 
 #[test]
 fn table_styles_the_file_defines_are_read_used_and_kept() {
-    use deckcraft_model::table::{TableBorder, TablePart};
-    let p = deckcraft_pptx::import(&table_deck()).expect("import");
+    use seho_model::table::{TableBorder, TablePart};
+    let p = seho_pptx::import(&table_deck()).expect("import");
     let def = p.table_styles.iter().find(|d| d.id == STYLE_GUID).expect("the probe style is read");
     assert_eq!(def.name, "Probe Style");
     let bg = def.background.as_ref().expect("table background");
@@ -74,24 +74,24 @@ fn table_styles_the_file_defines_are_read_used_and_kept() {
     assert!(matches!(def.part(TablePart::Band1H).and_then(|b| b.fill.clone()), Some(Fill::Solid { .. })));
     // The table keeps the style's GUID, so it's drawn from the definition.
     let s = p.slides[0].shapes.iter().find(|s| s.name == "Styled").expect("table");
-    let deckcraft_model::ShapeKind::Table(t) = &s.kind else { panic!("table") };
+    let seho_model::ShapeKind::Table(t) = &s.kind else { panic!("table") };
     assert_eq!(t.style, STYLE_GUID);
     // Saving writes the definition back, unchanged.
-    let again = deckcraft_pptx::export(&p).expect("export");
-    let q = deckcraft_pptx::import(&again).expect("reimport");
+    let again = seho_pptx::export(&p).expect("export");
+    let q = seho_pptx::import(&again).expect("reimport");
     let def2 = q.table_styles.iter().find(|d| d.id == STYLE_GUID).expect("kept on save");
     assert_eq!(def2.parts, def.parts);
 }
 
 #[test]
 fn table_style_no_table_uses_is_kept_on_save() {
-    let mut p = deckcraft_pptx::import(&table_deck()).expect("import");
+    let mut p = seho_pptx::import(&table_deck()).expect("import");
     assert!(p.table_styles.iter().any(|d| d.id == STYLE_GUID));
     // Drop the only table that uses the style; the deck still defines it.
     for s in &mut p.slides {
-        std::sync::Arc::make_mut(s).shapes.retain(|sh| !matches!(sh.kind, deckcraft_model::ShapeKind::Table(_)));
+        std::sync::Arc::make_mut(s).shapes.retain(|sh| !matches!(sh.kind, seho_model::ShapeKind::Table(_)));
     }
-    let q = deckcraft_pptx::import(&deckcraft_pptx::export(&p).expect("export")).expect("reimport");
+    let q = seho_pptx::import(&seho_pptx::export(&p).expect("export")).expect("reimport");
     let d = q.table_styles.iter().find(|d| d.id == STYLE_GUID).expect("style kept");
     assert_eq!(d.name, "Probe Style");
 }

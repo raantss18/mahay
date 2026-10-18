@@ -2,7 +2,7 @@
 #
 # Clean-room translations from English source labels. Use standard Lithuanian computing terms;
 # consult the Lietuvos Respublikos terminų bankas (terminai.vlkk.lt) when selecting terminology.
-# Product and format names (PdfCraft, PDF, PDF/A, OCR, XFA, Word…) remain unchanged.
+# Product and format names (Taratasy, PDF, PDF/A, OCR, XFA, Word…) remain unchanged.
 
 	Menu	Meniu
 	Edit	Redaguoti
@@ -139,7 +139,7 @@
 	Accessibility	Prieinamumas
 	Help…	Žinynas…
 	Check for updates…	Tikrinti, ar yra naujinimų…
-	About PdfCraft	Apie „PdfCraft“
+	About Taratasy	Apie „Taratasy“
 	Automatically	Automatiškai
 	Never	Niekada
 	Always	Visada
@@ -560,7 +560,7 @@
 	Files are combined from top to bottom. Leave Pages empty to take every page.	Failai jungiami iš viršaus į apačią. Palikite lauką „Puslapiai“ tuščią, jei norite įtraukti visus puslapius.
 	Files are combined in the order shown. Drag them to change it.	Failai sujungiami rodoma tvarka. Vilkite juos, kad ją pakeistumėte.
 	Files for {name}	Failai: {name}
-	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Čia rodomi „PdfCraft“ atverti failai. Įkelkite PDF bet kurioje vietoje, kad jį atvertumėte.
+	Files you open in Taratasy appear here. Drop a PDF anywhere to open it.	Čia rodomi „Taratasy“ atverti failai. Įkelkite PDF bet kurioje vietoje, kad jį atvertumėte.
 	Fill & Sign dates	Datos pildymo ir pasirašymo įrankyje
 	Fill & Sign signature	Parašas pildymo ir pasirašymo įrankyje
 	Fill Color:	Užpildo spalva:
@@ -668,7 +668,7 @@
 	JavaScript is turned off (Preferences ▸ JavaScript).	JavaScript išjungtas (Nuostatos > JavaScript).
 	JavaScript, e.g. getField("total").value	JavaScript, pvz., getField("total").value
 	Join our Discord	Prisijunkite prie mūsų „Discord“ serverio
-	Join the ArtCraft community	Prisijunkite prie „ArtCraft“ bendruomenės
+	Join the Mahay community	Prisijunkite prie „Mahay“ bendruomenės
 	Justify	Abipusė lygiuotė
 	Keep source fonts	Išsaugoti šaltinio šriftus
 	Keep tool selected	Palikti įrankį pasirinktą
@@ -871,10 +871,10 @@
 	Pattern	Šablonas
 	Patterns	Šablonai
 	Patterns (graphics objects)	Šablonai (grafiniai objektai)
-	PdfCraft didn't shut down normally. These documents had changes that were autosaved:	„PdfCraft“ buvo uždaryta netinkamai. Šių dokumentų pakeitimai buvo automatiškai įrašyti:
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	„PdfCraft“ veikia neprisijungus. Nerenkami telemetrijos duomenys, nereikia paskyros ir nenaudojamos debesijos paslaugos, nebent pridėtumėte jų teikėją.
-	PdfCraft {c} is up to date.	Naudojate naujausią „PdfCraft“ versiją {c}.
-	PdfCraft {v} is available.	Išleista „PdfCraft“ versija {v}.
+	Taratasy didn't shut down normally. These documents had changes that were autosaved:	„Taratasy“ buvo uždaryta netinkamai. Šių dokumentų pakeitimai buvo automatiškai įrašyti:
+	Taratasy works offline. No telemetry, no account, and no cloud processing unless you add a provider.	„Taratasy“ veikia neprisijungus. Nerenkami telemetrijos duomenys, nereikia paskyros ir nenaudojamos debesijos paslaugos, nebent pridėtumėte jų teikėją.
+	Taratasy {c} is up to date.	Naudojate naujausią „Taratasy“ versiją {c}.
+	Taratasy {v} is available.	Išleista „Taratasy“ versija {v}.
 	Percentage	Procentai
 	Permissions password	Teisių slaptažodis
 	Permitted actions after certifying	Po patvirtinimo leidžiami veiksmai
@@ -948,7 +948,7 @@
 	Remove {n} files	Pašalinti failų: {n}
 	Remove {n} pages	Pašalinti puslapių: {n}
 	Reopen Closed Tab	Vėl atverti užvertą kortelę
-	Reopen the files that were open when PdfCraft last closed	Vėl atverti failus, kurie buvo atverti paskutinį kartą užveriant „PdfCraft“
+	Reopen the files that were open when Taratasy last closed	Vėl atverti failus, kurie buvo atverti paskutinį kartą užveriant „Taratasy“
 	Repair log	Taisymo žurnalas
 	Repeat overlay text	Kartoti perdangos tekstą
 	Replace Image…	Pakeisti paveikslėlį…
@@ -1131,7 +1131,7 @@
 	Text alignment:	Teksto lygiuotė:
 	Text in images isn't found; recognise text (OCR) first.	Paveikslėliuose esantis tekstas nerandamas; pirmiausia atpažinkite tekstą (OCR).
 	Text is compared word by word; the differences are shown on the new file.	Tekstas lyginamas žodis po žodžio; skirtumai rodomi naujame faile.
-	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Teksto atpažinimas neįdiegtas: trūksta modelio failų. Iš naujo įdiekite „PdfCraft“ arba nustatykite PDFCRAFT_MODELS aplanką, kuriame jie laikomi.
+	Text recognition isn't installed: its model files are missing. Reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them.	Teksto atpažinimas neįdiegtas: trūksta modelio failų. Iš naujo įdiekite „Taratasy“ arba nustatykite TARATASY_MODELS aplanką, kuriame jie laikomi.
 	Text to find	Ieškomas tekstas
 	Text to insert	Įterpiamas tekstas
 	Text used as a clipping path cannot be moved with this selection.	Teksto, naudojamo kaip iškarpymo kelias, negalima perkelti pasirinkus šį objektą.
@@ -1146,9 +1146,9 @@
 	The document's security settings don't allow copying text and images	Dokumento saugos nuostatos neleidžia kopijuoti teksto ir paveikslėlių
 	The document's security settings don't allow this change	Dokumento saugos nuostatos neleidžia atlikti šio pakeitimo
 	The existing action will be preserved.	Esamas veiksmas bus išsaugotas.
-	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	„PdfCraft“ naudojami šriftai negali atvaizduoti simbolio „{c}“ ({code}), todėl visose PDF žiūryklėse jis rodomas kaip ?. Tekstas įrašytas.
-	The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.	Raktas saugomas „Windows“ sertifikatų saugykloje; gali būti paprašyta leisti „PdfCraft“ juo naudotis.
-	The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.	Raktas saugomas „macOS“ raktinėje; gali būti paprašyta leisti „PdfCraft“ juo naudotis.
+	The fonts Taratasy writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	„Taratasy“ naudojami šriftai negali atvaizduoti simbolio „{c}“ ({code}), todėl visose PDF žiūryklėse jis rodomas kaip ?. Tekstas įrašytas.
+	The key is in the Windows certificate store, which may ask to allow Taratasy to use it.	Raktas saugomas „Windows“ sertifikatų saugykloje; gali būti paprašyta leisti „Taratasy“ juo naudotis.
+	The key is in the macOS Keychain, which may ask to allow Taratasy to use it.	Raktas saugomas „macOS“ raktinėje; gali būti paprašyta leisti „Taratasy“ juo naudotis.
 	The newest {n} of {total} PDFs	Naujausi PDF failai: {n} iš {total}
 	The password is only used to read the file; it isn't saved.	Slaptažodis naudojamas tik failui perskaityti ir nėra įrašomas.
 	The printer driver's own settings for this print: paper tray, paper type, finishing and more.	Šio spausdinimo spausdintuvo tvarkyklės nuostatos: popieriaus dėklas, popieriaus tipas, apdaila ir kita.
@@ -1189,7 +1189,7 @@
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Failas buvo pažeistas ir pataisytas. Įrašius bus išsaugota pataisyta versija.
 	This folder isn't available right now. It may have moved, or its drive or cloud sync is offline.	Aplankas šiuo metu nepasiekiamas. Jis galėjo būti perkeltas arba diskas ar sinchronizavimas su debesija neveikia.
 	This form's scripts are turned off because one ran too long. Reopen the document to run them again.	Šios formos scenarijai išjungti, nes vienas jų veikė per ilgai. Atverkite dokumentą iš naujo, kad scenarijai būtų vykdomi vėl.
-	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Tai dinaminė XFA forma, kurios „PdfCraft“ dar negali rodyti. Matote faile esantį pakaitinį puslapį.
+	This is a dynamic XFA form, which Taratasy can't display yet. What you see is the file's placeholder page.	Tai dinaminė XFA forma, kurios „Taratasy“ dar negali rodyti. Matote faile esantį pakaitinį puslapį.
 	This measurement needs at least {n} points.	Šiam matavimui reikia bent {n} taškų.
 	This page contains objects that cannot be selected together.	Šiame puslapyje yra objektų, kurių negalima pasirinkti kartu.
 	This page couldn't be displayed.\n{e}	Nepavyko parodyti šio puslapio.\n{e}
@@ -1266,7 +1266,7 @@
 	Visible Rectangle	Matomo stačiakampio anotacija
 	Visual	Vaizdinis
 	Warnings	Įspėjimai
-	Welcome to PdfCraft	Sveiki atvykę į „PdfCraft“
+	Welcome to Taratasy	Sveiki atvykę į „Taratasy“
 	What word or phrase would you like to search for?	Kokio žodžio ar frazės norite ieškoti?
 	Whole words only	Tik ištisi žodžiai
 	Width:	Plotis:
@@ -1343,7 +1343,7 @@
 	Archive documents	Archyvuoti dokumentus
 	Area	Plotas
 	Arrow	Rodyklė
-	ArtCraft website	„ArtCraft“ svetainė
+	Mahay website	„Mahay“ svetainė
 	Ask about this document	Klausti apie šį dokumentą
 	Attach a file	Pridėti failą
 	Attach file	Pridėti failą
@@ -1478,7 +1478,7 @@
 	Insert text	Įterpti tekstą
 	JavaScript	JavaScript
 	JavaScript console…	JavaScript konsolė…
-	Join the ArtCraft Discord	Prisijungti prie „ArtCraft“ „Discord“ serverio
+	Join the Mahay Discord	Prisijungti prie „Mahay“ „Discord“ serverio
 	Light gray	Šviesiai pilka
 	Line	Linija
 	Link	Saitas
@@ -1509,8 +1509,8 @@
 	Page options	Puslapio parinktys
 	Page transitions	Puslapių perėjimai
 	Paste pages	Įdėti puslapius
-	PdfCraft on GitHub	„PdfCraft“ „GitHub“ puslapis
-	PdfCraft web page	„PdfCraft“ svetainė
+	Taratasy on GitHub	„Taratasy“ „GitHub“ puslapis
+	Taratasy web page	„Taratasy“ svetainė
 	Perimeter	Perimetras
 	Pin folder to Home…	Prisegti aplanką prie pradžios lango…
 	PostScript / EPS	PostScript / EPS
@@ -1669,7 +1669,7 @@
 	Page {} has additional actions	Puslapis {} turi papildomų veiksmų
 	Panel layout could not be restored: {error}	Nepavyko atkurti skydelių išdėstymo: {error}
 	Panel move was not applied: {error}	Skydelio perkėlimas nepritaikytas: {error}
-	PdfCraft can't check this signature yet: {}.	„PdfCraft“ dar negali patikrinti šio parašo: {}.
+	Taratasy can't check this signature yet: {}.	„Taratasy“ dar negali patikrinti šio parašo: {}.
 	Previous (⇧⌘G)	Ankstesnis (⇧⌘G)
 	Print (⌘P)	Spausdinti (⌘P)
 	Producer	PDF kūrimo programa
@@ -1733,7 +1733,7 @@
 	The signed content is a constructed (segmented) OCTET STRING, as BER allows; it was read anyway.	Pasirašytas turinys yra sudėtinis (segmentuotas) OCTET STRING, kaip leidžia BER; jis vis tiek perskaitytas.
 	The signer's certificate does not allow digital signatures (its key usage has neither digital signature nor non-repudiation).	Pasirašiusiojo sertifikatas neleidžia skaitmeninių parašų (rakto paskirtyje nenurodyta nei pasirašymo, nei neišsižadėjimo paskirtis).
 	The signer's certificate has been revoked ({}).	Pasirašiusiojo sertifikatas atšauktas ({}).
-	The signer's certificate has critical extensions PdfCraft does not recognize ({}).	Pasirašiusiojo sertifikatas turi kritinių plėtinių, kurių „PdfCraft“ neatpažįsta ({}).
+	The signer's certificate has critical extensions Taratasy does not recognize ({}).	Pasirašiusiojo sertifikatas turi kritinių plėtinių, kurių „Taratasy“ neatpažįsta ({}).
 	The signer's certificate is not in the signature.	Paraše nėra pasirašiusiojo sertifikato.
 	The signer's certificate is not issued for signing documents (its extended key usage has no document-signing purpose).	Pasirašiusiojo sertifikatas neskirtas dokumentams pasirašyti (išplėstinėje rakto paskirtyje nenurodytas dokumentų pasirašymas).
 	The signer's certificate was not valid at the time of signing.	Pasirašiusiojo sertifikatas pasirašymo metu negaliojo.
@@ -2178,7 +2178,7 @@ comment menu	Edit	Redaguoti
 	Passed	Atitinka
 	Password protection will be applied when you save	Apsauga slaptažodžiu bus pritaikyta įrašant
 	Path	Kelias
-	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	„PdfCraft“ atvaizduoja be grafikos procesoriaus, todėl gali veikti lėtai. Gali padėti grafikos tvarkyklės atnaujinimas.
+	Taratasy is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	„Taratasy“ atvaizduoja be grafikos procesoriaus, todėl gali veikti lėtai. Gali padėti grafikos tvarkyklės atnaujinimas.
 	People may need more time to respond. Check that nothing has a time limit.	Žmonėms gali reikėti daugiau laiko atsakyti. Patikrinkite, ar nėra laiko apribojimų.
 	Phone Number	Telefono numeris
 	Phone Numbers	Telefono numeriai
@@ -2317,7 +2317,7 @@ comment menu	Edit	Redaguoti
 	Text language is specified	Teksto kalba nurodyta
 	Text must contrast enough with its background for people with low vision. Check the colours by eye or with a contrast tool.	Tekstas turi pakankamai išsiskirti iš fono, kad jį matytų silpnaregiai. Patikrinkite spalvas vizualiai arba kontrasto tikrinimo įrankiu.
 	Text recognition is already running	Teksto atpažinimas jau vykdomas
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Teksto atpažinimas neįdiegtas: trūksta modelių (vykdykite `cargo xtask models` arba nustatykite PDFCRAFT_MODELS).
+	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set TARATASY_MODELS).	Teksto atpažinimas neįdiegtas: trūksta modelių (vykdykite `cargo xtask models` arba nustatykite TARATASY_MODELS).
 	That didn't work: an internal error stopped it ({m}).	Veiksmas nepavyko: jį sustabdė vidinė klaida ({m}).
 	That didn't work: an internal error stopped it ({m}). Your documents are unchanged.	Veiksmas nepavyko: jį sustabdė vidinė klaida ({m}). Dokumentai nepakeisti.
 	The Keychain's digital IDs couldn't be listed: {e}	Nepavyko gauti raktinėje esančių skaitmeninių ID sąrašo: {e}
@@ -2334,7 +2334,7 @@ comment menu	Edit	Redaguoti
 	The document's security settings don't allow filling in form fields	Dokumento saugos nuostatos neleidžia pildyti formos laukų
 	The field properties could not be changed.	Nepavyko pakeisti lauko savybių.
 	The field properties dialog is no longer open.	Lauko savybių dialogas jau užvertas.
-	The form asks to be submitted to {u}; PdfCraft doesn't send form data. Save the document to keep your entries.	Forma prašo pateikti duomenis į {u}; „PdfCraft“ formos duomenų nesiunčia. Įrašykite dokumentą, kad išsaugotumėte įvestas reikšmes.
+	The form asks to be submitted to {u}; Taratasy doesn't send form data. Save the document to keep your entries.	Forma prašo pateikti duomenis į {u}; „Taratasy“ formos duomenų nesiunčia. Įrašykite dokumentą, kad išsaugotumėte įvestas reikšmes.
 	The form asks viewers to make appearances (NeedAppearances)	Forma prašo žiūryklių sukurti laukų išvaizdą (NeedAppearances)
 	The linked PDF opened, but its named destination was not applied.	Susietas PDF atvertas, tačiau pavadinta paskirties vieta nepritaikyta.
 	The linked PDF opened, but its page destination was out of range.	Susietas PDF atvertas, tačiau paskirties puslapis nepatenka į puslapių intervalą.
@@ -2355,7 +2355,7 @@ comment menu	Edit	Redaguoti
 	This document has no form fields.	Šiame dokumente nėra formos laukų.
 	This document has no layers.	Šiame dokumente nėra sluoksnių.
 	This file is already as small as it can be made ({size}). No copy was saved.	Šio failo daugiau sumažinti negalima ({size}). Kopija neįrašyta.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ši forma taip pat turi XFA duomenų, kurių „PdfCraft“ dar neskaito. Laukus galite pildyti, tačiau „Acrobat“ gali rodyti XFA reikšmes.
+	This form also contains XFA data, which Taratasy doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ši forma taip pat turi XFA duomenų, kurių „Taratasy“ dar neskaito. Laukus galite pildyti, tačiau „Acrobat“ gali rodyti XFA reikšmes.
 	Thumbnails	Miniatiūros
 	Timed responses	Atsakymai per ribotą laiką
 	Type Password	Įveskite slaptažodį
@@ -2408,7 +2408,7 @@ comment menu	Edit	Redaguoti
 	the document is protected by a password	dokumentas apsaugotas slaptažodžiu
 	the image is empty	paveikslėlis tuščias
 	the password is incorrect	slaptažodis netinkamas
-	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	teksto atpažinimo modeliai neįdiegti (iš naujo įdiekite „PdfCraft“ arba nustatykite PDFCRAFT_MODELS aplanką, kuriame jie laikomi)
+	the text recognition models are not installed (reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them)	teksto atpažinimo modeliai neįdiegti (iš naujo įdiekite „Taratasy“ arba nustatykite TARATASY_MODELS aplanką, kuriame jie laikomi)
 	the title must not be empty	pavadinimas negali būti tuščias
 	there are no pages to print	nėra spausdintinų puslapių
 	there are no redaction marks to apply	nėra pritaikytinų konfidencialios informacijos šalinimo žymų
@@ -2421,19 +2421,19 @@ comment menu	Edit	Redaguoti
 	{label} failed: {e}	Veiksmas {label} nepavyko: {e}
 	{name} has no action	{name} neturi veiksmo
 	{name} is too large for a word list (at most 1 MB).	{name} per didelis žodžių sąrašui (leidžiama iki 1 MB).
-	{name} submits the form to {url}; PdfCraft doesn't send form data. Save the document to keep your entries.	{name} pateikia formą į {url}; „PdfCraft“ formos duomenų nesiunčia. Įrašykite dokumentą, kad išsaugotumėte įvestas reikšmes.
+	{name} submits the form to {url}; Taratasy doesn't send form data. Save the document to keep your entries.	{name} pateikia formą į {url}; „Taratasy“ formos duomenų nesiunčia. Įrašykite dokumentą, kad išsaugotumėte įvestas reikšmes.
 	{name}: choosing images arrives on the web with file pickers for images	{name}: žiniatinklio versijoje paveikslėlius bus galima pasirinkti įdiegus jų failų pasirinkimą
 	{name}: the {other} action isn't supported yet	{name}: veiksmas {other} dar nepalaikomas
-	{who} in this document tried to open an address PdfCraft won't open: {e}.	Šiame dokumente {who} bandė atverti adresą, kurio „PdfCraft“ neatveria: {e}.
-	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Šiame dokumente {who} bandė atverti adresą, kurio „PdfCraft“ neatveria: {e}. Iš dokumentų atveriami tik žiniatinklio (http, https) ir el. pašto (mailto) saitai.
+	{who} in this document tried to open an address Taratasy won't open: {e}.	Šiame dokumente {who} bandė atverti adresą, kurio „Taratasy“ neatveria: {e}.
+	{who} in this document tried to open an address Taratasy won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Šiame dokumente {who} bandė atverti adresą, kurio „Taratasy“ neatveria: {e}. Iš dokumentų atveriami tik žiniatinklio (http, https) ir el. pašto (mailto) saitai.
 animation effects	Off	Išjungta
 animation effects	On	Įjungta
 	View more	Rodyti daugiau
 	View less	Rodyti mažiau
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Tęskite tik jei pasitikite šiuo dokumentu. Adresu gali būti perduota dokumento informacija, pavyzdžiui, tai, ką įvedėte į jo formą.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Spausdinkite vienpusiškai. Išlaikykite lapų tvarką, pjaukite ties žymomis, tada sudėkite krūveles iš kairės į dešinę ir iš viršaus į apačią.
-	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: PdfCraft finds the signature and removes the paper.	Pasirašykite ant balto popieriaus lapo ir nufotografuokite jį esant ryškiam, tolygiam apšvietimui (naudokite blykstę). Pasirinkite nuotrauką arba nuvilkite ją čia: „PdfCraft“ suras parašą ir pašalins popieriaus foną.
-	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Šio lauko šriftas negali atvaizduoti simbolio „{c}“ ({code}), todėl „PdfCraft“ vietoj jo rodo ?. Reikšmė įrašoma, o kitos PDF žiūryklės pagal ją iš naujo atvaizduoja lauką.
+	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: Taratasy finds the signature and removes the paper.	Pasirašykite ant balto popieriaus lapo ir nufotografuokite jį esant ryškiam, tolygiam apšvietimui (naudokite blykstę). Pasirinkite nuotrauką arba nuvilkite ją čia: „Taratasy“ suras parašą ir pašalins popieriaus foną.
+	This field's font can't draw “{c}” ({code}), so Taratasy shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Šio lauko šriftas negali atvaizduoti simbolio „{c}“ ({code}), todėl „Taratasy“ vietoj jo rodo ?. Reikšmė įrašoma, o kitos PDF žiūryklės pagal ją iš naujo atvaizduoja lauką.
 	{chars} can't be written into the PDF yet: Fill & Sign text is Western European only. Pick a numeric format such as dd.mm.yyyy.	Simbolių {chars} dar negalima įrašyti į PDF: pildymo ir pasirašymo tekstui palaikomi tik Vakarų Europos simboliai. Pasirinkite skaitinį formatą, pvz., dd.mm.yyyy.
 	January	sausis
 	February	vasaris

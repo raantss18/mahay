@@ -2,12 +2,12 @@
 
 use std::fmt::Write as _;
 
-use gridcraft_core::{CellRef, RangeRef};
-use gridcraft_model::{Sheet, Workbook};
+use tabilao_core::{CellRef, RangeRef};
+use tabilao_model::{Sheet, Workbook};
 
 use crate::{EngineError, Result};
 
-/// File formats GridCraft reads or writes.
+/// File formats Tabilao reads or writes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FileKind {
     Xlsx,
@@ -44,7 +44,7 @@ pub const PASSWORD_REQUIRED: &str = "is password-protected. Enter its password t
 /// The error for a wrong password contains this.
 pub const WRONG_PASSWORD: &str = "The password is incorrect.";
 /// The first open warning of a workbook decrypted with its password.
-pub const DECRYPTED_NOTICE: &str = "This workbook was password-protected. GridCraft saves it without the password.";
+pub const DECRYPTED_NOTICE: &str = "This workbook was password-protected. Tabilao saves it without the password.";
 
 /// Parses a file's bytes into a workbook. `name` picks the format by extension when the bytes
 /// don't say. An encrypted workbook needs [`open_bytes_with_password`].
@@ -55,19 +55,19 @@ pub fn open_bytes(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
 /// [`open_bytes`], first decrypting a password-protected workbook with `password`. Errors never
 /// quote the password.
 pub fn open_bytes_with_password(name: &str, bytes: &[u8], password: Option<&str>) -> Result<(Workbook, Vec<String>)> {
-    if gridcraft_xlsx::sniff(bytes) != gridcraft_xlsx::Format::Encrypted {
+    if tabilao_xlsx::sniff(bytes) != tabilao_xlsx::Format::Encrypted {
         let (mut wb, warnings) = open_plain(name, bytes)?;
         fit_imported_rows(&mut wb);
         return Ok((wb, warnings));
     }
     // A scheme no password opens is said straight away, rather than after asking for one.
-    let decrypt_error = |e: gridcraft_xlsx::DecryptError| EngineError::Other(decrypt_message(name, e));
+    let decrypt_error = |e: tabilao_xlsx::DecryptError| EngineError::Other(decrypt_message(name, e));
     let Some(password) = password else {
-        gridcraft_xlsx::check_encryption(bytes).map_err(decrypt_error)?;
+        tabilao_xlsx::check_encryption(bytes).map_err(decrypt_error)?;
         return Err(EngineError::Other(format!("'{name}' {PASSWORD_REQUIRED}")));
     };
-    let plain = gridcraft_xlsx::decrypt(bytes, password).map_err(decrypt_error)?;
-    if gridcraft_xlsx::sniff(&plain) == gridcraft_xlsx::Format::Encrypted {
+    let plain = tabilao_xlsx::decrypt(bytes, password).map_err(decrypt_error)?;
+    if tabilao_xlsx::sniff(&plain) == tabilao_xlsx::Format::Encrypted {
         return Err(EngineError::Other(format!("We can't open '{name}': the encrypted file is damaged (it holds another encrypted file).")));
     }
     let (mut wb, mut warnings) = open_plain(name, &plain)?;
@@ -101,51 +101,51 @@ fn fit_imported_rows(wb: &mut Workbook) {
 }
 
 /// What to tell the user when an encrypted workbook can't be decrypted. Never quotes the password.
-fn decrypt_message(name: &str, e: gridcraft_xlsx::DecryptError) -> String {
+fn decrypt_message(name: &str, e: tabilao_xlsx::DecryptError) -> String {
     match e {
-        gridcraft_xlsx::DecryptError::WrongPassword => format!("{WRONG_PASSWORD} Check that Caps Lock is off and try again."),
-        gridcraft_xlsx::DecryptError::Unsupported(scheme) => {
-            format!("'{name}' uses {scheme} encryption, which GridCraft can't open yet. Remove the password in Excel and try again.")
+        tabilao_xlsx::DecryptError::WrongPassword => format!("{WRONG_PASSWORD} Check that Caps Lock is off and try again."),
+        tabilao_xlsx::DecryptError::Unsupported(scheme) => {
+            format!("'{name}' uses {scheme} encryption, which Tabilao can't open yet. Remove the password in Excel and try again.")
         }
-        gridcraft_xlsx::DecryptError::Malformed(detail) => format!("We can't open '{name}': the encrypted file is damaged ({detail})."),
+        tabilao_xlsx::DecryptError::Malformed(detail) => format!("We can't open '{name}': the encrypted file is damaged ({detail})."),
     }
 }
 
 /// Parses bytes that aren't encrypted.
 fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
     let kind = FileKind::from_path(name);
-    let sniffed = gridcraft_xlsx::sniff(bytes);
-    if sniffed == gridcraft_xlsx::Format::Xls {
-        let (wb, report) = gridcraft_xlsx::read_xls(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
+    let sniffed = tabilao_xlsx::sniff(bytes);
+    if sniffed == tabilao_xlsx::Format::Xls {
+        let (wb, report) = tabilao_xlsx::read_xls(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
         return Ok((wb, report.warnings));
     }
-    if sniffed == gridcraft_xlsx::Format::LegacyBinary {
+    if sniffed == tabilao_xlsx::Format::LegacyBinary {
         return Err(EngineError::Other(format!(
-            "'{name}' is a legacy binary file but not an Excel workbook (no workbook stream). GridCraft can't open it."
+            "'{name}' is a legacy binary file but not an Excel workbook (no workbook stream). Tabilao can't open it."
         )));
     }
     // Content wins over the extension: an ODS or XLSB package is imported as what it is,
     // whatever it is called; the extension only decides when the bytes don't say.
     let import = match sniffed {
-        gridcraft_xlsx::Format::Ods => Some(FileKind::Ods),
-        gridcraft_xlsx::Format::Xlsb => Some(FileKind::Xlsb),
+        tabilao_xlsx::Format::Ods => Some(FileKind::Ods),
+        tabilao_xlsx::Format::Xlsb => Some(FileKind::Xlsb),
         // An XLSX package is never read as ODS/XLSB just because of its name.
-        gridcraft_xlsx::Format::Xlsx => None,
+        tabilao_xlsx::Format::Xlsx => None,
         _ => kind.filter(|k| matches!(k, FileKind::Ods | FileKind::Xlsb)),
     };
     if let Some(import) = import {
-        let read = if import == FileKind::Ods { gridcraft_xlsx::read_ods } else { gridcraft_xlsx::read_xlsb };
+        let read = if import == FileKind::Ods { tabilao_xlsx::read_ods } else { tabilao_xlsx::read_xlsb };
         let (wb, report) = read(bytes).map_err(|e| EngineError::Other(format!("We can't import '{name}': {e}")))?;
         return Ok((wb, report.warnings));
     }
     // Text named `.xlsx` is read as text.
-    if sniffed == gridcraft_xlsx::Format::Xlsx || (kind == Some(FileKind::Xlsx) && sniffed != gridcraft_xlsx::Format::Csv) {
-        let (wb, report) = gridcraft_xlsx::read_xlsx(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
+    if sniffed == tabilao_xlsx::Format::Xlsx || (kind == Some(FileKind::Xlsx) && sniffed != tabilao_xlsx::Format::Csv) {
+        let (wb, report) = tabilao_xlsx::read_xlsx(bytes).map_err(|e| EngineError::Other(format!("We can't open '{name}': {e}")))?;
         return Ok((wb, report.warnings));
     }
     match kind {
         Some(FileKind::Json) => {
-            let mut wb: Workbook = serde_json::from_slice(bytes).map_err(|e| EngineError::Other(format!("not a GridCraft JSON workbook: {e}")))?;
+            let mut wb: Workbook = serde_json::from_slice(bytes).map_err(|e| EngineError::Other(format!("not a Tabilao JSON workbook: {e}")))?;
             wb.styles.rebuild_index();
             if wb.sheets.is_empty() {
                 wb = Workbook::new();
@@ -153,16 +153,16 @@ fn open_plain(name: &str, bytes: &[u8]) -> Result<(Workbook, Vec<String>)> {
             Ok((wb, vec![]))
         }
         Some(FileKind::Tsv) => {
-            let opts = gridcraft_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
-            let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+            let opts = tabilao_xlsx::CsvOptions { delimiter: b'\t', ..Default::default() };
+            let mut wb = tabilao_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
             // Tab is what makes it a .tsv/.txt; saved as .csv it gets the CSV default.
             wb.csv_delimiter = None;
             rename_first_sheet(&mut wb, name);
             Ok((wb, vec![]))
         }
         _ => {
-            let opts = gridcraft_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
-            let mut wb = gridcraft_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+            let opts = tabilao_xlsx::CsvOptions { delimiter: 0, ..Default::default() };
+            let mut wb = tabilao_xlsx::read_csv(bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
             rename_first_sheet(&mut wb, name);
             Ok((wb, vec![]))
         }
@@ -200,7 +200,7 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
     match kind {
         // The extension picks the package kind; only the macro-enabled kinds (.xlsm, .xltm) carry
         // the VBA project, so any other name saves without it, as Excel does.
-        FileKind::Xlsx => gridcraft_xlsx::write_xlsx_as(wb, gridcraft_xlsx::XlsxKind::from_path(path)).map_err(|e| EngineError::Other(e.to_string())),
+        FileKind::Xlsx => tabilao_xlsx::write_xlsx_as(wb, tabilao_xlsx::XlsxKind::from_path(path)).map_err(|e| EngineError::Other(e.to_string())),
         FileKind::Xls => {
             Err(EngineError::Other("Excel 97-2003 (.xls) is supported for import only. Save as .xlsx or another supported export format.".into()))
         }
@@ -217,7 +217,7 @@ pub fn save_bytes_as(wb: &Workbook, path: &str, kind: FileKind) -> Result<Vec<u8
 /// [`save_bytes`] for the file at `path`: relative paths to linked workbooks are rewritten for
 /// its folder, so they still name the same files.
 pub fn save_file_bytes(wb: &Workbook, path: &str) -> Result<Vec<u8>> {
-    match source_dir(path).and_then(|f| gridcraft_xlsx::rebase_links(wb, &f)) {
+    match source_dir(path).and_then(|f| tabilao_xlsx::rebase_links(wb, &f)) {
         Some(rebased) => save_bytes(&rebased, path),
         None => save_bytes(wb, path),
     }
@@ -232,11 +232,11 @@ pub fn source_dir(path: &str) -> Option<std::path::PathBuf> {
 /// characters in each cell" (Microsoft Support, *Excel formatting and features that are not
 /// transferred to other file formats*): number formats applied, never column-width `#####`.
 fn csv(wb: &Workbook, sh: &Sheet, delimiter: u8) -> Result<Vec<u8>> {
-    gridcraft_xlsx::write_csv(sh, delimiter, |c| {
+    tabilao_xlsx::write_csv(sh, delimiter, |c| {
         // General's grid-width formatting rounds large identifiers to scientific notation.
         // Delimited files have no column width, so preserve the whole numeric value instead.
         if wb.styles.get(sh.style_id(c)).num_fmt.as_str().eq_ignore_ascii_case("General")
-            && let gridcraft_core::Value::Number(number) = sh.value(c)
+            && let tabilao_core::Value::Number(number) = sh.value(c)
             && number.is_finite()
         {
             number.to_string()
@@ -263,16 +263,16 @@ fn html_cell_css(wb: &Workbook, sh: &Sheet, c: CellRef) -> String {
     if let Some(h) = st.font.color.hex(&wb.theme) {
         let _ = write!(css, "color:{h};");
     }
-    if st.fill.pattern != gridcraft_model::PatternType::None
+    if st.fill.pattern != tabilao_model::PatternType::None
         && let Some(h) = st.fill.fg.hex(&wb.theme)
     {
         let _ = write!(css, "background:{h};");
     }
     let v = sh.value(c);
     let align = match st.align.h {
-        gridcraft_model::HAlign::Center => "center",
-        gridcraft_model::HAlign::Right => "right",
-        gridcraft_model::HAlign::Left => "left",
+        tabilao_model::HAlign::Center => "center",
+        tabilao_model::HAlign::Right => "right",
+        tabilao_model::HAlign::Left => "left",
         _ if v.is_number() => "right",
         _ => "left",
     };
@@ -504,12 +504,12 @@ mod tests {
     fn html_export_fails_instead_of_dropping_cells_past_the_row_limit() {
         let mut wb = Workbook::new();
         let sh = wb.sheet_mut(0).unwrap();
-        sh.set_value(CellRef::new(0, 0), gridcraft_core::Value::text("near"));
-        sh.set_value(CellRef::new(149_999, 0), gridcraft_core::Value::text("far"));
+        sh.set_value(CellRef::new(0, 0), tabilao_core::Value::text("near"));
+        sh.set_value(CellRef::new(149_999, 0), tabilao_core::Value::text("far"));
         assert!(save_bytes(&wb, "book.html").is_err());
         let sh = wb.sheet_mut(0).unwrap();
         sh.remove_cell(CellRef::new(149_999, 0));
-        sh.set_value(CellRef::new(100_000, 0), gridcraft_core::Value::text("far"));
+        sh.set_value(CellRef::new(100_000, 0), tabilao_core::Value::text("far"));
         let html = String::from_utf8(save_bytes(&wb, "book.html").unwrap()).unwrap();
         assert!(html.contains(">near</td>") && html.contains(">far</td>"));
     }
@@ -520,7 +520,7 @@ mod tests {
         wb.vba_project = Some(b"vba".to_vec());
         let has_macros = |path: &str| {
             let bytes = save_bytes(&wb, path).unwrap();
-            gridcraft_xlsx::read_xlsx(&bytes).unwrap().0.vba_project.is_some()
+            tabilao_xlsx::read_xlsx(&bytes).unwrap().0.vba_project.is_some()
         };
         assert!(has_macros("book.xlsm"));
         assert!(has_macros("BOOK.XLSM"));
@@ -546,7 +546,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn failed_save_leaves_no_temporary_file() {
-        let dir = std::env::temp_dir().join(format!("gridcraft-write-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tabilao-write-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let blocked = dir.join("Book1.xlsx");
@@ -610,8 +610,8 @@ mod tests {
     fn csv_save_of_a_workbook_not_read_from_csv_uses_commas() {
         let mut wb = Workbook::new();
         if let Some(sh) = wb.sheet_mut(0) {
-            sh.set_value(CellRef::new(0, 0), gridcraft_core::Value::text("a"));
-            sh.set_value(CellRef::new(0, 1), gridcraft_core::Value::Number(1.0));
+            sh.set_value(CellRef::new(0, 0), tabilao_core::Value::text("a"));
+            sh.set_value(CellRef::new(0, 1), tabilao_core::Value::Number(1.0));
         }
         assert_eq!(save_bytes(&wb, "new.csv").unwrap(), b"a,1\r\n");
         // Through .xlsx the CSV origin is gone, as in Excel.
@@ -627,7 +627,7 @@ mod tests {
 
     #[test]
     fn encrypted_workbook_is_reported_not_misread() {
-        let file = gridcraft_xlsx::testing::encrypt_workbook(b"package", "pw");
+        let file = tabilao_xlsx::testing::encrypt_workbook(b"package", "pw");
         let msg = open_bytes("secret.xlsx", &file).unwrap_err().to_string();
         assert!(msg.contains(PASSWORD_REQUIRED), "got: {msg}");
         assert!(!msg.contains("zip"), "must not surface the zip error: {msg}");
@@ -643,10 +643,10 @@ mod tests {
     #[test]
     fn encryption_no_password_opens_is_reported_without_asking_for_one() {
         let info: &[u8] = &[3, 0, 2, 0, 4, 0, 0, 0]; // Standard header flags: RC4, not AES
-        let file = gridcraft_xlsx::testing::compound_file(&[("EncryptionInfo", info), ("EncryptedPackage", &[0; 8])]);
+        let file = tabilao_xlsx::testing::compound_file(&[("EncryptionInfo", info), ("EncryptedPackage", &[0; 8])]);
         let msg = open_bytes("rc4.xlsx", &file).unwrap_err().to_string();
         assert!(msg.contains("RC4") && !msg.contains(PASSWORD_REQUIRED), "got: {msg}");
-        let irm = gridcraft_xlsx::testing::compound_file(&[("EncryptedPackage", &[0; 8])]);
+        let irm = tabilao_xlsx::testing::compound_file(&[("EncryptedPackage", &[0; 8])]);
         let msg = open_bytes("irm.xlsx", &irm).unwrap_err().to_string();
         assert!(msg.contains("rights-management") && !msg.contains("damaged"), "got: {msg}");
     }
@@ -663,8 +663,8 @@ mod tests {
     /// whole values in narrow columns (never `#####`), quoting unchanged.
     #[test]
     fn csv_writes_displayed_text() {
-        use gridcraft_core::{CellError, Value};
-        use gridcraft_model::{Cell, Formula, LineInfo, NumFmt, StyleId};
+        use tabilao_core::{CellError, Value};
+        use tabilao_model::{Cell, Formula, LineInfo, NumFmt, StyleId};
         let mut wb = Workbook::new();
         let mut styled = |code: &str| wb.styles.derive(StyleId::DEFAULT, |s| s.num_fmt = NumFmt::new(code));
         let (date, money, pct, frac, text, fixed, thousands) =
@@ -697,8 +697,8 @@ mod tests {
 
     #[test]
     fn delimited_exports_preserve_general_precision_and_explicit_number_formats() {
-        use gridcraft_core::Value;
-        use gridcraft_model::{Cell, NumFmt, StyleId};
+        use tabilao_core::Value;
+        use tabilao_model::{Cell, NumFmt, StyleId};
         let mut workbook = Workbook::new();
         let scientific = workbook.styles.derive(StyleId::DEFAULT, |style| style.num_fmt = NumFmt::new("0.00E+00"));
         let sheet = workbook.sheet_mut(0).unwrap();
@@ -728,15 +728,15 @@ mod tests {
     #[test]
     fn content_wins_over_a_mismatched_extension() {
         let mut wb = Workbook::new();
-        wb.sheet_mut(0).unwrap().set_value(CellRef::new(0, 0), gridcraft_core::Value::Number(7.0));
+        wb.sheet_mut(0).unwrap().set_value(CellRef::new(0, 0), tabilao_core::Value::Number(7.0));
         let package = save_bytes(&wb, "book.xlsx").unwrap();
         for name in ["book.xlsx", "book.ods", "book.xlsb", "book.csv"] {
             let (opened, _) = open_bytes(name, &package).unwrap_or_else(|e| panic!("{name}: {e}"));
-            assert_eq!(opened.sheet(0).unwrap().value(CellRef::new(0, 0)), gridcraft_core::Value::Number(7.0), "{name}");
+            assert_eq!(opened.sheet(0).unwrap().value(CellRef::new(0, 0)), tabilao_core::Value::Number(7.0), "{name}");
         }
         for name in ["data.xlsx", "data.csv"] {
             let (opened, _) = open_bytes(name, b"a,b\n1,2\n").unwrap_or_else(|e| panic!("{name}: {e}"));
-            assert_eq!(opened.sheet(0).unwrap().value(CellRef::new(0, 1)), gridcraft_core::Value::text("b"), "{name}");
+            assert_eq!(opened.sheet(0).unwrap().value(CellRef::new(0, 1)), tabilao_core::Value::text("b"), "{name}");
         }
     }
 }

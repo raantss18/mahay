@@ -1,10 +1,10 @@
 //! Middle-click scrolling of the document canvas (#1065), the same gesture as Word on Windows
-//! and pdfcraft's viewer: click the wheel and a marker shows where; moving the pointer above or
+//! and taratasy's viewer: click the wheel and a marker shows where; moving the pointer above or
 //! below it scrolls, faster the farther away. Another click, Escape, any other key, the wheel or
 //! leaving the window stops it. Holding the wheel down and moving scrolls too, and then letting
 //! go stops.
 //!
-//! WordCraft doesn't paste the primary selection on a middle click, so on Linux the button is
+//! Soratra doesn't paste the primary selection on a middle click, so on Linux the button is
 //! free for this. macOS apps don't scroll this way, and browsers have their own middle-click
 //! behaviour, so there the button is left alone.
 

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use craft_docpath::{PathKind, Refused, classify, is_local, resolve, resolve_absolute};
+use mahay_docpath::{PathKind, Refused, classify, is_local, resolve, resolve_absolute};
 
 fn check(kind: PathKind, cases: &[&str]) {
     for raw in cases {

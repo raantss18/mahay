@@ -1,7 +1,7 @@
 //! BEFORE/AFTER helper for the banded interleave/deinterleave: `--serial` runs the old
 //! sequential implementation inline, the default runs the current parallel one.
 fn main() {
-    use photocraft_color::SampleType;
+    use sary_color::SampleType;
     let serial = std::env::args().any(|a| a == "--serial");
     for (label, s, ch) in [("u16 rgb", SampleType::U16, 3usize), ("f32 rgba", SampleType::F32, 4)] {
         let bps = s.bytes();
@@ -28,7 +28,7 @@ fn main() {
             }
             out
         } else {
-            photocraft_io::pixels::interleave(&refs, &fill, n, s, &invert)
+            sary_io::pixels::interleave(&refs, &fill, n, s, &invert)
         };
         let t1 = t0.elapsed().as_secs_f64() * 1000.0;
         let t2 = std::time::Instant::now();
@@ -46,7 +46,7 @@ fn main() {
                 }
             }
         } else {
-            let _ = photocraft_io::pixels::deinterleave(&interleaved, ch, s, &invert);
+            let _ = sary_io::pixels::deinterleave(&interleaved, ch, s, &invert);
         }
         let t3 = t2.elapsed().as_secs_f64() * 1000.0;
         println!("{label}: interleave {t1:.1} ms, deinterleave {t3:.1} ms (20 MP, release, {})", if serial { "serial (before)" } else { "parallel (after)" });

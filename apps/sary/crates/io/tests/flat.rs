@@ -1,19 +1,19 @@
-//! Flat formats through photocraft-codecs, and export warnings.
+//! Flat formats through sary-codecs, and export warnings.
 
 mod common;
 
 use common::*;
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_io::*;
+use sary_color::{ColorMode, SampleType};
+use sary_io::*;
 
-fn single(mode: ColorMode, depth: SampleType, alpha: bool) -> photocraft_doc::Document {
-    let mut d = photocraft_doc::Document::new("s", photocraft_geom::Size::new(9, 6), mode, depth);
+fn single(mode: ColorMode, depth: SampleType, alpha: bool) -> sary_doc::Document {
+    let mut d = sary_doc::Document::new("s", sary_geom::Size::new(9, 6), mode, depth);
     let fmt = d.pixel_format();
     d.layers.push(raster("Background", fmt, d.bounds(), 3, alpha));
     d
 }
 
-fn pixels_eq(a: &photocraft_doc::Document, b: &photocraft_doc::Document, tol: f32) {
+fn pixels_eq(a: &sary_doc::Document, b: &sary_doc::Document, tol: f32) {
     let sa = a.layers[0].surface().unwrap();
     let sb = b.layers[0].surface().unwrap();
     let r = a.bounds();
@@ -105,7 +105,7 @@ fn indexed_bmp_opens_with_its_color_table() {
 #[test]
 fn indexed_png_opens_with_its_color_table() {
     let pal = [[10, 20, 30], [200, 100, 50], [7, 8, 9], [0, 255, 0]];
-    let png = photocraft_codecs::encode_png_indexed(2, 2, &[1, 0, 2, 1], &pal, Some(2), None).unwrap();
+    let png = sary_codecs::encode_png_indexed(2, 2, &[1, 0, 2, 1], &pal, Some(2), None).unwrap();
     let doc = import("indexed.png", &png).unwrap().document;
     assert_eq!(doc.mode, ColorMode::Indexed);
     assert_eq!(doc.depth, SampleType::U8);
@@ -156,7 +156,7 @@ fn dpx_header_fields_and_encoding_notes_round_trip_through_the_document() {
 #[test]
 fn exr_rgba32() {
     let mut d = single(ColorMode::Rgb, SampleType::F32, true);
-    d.icc_profile = Some(photocraft_cms::Builtin::LinearSrgb.profile().to_bytes());
+    d.icc_profile = Some(sary_cms::Builtin::LinearSrgb.profile().to_bytes());
     let r = export(&d, "exr", &ExportOptions::default()).expect("export");
     let back = import("x.exr", &r.bytes).expect("import").document;
     assert_eq!((back.size, back.mode, back.depth), (d.size, d.mode, d.depth));
@@ -168,19 +168,19 @@ fn exr_rgba32() {
     let back = import("x.exr", &r.bytes).expect("import").document;
     let (a, b) = (srgb.layers[0].surface().unwrap().pixel(2, 3), back.layers[0].surface().unwrap().pixel(2, 3));
     for c in 0..3 {
-        assert!((photocraft_color::convert::srgb_to_linear(a[c]) - b[c]).abs() < 1e-4, "{a:?} -> {b:?}");
+        assert!((sary_color::convert::srgb_to_linear(a[c]) - b[c]).abs() < 1e-4, "{a:?} -> {b:?}");
     }
     assert!((a[3] - b[3]).abs() < 1e-6, "alpha kept");
 }
 
 /// An opaque document filled with `#808080`.
-fn mid_gray(mode: ColorMode, depth: SampleType) -> photocraft_doc::Document {
-    let mut d = photocraft_doc::Document::new("g", photocraft_geom::Size::new(4, 4), mode, depth);
+fn mid_gray(mode: ColorMode, depth: SampleType) -> sary_doc::Document {
+    let mut d = sary_doc::Document::new("g", sary_geom::Size::new(4, 4), mode, depth);
     let fmt = d.pixel_format();
-    let mut s = photocraft_raster::Surface::new(fmt);
+    let mut s = sary_raster::Surface::new(fmt);
     let v = 128.0 / 255.0;
-    s.fill_rect(d.bounds(), &photocraft_raster::from_rgba(&fmt, [v, v, v, 1.0]));
-    d.layers.push(photocraft_doc::Layer::new("Background", photocraft_doc::LayerContent::Raster(s)));
+    s.fill_rect(d.bounds(), &sary_raster::from_rgba(&fmt, [v, v, v, 1.0]));
+    d.layers.push(sary_doc::Layer::new("Background", sary_doc::LayerContent::Raster(s)));
     d
 }
 
@@ -188,12 +188,12 @@ fn mid_gray(mode: ColorMode, depth: SampleType) -> photocraft_doc::Document {
 /// its linear value, as an RGB `#808080` is, rather than as the display-encoded 0.5 (#2386).
 #[test]
 fn gray_exr_and_hdr_store_linear_light() {
-    let linear = photocraft_color::convert::srgb_to_linear(128.0 / 255.0);
+    let linear = sary_color::convert::srgb_to_linear(128.0 / 255.0);
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
         for (ext, tol) in [("exr", 2e-5), ("hdr", 2e-3)] {
             for mode in [ColorMode::Grayscale, ColorMode::Rgb] {
                 let r = export(&mid_gray(mode, depth), ext, &ExportOptions::default()).expect("export");
-                let img = photocraft_codecs::decode(&r.bytes).expect("decode");
+                let img = sary_codecs::decode(&r.bytes).expect("decode");
                 let samples = img.to_normalized();
                 let worst = samples.iter().map(|v| (v - linear).abs()).fold(0.0f32, f32::max);
                 assert!(worst <= tol, "{mode:?} {depth:?} .{ext}: stored samples differ from {linear} by {worst}");
@@ -206,7 +206,7 @@ fn gray_exr_and_hdr_store_linear_light() {
 /// profile, in which its samples are the colours saved.
 #[test]
 fn gray_exr_round_trips() {
-    use photocraft_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
+    use sary_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
         let r = export(&mid_gray(ColorMode::Grayscale, depth), "exr", &ExportOptions::default()).expect("export");
         let back = import("x.exr", &r.bytes).expect("import").document;
@@ -220,10 +220,10 @@ fn gray_exr_round_trips() {
     }
 }
 
-fn smooth(mode: ColorMode) -> photocraft_doc::Document {
-    let mut d = photocraft_doc::Document::new("s", photocraft_geom::Size::new(32, 16), mode, SampleType::U8);
+fn smooth(mode: ColorMode) -> sary_doc::Document {
+    let mut d = sary_doc::Document::new("s", sary_geom::Size::new(32, 16), mode, SampleType::U8);
     let fmt = d.pixel_format();
-    let mut s = photocraft_raster::Surface::new(fmt);
+    let mut s = sary_raster::Surface::new(fmt);
     let n = fmt.channels();
     let mut v = Vec::new();
     for y in 0..16 {
@@ -235,7 +235,7 @@ fn smooth(mode: ColorMode) -> photocraft_doc::Document {
         }
     }
     s.write_region(d.bounds(), &v);
-    d.layers.push(photocraft_doc::Layer::new("Background", photocraft_doc::LayerContent::Raster(s)));
+    d.layers.push(sary_doc::Layer::new("Background", sary_doc::LayerContent::Raster(s)));
     d
 }
 
@@ -267,7 +267,7 @@ fn metadata_roundtrip_png() {
     d.icc_profile = Some(std::sync::Arc::new(sample_icc()));
     d.metadata.xmp = Some("<x:xmpmeta xmlns:x='adobe:ns:meta/'/>".into());
     // DPI and ICC always travel with the file; XMP unless Export As asks for none (#647).
-    let none = ExportOptions { xmp: photocraft_io::XmpEmbed::None, ..ExportOptions::default() };
+    let none = ExportOptions { xmp: sary_io::XmpEmbed::None, ..ExportOptions::default() };
     let r = export(&d, "png", &none).unwrap();
     let back = import("x.png", &r.bytes).unwrap().document;
     assert!((back.resolution_dpi - 300.0).abs() < 1.0);
@@ -292,7 +292,7 @@ fn layered_to_png_warns_flatten() {
     assert!(r.warnings.iter().any(|w| w.contains("flattened")), "{:?}", r.warnings);
     let back = import("out.png", &r.bytes).unwrap().document;
     // Composite equals our flatten.
-    let flat = photocraft_compose::flatten(&d).px;
+    let flat = sary_compose::flatten(&d).px;
     let s = back.layers[0].surface().unwrap();
     let px: Vec<[f32; 4]> = s.read_region(back.bounds()).as_chunks::<4>().0.iter().map(|p| [p[0], p[1], p[2], p[3]]).collect();
     assert!(max_diff(&px, &flat) <= 1.0 / 255.0 + 1e-4);
@@ -322,11 +322,11 @@ fn cmyk_layered_to_png_warns_conversion() {
 #[test]
 fn effects_are_written_to_psd_and_read_back() {
     let mut d = gen_doc(ColorMode::Rgb, SampleType::U8, Features::PIXELS);
-    d.layers[1].effects.items.push(photocraft_doc::Effect::ColorOverlay {
-        common: photocraft_doc::FxCommon::new(photocraft_color::BlendMode::Normal, 1.0),
-        color: photocraft_color::Color::BLACK,
+    d.layers[1].effects.items.push(sary_doc::Effect::ColorOverlay {
+        common: sary_doc::FxCommon::new(sary_color::BlendMode::Normal, 1.0),
+        color: sary_color::Color::BLACK,
     });
-    d.layers[1].effects.items.push(photocraft_doc::Effect::default_drop_shadow());
+    d.layers[1].effects.items.push(sary_doc::Effect::default_drop_shadow());
     let r = export(&d, "a.psd", &ExportOptions::default()).unwrap();
     assert!(!r.warnings.iter().any(|w| w.contains("effects")), "{:?}", r.warnings);
     let back = import("a.psd", &r.bytes).unwrap().document;
@@ -357,7 +357,7 @@ fn extension_forms() {
 
 /// Asserts how a flat file opened: the locked Background when opaque, a normal "Layer 0" (as in
 /// Photoshop) when it has transparency.
-fn assert_opens_as(what: &str, d: &photocraft_doc::Document, transparent: bool) {
+fn assert_opens_as(what: &str, d: &sary_doc::Document, transparent: bool) {
     let [l] = &d.layers[..] else { panic!("{what}: {} layers", d.layers.len()) };
     if transparent {
         assert_eq!(l.name, "Layer 0", "{what}");
@@ -378,7 +378,7 @@ fn background_lock_follows_alpha() {
 
 #[test]
 fn transparent_flat_images_open_as_layer_0() {
-    use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType as CS};
+    use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType as CS};
     let (w, h) = (6u32, 4u32);
     let n = (w * h) as usize;
     let enc = |layout: ChannelLayout, sample: CS, format: Format| {
@@ -388,7 +388,7 @@ fn transparent_flat_images_open_as_layer_0() {
             _ => Image::from_u16(w, h, layout, &(0..n * ch).map(|i| if (i + 1) % ch == 0 && i < ch * 5 { 0 } else { 50_000 }).collect::<Vec<_>>()),
         }
         .unwrap();
-        photocraft_codecs::encode(&img, format, &EncodeOptions::default()).unwrap()
+        sary_codecs::encode(&img, format, &EncodeOptions::default()).unwrap()
     };
     let cases: Vec<(&str, Vec<u8>, bool)> = vec![
         ("a.png", enc(ChannelLayout::Rgba, CS::U8, Format::Png), true),
@@ -396,8 +396,8 @@ fn transparent_flat_images_open_as_layer_0() {
         ("ga.png", enc(ChannelLayout::GrayA, CS::U8, Format::Png), true),
         ("a.tif", enc(ChannelLayout::Rgba, CS::U8, Format::Tiff), true),
         ("ga.tif", enc(ChannelLayout::GrayA, CS::U16, Format::Tiff), true),
-        ("pal.png", photocraft_codecs::encode_png_indexed(w, h, &[0, 1].repeat(n / 2), &[[255, 0, 0], [0, 0, 255]], Some(0), None).unwrap(), true),
-        ("pal_opaque.png", photocraft_codecs::encode_png_indexed(w, h, &[0, 1].repeat(n / 2), &[[255, 0, 0], [0, 0, 255]], None, None).unwrap(), false),
+        ("pal.png", sary_codecs::encode_png_indexed(w, h, &[0, 1].repeat(n / 2), &[[255, 0, 0], [0, 0, 255]], Some(0), None).unwrap(), true),
+        ("pal_opaque.png", sary_codecs::encode_png_indexed(w, h, &[0, 1].repeat(n / 2), &[[255, 0, 0], [0, 0, 255]], None, None).unwrap(), false),
         ("rgb.png", enc(ChannelLayout::Rgb, CS::U8, Format::Png), false),
         ("g.png", enc(ChannelLayout::Gray, CS::U16, Format::Png), false),
         ("rgb.tif", enc(ChannelLayout::Rgb, CS::U8, Format::Tiff), false),
@@ -432,23 +432,23 @@ fn psd_to_png_to_psd_chain() {
     let d3 = import("a.png", &png.bytes).unwrap().document;
     assert_eq!(d3.depth, SampleType::U16);
     let psd2 = export(&d3, "b.psd", &ExportOptions::default()).unwrap();
-    assert!(photocraft_psd::PsdFile::from_bytes(&psd2.bytes).is_ok());
+    assert!(sary_psd::PsdFile::from_bytes(&psd2.bytes).is_ok());
 }
 
 /// A one-layer document of 16-pixel-wide columns, each one straight colour (colour channels, then alpha).
-fn columns(mode: ColorMode, depth: SampleType, cols: &[&[f32]]) -> photocraft_doc::Document {
-    let mut d = photocraft_doc::Document::new("c", photocraft_geom::Size::new(16 * cols.len() as u32, 16), mode, depth);
-    let mut s = photocraft_raster::Surface::new(d.pixel_format());
+fn columns(mode: ColorMode, depth: SampleType, cols: &[&[f32]]) -> sary_doc::Document {
+    let mut d = sary_doc::Document::new("c", sary_geom::Size::new(16 * cols.len() as u32, 16), mode, depth);
+    let mut s = sary_raster::Surface::new(d.pixel_format());
     for (i, px) in cols.iter().enumerate() {
         let x = 16 * i as i32;
-        s.fill_rect(photocraft_geom::Rect::new(x, 0, x + 16, 16), px);
+        s.fill_rect(sary_geom::Rect::new(x, 0, x + 16, 16), px);
     }
-    d.layers.push(photocraft_doc::Layer::new("Layer", photocraft_doc::LayerContent::Raster(s)));
+    d.layers.push(sary_doc::Layer::new("Layer", sary_doc::LayerContent::Raster(s)));
     d
 }
 
 /// The pixel at the centre of each column of `doc`.
-fn column_pixels(doc: &photocraft_doc::Document, n: usize) -> Vec<Vec<f32>> {
+fn column_pixels(doc: &sary_doc::Document, n: usize) -> Vec<Vec<f32>> {
     let s = doc.layers[0].surface().unwrap();
     (0..n).map(|i| s.pixel(16 * i as i32 + 8, 8)).collect()
 }
@@ -501,7 +501,7 @@ fn transparency_is_composited_over_white_for_formats_without_alpha() {
 /// through the colour engine, instead of values that only mean something under the dropped profile.
 #[test]
 fn non_srgb_rgb_is_converted_to_srgb_for_formats_without_a_profile() {
-    use photocraft_cms::{Builtin, Intent, Transform};
+    use sary_cms::{Builtin, Intent, Transform};
     let cols: [&[f32]; 3] = [&[0.0, 0.05, 0.0, 1.0], &[0.2, 0.5, 0.8, 1.0], &[1.0, 0.25, 0.0, 1.0]];
     for (profile, depth) in [(Builtin::LinearSrgb, SampleType::F32), (Builtin::LinearSrgb, SampleType::U16), (Builtin::DisplayP3, SampleType::U8)] {
         let mut d = columns(ColorMode::Rgb, depth, &cols);
@@ -549,15 +549,15 @@ fn non_srgb_rgb_is_converted_to_srgb_for_formats_without_a_profile() {
 fn linear_gray_exports_without_profiles_use_display_encoding() {
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
         let mut d = columns(ColorMode::Grayscale, depth, &[&[0.25, 1.0], &[0.5, 1.0]]);
-        d.icc_profile = Some(photocraft_cms::builtin::linear_gray().to_bytes());
+        d.icc_profile = Some(sary_cms::builtin::linear_gray().to_bytes());
         let stored = column_pixels(&d, 2);
         for ext in ["tga", "bmp", "gif", "qoi"] {
             let r = export(&d, ext, &ExportOptions::default()).unwrap();
-            let img = photocraft_codecs::decode(&r.bytes).unwrap();
+            let img = sary_codecs::decode(&r.bytes).unwrap();
             let values = img.to_normalized();
             let stride = img.layout().channels();
             for (i, src) in stored.iter().enumerate() {
-                let expected = photocraft_color::convert::linear_to_srgb(src[0]);
+                let expected = sary_color::convert::linear_to_srgb(src[0]);
                 assert!(
                     (values[16 * i * stride] - expected).abs() <= 1.5 / 255.0,
                     "{depth:?} {ext} pixel {i}: got {}, expected {expected}",
@@ -572,13 +572,13 @@ fn linear_gray_exports_without_profiles_use_display_encoding() {
 #[test]
 fn default_gray_exports_without_profiles_keep_samples() {
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
-        for icc in [None, Some(photocraft_cms::Builtin::SGray.profile().to_bytes())] {
+        for icc in [None, Some(sary_cms::Builtin::SGray.profile().to_bytes())] {
             let mut d = columns(ColorMode::Grayscale, depth, &[&[0.25, 1.0], &[0.5, 1.0]]);
             d.icc_profile = icc;
             let stored = column_pixels(&d, 2);
             for ext in ["tga", "bmp", "gif", "qoi"] {
                 let r = export(&d, ext, &ExportOptions::default()).unwrap();
-                let img = photocraft_codecs::decode(&r.bytes).unwrap();
+                let img = sary_codecs::decode(&r.bytes).unwrap();
                 let values = img.to_normalized();
                 let stride = img.layout().channels();
                 for (i, src) in stored.iter().enumerate() {
@@ -594,13 +594,13 @@ fn default_gray_exports_without_profiles_keep_samples() {
 fn linear_gray_export_preserves_alpha_and_embeddable_profiles() {
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
         let mut d = columns(ColorMode::Grayscale, depth, &[&[0.25, 0.5]]);
-        d.icc_profile = Some(photocraft_cms::builtin::linear_gray().to_bytes());
+        d.icc_profile = Some(sary_cms::builtin::linear_gray().to_bytes());
         let stored = column_pixels(&d, 1);
         let r = export(&d, "tga", &ExportOptions::default()).unwrap();
-        let img = photocraft_codecs::decode(&r.bytes).unwrap();
-        assert_eq!(img.layout(), photocraft_codecs::ChannelLayout::GrayA);
+        let img = sary_codecs::decode(&r.bytes).unwrap();
+        assert_eq!(img.layout(), sary_codecs::ChannelLayout::GrayA);
         let values = img.to_normalized();
-        let expected = photocraft_color::convert::linear_to_srgb(stored[0][0]);
+        let expected = sary_color::convert::linear_to_srgb(stored[0][0]);
         assert!((values[0] - expected).abs() <= 1.5 / 255.0, "{depth:?}: gray {} vs {expected}", values[0]);
         assert!((values[1] - stored[0][1]).abs() <= 1.0 / 255.0, "{depth:?}: alpha changed");
         let r = export(&d, "png", &ExportOptions::default()).unwrap();
@@ -614,16 +614,16 @@ fn linear_gray_export_preserves_alpha_and_embeddable_profiles() {
 /// RGB samples must use the sRGB transfer function, not the source gray encoding.
 #[test]
 fn linear_gray_webp_exports_use_display_encoding() {
-    use photocraft_codecs::{ChannelLayout, EncodeOptions};
+    use sary_codecs::{ChannelLayout, EncodeOptions};
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
         for alpha in [1.0, 0.5] {
             let mut d = columns(ColorMode::Grayscale, depth, &[&[0.25, alpha], &[0.5, alpha]]);
-            d.icc_profile = Some(photocraft_cms::builtin::linear_gray().to_bytes());
+            d.icc_profile = Some(sary_cms::builtin::linear_gray().to_bytes());
             let stored = column_pixels(&d, 2);
             for lossless in [true, false] {
                 let opts = ExportOptions { encode: EncodeOptions { webp_lossless: lossless, webp_quality: 100, ..Default::default() }, ..Default::default() };
                 let r = export(&d, "webp", &opts).unwrap();
-                let img = photocraft_codecs::decode(&r.bytes).unwrap();
+                let img = sary_codecs::decode(&r.bytes).unwrap();
                 let what = format!("{depth:?}, alpha {alpha}, lossless {lossless}");
                 assert_eq!(img.layout(), if alpha == 1.0 { ChannelLayout::Rgb } else { ChannelLayout::Rgba }, "{what}");
                 assert_eq!(img.icc, None, "{what}: a gray ICC cannot describe RGB samples");
@@ -632,7 +632,7 @@ fn linear_gray_webp_exports_use_display_encoding() {
                 let tolerance = if lossless { 1.5 / 255.0 } else { 3.0 / 255.0 };
                 for (i, src) in stored.iter().enumerate() {
                     let offset = (8 * img.width() as usize + 16 * i + 8) * stride;
-                    let expected = photocraft_color::convert::linear_to_srgb(src[0]);
+                    let expected = sary_color::convert::linear_to_srgb(src[0]);
                     for &value in &values[offset..offset + 3] {
                         assert!((value - expected).abs() <= tolerance, "{what}, pixel {i}: got {value}, expected {expected}");
                     }
@@ -649,12 +649,12 @@ fn linear_gray_webp_exports_use_display_encoding() {
 #[test]
 fn default_gray_webp_exports_keep_samples() {
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
-        for icc in [None, Some(photocraft_cms::Builtin::SGray.profile().to_bytes())] {
+        for icc in [None, Some(sary_cms::Builtin::SGray.profile().to_bytes())] {
             let mut d = columns(ColorMode::Grayscale, depth, &[&[0.25, 0.5], &[0.5, 1.0]]);
             d.icc_profile = icc;
             let stored = column_pixels(&d, 2);
             let r = export(&d, "webp", &ExportOptions::default()).unwrap();
-            let img = photocraft_codecs::decode(&r.bytes).unwrap();
+            let img = sary_codecs::decode(&r.bytes).unwrap();
             assert_eq!(img.icc, None, "{depth:?}: a gray ICC cannot describe RGB samples");
             let back = import("gray.webp", &r.bytes).unwrap().document;
             let want: Vec<Vec<f32>> = stored.iter().map(|p| vec![p[0], p[0], p[0], p[1]]).collect();
@@ -668,7 +668,7 @@ fn default_gray_webp_exports_keep_samples() {
 fn rgb_webp_exports_keep_embeddable_profiles() {
     for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
         let mut d = columns(ColorMode::Rgb, depth, &[&[0.25, 0.5, 0.75, 0.5]]);
-        d.icc_profile = Some(photocraft_cms::Builtin::LinearSrgb.profile().to_bytes());
+        d.icc_profile = Some(sary_cms::Builtin::LinearSrgb.profile().to_bytes());
         let r = export(&d, "webp", &ExportOptions::default()).unwrap();
         let back = import("rgb.webp", &r.bytes).unwrap().document;
         assert_eq!(back.icc_profile, d.icc_profile, "{depth:?}: WebP keeps RGB ICC");
@@ -685,7 +685,7 @@ fn truncated_jpeg_imports_with_a_warning() {
         assert_eq!(import("x.jpg", &full).unwrap().warnings, Vec::<String>::new(), "{mode:?}");
         // Cut inside the scan data (most of this small file is headers).
         let r = import("x.jpg", &full[..full.len() - 4]).unwrap();
-        assert_eq!(r.document.size, photocraft_geom::Size::new(32, 16));
+        assert_eq!(r.document.size, sary_geom::Size::new(32, 16));
         assert!(r.warnings.first().is_some_and(|w| w.starts_with("JPEG data ends early")), "{mode:?}: {:?}", r.warnings);
     }
 }
@@ -720,19 +720,19 @@ fn alpha_value(x: u32) -> f32 {
 }
 
 /// `d` with one alpha channel holding [`alpha_value`] (Photoshop's "Alpha 1").
-fn with_alpha_channel(mut d: photocraft_doc::Document, name: &str) -> photocraft_doc::Document {
-    let fmt = photocraft_color::PixelFormat::new(ColorMode::Grayscale, d.depth, false);
-    let mut s = photocraft_raster::Surface::new(fmt);
+fn with_alpha_channel(mut d: sary_doc::Document, name: &str) -> sary_doc::Document {
+    let fmt = sary_color::PixelFormat::new(ColorMode::Grayscale, d.depth, false);
+    let mut s = sary_raster::Surface::new(fmt);
     let r = d.bounds();
     let vals: Vec<f32> = (r.y0..r.y1).flat_map(|_| (r.x0..r.x1).map(|x| alpha_value(x as u32))).collect();
     s.write_region(r, &vals);
-    d.channels.push(photocraft_doc::AlphaChannel::new(name, s));
+    d.channels.push(sary_doc::AlphaChannel::new(name, s));
     d
 }
 
 /// Header and decoded pixels of a TGA file.
-fn tga(bytes: &[u8]) -> (u8, u8, photocraft_codecs::Image) {
-    (bytes[16], bytes[17] & 0x0f, photocraft_codecs::decode(bytes).expect("decode tga"))
+fn tga(bytes: &[u8]) -> (u8, u8, sary_codecs::Image) {
+    (bytes[16], bytes[17] & 0x0f, sary_codecs::decode(bytes).expect("decode tga"))
 }
 
 /// #2124: Photoshop writes the document's alpha channel as a 32-bit Targa's alpha (8 alpha bits
@@ -745,7 +745,7 @@ fn tga_writes_the_alpha_channel_as_32_bit_alpha() {
         let r = export(&d, "a.tga", &ExportOptions::default()).unwrap();
         let (bpp, alpha_bits, img) = tga(&r.bytes);
         assert_eq!((bpp, alpha_bits), (32, 8), "{depth:?}");
-        assert_eq!(img.layout(), photocraft_codecs::ChannelLayout::Rgba, "{depth:?}");
+        assert_eq!(img.layout(), sary_codecs::ChannelLayout::Rgba, "{depth:?}");
         let (w, _) = img.dimensions();
         for (i, px) in img.data().as_chunks::<4>().0.iter().enumerate() {
             let x = i as u32 % w;
@@ -831,9 +831,9 @@ fn tga_transparency_reopens_as_alpha_1() {
 #[test]
 fn tga_alpha_channel_wins_over_transparency_and_skips_spot_channels() {
     let mut d = with_alpha_channel(single(ColorMode::Rgb, SampleType::U8, true), "Alpha 2");
-    let spot = photocraft_raster::Surface::new(photocraft_color::PixelFormat::new(ColorMode::Grayscale, SampleType::U8, false));
+    let spot = sary_raster::Surface::new(sary_color::PixelFormat::new(ColorMode::Grayscale, SampleType::U8, false));
     let spot =
-        photocraft_doc::AlphaChannel { spot: Some((photocraft_color::Color::rgb(1.0, 0.0, 0.0), 1.0)), ..photocraft_doc::AlphaChannel::new("Spot", spot) };
+        sary_doc::AlphaChannel { spot: Some((sary_color::Color::rgb(1.0, 0.0, 0.0), 1.0)), ..sary_doc::AlphaChannel::new("Spot", spot) };
     d.channels.insert(0, spot);
     let r = export(&d, "a.tga", &ExportOptions::default()).unwrap();
     let (bpp, alpha_bits, img) = tga(&r.bytes);
@@ -874,8 +874,8 @@ fn tga_opts(bits: TgaBits) -> ExportOptions {
 
 /// A `TGA_W`×`TGA_H` 8-bit RGB document (more than one tile each way) whose opaque Background
 /// reaches every byte value in each channel, and its colours as interleaved RGB bytes.
-fn tga_rgb_doc() -> (photocraft_doc::Document, Vec<u8>) {
-    let mut d = photocraft_doc::Document::new("t", photocraft_geom::Size::new(TGA_W, TGA_H), ColorMode::Rgb, SampleType::U8);
+fn tga_rgb_doc() -> (sary_doc::Document, Vec<u8>) {
+    let mut d = sary_doc::Document::new("t", sary_geom::Size::new(TGA_W, TGA_H), ColorMode::Rgb, SampleType::U8);
     let (mut rgb, mut rgba) = (Vec::new(), Vec::new());
     for y in 0..TGA_H {
         for x in 0..TGA_W {
@@ -885,8 +885,8 @@ fn tga_rgb_doc() -> (photocraft_doc::Document, Vec<u8>) {
             rgba.push(255);
         }
     }
-    let s = photocraft_raster::Surface::from_interleaved(d.pixel_format(), d.bounds(), &rgba);
-    let mut bg = photocraft_doc::Layer::new("Background", photocraft_doc::LayerContent::Raster(s));
+    let s = sary_raster::Surface::from_interleaved(d.pixel_format(), d.bounds(), &rgba);
+    let mut bg = sary_doc::Layer::new("Background", sary_doc::LayerContent::Raster(s));
     bg.locks.transparency = true;
     bg.locks.position = true;
     d.layers.push(bg);
@@ -894,10 +894,10 @@ fn tga_rgb_doc() -> (photocraft_doc::Document, Vec<u8>) {
 }
 
 /// `d` with an 8-bit "Alpha 1" channel holding `alpha` (one byte per pixel, row-major).
-fn with_alpha_bytes(mut d: photocraft_doc::Document, alpha: &[u8]) -> photocraft_doc::Document {
-    let mut s = photocraft_raster::Surface::from_interleaved(photocraft_color::PixelFormat::GRAY8, d.bounds(), alpha);
+fn with_alpha_bytes(mut d: sary_doc::Document, alpha: &[u8]) -> sary_doc::Document {
+    let mut s = sary_raster::Surface::from_interleaved(sary_color::PixelFormat::GRAY8, d.bounds(), alpha);
     s.prune();
-    d.channels.push(photocraft_doc::AlphaChannel::new("Alpha 1", s));
+    d.channels.push(sary_doc::AlphaChannel::new("Alpha 1", s));
     d
 }
 
@@ -907,8 +907,8 @@ fn gradient_alpha() -> Vec<u8> {
 }
 
 /// A decoded Targa's interleaved RGB and alpha bytes.
-fn rgb_and_alpha(img: &photocraft_codecs::Image) -> (Vec<u8>, Vec<u8>) {
-    assert_eq!(img.layout(), photocraft_codecs::ChannelLayout::Rgba);
+fn rgb_and_alpha(img: &sary_codecs::Image) -> (Vec<u8>, Vec<u8>) {
+    assert_eq!(img.layout(), sary_codecs::ChannelLayout::Rgba);
     let px = img.data().as_chunks::<4>().0;
     (px.iter().flat_map(|p| [p[0], p[1], p[2]]).collect(), px.iter().map(|p| p[3]).collect())
 }
@@ -979,7 +979,7 @@ fn tga_24_bit_writes_no_alpha() {
     let r = export(&d, "a.tga", &tga_opts(TgaBits::Bits24)).unwrap();
     let (bpp, alpha_bits, img) = tga(&r.bytes);
     assert_eq!((bpp, alpha_bits), (24, 0));
-    assert_eq!(img.layout(), photocraft_codecs::ChannelLayout::Rgb);
+    assert_eq!(img.layout(), sary_codecs::ChannelLayout::Rgb);
     assert!(img.data() == rgb.as_slice(), "the colours are the document's");
     assert!(r.warnings.iter().any(|w| w.contains("24-bit") && w.contains("\"Alpha 1\"")), "{:?}", r.warnings);
     let (back_rgb, back_alpha) = reopened(&r.bytes);
@@ -1041,9 +1041,9 @@ fn tga_default_bits_follow_the_alpha_channels() {
     let d = single(ColorMode::Rgb, SampleType::U8, true);
     assert_eq!(tga_default_bits(&d), TgaBits::Bits24, "transparency alone");
     let mut spot = d.clone();
-    let s = photocraft_raster::Surface::new(photocraft_color::PixelFormat::GRAY8);
+    let s = sary_raster::Surface::new(sary_color::PixelFormat::GRAY8);
     spot.channels
-        .push(photocraft_doc::AlphaChannel { spot: Some((photocraft_color::Color::rgb(1.0, 0.0, 0.0), 1.0)), ..photocraft_doc::AlphaChannel::new("Spot", s) });
+        .push(sary_doc::AlphaChannel { spot: Some((sary_color::Color::rgb(1.0, 0.0, 0.0), 1.0)), ..sary_doc::AlphaChannel::new("Spot", s) });
     assert_eq!(tga_default_bits(&spot), TgaBits::Bits24, "spot channel");
     assert_eq!(tga_default_bits(&with_alpha_channel(d, "Alpha 1")), TgaBits::Bits32);
     assert_eq!((TgaBits::from_bits(24), TgaBits::from_bits(32), TgaBits::from_bits(16)), (Some(TgaBits::Bits24), Some(TgaBits::Bits32), None));

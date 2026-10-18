@@ -1,4 +1,4 @@
-# Spanish (es) catalog for ArtCraft Launcher.
+# Spanish (es) catalog for Mahay Trano.
 # Format: context<TAB>source<TAB>translation
 # Empty context = plain UI string (tl!, t).
 # @id = command-id keyed (tr_id).
@@ -6,21 +6,21 @@
 # @msg = status/error message template (message, msg).
 # Other context = disambiguation for tr_ctx.
 #
-# Clean-room: written from the meaning of ArtCraft Launcher's English labels, in neutral
+# Clean-room: written from the meaning of Mahay Trano's English labels, in neutral
 # international Spanish for Spain and Latin America (the interface addresses the user as "tú";
 # no regional words such as "ordenador").
 #
 # Coverage: the whole interface: every menu string and tl! literal (complete_menus = true).
-# Left in English on purpose: product name "ArtCraft Launcher" (and its "Launcher" tag), suite
-# name "Craft App Suite", app names (PhotoCraft, LightCraft, FilmCraft,
-# DesignCraft, VectorCraft, PdfCraft, EffectCraft, WordCraft, DeckCraft, GridCraft, CADCraft,
-# SoundCraft, FigCraft), "GitHub", "Discord", "Finder", "makers".
+# Left in English on purpose: product name "Mahay Trano" (and its "Launcher" tag), suite
+# name "Mahay App Suite", app names (Sary, Hazavana, Hetsika,
+# Pejy, Tsipika, Taratasy, Tselatra, Soratra, Seho, Tabilao, Drafitra,
+# Feo, Endrika), "GitHub", "Discord", "Finder", "makers".
 # Trailing "…" (U+2026) must be preserved. Placeholders must appear in the translation:
 # {ago}, {a}, {b}, {count}, {date}, {day}, {done}, {e}, {f}, {installed}, {latest}, {min},
 # {month}, {name}, {n}, {os}, {platform}, {sources}, {total}, {version}, {v}, {year}.
 
 	Launcher	Launcher
-	Craft App Suite	Craft App Suite
+	Mahay App Suite	Mahay App Suite
 	Open Source Tools for Creatives, Makers, and Builders	Herramientas de código abierto para creativos, makers y constructores
 	Settings	Ajustes
 	Check for updates	Buscar actualizaciones
@@ -73,7 +73,7 @@
 	Reinstall	Reinstalar
 	Uninstall…	Desinstalar…
 	All releases	Todas las versiones
-	ArtCraft Launcher {version} is available.	ArtCraft Launcher {version} está disponible.
+	Mahay Trano {version} is available.	Mahay Trano {version} está disponible.
 	Dismiss	Descartar
 	Update and restart	Actualizar y reiniciar
 	A new version is available. Would you like to relaunch with the updated version?	Hay una versión nueva. ¿Quieres reiniciar con la versión actualizada?
@@ -83,7 +83,7 @@
 	Released {date}	Publicada el {date}
 	Open on GitHub	Abrir en GitHub
 	Close	Cerrar
-	ArtCraft Launcher {version}	ArtCraft Launcher {version}
+	Mahay Trano {version}	Mahay Trano {version}
 	Only when I ask	Solo cuando lo pida
 	Automatically download and install updates	Descargar e instalar actualizaciones automáticamente
 	Notify me when an installed app has an update	Avisarme cuando una aplicación instalada tenga una actualización
@@ -96,11 +96,11 @@
 	Running in the background	En segundo plano
 	Keep running in the tray when the window is closed	Seguir abierto en la bandeja del sistema al cerrar la ventana
 	Show the window on the current desktop	Mostrar la ventana en el escritorio actual
-	Start ArtCraft Launcher when I log in	Abrir ArtCraft Launcher al iniciar sesión
+	Start Mahay Trano when I log in	Abrir Mahay Trano al iniciar sesión
 	Community	Comunidad
-	Questions, ideas and news from the ArtCraft team	Preguntas, ideas y noticias del equipo de ArtCraft
+	Questions, ideas and news from the Mahay team	Preguntas, ideas y noticias del equipo de Mahay
 	Appearance	Apariencia
-	Quit ArtCraft Launcher	Salir de ArtCraft Launcher
+	Quit Mahay Trano	Salir de Mahay Trano
 	Done	Listo
 	Uninstall {name}?	¿Desinstalar {name}?
 	The app will be moved to the Trash. Your documents and settings stay.	La aplicación se moverá a la Papelera. Tus documentos y ajustes se conservan.
@@ -114,7 +114,7 @@
 	yesterday	ayer
 	{month} {day}, {year}	{day} {month} {year}
 	Automatically	Automáticamente
-	Every Craft app	Todas las aplicaciones Craft
+	Every Mahay app	Todas las aplicaciones Mahay
 	Apps on this computer	Aplicaciones en este equipo
 	Installed apps with a newer version	Aplicaciones instaladas con una versión más reciente
 	Apps you can install	Aplicaciones que puedes instalar
@@ -134,7 +134,7 @@
 	Open link	Abrir enlace
 	Update	Actualizar
 	{name} icon	Icono de {name}
-	Loading ArtCraft Launcher…	Cargando ArtCraft Launcher…
+	Loading Mahay Trano…	Cargando Mahay Trano…
 	Cancel update	Cancelar la actualización
 	Stop waiting; the update can be started again later	Dejar de esperar; la actualización se puede volver a iniciar más tarde
 	Download again	Volver a descargar
@@ -155,19 +155,19 @@
 	Arch package (.pkg.tar.zst)	Paquete Arch (.pkg.tar.zst)
 	Flatpak bundle	Paquete Flatpak
 	Tarball (.tar.gz)	Archivo tar (.tar.gz)
-photocraft	Image editing	Edición de imágenes
-vectorcraft	Vector illustration	Ilustración vectorial
-filmcraft	Video editing, color and sound	Edición de video, color y sonido
-lightcraft	Photo library and raw development	Fototeca y revelado RAW
-pdfcraft	Reading, organizing and protecting PDFs	Leer, organizar y proteger PDF
-effectcraft	Motion graphics and visual effects	Gráficos en movimiento y efectos visuales
-designcraft	Page layout and publishing	Maquetación y publicación
-wordcraft	Writing and document design	Escritura y diseño de documentos
-deckcraft	Presentations and slide shows	Presentaciones y diapositivas
-gridcraft	Spreadsheets and data	Hojas de cálculo y datos
-cadcraft	Computer-aided design and drafting	CAD: diseño y dibujo técnico
-soundcraft	Recording, editing and mixing audio	Grabación, edición y mezcla de audio
-figcraft	Interface design and prototyping	Diseño de interfaces y prototipos
+sary	Image editing	Edición de imágenes
+tsipika	Vector illustration	Ilustración vectorial
+hetsika	Video editing, color and sound	Edición de video, color y sonido
+hazavana	Photo library and raw development	Fototeca y revelado RAW
+taratasy	Reading, organizing and protecting PDFs	Leer, organizar y proteger PDF
+tselatra	Motion graphics and visual effects	Gráficos en movimiento y efectos visuales
+pejy	Page layout and publishing	Maquetación y publicación
+soratra	Writing and document design	Escritura y diseño de documentos
+seho	Presentations and slide shows	Presentaciones y diapositivas
+tabilao	Spreadsheets and data	Hojas de cálculo y datos
+drafitra	Computer-aided design and drafting	CAD: diseño y dibujo técnico
+feo	Recording, editing and mixing audio	Grabación, edición y mezcla de audio
+endrika	Interface design and prototyping	Diseño de interfaces y prototipos
 month	Jan	ene.
 month	Feb	feb.
 month	Mar	mar.
@@ -186,8 +186,8 @@ month	Dec	dic.
 	Installing for {platform}	Instalación para {platform}
 	Downloads for {platform}	Descargas para {platform}
 	No downloads for this system	No hay descargas para este sistema
-	Join the ArtCraft community on Discord	Únete a la comunidad de ArtCraft en Discord
-	ArtCraft on {name}	ArtCraft en {name}
+	Join the Mahay community on Discord	Únete a la comunidad de Mahay en Discord
+	Mahay on {name}	Mahay en {name}
 	Couldn't open {name}: {e}	No se pudo abrir {name}: {e}
 	Download cancelled	Descarga cancelada
 	Available to install	Disponible para instalar
@@ -207,7 +207,7 @@ month	Dec	dic.
 	Version {version} installed	Versión {version} instalada
 	Version {latest}	Versión {latest}
 	No release published yet	Aún no hay ninguna versión publicada
-	ArtCraft Launcher	ArtCraft Launcher
+	Mahay Trano	Mahay Trano
 	App	Aplicación
 	Latest	Última
 	Released	Publicada
@@ -229,7 +229,7 @@ month	Dec	dic.
 	Couldn't check for updates: {f}	No se pudieron buscar actualizaciones: {f}
 	Website (coming soon)	Sitio web (próximamente)
 	GitHub repository	Repositorio en GitHub
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Update 1 app	Actualizar 1 aplicación
 	Update all ({count})	Actualizar todas ({count})
 	⊞  Grid	⊞  Cuadrícula
@@ -242,11 +242,11 @@ month	Dec	dic.
 	Full changelog	Registro de cambios completo
 	link	enlace
 	No apps match	Ninguna aplicación coincide
-	Open ArtCraft Launcher to update.	Abre ArtCraft Launcher para actualizar.
+	Open Mahay Trano to update.	Abre Mahay Trano para actualizar.
 	{name} {v} is available	{name} {v} está disponible
 	{count} updates are available	Hay {count} actualizaciones disponibles
 	These notes weren't fetched (GitHub's request limit was reached). They're on the release page.	Estas notas no se descargaron (se alcanzó el límite de solicitudes de GitHub). Están en la página de la versión.
-	When on, opening the launcher from the menu bar brings its window to the desktop you're on. When off, macOS switches you to the desktop the window was on.	Si está activado, abrir ArtCraft Launcher desde la barra de menús lleva su ventana al escritorio en el que estás. Si está desactivado, macOS te cambia al escritorio en el que estaba la ventana.
+	When on, opening the launcher from the menu bar brings its window to the desktop you're on. When off, macOS switches you to the desktop the window was on.	Si está activado, abrir Mahay Trano desde la barra de menús lleva su ventana al escritorio en el que estás. Si está desactivado, macOS te cambia al escritorio en el que estaba la ventana.
 	Couldn't change the login item: {e}	No se pudo cambiar el elemento de inicio de sesión: {e}
 column	App	Aplicación
 column	Installed	Instalada
@@ -295,7 +295,7 @@ filter	Installed	Instaladas
 @id	launcher.notes	Novedades
 @id	launcher.dismiss	Descartar
 @id	settings.open	Ajustes
-@id	settings.quit	Salir de ArtCraft Launcher
+@id	settings.quit	Salir de Mahay Trano
 @id	view.grid	Cuadrícula
 @id	view.table	Tabla
 @id	filter.all	Todas
@@ -319,14 +319,14 @@ filter	Installed	Instaladas
 @id	linux.preferred_kind	Instalar las aplicaciones nuevas como
 @id	tray.close_to_tray	Seguir abierto en la bandeja del sistema al cerrar la ventana
 @id	tray.show_on_current_desktop	Mostrar la ventana en el escritorio actual
-@id	tray.login_item	Abrir ArtCraft Launcher al iniciar sesión
+@id	tray.login_item	Abrir Mahay Trano al iniciar sesión
 @id	appearance.theme	Apariencia
-	Show ArtCraft Launcher	Mostrar ArtCraft Launcher
+	Show Mahay Trano	Mostrar Mahay Trano
 	Check for Updates	Buscar actualizaciones
-	Visit getartcraft.com	Visitar getartcraft.com
-	ArtCraft on GitHub	ArtCraft en GitHub
-	Join the ArtCraft Discord	Únete al Discord de ArtCraft
-@plural	ArtCraft Launcher · {n} update available|ArtCraft Launcher · {n} updates available	ArtCraft Launcher · {n} actualización disponible|ArtCraft Launcher · {n} actualizaciones disponibles
+	Visit mahay.com	Visitar mahay.com
+	Mahay on GitHub	Mahay en GitHub
+	Join the Mahay Discord	Únete al Discord de Mahay
+@plural	Mahay Trano · {n} update available|Mahay Trano · {n} updates available	Mahay Trano · {n} actualización disponible|Mahay Trano · {n} actualizaciones disponibles
 	Install folder	Carpeta de instalación
 	Default install folder	Carpeta de instalación predeterminada
 	System default	Predeterminada del sistema
@@ -338,7 +338,7 @@ filter	Installed	Instaladas
 @msg	couldn't use install folder {path}: {reason}	no se pudo usar la carpeta de instalación {path}: {reason}
 @msg	this release has no AppImage for a custom install folder	esta versión no tiene un AppImage para una carpeta de instalación personalizada
 @msg	custom install folders aren't supported on this system	este sistema no admite carpetas de instalación personalizadas
-@msg	{path} already exists and wasn't installed by ArtCraft Launcher	{path} ya existe y no fue instalado por ArtCraft Launcher
+@msg	{path} already exists and wasn't installed by Mahay Trano	{path} ya existe y no fue instalado por Mahay Trano
 @msg	couldn't move {path} to Trash ({reason}). Remove it in Finder instead.	no se pudo mover {path} a la Papelera ({reason}). Elimínalo desde Finder.
 	Apps are placed inside this folder.	Las aplicaciones se guardan dentro de esta carpeta.
 	Replace what's there?	¿Reemplazar lo que hay?

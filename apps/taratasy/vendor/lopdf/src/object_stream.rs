@@ -86,7 +86,7 @@ impl ObjectStream {
             warn!("object stream: the object stream dictionary specifies a wrong number of objects")
         }
 
-        // PdfCraft patch: bound members by the next distinct offset and parse each offset
+        // Taratasy patch: bound members by the next distinct offset and parse each offset
         // only once, so overlapping or duplicate entries cannot amplify decoded content.
         let mut extents = BTreeMap::new();
         for (index, chunk) in numbers[..len].chunks(2).enumerate() {

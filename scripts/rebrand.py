@@ -37,7 +37,7 @@ DISPLAY = {
     "CADCraft": "Drafitra", "CadCraft": "Drafitra", "AniCraft": "Sarimiaina",
     "ArtCraft Launcher": "Mahay Trano", "ArtCraft": "Mahay",
 }
-SKIP_NAMES = re.compile(r"^(LICENSE.*|NOTICE.*|ATTRIBUTION.*|COPYRIGHT.*)$", re.I)
+SKIP_NAMES = re.compile(r"^(LICENSE|LICENSE-[A-Z]+|NOTICE|COPYING|ATTRIBUTION\.(md|toml))(\.(md|txt))?$")
 SKIP_DIRS = {"licenses", "contributors", ".git", "target"}
 UPSTREAM_REF = re.compile(r"https?://github\.com/storytold/[\w.-]+/(?:issues|pull|discussions)/\d+[^\s)\]\"'>`]*")
 OUR_REPO = "https://github.com/raantss18/mahay"
@@ -64,12 +64,16 @@ def build_rules():
     rules += [
         (r"ARTCRAFT", "MAHAY"), (r"Artcraft", "Mahay"), (r"artcraft", "mahay"),
         # Shared libraries: craft-fonts, craft_quit, CRAFT_FONTS_DIR, ...
-        (r"\bcraft([-_])", r"mahay\1"),
-        (r"\bCRAFT_", "MAHAY_"),
+        (r"(?<![A-Za-z])craft(?=[-_])", "mahay"),
+        (r"(?<![A-Z])CRAFT_", "MAHAY_"),
+        (r"\bcraft (apps|fonts)\b", r"Mahay \1"),
         (r"\bCraft apps\b", "Mahay apps"),
         (r"\bCrafting [Aa]pps\b", "Mahay apps"),
         (r"\bcraftrules\b", "mahay-rules"),
-        (r"\bpcraft\b", "sary"),
+        (r"(?<![A-Za-z])pcraft(?![a-z])", "sary"),
+        (r"\bPcraft", "Sary"),
+        (r"\bPCRAFT", "SARY"),
+        (r"\bCraft(?=[A-Z])", "Mahay"),
         (r"\bPhoto Craft\b", "Sary"),
         (r"\bCraft\b", "Mahay"),
     ]
@@ -94,11 +98,11 @@ def rename_text(text):
 
 def is_text(path):
     with open(path, "rb") as f:
-        chunk = f.read(8192)
-    if b"\x00" in chunk:
+        data = f.read()
+    if b"\x00" in data[:8192]:
         return False
     try:
-        chunk.decode("utf-8")
+        data.decode("utf-8")
     except UnicodeDecodeError:
         return False
     return True

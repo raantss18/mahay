@@ -1,11 +1,11 @@
 //! Tagged-block helpers: the preserved block-list encoding, fills, text,
 //! smart objects, locks and label colors.
 
-use photocraft_color::{Color, ColorMode};
-use photocraft_doc::{AdvancedBlending, BlendIf, BlendRange, Fill, GradientStyle, Knockout, LabelColor, Locks};
-use photocraft_geom::Affine;
-use photocraft_psd::descriptor::{Descriptor, Id, UnicodeString, Value, VersionedDescriptor};
-use photocraft_psd::layer::BlendingRanges;
+use sary_color::{Color, ColorMode};
+use sary_doc::{AdvancedBlending, BlendIf, BlendRange, Fill, GradientStyle, Knockout, LabelColor, Locks};
+use sary_geom::Affine;
+use sary_psd::descriptor::{Descriptor, Id, UnicodeString, Value, VersionedDescriptor};
+use sary_psd::layer::BlendingRanges;
 
 /// `brst` (channel blending restrictions): a list of big-endian u32 channel indices left out of
 /// blending → a bit mask (bit `i` = channel `i`; indices above 31 are ignored).
@@ -101,7 +101,7 @@ pub fn ranges_from_blend_if(b: &BlendIf, channels: usize) -> BlendingRanges {
 
 /// `lspf` bits (Adobe spec: bit 0 transparency, 1 composite, 2 position).
 /// Artboard (bit 3, `0x08`, as reference files write it) and "all" (bit 31) are undocumented.
-/// Older PhotoCraft builds wrote the artboard lock at bit 4 (`0x10`); that value is still
+/// Older Sary builds wrote the artboard lock at bit 4 (`0x10`); that value is still
 /// accepted on read so those files keep their lock, and is rewritten at `0x08`.
 pub fn locks_from_lspf(v: u32) -> Locks {
     Locks { transparency: v & 1 != 0, pixels: v & 2 != 0, position: v & 4 != 0, artboard: v & 0x08 != 0 || v & 0x10 != 0, all: v & 0x8000_0000 != 0 }
@@ -280,7 +280,7 @@ pub(crate) fn gradient_stops_editable(grad: &Descriptor, method: Option<&[u8]>) 
     let mut raw = gradient_stops_raw(grad);
     let m = crate::gradient_bake::Method::from_code(method);
     // Lab stops (Lab documents) interpolate in L*a*b*, which only baking reproduces.
-    let lab = raw.stops.iter().all(|(_, c)| c.mode == photocraft_color::ColorMode::Lab);
+    let lab = raw.stops.iter().all(|(_, c)| c.mode == sary_color::ColorMode::Lab);
     if raw.stops.len() >= 2 && (raw.smooth > 0.0 || m != crate::gradient_bake::Method::Classic || lab) {
         raw.stops = crate::gradient_bake::bake(std::mem::take(&mut raw.stops), &raw.mids, raw.smooth, m);
         raw.mids.clear();
@@ -529,7 +529,7 @@ pub(crate) fn with_pattern_placement(mut d: Descriptor, angle: f32, link: bool, 
 /// axis, bounds and, for `warpCustom`, the 4 × 4 `customEnvelopeWarp` mesh. Read-only: the raw
 /// block is what gets written back. `None` when absent or `warpNone` with no mesh. A `PlLd`
 /// record keeps its warp elsewhere: see [`parse_plld_warp`].
-pub fn parse_placed_warp(key: &[u8; 4], data: &[u8]) -> Option<photocraft_geom::warp::Warp> {
+pub fn parse_placed_warp(key: &[u8; 4], data: &[u8]) -> Option<sary_geom::warp::Warp> {
     if key != b"SoLd" && key != b"SoLE" {
         return None;
     }
@@ -540,8 +540,8 @@ pub fn parse_placed_warp(key: &[u8; 4], data: &[u8]) -> Option<photocraft_geom::
 /// A `warp` descriptor (the `SoLd` key, or the whole descriptor after a `PlLd` record's corners)
 /// as a warp: `Some(None)` for no warp (`warpNone`, or a warp that moves nothing), `None` when it
 /// can't be read (an unknown style, missing bounds, a mesh that isn't 4 × 4).
-fn warp_of(w: &Descriptor) -> Option<Option<photocraft_geom::warp::Warp>> {
-    use photocraft_geom::warp::{BezierMesh, Warp, WarpStyle};
+fn warp_of(w: &Descriptor) -> Option<Option<sary_geom::warp::Warp>> {
+    use sary_geom::warp::{BezierMesh, Warp, WarpStyle};
     let style = enum_of(w, "warpStyle").and_then(|v| WarpStyle::parse(&String::from_utf8_lossy(v)))?;
     if style == WarpStyle::None {
         return Some(None);
@@ -596,9 +596,9 @@ pub(crate) fn parse_prefix_versioned(data: &[u8]) -> Option<Descriptor> {
 /// single-patch custom warp's 16 control points, which may spill past the source, else the source
 /// rect `0..w × 0..h`. Mapping the source rect instead counts the overhang twice and stretches the
 /// placement. A degenerate or non-finite box falls back to the source rect.
-pub(crate) fn placed_frame(warp: Option<&photocraft_geom::warp::Warp>, w: f64, h: f64) -> [f64; 4] {
+pub(crate) fn placed_frame(warp: Option<&sary_geom::warp::Warp>, w: f64, h: f64) -> [f64; 4] {
     let rect = [0.0, 0.0, w, h];
-    let Some(m) = warp.filter(|wp| wp.style == photocraft_geom::warp::WarpStyle::Custom).and_then(|wp| wp.mesh.as_ref()).filter(|m| m.points.len() == 16)
+    let Some(m) = warp.filter(|wp| wp.style == sary_geom::warp::WarpStyle::Custom).and_then(|wp| wp.mesh.as_ref()).filter(|m| m.points.len() == 16)
     else {
         return rect;
     };
@@ -652,7 +652,7 @@ pub fn corners_affine(p: &[f64; 8], frame: [f64; 4]) -> Option<Affine> {
 /// its size (a custom warp's box needs no size); position and rotation stay right, only Replace
 /// Contents and re-renders depend on the scale. Import and export (which keeps an unedited record
 /// verbatim) both place a `PlLd` layer with this.
-pub fn plld_transform(p: &[f64; 8], size: Option<(f64, f64)>, warp: Option<&photocraft_geom::warp::Warp>) -> (Affine, Option<[f64; 9]>) {
+pub fn plld_transform(p: &[f64; 8], size: Option<(f64, f64)>, warp: Option<&sary_geom::warp::Warp>) -> (Affine, Option<[f64; 9]>) {
     let (w, h) = size.unwrap_or_else(|| ((p[2] - p[0]).hypot(p[3] - p[1]), (p[6] - p[0]).hypot(p[7] - p[1])));
     let perspective = corners_perspective([[p[0], p[1]], [p[2], p[3]], [p[4], p[5]], [p[6], p[7]]], (w, h));
     let frame = if perspective.is_some() { [0.0, 0.0, w, h] } else { placed_frame(warp, w, h) };
@@ -691,7 +691,7 @@ pub enum PlldWarp {
     /// No warp: `warpNone`, a warp that moves nothing, or a record that ends at its corners.
     None,
     /// The warp, in source pixels like the `SoLd` one.
-    Warp(photocraft_geom::warp::Warp),
+    Warp(sary_geom::warp::Warp),
     /// A warp is stored but can't be read (or the record itself can't be): re-rendering the
     /// layer from its source would drop it.
     Unreadable,
@@ -741,7 +741,7 @@ pub fn corners_perspective(q: [[f64; 2]; 4], (w, h): (f64, f64)) -> Option<[f64;
     if (0..2).all(|i| (q[0][i] + q[2][i] - q[1][i] - q[3][i]).abs() <= tol) || w <= 0.0 || h <= 0.0 {
         return None;
     }
-    photocraft_algo::transform::Homography::rect_to_quad([0.0, 0.0, w, h], q).map(|m| m.0)
+    sary_algo::transform::Homography::rect_to_quad([0.0, 0.0, w, h], q).map(|m| m.0)
 }
 
 /// `masterFXSwitch` from an `lfx2` block (defaults to `true`).
@@ -762,8 +762,8 @@ mod tests {
     /// alpha) and survive a write; the ramp's alpha follows them.
     #[test]
     fn gradient_fill_opacity_stops_become_alpha() {
-        use photocraft_color::Color;
-        use photocraft_doc::{Fill, GradientStyle};
+        use sary_color::Color;
+        use sary_doc::{Fill, GradientStyle};
         let red = Color::rgba(1.0, 0.0, 0.0, 1.0);
         let f = Fill::gradient(vec![(0.0, red), (1.0, Color { alpha: 0.0, ..red })], 90.0, 1.0, GradientStyle::Linear, false);
         let (k, data) = super::write_fill(&f);
@@ -771,7 +771,7 @@ mod tests {
         let Fill::Gradient { stops, opacity_stops, .. } = &back else { panic!("gradient") };
         assert_eq!(opacity_stops, &vec![(0.0, 1.0), (1.0, 0.0)]);
         assert!(stops.iter().all(|s| s.1.c[0] == 1.0 && s.1.c[1] == 0.0));
-        let ramp = photocraft_compose::gradient_fill::Ramp::new(&back).unwrap();
+        let ramp = sary_compose::gradient_fill::Ramp::new(&back).unwrap();
         assert_eq!(ramp.sample(0.0)[3], 1.0);
         assert!(ramp.sample(1.0)[3] < 0.01);
         // Opaque gradients come back without opacity stops.
@@ -786,9 +786,9 @@ mod tests {
     /// `gs99`, which Photoshop doesn't write, so every gradient opened as Classic.
     #[test]
     fn gradient_fill_reads_the_interpolation_method() {
-        use photocraft_color::Color;
-        use photocraft_doc::{Fill, GradientStyle};
-        use photocraft_psd::descriptor::{Id, Value};
+        use sary_color::Color;
+        use sary_doc::{Fill, GradientStyle};
+        use sary_psd::descriptor::{Id, Value};
         let f = Fill::gradient(vec![(0.0, Color::BLACK), (1.0, Color::WHITE)], 0.0, 1.0, GradientStyle::Linear, false);
         let (k, data) = super::write_fill(&f);
         let d = super::parse_prefix_versioned(&data).unwrap();
@@ -796,7 +796,7 @@ mod tests {
             let d =
                 d.clone().with("gradientsInterpolationMethod", Value::Enumerated { type_id: Id::new("gradientInterpolationMethodType"), value: Id::new(code) });
             let back = super::fill_from_desc(&k, &d).unwrap();
-            let ramp = photocraft_compose::gradient_fill::Ramp::new(&back).unwrap();
+            let ramp = sary_compose::gradient_fill::Ramp::new(&back).unwrap();
             (ramp.sample(0.5)[0] * 255.0).round()
         };
         assert_eq!(mid("Gcls"), 128.0);
@@ -807,8 +807,8 @@ mod tests {
 
     #[test]
     fn lab_descriptor_colours_round_trip() {
-        use photocraft_color::ColorMode;
-        use photocraft_psd::descriptor::{Descriptor, Value};
+        use sary_color::ColorMode;
+        use sary_psd::descriptor::{Descriptor, Value};
         let d = Descriptor::new("LbCl").with("Lmnc", Value::Double(19.07)).with("A   ", Value::Double(52.29)).with("B   ", Value::Double(-85.08));
         let c = super::color_from_desc(&d).unwrap();
         assert_eq!(c.mode, ColorMode::Lab);
@@ -824,8 +824,8 @@ mod tests {
 
     #[test]
     fn blending_ranges_map_to_blend_if() {
-        use photocraft_doc::{BlendIf, BlendRange};
-        use photocraft_psd::layer::BlendingRanges;
+        use sary_doc::{BlendIf, BlendRange};
+        use sary_psd::layer::BlendingRanges;
         // Full ranges (what every layer without Blend If carries) → the default setting.
         assert_eq!(super::blend_if_from_ranges(&BlendingRanges::full(3)), BlendIf::default());
         assert_eq!(super::blend_if_from_ranges(&BlendingRanges::default()), BlendIf::default());
@@ -851,7 +851,7 @@ mod tests {
 
     #[test]
     fn advanced_blending_blocks_round_trip() {
-        use photocraft_doc::{AdvancedBlending, Knockout};
+        use sary_doc::{AdvancedBlending, Knockout};
         let a = AdvancedBlending {
             knockout: Knockout::Deep,
             blend_interior: true,
@@ -892,8 +892,8 @@ mod tests {
 
     #[test]
     fn placed_layer_warp_is_read() {
-        use photocraft_geom::warp::WarpStyle;
-        use photocraft_psd::descriptor::ObjectArray;
+        use sary_geom::warp::WarpStyle;
+        use sary_psd::descriptor::ObjectArray;
         let e = |t: &str, v: &str| Value::Enumerated { type_id: Id::new(t), value: Id::new(v) };
         let bounds = Descriptor::new("Rctn")
             .with("Top ", Value::UnitFloat { unit: *b"#Pxl", value: 0.0 })
@@ -942,7 +942,7 @@ mod tests {
         for bits in [0u32, 1, 2, 4, 8, 0x0D, 0x8000_0000, 0x8000_000F] {
             assert_eq!(lspf_from_locks(&locks_from_lspf(bits)), bits);
         }
-        // Older PhotoCraft files wrote the artboard lock at 0x10; it reads back as artboard
+        // Older Sary files wrote the artboard lock at 0x10; it reads back as artboard
         // and is rewritten at the reference value 0x08.
         assert!(locks_from_lspf(0x10).artboard);
         assert_eq!(lspf_from_locks(&locks_from_lspf(0x10)), 0x08);
@@ -1051,7 +1051,7 @@ mod more_tests {
     #[test]
     fn plld_corners_frame_a_spilled_custom_warp_like_sold() {
         use crate::smart_map::{PlacedSpec, parse_sold, plld_bytes, sold_bytes};
-        use photocraft_geom::warp::{BezierMesh, Warp};
+        use sary_geom::warp::{BezierMesh, Warp};
         let bounds = [0.0, 0.0, 50.0, 25.0];
         let mut mesh = BezierMesh::identity(bounds, 1, 1);
         mesh.points[0] = [-10.0, -5.0];
@@ -1113,7 +1113,7 @@ mod more_tests {
     #[test]
     fn plld_warps_round_trip() {
         use crate::smart_map::{PlacedSpec, plld_bytes};
-        use photocraft_geom::warp::{BezierMesh, Warp, WarpStyle};
+        use sary_geom::warp::{BezierMesh, Warp, WarpStyle};
         let bounds = [0.0, 0.0, 60.0, 30.0];
         let mut arc = Warp::preset(WarpStyle::Arc, 40.0, bounds);
         arc.vertical = true;
@@ -1145,7 +1145,7 @@ mod more_tests {
     #[test]
     fn plld_unreadable_warps() {
         use crate::smart_map::{PlacedSpec, plld_bytes};
-        use photocraft_geom::warp::{Warp, WarpStyle};
+        use sary_geom::warp::{Warp, WarpStyle};
         let arc = Warp::preset(WarpStyle::Arc, 40.0, [0.0, 0.0, 4.0, 4.0]);
         let spec = PlacedSpec {
             idnt: "id",
@@ -1185,7 +1185,7 @@ mod more_tests {
     /// `SoLd` data with a 50 × 25 source, the quad `trnf` and, when given, a custom warp whose
     /// 16 control points are `pts`.
     fn sold_with_warp(trnf: [f64; 8], pts: Option<&[[f64; 2]]>) -> Vec<u8> {
-        use photocraft_psd::descriptor::ObjectArray;
+        use sary_psd::descriptor::ObjectArray;
         let e = |t: &str, v: &str| Value::Enumerated { type_id: Id::new(t), value: Id::new(v) };
         let mut d = Descriptor::new("null")
             .with("Idnt", Value::Text(UnicodeString::new_nul("uuid-1")))
@@ -1216,7 +1216,7 @@ mod more_tests {
     /// source rect: a mesh spilling to x = -10, y = -5 and x = 60 frames a 70 × 30 box.
     #[test]
     fn smart_transform_maps_the_warp_control_box_onto_the_quad() {
-        let mut pts = photocraft_geom::warp::BezierMesh::identity([0.0, 0.0, 50.0, 25.0], 1, 1).points;
+        let mut pts = sary_geom::warp::BezierMesh::identity([0.0, 0.0, 50.0, 25.0], 1, 1).points;
         pts[0] = [-10.0, -5.0];
         pts[15] = [60.0, 25.0];
         let quad = [100.0, 200.0, 240.0, 200.0, 240.0, 260.0, 100.0, 260.0];
@@ -1233,8 +1233,8 @@ mod more_tests {
         let quad = [100.0, 200.0, 240.0, 200.0, 240.0, 260.0, 100.0, 260.0];
         let (_, a) = parse_smart(b"SoLd", &sold_with_warp(quad, Some(&[[7.0, 7.0]; 16])));
         assert_eq!(a.m, [2.8, 0.0, 0.0, 2.4, 100.0, 200.0]);
-        let mut warp = photocraft_geom::warp::Warp::preset(photocraft_geom::warp::WarpStyle::Custom, 0.0, [0.0, 0.0, 50.0, 25.0]);
-        warp.mesh = Some(photocraft_geom::warp::BezierMesh { us: vec![0.0, 1.0], vs: vec![0.0, 1.0], points: vec![[f64::NAN, 1.0]; 16] });
+        let mut warp = sary_geom::warp::Warp::preset(sary_geom::warp::WarpStyle::Custom, 0.0, [0.0, 0.0, 50.0, 25.0]);
+        warp.mesh = Some(sary_geom::warp::BezierMesh { us: vec![0.0, 1.0], vs: vec![0.0, 1.0], points: vec![[f64::NAN, 1.0]; 16] });
         assert_eq!(placed_frame(Some(&warp), 50.0, 25.0), [0.0, 0.0, 50.0, 25.0]);
         assert_eq!(placed_frame(None, 50.0, 25.0), [0.0, 0.0, 50.0, 25.0]);
     }

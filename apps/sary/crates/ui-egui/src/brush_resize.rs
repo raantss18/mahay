@@ -12,10 +12,10 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use egui::{Color32, Pos2, Stroke, vec2};
-use photocraft_engine::paint::MAX_BRUSH_SIZE;
+use sary_engine::paint::MAX_BRUSH_SIZE;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::Tool;
 
@@ -68,7 +68,7 @@ pub fn resized(start: (f32, f32), dx: f64, dy: f64, zoom: f32) -> (f32, f32) {
 /// Route a tool event: true when it belongs to a resize drag (begun here with Control+Alt held,
 /// or an Alt+right-drag `armed` for this press, or already in progress), so the tool never sees
 /// it.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers, armed: bool) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers, armed: bool) -> bool {
     static KEY: AtomicU64 = AtomicU64::new(0);
     match ev {
         ToolEvent::Down { x, y, .. } => {
@@ -104,13 +104,13 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers, ar
 
 /// End an Alt+right-drag resize whose button is no longer down (its release went elsewhere, e.g.
 /// outside the window), so it can't swallow the next stroke.
-pub fn release_stale(app: &mut PhotocraftApp, secondary_down: bool) {
+pub fn release_stale(app: &mut SaryApp, secondary_down: bool) {
     if !secondary_down && app.brush_resize.is_some_and(|r| r.secondary) {
         app.brush_resize = None;
     }
 }
 
-fn update(app: &mut PhotocraftApp, r: Resize, x: f64, y: f64) {
+fn update(app: &mut SaryApp, r: Resize, x: f64, y: f64) {
     // Screen-relative, as in Photoshop (#4228): right is bigger and down harder on screen, however
     // the view is rotated or flipped. The screen delta over the zoom is in document pixels at 0°.
     let (dx, dy, zoom) = match ViewXform::active(app) {
@@ -139,7 +139,7 @@ fn update(app: &mut PhotocraftApp, r: Resize, x: f64, y: f64) {
 /// Draw the resize feedback: the brush circle at the anchor, filled with the brush preview
 /// colour whose solid core shows the hardness (Photoshop's), and the readout beside the pointer.
 /// Returns true while a resize is in progress (the canvas then hides its cursor).
-pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) -> bool {
+pub fn draw(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) -> bool {
     let Some(r) = app.brush_resize else { return false };
     let b = &app.session.tools.brush;
     let c = xf.to_screen(r.anchor[0] as f32, r.anchor[1] as f32);
@@ -161,7 +161,7 @@ pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) -> boo
 
 /// The tip preview's tint: Preferences ▸ Cursors ▸ Brush Preview colour (red by default, as in
 /// Photoshop), at the overlay's alpha. Unreadable values keep the red.
-fn preview_tint(app: &PhotocraftApp) -> Color32 {
+fn preview_tint(app: &SaryApp) -> Color32 {
     let alpha = 110;
     crate::color_picker_ui::parse_hex(&app.session.prefs().cursors.brush_preview_color).map_or(Color32::from_rgba_unmultiplied(255, 0, 0, alpha), |c| {
         Color32::from_rgba_unmultiplied((c[0] * 255.0).round() as u8, (c[1] * 255.0).round() as u8, (c[2] * 255.0).round() as u8, alpha)
@@ -209,15 +209,15 @@ mod tests {
 
     const CTRL_ALT: Modifiers = Modifiers { alt: true, ctrl: true, shift: false, mac_cmd: false, command: false };
 
-    fn app(tool: Tool) -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    fn app(tool: Tool) -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 300, "height": 200, "background": "transparent"})).unwrap();
         app.run("tools.setBrush", json!({"brush": {"size": 40, "hardness": 0.2}})).unwrap();
         app.ui.tool = tool;
         app
     }
 
-    fn history(app: &PhotocraftApp) -> usize {
+    fn history(app: &SaryApp) -> usize {
         app.session.active().unwrap().history.past_len()
     }
 
@@ -279,7 +279,7 @@ mod tests {
         let mut a = app(Tool::Brush);
         a.sync_views();
         let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -288,10 +288,10 @@ mod tests {
             },
             a,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
         h.run_steps(4);
         let c = h.state().last_canvas_rect.center();
-        let press = |h: &mut Harness<'static, PhotocraftApp>, pos: Pos2, pressed: bool| {
+        let press = |h: &mut Harness<'static, SaryApp>, pos: Pos2, pressed: bool| {
             h.event(egui::Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: CTRL_ALT });
             h.run();
         };
@@ -318,9 +318,9 @@ mod tests {
         assert_eq!(history(h.state()), undo0, "no undo step");
     }
 
-    fn canvas(a: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+    fn canvas(a: SaryApp) -> Harness<'static, SaryApp> {
         let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -329,18 +329,18 @@ mod tests {
             },
             a,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
         h.run_steps(4);
         h
     }
 
-    fn button(h: &mut Harness<'static, PhotocraftApp>, pos: Pos2, button: PointerButton, pressed: bool, modifiers: Modifiers) {
+    fn button(h: &mut Harness<'static, SaryApp>, pos: Pos2, button: PointerButton, pressed: bool, modifiers: Modifiers) {
         h.event(egui::Event::PointerButton { pos, button, pressed, modifiers });
         h.run_steps(2);
     }
 
     /// Alt+right-drag from the canvas centre, six steps of `step` screen points.
-    fn alt_right_drag(h: &mut Harness<'static, PhotocraftApp>, step: egui::Vec2) -> Pos2 {
+    fn alt_right_drag(h: &mut Harness<'static, SaryApp>, step: egui::Vec2) -> Pos2 {
         let c = h.state().last_canvas_rect.center();
         h.event(egui::Event::ModifiersChanged(Modifiers::ALT));
         h.event(egui::Event::PointerMoved(c));

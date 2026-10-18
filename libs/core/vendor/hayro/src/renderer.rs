@@ -23,17 +23,17 @@ use vello_cpu::{
     Image, ImageSource, Mask, PaintType, Pixmap, RenderContext, RenderSettings, peniko,
 };
 
-/// PdfCraft patch: largest image drawn, in pixels (2^28 ≈ 268 MP, well above real page images).
+/// Taratasy patch: largest image drawn, in pixels (2^28 ≈ 268 MP, well above real page images).
 const MAX_IMAGE_PIXELS: u64 = 1 << 28;
 
-/// PdfCraft patch: source axes allowed into CatmullRom planning. Unlike the final pixmap,
+/// Taratasy patch: source axes allowed into CatmullRom planning. Unlike the final pixmap,
 /// sources need not fit u16: a 65536-pixel strip can safely shrink to a 16-pixel image.
 /// This resource cap follows the existing CCITT column limit; the filter-work estimate below
 /// additionally bounds tables/scratch before entering the opaque PicScale planner.
 const MAX_RESAMPLING_SOURCE_SIDE: u32 = 1 << 20;
 const MAX_RESAMPLING_PLAN_BYTES: usize = 128 << 20;
 
-/// PdfCraft patch: source, intermediate and RGBA byte lengths, independent of backend sides.
+/// Taratasy patch: source, intermediate and RGBA byte lengths, independent of backend sides.
 fn source_byte_len(width: u32, height: u32, channels: usize, max_pixels: u64) -> Option<usize> {
     if width == 0 || height == 0 || !matches!(channels, 1 | 3 | 4) {
         return None;
@@ -50,7 +50,7 @@ fn source_byte_len(width: u32, height: u32, channels: usize, max_pixels: u64) ->
     pixels.checked_mul(channels)
 }
 
-/// PdfCraft patch: only final pixmaps/padded glyphs need to fit the backend's u16 sides.
+/// Taratasy patch: only final pixmaps/padded glyphs need to fit the backend's u16 sides.
 fn image_byte_len(width: u32, height: u32, channels: usize, max_pixels: u64) -> Option<usize> {
     if width > u32::from(u16::MAX) || height > u32::from(u16::MAX) {
         return None;
@@ -58,7 +58,7 @@ fn image_byte_len(width: u32, height: u32, channels: usize, max_pixels: u64) -> 
     source_byte_len(width, height, channels, max_pixels)
 }
 
-/// PdfCraft patch: conservative CatmullRom planning work for one axis in PicScale 0.7.12.
+/// Taratasy patch: conservative CatmullRom planning work for one axis in PicScale 0.7.12.
 /// Its four-tap kernel grows on downscaling. Include float/32-aligned i16 weights, temporary
 /// float/f64/usize tap arrays and two copies of the bounds. This is a size estimate, not a
 /// fallible reserve inside PicScale or a bound on total renderer memory.
@@ -84,7 +84,7 @@ fn filter_plan_bytes(source: u32, target: u32) -> Option<usize> {
         .checked_add(bounds)
 }
 
-/// PdfCraft patch: alpha-aware RGBA plans also need source-sized premultiplication scratch.
+/// Taratasy patch: alpha-aware RGBA plans also need source-sized premultiplication scratch.
 /// Bound the combined scratch before planning, including a conservative crossed intermediate
 /// (or four rows for a short target) when both convolution axes change.
 fn resampling_scratch_byte_len(
@@ -114,7 +114,7 @@ fn resampling_scratch_byte_len(
     Some(len)
 }
 
-/// PdfCraft patch: validate output, crossed intermediate and filter-work bounds before planning.
+/// Taratasy patch: validate output, crossed intermediate and filter-work bounds before planning.
 /// Source width × target height also bounds PicScale's smaller single-threaded four-row scratch.
 /// Nearest-neighbour (`!interpolate`) has none of those: it copies source pixels into the target,
 /// so only the source and target buffers are bounded.
@@ -146,8 +146,8 @@ fn resampling_byte_len(
     Some(target_len)
 }
 
-/// PdfCraft patch: image dimensions selected before allocating resampling buffers.
-/// Exported for PdfCraft's small, metadata-only regression tests. `None` rejects invalid
+/// Taratasy patch: image dimensions selected before allocating resampling buffers.
+/// Exported for Taratasy's small, metadata-only regression tests. `None` rejects invalid
 /// sources/scales or an over-budget target/intermediate; the caller may retain a valid source.
 /// `interpolate` selects the Catmull-Rom limits; nearest-neighbour (`false`) skips them.
 #[doc(hidden)]
@@ -186,14 +186,14 @@ pub fn image_resampling_size(
     Some(target)
 }
 
-/// PdfCraft patch: allocation failures in image conversion/resampling keep the renderer alive.
+/// Taratasy patch: allocation failures in image conversion/resampling keep the renderer alive.
 fn image_buffer(len: usize) -> Option<Vec<u8>> {
     let mut out = Vec::new();
     out.try_reserve_exact(len).ok()?;
     Some(out)
 }
 
-/// PdfCraft patch (#624): the source index that PicScale's nearest-neighbour plan copies for
+/// Taratasy patch (#624): the source index that PicScale's nearest-neighbour plan copies for
 /// destination `index` of `dst` samples taken from `src`. It is the same fixed-point centre
 /// sampling as `ResampleNearestPlan`, so these are the samples a nearest resize would copy.
 fn nearest_source_index(src: u32, dst: u32, index: u32) -> usize {
@@ -201,7 +201,7 @@ fn nearest_source_index(src: u32, dst: u32, index: u32) -> usize {
     ((u64::from(index) * step + (step >> 1)) >> 32) as usize
 }
 
-/// PdfCraft patch (#624): nearest-resizes a colour image and its same-sized soft mask straight
+/// Taratasy patch (#624): nearest-resizes a colour image and its same-sized soft mask straight
 /// into premultiplied RGBA of `target` size. Colour and mask come from the same source pixel, so
 /// this equals a nearest resize of the expanded RGBA followed by premultiplying each pixel.
 fn nearest_premultiplied_rgba(
@@ -236,7 +236,7 @@ fn nearest_premultiplied_rgba(
     Some(out)
 }
 
-/// PdfCraft patch: most pieces one dashed stroke may be cut into. Stroke expansion keeps every
+/// Taratasy patch: most pieces one dashed stroke may be cut into. Stroke expansion keeps every
 /// dash, so a pattern that is tiny next to its path asks for billions: a fuzzed `/D [[11] 0]` on
 /// a line from x = 92234775807 allocated over 5 GB, and `[0.000001] 0 d` on a 20 pt line over
 /// 10 GB. Measured in release builds: a stroke cut into 250,000 pieces renders in about 16 ms and
@@ -244,7 +244,7 @@ fn nearest_premultiplied_rgba(
 /// stay far below this.
 const MAX_DASHES_PER_STROKE: f64 = 250_000.0;
 
-/// PdfCraft patch: the dash pattern to stroke `path` with. Empty (a solid line) when the pattern
+/// Taratasy patch: the dash pattern to stroke `path` with. Empty (a solid line) when the pattern
 /// is invalid, or when it could cut the path into more than [`MAX_DASHES_PER_STROKE`] pieces.
 /// ISO 32000-2 §8.4.3.6 requires nonnegative entries that are not all zero; a pattern whose
 /// period isn't positive (`[-1 -1] 0 d`) made kurbo's search for the starting dash loop for ever.
@@ -272,7 +272,7 @@ fn usable_dash_pattern(path: &BezPath, dashes: &[f32]) -> Vec<f64> {
     dashes.iter().map(|d| f64::from(*d)).collect()
 }
 
-/// PdfCraft patch: the length of `path`'s control polygon, which a curve never exceeds, and how
+/// Taratasy patch: the length of `path`'s control polygon, which a curve never exceeds, and how
 /// many times kurbo restarts a dash pattern along it (each `MoveTo` and `ClosePath`).
 fn control_polygon_length(path: &BezPath) -> (f64, usize) {
     let (mut length, mut restarts) = (0.0, 0usize);
@@ -305,29 +305,29 @@ fn control_polygon_length(path: &BezPath) -> (f64, usize) {
     (length, restarts)
 }
 
-/// PdfCraft patch: how far, in user space, drawing may place geometry outside a path's exact
+/// Taratasy patch: how far, in user space, drawing may place geometry outside a path's exact
 /// outline. vello expands strokes to a tolerance of at most 0.25 user units (`TOL / max(|a|, |d|,
 /// 1)` in vello_common's `flatten::stroke`), and kurbo approximates round joins and caps to 1e-3.
 /// Fills are flattened into chords, which stay inside the outline's bounds.
 const DRAW_SLACK: f64 = 0.5;
 
-/// PdfCraft patch: previews skip images below this target area in device pixels: redrawing
+/// Taratasy patch: previews skip images below this target area in device pixels: redrawing
 /// them at full detail costs a decode and a resample each for pixels nobody can see.
 const PREVIEW_MIN_IMAGE_AREA: u32 = 16;
 
 thread_local! {
-    /// PdfCraft patch: whether [`may_paint_canvas`] may skip paths on this thread. Turned off
-    /// only by PdfCraft's regression test, which renders each tile with and without skipping.
+    /// Taratasy patch: whether [`may_paint_canvas`] may skip paths on this thread. Turned off
+    /// only by Taratasy's regression test, which renders each tile with and without skipping.
     static SKIP_OFFSCREEN_PATHS: std::cell::Cell<bool> = const { std::cell::Cell::new(true) };
 }
 
-/// PdfCraft patch: exported for its regression test (see [`SKIP_OFFSCREEN_PATHS`]).
+/// Taratasy patch: exported for its regression test (see [`SKIP_OFFSCREEN_PATHS`]).
 #[doc(hidden)]
 pub fn set_skip_offscreen_paths(skip: bool) {
     SKIP_OFFSCREEN_PATHS.with(|s| s.set(skip));
 }
 
-/// PdfCraft patch: whether a device-space box can paint a pixel of a `width` × `height`
+/// Taratasy patch: whether a device-space box can paint a pixel of a `width` × `height`
 /// canvas. A box whose bounds miss the canvas is skipped without changing a pixel.
 /// Bounds that aren't finite are drawn as before.
 fn paints_canvas(device: Rect, width: u16, height: u16) -> bool {
@@ -344,7 +344,7 @@ fn paints_canvas(device: Rect, width: u16, height: u16) -> bool {
             && device.y1 > 0.0)
 }
 
-/// PdfCraft patch: whether a path drawn with `transform` can paint a pixel of a `width` ×
+/// Taratasy patch: whether a path drawn with `transform` can paint a pixel of a `width` ×
 /// `height` canvas. `reach` is how far its paint extends beyond the path, in user space: 0 for a
 /// fill; for a stroke, half its width times the larger of its miter limit (kurbo draws a miter
 /// only when its tip is within `limit × width / 2` of the vertex) and √2 (square caps). The box
@@ -389,7 +389,7 @@ fn may_paint_canvas(
     paints_canvas(device, width, height)
 }
 
-/// PdfCraft patch: whether a `rect` drawn with `transform` can paint a pixel of a `width` ×
+/// Taratasy patch: whether a `rect` drawn with `transform` can paint a pixel of a `width` ×
 /// `height` canvas. Used for images: decoded data can only shrink against the stream-size box
 /// (subsampled `scale_factors`), so the box over-approximates what is drawn and skipping it
 /// never changes a pixel, while a tile of an image-heavy page no longer decodes, resamples and
@@ -401,7 +401,7 @@ fn may_paint_rect(rect: Rect, transform: Affine, width: u16, height: u16) -> boo
     paints_canvas(device, width, height)
 }
 
-/// PdfCraft patch: the whole-pixel device rectangle of a shrunk, axis-aligned image, as
+/// Taratasy patch: the whole-pixel device rectangle of a shrunk, axis-aligned image, as
 /// `(width, height, x0, y0)`. `transform` maps source pixels to device pixels and `planned` is the
 /// size [`image_resampling_size`] chose; `None` (draw as before) for rotated, skewed or flipped
 /// images, non-finite geometry, or a snapped size that strays more than a pixel from `planned`
@@ -429,11 +429,11 @@ fn snap_minified_image(
 
 pub(crate) struct Renderer {
     pub(crate) ctx: RenderContext,
-    /// PdfCraft patch: when set, solid text and line-art paint colours are remapped
+    /// Taratasy patch: when set, solid text and line-art paint colours are remapped
     /// while rendering (the "reading colours" view setting).
     color_replacement: Option<ColorReplacement>,
     pub(crate) inside_pattern: bool,
-    /// Soft masks drawn during this render. PdfCraft note: it belongs to one `Renderer` (one
+    /// Soft masks drawn during this render. Taratasy note: it belongs to one `Renderer` (one
     /// render, every nested renderer starting empty) and so to one `preview` setting: a mask
     /// drawn for a preview, which may leave out tiny images, never reaches a final render.
     pub(crate) soft_mask_cache: HashMap<u128, Mask>,
@@ -441,7 +441,7 @@ pub(crate) struct Renderer {
     pub(crate) cur_mask: Option<Mask>,
     pub(crate) in_type3_glyph: bool,
     pub(crate) scaler: Scaler,
-    /// PdfCraft patch: low-detail preview render (see `InterpreterSettings::preview`).
+    /// Taratasy patch: low-detail preview render (see `InterpreterSettings::preview`).
     pub(crate) preview: bool,
     // TODO: Remove this once vello_cpu bug with non-transparent images is fixed
     image_transparency_stack: Vec<bool>,
@@ -477,7 +477,7 @@ impl Renderer {
         }
     }
 
-    /// PdfCraft patch: returns the stroke's reach for [`may_paint_canvas`].
+    /// Taratasy patch: returns the stroke's reach for [`may_paint_canvas`].
     fn set_stroke_properties(
         &mut self,
         stroke_props: &StrokeProps,
@@ -499,7 +499,7 @@ impl Renderer {
             line_width *= threshold;
         }
 
-        // PdfCraft patch: a stroke far wider than the canvas looks the same as one a few canvases
+        // Taratasy patch: a stroke far wider than the canvas looks the same as one a few canvases
         // wide, but its geometry grows with the width: a fuzzed `/LW 9223372036854775807`
         // allocated 10 GB in stroke expansion.
         let widest = 4.0 * (f32::from(self.ctx.width()) + f32::from(self.ctx.height()));
@@ -513,7 +513,7 @@ impl Renderer {
             miter_limit: stroke_props.miter_limit as f64,
             start_cap: stroke_props.line_cap,
             end_cap: stroke_props.line_cap,
-            // PdfCraft patch: see `usable_dash_pattern`.
+            // Taratasy patch: see `usable_dash_pattern`.
             dash_pattern: usable_dash_pattern(path, &stroke_props.dash_array).into(),
             dash_offset: if stroke_props.dash_offset.is_finite() {
                 stroke_props.dash_offset as f64
@@ -535,7 +535,7 @@ impl Renderer {
     }
 
     fn draw_image_with_alpha_mask(&mut self, image_data: ImageData, mut alpha_data: LumaData) {
-        // PdfCraft patch: mismatched masks need a dummy RGB staging image. Validate and
+        // Taratasy patch: mismatched masks need a dummy RGB staging image. Validate and
         // reserve it before creating/pushing any mask, so failure skips the whole image.
         let Some(len) = source_byte_len(alpha_data.width, alpha_data.height, 3, MAX_IMAGE_PIXELS)
         else {
@@ -555,7 +555,7 @@ impl Renderer {
                     image_data.width() as f64 / alpha_data.width as f64,
                     image_data.height() as f64 / alpha_data.height as f64,
                 );
-            // PdfCraft patch (#1649): a mask that differs in size from its image carries the
+            // Taratasy patch (#1649): a mask that differs in size from its image carries the
             // shape on its own (Word saves text as a tiny black image with a glyph-bitmap mask).
             // Shrunk by nearest-neighbour it keeps one sample in N and drops every stroke thinner
             // than N mask pixels, so a shrunk mask is filtered whatever its `/Interpolate`, which
@@ -570,7 +570,7 @@ impl Renderer {
                     self.ctx.height(),
                     derive_settings(self.ctx.render_settings()),
                 ),
-                // PdfCraft patch: this renders an image's alpha mask, which must keep its
+                // Taratasy patch: this renders an image's alpha mask, which must keep its
                 // original values, so it is never remapped by the reading-colours setting.
                 color_replacement: None,
                 inside_pattern: false,
@@ -618,7 +618,7 @@ impl Renderer {
         pixel_format: ImagePixelFormat,
         interpolate: bool,
     ) -> (Vec<u8>, u32, u32) {
-        // PdfCraft patch (#624): `/Interpolate` governs the pre-minification pass too. Using
+        // Taratasy patch (#624): `/Interpolate` governs the pre-minification pass too. Using
         // Catmull-Rom here for an image that did not request interpolation blends hard edges
         // before ImageQuality::Low gets a chance to sample it. Keep the pre-resize (and its
         // bounded memory/performance behaviour), but use nearest-neighbour when interpolation
@@ -689,7 +689,7 @@ impl Renderer {
             ImageSize,
         ) -> Result<Arc<Resampling<u8, N>>, PicScaleError>,
     ) -> Result<Vec<u8>, Vec<u8>> {
-        // PdfCraft patch: validate before constructing a plan or allocating its output/scratch.
+        // Taratasy patch: validate before constructing a plan or allocating its output/scratch.
         // Returning the owned input preserves both its pixels and dimensions on any failure.
         let resized = (|| {
             let len = resampling_byte_len(
@@ -743,7 +743,7 @@ impl Renderer {
             let (x, y) = x_y_advances(&cur_transform);
             (x.length() as f32, y.length() as f32)
         };
-        // PdfCraft patch: do not send non-finite or collapsed geometry to the rasterizer.
+        // Taratasy patch: do not send non-finite or collapsed geometry to the rasterizer.
         if !cur_transform.as_coeffs().iter().all(|v| v.is_finite())
             || !x_scale.is_finite()
             || !y_scale.is_finite()
@@ -814,12 +814,12 @@ impl Renderer {
                 (source_width, source_height)
             }
         };
-        // PdfCraft patch (#624): High is bicubic and would blend the nearest pre-resize of an image
+        // Taratasy patch (#624): High is bicubic and would blend the nearest pre-resize of an image
         // that did not request interpolation, so only interpolated glyph images are promoted.
         if requested_resize && self.in_type3_glyph && interpolate {
             quality = ImageQuality::High;
         }
-        // PdfCraft patch: an axis-aligned, interpolated image that is shrunk lands on whole device
+        // Taratasy patch: an axis-aligned, interpolated image that is shrunk lands on whole device
         // pixels. It is shrunk once to exactly its snapped device rectangle and drawn 1:1 at the
         // snapped corner. Otherwise the shrunk raster (rounded up to a whole size) is sampled a
         // second time at a fractional scale and offset, which blurs scans and photos.
@@ -835,7 +835,7 @@ impl Renderer {
         let (new_width, new_height) = snapped.map_or((new_width, new_height), |s| (s.0, s.1));
         let needs_resize = (new_width, new_height) != (source_width, source_height);
 
-        // PdfCraft patch (#624): a minified image with a soft mask that is not interpolated is
+        // Taratasy patch (#624): a minified image with a soft mask that is not interpolated is
         // nearest-sampled straight into premultiplied target RGBA. That skips the full-resolution
         // RGBA copy below and the premultiply pass after it.
         let direct = match &alpha_data {
@@ -1016,7 +1016,7 @@ impl Renderer {
             .fill_rect(&Rect::new(0.0, 0.0, width as f64, height as f64));
     }
 
-    /// PdfCraft patch: remaps a solid paint colour through `color_replacement`, if one is
+    /// Taratasy patch: remaps a solid paint colour through `color_replacement`, if one is
     /// set. `Paint::Pattern` (images, shadings, tiling patterns) always passes through
     /// untouched.
     fn replaced<'a>(&self, paint: &Paint<'a>, is_text: bool) -> Paint<'a> {
@@ -1067,11 +1067,11 @@ impl Renderer {
                             self.ctx.height() as f64,
                         ));
 
-                        // PdfCraft patch: mesh shadings are sampled only inside `bbox` (and a
+                        // Taratasy patch: mesh shadings are sampled only inside `bbox` (and a
                         // pixel around it: texels at a fractional edge look one pixel further).
                         let encoded = s.encode_within(Some(bbox.inflate(1.0, 1.0)));
 
-                        // PdfCraft patch (backport of hayro 0.8): axial and radial shadings
+                        // Taratasy patch (backport of hayro 0.8): axial and radial shadings
                         // become native gradients instead of a texture sampled pixel by pixel.
                         // Upstream also shifts by half a pixel for vello_cpu 0.3; 0.0.8 already
                         // evaluates gradients at pixel centres, like the texture below.
@@ -1127,7 +1127,7 @@ impl Renderer {
                         };
                         xs = xs.max(min_x_scale).min(max_x_scale);
                         ys = ys.max(min_y_scale).min(max_y_scale);
-                        // PdfCraft patch: the cell pixmap is `step × scale` pixels, which only the
+                        // Taratasy patch: the cell pixmap is `step × scale` pixels, which only the
                         // u16 cast below bounded (a fuzzed /XStep far beyond /BBox gave 65535² cells).
                         xs = tiling_cell_scale(xs, t.x_step, MAX_PIXMAP_SIZE);
                         ys = tiling_cell_scale(ys, t.y_step, MAX_PIXMAP_SIZE);
@@ -1146,7 +1146,7 @@ impl Renderer {
                                 pix_height,
                                 derive_settings(self.ctx.render_settings()),
                             ),
-                            // PdfCraft patch: a pattern cell is painted as one artwork, so its
+                            // Taratasy patch: a pattern cell is painted as one artwork, so its
                             // content is never remapped by the reading-colours setting.
                             color_replacement: None,
                             cur_mask: None,
@@ -1212,12 +1212,12 @@ impl Renderer {
     ) {
         self.ctx.set_transform(transform);
         let reach = self.set_stroke_properties(stroke_props, is_text, path);
-        // PdfCraft patch: see `may_paint_canvas`.
+        // Taratasy patch: see `may_paint_canvas`.
         if !may_paint_canvas(path, transform, reach, self.ctx.width(), self.ctx.height()) {
             return;
         }
 
-        // PdfCraft patch: apply the reading-colours mapping before painting.
+        // Taratasy patch: apply the reading-colours mapping before painting.
         let paint = self.replaced(paint, is_text);
         let clip_path = self.set_paint(&paint, path, true);
         if let Some(clip_path) = clip_path.as_ref() {
@@ -1235,18 +1235,18 @@ impl Renderer {
         transform: Affine,
         paint: &Paint<'_>,
         fill_rule: FillRule,
-        // PdfCraft patch: distinguishes glyph fills from plain line art for the
+        // Taratasy patch: distinguishes glyph fills from plain line art for the
         // reading-colours mapping.
         is_text: bool,
     ) {
         self.ctx.set_fill_rule(convert_fill_rule(fill_rule));
         self.ctx.set_transform(transform);
-        // PdfCraft patch: see `may_paint_canvas`.
+        // Taratasy patch: see `may_paint_canvas`.
         if !may_paint_canvas(path, transform, 0.0, self.ctx.width(), self.ctx.height()) {
             return;
         }
 
-        // PdfCraft patch: apply the reading-colours mapping before painting.
+        // Taratasy patch: apply the reading-colours mapping before painting.
         let paint = self.replaced(paint, is_text);
         let clip_path = self.set_paint(&paint, path, false);
         if let Some(clip_path) = clip_path.as_ref() {
@@ -1276,12 +1276,12 @@ impl Renderer {
                     transform * glyph_transform,
                     paint,
                     FillRule::NonZero,
-                    // PdfCraft patch: glyph outlines are text for the reading-colours mapping.
+                    // Taratasy patch: glyph outlines are text for the reading-colours mapping.
                     true,
                 );
             }
             Glyph::Type3(s) => {
-                // PdfCraft patch: a type 3 glyph's content stream keeps painting as line art
+                // Taratasy patch: a type 3 glyph's content stream keeps painting as line art
                 // (its internal ops reach `fill_path`/`stroke_path` with `is_text: false`), so
                 // reading colours remap it only when line-art replacement is on.
                 self.in_type3_glyph = true;
@@ -1342,7 +1342,7 @@ impl Renderer {
 
 impl<'a> Device<'a> for Renderer {
     fn draw_image(&mut self, image: hayro_interpret::Image<'a, '_>, mut transform: Affine) {
-        // PdfCraft patch: see `may_paint_rect`. Checked before decoding: off-canvas images
+        // Taratasy patch: see `may_paint_rect`. Checked before decoding: off-canvas images
         // cost nothing, so a tile no longer decodes every image on its page.
         if !may_paint_rect(
             Rect::new(0.0, 0.0, f64::from(image.width()), f64::from(image.height())),
@@ -1364,7 +1364,7 @@ impl<'a> Device<'a> for Renderer {
             .length()
             .ceil() as u32;
 
-        // PdfCraft patch: previews skip images that would cover only a few device pixels.
+        // Taratasy patch: previews skip images that would cover only a few device pixels.
         // Final renders always draw them. (Measured as axis lengths: the `target_*` above
         // map a point, so they include the translation and only suit the decode hint.)
         if self.preview {
@@ -1385,7 +1385,7 @@ impl<'a> Device<'a> for Renderer {
                             stencil.scale_factors.1 as f64,
                         );
 
-                        // PdfCraft patch: a stencil mask is line art in disguise, so its solid
+                        // Taratasy patch: a stencil mask is line art in disguise, so its solid
                         // paint goes through the reading-colours mapping (line-art gate) like
                         // every other solid fill; baked in raw, its ink would stay at its
                         // original colour and vanish into a mapped background.
@@ -1460,7 +1460,7 @@ impl<'a> Device<'a> for Renderer {
                                             height,
                                             derive_settings(self.ctx.render_settings()),
                                         ),
-                                        // PdfCraft patch: a stencil mask must keep its original
+                                        // Taratasy patch: a stencil mask must keep its original
                                         // coverage values, so its content is never remapped by
                                         // the reading-colours setting.
                                         color_replacement: None,
@@ -1620,12 +1620,12 @@ impl<'a> Device<'a> for Renderer {
             PathDrawMode::Fill(fill_rule) => {
                 self.ctx.set_fill_rule(convert_fill_rule(*fill_rule));
                 self.ctx.set_transform(transform);
-                // PdfCraft patch: see `may_paint_canvas`.
+                // Taratasy patch: see `may_paint_canvas`.
                 if !may_paint_canvas(&path, transform, 0.0, self.ctx.width(), self.ctx.height()) {
                     return;
                 }
 
-                // PdfCraft patch: apply the reading-colours mapping before painting.
+                // Taratasy patch: apply the reading-colours mapping before painting.
                 let paint = self.replaced(paint, false);
                 let clip_path = self.set_paint(&paint, &path, false);
                 if let Some(clip_path) = clip_path.as_ref() {
@@ -1670,11 +1670,11 @@ impl<'a> Device<'a> for Renderer {
     }
 }
 
-/// PdfCraft patch (backport of hayro 0.8): largest per-channel error allowed when approximating
+/// Taratasy patch (backport of hayro 0.8): largest per-channel error allowed when approximating
 /// a shading function by gradient stops.
 const NATIVE_GRADIENT_TOLERANCE: f32 = 0.01;
 
-/// PdfCraft patch (backport of hayro 0.8): a `vello_cpu` gradient for an approximated shading.
+/// Taratasy patch (backport of hayro 0.8): a `vello_cpu` gradient for an approximated shading.
 fn native_gradient(native: hayro_interpret::gradient::SvgGradient) -> PaintType {
     use hayro_interpret::gradient::SvgGradientKind;
 
@@ -1746,7 +1746,7 @@ fn render_shading_texture(
 fn draw_soft_mask(mask: &SoftMask<'_>, settings: RenderSettings, width: u16, height: u16, preview: bool) -> Mask {
     let mut renderer = Renderer {
         ctx: RenderContext::new_with(width, height, derive_settings(&settings)),
-        // PdfCraft patch: a soft mask must keep its original luminance values, so its
+        // Taratasy patch: a soft mask must keep its original luminance values, so its
         // content is never remapped by the reading-colours setting.
         color_replacement: None,
         inside_pattern: false,
@@ -1866,7 +1866,7 @@ fn convert_blend_mode(blend_mode: BlendMode) -> peniko::BlendMode {
     peniko::BlendMode::new(mix, Compose::SrcOver)
 }
 
-/// PdfCraft patch: the scale for a tiling cell, lowered so that the cell pixmap (`|step| ×
+/// Taratasy patch: the scale for a tiling cell, lowered so that the cell pixmap (`|step| ×
 /// scale` pixels a side) stays within `max_pixels`. Geometry is unchanged (the pattern transform
 /// is derived from the scale); an over-large step only renders at lower resolution.
 pub fn tiling_cell_scale(scale: f32, step: f32, max_pixels: f32) -> f32 {

@@ -10,7 +10,7 @@
 //! size), the colour-line model of A. Levin, D. Lischinski and Y. Weiss, "A Closed-Form Solution
 //! to Natural Image Matting" (CVPR 2006), with one foreground and one background colour per window.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 use super::box_mean;
 use crate::segment::RgbImage;

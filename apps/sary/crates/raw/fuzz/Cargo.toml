@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-raw-fuzz"
+name = "sary-raw-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2024"
@@ -14,7 +14,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-photocraft-raw = { path = ".." }
+sary-raw = { path = ".." }
 
 [profile.release]
 debug = 1

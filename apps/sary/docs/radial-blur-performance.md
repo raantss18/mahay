@@ -52,5 +52,5 @@ longer measurements. Historical handoff polar/default timings do not describe
 this output-preserving implementation.
 
 ```sh
-cargo run --release -j 12 -p photocraft-algo --example bench_radial -- 6000 4000 1 1
+cargo run --release -j 12 -p sary-algo --example bench_radial -- 6000 4000 1 1
 ```

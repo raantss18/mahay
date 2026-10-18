@@ -4,7 +4,7 @@
 use std::io::Read;
 use std::sync::Arc;
 
-use deckcraft_model::{Comment, Presentation, defaults};
+use seho_model::{Comment, Presentation, defaults};
 
 fn deck() -> Presentation {
     let mut p = defaults::new_presentation(None);
@@ -70,8 +70,8 @@ fn rewrite(bytes: &[u8], drop: &[&str]) -> Vec<u8> {
 #[test]
 fn threads_and_resolved_round_trip() {
     let p = deck();
-    let bytes = deckcraft_pptx::export(&p).expect("export");
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let bytes = seho_pptx::export(&p).expect("export");
+    let q = seho_pptx::import(&bytes).expect("import");
     let (a, b) = (&p.slides[0].comments, &q.slides[0].comments);
     assert_eq!(b.len(), a.len(), "comments duplicated: {b:?}");
     assert_eq!(b[0].author, "Ada");
@@ -94,7 +94,7 @@ fn threads_and_resolved_round_trip() {
 
 #[test]
 fn package_carries_both_parts_and_the_slide_anchor() {
-    let bytes = deckcraft_pptx::export(&deck()).expect("export");
+    let bytes = seho_pptx::export(&deck()).expect("export");
     let modern = part(&bytes, "ppt/comments/modernComment1.xml");
     assert!(modern.contains("p188:cmLst"), "{modern}");
     // The thread and the second reply are resolved; the first reply is not.
@@ -109,7 +109,7 @@ fn package_carries_both_parts_and_the_slide_anchor() {
     let rels = part(&bytes, "ppt/slides/_rels/slide1.xml.rels");
     assert!(rels.contains("2018/10/relationships/comments"), "{rels}");
     // The slide's commentRel anchor names the relationship that points at THIS modern part —
-    // the wiring PowerPoint needs and DeckCraft's own reader does not check.
+    // the wiring PowerPoint needs and Seho's own reader does not check.
     let slide = part(&bytes, "ppt/slides/slide1.xml");
     assert!(slide.contains("commentRel") && slide.contains("{6950BFC3-D8DA-4A85-94F7-54DA5524770B}"), "{slide}");
     let anchor_at = slide.find("commentRel").expect("anchor");
@@ -132,14 +132,14 @@ fn comments_on_several_slides_round_trip() {
     }
     let s = Arc::make_mut(&mut p.slides[2]);
     s.comments = vec![Comment { author: "Cara".into(), text: "Slide three".into(), date: "2025-03-06T00:00:00Z".into(), ..Default::default() }];
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     assert!(part(&bytes, "ppt/comments/modernComment1.xml").contains("Top thread"));
     // The parts are numbered by comment slide: the comment-free middle slide is skipped.
     assert!(part(&bytes, "ppt/comments/comment2.xml").contains("Slide three"));
     assert!(part(&bytes, "ppt/comments/modernComment2.xml").contains("Slide three"));
     let rels2 = part(&bytes, "ppt/slides/_rels/slide2.xml.rels");
     assert!(!rels2.contains("relationships/comments"), "{rels2}");
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let q = seho_pptx::import(&bytes).expect("import");
     assert_eq!(q.slides[0].comments.len(), 2);
     assert!(q.slides[1].comments.is_empty());
     assert_eq!(q.slides[2].comments.len(), 1);
@@ -150,7 +150,7 @@ fn comments_on_several_slides_round_trip() {
 /// flattened replies.
 #[test]
 fn legacy_only_package_imports() {
-    let bytes = deckcraft_pptx::export(&deck()).expect("export");
+    let bytes = seho_pptx::export(&deck()).expect("export");
     let trimmed = rewrite(
         &bytes,
         &[
@@ -183,7 +183,7 @@ fn legacy_only_package_imports() {
     std::io::Write::write_all(&mut out, legacy_rels.as_bytes()).expect("write");
     let legacy_pkg = out.finish().expect("finish").into_inner();
 
-    let q = deckcraft_pptx::import(&legacy_pkg).expect("import");
+    let q = seho_pptx::import(&legacy_pkg).expect("import");
     let b = &q.slides[0].comments;
     // The legacy part flattened the two replies into siblings: four top-level comments.
     assert_eq!(b.len(), 4, "{b:?}");
@@ -197,9 +197,9 @@ fn legacy_only_package_imports() {
 /// A modern-only package (no legacy part) imports threads and EMU positions.
 #[test]
 fn modern_only_package_imports() {
-    let bytes = deckcraft_pptx::export(&deck()).expect("export");
+    let bytes = seho_pptx::export(&deck()).expect("export");
     let trimmed = rewrite(&bytes, &["ppt/comments/comment1.xml"]);
-    let q = deckcraft_pptx::import(&trimmed).expect("import");
+    let q = seho_pptx::import(&trimmed).expect("import");
     let b = &q.slides[0].comments;
     assert_eq!(b.len(), 2, "{b:?}");
     assert_eq!(b[0].replies.len(), 2);

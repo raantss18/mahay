@@ -72,7 +72,7 @@ impl Ord for Name<'_> {
 }
 
 impl<'a> Name<'a> {
-    // PdfCraft patch: (#307) lazy dictionary indexes cannot borrow through a
+    // Taratasy patch: (#307) lazy dictionary indexes cannot borrow through a
     // OnceLock without making the enclosing PDF pages invariant in their lifetime.
     // Ordinary PDF keys fit inline, so owning these bytes needs no allocation.
     pub(crate) fn into_owned(self) -> Name<'static> {

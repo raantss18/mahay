@@ -1,8 +1,8 @@
 //! Direct formatting applies only the requested properties to every selected Type layer.
 
-use photocraft_doc::text::{AntiAlias, Caps, CharStyle, Kerning, Orientation, TextAlign};
-use photocraft_doc::{LayerContent, LayerId, TextLayer};
-use photocraft_engine::Session;
+use sary_doc::text::{AntiAlias, Caps, CharStyle, Kerning, Orientation, TextAlign};
+use sary_doc::{LayerContent, LayerId, TextLayer};
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 fn text(s: &Session, id: LayerId) -> TextLayer {
@@ -201,7 +201,7 @@ fn direct_type_formatting_menu_routes_batch_without_enabling_structural_commands
                     "type.orientation.vertical" => expected.orientation = Orientation::Vertical,
                     "type.openType.fractions" => {
                         for run in &mut expected.runs {
-                            run.style.features.push(photocraft_doc::text::FontFeature { tag: "frac".into(), value: 1 });
+                            run.style.features.push(sary_doc::text::FontFeature { tag: "frac".into(), value: 1 });
                         }
                     }
                     "type.warpText" => {
@@ -209,7 +209,7 @@ fn direct_type_formatting_menu_routes_batch_without_enabling_structural_commands
                         expected.warp = actual.warp.clone();
                     }
                     _ => {
-                        expected.runs = vec![photocraft_doc::text::TextRun { len: expected.text.len(), style: defaults.runs[0].style.clone() }];
+                        expected.runs = vec![sary_doc::text::TextRun { len: expected.text.len(), style: defaults.runs[0].style.clone() }];
                         expected.paragraphs = defaults.paragraphs.clone();
                     }
                 }

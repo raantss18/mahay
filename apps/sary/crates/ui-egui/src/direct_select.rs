@@ -16,19 +16,19 @@
 //!   segments) and the Pen carries on drawing from its last anchor once ⌘/Ctrl is let go; a
 //!   ⌘/Ctrl-press anywhere else ends it, as in Photoshop (#4022).
 //!
-//! A drag previews with `photocraft_vector::edit` and commits once on release through the engine
+//! A drag previews with `sary_vector::edit` and commits once on release through the engine
 //! (`path.moveAnchors`, `path.moveHandle`, `path.bendSegment`, `path.convertPoint`): one history
 //! step per drag, and the same commands drive it over MCP and the control channel. The Pen path
 //! being drawn is not in the document yet: its edits apply to it directly, without a command.
 
 use egui::{Color32, Modifiers, Pos2};
-use photocraft_doc::vector::Path;
-use photocraft_geom::Point;
-use photocraft_vector::edit::{self, Handle, Hit};
+use sary_doc::vector::Path;
+use sary_geom::Point;
+use sary_vector::edit::{self, Handle, Hit};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ToolEvent;
 use crate::state::Tool;
 
@@ -145,7 +145,7 @@ fn converting(tool: Tool, mods: Modifiers, pen_idle: bool) -> bool {
 
 /// Is the Curvature Pen idle (no path being drawn, no ⌘/Ctrl)? Then it edits the active path in
 /// place, as in Photoshop: a press on one of its anchors drags it, with no modifier.
-fn curvature_idle(app: &PhotocraftApp, mods: Modifiers) -> bool {
+fn curvature_idle(app: &SaryApp, mods: Modifiers) -> bool {
     app.ui.tool == Tool::CurvaturePen && !mods.command && app.ui.pen.as_ref().is_none_or(|p| p.knots.is_empty())
 }
 
@@ -156,7 +156,7 @@ fn owns(tool: Tool) -> bool {
 
 /// Does the canvas draw Direct Selection's overlay instead of the plain path outlines? The Add /
 /// Delete Anchor Point tools show it too: they edit the same paths.
-pub fn shows(app: &PhotocraftApp, mods: Modifiers) -> bool {
+pub fn shows(app: &SaryApp, mods: Modifiers) -> bool {
     direct(app.ui.tool, mods)
         || curvature_idle(app, mods)
         || app.ui.direct_selection.drag.is_some()
@@ -165,7 +165,7 @@ pub fn shows(app: &PhotocraftApp, mods: Modifiers) -> bool {
 
 /// The active paths, front first: the targeted vector mask or the active shape layer's path, then
 /// the work path. The Pen's Auto Add/Delete edits these (`anchor_tools::pen_auto`).
-pub(crate) fn active_paths(app: &PhotocraftApp) -> Vec<(PathRef, Path)> {
+pub(crate) fn active_paths(app: &SaryApp) -> Vec<(PathRef, Path)> {
     let layer = crate::vector_ui::targeted_vector_mask(app).or_else(|| crate::vector_ui::active_shape_path(app));
     let work = app.session.active().and_then(|st| st.doc.work_path.clone());
     layer.map(|(id, p)| (PathRef::Layer(id), p)).into_iter().chain(work.map(|p| (PathRef::Work, p))).collect()
@@ -173,7 +173,7 @@ pub(crate) fn active_paths(app: &PhotocraftApp) -> Vec<(PathRef, Path)> {
 
 /// The paths Direct Selection edits, front first: the Pen path being drawn, the active paths, then
 /// every visible shape layer.
-pub(crate) fn candidates(app: &PhotocraftApp) -> Vec<(PathRef, Path)> {
+pub(crate) fn candidates(app: &SaryApp) -> Vec<(PathRef, Path)> {
     let pen = app.ui.pen.as_ref().filter(|p| !p.dragging && !p.knots.is_empty()).map(|p| (PathRef::Pen, crate::vector_ui::pen_path(p)));
     let mut out: Vec<_> = pen.into_iter().chain(active_paths(app)).collect();
     if let Some(st) = app.session.active() {
@@ -181,7 +181,7 @@ pub(crate) fn candidates(app: &PhotocraftApp) -> Vec<(PathRef, Path)> {
             if !l.visible || !(1..=path.len()).all(|n| st.doc.layer_at(&path[..n]).is_some_and(|a| a.visible)) {
                 continue;
             }
-            if let photocraft_doc::LayerContent::Shape(sh) = &l.content
+            if let sary_doc::LayerContent::Shape(sh) = &l.content
                 && !out.iter().any(|(r, _)| *r == PathRef::Layer(l.id.0))
             {
                 out.push((PathRef::Layer(l.id.0), sh.path.clone()));
@@ -191,7 +191,7 @@ pub(crate) fn candidates(app: &PhotocraftApp) -> Vec<(PathRef, Path)> {
     out
 }
 
-fn retracted(k: &photocraft_doc::Knot, h: Handle) -> bool {
+fn retracted(k: &sary_doc::Knot, h: Handle) -> bool {
     let c = if h == Handle::In { k.in_ctrl } else { k.out_ctrl };
     (c.x - k.anchor.x).abs() < 1e-9 && (c.y - k.anchor.y).abs() < 1e-9
 }
@@ -215,7 +215,7 @@ fn shown_handles(ds: &DirectSelection, path: &Path) -> Vec<([usize; 2], Handle)>
 
 /// Canvas pointer events for Direct Selection and the Pen's ⌘ / ⌥ modes; false when the event is
 /// not theirs.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: Modifiers) -> bool {
     let tool = app.ui.tool;
     match ev {
         ToolEvent::Down { x, y, .. } => {
@@ -268,7 +268,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -> bool 
 }
 
 /// Does a press at `p` hit the Pen path being drawn: one of its anchors, shown handles or segments?
-fn hits_pen(app: &PhotocraftApp, p: [f64; 2]) -> bool {
+fn hits_pen(app: &SaryApp, p: [f64; 2]) -> bool {
     let tol = 6.0 / f64::from(app.point_zoom().max(0.01));
     let ds = &app.ui.direct_selection;
     candidates(app).into_iter().filter(|(r, _)| *r == PathRef::Pen).any(|(r, path)| {
@@ -279,7 +279,7 @@ fn hits_pen(app: &PhotocraftApp, p: [f64; 2]) -> bool {
 
 /// A press: pick what's under the pointer and start a drag. False lets the Pen handle a ⌥-press
 /// that hit nothing; the Convert Point tool has nothing else to do, so it keeps the press.
-fn press(app: &mut PhotocraftApp, p: [f64; 2], mods: Modifiers, convert: bool) -> bool {
+fn press(app: &mut SaryApp, p: [f64; 2], mods: Modifiers, convert: bool) -> bool {
     let own_tool = app.ui.tool == Tool::ConvertPoint;
     let tol = 6.0 / f64::from(app.point_zoom().max(0.01));
     let ds = &app.ui.direct_selection;
@@ -353,7 +353,7 @@ fn press(app: &mut PhotocraftApp, p: [f64; 2], mods: Modifiers, convert: bool) -
 
 /// What the idle Curvature Pen has under document point `p` on the active paths: an anchor or a
 /// segment, with the path it is on. Handles don't count.
-fn curvature_target(app: &PhotocraftApp, p: [f64; 2]) -> Option<(PathRef, Path, Hit)> {
+fn curvature_target(app: &SaryApp, p: [f64; 2]) -> Option<(PathRef, Path, Hit)> {
     let tol = 6.0 / f64::from(app.point_zoom().max(0.01));
     active_paths(app).into_iter().find_map(|(r, path)| match edit::hit(&path, Point::new(p[0], p[1]), tol, &[]) {
         Some(h @ (Hit::Anchor(_) | Hit::Segment(..))) => Some((r, path, h)),
@@ -364,7 +364,7 @@ fn curvature_target(app: &PhotocraftApp, p: [f64; 2]) -> Option<(PathRef, Path, 
 /// What a Curvature Pen press at `p` would do to an existing point, for its cursor: the anchor
 /// under it (idle: one of the active path's; drawing: one of the path being drawn), or the active
 /// path's segment it would add an anchor to.
-pub fn curvature_hover(app: &PhotocraftApp, p: [f64; 2], mods: Modifiers) -> Option<Hit> {
+pub fn curvature_hover(app: &SaryApp, p: [f64; 2], mods: Modifiers) -> Option<Hit> {
     if app.ui.tool != Tool::CurvaturePen || mods.command {
         return None;
     }
@@ -376,7 +376,7 @@ pub fn curvature_hover(app: &PhotocraftApp, p: [f64; 2], mods: Modifiers) -> Opt
 
 /// The idle Curvature Pen's double-click on an anchor of the active path: smooth ↔ corner, and
 /// the subpath reflows (one `path.convertPoint` with `curvature`).
-pub(crate) fn curvature_toggle_active(app: &mut PhotocraftApp, p: [f64; 2]) {
+pub(crate) fn curvature_toggle_active(app: &mut SaryApp, p: [f64; 2]) {
     let Some((target, _, Hit::Anchor([s, k]))) = curvature_target(app, p) else { return };
     let mut params = json!({"subpath": s, "knot": k, "curvature": true});
     if let (Some(o), Some(tp)) = (params.as_object_mut(), target.params().as_object()) {
@@ -394,7 +394,7 @@ pub(crate) fn curvature_toggle_active(app: &mut PhotocraftApp, p: [f64; 2]) {
 /// way the curve reflows smoothly through the moved anchor, as in Photoshop (`path.moveAnchors`
 /// with `curvature` on release), and an added anchor and its drag are one history step. False
 /// when the press hits neither, so it starts a new path.
-fn curvature_press(app: &mut PhotocraftApp, p: [f64; 2]) -> bool {
+fn curvature_press(app: &mut SaryApp, p: [f64; 2]) -> bool {
     let Some((target, mut base, hit)) = curvature_target(app, p) else { return false };
     let mut coalesce = None;
     let k = match hit {
@@ -430,7 +430,7 @@ fn curvature_press(app: &mut PhotocraftApp, p: [f64; 2]) -> bool {
 
 /// End of an edit drag: commit it as one command. A click (no movement) commits nothing, except
 /// Pen + ⌥ on an anchor, which makes it a corner. The Pen path being drawn takes the edit directly.
-fn release(app: &mut PhotocraftApp, target: PathRef, base: &Path, edit: &Edit, start: [f64; 2], end: [f64; 2]) {
+fn release(app: &mut SaryApp, target: PathRef, base: &Path, edit: &Edit, start: [f64; 2], end: [f64; 2]) {
     let moved = (end[0] - start[0]).hypot(end[1] - start[1]) * f64::from(app.point_zoom()) >= 1.0;
     if target == PathRef::Pen {
         let edited = match edit {
@@ -465,7 +465,7 @@ fn release(app: &mut PhotocraftApp, target: PathRef, base: &Path, edit: &Edit, s
 
 /// End of a marquee: select the anchors inside it on the frontmost path that has any (⇧ adds).
 /// A click on empty canvas deselects.
-fn marquee(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2], add: bool) {
+fn marquee(app: &mut SaryApp, start: [f64; 2], end: [f64; 2], add: bool) {
     let rect = [start[0], start[1], end[0], end[1]];
     let hits = candidates(app).into_iter().map(|(r, path)| (r, edit::anchors_in(&path, rect))).find(|(_, a)| !a.is_empty());
     let ds = &mut app.ui.direct_selection;
@@ -490,7 +490,7 @@ fn marquee(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2], add: bool) {
 /// Arrow keys with Direct Selection and selected anchors (#4486), as in Photoshop: nudge them
 /// 1 px (⇧ 10 px) through `path.moveAnchors`, one history step per press. Not while a drag is
 /// in progress. Returns true when a key was used.
-pub fn arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn arrow_keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     let ds = &app.ui.direct_selection;
     let Some(target) = ds.target.filter(|_| app.ui.tool == Tool::DirectSelection && !ds.anchors.is_empty() && ds.drag.is_none()) else {
         return false;
@@ -521,7 +521,7 @@ pub fn arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
 /// Paths with their anchors (selected ones filled), the shown handles, the drag's preview in
 /// place of its path, and the marquee. `paths` false (View › Show › Target Path off) leaves only
 /// the marquee.
-pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, to_scr: &dyn Fn([f64; 2]) -> Pos2, accent: Color32, paths: bool) {
+pub fn draw_overlay(app: &SaryApp, painter: &egui::Painter, to_scr: &dyn Fn([f64; 2]) -> Pos2, accent: Color32, paths: bool) {
     let ds = &app.ui.direct_selection;
     // The idle Curvature Pen shows the anchors of the path it edits, not every shape's.
     let shown = if !paths {

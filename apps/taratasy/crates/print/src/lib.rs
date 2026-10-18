@@ -17,8 +17,8 @@
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use pdfcraft_content::Matrix;
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
+use taratasy_content::Matrix;
+use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
 
 pub mod range;
 pub mod spool;
@@ -48,7 +48,7 @@ pub enum PrintError {
     #[error("{0}")]
     Spool(String),
     #[error(transparent)]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
 }
 
 /// How an interface says one of our wordings in its own language, holes and all: given the English
@@ -324,7 +324,7 @@ pub fn cups_media(index: usize) -> Option<&'static str> {
 /// sideways on a letter or A4 sheet), counting each text-showing operator once; form XObjects
 /// are followed a few levels deep.
 pub fn text_reads_up(doc: &Document, index: usize) -> bool {
-    let Some(page) = pdfcraft_model::pages(doc).into_iter().nth(index) else { return false };
+    let Some(page) = taratasy_model::pages(doc).into_iter().nth(index) else { return false };
     let to_display = Matrix(page.view_matrix(doc)).invert().unwrap_or_default();
     let res = page.dict.get(b"Resources").and_then(|r| doc.resolve(r).as_dict().cloned()).unwrap_or_default();
     let mut score = 0i64;
@@ -334,7 +334,7 @@ pub fn text_reads_up(doc: &Document, index: usize) -> bool {
 
 fn text_direction(doc: &Document, data: &[u8], res: &Dict, base: Matrix, depth: usize, score: &mut i64) {
     let (mut ctm, mut tm, mut stack) = (base, Matrix::IDENTITY, Vec::new());
-    for op in pdfcraft_content::parse(data).ops {
+    for op in taratasy_content::parse(data).ops {
         match op.op.as_slice() {
             // Bounded like the renderer's graphics-state stack: deeper saves are ignored.
             b"q" if stack.len() < 256 => stack.push(ctm),
@@ -663,7 +663,7 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
 // Model-derived transforms and clipping bounds need their full PDF decimal precision.
 fn geometry_number(value: f64) -> String {
     let mut bytes = Vec::new();
-    pdfcraft_cos::serialize(&Object::Real(value), &mut bytes);
+    taratasy_cos::serialize(&Object::Real(value), &mut bytes);
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
@@ -749,7 +749,7 @@ fn appearance_matrix(doc: &Document, form: &Dict, rect: [f64; 4]) -> Option<Matr
 
 /// A Form XObject holding page `index` as it prints (user space; BBox = crop box).
 fn page_form(doc: &mut Document, index: usize, content: Content) -> Result<ObjRef, PrintError> {
-    let page = pdfcraft_model::pages(doc).swap_remove(index);
+    let page = taratasy_model::pages(doc).swap_remove(index);
     let crop = page.crop(doc);
     let mut res = page.dict.get(b"Resources").and_then(|r| doc.resolve(r).as_dict().cloned()).unwrap_or_default();
     let mut body = if content == Content::FormFieldsOnly { Vec::new() } else { decoded_contents(doc, &page.dict) };
@@ -800,7 +800,7 @@ fn page_form(doc: &mut Document, index: usize, content: Content) -> Result<ObjRe
 /// Build the print-ready PDF for `settings`. Encryption is not carried over (the file goes to a
 /// printer or is the user's own copy); callers must check the print permission first.
 pub fn impose(src: &Document, settings: &Settings) -> Result<Vec<u8>, PrintError> {
-    let pages = pdfcraft_model::pages(src);
+    let pages = taratasy_model::pages(src);
     let sizes: Vec<(f64, f64)> = pages.iter().map(|p| p.display_size(src)).collect();
     let sheets = layout(&sizes, settings)?;
     let mut doc = src.clone();

@@ -218,7 +218,7 @@ pub fn client_token(supplied: Option<&str>, token_file: Option<&Path>) -> Result
     token_file.map_or_else(
         || {
             Err(AutomationError::BadRequest(
-                "bridge mode needs --control-token, --control-token-file, PHOTOCRAFT_CONTROL_TOKEN, or PHOTOCRAFT_CONTROL_TOKEN_FILE".into(),
+                "bridge mode needs --control-token, --control-token-file, SARY_CONTROL_TOKEN, or SARY_CONTROL_TOKEN_FILE".into(),
             ))
         },
         |path| read_token_file(path).map(|v| v.to_ascii_lowercase()),
@@ -306,8 +306,8 @@ impl Read for AuthDeadlineStream {
 
 /// Environment-aware token inputs shared by the desktop app and CLI.
 pub fn token_inputs(supplied: Option<String>, token_file: Option<PathBuf>) -> (Option<String>, Option<PathBuf>) {
-    let supplied = supplied.or_else(|| std::env::var("PHOTOCRAFT_CONTROL_TOKEN").ok());
-    let token_file = token_file.or_else(|| std::env::var_os("PHOTOCRAFT_CONTROL_TOKEN_FILE").map(PathBuf::from));
+    let supplied = supplied.or_else(|| std::env::var("SARY_CONTROL_TOKEN").ok());
+    let token_file = token_file.or_else(|| std::env::var_os("SARY_CONTROL_TOKEN_FILE").map(PathBuf::from));
     (supplied, token_file)
 }
 
@@ -381,7 +381,7 @@ mod tests {
 
     #[test]
     fn token_file_round_trips_between_server_and_client() {
-        let path = std::env::temp_dir().join(format!("photocraft-control-token-{}-{}.txt", std::process::id(), generate_token().unwrap()));
+        let path = std::env::temp_dir().join(format!("sary-control-token-{}-{}.txt", std::process::id(), generate_token().unwrap()));
         let server = server_token(None, Some(&path)).unwrap();
         let client = client_token(None, Some(&path)).unwrap();
         assert_eq!(server, client);
@@ -457,7 +457,7 @@ mod tests {
     #[test]
     fn an_existing_token_file_must_be_owner_only() {
         use std::os::unix::fs::PermissionsExt;
-        let dir = std::env::temp_dir().join(format!("photocraft-token-perm-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-token-perm-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("token.txt");
         let token = "0123456789abcdef".repeat(4); // 64 hex chars, passes validate_token

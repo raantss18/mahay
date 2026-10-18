@@ -5,9 +5,9 @@
 //! The built-in groups are our own designs, built from the same effect params as
 //! `layer.layerStyle.*`.
 
-use photocraft_color::{BlendMode, ColorMode, SampleType};
-use photocraft_doc::{Document, Effect, Layer, Size};
-use photocraft_geom::Rect;
+use sary_color::{BlendMode, ColorMode, SampleType};
+use sary_doc::{Document, Effect, Layer, Size};
+use sary_geom::Rect;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -156,12 +156,12 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
 }
 
 /// Target layers: `"layers": [ids]`, `"layer": id`, else every selected layer.
-fn targets(s: &Session, p: &Value) -> Vec<photocraft_doc::LayerId> {
+fn targets(s: &Session, p: &Value) -> Vec<sary_doc::LayerId> {
     if let Some(a) = p.get("layers").and_then(Value::as_array) {
-        return a.iter().filter_map(Value::as_u64).map(photocraft_doc::LayerId).collect();
+        return a.iter().filter_map(Value::as_u64).map(sary_doc::LayerId).collect();
     }
     if let Some(id) = p.get("layer").and_then(Value::as_u64) {
-        return vec![photocraft_doc::LayerId(id)];
+        return vec![sary_doc::LayerId(id)];
     }
     crate::layer_multi_cmds::selected(s)
 }
@@ -326,7 +326,7 @@ pub fn thumbnail(s: &Session, style: &StylePreset, size: u32) -> Vec<u8> {
         l.fill_opacity = f;
     }
     doc.layers.push(l);
-    photocraft_compose::render(&doc, doc.bounds()).to_rgba8().pixels
+    sary_compose::render(&doc, doc.bounds()).to_rgba8().pixels
 }
 
 pub fn specs() -> Vec<CommandSpec> {

@@ -1,9 +1,9 @@
 //! Patterns: tiles used by Pattern Overlay, pattern fill layers, pattern strokes, Edit › Fill
-//! and brush textures. Pure data; rendering lives in `photocraft-compose`, the PSD mapping
-//! (`Patt`/`Pat2`/`Pat3` global blocks) in `photocraft-io`.
+//! and brush textures. Pure data; rendering lives in `sary-compose`, the PSD mapping
+//! (`Patt`/`Pat2`/`Pat3` global blocks) in `sary-io`.
 
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_geom::Rect;
+use sary_raster::Surface;
 
 /// Largest pattern edge a file may declare (the PSD reader's limit; Define Pattern stops at 4000).
 pub const MAX_EDGE: u32 = 30_000;
@@ -101,7 +101,7 @@ pub fn find<'a>(patterns: &'a [Pattern], id: &str, name: &str) -> Option<&'a Pat
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::PixelFormat;
+    use sary_color::PixelFormat;
 
     #[test]
     fn ids_are_deterministic_and_lookup_falls_back_to_names() {

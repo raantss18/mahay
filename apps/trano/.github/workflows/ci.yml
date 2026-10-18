@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # No macOS on PRs or main (craftrules release/cut-a-release.md): the org's 5 macOS slots
+        # No macOS on PRs or main (mahay-rules release/cut-a-release.md): the org's 5 macOS slots
         # are kept for release builds, and release.yml builds and checks macOS.
         os: [ubuntu-latest, windows-latest]
     steps:
@@ -71,7 +71,7 @@ jobs:
       - name: Check wasm-safe crates
         run: cargo xtask wasm
       - name: Clippy (wasm32)
-        run: cargo clippy -p artcraft-launcher-core -p artcraft-launcher-web --target wasm32-unknown-unknown --locked -- -D warnings
+        run: cargo clippy -p trano-core -p trano-web --target wasm32-unknown-unknown --locked -- -D warnings
       - name: Install trunk
         run: |
           curl -fsSL "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" \

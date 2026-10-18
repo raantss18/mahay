@@ -4,7 +4,7 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::PdfCraftApp;
+use taratasy_ui_egui::TaratasyApp;
 
 /// A one-page PDF with a proper xref; `acroform` is the catalog's /AcroForm (or empty), `extra`
 /// more catalog entries, `objects` extra objects numbered from 5.
@@ -33,9 +33,9 @@ fn pdf(acroform: &str, extra: &str, objects: &[&str]) -> Vec<u8> {
 
 const XFA_PACKET: &str = "<< /Length 52 >>\nstream\n<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\"></xdp:xdp>\nendstream";
 
-fn open(bytes: Vec<u8>) -> Harness<'static, PdfCraftApp> {
+fn open(bytes: Vec<u8>) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 800.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, bytes).expect("opens");
         app
@@ -44,15 +44,15 @@ fn open(bytes: Vec<u8>) -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn xfa(h: &Harness<'static, PdfCraftApp>) -> Option<pdfcraft_render::Xfa> {
+fn xfa(h: &Harness<'static, TaratasyApp>) -> Option<taratasy_render::Xfa> {
     let s = h.state();
     s.session.get(s.views[0].id).unwrap().info.xfa
 }
 
 #[test]
 fn a_dynamic_xfa_form_is_laid_out_and_filled() {
-    let h = open(pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::template(2)));
-    assert_eq!(xfa(&h), Some(pdfcraft_render::Xfa::Dynamic));
+    let h = open(taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::template(2)));
+    assert_eq!(xfa(&h), Some(taratasy_render::Xfa::Dynamic));
     h.get_by_label_contains("laid out from its template: 2 pages, 11 fields");
     let s = h.state();
     let doc = s.session.get(s.views[0].id).unwrap();
@@ -67,21 +67,21 @@ fn a_dynamic_xfa_form_says_its_page_is_a_placeholder() {
     // No fields, the form lives in the XFA packets (an array of name/stream pairs here), but
     // the packets hold no template: the placeholder page stays, with a notice.
     let h = open(pdf("/AcroForm << /Fields [] /XFA [(template) 5 0 R] >>", "/NeedsRendering true", &[XFA_PACKET]));
-    assert_eq!(xfa(&h), Some(pdfcraft_render::Xfa::Dynamic));
+    assert_eq!(xfa(&h), Some(taratasy_render::Xfa::Dynamic));
     h.get_by_label_contains("dynamic XFA form");
     // Without /NeedsRendering, no fields still means nothing to fill but the placeholder.
     let h = open(pdf("/AcroForm << /Fields [] /XFA 5 0 R >>", "", &[XFA_PACKET]));
-    assert_eq!(xfa(&h), Some(pdfcraft_render::Xfa::Dynamic));
+    assert_eq!(xfa(&h), Some(taratasy_render::Xfa::Dynamic));
 }
 
 #[test]
 fn a_static_xfa_form_is_filled_from_its_data_and_says_so() {
     let field = "<< /FT /Tx /T (name) /Rect [20 20 200 40] /Type /Annot /Subtype /Widget /P 3 0 R >>";
     let h = open(pdf("/AcroForm << /Fields [6 0 R] /XFA 5 0 R >>", "", &[XFA_PACKET, field]));
-    assert_eq!(xfa(&h), Some(pdfcraft_render::Xfa::Static));
+    assert_eq!(xfa(&h), Some(taratasy_render::Xfa::Static));
     h.get_by_label_contains("XFA data are kept in step");
     // Values saved in the datasets by another viewer show up in the fields.
-    let h = open(pdfcraft_xfa::fixtures::static_shell("<form1><page1><name>Ada</name><agree>1</agree></page1></form1>"));
+    let h = open(taratasy_xfa::fixtures::static_shell("<form1><page1><name>Ada</name><agree>1</agree></page1></form1>"));
     let s = h.state();
     let doc = s.session.get(s.views[0].id).unwrap();
     assert_eq!(doc.form.iter().find(|f| f.name == "form1[0].page1[0].name[0]").unwrap().value, vec!["Ada".to_string()]);
@@ -100,11 +100,11 @@ fn ordinary_forms_and_documents_have_no_xfa_notice() {
     h.get_by_label_contains("interactive form fields");
     // A malformed /XFA (a number) still counts as XFA; it never crashes the open.
     let h = open(pdf("/AcroForm << /Fields [] /XFA 42 >>", "", &[]));
-    assert_eq!(xfa(&h), Some(pdfcraft_render::Xfa::Dynamic));
+    assert_eq!(xfa(&h), Some(taratasy_render::Xfa::Dynamic));
 }
 
 /// Run frames until the pages are drawn (fields can be clicked then).
-fn wait_for_pages(h: &mut Harness<'static, PdfCraftApp>) {
+fn wait_for_pages(h: &mut Harness<'static, TaratasyApp>) {
     for _ in 0..40 {
         h.run_steps(2);
         if !h.state().render_pending() {
@@ -115,12 +115,12 @@ fn wait_for_pages(h: &mut Harness<'static, PdfCraftApp>) {
 }
 
 /// Click the centre of a field's widget.
-fn click_field(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
+fn click_field(h: &mut Harness<'static, TaratasyApp>, name: &str) {
     let p = {
         let s = h.state();
         let doc = s.session.get(s.views[0].id).unwrap();
         let f = doc.form.iter().find(|f| f.name == name).unwrap_or_else(|| panic!("no field {name}"));
-        pdfcraft_ui_egui::forms_ui::field_screen_rect(&s.views[0], &doc.info, f, 0).expect("on screen").center()
+        taratasy_ui_egui::forms_ui::field_screen_rect(&s.views[0], &doc.info, f, 0).expect("on screen").center()
     };
     h.hover_at(p);
     h.run_steps(1);
@@ -132,9 +132,9 @@ fn click_field(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
 
 #[test]
 fn xfa_buttons_run_their_scripts_in_the_app() {
-    let mut h = open(pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::scripted_template()));
+    let mut h = open(taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::scripted_template()));
     wait_for_pages(&mut h);
-    let names = |h: &Harness<'static, PdfCraftApp>| {
+    let names = |h: &Harness<'static, TaratasyApp>| {
         let s = h.state();
         s.session.get(s.views[0].id).unwrap().form.iter().map(|f| f.name.clone()).collect::<Vec<_>>()
     };
@@ -148,9 +148,9 @@ fn xfa_buttons_run_their_scripts_in_the_app() {
 
 #[test]
 fn messages_from_scripts_run_on_open_show_right_away() {
-    let tpl = pdfcraft_xfa::fixtures::scripted_template()
+    let tpl = taratasy_xfa::fixtures::scripted_template()
         .replace("if (qty.rawValue === null) qty.rawValue = 2;", r#"xfa.host.messageBox("Welcome to the form"); xfa.host.print();"#);
-    let mut h = open(pdfcraft_xfa::fixtures::shell(&tpl));
+    let mut h = open(taratasy_xfa::fixtures::shell(&tpl));
     h.run_steps(2);
     assert!(h.query_by_label_contains("Welcome to the form").is_some(), "script console: {:?}", h.state().js_console.log);
     assert_eq!(h.state().dialog, None, "an initialize script can't open the Print dialog");
@@ -169,8 +169,8 @@ fn says_scripts_are_off(toast: &Option<(String, f64)>) -> bool {
 
 #[test]
 fn a_form_whose_scripts_were_turned_off_at_open_says_so() {
-    let tpl = pdfcraft_xfa::fixtures::scripted_template().replace("if (qty.rawValue === null) qty.rawValue = 2;", RUNAWAY);
-    let mut h = open(pdfcraft_xfa::fixtures::shell(&tpl));
+    let tpl = taratasy_xfa::fixtures::scripted_template().replace("if (qty.rawValue === null) qty.rawValue = 2;", RUNAWAY);
+    let mut h = open(taratasy_xfa::fixtures::shell(&tpl));
     let id = h.state().views[0].id;
     assert!(h.state().session.get(id).unwrap().xfa_scripts_off(), "script console: {:?}", h.state().js_console.log);
     // A toast says so as it happens; the notice bar keeps saying so after the toast is gone.
@@ -181,14 +181,14 @@ fn a_form_whose_scripts_were_turned_off_at_open_says_so() {
     // The bar leads to the console, where the script's error is.
     h.get_by_label("JavaScript Console").click();
     h.run_steps(2);
-    assert_eq!(h.state().dialog, Some(pdfcraft_ui_egui::Dialog::JsConsole));
+    assert_eq!(h.state().dialog, Some(taratasy_ui_egui::Dialog::JsConsole));
     assert!(h.state().js_console.log.iter().any(|l| l.contains("abandoned")), "{:?}", h.state().js_console.log);
 }
 
 #[test]
 fn scripts_turned_off_by_a_click_bring_a_closed_notice_bar_back() {
-    let tpl = pdfcraft_xfa::fixtures::scripted_template().replace(r#"xfa.host.messageBox("Hello " + qty.rawValue);"#, RUNAWAY);
-    let mut h = open(pdfcraft_xfa::fixtures::shell(&tpl));
+    let tpl = taratasy_xfa::fixtures::scripted_template().replace(r#"xfa.host.messageBox("Hello " + qty.rawValue);"#, RUNAWAY);
+    let mut h = open(taratasy_xfa::fixtures::shell(&tpl));
     wait_for_pages(&mut h);
     // The form opens with its scripts on, and the user closes the notice bar.
     let id = h.state().views[0].id;

@@ -1,7 +1,7 @@
 //! Chart parts (`c:chartSpace`) → [`Chart`]. The original XML is kept in `Chart.raw`.
 
-use deckcraft_model::chart::{Chart, ChartType, ErrorBars, Series, Trendline, TrendlineType};
-use deckcraft_model::style::Fill;
+use seho_model::chart::{Chart, ChartType, ErrorBars, Series, Trendline, TrendlineType};
+use seho_model::style::Fill;
 
 use crate::xml::El;
 
@@ -19,9 +19,9 @@ fn simple_fill(sp: Option<&El>) -> Option<Fill> {
     None
 }
 
-fn simple_line(sp: Option<&El>) -> Option<deckcraft_model::Line> {
+fn simple_line(sp: Option<&El>) -> Option<seho_model::Line> {
     let ln = sp?.child("ln")?;
-    let mut l = deckcraft_model::Line { width: super::dml::pt(ln, "w"), ..Default::default() };
+    let mut l = seho_model::Line { width: super::dml::pt(ln, "w"), ..Default::default() };
     l.fill = simple_fill(Some(ln));
     Some(l)
 }
@@ -388,8 +388,8 @@ fn trendline(e: &El) -> Option<Trendline> {
 }
 
 /// The colour of the first `a:defRPr` or `a:rPr` with a solid fill under `e`.
-fn text_color(e: Option<&El>) -> Option<deckcraft_model::ColorRef> {
-    fn rec(e: &El, depth: usize) -> Option<deckcraft_model::ColorRef> {
+fn text_color(e: Option<&El>) -> Option<seho_model::ColorRef> {
+    fn rec(e: &El, depth: usize) -> Option<seho_model::ColorRef> {
         if depth > 8 {
             return None;
         }
@@ -412,8 +412,8 @@ const MAX_KEPT_PARTS: usize = 256;
 const MAX_KEPT_DEPTH: usize = 8;
 
 /// Relationships and parts a chart points at, so a later save can write them back.
-pub(crate) fn capture_kept(pkg: &crate::opc::Package, chart_part: &str) -> deckcraft_model::chart::ChartKept {
-    use deckcraft_model::chart::{ChartKept, ChartRel};
+pub(crate) fn capture_kept(pkg: &crate::opc::Package, chart_part: &str) -> seho_model::chart::ChartKept {
+    use seho_model::chart::{ChartKept, ChartRel};
 
     let mut kept = ChartKept::default();
     // The chart document itself is rewritten; don't store a second copy of it.
@@ -442,11 +442,11 @@ fn safe_rel(id: &str, ty: &str, target: &str) -> bool {
 fn copy_part(
     pkg: &crate::opc::Package,
     part: &str,
-    out: &mut Vec<deckcraft_model::chart::ChartPart>,
+    out: &mut Vec<seho_model::chart::ChartPart>,
     seen: &mut std::collections::HashMap<String, bool>,
     depth: usize,
 ) -> bool {
-    use deckcraft_model::chart::ChartPart;
+    use seho_model::chart::ChartPart;
 
     if depth > MAX_KEPT_DEPTH || out.len() >= MAX_KEPT_PARTS {
         log::warn!("pptx: chart part closure stopped at {part}");
@@ -638,7 +638,7 @@ mod tests {
         // LibreOffice's templates set light axis text for dark slides on the axes' c:txPr.
         let xml = r#"<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><c:chart><c:plotArea><c:barChart><c:barDir val="col"/><c:ser><c:idx val="0"/><c:val><c:numRef><c:numCache><c:ptCount val="1"/><c:pt idx="0"><c:v>1</c:v></c:pt></c:numCache></c:numRef></c:val></c:ser><c:axId val="1"/><c:axId val="2"/></c:barChart><c:catAx><c:axId val="1"/><c:txPr><a:bodyPr/><a:p><a:pPr><a:defRPr sz="1000"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:defRPr></a:pPr></a:p></c:txPr></c:catAx><c:valAx><c:axId val="2"/></c:valAx></c:plotArea></c:chart></c:chartSpace>"#;
         let c = read_chart_xml(xml.as_bytes()).unwrap();
-        assert_eq!(c.text_color, Some(deckcraft_model::ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 255, 255))));
+        assert_eq!(c.text_color, Some(seho_model::ColorRef::rgb(seho_color::Rgba::rgb(255, 255, 255))));
         assert!(!c.cat_reversed);
         let rev = read_chart_xml(
             xml.replace("<c:catAx><c:axId val=\"1\"/>", "<c:catAx><c:axId val=\"1\"/><c:scaling><c:orientation val=\"maxMin\"/></c:scaling>")

@@ -34,7 +34,7 @@ async fn bounded_line<R: tokio::io::AsyncRead + Unpin>(source: &mut BufReader<R>
     }
 }
 
-impl PhotocraftMcp {
+impl SaryMcp {
     /// Serve a JSON-lines stream. A malformed line receives -32700/id:null; the next line
     /// is still handled. A single writer serializes parse errors and SDK responses.
     pub async fn serve_io(
@@ -134,7 +134,7 @@ mod tests {
         // crosses the byte limit. No part of this line may be forwarded to rmcp.
         input.extend(vec![b' '; MAX_REQUEST_BYTES - call.len()]);
         input.push(b'\n');
-        let server = PhotocraftMcp::headless();
+        let server = SaryMcp::headless();
         let observer = server.clone();
         let result = tokio::time::timeout(std::time::Duration::from_secs(5), server.serve_io(std::io::Cursor::new(input), tokio::io::sink()))
             .await

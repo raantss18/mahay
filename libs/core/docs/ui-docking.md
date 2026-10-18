@@ -1,6 +1,6 @@
 # Panel docking
 
-`craft_ui::docking` lets an application move the same panel between docked tabs, side splits and
+`mahay_ui::docking` lets an application move the same panel between docked tabs, side splits and
 floating groups. The shared layer owns placement and interaction; the application owns each
 panel's contents, commands, document state and persistence policy.
 
@@ -17,7 +17,7 @@ requires `Debug + Send + Sync + 'static`. A panel identity occurs at most once i
 Keep transient document/sequence tabs separate when they represent documents inside one panel.
 
 ```rust
-use craft_ui::docking::{Action, Floating, Layout, Node, Placement};
+use mahay_ui::docking::{Action, Floating, Layout, Node, Placement};
 
 let mut layout = Layout {
     root: Some(Node::Tabs { panels: vec!["layers", "properties"], active: 0 }),
@@ -29,7 +29,7 @@ layout.apply(Action::Move {
     panel: "brushes", anchor: "layers",
     placement: Placement::Tab { before: Some("properties") },
 })?;
-# Ok::<(), craft_ui::docking::DockError>(())
+# Ok::<(), mahay_ui::docking::DockError>(())
 ```
 
 Every transaction validates the original layout before cloning or recursive mutation. It checks
@@ -79,7 +79,7 @@ responsibility. The model does not instantiate or reparent native windows.
 
 ## Persistence and visibility
 
-Enable `craft-ui`'s optional `serde` feature to serialize the shared model, or retain an existing
+Enable `mahay-ui`'s optional `serde` feature to serialize the shared model, or retain an existing
 schema through an adapter. The serialization feature does not choose a filesystem location or
 write preferences. Applications validate panel IDs, payload size and schema version before
 committing loaded state. Bound recursive deserialization/conversion in the app as well as using
@@ -104,7 +104,7 @@ then uses actual pointer events to merge, detach and redock Brushes. It checks r
 and widget identity at two widths, two display scales and both egui themes. To retain captures:
 
 ```sh
-CRAFT_UI_DOCK_VISUAL_DIR=/absolute/output/path cargo test -p craft-ui --test docking_workflows --all-features
+MAHAY_UI_DOCK_VISUAL_DIR=/absolute/output/path cargo test -p mahay-ui --test docking_workflows --all-features
 ```
 
 These are offscreen egui checks. An adopting application still needs command, content, workspace

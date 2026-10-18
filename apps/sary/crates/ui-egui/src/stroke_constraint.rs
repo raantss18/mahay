@@ -85,7 +85,7 @@ pub fn constrain(tool: Tool, axis: &mut Option<Axis>, start: [f64; 2], last: [f6
 
 /// Where the ⇧-click line preview starts (#257): the end of the last stroke on the active
 /// document, while ⇧ is held with a painting tool and nothing is being painted.
-pub fn line_preview_start(app: &crate::PhotocraftApp, tool: Tool, shift: bool) -> Option<[f64; 2]> {
+pub fn line_preview_start(app: &crate::SaryApp, tool: Tool, shift: bool) -> Option<[f64; 2]> {
     if !shift || !connects(tool) || app.drag.is_some() {
         return None;
     }
@@ -98,7 +98,7 @@ pub fn line_preview_start(app: &crate::PhotocraftApp, tool: Tool, shift: bool) -
 /// pointer (drawn here only when the painting cursor doesn't already show the tip). Two line
 /// segments and at most one circle: no measurable cost per frame. Returns the drawn segment.
 pub fn draw_line_preview(
-    app: &crate::PhotocraftApp,
+    app: &crate::SaryApp,
     painter: &egui::Painter,
     xf: &crate::canvas::ViewXform,
     pointer: egui::Pos2,
@@ -114,7 +114,7 @@ pub fn draw_line_preview(
     for (w, c) in [(2.5, Color32::from_black_alpha(120)), (1.0, Color32::from_white_alpha(230))] {
         painter.line_segment([a, pointer], Stroke::new(w, c));
     }
-    use photocraft_engine::prefs::PaintingCursor;
+    use sary_engine::prefs::PaintingCursor;
     if matches!(app.session.prefs().cursors.painting, PaintingCursor::Standard | PaintingCursor::Precise) {
         let r = (app.session.tools.brush.size / 2.0 * xf.zoom).max(1.0);
         painter.circle_stroke(pointer, r + 0.5, Stroke::new(1.0, Color32::from_black_alpha(140)));
@@ -126,7 +126,7 @@ pub fn draw_line_preview(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::PhotocraftApp;
+    use crate::SaryApp;
     use crate::canvas::{ToolEvent, tool_event};
     use serde_json::json;
 
@@ -163,20 +163,20 @@ mod tests {
         assert!(close(constrain(Tool::Move, &mut None, o, o, [30.0, 12.0], true, 1.0), [30.0, 12.0]));
     }
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 120, "height": 120, "background": "transparent"})).unwrap();
         app.run("tools.setBrush", json!({"brush": {"size": 4, "hardness": 1.0}})).unwrap();
         app.session.tools.brush.smoothing.amount = 0.0;
         app
     }
 
-    fn last_stroke_points(app: &PhotocraftApp) -> Vec<[f64; 2]> {
+    fn last_stroke_points(app: &SaryApp) -> Vec<[f64; 2]> {
         let p = app.session.journal.iter().rev().find(|(id, _)| id == "paint.stroke").map(|(_, p)| p.clone()).unwrap();
         p["points"].as_array().unwrap().iter().map(|q| [q[0].as_f64().unwrap(), q[1].as_f64().unwrap()]).collect()
     }
 
-    fn alpha(app: &PhotocraftApp, x: i32, y: i32) -> f32 {
+    fn alpha(app: &SaryApp, x: i32, y: i32) -> f32 {
         app.session.documents()[0].doc.layers[0].surface().unwrap().rgba(x, y)[3]
     }
 
@@ -330,7 +330,7 @@ mod tests {
     }
 
     /// Every line segment the last frame painted.
-    fn segments(h: &egui_kittest::Harness<'static, PhotocraftApp>) -> Vec<[egui::Pos2; 2]> {
+    fn segments(h: &egui_kittest::Harness<'static, SaryApp>) -> Vec<[egui::Pos2; 2]> {
         fn walk(s: &egui::Shape, out: &mut Vec<[egui::Pos2; 2]>) {
             match s {
                 egui::Shape::LineSegment { points, .. } => out.push(*points),
@@ -352,7 +352,7 @@ mod tests {
         a.ui.tool = Tool::Brush;
         a.sync_views();
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -361,12 +361,12 @@ mod tests {
             },
             a,
         );
-        crate::PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        crate::SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
         h.run_steps(4);
         let c = h.state().last_canvas_rect.center();
         let target = c + vec2(120.0, 90.0);
         let near = |p: egui::Pos2, q: egui::Pos2| p.distance(q) < 1.5;
-        let band = |h: &egui_kittest::Harness<'static, PhotocraftApp>, from: egui::Pos2| segments(h).iter().any(|s| near(s[0], from) && near(s[1], target));
+        let band = |h: &egui_kittest::Harness<'static, SaryApp>, from: egui::Pos2| segments(h).iter().any(|s| near(s[0], from) && near(s[1], target));
         // ⇧ with no previous stroke: nothing.
         h.event(Event::ModifiersChanged(Modifiers::SHIFT));
         h.event(Event::PointerMoved(target));

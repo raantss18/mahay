@@ -1,15 +1,15 @@
 //! Reopen the files from the last session (Preferences ▸ Documents and view, #442): which files
-//! were open when PdfCraft last closed, the page each showed and the active tab. Local only, like
+//! were open when Taratasy last closed, the page each showed and the active tab. Local only, like
 //! the recent-files list, and kept only while the preference is on.
 
 use serde::Serialize;
 
-use crate::PdfCraftApp;
+use crate::TaratasyApp;
 
 /// More files than anyone keeps open. Settings are untrusted, so a longer list is cut here.
 pub const MAX_FILES: usize = 64;
 
-/// The files open when PdfCraft last closed.
+/// The files open when Taratasy last closed.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 pub struct LastSession {
     pub files: Vec<SessionFile>,
@@ -27,7 +27,7 @@ pub struct SessionFile {
 }
 
 impl LastSession {
-    /// Read what [`PdfCraftApp::persist`] wrote. Malformed entries are skipped and the list is
+    /// Read what [`TaratasyApp::persist`] wrote. Malformed entries are skipped and the list is
     /// capped at [`MAX_FILES`].
     pub(crate) fn from_json(v: &serde_json::Value) -> Self {
         let files = v["files"]
@@ -56,7 +56,7 @@ fn absolute(path: &str) -> String {
     std::path::absolute(path).map_or_else(|_| path.to_string(), |p| p.to_string_lossy().into_owned())
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// The files open now. Documents that were never saved to a file are left out (crash
     /// recovery keeps their unsaved work), and so is everything on the web, which has no paths.
     pub(crate) fn open_session(&self) -> LastSession {

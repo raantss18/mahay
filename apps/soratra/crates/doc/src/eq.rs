@@ -4,7 +4,7 @@
 //! diamond as one: ` eq \o\ac(○,字)`.
 //!
 //! Which of the two enclosure styles a field has is kept in the document model as a trailing
-//! `\* enlarge` (WordCraft's own; nothing is written for the default "shrink text" style). In a
+//! `\* enlarge` (Soratra's own; nothing is written for the default "shrink text" style). In a
 //! `.docx` the style is Word's: the font sizes of the field code's runs (the text smaller than the
 //! symbol, or the symbol larger than the text), so the marker never reaches a file.
 

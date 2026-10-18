@@ -8,13 +8,13 @@
 //! (Windows display language, macOS preferred languages, `LANG`/`LC_*` elsewhere) when there is a
 //! catalog for it, and English otherwise. File ▸ Options ▸ Interface language picks one by hand.
 //!
-//! This is the system PdfCraft and PhotoCraft use (`pdfcraft/crates/ui-egui/src/i18n`), so the
-//! catalog format and habits carry over between the Crafting Apps.
+//! This is the system Taratasy and Sary use (`taratasy/crates/ui-egui/src/i18n`), so the
+//! catalog format and habits carry over between the Mahay apps.
 //!
 //! # Adding a language
 //! 1. Add `xx.tsv` next to `zh-hans.tsv` (copy its header; translate from the *meaning* of the
 //!    English text, clean-room: never from Microsoft Word's or another product's localisation).
-//! 2. Add one row to [`LANGUAGES`]. Set its `editing_lang` only when `wordcraft-proof` can proof
+//! 2. Add one row to [`LANGUAGES`]. Set its `editing_lang` only when `soratra-proof` can proof
 //!    the language (Polish: `pl-PL`): new documents are then written in it.
 //!
 //! The Options dropdown, the system-language match and the catalog tests pick it up from there.
@@ -46,7 +46,7 @@ pub struct LangInfo {
     /// Which CJK interface face comes first (Chinese text wants the Chinese face).
     pub prefer_hans: bool,
     /// The language (BCP 47) new blank documents are written in with this interface, for
-    /// languages WordCraft can proof; `None` keeps WordCraft's default, US English.
+    /// languages Soratra can proof; `None` keeps Soratra's default, US English.
     pub editing_lang: Option<&'static str>,
     catalog: OnceLock<Catalog>,
 }
@@ -109,7 +109,7 @@ pub static LANGUAGES: [LangInfo; 23] = [
         editing_lang: None,
         catalog: OnceLock::new(),
     },
-    // Polish; `pl`, `pl-PL` and `pl_PL.UTF-8` resolve here. WordCraft proofs Polish (spelling,
+    // Polish; `pl`, `pl-PL` and `pl_PL.UTF-8` resolve here. Soratra proofs Polish (spelling,
     // grammar, hyphenation), so new documents are written in Polish with this interface.
     LangInfo {
         code: "pl",
@@ -142,7 +142,7 @@ pub static LANGUAGES: [LangInfo; 23] = [
         catalog: OnceLock::new(),
     },
     // Italian; `it-IT`, `it-CH` and `it-*` resolve here. New documents are written in
-    // Italian: `wordcraft-proof` checks it (`ProofLang::It`).
+    // Italian: `soratra-proof` checks it (`ProofLang::It`).
     LangInfo {
         code: "it",
         name: "Italiano",
@@ -297,7 +297,7 @@ pub fn lang_from_tag(tag: &str) -> Option<Lang> {
     cands.iter().find_map(|c| Lang::from_code(c))
 }
 
-/// The first of the system's preferred languages WordCraft has, in the user's order: someone
+/// The first of the system's preferred languages Soratra has, in the user's order: someone
 /// who prefers French, then Japanese, gets Japanese rather than English.
 pub fn first_supported<'a>(tags: impl IntoIterator<Item = &'a str>) -> Option<Lang> {
     tags.into_iter().find_map(lang_from_tag)
@@ -316,7 +316,7 @@ pub fn system_lang() -> Lang {
 fn detect_system_lang() -> Lang {
     // An explicit override, then the platform's preferred UI languages (Windows display language,
     // macOS preferred languages, `LC_ALL`/`LC_MESSAGES`/`LANG` on Unix, the browser on the web).
-    if let Some(l) = std::env::var("WORDCRAFT_LANGUAGE").ok().and_then(|v| lang_from_tag(&v)) {
+    if let Some(l) = std::env::var("SORATRA_LANGUAGE").ok().and_then(|v| lang_from_tag(&v)) {
         return l;
     }
     let tags: Vec<String> = sys_locale::get_locales().take(16).collect();
@@ -326,13 +326,13 @@ fn detect_system_lang() -> Lang {
 /// The system region (#838): it picks the paper File › New starts on, the default measurement
 /// unit and the decimal separator, independently of the interface language (an English
 /// interface in Germany still gets A4 and centimetres). `en-US` in tests.
-pub fn system_region() -> wordcraft_engine::Region {
+pub fn system_region() -> soratra_engine::Region {
     if cfg!(test) {
-        return wordcraft_engine::Region::default();
+        return soratra_engine::Region::default();
     }
     // The environment's locale variables (Unix), else the platform's first preferred locale (on
     // macOS it carries the region, as in `en-PL`; on the web it is the browser's language).
-    wordcraft_engine::Region::from_locale_vars(|name| std::env::var(name).ok(), sys_locale::get_locale)
+    soratra_engine::Region::from_locale_vars(|name| std::env::var(name).ok(), sys_locale::get_locale)
 }
 
 thread_local! {
@@ -406,7 +406,7 @@ pub fn tr(lang: Lang, s: &str) -> &str {
 /// A style's name as the interface shows it: built-in styles (`Normal`, `Heading 2`, `TOC 3`) in
 /// the current language, styles the author made exactly as named. Display only: the document,
 /// commands and saved files keep the English name.
-pub fn style_name(style: &wordcraft_doc::Style) -> String {
+pub fn style_name(style: &soratra_doc::Style) -> String {
     if style.builtin { builtin_style_name(&style.name) } else { style.name.clone() }
 }
 

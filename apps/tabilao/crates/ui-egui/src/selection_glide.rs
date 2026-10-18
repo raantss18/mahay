@@ -26,7 +26,7 @@
 //! window (the sheet scrolls, the cell stays where it is on screen) doesn't make it wobble.
 
 use egui::{Rect, pos2};
-use gridcraft_engine::core::RangeRef;
+use tabilao_engine::core::RangeRef;
 
 /// How long a glide takes, in seconds.
 pub const GLIDE_SECS: f64 = 0.12;
@@ -146,7 +146,7 @@ pub fn ants_phase(now: f64) -> f32 {
 mod tests {
     use super::*;
     use egui::vec2;
-    use gridcraft_engine::core::CellRef;
+    use tabilao_engine::core::CellRef;
 
     const PLACE: (u64, usize) = (1, 0);
     const VIEW: Rect = Rect::from_min_max(pos2(0.0, 0.0), pos2(1000.0, 600.0));

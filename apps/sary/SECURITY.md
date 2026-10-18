@@ -1,6 +1,6 @@
 # Security Policy
 
-PhotoCraft processes complex document and image formats and exposes CLI, JSON control, and MCP automation. Treat files, paths, metadata, automation requests, and command parameters as potentially malicious.
+Sary processes complex document and image formats and exposes CLI, JSON control, and MCP automation. Treat files, paths, metadata, automation requests, and command parameters as potentially malicious.
 
 ## Reporting a vulnerability
 
@@ -14,7 +14,7 @@ If no private channel can be established, withhold weaponized material and repor
 
 A useful report includes:
 
-- affected PhotoCraft version, commit, or release artifact;
+- affected Sary version, commit, or release artifact;
 - operating system, architecture, build profile, and relevant feature flags;
 - the affected component or path;
 - security impact and required attacker access;
@@ -36,7 +36,7 @@ Test files accepted into the repository must be minimized, free of personal or p
 
 Security reports may cover:
 
-- PSD/PSB, raster, `.pcraft`, ICC, LUT, pattern, and embedded-object parsing;
+- PSD/PSB, raster, `.sary`, ICC, LUT, pattern, and embedded-object parsing;
 - decompression bombs, oversized dimensions, integer overflow, memory exhaustion, recursion, or hangs;
 - import/export and filesystem path handling, including traversal, symlinks, and unsafe overwrite behavior;
 - engine command validation and serialization/deserialization;

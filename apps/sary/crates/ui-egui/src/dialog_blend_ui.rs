@@ -11,7 +11,7 @@ use crate::theme::Tokens;
 /// Validate a persisted blending choice before restoring it from Preferences.
 pub fn valid(key: &str, v: &Value) -> bool {
     match key {
-        "mode" => v.as_str().and_then(photocraft_engine::commands::blend_from_str).is_some_and(|m| m != photocraft_color::BlendMode::PassThrough),
+        "mode" => v.as_str().and_then(sary_engine::commands::blend_from_str).is_some_and(|m| m != sary_color::BlendMode::PassThrough),
         "opacity" => v.as_f64().is_some_and(|o| o.is_finite() && (0.0..=100.0).contains(&o)),
         "preserveTransparency" => v.is_boolean(),
         _ => false,
@@ -26,7 +26,7 @@ pub fn body(ui: &mut egui::Ui, fields: &mut Map<String, Value>, prefix: &str) {
     ui.horizontal(|ui| {
         label(ui, tl!("Mode:"));
         let mut mode = fields.get("mode").and_then(Value::as_str).unwrap_or("normal").to_string();
-        let opts: Vec<(String, &str)> = photocraft_color::BlendMode::LAYER_MODES.iter().map(|m| (mode_key(*m), m.label())).collect();
+        let opts: Vec<(String, &str)> = sary_color::BlendMode::LAYER_MODES.iter().map(|m| (mode_key(*m), m.label())).collect();
         if crate::widgets::dropdown(ui, &format!("{prefix}-mode"), &mut mode, &opts, 170.0) {
             fields.insert("mode".into(), json!(mode));
         }
@@ -54,7 +54,7 @@ fn label(ui: &mut egui::Ui, text: &str) {
 }
 
 /// The `mode` param naming a blend mode ("normal", "colorBurn"…), parsed by the engine.
-fn mode_key(m: photocraft_color::BlendMode) -> String {
+fn mode_key(m: sary_color::BlendMode) -> String {
     let s = format!("{m:?}");
     let mut c = s.chars();
     c.next().map(|f| f.to_ascii_lowercase().to_string() + c.as_str()).unwrap_or_default()

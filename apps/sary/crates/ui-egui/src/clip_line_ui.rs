@@ -16,7 +16,7 @@
 //! - the release cursor is the clip cursor struck through.
 
 use egui::{Pos2, Rangef, Rect, Sense, vec2};
-use photocraft_doc::{Document, LayerContent, LayerId};
+use sary_doc::{Document, LayerContent, LayerId};
 use serde_json::{Value, json};
 
 use crate::layer_row_ui::{RIGHT_PAD, RowRects};
@@ -108,7 +108,7 @@ pub fn show(ui: &mut egui::Ui, doc: &Document, actions: &mut Vec<(String, Value)
     let resp = ui.interact(line.rect, ui.id().with("clip-line"), Sense::click());
     let label = if line.release { "Release Clipping Mask" } else { "Create Clipping Mask" };
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, label));
-    // PhotoCraft's own cursors: a hooked arrow onto the layer below, and the same arrow with a
+    // Sary's own cursors: a hooked arrow onto the layer below, and the same arrow with a
     // small "no" badge to release. The arrow's tip, (15, 16) of the 24-unit box, is the hot spot.
     let icon = if line.release { "clip-release" } else { "clip-below" };
     crate::icons::cursor(&ctx, icon, p, vec2(15.0, 16.0) / 24.0, CURSOR_SIZE);

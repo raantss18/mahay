@@ -1,7 +1,7 @@
 //! `import_gif_frames`: each GIF frame as a single-layer document, in order, with its delay.
 
-use photocraft_codecs::web::{GifFrame, encode_gif_animated};
-use photocraft_io::{IoError, import_gif_frames};
+use sary_codecs::web::{GifFrame, encode_gif_animated};
+use sary_io::{IoError, import_gif_frames};
 
 fn gif(colours: &[([u8; 3], u16)]) -> Vec<u8> {
     let frames: Vec<GifFrame> = colours.iter().map(|&(c, delay_cs)| GifFrame { indices: vec![0; 6], palette: vec![c], transparent: None, delay_cs }).collect();

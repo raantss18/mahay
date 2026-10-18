@@ -5,7 +5,7 @@ use rmcp::model::ProgressNotificationParam;
 use rmcp::service::RequestContext;
 use std::time::{Duration, Instant};
 
-impl PhotocraftMcp {
+impl SaryMcp {
     pub(super) async fn render_video_progress(&self, params: Value, context: RequestContext<RoleServer>) -> CallToolResult {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         // rmcp may drop the request future on cancellation. The blocking worker owns the

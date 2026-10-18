@@ -1,11 +1,11 @@
 [package]
-name = "photocraft-psd-fuzz"
+name = "sary-psd-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2024"
 license = "MIT OR Apache-2.0"
 
-# Standalone: excluded from the photocraft workspace.
+# Standalone: excluded from the sary workspace.
 [workspace]
 
 [package.metadata]
@@ -13,7 +13,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-photocraft-psd = { path = ".." }
+sary-psd = { path = ".." }
 
 [[bin]]
 name = "parse"

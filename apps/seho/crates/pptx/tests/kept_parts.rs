@@ -3,7 +3,7 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use zip::write::SimpleFileOptions;
 
 const ITEM: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><b:Sources xmlns:b="http://schemas.openxmlformats.org/officeDocument/2006/bibliography"/>"#;
@@ -14,9 +14,9 @@ const CUSTOM: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?><
 
 fn deck() -> Vec<u8> {
     let mut s = Session::new();
-    deckcraft_engine::sample::open_sample(&mut s).expect("sample");
+    seho_engine::sample::open_sample(&mut s).expect("sample");
     let p = s.doc().expect("doc").doc.as_ref().clone();
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut src = zip::ZipArchive::new(Cursor::new(bytes)).expect("zip");
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for i in 0..src.len() {
@@ -67,9 +67,9 @@ fn read(zip: &mut zip::ZipArchive<Cursor<Vec<u8>>>, name: &str) -> String {
 
 #[test]
 fn custom_xml_label_and_custom_properties_survive_save() {
-    let p = deckcraft_pptx::import(&deck()).expect("import");
+    let p = seho_pptx::import(&deck()).expect("import");
     assert_eq!(p.kept_parts.len(), 5);
-    let saved = deckcraft_pptx::export(&p).expect("export");
+    let saved = seho_pptx::export(&p).expect("export");
     let mut zip = zip::ZipArchive::new(Cursor::new(saved.clone())).expect("zip");
     for (n, d) in [
         ("customXml/item1.xml", ITEM),
@@ -86,6 +86,6 @@ fn custom_xml_label_and_custom_properties_survive_save() {
     assert!(root.contains("classificationlabels") && root.contains(r#"Target="docProps/custom.xml""#));
     assert!(read(&mut zip, "ppt/_rels/presentation.xml.rels").contains(r#"Target="../customXml/item1.xml""#));
     // And again: a second save keeps them once.
-    let again = deckcraft_pptx::import(&saved).expect("reimport");
+    let again = seho_pptx::import(&saved).expect("reimport");
     assert_eq!(again.kept_parts, p.kept_parts);
 }

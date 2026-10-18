@@ -1,14 +1,14 @@
 //! Filter › Render › Flame…, Picture Frame… and Tree…: procedural renderers
-//! (`photocraft_algo::render2`). They draw onto the active pixel layer (or a
+//! (`sary_algo::render2`). They draw onto the active pixel layer (or a
 //! new layer with `newLayer: true`, or when the active layer has no pixels),
 //! inside the selection, in any colour mode and depth, as one undo step.
 //! Results report what was drawn (`layer`, `bounds`, `primitives`) so agents
 //! can verify them without screenshots.
 
-use photocraft_algo::render2::{self, FlameSpec, FrameSpec, Prim, TreeSpec};
-use photocraft_doc::{Layer, LayerContent, LayerId};
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_algo::render2::{self, FlameSpec, FrameSpec, Prim, TreeSpec};
+use sary_doc::{Layer, LayerContent, LayerId};
+use sary_geom::Rect;
+use sary_raster::Surface;
 use serde_json::{Map, Value, json};
 
 use crate::commands::CommandSpec;
@@ -83,7 +83,7 @@ fn flame_paths(s: &Session, p: &Value) -> Option<Vec<Vec<(f32, f32)>>> {
         Some(n) if !n.is_empty() && !n.eq_ignore_ascii_case("work") => doc.paths.iter().find(|sp| sp.name == n).map(|sp| &sp.path),
         _ => doc.work_path.as_ref().or_else(|| doc.paths.first().map(|sp| &sp.path)),
     }?;
-    let polys: Vec<Vec<(f32, f32)>> = photocraft_vector::flatten_path(path, 0.5)
+    let polys: Vec<Vec<(f32, f32)>> = sary_vector::flatten_path(path, 0.5)
         .into_iter()
         .map(|pl| {
             let mut v: Vec<(f32, f32)> = pl.pts.iter().map(|&(x, y)| (x as f32, y as f32)).collect();
@@ -292,11 +292,11 @@ mod tests {
         s.execute("edit.undo", json!({})).unwrap();
         // A vertical line path on the left edge: the flame stays near it.
         s.edit("path", |doc, _| {
-            let mut sub = photocraft_doc::Subpath::default();
+            let mut sub = sary_doc::Subpath::default();
             for (x, y) in [(20.0, 110.0), (20.0, 20.0)] {
-                sub.knots.push(photocraft_doc::Knot::corner(x, y));
+                sub.knots.push(sary_doc::Knot::corner(x, y));
             }
-            doc.work_path = Some(photocraft_doc::Path { subpaths: vec![sub], ..Default::default() });
+            doc.work_path = Some(sary_doc::Path { subpaths: vec![sub], ..Default::default() });
             Ok(())
         })
         .unwrap();
@@ -373,7 +373,7 @@ mod tests {
         }
     }
 
-    /// `cargo test --release -p photocraft-engine render_cmds::tests::bench_24mp -- --ignored --nocapture`
+    /// `cargo test --release -p sary-engine render_cmds::tests::bench_24mp -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn bench_24mp() {

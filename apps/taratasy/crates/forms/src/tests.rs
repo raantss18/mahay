@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pdfcraft_cos::{Document, Object, SaveOptions, write_incremental};
+use taratasy_cos::{Document, Object, SaveOptions, write_incremental};
 
 use super::*;
 
@@ -96,7 +96,7 @@ fn appearance_text(doc: &Document, w: &Widget, font_name: &[u8]) -> (Object, Vec
     let resources = doc.resolve(stream.dict.get(b"Resources").unwrap());
     let fonts = doc.resolve(resources.as_dict().unwrap().get(b"Font").unwrap());
     let font = doc.resolve(fonts.as_dict().unwrap().get(font_name).unwrap());
-    let shown = pdfcraft_content::parse(&stream.decoded().unwrap())
+    let shown = taratasy_content::parse(&stream.decoded().unwrap())
         .ops
         .into_iter()
         .filter(|op| op.is("Tj"))
@@ -300,7 +300,7 @@ fn existing_field_font_encoding_keeps_italian_punctuation_visible() {
     assert_eq!(f.value, [value], "the stored value and the drawn text must agree");
     let (font, lines) = appearance_text(&doc, &f.widgets[0], b"Helv");
     assert_eq!(font, original_font, "keep the existing field's font and encoding");
-    let metrics = pdfcraft_fonts::pdf::Metrics::from_dict(&doc, font.as_dict().unwrap());
+    let metrics = taratasy_fonts::pdf::Metrics::from_dict(&doc, font.as_dict().unwrap());
     let shown = lines.concat();
     assert_eq!(metrics.decode(&shown), value, "decode the appearance with its actual font");
     assert_eq!(shown, b"Citt\xe0 Sant\x90Angelo \x84 qualit\xe0");
@@ -331,7 +331,7 @@ fn unavailable_glyph_uses_an_appearance_font_without_changing_the_source_font() 
     let font = font.as_dict().unwrap();
     assert_eq!(font.name(b"BaseFont"), Some(&b"Helvetica"[..]));
     assert_eq!(font.name(b"Encoding"), Some(&b"WinAnsiEncoding"[..]));
-    let metrics = pdfcraft_fonts::pdf::Metrics::from_dict(&doc, font);
+    let metrics = taratasy_fonts::pdf::Metrics::from_dict(&doc, font);
     let shown = lines.concat();
     assert_eq!(metrics.decode(&shown), value);
     assert_eq!(shown, b"Citt\xe0 Sant\x92Angelo \x97 qualit\xe0");
@@ -360,7 +360,7 @@ fn multiline_wrapping_keeps_encodable_text_without_requiring_ascii_space() {
     let (font, lines) = appearance_text(&doc, &f.widgets[0], b"Helv");
     assert_eq!(font, original_font);
     assert!(lines.len() >= 3 && lines.iter().all(|line| !line.is_empty()));
-    let metrics = pdfcraft_fonts::pdf::Metrics::from_dict(&doc, font.as_dict().unwrap());
+    let metrics = taratasy_fonts::pdf::Metrics::from_dict(&doc, font.as_dict().unwrap());
     assert_eq!(metrics.decode(&lines.concat()), value.replace('\n', ""));
 }
 
@@ -441,7 +441,7 @@ fn text_a_field_font_cannot_hold_is_kept_marked_and_redrawn_elsewhere() {
         let w = &field(&all, name).widgets[0];
         let n = doc.get(w.obj).as_dict().unwrap().get(b"AP").unwrap().as_dict().unwrap().reference(b"N").unwrap();
         let Object::Stream(s) = &*doc.get(n) else { panic!() };
-        let mark = doc.get(w.obj).as_dict().and_then(pdfcraft_fonts::undrawn_mark);
+        let mark = doc.get(w.obj).as_dict().and_then(taratasy_fonts::undrawn_mark);
         (String::from_utf8_lossy(&s.decoded().unwrap()).into_owned(), mark)
     };
     // A WinAnsi field: the Chinese value is kept and marked; Helvetica draws `?` for it.
@@ -533,7 +533,7 @@ fn check_boxes_and_radios_switch_states() {
     let size = field(&all, "size");
     assert_eq!(size.value, ["L"]);
     assert_eq!(size.widgets.iter().map(|w| w.state.clone().unwrap()).collect::<Vec<_>>(), ["Off", "L"]);
-    // The bare check box got PdfCraft's own appearances and kept its other keys.
+    // The bare check box got Taratasy's own appearances and kept its other keys.
     let bare = field(&all, "bare");
     assert_eq!(bare.value, ["Yes"]);
     assert_eq!(bare.widgets[0].on_state.as_deref(), Some("Yes"));
@@ -733,7 +733,7 @@ fn every_field_type_can_be_added_named_and_drawn() {
     {
         // One page.
         let pages = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
-        let mut p = pdfcraft_cos::Dict::new();
+        let mut p = taratasy_cos::Dict::new();
         p.set(b"Type".to_vec(), Object::name("Page"));
         p.set(b"Parent".to_vec(), Object::Ref(pages));
         p.set(b"MediaBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 600.into(), 800.into()]));
@@ -837,7 +837,7 @@ fn properties_rename_and_delete() {
 fn deleting_works_with_a_form_dictionary_inside_the_catalog() {
     let mut doc = fixture();
     let root = doc.root().unwrap();
-    let af = doc.get(pdfcraft_cos::ObjRef::new(4, 0)).as_dict().cloned().unwrap();
+    let af = doc.get(taratasy_cos::ObjRef::new(4, 0)).as_dict().cloned().unwrap();
     doc.update_dict(root, |d| d.set(b"AcroForm".to_vec(), Object::Dict(af))).unwrap();
     let before = fields(&doc).len();
     delete_field(&mut doc, "name").unwrap();
@@ -849,7 +849,7 @@ fn deleting_works_with_a_form_dictionary_inside_the_catalog() {
 fn one_page() -> Document {
     let mut doc = Document::new_empty();
     let pages = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
-    let mut p = pdfcraft_cos::Dict::new();
+    let mut p = taratasy_cos::Dict::new();
     p.set(b"Type".to_vec(), Object::name("Page"));
     p.set(b"Parent".to_vec(), Object::Ref(pages));
     p.set(b"MediaBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 600.into(), 800.into()]));
@@ -1137,7 +1137,7 @@ fn ordering_tabs_manually() {
     }
     // A comment between the widgets keeps its place.
     let page = page_refs(&doc)[0];
-    let mut note = pdfcraft_cos::Dict::new();
+    let mut note = taratasy_cos::Dict::new();
     note.set(b"Type".to_vec(), Object::name("Annot"));
     note.set(b"Subtype".to_vec(), Object::name("Text"));
     note.set(b"Rect".to_vec(), Object::Array(vec![0.into(), 0.into(), 10.into(), 10.into()]));
@@ -1174,7 +1174,7 @@ fn duplicating_a_field_across_pages_shares_its_value() {
     // A second and third page.
     let pages = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
     for _ in 0..2 {
-        let mut p = pdfcraft_cos::Dict::new();
+        let mut p = taratasy_cos::Dict::new();
         p.set(b"Type".to_vec(), Object::name("Page"));
         p.set(b"Parent".to_vec(), Object::Ref(pages));
         p.set(b"MediaBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 600.into(), 800.into()]));
@@ -1271,7 +1271,7 @@ fn image_fields_ask_for_a_picture_and_show_it() {
     {
         d.set(k.to_vec(), v);
     }
-    let img = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(d, vec![0; 24])));
+    let img = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(d, vec![0; 24])));
     set_button_icon(&mut doc, &name, img, (4, 2)).unwrap();
     let w = doc.get(f.widgets[0].obj).as_dict().cloned().unwrap();
     let mk = w.get(b"MK").unwrap().as_dict().unwrap().clone();
@@ -1462,12 +1462,12 @@ fn detection_makes_a_row_of_touching_cells_one_comb_field() {
 #[test]
 fn page_shapes_reads_boxes_and_rules() {
     let mut doc = fixture();
-    let page = pdfcraft_model::pages(&doc)[0].obj;
-    let s = doc.add(pdfcraft_cos::Object::Stream(pdfcraft_cos::Stream::flate(
+    let page = taratasy_model::pages(&doc)[0].obj;
+    let s = doc.add(taratasy_cos::Object::Stream(taratasy_cos::Stream::flate(
         Default::default(),
         b"q 2 0 0 2 0 0 cm 10 10 6 6 re S 20 50 m 120 50 l S 0 0 m 5 5 l S 30 300 100 0.5 re f Q",
     )));
-    doc.update_dict(page, |d| d.set(b"Contents".to_vec(), pdfcraft_cos::Object::Ref(s))).unwrap();
+    doc.update_dict(page, |d| d.set(b"Contents".to_vec(), taratasy_cos::Object::Ref(s))).unwrap();
     let sh = crate::detect::page_shapes(&doc, 0);
     assert_eq!(sh.boxes, [[20.0, 20.0, 32.0, 32.0]]);
     assert_eq!(sh.rules, [[40.0, 100.0, 240.0, 100.0], [60.0, 600.5, 260.0, 600.5]]);
@@ -1603,7 +1603,7 @@ fn filling_and_authoring_keep_shared_appearances_and_drop_stale_alternates() {
                 d.set(b"Type".to_vec(), Object::name("XObject"));
                 d.set(b"Subtype".to_vec(), Object::name("Form"));
                 d.set(b"BBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 20.into(), 10.into()]));
-                let r = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(d, bytes.to_vec())));
+                let r = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(d, bytes.to_vec())));
                 entries.set(key.to_vec(), Object::Ref(r));
             }
             entries.set(b"VendorState".to_vec(), Object::name("Retained"));
@@ -1624,7 +1624,7 @@ fn filling_and_authoring_keep_shared_appearances_and_drop_stale_alternates() {
                 }
                 assert_eq!(doc.resolve(&source), before, "a shared AP must not change");
                 let bytes = if full {
-                    pdfcraft_cos::write_full(&doc, &SaveOptions::default()).unwrap()
+                    taratasy_cos::write_full(&doc, &SaveOptions::default()).unwrap()
                 } else {
                     assert!(!doc.revisions().is_empty(), "incremental save needs an existing revision");
                     assert!(!doc.encryption_changed() && !doc.full_save_required(), "this edit must not require a full rewrite");
@@ -1678,7 +1678,7 @@ fn filling_and_authoring_keep_shared_appearances_and_drop_stale_alternates() {
 fn pushbutton_redraw_resolves_caption_and_layout_after_save_and_reopen() {
     fn saved(doc: &Document, full: bool) -> Document {
         let bytes = if full {
-            pdfcraft_cos::write_full(doc, &SaveOptions::default()).unwrap()
+            taratasy_cos::write_full(doc, &SaveOptions::default()).unwrap()
         } else {
             assert!(!doc.revisions().is_empty(), "incremental save needs an existing revision");
             assert!(!doc.encryption_changed() && !doc.full_save_required(), "this edit must not require a full rewrite");
@@ -1700,7 +1700,7 @@ fn pushbutton_redraw_resolves_caption_and_layout_after_save_and_reopen() {
                     add_field(&mut doc, 0, [50.0, 600.0, 250.0, 650.0], &NewField::Button { caption: "Original caption".into() }, Some("Picture"))
                         .unwrap();
                 let widget = field(&fields(&doc), &name).widgets[0].obj;
-                let caption = Object::String(pdfcraft_cos::PdfString::literal(b"Original caption".to_vec()));
+                let caption = Object::String(taratasy_cos::PdfString::literal(b"Original caption".to_vec()));
                 let caption = if indirect_caption { Object::Ref(doc.add(caption)) } else { caption };
                 let layout = Object::Int(i64::from(icon_only));
                 let layout = if indirect_layout { Object::Ref(doc.add(layout)) } else { layout };
@@ -1709,7 +1709,7 @@ fn pushbutton_redraw_resolves_caption_and_layout_after_save_and_reopen() {
                 icon_dict.set(b"Subtype".to_vec(), Object::name("Form"));
                 icon_dict.set(b"BBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 4.into(), 2.into()]));
                 let icon_bytes = b"0 0 4 2 re f\n";
-                let icon = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(icon_dict, icon_bytes.to_vec())));
+                let icon = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(icon_dict, icon_bytes.to_vec())));
                 let mut mk = Dict::new();
                 mk.set(b"CA".to_vec(), caption);
                 mk.set(b"TP".to_vec(), layout);
@@ -1773,7 +1773,7 @@ fn check_box_redraw_keeps_down_states_it_still_draws() {
         let mut d = Dict::new();
         d.set(b"Subtype".to_vec(), Object::name("Form"));
         d.set(b"BBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 20.into(), 20.into()]));
-        let r = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(d, b"0 0 20 20 re f\n".to_vec())));
+        let r = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(d, b"0 0 20 20 re f\n".to_vec())));
         down.set(state.to_vec(), Object::Ref(r));
     }
     ap.set(b"D".to_vec(), Object::Dict(down));
@@ -1841,7 +1841,7 @@ fn partial_appearance_keeps_custom_default_appearance_and_font_resources() {
     dr.set(b"Font".to_vec(), Object::Dict(fonts));
     doc.update_dict(af, |d| d.set(b"DR".to_vec(), Object::Dict(dr))).unwrap();
     let da = "/ProjectFont 13 Tf 0.15 g 2 Tc";
-    doc.update_dict(obj, |d| d.set(b"DA".to_vec(), pdfcraft_cos::PdfString::literal(da.as_bytes().to_vec()))).unwrap();
+    doc.update_dict(obj, |d| d.set(b"DA".to_vec(), taratasy_cos::PdfString::literal(da.as_bytes().to_vec()))).unwrap();
 
     let patch = LookPatch { border: Some(Some([1.0, 0.0, 0.0])), width: Some(3.0), ..Default::default() };
     set_props(&mut doc, "name", &FieldProps { appearance: Some(patch), ..Default::default() }).unwrap();
@@ -1895,7 +1895,7 @@ fn repeated_partial_appearance_edits_keep_the_default_appearance_one_operator_ea
 fn a_font_only_edit_leaves_the_widget_and_a_shared_indirect_border_untouched() {
     let mut doc = fixture();
     let widgets = field(&fields(&doc), "size").widgets.clone();
-    let mut mk = pdfcraft_cos::Dict::new();
+    let mut mk = taratasy_cos::Dict::new();
     mk.set(b"BC".to_vec(), Object::Array(vec![0.into(), 0.into(), 1.into()]));
     let shared = doc.add(Object::Dict(mk));
     for w in &widgets {
@@ -1923,14 +1923,14 @@ fn partial_appearance_preserves_each_widgets_indirect_colours_and_border_extensi
     let widgets = field(&fields(&doc), "size").widgets.clone();
     let mut refs = Vec::new();
     for (i, widget) in widgets.iter().enumerate() {
-        let mut mk = pdfcraft_cos::Dict::new();
+        let mut mk = taratasy_cos::Dict::new();
         mk.set(b"BG".to_vec(), Object::Array(vec![Object::Real(i as f64), 0.into(), 1.into()]));
         mk.set(b"BC".to_vec(), Object::Array(vec![0.into(), Object::Real(i as f64), 0.into()]));
-        mk.set(b"CA".to_vec(), pdfcraft_cos::PdfString::text("l"));
+        mk.set(b"CA".to_vec(), taratasy_cos::PdfString::text("l"));
         mk.set(b"R".to_vec(), Object::Int(90));
         mk.set(b"VendorKey".to_vec(), Object::Int(71));
         let mk_ref = doc.add(Object::Dict(mk));
-        let mut bs = pdfcraft_cos::Dict::new();
+        let mut bs = taratasy_cos::Dict::new();
         bs.set(b"S".to_vec(), Object::name("D"));
         bs.set(b"W".to_vec(), Object::Real(1.0));
         bs.set(b"D".to_vec(), Object::Array(vec![4.into(), 2.into()]));
@@ -1940,7 +1940,7 @@ fn partial_appearance_preserves_each_widgets_indirect_colours_and_border_extensi
         doc.update_dict(widget.obj, |d| {
             d.set(b"MK".to_vec(), Object::Ref(mk_ref));
             d.set(b"BS".to_vec(), Object::Ref(bs_ref));
-            d.set(b"DA".to_vec(), pdfcraft_cos::PdfString::text(da));
+            d.set(b"DA".to_vec(), taratasy_cos::PdfString::text(da));
         })
         .unwrap();
         refs.push(mk_ref);
@@ -1981,8 +1981,8 @@ fn partial_appearance_preserves_each_widgets_indirect_colours_and_border_extensi
 fn a_whole_look_keeps_the_rest_of_an_indirect_mk() {
     let mut doc = fixture();
     let widget = field(&fields(&doc), "agree").widgets[0].obj;
-    let mut mk = pdfcraft_cos::Dict::new();
-    mk.set(b"CA".to_vec(), pdfcraft_cos::PdfString::text("8"));
+    let mut mk = taratasy_cos::Dict::new();
+    mk.set(b"CA".to_vec(), taratasy_cos::PdfString::text("8"));
     mk.set(b"R".to_vec(), Object::Int(90));
     mk.set(b"VendorKey".to_vec(), Object::Int(71));
     let mk_ref = doc.add(Object::Dict(mk));
@@ -2040,8 +2040,8 @@ fn invalid_appearance_patches_are_refused_before_anything_is_written() {
 fn page_shapes_preserves_closed_path_rectangle_height() {
     let shapes = |content: &[u8]| {
         let mut doc = fixture();
-        let page = pdfcraft_model::pages(&doc)[0].obj;
-        let stream = doc.add(Object::Stream(pdfcraft_cos::Stream::flate(Default::default(), content)));
+        let page = taratasy_model::pages(&doc)[0].obj;
+        let stream = doc.add(Object::Stream(taratasy_cos::Stream::flate(Default::default(), content)));
         doc.update_dict(page, |d| d.set(b"Contents".to_vec(), Object::Ref(stream))).unwrap();
         crate::detect::page_shapes(&doc, 0)
     };
@@ -2055,8 +2055,8 @@ fn page_shapes_preserves_closed_path_rectangle_height() {
 
 fn detection_test_shapes(content: &[u8]) -> crate::detect::Shapes {
     let mut doc = fixture();
-    let page = pdfcraft_model::pages(&doc)[0].obj;
-    let stream = doc.add(Object::Stream(pdfcraft_cos::Stream::flate(Default::default(), content)));
+    let page = taratasy_model::pages(&doc)[0].obj;
+    let stream = doc.add(Object::Stream(taratasy_cos::Stream::flate(Default::default(), content)));
     doc.update_dict(page, |d| d.set(b"Contents".to_vec(), Object::Ref(stream))).unwrap();
     crate::detect::page_shapes(&doc, 0)
 }
@@ -2140,7 +2140,7 @@ fn page_shapes_closes_only_last_stroked_subpath_but_all_filled_subpaths() {
 #[test]
 fn auto_text_size_fits_single_and_multiline_text() {
     use crate::appearance::auto_text_size;
-    use pdfcraft_fonts::{helvetica_width, wrap_with};
+    use taratasy_fonts::{helvetica_width, wrap_with};
     let long = "Weekly progress and diligence: CoBank refi, IL and Redwood Falls";
     // Single line: the height's size for short text, shrunk to the width for long text.
     assert_eq!(auto_text_size("Hi", 94.0, 8.0, false, helvetica_width), 8.0 / 1.15);

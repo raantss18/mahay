@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pdfcraft_cos::{Document, Object, SaveOptions, write_full, write_incremental};
+use taratasy_cos::{Document, Object, SaveOptions, write_full, write_incremental};
 
 use super::*;
 
@@ -278,11 +278,11 @@ fn inserts_blank_page() {
 fn document_info_edits_round_trip_with_unicode() {
     let mut doc = open(fixture());
     set_info(&mut doc, "Title", "Résumé — 履歴書").unwrap();
-    set_info(&mut doc, "Author", "PdfCraft").unwrap();
+    set_info(&mut doc, "Author", "Taratasy").unwrap();
     set_info(&mut doc, "Producer", "").unwrap(); // clearing removes the key
     let doc = save_and_reopen(&doc);
     assert_eq!(info(&doc, "Title").as_deref(), Some("Résumé — 履歴書"));
-    assert_eq!(info(&doc, "Author").as_deref(), Some("PdfCraft"));
+    assert_eq!(info(&doc, "Author").as_deref(), Some("Taratasy"));
     assert_eq!(info(&doc, "Producer"), None);
 }
 
@@ -353,14 +353,14 @@ fn doc_with_xmp(xmp: &[u8]) -> Document {
     let mut dict = Dict::new();
     dict.set(b"Type".to_vec(), Object::name("Metadata"));
     dict.set(b"Subtype".to_vec(), Object::name("XML"));
-    let m = doc.add(Object::Stream(pdfcraft_cos::Stream::flate(dict, xmp)));
+    let m = doc.add(Object::Stream(taratasy_cos::Stream::flate(dict, xmp)));
     let root = doc.root().unwrap();
     doc.update_dict(root, |c| c.set(b"Metadata".to_vec(), Object::Ref(m))).unwrap();
     full_roundtrip(&doc)
 }
 
 /// The catalog's metadata stream.
-fn xmp_stream(doc: &Document) -> Option<pdfcraft_cos::Stream> {
+fn xmp_stream(doc: &Document) -> Option<taratasy_cos::Stream> {
     match &*doc.get(catalog(doc).reference(b"Metadata")?) {
         Object::Stream(s) => Some(s.clone()),
         _ => None,
@@ -1598,7 +1598,7 @@ fn page_label_limits_reject_cyclic_old_trees_without_rewriting() {
 fn page_label_limits_reject_oversized_old_arrays_without_rewriting() {
     let mut d = doc_a();
     let mut dict = Dict::new();
-    dict.set(b"Kids".to_vec(), Object::Array(vec![Object::Null; pdfcraft_cos::page_labels::MAX_LABEL_TREE_WORK + 1]));
+    dict.set(b"Kids".to_vec(), Object::Array(vec![Object::Null; taratasy_cos::page_labels::MAX_LABEL_TREE_WORK + 1]));
     let tree = d.add(Object::Dict(dict));
     d.update_dict(d.root().unwrap(), |c| c.set(b"PageLabels".to_vec(), Object::Ref(tree))).unwrap();
     let before = d.modified_objects();
@@ -1739,7 +1739,7 @@ fn page_label_missing_kids_are_not_a_cycle() {
     leaf.set(b"Nums".to_vec(), Object::Array(vec![Object::Int(0), Object::Dict(spec)]));
     let leaf = d.add(Object::Dict(leaf));
     let mut tree = Dict::new();
-    let missing = |n| Object::Ref(pdfcraft_cos::ObjRef { num: n, generation: 0 });
+    let missing = |n| Object::Ref(taratasy_cos::ObjRef { num: n, generation: 0 });
     tree.set(b"Kids".to_vec(), Object::Array(vec![missing(9_000), missing(9_001), Object::Ref(leaf)]));
     let tree = d.add(Object::Dict(tree));
     d.update_dict(d.root().unwrap(), |c| c.set(b"PageLabels".to_vec(), Object::Ref(tree))).unwrap();
@@ -1838,7 +1838,7 @@ fn page_label_prefixes_are_bounded_in_total() {
     assert!(crate::number_pages(&mut d, 0, 1, crate::LabelStyle::Decimal, "", 1).is_err());
     assert_eq!(d.modified_objects(), before, "a refused relabelling changes nothing");
     // Exactly 4 MiB of prefixes is still read.
-    let max = pdfcraft_cos::page_labels::MAX_PREFIX_TOTAL_BYTES / 1024;
+    let max = taratasy_cos::page_labels::MAX_PREFIX_TOTAL_BYTES / 1024;
     assert!(crate::page_labels(&shared(max as i64, 1024)).unwrap().iter().all(|l| l.len() == 1024));
 }
 
@@ -1939,9 +1939,9 @@ fn initial_view_round_trips_and_keeps_scripts() {
     // A script opening action survives a change that needs no destination.
     let mut doc = doc;
     let root = doc.root().unwrap();
-    let mut js = pdfcraft_cos::Dict::new();
+    let mut js = taratasy_cos::Dict::new();
     js.set(b"S".to_vec(), Object::name("JavaScript"));
-    js.set(b"JS".to_vec(), pdfcraft_cos::PdfString::text("app.alert('hi')"));
+    js.set(b"JS".to_vec(), taratasy_cos::PdfString::text("app.alert('hi')"));
     doc.update_dict(root, |c| c.set(b"OpenAction".to_vec(), Object::Dict(js))).unwrap();
     crate::set_initial_view(&mut doc, &crate::InitialView { layout: Layout::SinglePage, ..Default::default() }).unwrap();
     assert!(doc.get(root).as_dict().unwrap().get(b"OpenAction").and_then(|o| o.as_dict()).is_some_and(|d| d.name(b"S") == Some(b"JavaScript")));
@@ -2085,20 +2085,20 @@ fn extract_still_prunes_page_xobjects_when_type3_resources_are_separate() {
 
 fn doc_type3_glyph_form_with_shared_resources(cycle: bool) -> Document {
     let mut doc = doc_type3_shared_xobjects("<< >>");
-    let mut resources = pdfcraft_cos::Dict::new();
+    let mut resources = taratasy_cos::Dict::new();
     resources.set(b"XObject".to_vec(), Object::Ref(ObjRef::new(6, 0)));
-    let mut form = pdfcraft_cos::Dict::new();
+    let mut form = taratasy_cos::Dict::new();
     form.set(b"Type".to_vec(), Object::name("XObject"));
     form.set(b"Subtype".to_vec(), Object::name("Form"));
     form.set(b"BBox".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(0), Object::Int(1), Object::Int(1)]));
     form.set(b"Resources".to_vec(), Object::Dict(resources));
-    let form = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(form, b"/ImB Do".to_vec())));
-    let mut xobjects = pdfcraft_cos::Dict::new();
+    let form = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(form, b"/ImB Do".to_vec())));
+    let mut xobjects = taratasy_cos::Dict::new();
     xobjects.set(b"Fm".to_vec(), Object::Ref(form));
-    let mut resources = pdfcraft_cos::Dict::new();
+    let mut resources = taratasy_cos::Dict::new();
     resources.set(b"XObject".to_vec(), Object::Dict(xobjects));
     doc.update_dict(ObjRef::new(7, 0), |font| font.set(b"Resources".to_vec(), Object::Dict(resources))).unwrap();
-    doc.set(ObjRef::new(8, 0), Object::Stream(pdfcraft_cos::Stream::from_raw(pdfcraft_cos::Dict::new(), b"1 0 0 0 1 1 d1 /Fm Do".to_vec())));
+    doc.set(ObjRef::new(8, 0), Object::Stream(taratasy_cos::Stream::from_raw(taratasy_cos::Dict::new(), b"1 0 0 0 1 1 d1 /Fm Do".to_vec())));
     if cycle {
         doc.update_dict(ObjRef::new(6, 0), |xobjects| xobjects.set(b"Again".to_vec(), Object::Ref(form))).unwrap();
     }
@@ -2144,12 +2144,12 @@ fn doc_type3_resources_of_undecodable_content(form: bool) -> Document {
         resources.remove(b"Font");
     })
     .unwrap();
-    doc.set(ObjRef::new(4, 0), Object::Stream(pdfcraft_cos::Stream::from_raw(pdfcraft_cos::Dict::new(), b"/ImA Do".to_vec())));
-    let mut fonts = pdfcraft_cos::Dict::new();
+    doc.set(ObjRef::new(4, 0), Object::Stream(taratasy_cos::Stream::from_raw(taratasy_cos::Dict::new(), b"/ImA Do".to_vec())));
+    let mut fonts = taratasy_cos::Dict::new();
     fonts.set(b"T3".to_vec(), Object::Ref(ObjRef::new(7, 0)));
-    let mut glyph_resources = pdfcraft_cos::Dict::new();
+    let mut glyph_resources = taratasy_cos::Dict::new();
     glyph_resources.set(b"Font".to_vec(), Object::Dict(fonts));
-    let mut unreadable = pdfcraft_cos::Dict::new();
+    let mut unreadable = taratasy_cos::Dict::new();
     unreadable.set(b"Filter".to_vec(), Object::name("NoSuchFilter"));
     if form {
         unreadable.set(b"Type".to_vec(), Object::name("XObject"));
@@ -2157,18 +2157,18 @@ fn doc_type3_resources_of_undecodable_content(form: bool) -> Document {
         unreadable.set(b"BBox".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(0), Object::Int(200), Object::Int(200)]));
         unreadable.set(b"Resources".to_vec(), Object::Dict(glyph_resources.clone()));
     }
-    let unreadable = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(unreadable, b"BT /T3 50 Tf 50 80 Td (A) Tj ET".to_vec())));
+    let unreadable = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(unreadable, b"BT /T3 50 Tf 50 80 Td (A) Tj ET".to_vec())));
     let (contents, resources) = if form {
-        let contents = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(pdfcraft_cos::Dict::new(), b"/Fm Do".to_vec())));
-        let mut xobjects = pdfcraft_cos::Dict::new();
+        let contents = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(taratasy_cos::Dict::new(), b"/Fm Do".to_vec())));
+        let mut xobjects = taratasy_cos::Dict::new();
         xobjects.set(b"Fm".to_vec(), Object::Ref(unreadable));
-        let mut resources = pdfcraft_cos::Dict::new();
+        let mut resources = taratasy_cos::Dict::new();
         resources.set(b"XObject".to_vec(), Object::Dict(xobjects));
         (contents, resources)
     } else {
         (unreadable, glyph_resources)
     };
-    let mut page = pdfcraft_cos::Dict::new();
+    let mut page = taratasy_cos::Dict::new();
     page.set(b"Type".to_vec(), Object::name("Page"));
     page.set(b"Parent".to_vec(), Object::Ref(ObjRef::new(2, 0)));
     page.set(b"Contents".to_vec(), Object::Ref(contents));
@@ -2201,7 +2201,7 @@ fn extract_keeps_type3_glyph_resources_of_an_undecodable_form() {
 #[test]
 fn extract_still_prunes_separate_resources_when_many_pages_share_a_type3_font() {
     let mut src = doc_type3_shared_xobjects("<< /XObject << /ImB 10 0 R >> >>");
-    src.set(ObjRef::new(4, 0), Object::Stream(pdfcraft_cos::Stream::from_raw(pdfcraft_cos::Dict::new(), b"/ImA Do".to_vec())));
+    src.set(ObjRef::new(4, 0), Object::Stream(taratasy_cos::Stream::from_raw(taratasy_cos::Dict::new(), b"/ImA Do".to_vec())));
     let page = src.get(ObjRef::new(3, 0)).as_dict().unwrap().clone();
     let mut kids = vec![Object::Ref(ObjRef::new(3, 0))];
     for _ in 1..4_000 {
@@ -2219,11 +2219,11 @@ fn extract_still_prunes_separate_resources_when_many_pages_share_a_type3_font() 
 
 // Both sides of the comparison go through the same pdftoppm, so the assertion is about our two
 // documents rather than about Poppler's output, and no Poppler version can change the verdict.
-// It skips where pdftoppm is absent and fails where PDFCRAFT_ORACLES_REQUIRED is set.
+// It skips where pdftoppm is absent and fails where TARATASY_ORACLES_REQUIRED is set.
 #[test]
 fn extract_type3_shared_xobjects_matches_poppler_pixels() {
-    let pdftoppm = pdfcraft_oracle::or_skip!(pdfcraft_oracle::pdftoppm());
-    let dir = std::env::temp_dir().join(format!("pdfcraft-type3-extract-{}", std::process::id()));
+    let pdftoppm = taratasy_oracle::or_skip!(taratasy_oracle::pdftoppm());
+    let dir = std::env::temp_dir().join(format!("taratasy-type3-extract-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let fixtures = [
         doc_type3_shared_xobjects("<< /XObject 6 0 R >>"),

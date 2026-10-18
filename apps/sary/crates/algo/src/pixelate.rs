@@ -3,7 +3,7 @@
 //! Cell layouts are anchored at the reference bounds' origin and random
 //! choices hash document coordinates, so output is independent of tiling.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 mod facet;
 #[cfg(test)]

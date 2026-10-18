@@ -4,14 +4,14 @@
 //! there is no GPU adapter.
 
 use eframe::egui_wgpu::RenderState;
-use photocraft_color::{Color, ColorMode, SampleType};
-use photocraft_doc::{Document, Size};
-use photocraft_gpu::Fault;
-use photocraft_ui_egui::gpu_canvas::{self, GpuCanvas};
-use photocraft_ui_egui::{PhotocraftApp, gpu_status};
+use sary_color::{Color, ColorMode, SampleType};
+use sary_doc::{Document, Size};
+use sary_gpu::Fault;
+use sary_ui_egui::gpu_canvas::{self, GpuCanvas};
+use sary_ui_egui::{SaryApp, gpu_status};
 use serde_json::json;
 
-use photocraft_testkit::gpu_lock;
+use sary_testkit::gpu_lock;
 
 fn render_state() -> Option<RenderState> {
     let rs =
@@ -32,16 +32,16 @@ fn composite_reuse_reports_held_bytes_and_honors_the_canvas_override() {
     let Some(rs) = render_state() else { return };
     let g = GpuCanvas::new(&rs);
     let mut d = doc();
-    d.layers.push(photocraft_doc::Layer::new("top", photocraft_doc::LayerContent::Fill(photocraft_doc::Fill::Solid(Color::rgba(0.8, 0.1, 0.2, 0.5)))));
+    d.layers.push(sary_doc::Layer::new("top", sary_doc::LayerContent::Fill(sary_doc::Fill::Solid(Color::rgba(0.8, 0.1, 0.2, 0.5)))));
     g.set_memory_budget(1 << 30);
     g.set_composite_cache_budget(0);
     assert_eq!(g.composite(&d, d.bounds(), false).unwrap().prefix_hits, 0);
     assert_eq!(g.compositor_bytes().unwrap().1, 0, "no effect maps or composite chunks");
     g.set_composite_cache_budget(512 << 20);
     assert_eq!(g.composite(&d, d.bounds(), false).unwrap().prefix_hits, 0);
-    let bpp = if photocraft_gpu::Compositor::preferred_acc_format(&rs.adapter) == eframe::wgpu::TextureFormat::Rgba32Float { 16 } else { 8 };
+    let bpp = if sary_gpu::Compositor::preferred_acc_format(&rs.adapter) == eframe::wgpu::TextureFormat::Rgba32Float { 16 } else { 8 };
     // The cache holds whole chunk-aligned cells, not the document's exact rectangle.
-    let cell = u64::from(photocraft_gpu::CHUNK);
+    let cell = u64::from(sary_gpu::CHUNK);
     let cells = u64::from(d.size.width).div_ceil(cell) * cell * u64::from(d.size.height).div_ceil(cell) * cell;
     assert_eq!(g.compositor_bytes().unwrap().1 as u64, cells * bpp);
     d.layers[1].opacity = 0.4;
@@ -89,7 +89,7 @@ fn destroyed_device_falls_back_without_panicking() {
     let mut d2 = d.clone();
     d2.layers[0].opacity = 0.5;
     for _ in 0..3 {
-        let r = g.refresh(key, &d2, Some(photocraft_geom::Rect::new(0, 0, 50, 50)), None);
+        let r = g.refresh(key, &d2, Some(sary_geom::Rect::new(0, 0, 50, 50)), None);
         if r.kind == "lost" {
             break;
         }
@@ -103,7 +103,7 @@ fn destroyed_device_falls_back_without_panicking() {
 fn app_switches_to_the_cpu_canvas_and_keeps_the_documents() {
     let _gpu = gpu_lock();
     let Some(rs) = render_state() else { return };
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), photocraft_ui_egui::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), sary_ui_egui::Services::default());
     app.set_wgpu(rs);
     app.run("file.new", json!({"width": 320, "height": 240})).unwrap();
     app.sync_views();
@@ -113,18 +113,18 @@ fn app_switches_to_the_cpu_canvas_and_keeps_the_documents() {
     let flag = started.clone();
     app.on_started(move |_| flag.set(true));
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1000.0, 700.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
             }
             app.check_gpu(&ctx);
-            egui::CentralPanel::default().show(ui, |ui| photocraft_ui_egui::canvas::document_area(app, ui));
+            egui::CentralPanel::default().show(ui, |ui| sary_ui_egui::canvas::document_area(app, ui));
             app.check_gpu(&ctx);
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, photocraft_ui_egui::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, sary_ui_egui::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     assert!(h.state().gpu_active(), "GPU canvas in use before the loss");
     // The device is lost (e.g. the OS killed a huge submission).
@@ -153,7 +153,7 @@ fn app_switches_to_the_cpu_canvas_and_keeps_the_documents() {
 
 #[test]
 fn started_hook_runs_once_after_the_first_frames() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), photocraft_ui_egui::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), sary_ui_egui::Services::default());
     let runs = std::rc::Rc::new(std::cell::Cell::new(0));
     let r = runs.clone();
     app.on_started(move |_| r.set(r.get() + 1));
@@ -172,7 +172,7 @@ fn started_hook_runs_once_after_the_first_frames() {
 
 #[test]
 fn system_info_lists_the_graphics_state() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), photocraft_ui_egui::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), sary_ui_egui::Services::default());
     app.perf.gpu_info.adapter = "Test GPU".into();
     app.perf.gpu_info.backend = "dx12".into();
     app.perf.gpu_info.preference = "auto".into();

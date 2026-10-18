@@ -1,8 +1,8 @@
 //! Review tab: protection, spelling (basic), workbook statistics, comment navigation and the
 //! Comments pane, Show All Notes and Convert to Comments.
 
-use gridcraft_core::CellRef;
-use gridcraft_model::{EditRange, PasswordHash, SheetProtection, Visibility, password_hash};
+use tabilao_core::CellRef;
+use tabilao_model::{EditRange, PasswordHash, SheetProtection, Visibility, password_hash};
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -187,8 +187,8 @@ fn unprotect_sheet(s: &mut Session, p: &Json) -> Result<Json> {
 fn new_password_hash(d: &DocState, what: &str, pw: &str) -> PasswordHash {
     static SALT_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let n = SALT_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let seed = format!("{what}\u{0}{n}\u{0}{}\u{0}{}", d.uid, gridcraft_calc::now_serial().to_bits());
-    PasswordHash::new_sha512(pw, &gridcraft_model::password::salt_from(seed.as_bytes()))
+    let seed = format!("{what}\u{0}{n}\u{0}{}\u{0}{}", d.uid, tabilao_calc::now_serial().to_bits());
+    PasswordHash::new_sha512(pw, &tabilao_model::password::salt_from(seed.as_bytes()))
 }
 
 fn range_text(r: &EditRange) -> String {
@@ -412,7 +412,7 @@ mod tests {
         assert_eq!(s.doc().unwrap().wb.active().unwrap().protection.as_ref(), Some(&prot));
         s.execute("review.unprotectSheet", json!({"password": "pa55"})).unwrap();
         assert!(!s.doc().unwrap().wb.active().unwrap().is_protected());
-        // A GridCraft JSON workbook saved before carried the internal hash under `password_hash`.
+        // A Tabilao JSON workbook saved before carried the internal hash under `password_hash`.
         let old = format!(
             r#"{{"password_hash": {}, "select_locked": true, "select_unlocked": true, "format_cells": false, "format_columns": false, "format_rows": false, "insert_columns": false, "insert_rows": false, "delete_columns": false, "delete_rows": false, "sort": false, "autofilter": false}}"#,
             password_hash("old")

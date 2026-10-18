@@ -3,9 +3,9 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use gridcraft_core::{CellRef, RangeRef, Value};
-use gridcraft_model::{Sheet, Workbook};
-use gridcraft_numfmt::{Formatted, NumberFormat, format_value};
+use tabilao_core::{CellRef, RangeRef, Value};
+use tabilao_model::{Sheet, Workbook};
+use tabilao_numfmt::{Formatted, NumberFormat, format_value};
 
 /// Parsed number formats are cached by code.
 fn parsed(code: &str) -> NumberFormat {
@@ -46,12 +46,12 @@ pub fn edit_text(wb: &Workbook, sheet: &Sheet, c: CellRef) -> String {
     if cell.formula.is_some() || !parsed(code).is_date() {
         return raw;
     }
-    let reads_back = |s: &str| matches!(gridcraft_core::parse::parse_input(s, wb.date_system).value, Value::Number(m) if (m - n).abs() < 1e-9);
+    let reads_back = |s: &str| matches!(tabilao_core::parse::parse_input(s, wb.date_system).value, Value::Number(m) if (m - n).abs() < 1e-9);
     let shown = format(&cell.value, code, wb).text;
     if reads_back(&shown) {
         return shown;
     }
-    let Some(dt) = gridcraft_core::date::datetime_from_serial(wb.date_system, *n) else { return raw };
+    let Some(dt) = tabilao_core::date::datetime_from_serial(wb.date_system, *n) else { return raw };
     let time = format!("{:02}:{:02}:{:02}", dt.hour, dt.minute, dt.second);
     let date = format!("{:04}-{:02}-{:02}", dt.year, dt.month, dt.day);
     let iso = if *n < 1.0 {

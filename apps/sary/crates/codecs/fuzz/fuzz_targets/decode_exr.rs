@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use photocraft_codecs::{decode_as_with, DecodeOptions, Format, Limits};
+use sary_codecs::{decode_as_with, DecodeOptions, Format, Limits};
 
 fuzz_target!(|data: &[u8]| {
     let opts = DecodeOptions {

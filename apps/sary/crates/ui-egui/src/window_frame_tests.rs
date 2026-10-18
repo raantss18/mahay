@@ -9,7 +9,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::Services;
 
 #[test]
@@ -22,7 +22,7 @@ fn the_window_frame_service_runs_every_raw_input_hook() {
         })),
         ..Default::default()
     };
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+    let mut app = SaryApp::new(sary_engine::Session::new(), services);
     let ctx = egui::Context::default();
     for _ in 0..3 {
         eframe::App::raw_input_hook(&mut app, &ctx, &mut egui::RawInput::default());
@@ -34,7 +34,7 @@ fn the_window_frame_service_runs_every_raw_input_hook() {
 fn no_window_frame_service_is_fine() {
     // Decorated windows (the system title bar preference) and non-Windows platforms leave the
     // service unset; the hook must simply do nothing.
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), Services::default());
     let ctx = egui::Context::default();
     eframe::App::raw_input_hook(&mut app, &ctx, &mut egui::RawInput::default());
 }

@@ -1,7 +1,7 @@
 //! Smoothing is a tool option: the Brush starts at Photoshop's 10 %, and picking a brush preset
 //! keeps the current smoothing (amount and mode) instead of taking the preset's.
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 #[test]
@@ -48,9 +48,9 @@ fn smoothing_switch_is_drivable_and_presets_keep_the_disabled_settings() {
 fn an_explicit_stroke_smoothing_amount_overrides_the_tool_switch() {
     let mut s = Session::new();
     s.execute("tools.setBrush", json!({"brush": {"smoothing": {"enabled": false, "amount": 0.6}}})).unwrap();
-    let inherited = photocraft_engine::brush_cmds::resolve_brush(&s, &json!({}), "paint.stroke").unwrap();
+    let inherited = sary_engine::brush_cmds::resolve_brush(&s, &json!({}), "paint.stroke").unwrap();
     assert!(!inherited.smoothing.enabled && inherited.smoothing.amount == 0.6);
-    let explicit = photocraft_engine::brush_cmds::resolve_brush(&s, &json!({"smoothing": 0.4}), "paint.stroke").unwrap();
+    let explicit = sary_engine::brush_cmds::resolve_brush(&s, &json!({"smoothing": 0.4}), "paint.stroke").unwrap();
     assert!(explicit.smoothing.enabled && explicit.smoothing.amount == 0.4);
     assert!(!s.tools.brush.smoothing.enabled, "a stroke override does not change the tool");
 }

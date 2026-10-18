@@ -1,5 +1,5 @@
 //! Paths stored in a document reach the file system only through [`resolve`] (built on
-//! [`photocraft_io::doc_path::resolve`]): linked smart objects, the Displace map and Color Lookup
+//! [`sary_io::doc_path::resolve`]): linked smart objects, the Displace map and Color Lookup
 //! file a smart filter re-reads, data-set images and video footage. A refused path is handled like
 //! a missing file: the layer keeps its last rendering, and commands that need the file say why.
 //!
@@ -11,7 +11,7 @@
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 
-pub use photocraft_io::doc_path::NotFollowed;
+pub use sary_io::doc_path::NotFollowed;
 
 thread_local! {
     static DOCUMENT: RefCell<Option<PathBuf>> = const { RefCell::new(None) };
@@ -46,7 +46,7 @@ pub fn resolve(stored: &str) -> Result<PathBuf, NotFollowed> {
 
 /// The file to open for `stored`, a path stored in the document saved at `document`.
 pub fn resolve_in(stored: &str, document: Option<&Path>) -> Result<PathBuf, NotFollowed> {
-    photocraft_io::doc_path::resolve(stored, document)
+    sary_io::doc_path::resolve(stored, document)
 }
 
 /// The message for a stored path that is not followed.

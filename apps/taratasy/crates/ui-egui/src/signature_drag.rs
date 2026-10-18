@@ -1,8 +1,8 @@
 //! Cached page/image layers: a signature follows each pointer frame without editing the PDF.
 
 use egui::{ColorImage, TextureHandle, TextureOptions};
-use pdfcraft_engine::{Document, Edit};
-use pdfcraft_render::{RenderPool, RenderRequest};
+use taratasy_engine::{Document, Edit};
+use taratasy_render::{RenderPool, RenderRequest};
 
 use crate::QuickTool;
 use crate::comments::{CommentView, Gesture, PageCx};

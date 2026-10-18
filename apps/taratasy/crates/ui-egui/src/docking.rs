@@ -1,8 +1,8 @@
 //! Application panel identities and persistence around the shared docking renderer.
 //! Document contents remain owned by their existing view implementations.
 
-use craft_ui::docking::{Action, DockArea, DockStyle, Layout, Location, Node, PanelLimits, Permissions, Placement, Zone};
-use craft_ui::layout::{SplitAxis, SplitSize};
+use mahay_ui::docking::{Action, DockArea, DockStyle, Layout, Location, Node, PanelLimits, Permissions, Placement, Zone};
+use mahay_ui::layout::{SplitAxis, SplitSize};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -137,7 +137,7 @@ impl Workspace {
             }
             let mut probe = self.layout.clone();
             if let Err(error) = probe.restore(*panel, location)
-                && error != craft_ui::docking::DockError::MissingTarget
+                && error != mahay_ui::docking::DockError::MissingTarget
             {
                 return Err(error.to_string());
             }
@@ -294,12 +294,12 @@ impl Workspace {
     }
 }
 
-fn sync(workspace: &mut Workspace, app: &crate::PdfCraftApp) -> Result<(), String> {
+fn sync(workspace: &mut Workspace, app: &crate::TaratasyApp) -> Result<(), String> {
     workspace.set_visible(Panel::Tools, app.left_open)?;
     workspace.set_visible(Panel::Inspector, app.right.is_some())
 }
 
-fn drain_reveals(workspace: &mut Workspace, app: &mut crate::PdfCraftApp) {
+fn drain_reveals(workspace: &mut Workspace, app: &mut crate::TaratasyApp) {
     for panel in std::mem::take(&mut app.pending_panel_reveals) {
         if workspace.layout.contains(&panel) {
             let _ = workspace.apply(Action::Activate { panel });
@@ -307,7 +307,7 @@ fn drain_reveals(workspace: &mut Workspace, app: &mut crate::PdfCraftApp) {
     }
 }
 
-fn publish_visibility(app: &mut crate::PdfCraftApp, workspace: &Workspace) {
+fn publish_visibility(app: &mut crate::TaratasyApp, workspace: &Workspace) {
     app.left_open = workspace.layout.contains(&Panel::Tools);
     if !workspace.layout.contains(&Panel::Inspector) {
         if app.right.is_some() {
@@ -318,7 +318,7 @@ fn publish_visibility(app: &mut crate::PdfCraftApp, workspace: &Workspace) {
     }
 }
 
-pub fn command(app: &mut crate::PdfCraftApp, reset: bool, params: &Value) -> Result<Value, String> {
+pub fn command(app: &mut crate::TaratasyApp, reset: bool, params: &Value) -> Result<Value, String> {
     let mut workspace = app.docking.clone();
     if reset {
         workspace = Workspace::default();
@@ -366,7 +366,7 @@ fn saved_split_path(saved: &Layout<Panel>, rendered: &Layout<Panel>, path: &[boo
     None
 }
 
-pub fn show(app: &mut crate::PdfCraftApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut crate::TaratasyApp, ui: &mut egui::Ui) {
     let t = crate::theme::Tokens::get(ui.ctx());
     let mut workspace = std::mem::take(&mut app.docking);
     if let Err(error) = workspace.validate().and_then(|()| sync(&mut workspace, app)) {
@@ -396,7 +396,7 @@ pub fn show(app: &mut crate::PdfCraftApp, ui: &mut egui::Ui) {
         // Availability is a render projection: the saved group, selection and width survive Home.
         let _ = rendered.apply(Action::Close { panel: Panel::Inspector });
     }
-    let output = DockArea::new(egui::Id::new("pdfcraft-docking")).show_with_limits(
+    let output = DockArea::new(egui::Id::new("taratasy-docking")).show_with_limits(
         ui,
         &rendered,
         &style,
@@ -417,7 +417,7 @@ pub fn show(app: &mut crate::PdfCraftApp, ui: &mut egui::Ui) {
             }
             Panel::Tools => crate::panels::left_panel(app, ui),
             Panel::Inspector => {
-                ui.data_mut(|data| data.insert_temp(egui::Id::new("pdfcraft-inspector-body"), ui.max_rect()));
+                ui.data_mut(|data| data.insert_temp(egui::Id::new("taratasy-inspector-body"), ui.max_rect()));
                 crate::panels::right_panel(app, ui);
             }
         },
@@ -487,8 +487,8 @@ mod tests {
                     SplitSize::FixedFirst(272.0),
                     Node::Stack {
                         entries: vec![
-                            craft_ui::docking::StackEntry { panel: Panel::Tools, open: true, height: None },
-                            craft_ui::docking::StackEntry { panel: Panel::Inspector, open: false, height: None },
+                            mahay_ui::docking::StackEntry { panel: Panel::Tools, open: true, height: None },
+                            mahay_ui::docking::StackEntry { panel: Panel::Inspector, open: false, height: None },
                         ],
                     },
                     tabs(Panel::Canvas),

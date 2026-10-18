@@ -1,9 +1,9 @@
 //! Duplicated smart objects share their editable contents, but not instance settings (#2163).
 
-use photocraft_doc::{Layer, LayerContent, LayerId, SmartObject};
-use photocraft_engine::Session;
-use photocraft_engine::smart_cmds::{decode_source, source_bytes};
-use photocraft_geom::Rect;
+use sary_doc::{Layer, LayerContent, LayerId, SmartObject};
+use sary_engine::Session;
+use sary_engine::smart_cmds::{decode_source, source_bytes};
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
 fn session(depth: u64) -> (Session, u64, u64) {
@@ -31,7 +31,7 @@ fn smart(s: &Session, id: u64) -> &SmartObject {
 
 fn contents_pixel(s: &Session, id: u64) -> [f32; 4] {
     let (name, bytes) = source_bytes(&s.active().unwrap().doc.metadata, &smart(s, id).source).unwrap();
-    photocraft_compose::flatten(&decode_source(&name, &bytes).unwrap()).px[0]
+    sary_compose::flatten(&decode_source(&name, &bytes).unwrap()).px[0]
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn surviving_duplicate_receives_edits_after_originating_layer_is_deleted() {
 
 #[test]
 fn shared_and_independent_contents_survive_native_psd_and_psb() {
-    for format in ["pcraft", "psd", "psb"] {
+    for format in ["sary", "psd", "psb"] {
         let (mut s, original, duplicate) = session(16);
         let independent = s.execute("layer.smartObjects.newSmartObjectViaCopy", json!({"layer": original})).unwrap()["layer"].as_u64().unwrap();
         s.edit("name", |doc, _| {
@@ -107,13 +107,13 @@ fn shared_and_independent_contents_survive_native_psd_and_psb() {
         .unwrap();
         // Initially byte-identical independent copies must not be merged by blob deduplication.
         let doc = &s.active().unwrap().doc;
-        let back = if format == "pcraft" {
-            let bytes = photocraft_format::save_to_bytes(doc, &Default::default()).unwrap();
-            photocraft_format::load_from_bytes(&bytes).unwrap()
+        let back = if format == "sary" {
+            let bytes = sary_format::save_to_bytes(doc, &Default::default()).unwrap();
+            sary_format::load_from_bytes(&bytes).unwrap()
         } else {
-            let out = photocraft_io::export(doc, format, &Default::default()).unwrap();
+            let out = sary_io::export(doc, format, &Default::default()).unwrap();
             assert!(out.warnings.is_empty(), "{format}: {:?}", out.warnings);
-            photocraft_io::import(&format!("duplicates.{format}"), &out.bytes).unwrap().document
+            sary_io::import(&format!("duplicates.{format}"), &out.bytes).unwrap().document
         };
         let named = |name: &str| back.walk().into_iter().find(|(_, _, l)| l.name == name).unwrap().2.id.0;
         let (original, duplicate, independent) = (named("original"), named("duplicate"), named("independent"));
@@ -178,8 +178,8 @@ fn replacing_shared_contents_does_not_reuse_or_commit_a_stale_editor() {
     let (mut s, original, duplicate) = session(16);
     let child = s.execute("layer.smartObjects.editContents", json!({"layer": original})).unwrap()["document"].as_u64().unwrap() as usize;
     paint(&mut s, [0.0, 1.0, 0.0, 1.0]);
-    let path = std::env::temp_dir().join(format!("photocraft-shared-contents-{}-{original}.pcraft", std::process::id()));
-    std::fs::write(&path, photocraft_format::save_to_bytes(&s.active().unwrap().doc, &Default::default()).unwrap()).unwrap();
+    let path = std::env::temp_dir().join(format!("sary-shared-contents-{}-{original}.sary", std::process::id()));
+    std::fs::write(&path, sary_format::save_to_bytes(&s.active().unwrap().doc, &Default::default()).unwrap()).unwrap();
     paint(&mut s, [1.0, 0.0, 0.0, 1.0]);
     s.set_active(0);
     let replaced = s.execute("layer.smartObjects.replaceContents", json!({"layer": duplicate, "path": path}));
@@ -193,17 +193,17 @@ fn replacing_shared_contents_does_not_reuse_or_commit_a_stale_editor() {
     s.execute("file.close", json!({})).unwrap();
     assert_eq!(contents_pixel(&s, original), [0.0, 1.0, 0.0, 1.0]);
     s.execute("layer.smartObjects.editContents", json!({"layer": original})).unwrap();
-    assert_eq!(photocraft_compose::flatten(&s.active().unwrap().doc).px[0], [0.0, 1.0, 0.0, 1.0]);
+    assert_eq!(sary_compose::flatten(&s.active().unwrap().doc).px[0], [0.0, 1.0, 0.0, 1.0]);
 }
 
-/// A `.pcraft` file whose contents are one solid colour, for Replace Contents.
+/// A `.sary` file whose contents are one solid colour, for Replace Contents.
 fn contents_file(rgba: [f32; 4], tag: &str) -> std::path::PathBuf {
     let mut s = Session::new();
     s.execute("file.new", json!({"width": 8, "height": 6})).unwrap();
     s.execute("layer.new.layer", json!({})).unwrap();
     paint(&mut s, rgba);
-    let path = std::env::temp_dir().join(format!("photocraft-{tag}-{}.pcraft", std::process::id()));
-    std::fs::write(&path, photocraft_format::save_to_bytes(&s.active().unwrap().doc, &Default::default()).unwrap()).unwrap();
+    let path = std::env::temp_dir().join(format!("sary-{tag}-{}.sary", std::process::id()));
+    std::fs::write(&path, sary_format::save_to_bytes(&s.active().unwrap().doc, &Default::default()).unwrap()).unwrap();
     path
 }
 
@@ -230,9 +230,9 @@ fn inspect_and_replace_contents_report_shared_instances() {
         Ok(())
     })
     .unwrap();
-    let out = photocraft_io::export(&s.active().unwrap().doc, "psd", &Default::default()).unwrap();
+    let out = sary_io::export(&s.active().unwrap().doc, "psd", &Default::default()).unwrap();
     let mut s = Session::new();
-    s.add_document(photocraft_io::import("copies.psd", &out.bytes).unwrap().document, None);
+    s.add_document(sary_io::import("copies.psd", &out.bytes).unwrap().document, None);
 
     let tree = s.execute("document.inspect", json!({})).unwrap();
     let [o, d, i] = ["original", "duplicate", "independent"].map(|name| inspected(&tree["layers"], name).unwrap().clone());
@@ -261,11 +261,11 @@ fn inspect_and_replace_contents_report_shared_instances() {
 fn photoshop_placed_copies_import_as_shared_instances() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus/photoshop/smart-filters/sf-none-plain.psd");
     let bytes = std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e} (run `cargo xtask corpus --all`)", path.display()));
-    let mut file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
+    let mut file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
     let placed = file.layers().iter().find(|r| r.block(b"SoLd").is_some()).expect("a placed layer").clone();
     file.layers_mut().push(placed);
     let mut s = Session::new();
-    s.add_document(photocraft_io::psd_to_document(&file).0, None);
+    s.add_document(sary_io::psd_to_document(&file).0, None);
 
     let tree = s.execute("document.inspect", json!({})).unwrap();
     let copies: Vec<&Value> = tree["layers"].as_array().unwrap().iter().filter(|l| l["kind"] == "Smart Object").collect();

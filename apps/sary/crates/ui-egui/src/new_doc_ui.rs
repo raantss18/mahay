@@ -6,18 +6,18 @@
 use egui::{Align2, Rect, RichText, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Map, Value, json};
 
-use photocraft_engine::prefs::UnitsAndRulers;
+use sary_engine::prefs::UnitsAndRulers;
 
 use crate::theme::Tokens;
 use crate::{icons, widgets};
-use photocraft_engine::document_preset_cmds::DocumentSettings;
+use sary_engine::document_preset_cmds::DocumentSettings;
 
 /// A blank-document preset: (name, width px, height px, ppi).
 pub type Preset = (&'static str, u32, u32, f32);
 
 /// Photoshop's New Document categories and their blank-document presets.
 pub const CATEGORIES: &[(&str, &[Preset])] = &[
-    ("Recent", &[("Default PhotoCraft Size", 2100, 1500, 300.0), ("HDTV 1080p", 1920, 1080, 72.0)]),
+    ("Recent", &[("Default Sary Size", 2100, 1500, 300.0), ("HDTV 1080p", 1920, 1080, 72.0)]),
     (
         "Photo",
         &[
@@ -292,7 +292,7 @@ const SWATCH: f32 = 22.0;
 
 /// The colour the new document's background starts with: white, black, the captured or current
 /// toolbox background colour, or a custom `"#rrggbb"`; `None` for Transparent.
-fn background_rgb(app: &crate::PhotocraftApp, f: &Map<String, Value>) -> Option<[f32; 3]> {
+fn background_rgb(app: &crate::SaryApp, f: &Map<String, Value>) -> Option<[f32; 3]> {
     let bg = get_s(f, "background", "white");
     match bg.as_str() {
         "transparent" => None,
@@ -311,7 +311,7 @@ fn background_rgb(app: &crate::PhotocraftApp, f: &Map<String, Value>) -> Option<
 }
 
 /// Restore a snapshot without replacing the new document's name or its clipboard offer.
-pub fn apply_saved_preset(f: &mut Map<String, Value>, preset: &photocraft_engine::document_preset_cmds::DocumentPreset) {
+pub fn apply_saved_preset(f: &mut Map<String, Value>, preset: &sary_engine::document_preset_cmds::DocumentPreset) {
     apply_settings(f, &preset.settings);
     f.insert("__savedPreset".into(), json!(preset.name));
 }
@@ -408,7 +408,7 @@ fn recent_cards(f: &Map<String, Value>, recent: &[DocumentSettings], units: &Uni
     cards
 }
 
-fn saved_presets(app: &mut crate::PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) -> bool {
+fn saved_presets(app: &mut crate::SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) -> bool {
     let presets = app.session.presets.documents.clone();
     if presets.is_empty() {
         ui.label(tl!("No saved presets yet."));
@@ -449,7 +449,7 @@ fn saved_presets(app: &mut crate::PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<
     create
 }
 
-fn save_preset(app: &mut crate::PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+fn save_preset(app: &mut crate::SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     ui.add_space(12.0);
     if f.get("__savingPreset").and_then(Value::as_bool) != Some(true) {
         if widgets::secondary_button(ui, tl!("Save Preset…"), 240.0).clicked() {
@@ -494,7 +494,7 @@ fn save_preset(app: &mut crate::PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<St
 
 /// Returns whether a preset double-click requested creation, after applying its settings.
 /// A recent category click can make egui count the preset double-click as a triple-click.
-pub fn body(app: &mut crate::PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) -> bool {
+pub fn body(app: &mut crate::SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) -> bool {
     let t = Tokens::get(ui.ctx());
     let cat = get_s(f, "__category", "Recent");
     let mut create = false;
@@ -801,20 +801,20 @@ mod tests {
     #[test]
     fn tiny_size_in_inches_is_not_changed_by_showing_it() {
         use egui_kittest::Harness;
-        let app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let app = crate::SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let mut f = crate::state::UiState::new_document_fields();
         for (k, v) in [("width", json!(1)), ("height", json!(1)), ("resolution", json!(300.0)), ("__unit", json!("in"))] {
             f.insert(k.into(), v);
         }
         let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).build_ui_state(
-            |ui, (app, f): &mut (crate::PhotocraftApp, Map<String, Value>)| {
+            |ui, (app, f): &mut (crate::SaryApp, Map<String, Value>)| {
                 if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     body(app, ui, f);
                 }
             },
             (app, f),
         );
-        crate::PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        crate::SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(3);
         let p = command_params(&h.state().1);
         assert_eq!((p["width"].as_u64(), p["height"].as_u64()), (Some(1), Some(1)));
@@ -957,7 +957,7 @@ mod tests {
                 (CLIPBOARD, "20 x 30 px @ 72 ppi".to_string()),
                 ("Custom", "800 x 600 px @ 72 ppi".to_string()),
                 ("HDTV 1080p", "1920 x 1080 px @ 72 ppi".to_string()),
-                ("Default PhotoCraft Size", "7 x 5 in @ 300 ppi".to_string()),
+                ("Default Sary Size", "7 x 5 in @ 300 ppi".to_string()),
             ]
         );
         assert!(holds(&f, &settings(20, 30, 72.0)) && !holds(&f, &settings(800, 600, 72.0)));
@@ -966,7 +966,7 @@ mod tests {
     #[test]
     fn clipboard_preset_comes_first_and_is_selected() {
         // Nothing on the clipboard: the dialog opens as before.
-        let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = crate::SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let f = app.new_document_fields();
         assert_eq!(f, crate::state::UiState::new_document_fields());
         assert!(clipboard_preset(&f).is_none());
@@ -992,7 +992,7 @@ mod tests {
         assert_eq!(p["height"], 3508);
         assert_eq!(p["resolution"], 300.0);
         assert!(p.get("__preset").is_none() && p.get("__unit").is_none());
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", p).unwrap();
         let d = &s.active().unwrap().doc;
         assert_eq!((d.size.width, d.size.height, d.resolution_dpi), (2480, 3508, 300.0));
@@ -1000,7 +1000,7 @@ mod tests {
 
     #[test]
     fn saved_selection_restores_all_settings_but_keeps_the_document_name() {
-        let mut session = photocraft_engine::Session::new();
+        let mut session = sary_engine::Session::new();
         session
             .execute(
                 "document.presets.save",
@@ -1033,14 +1033,14 @@ mod tests {
     /// The real dialog (#254): a typed size must reach `file.new`, however it is confirmed.
     mod dialog {
         use super::super::{CATEGORIES, apply_preset};
-        use crate::PhotocraftApp;
+        use crate::SaryApp;
         use crate::state::{DialogKind, UiState};
         use egui::accesskit::Role;
         use egui_kittest::{Harness, kittest::Queryable};
         use std::sync::{Arc, Mutex};
 
         /// The real preference services, backed by an in-memory store shared across app restarts.
-        fn harness_with_store(store: &Arc<Mutex<Option<String>>>) -> Harness<'static, PhotocraftApp> {
+        fn harness_with_store(store: &Arc<Mutex<Option<String>>>) -> Harness<'static, SaryApp> {
             let (read, write) = (store.clone(), store.clone());
             let services = crate::Services {
                 load_prefs: Some(Box::new(move || read.lock().unwrap().clone())),
@@ -1050,7 +1050,7 @@ mod tests {
                 })),
                 ..Default::default()
             };
-            let app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+            let app = SaryApp::new(sary_engine::Session::new(), services);
             let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_ui_state(
                 |ui, app| {
                     crate::prefs_ui::tick(app, ui.ctx());
@@ -1058,7 +1058,7 @@ mod tests {
                 },
                 app,
             );
-            PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+            SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
             h.state_mut().ui.open_dialog(DialogKind::NewDocument, UiState::new_document_fields());
             h.run_steps(3);
             h
@@ -1088,7 +1088,7 @@ mod tests {
             assert_eq!(bg, "#336699");
             crate::dialogs::confirm(h.state_mut(), nd).unwrap();
             let doc = &h.state().session.active().unwrap().doc;
-            let px = photocraft_compose::flatten(doc).px[0];
+            let px = sary_compose::flatten(doc).px[0];
             assert!((px[0] * 255.0 - 51.0).abs() < 1.0 && (px[1] * 255.0 - 102.0).abs() < 1.0 && (px[2] * 255.0 - 153.0).abs() < 1.0, "{px:?}");
         }
 
@@ -1106,7 +1106,7 @@ mod tests {
             assert!((c[0] * 255.0 - 51.0).abs() < 1.0 && (c[1] * 255.0 - 102.0).abs() < 1.0 && (c[2] * 255.0 - 153.0).abs() < 1.0, "{c:?}");
         }
 
-        fn name_preset(h: &mut Harness<'static, PhotocraftApp>, name: &str) {
+        fn name_preset(h: &mut Harness<'static, SaryApp>, name: &str) {
             h.get_by_label("Save Preset…").click();
             h.run_steps(2);
             h.get_by_role_and_label(Role::TextInput, "Preset Name").click();
@@ -1187,19 +1187,19 @@ mod tests {
             assert_eq!(h.state().session.presets.documents.len(), 1);
         }
 
-        fn harness() -> Harness<'static, PhotocraftApp> {
-            let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        fn harness() -> Harness<'static, SaryApp> {
+            let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             let mut h = Harness::builder()
                 .with_size(egui::vec2(1400.0, 900.0))
                 .with_step_dt(1.0 / 60.0)
                 .build_ui_state(|ui, app| crate::dialogs::show(app, ui.ctx()), app);
-            PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+            SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
             h.state_mut().ui.open_dialog(DialogKind::NewDocument, UiState::new_document_fields());
             h.run_steps(3);
             h
         }
 
-        fn click_at(h: &mut Harness<'static, PhotocraftApp>, at: egui::Pos2) {
+        fn click_at(h: &mut Harness<'static, SaryApp>, at: egui::Pos2) {
             h.hover_at(at);
             h.run_steps(1);
             h.drag_at(at);
@@ -1209,12 +1209,12 @@ mod tests {
         }
 
         /// The Width (0), Height (1) and Resolution (2) fields.
-        fn field(h: &Harness<'static, PhotocraftApp>, i: usize) -> egui::Rect {
+        fn field(h: &Harness<'static, SaryApp>, i: usize) -> egui::Rect {
             h.query_all_by_role(Role::SpinButton).nth(i).map(|n| n.rect()).expect("a size field")
         }
 
         /// Click into field `i` (which selects its text) and type `text`, as a user does.
-        fn type_into(h: &mut Harness<'static, PhotocraftApp>, i: usize, text: &str) {
+        fn type_into(h: &mut Harness<'static, SaryApp>, i: usize, text: &str) {
             let r = field(h, i);
             click_at(h, r.center());
             for c in text.chars() {
@@ -1223,28 +1223,28 @@ mod tests {
             }
         }
 
-        fn fields(h: &Harness<'static, PhotocraftApp>) -> serde_json::Map<String, serde_json::Value> {
+        fn fields(h: &Harness<'static, SaryApp>) -> serde_json::Map<String, serde_json::Value> {
             h.state().ui.dialogs.first().map(|d| d.fields.clone()).expect("the dialog is open")
         }
 
-        fn set_fields(h: &mut Harness<'static, PhotocraftApp>, f: serde_json::Map<String, serde_json::Value>) {
+        fn set_fields(h: &mut Harness<'static, SaryApp>, f: serde_json::Map<String, serde_json::Value>) {
             h.state_mut().ui.dialogs[0].fields = f;
             h.run_steps(2);
         }
 
-        fn enter(h: &mut Harness<'static, PhotocraftApp>) {
+        fn enter(h: &mut Harness<'static, SaryApp>) {
             h.key_press(egui::Key::Enter);
             h.run_steps(3);
         }
 
-        fn created(h: &Harness<'static, PhotocraftApp>) -> (u32, u32, f32) {
+        fn created(h: &Harness<'static, SaryApp>) -> (u32, u32, f32) {
             assert!(h.state().ui.dialogs.is_empty(), "the dialog closed");
             let d = &h.state().session.active().expect("a new document").doc;
             (d.size.width, d.size.height, d.resolution_dpi)
         }
 
         /// Preset cards paint their titles directly, without an accessibility label.
-        fn preset_title_at(h: &Harness<'static, PhotocraftApp>, title: &str) -> egui::Pos2 {
+        fn preset_title_at(h: &Harness<'static, SaryApp>, title: &str) -> egui::Pos2 {
             fn find(shape: &egui::Shape, title: &str) -> Option<egui::Pos2> {
                 match shape {
                     egui::Shape::Text(text) if text.galley.job.text == title => Some(text.visual_bounding_rect().center()),
@@ -1255,7 +1255,7 @@ mod tests {
             h.output().shapes.iter().find_map(|shape| find(&shape.shape, title)).expect("visible preset title")
         }
 
-        fn second_click_creates_once(h: &mut Harness<'static, PhotocraftApp>, at: egui::Pos2) {
+        fn second_click_creates_once(h: &mut Harness<'static, SaryApp>, at: egui::Pos2) {
             assert!(h.state().session.documents().is_empty(), "the first click only selects the preset");
             assert_eq!(h.state().ui.dialogs.len(), 1);
             // Two real pointer press/release pairs within egui's double-click interval.
@@ -1266,7 +1266,7 @@ mod tests {
             assert!(h.state().ui.views[0].fit_pending, "the normal Create path fits the new document");
         }
 
-        fn assert_pixel(h: &mut Harness<'static, PhotocraftApp>, expected: [f64; 4]) {
+        fn assert_pixel(h: &mut Harness<'static, SaryApp>, expected: [f64; 4]) {
             let pixel = h.state_mut().session.execute("document.pixel", serde_json::json!({"x":0,"y":0})).unwrap();
             for (actual, expected) in pixel.as_array().unwrap().iter().zip(expected) {
                 assert!((actual.as_f64().unwrap() - expected).abs() < 0.001, "background pixel: {pixel}");
@@ -1293,7 +1293,7 @@ mod tests {
             assert_eq!(created(&h), (1200, 1800, 300.0));
             let doc = &h.state().session.active().unwrap().doc;
             assert_eq!(doc.name, "Portrait proof");
-            assert_eq!((doc.mode, doc.depth), (photocraft_doc::ColorMode::Cmyk, photocraft_doc::SampleType::U16));
+            assert_eq!((doc.mode, doc.depth), (sary_doc::ColorMode::Cmyk, sary_doc::SampleType::U16));
             assert_pixel(&mut h, [0.0; 4]);
         }
 
@@ -1316,7 +1316,7 @@ mod tests {
             second_click_creates_once(&mut h, at);
             assert_eq!(created(&h), (37, 23, 72.0));
             let doc = &h.state().session.active().unwrap().doc;
-            assert_eq!((doc.mode, doc.depth), (photocraft_doc::ColorMode::Grayscale, photocraft_doc::SampleType::U8));
+            assert_eq!((doc.mode, doc.depth), (sary_doc::ColorMode::Grayscale, sary_doc::SampleType::U8));
             assert_pixel(&mut h, [1.0; 4]);
         }
 
@@ -1347,7 +1347,7 @@ mod tests {
             assert_eq!(created(&h), (48, 32, 254.0));
             let doc = &h.state().session.active().unwrap().doc;
             assert_eq!(doc.name, "Current document name");
-            assert_eq!((doc.mode, doc.depth), (photocraft_doc::ColorMode::Rgb, photocraft_doc::SampleType::F32));
+            assert_eq!((doc.mode, doc.depth), (sary_doc::ColorMode::Rgb, sary_doc::SampleType::F32));
             assert_pixel(&mut h, [0.125, 0.375, 0.625, 1.0]);
         }
 
@@ -1430,7 +1430,7 @@ mod tests {
             let heading = h.get_by_label_contains("BLANK DOCUMENT PRESETS").rect();
             // Pick the second card, then the first (Clipboard) again.
             click_at(&mut h, heading.left_bottom() + egui::vec2(80.0 + 172.0, 60.0));
-            assert_eq!(fields(&h).get("__preset").and_then(|v| v.as_str()), Some("Default PhotoCraft Size"));
+            assert_eq!(fields(&h).get("__preset").and_then(|v| v.as_str()), Some("Default Sary Size"));
             click_at(&mut h, heading.left_bottom() + egui::vec2(80.0, 60.0));
             assert_eq!(fields(&h).get("__preset").and_then(|v| v.as_str()), Some(super::super::CLIPBOARD));
             enter(&mut h);

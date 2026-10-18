@@ -13,7 +13,7 @@ mod jpx;
 mod lzw_flate;
 mod run_length;
 
-// PdfCraft patch: the incremental Flate decoder that `page::ContentReader` drives.
+// Taratasy patch: the incremental Flate decoder that `page::ContentReader` drives.
 pub(crate) use lzw_flate::flate::{FlateState, is_plain as flate_is_plain};
 
 use crate::object::Dict;
@@ -83,7 +83,7 @@ impl Filter {
         }
     }
 
-    /// PdfCraft patch: `limit` is the most bytes the filter may produce (see `decode_limit`).
+    /// Taratasy patch: `limit` is the most bytes the filter may produce (see `decode_limit`).
     pub(crate) fn apply(
         &self,
         data: &[u8],
@@ -131,18 +131,18 @@ impl Filter {
     }
 }
 
-/// PdfCraft patch: the most bytes Flate, LZW or RunLength may produce for a stream that isn't an
+/// Taratasy patch: the most bytes Flate, LZW or RunLength may produce for a stream that isn't an
 /// image of known size: content streams, fonts, forms, ICC profiles. These filters expand without
 /// limit (Flate about 1000:1), so a 2 MB page that inflated to 2 GB took the renderer past 3 GB in
 /// under a second. They never write past the limit (the buffer can still grow to under twice
 /// it). Real streams are far smaller; the same figure bounds lopdf's load-time decoding.
 pub const MAX_DECODED_STREAM: usize = 256 << 20;
 
-/// PdfCraft patch: the most bytes they may produce for an image of known size, however large it
+/// Taratasy patch: the most bytes they may produce for an image of known size, however large it
 /// says it is.
 const MAX_DECODED_IMAGE: u64 = 1 << 30;
 
-/// PdfCraft patch: the output limit for one filter of a stream decoded with `params`; `last`
+/// Taratasy patch: the output limit for one filter of a stream decoded with `params`; `last`
 /// says whether it is the last filter. The last filter of an image whose size, bits per
 /// component and components are known produces its pixels, plus at most one PNG predictor tag
 /// byte per pixel byte (a predictor row can be as short as one byte): bytes past that are never
@@ -163,7 +163,7 @@ pub(crate) fn decode_limit(params: &ImageDecodeParams, last: bool, limits: crate
     usize::try_from(image).unwrap_or(MAX_DECODED_STREAM)
 }
 
-/// PdfCraft patch: whether a CCITT image of `columns` × `rows` may be decoded. The decoder sizes
+/// Taratasy patch: whether a CCITT image of `columns` × `rows` may be decoded. The decoder sizes
 /// its line buffers from `/Columns`, which a fuzzed file set to 4294967295 (a 4 GiB allocation);
 /// real fax lines are a few thousand pixels wide.
 pub fn ccitt_size_ok(columns: u32, rows: u32) -> bool {

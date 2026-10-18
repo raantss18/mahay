@@ -57,7 +57,7 @@ pub fn tool_definitions() -> Value {
         tool(
             "list_commands",
             "List commands",
-            "Every WordCraft command: id, label, ribbon location, shortcut and params. Filter with `query`.",
+            "Every Soratra command: id, label, ribbon location, shortcut and params. Filter with `query`.",
             obj(json!({"query": s("Case-insensitive filter on id/label/location")}), &[]),
             true
         ),
@@ -128,8 +128,8 @@ pub fn tool_definitions() -> Value {
             obj(json!({"page": n("1-based page"), "scale": n("Pixels per point (default 1)")}), &[]),
             true
         ),
-        tool("parity", "Feature parity", "WordCraft's command coverage of the word-processor feature catalog.", obj(json!({}), &[]), true),
-        tool("screenshot", "Screenshot app", "Screenshot of the whole WordCraft window (desktop app only).", obj(json!({}), &[]), true),
+        tool("parity", "Feature parity", "Soratra's command coverage of the word-processor feature catalog.", obj(json!({}), &[]), true),
+        tool("screenshot", "Screenshot app", "Screenshot of the whole Soratra window (desktop app only).", obj(json!({}), &[]), true),
         tool(
             "click",
             "Click",

@@ -3,10 +3,10 @@
 //! background). Everything that changes the document is `layer.artboard.set` and friends.
 
 use egui::{Align2, Color32, Pos2, Rect, Stroke};
-use photocraft_doc::{ArtboardBackground, Document, Layer};
+use sary_doc::{ArtboardBackground, Document, Layer};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::theme::Tokens;
 
@@ -14,7 +14,7 @@ use crate::theme::Tokens;
 /// boards' x edges, split around the boards they cross).
 pub fn pasteboard_rects(xf: &ViewXform, doc: &Document) -> Vec<Rect> {
     let canvas = doc.bounds();
-    let boards: Vec<photocraft_geom::Rect> = doc.artboards().iter().map(|b| b.2.rect.intersect(&canvas)).filter(|r| !r.is_empty()).collect();
+    let boards: Vec<sary_geom::Rect> = doc.artboards().iter().map(|b| b.2.rect.intersect(&canvas)).filter(|r| !r.is_empty()).collect();
     let mut xs: Vec<i32> = vec![canvas.x0, canvas.x1];
     for b in &boards {
         xs.extend([b.x0, b.x1]);
@@ -29,19 +29,19 @@ pub fn pasteboard_rects(xf: &ViewXform, doc: &Document) -> Vec<Rect> {
         let mut y = canvas.y0;
         for (a, b) in spans {
             if a > y {
-                out.push(xf.doc_rect(photocraft_geom::Rect::new(x0, y, x1, a)));
+                out.push(xf.doc_rect(sary_geom::Rect::new(x0, y, x1, a)));
             }
             y = y.max(b);
         }
         if y < canvas.y1 {
-            out.push(xf.doc_rect(photocraft_geom::Rect::new(x0, y, x1, canvas.y1)));
+            out.push(xf.doc_rect(sary_geom::Rect::new(x0, y, x1, canvas.y1)));
         }
     }
     out
 }
 
 /// Board outlines and names (the active board's name is highlighted, as in Photoshop).
-pub fn draw_frames(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_frames(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let Some(st) = app.session.active() else { return };
     let t = Tokens::get(painter.ctx());
     let active = st.active_layer.and_then(|id| st.doc.artboard_of(id));
@@ -55,7 +55,7 @@ pub fn draw_frames(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform)
 }
 
 /// View › Fit Artboard on Screen: zoom to the active artboard (or the first one).
-pub fn fit_artboard(app: &mut PhotocraftApp) -> Result<Value, String> {
+pub fn fit_artboard(app: &mut SaryApp) -> Result<Value, String> {
     let i = app.session.active_index().ok_or("no document")?;
     let st = app.session.active().ok_or("no document")?;
     let id = st.active_layer.and_then(|l| st.doc.artboard_of(l)).or_else(|| st.doc.artboards().last().map(|b| b.0)).ok_or("the document has no artboards")?;
@@ -77,7 +77,7 @@ pub fn fit_artboard(app: &mut PhotocraftApp) -> Result<Value, String> {
 }
 
 /// Properties panel for an artboard.
-pub fn properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, layer: &Layer) {
+pub fn properties(app: &mut SaryApp, ui: &mut egui::Ui, layer: &Layer) {
     let Some(a) = layer.artboard().cloned() else { return };
     let t = Tokens::get(ui.ctx());
     let key = |k: &str| format!("artboard-{}-{k}", layer.id.0);
@@ -88,7 +88,7 @@ pub fn properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, layer: &Layer) {
     ui.add_space(4.0);
     let mut preset = a.preset.clone();
     let mut opts: Vec<(String, &str)> = vec![(String::new(), tl!("Custom"))];
-    opts.extend(photocraft_engine::artboard_cmds::PRESETS.iter().map(|(n, _, _)| (n.to_string(), *n)));
+    opts.extend(sary_engine::artboard_cmds::PRESETS.iter().map(|(n, _, _)| (n.to_string(), *n)));
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new(tl!("Size")).color(t.text_dim).size(12.0));
         if crate::widgets::dropdown(ui, &key("preset"), &mut preset, &opts, 150.0) && !preset.is_empty() {
@@ -144,7 +144,7 @@ pub fn properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, layer: &Layer) {
         }
         if let ArtboardBackground::Custom(c) = a.background {
             let [r8, g8, b8, _] = c.to_rgba8();
-            // PhotoCraft's Color Picker, as everywhere else (#2144): OK sets the background.
+            // Sary's Color Picker, as everywhere else (#2144): OK sets the background.
             if crate::widgets::color_swatch_button(ui, egui::Color32::from_rgb(r8, g8, b8), tl!("Color")).clicked() {
                 pick = Some(c.to_rgb());
             }
@@ -167,8 +167,8 @@ mod tests {
     use super::*;
     use crate::menus::{invoke as menu, is_live, menu_items};
 
-    fn app() -> (PhotocraftApp, egui::Context) {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> (SaryApp, egui::Context) {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 100, "height": 50})).unwrap();
         app.sync_views();
         (app, egui::Context::default())
@@ -209,7 +209,7 @@ mod tests {
         ] {
             assert!(is_live(id), "{id}");
         }
-        let enabled = |app: &PhotocraftApp, id: &str| menu_items(app).into_iter().find(|i| i.id == id).is_some_and(|i| i.enabled);
+        let enabled = |app: &SaryApp, id: &str| menu_items(app).into_iter().find(|i| i.id == id).is_some_and(|i| i.enabled);
         assert!(!enabled(&app, "view.fitArtboardOnScreen"));
         // Menu clicks without params open dialogs for the parameterised commands.
         let r = menu(&mut app, &ctx, "layer.new.artboard", json!({})).unwrap();
@@ -247,7 +247,7 @@ mod tests {
         }
     }
 
-    fn drag(app: &mut PhotocraftApp, from: [f64; 2], by: [f64; 2], mods: egui::Modifiers) {
+    fn drag(app: &mut SaryApp, from: [f64; 2], by: [f64; 2], mods: egui::Modifiers) {
         use crate::canvas::{ToolEvent, tool_event};
         tool_event(app, ToolEvent::Down { x: from[0], y: from[1], pressure: 1.0 }, mods);
         for t in [0.5, 1.0] {
@@ -256,7 +256,7 @@ mod tests {
         tool_event(app, ToolEvent::Up { x: from[0] + by[0], y: from[1] + by[1] }, mods);
     }
 
-    fn boards(app: &PhotocraftApp) -> Vec<photocraft_geom::Rect> {
+    fn boards(app: &SaryApp) -> Vec<sary_geom::Rect> {
         app.session.active().unwrap().doc.artboards().iter().map(|b| b.2.rect).collect()
     }
 
@@ -272,14 +272,14 @@ mod tests {
         app.ui.extras.snap = false;
         app.ui.view.show.smart_guides = false;
         drag(&mut app, [20.0, 20.0], [10.0, 5.0], egui::Modifiers::NONE);
-        assert_eq!(boards(&app), vec![photocraft_geom::Rect::new(10, 5, 50, 45)]);
+        assert_eq!(boards(&app), vec![sary_geom::Rect::new(10, 5, 50, 45)]);
         let st = app.session.active().unwrap();
         assert_eq!(st.active_layer, Some(st.doc.artboards()[0].0));
         // ⌥-drag: the copy follows the pointer, the original stays.
         drag(&mut app, [20.0, 20.0], [50.0, 0.0], egui::Modifiers::ALT);
         let mut got = boards(&app);
         got.sort_by_key(|r| r.x0);
-        assert_eq!(got, vec![photocraft_geom::Rect::new(10, 5, 50, 45), photocraft_geom::Rect::new(60, 5, 100, 45)]);
+        assert_eq!(got, vec![sary_geom::Rect::new(10, 5, 50, 45), sary_geom::Rect::new(60, 5, 100, 45)]);
         // One undo step takes the copy back.
         app.run("edit.undo", json!({})).unwrap();
         assert_eq!(boards(&app).len(), 1);

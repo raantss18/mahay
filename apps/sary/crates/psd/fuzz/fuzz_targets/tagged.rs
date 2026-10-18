@@ -8,7 +8,7 @@
 //! bytes (which it would almost never do); the rest is the block data.
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::tagged::TaggedBlock;
+use sary_psd::tagged::TaggedBlock;
 
 const KEYS: [&[u8; 4]; 20] = [
     // typed (parsed)

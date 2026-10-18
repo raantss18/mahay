@@ -2,16 +2,16 @@
 
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
-use photocraft_doc::{LayerContent, LayerId};
+use sary_doc::{LayerContent, LayerId};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
-fn harness(session: photocraft_engine::Session, ppp: f32) -> Harness<'static, PhotocraftApp> {
+fn harness(session: sary_engine::Session, ppp: f32) -> Harness<'static, SaryApp> {
     let mut h =
         Harness::builder().with_size(vec2(1440.0, 900.0)).with_pixels_per_point(ppp).with_step_dt(1.0 / 60.0).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            PhotocraftApp::new(session, crate::Services::default())
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::new(session, crate::Services::default())
         });
     let ctx = h.ctx.clone();
     let (req, _rx) = crate::control::ControlRequest::new("ui.set", json!({"dock": {"collapsed": ["color", "properties", "history", "navigator"]}}));
@@ -20,7 +20,7 @@ fn harness(session: photocraft_engine::Session, ppp: f32) -> Harness<'static, Ph
     h
 }
 
-fn click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, button: PointerButton) {
+fn click(h: &mut Harness<'_, SaryApp>, at: Pos2, button: PointerButton) {
     h.hover_at(at);
     h.step();
     for pressed in [true, false] {
@@ -30,7 +30,7 @@ fn click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, button: PointerButton) {
     h.run_steps(3);
 }
 
-fn double_click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
+fn double_click(h: &mut Harness<'_, SaryApp>, at: Pos2) {
     for _ in 0..40 {
         h.step();
     }
@@ -38,23 +38,23 @@ fn double_click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
     click(h, at, PointerButton::Primary);
 }
 
-fn row(h: &Harness<'_, PhotocraftApp>, id: u64) -> super::RowRects {
+fn row(h: &Harness<'_, SaryApp>, id: u64) -> super::RowRects {
     super::recorded(&h.ctx).into_iter().find(|r| r.layer == id).expect("layer row drawn")
 }
 
-fn thumbnail(h: &Harness<'_, PhotocraftApp>, id: u64) -> Pos2 {
+fn thumbnail(h: &Harness<'_, SaryApp>, id: u64) -> Pos2 {
     let r = row(h, id).row;
     // Top-level Pro row: 6 pt padding, 28 pt eye column, 24 pt layer thumbnail.
     pos2(r.left() + 6.0 + 28.0 + 12.0, r.center().y)
 }
 
-fn session() -> photocraft_engine::Session {
-    let mut s = photocraft_engine::Session::new();
+fn session() -> sary_engine::Session {
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 640, "height": 480})).unwrap();
     s
 }
 
-fn text(h: &Harness<'_, PhotocraftApp>, id: u64) -> String {
+fn text(h: &Harness<'_, SaryApp>, id: u64) -> String {
     match &h.state().session.active().unwrap().doc.layer(LayerId(id)).unwrap().content {
         LayerContent::Text(t) => t.text.clone(),
         _ => panic!("expected text layer"),
@@ -159,7 +159,7 @@ fn mask_double_click_launches_select_and_mask_with_preference() {
 
 #[test]
 fn edit_type_command_rejects_missing_or_non_type_layers_without_changes() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     for has_document in [false, true] {
         if has_document {
@@ -183,8 +183,8 @@ fn layer_reselection_commits_type_edit_and_cancel_preserves_committed_text() {
         let mut doc = (*st.doc).clone();
         let LayerContent::Text(t) = &mut doc.layer_mut(LayerId(id)).unwrap().content else { panic!("text") };
         let mut moved = t.clone();
-        moved.transform = photocraft_geom::Affine::translate(350.0, 280.0);
-        let cache = photocraft_text::shared().lock().unwrap().render(&moved, 72.0, photocraft_color::PixelFormat::RGBA8).1.surface;
+        moved.transform = sary_geom::Affine::translate(350.0, 280.0);
+        let cache = sary_text::shared().lock().unwrap().render(&moved, 72.0, sary_color::PixelFormat::RGBA8).1.surface;
         t.cache = Some(cache.clone());
         st.doc = std::sync::Arc::new(doc);
         st.revision += 1;

@@ -4,8 +4,8 @@
 
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::json;
-use wordcraft_doc::Rgb;
-use wordcraft_doc::wordart::{ART_STYLES, DRAWN_WARPS, TextFill, TextWarp, art_style};
+use soratra_doc::Rgb;
+use soratra_doc::wordart::{ART_STYLES, DRAWN_WARPS, TextFill, TextWarp, art_style};
 
 use crate::WordApp;
 use crate::ribbon::mi;
@@ -141,8 +141,8 @@ pub fn outline_menu(ui: &mut Ui, app: &mut WordApp, theme: &[Rgb], current: Opti
 /// A warp's preview: its top, middle and bottom lines and a few verticals, bent as the text is.
 fn paint_warp(p: &egui::Painter, r: Rect, preset: &str, c: Color32) {
     let Some(tw) = TextWarp::new(preset) else { return };
-    let frame = wordcraft_geom::Rect::new(r.min.x, r.min.y, r.width(), r.height());
-    let Some(w) = wordcraft_layout::wordart::Warp::new(&tw, frame, 0.3) else { return };
+    let frame = soratra_geom::Rect::new(r.min.x, r.min.y, r.width(), r.height());
+    let Some(w) = soratra_layout::wordart::Warp::new(&tw, frame, 0.3) else { return };
     let pt = |u: f32, v: f32| {
         let (x, y) = w.map(u, v);
         Pos2::new(x, y)
@@ -161,7 +161,7 @@ pub fn effects_menu(ui: &mut Ui, app: &mut WordApp, theme: &[Rgb], transform: bo
     ui.menu_button(crate::tl!("Shadow"), |ui| {
         mi(ui, app, "No Shadow", "format.textEffects", json!({"shadow": null}));
         ui.separator();
-        for (id, label) in wordcraft_doc::effects::SHADOW_PRESETS {
+        for (id, label) in soratra_doc::effects::SHADOW_PRESETS {
             mi(ui, app, label, "format.textEffects", json!({"shadow": id}));
         }
     });
@@ -191,7 +191,7 @@ pub fn effects_menu(ui: &mut Ui, app: &mut WordApp, theme: &[Rgb], transform: bo
     }
 }
 
-/// Text Effects › Transform: the warps WordCraft bends text along, as previews.
+/// Text Effects › Transform: the warps Soratra bends text along, as previews.
 pub fn transform_menu(ui: &mut Ui, app: &mut WordApp) {
     let t = Tokens::get(ui.ctx());
     mi(ui, app, "No Transform", "wordArt.transform", json!({"preset": "none"}));
@@ -211,8 +211,8 @@ pub fn transform_menu(ui: &mut Ui, app: &mut WordApp) {
 
 /// The selected shape's text outline (colour, width), for the Weight menu.
 pub fn current_outline(app: &WordApp) -> Option<(Rgb, f32)> {
-    let story = match wordcraft_engine::cmd::objects::object_selection(&app.session) {
-        Some((_, wordcraft_doc::InlineObject::Shape { story: Some(id), .. })) => wordcraft_doc::StoryRef::Part(*id),
+    let story = match soratra_engine::cmd::objects::object_selection(&app.session) {
+        Some((_, soratra_doc::InlineObject::Shape { story: Some(id), .. })) => soratra_doc::StoryRef::Part(*id),
         _ => app.session.sel.focus.story,
     };
     let start = app.session.doc.start_of(story);

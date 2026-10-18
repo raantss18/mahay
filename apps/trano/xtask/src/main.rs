@@ -24,13 +24,13 @@ commands:
   icns <out.icns> <in.png>...
                   pack square PNGs (16-1024 px) into a macOS .icns, on any OS
   local sync | serve | status
-                  build the Craft apps from their checkouts and install them from this machine
+                  build the Mahay apps from their checkouts and install them from this machine
                   (cargo xtask local help)
 ";
 
 /// Packages that must build for wasm32-unknown-unknown: the pure core and the web app (which
 /// pulls in the shared egui UI).
-const WASM_PACKAGES: &[&str] = &["artcraft-launcher-core", "artcraft-launcher-web"];
+const WASM_PACKAGES: &[&str] = &["trano-core", "trano-web"];
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();

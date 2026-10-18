@@ -2,7 +2,7 @@
 //! and the scroll arrows, and the keyboard drives submenus and runs commands.
 
 use super::*;
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
 
@@ -34,7 +34,7 @@ fn reported_menus_stay_above_the_panel_when_the_window_position_is_unknown() {
             }
             check_bar_clear(&h, &what);
             let last = rows(&h, 0).len() - 1;
-            let in_view = |h: &Harness<'static, PhotocraftApp>| {
+            let in_view = |h: &Harness<'static, SaryApp>| {
                 let nav = Nav::current(&h.ctx);
                 nav.views[0].expand(0.5).contains_rect(nav.rows[0][last].rect) && nav.views[0].bottom() <= bottom + 0.5
             };
@@ -57,44 +57,44 @@ fn reported_menus_stay_above_the_panel_when_the_window_position_is_unknown() {
     }
 }
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
     app.sync_views();
     app
 }
 
-fn harness((w, h, scale): (f32, f32, f32)) -> Harness<'static, PhotocraftApp> {
+fn harness((w, h, scale): (f32, f32, f32)) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(w / scale, h / scale)).with_pixels_per_point(scale).build_ui_state(
         |ui, app| {
             crate::menus::menu_bar(app, ui);
         },
         app(),
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.ctx.all_styles_mut(|s| s.scroll_animation = egui::style::ScrollAnimation::none());
     h.run_steps(3);
     h
 }
 
-fn open(h: &mut Harness<'static, PhotocraftApp>, top: &str) {
+fn open(h: &mut Harness<'static, SaryApp>, top: &str) {
     h.get_by_label(top).click();
     h.run_steps(4);
     assert!(Nav::current(&h.ctx).rows.first().is_some_and(|r| !r.is_empty()), "{top} did not open");
 }
 
 /// Is row `i` of `level` entirely inside its level's visible (scrolled) area, on screen?
-fn visible(h: &Harness<'static, PhotocraftApp>, level: usize, i: usize) -> bool {
+fn visible(h: &Harness<'static, SaryApp>, level: usize, i: usize) -> bool {
     let nav = Nav::current(&h.ctx);
     let (Some(row), Some(view)) = (nav.rows.get(level).and_then(|r| r.get(i)), nav.views.get(level)) else { return false };
     view.expand(0.5).contains_rect(row.rect) && h.ctx.content_rect().expand(0.5).contains_rect(*view)
 }
 
-fn rows(h: &Harness<'static, PhotocraftApp>, level: usize) -> Vec<Row> {
+fn rows(h: &Harness<'static, SaryApp>, level: usize) -> Vec<Row> {
     Nav::current(&h.ctx).rows.get(level).cloned().unwrap_or_default()
 }
 
-fn key(h: &mut Harness<'static, PhotocraftApp>, k: egui::Key) {
+fn key(h: &mut Harness<'static, SaryApp>, k: egui::Key) {
     h.key_press(k);
     h.run_steps(3);
 }
@@ -266,13 +266,13 @@ fn left_and_right_switch_menus_and_shortcuts_wait_while_one_is_open() {
 }
 
 /// A level's visible height (its view) and the full height of its rows: equal means no scrolling.
-fn fits(h: &Harness<'static, PhotocraftApp>, level: usize) -> (f32, f32) {
+fn fits(h: &Harness<'static, SaryApp>, level: usize) -> (f32, f32) {
     let nav = Nav::current(&h.ctx);
     (nav.views.get(level).map_or(0.0, |v| v.height()), nav.contents.get(level).copied().unwrap_or(0.0))
 }
 
 /// The on-screen rect of the popup holding `level` (the smallest area around its view).
-fn popup(h: &Harness<'static, PhotocraftApp>, level: usize) -> egui::Rect {
+fn popup(h: &Harness<'static, SaryApp>, level: usize) -> egui::Rect {
     let Some(view) = Nav::current(&h.ctx).views.get(level).copied() else { return egui::Rect::NOTHING };
     h.ctx
         .memory(|m| m.areas().visible_layer_ids())
@@ -284,7 +284,7 @@ fn popup(h: &Harness<'static, PhotocraftApp>, level: usize) -> egui::Rect {
 }
 
 /// The popup is as tall as its rows plus the menu frame: no blank space, no clipped rows.
-fn hugs_rows(h: &Harness<'static, PhotocraftApp>, level: usize) -> Result<(), String> {
+fn hugs_rows(h: &Harness<'static, SaryApp>, level: usize) -> Result<(), String> {
     let (_, content) = fits(h, level);
     let frame = h.ctx.global_style().spacing.menu_margin.sum().y + 2.0;
     let area = popup(h, level);
@@ -292,7 +292,7 @@ fn hugs_rows(h: &Harness<'static, PhotocraftApp>, level: usize) -> Result<(), St
 }
 
 /// Open the `n`th enabled submenu of the open top-level menu with the keyboard.
-fn open_submenu(h: &mut Harness<'static, PhotocraftApp>, n: usize) -> bool {
+fn open_submenu(h: &mut Harness<'static, SaryApp>, n: usize) -> bool {
     let subs: Vec<usize> = rows(h, 0).iter().enumerate().filter(|(_, r)| r.enabled && r.command.is_none()).map(|(i, _)| i).collect();
     let Some(&target) = subs.get(n) else { return false };
     for _ in 0..rows(h, 0).len() {
@@ -384,7 +384,7 @@ fn a_short_window_still_scrolls_the_file_menu_to_its_last_row() {
 }
 
 /// Every popup on screen (menus and submenus).
-fn popups(h: &Harness<'static, PhotocraftApp>) -> Vec<egui::Rect> {
+fn popups(h: &Harness<'static, SaryApp>) -> Vec<egui::Rect> {
     h.ctx
         .memory(|m| m.areas().visible_layer_ids())
         .into_iter()
@@ -394,7 +394,7 @@ fn popups(h: &Harness<'static, PhotocraftApp>) -> Vec<egui::Rect> {
 }
 
 /// No popup covers the menu bar or runs off the window, and every menu title stays visible.
-fn check_bar_clear(h: &Harness<'static, PhotocraftApp>, what: &str) {
+fn check_bar_clear(h: &Harness<'static, SaryApp>, what: &str) {
     let bar = Nav::current(&h.ctx).bar_bottom.expect("the menu bar's bottom");
     let screen = h.ctx.content_rect();
     for r in popups(h) {
@@ -469,7 +469,7 @@ fn level_room_keeps_every_level_below_the_bar() {
 /// #315: a 1366 × 768 pt display with a Windows taskbar. `window` is the window's content size and
 /// `top` where its content starts on the desktop (below the title bar), in points; the taskbar
 /// covers the monitor's bottom [`crate::work_area::TASKBAR`] points. `scale` is the UI scale.
-fn taskbar_harness(window: (f32, f32), top: f32, scale: f32) -> Harness<'static, PhotocraftApp> {
+fn taskbar_harness(window: (f32, f32), top: f32, scale: f32) -> Harness<'static, SaryApp> {
     let mut h = harness((window.0 * scale, window.1 * scale, scale));
     let v = h.input_mut().viewports.entry(egui::ViewportId::ROOT).or_default();
     v.monitor_size = Some(egui::vec2(1366.0, 768.0));
@@ -480,7 +480,7 @@ fn taskbar_harness(window: (f32, f32), top: f32, scale: f32) -> Harness<'static,
 }
 
 /// The visible bottom of a taskbar harness: the monitor's bottom less the taskbar, in the window.
-fn taskbar_bottom(h: &Harness<'static, PhotocraftApp>) -> f32 {
+fn taskbar_bottom(h: &Harness<'static, SaryApp>) -> f32 {
     crate::work_area::visible_rect(&h.ctx).bottom()
 }
 
@@ -501,7 +501,7 @@ fn menus_stay_above_the_taskbar_and_scroll_to_their_last_row() {
                 assert!(r.bottom() <= bottom + 0.5, "{what}: popup {r:?} runs under the taskbar (from {bottom})");
             }
             let last = rows(&h, 0).len() - 1;
-            let in_view = |h: &Harness<'static, PhotocraftApp>, i: usize| {
+            let in_view = |h: &Harness<'static, SaryApp>, i: usize| {
                 let nav = Nav::current(&h.ctx);
                 nav.views[0].expand(0.5).contains_rect(nav.rows[0][i].rect) && nav.views[0].bottom() <= bottom + 0.5
             };
@@ -566,7 +566,7 @@ fn submenus_stay_above_the_taskbar() {
 /// #3737 on X11 (Linux Mint, 1920 × 1080 px): the window manager maximized the window to the whole
 /// monitor without keeping it clear of the bottom panel, so the window's position is known but the
 /// panel covers its bottom. At 1× and at a 150% UI scale (1280 × 720 pt).
-fn maximized_under_a_panel(scale: f32) -> Harness<'static, PhotocraftApp> {
+fn maximized_under_a_panel(scale: f32) -> Harness<'static, SaryApp> {
     let size = egui::vec2(1920.0, 1080.0) / scale;
     let mut h = harness((1920.0, 1080.0, scale));
     let v = h.input_mut().viewports.entry(egui::ViewportId::ROOT).or_default();
@@ -591,7 +591,7 @@ fn menus_of_a_maximized_window_stay_above_a_panel_it_runs_under() {
                 assert!(r.bottom() <= bottom + 0.5, "{what}: popup {r:?} runs under the panel (from {bottom})");
             }
             let last = rows(&h, 0).len() - 1;
-            let in_view = |h: &Harness<'static, PhotocraftApp>| {
+            let in_view = |h: &Harness<'static, SaryApp>| {
                 let nav = Nav::current(&h.ctx);
                 nav.views[0].expand(0.5).contains_rect(nav.rows[0][last].rect) && nav.views[0].bottom() <= bottom + 0.5
             };
@@ -665,7 +665,7 @@ fn press_drag_release_reaches_other_menus_and_submenus() {
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos: at, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
     h.run_steps(2);
-    let mut drag_to = |h: &mut Harness<'static, PhotocraftApp>, to: egui::Pos2| {
+    let mut drag_to = |h: &mut Harness<'static, SaryApp>, to: egui::Pos2| {
         for k in 1..=8 {
             h.event(egui::Event::PointerMoved(at + (to - at) * (k as f32 / 8.0)));
             h.run_steps(1);
@@ -690,21 +690,21 @@ fn press_drag_release_reaches_other_menus_and_submenus() {
 }
 
 /// A menu bar whose frames are `dt` seconds apart, as with a real pointer sending moves.
-fn harness_dt(dt: f32) -> Harness<'static, PhotocraftApp> {
+fn harness_dt(dt: f32) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1280.0, 720.0)).with_step_dt(dt).build_ui_state(
         |ui, app| {
             crate::menus::menu_bar(app, ui);
         },
         app(),
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.ctx.all_styles_mut(|s| s.scroll_animation = egui::style::ScrollAnimation::none());
     h.run_steps(3);
     h
 }
 
 /// Which of Image › Mode and Image › Adjustments has its submenu open.
-fn image_submenu(h: &Harness<'static, PhotocraftApp>) -> &'static str {
+fn image_submenu(h: &Harness<'static, SaryApp>) -> &'static str {
     match (h.query_by_label_contains("16 Bits/Channel").is_some(), h.query_by_label_contains("Brightness/Contrast").is_some()) {
         (true, false) => "Mode",
         (false, true) => "Adjustments",
@@ -715,7 +715,7 @@ fn image_submenu(h: &Harness<'static, PhotocraftApp>) -> &'static str {
 
 /// Open Image › Mode with the pointer resting on it, at 120 frames a second; returns where the
 /// pointer is, the Adjustments row below it, and Mode's 16 Bits/Channel row.
-fn rest_on_mode(h: &mut Harness<'static, PhotocraftApp>) -> (egui::Pos2, egui::Rect, egui::Rect) {
+fn rest_on_mode(h: &mut Harness<'static, SaryApp>) -> (egui::Pos2, egui::Rect, egui::Rect) {
     open(h, "Image");
     let mode = h.get_by_label_contains("Mode").rect();
     let from = egui::pos2(mode.right() - 40.0, mode.center().y);
@@ -730,7 +730,7 @@ fn rest_on_mode(h: &mut Harness<'static, PhotocraftApp>) -> (egui::Pos2, egui::R
 
 /// Move the pointer along `path` (0…1) in `frames` frames; `pause` holds it still for that many
 /// frames at that fraction of the way.
-fn glide(h: &mut Harness<'static, PhotocraftApp>, frames: usize, pause: Option<(f32, usize)>, mut path: impl FnMut(f32) -> egui::Pos2) {
+fn glide(h: &mut Harness<'static, SaryApp>, frames: usize, pause: Option<(f32, usize)>, mut path: impl FnMut(f32) -> egui::Pos2) {
     let mut paused = false;
     for k in 0..=frames {
         let t = k as f32 / frames as f32;
@@ -801,7 +801,7 @@ fn a_submenu_stays_open_while_the_pointer_heads_for_it() {
 /// and the highlight moves to it (only it is lit).
 #[test]
 fn resting_on_another_row_or_moving_away_switches_submenus() {
-    let only_adjustments_lit = |h: &Harness<'static, PhotocraftApp>, adjustments: egui::Rect, what: &str| {
+    let only_adjustments_lit = |h: &Harness<'static, SaryApp>, adjustments: egui::Rect, what: &str| {
         let row = rows(h, 0).iter().position(|r| r.rect.contains(adjustments.center()));
         assert_eq!(Nav::current(&h.ctx).highlighted(0), row, "{what}: Adjustments is the highlighted row, not Mode");
     };
@@ -861,7 +861,7 @@ fn a_scrolled_menu_reopens_and_stays_open_with_a_hidden_submenu_row_under_its_ti
         assert!(Nav::current(&h.ctx).contents[0] > view.height() + 1.0, "{top} must overflow for this test to mean anything");
         // Scroll to the end, then back up until a submenu row is out of view right under the title.
         h.hover_at(egui::pos2(view.center().x, view.bottom() - 2.0));
-        let wheel = |h: &mut Harness<'static, PhotocraftApp>, dy: f32| {
+        let wheel = |h: &mut Harness<'static, SaryApp>, dy: f32| {
             h.event(egui::Event::MouseWheel {
                 unit: egui::MouseWheelUnit::Point,
                 delta: egui::vec2(0.0, dy),
@@ -873,7 +873,7 @@ fn a_scrolled_menu_reopens_and_stays_open_with_a_hidden_submenu_row_under_its_ti
         for _ in 0..60 {
             wheel(&mut h, -60.0);
         }
-        let under = |h: &Harness<'static, PhotocraftApp>| {
+        let under = |h: &Harness<'static, SaryApp>| {
             rows(h, 0).iter().any(|r| r.command.is_none() && r.enabled && r.rect.x_range().contains(title.x) && r.rect.y_range().contains(title.y))
         };
         for _ in 0..400 {

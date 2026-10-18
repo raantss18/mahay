@@ -1,7 +1,7 @@
 //! Photographic relight: recover shading with a blur (Retinex) and replace it with a
 //! Lambertian lamp whose direction comes from angle / elevation.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 use crate::Ctx;
 use crate::fxutil::{MAXC, rgba, set_rgba, xy};
@@ -305,8 +305,8 @@ fn relight_rect(src: &Image, out: Rect, ctx: &Ctx, p: Params, sig: f32, step: i3
 mod tests {
     use super::*;
     use crate::{FilterParams, Halo, apply, apply_tiled, output_area};
-    use photocraft_color::{ColorMode, PixelFormat, SampleType};
-    use photocraft_raster::Surface;
+    use sary_color::{ColorMode, PixelFormat, SampleType};
+    use sary_raster::Surface;
 
     fn fmt(s: SampleType) -> PixelFormat {
         PixelFormat::new(ColorMode::Rgb, s, true)

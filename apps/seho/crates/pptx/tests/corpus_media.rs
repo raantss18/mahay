@@ -7,11 +7,11 @@
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_color::Rgba;
-use deckcraft_geom::Xfrm;
-use deckcraft_model::anim::{AnimClass, Animation};
-use deckcraft_model::text::{Run, RunKind, RunProps, TextBody};
-use deckcraft_model::{Geom, InkStroke, MediaClip, Presentation, Section, Shape, ShapeId, ShapeKind, Slide, SlideId, defaults};
+use seho_color::Rgba;
+use seho_geom::Xfrm;
+use seho_model::anim::{AnimClass, Animation};
+use seho_model::text::{Run, RunKind, RunProps, TextBody};
+use seho_model::{Geom, InkStroke, MediaClip, Presentation, Section, Shape, ShapeId, ShapeKind, Slide, SlideId, defaults};
 
 fn png(rgb: [u8; 3]) -> Vec<u8> {
     let mut out = Cursor::new(vec![]);
@@ -30,7 +30,7 @@ fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> Sh
 }
 
 fn new_slide(p: &mut Presentation, title: &str) -> Slide {
-    let layout = defaults::layout_of_kind(p, deckcraft_model::LayoutType::TitleOnly).unwrap_or_default();
+    let layout = defaults::layout_of_kind(p, seho_model::LayoutType::TitleOnly).unwrap_or_default();
     let mut s = defaults::new_slide(p, layout).expect("slide");
     if let Some(t) = s.shapes.first_mut() {
         t.text = Some(TextBody::from_text(title));
@@ -46,12 +46,12 @@ fn field(text: &str, kind: &str) -> TextBody {
 
 const SMARTART: &str = r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr name="Diagram"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="0" y="0"/><a:ext cx="3657600" cy="1828800"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/diagram"><dgm:relIds xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram"/><dgm:pt xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram"><dgm:t>Quarter</dgm:t></dgm:pt></a:graphicData></a:graphic></p:graphicFrame>"#;
 
-const OLE: &str = r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr name="Embedded"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="3810000" y="0"/><a:ext cx="1828800" cy="914400"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole"><p:oleObj name="Note" progId="DeckCraft.Note.1"><p:embed/></p:oleObj></a:graphicData></a:graphic></p:graphicFrame>"#;
+const OLE: &str = r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr name="Embedded"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="3810000" y="0"/><a:ext cx="1828800" cy="914400"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/presentationml/2006/ole"><p:oleObj name="Note" progId="Seho.Note.1"><p:embed/></p:oleObj></a:graphicData></a:graphic></p:graphicFrame>"#;
 
 fn corpus() -> (Presentation, Vec<u8>, Vec<u8>, Vec<u8>) {
     let mut p = defaults::new_presentation(None);
-    let audio_bytes = b"audio-bytes-deckcraft".to_vec();
-    let video_bytes = b"video-bytes-deckcraft".to_vec();
+    let audio_bytes = b"audio-bytes-seho".to_vec();
+    let video_bytes = b"video-bytes-seho".to_vec();
     let block = glb(1);
     let globe = glb(2);
     let poster = png([20, 80, 160]);
@@ -65,7 +65,7 @@ fn corpus() -> (Presentation, Vec<u8>, Vec<u8>, Vec<u8>) {
     let mut diagram = shape(&mut p, "Diagram", 40.0, 80.0, 288.0, 144.0);
     diagram.kind = ShapeKind::Opaque { xml: SMARTART.into(), preview: None, label: "SmartArt".into(), parts: vec![] };
     let mut embedded = shape(&mut p, "Embedded", 340.0, 80.0, 144.0, 72.0);
-    embedded.kind = ShapeKind::Opaque { xml: OLE.into(), preview: None, label: "DeckCraft.Note.1".into(), parts: vec![] };
+    embedded.kind = ShapeKind::Opaque { xml: OLE.into(), preview: None, label: "Seho.Note.1".into(), parts: vec![] };
     let mut block_shape = shape(&mut p, "Block", 40.0, 240.0, 120.0, 90.0);
     block_shape.kind = ShapeKind::Model3d { media: block_id, poster: None };
     let mut globe_shape = shape(&mut p, "Globe", 180.0, 240.0, 160.0, 120.0);
@@ -150,14 +150,14 @@ fn corpus() -> (Presentation, Vec<u8>, Vec<u8>, Vec<u8>) {
 }
 
 fn round(p: &Presentation) -> Presentation {
-    let bytes = deckcraft_pptx::export(p).expect("export");
-    deckcraft_pptx::import(&bytes).expect("import")
+    let bytes = seho_pptx::export(p).expect("export");
+    seho_pptx::import(&bytes).expect("import")
 }
 
 fn by_name<'a>(p: &'a Presentation, name: &str) -> &'a Shape {
     let mut found = None;
     for s in &p.slides {
-        deckcraft_model::walk(&s.shapes, &mut |x, _| {
+        seho_model::walk(&s.shapes, &mut |x, _| {
             if found.is_none() && x.name == name {
                 found = Some(x);
             }
@@ -189,12 +189,12 @@ fn assert_ink(s: &Shape) {
 #[test]
 fn object_corpus_round_trips() {
     let (p, block, globe, poster) = corpus();
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let types = zip_text(&bytes, "[Content_Types].xml");
     assert!(types.contains("model/gltf-binary"), "{types}");
     assert!(zip_has_payload(&bytes, &block), "block model was not written");
     assert!(zip_has_payload(&bytes, &globe), "globe model was not written");
-    let once = deckcraft_pptx::import(&bytes).expect("import");
+    let once = seho_pptx::import(&bytes).expect("import");
     let twice = round(&once);
 
     for q in [&once, &twice] {
@@ -206,8 +206,8 @@ fn object_corpus_round_trips() {
 
         let embedded = by_name(q, "Embedded");
         let ShapeKind::Opaque { xml, label, .. } = &embedded.kind else { panic!("{:?}", embedded.kind) };
-        assert_eq!(label, "DeckCraft.Note.1");
-        assert!(xml.contains("DeckCraft.Note.1"), "{xml}");
+        assert_eq!(label, "Seho.Note.1");
+        assert!(xml.contains("Seho.Note.1"), "{xml}");
         assert!(!xml.contains("r:id"), "an embedding part is issue #203");
 
         let block_shape = by_name(q, "Block");
@@ -233,7 +233,7 @@ fn object_corpus_round_trips() {
         assert_eq!(m.fade_in_ms, 80);
         assert_eq!(m.fade_out_ms, 120);
         assert_eq!(m.bookmarks, vec![("Intro".into(), 400), ("Outro".into(), 2200)]);
-        assert_eq!(q.media(m.media).expect("audio").data.as_ref(), b"audio-bytes-deckcraft".as_slice());
+        assert_eq!(q.media(m.media).expect("audio").data.as_ref(), b"audio-bytes-seho".as_slice());
 
         let film = by_name(q, "Film");
         let ShapeKind::Media(m) = &film.kind else { panic!("{:?}", film.kind) };
@@ -241,7 +241,7 @@ fn object_corpus_round_trips() {
         assert_eq!(m.trim_start_ms, 250);
         assert_eq!(m.trim_end_ms, 9000);
         assert_eq!(m.bookmarks, vec![("Mark".into(), 1500)]);
-        assert_eq!(q.media(m.media).expect("video").data.as_ref(), b"video-bytes-deckcraft".as_slice());
+        assert_eq!(q.media(m.media).expect("video").data.as_ref(), b"video-bytes-seho".as_slice());
 
         assert_field(q, "Slide number", "slidenum", "4");
         assert_field(q, "Date", "datetime4", "14 October 2026");
@@ -270,7 +270,7 @@ fn object_corpus_round_trips() {
 
 /// An exported deck with `parts` added (or replaced) and `edit` applied to every XML part.
 fn with_parts(parts: &[(&str, Vec<u8>)], edit: impl Fn(&str, String) -> String) -> Vec<u8> {
-    let base = deckcraft_pptx::export(&defaults::new_presentation(None)).expect("export");
+    let base = seho_pptx::export(&defaults::new_presentation(None)).expect("export");
     let mut z = zip::ZipArchive::new(Cursor::new(base)).expect("zip");
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let o = zip::write::SimpleFileOptions::default();
@@ -334,7 +334,7 @@ fn an_alternate_content_model_keeps_the_glb_and_its_poster() {
             s
         }
     });
-    let once = deckcraft_pptx::import(&bytes).expect("import");
+    let once = seho_pptx::import(&bytes).expect("import");
     let twice = round(&once);
     for q in [&once, &twice] {
         assert!(q.slides[0].shapes.iter().all(|s| s.name != "Model poster"), "the fallback picture replaced the model");
@@ -365,7 +365,7 @@ fn an_ink_content_part_still_uses_its_fallback_picture() {
             s
         }
     });
-    let p = deckcraft_pptx::import(&bytes).expect("import");
+    let p = seho_pptx::import(&bytes).expect("import");
     assert!(p.slides[0].shapes.iter().all(|s| s.name != "Ink marks"));
     let s = by_name(&p, "Ink poster");
     let ShapeKind::Picture { fill } = &s.kind else { panic!("{:?}", s.kind) };

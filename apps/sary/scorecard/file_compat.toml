@@ -10,14 +10,14 @@ id = "FILE-215-1"
 target = "Smart Objects export as embedded Smart Objects (SoLd + lnk2), not flat pixels"
 status = "done"
 issue = 215
-note = "psd_export.rs smart_blocks: PlLd + SoLd, source in lnk2 (.pcraft -> PSB); engine tests/smart_psd.rs; Photoshop 2026 opens 8/16-bit exports as live smart objects. Linked files are embedded"
+note = "psd_export.rs smart_blocks: PlLd + SoLd, source in lnk2 (.sary -> PSB); engine tests/smart_psd.rs; Photoshop 2026 opens 8/16-bit exports as live smart objects. Linked files are embedded"
 
 [[item]]
 id = "FILE-215-2"
 target = "Smart Filters survive PSD save and re-open (filterFX descriptor read and written)"
 status = "partial"
 issue = 215
-note = "smart_map.rs: 14 filters plus a verified Camera Raw subset mapped both ways, others kept verbatim, mask in FEid; io tests/smart_corpus.rs. PhotoCraft-only filters (Twirl, Liquify…) and unmapped Camera Raw settings are left out of filterFX with a warning"
+note = "smart_map.rs: 14 filters plus a verified Camera Raw subset mapped both ways, others kept verbatim, mask in FEid; io tests/smart_corpus.rs. Sary-only filters (Twirl, Liquify…) and unmapped Camera Raw settings are left out of filterFX with a warning"
 
 [[item]]
 id = "FILE-215-3"
@@ -87,11 +87,11 @@ id = "FILE-215-12"
 target = "Camera Raw dialog shows a histogram; settings persist as a PSD Smart Filter"
 status = "partial"
 issue = 215
-note = "Interactive RGB/Lab scopes. PSD WB/Light/Presence, curves, HSL, grading, sharpening/noise detail, grain and numeric vignette controls mapped with descriptor preservation. Active manual Optics and unverified vignette style keep the updated ACR 18.4 fixture opaque; PSD/.pcraft saves preserve it. HDR, remaining settings and Photoshop acceptance still open"
+note = "Interactive RGB/Lab scopes. PSD WB/Light/Presence, curves, HSL, grading, sharpening/noise detail, grain and numeric vignette controls mapped with descriptor preservation. Active manual Optics and unverified vignette style keep the updated ACR 18.4 fixture opaque; PSD/.sary saves preserve it. HDR, remaining settings and Photoshop acceptance still open"
 
 [[item]]
 id = "FILE-215-13"
-target = "Video layer frames persist in .pcraft; PSD video layers mapped"
+target = "Video layer frames persist in .sary; PSD video layers mapped"
 status = "partial"
 issue = 215
 note = "format convert.rs:89 + tests/roundtrip.rs:282 persist frames; no PSD video mapping"
@@ -115,7 +115,7 @@ id = "FILE-215-16"
 target = "Advanced Blending (knockout, blend as group, mask hides effects) end to end"
 status = "partial"
 issue = 215
-note = "doc advanced.rs + .pcraft + PSD/layered TIFF (knko infx clbl tsly lmgm vmgm), CPU compose advanced.rs (GPU falls back), blendingOptions command + dialog; 7 psd-tools knockout oracles now pass; knockout-isolated-groups (0.45 % AA edges), advanced-blending, blend-and-clipping still differ"
+note = "doc advanced.rs + .sary + PSD/layered TIFF (knko infx clbl tsly lmgm vmgm), CPU compose advanced.rs (GPU falls back), blendingOptions command + dialog; 7 psd-tools knockout oracles now pass; knockout-isolated-groups (0.45 % AA edges), advanced-blending, blend-and-clipping still differ"
 
 [[item]]
 id = "FILE-215-17"

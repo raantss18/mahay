@@ -2,11 +2,11 @@
 //! table-style conditional formatting. Rows are laid out as free-standing boxes; pagination
 //! moves whole rows or splits them between lines (`split_row`).
 
-use wordcraft_doc::numbering::Counters;
-use wordcraft_doc::props::{Align, Border, Borders, HeightRule, Rgb, TextDirection, VAlign, VMerge};
-use wordcraft_doc::styles::{PartSet, TablePart, TableStyleProps};
-use wordcraft_doc::{Block, Blocks, Paragraph, StoryRef, Table};
-use wordcraft_geom::Rect;
+use soratra_doc::numbering::Counters;
+use soratra_doc::props::{Align, Border, Borders, HeightRule, Rgb, TextDirection, VAlign, VMerge};
+use soratra_doc::styles::{PartSet, TablePart, TableStyleProps};
+use soratra_doc::{Block, Blocks, Paragraph, StoryRef, Table};
+use soratra_geom::Rect;
 
 use crate::para::{CellText, ClKind, ParaLayout};
 use crate::{BoxContext, BoxLayout, Ctx, Placed, layout_box};
@@ -109,7 +109,7 @@ fn default_margins(t: &Table, style: Option<&TableStyleProps>) -> [f32; 4] {
 /// table's defaults. The layout uses the left and right ones as they are (the app's ruler
 /// measures a cell's indents from them) but gives every cell in a row the row's largest top and
 /// bottom margins.
-pub fn cell_margins(doc: &wordcraft_doc::Document, t: &Table, row: usize, cell: usize) -> [f32; 4] {
+pub fn cell_margins(doc: &soratra_doc::Document, t: &Table, row: usize, cell: usize) -> [f32; 4] {
     let style = t.props.style.as_deref().and_then(|id| doc.styles.table_style(id));
     t.rows.get(row).and_then(|r| r.cells.get(cell)).and_then(|c| c.props.margins).unwrap_or_else(|| default_margins(t, style.as_ref()))
 }
@@ -124,7 +124,7 @@ const EMPTY_TEXT: f32 = 12.0;
 
 /// What one paragraph needs: the longest run of text without a break opportunity (`min`) and
 /// its longest line when nothing wraps (`max`), indents included.
-fn measure_para(p: &wordcraft_doc::Paragraph, env: &crate::para::ParaEnv) -> (f32, f32) {
+fn measure_para(p: &soratra_doc::Paragraph, env: &crate::para::ParaEnv) -> (f32, f32) {
     use crate::para::ClKind;
     let pl = crate::para::layout_para(p, env);
     let rp = &pl.rp;
@@ -169,11 +169,11 @@ fn measure_para(p: &wordcraft_doc::Paragraph, env: &crate::para::ParaEnv) -> (f3
 /// wrap), the widest fits every paragraph on one line. A cell spanning several columns spreads
 /// what its columns lack over them. Paragraphs are laid out with the table style's formatting;
 /// after [`MEASURE_BUDGET`] paragraphs the remaining rows are skipped.
-pub fn measure_table_columns(doc: &wordcraft_doc::Document, t: &Table) -> Vec<(f32, f32)> {
-    use wordcraft_doc::Block;
+pub fn measure_table_columns(doc: &soratra_doc::Document, t: &Table) -> Vec<(f32, f32)> {
+    use soratra_doc::Block;
     let style = t.props.style.as_deref().and_then(|id| doc.styles.table_style(id));
     let margins_def = default_margins(t, style.as_ref());
-    let ncols = t.cols().clamp(1, wordcraft_doc::table::MAX_COLS);
+    let ncols = t.cols().clamp(1, soratra_doc::table::MAX_COLS);
     let fields = crate::FieldCtx::default();
     let mut cols = vec![(0.0f32, 0.0f32); ncols];
     // Cells spanning several columns: (first column, span, min, max), applied after the others.
@@ -741,7 +741,7 @@ pub fn layout_table(ctx: &mut Ctx, story: StoryRef, t: &Table, path: &[u32], ava
             items.push(Placed::Cell {
                 rect: Rect::new(c.x, 0.0, c.w, if c.vmerge == VMerge::Continue { rh } else { span_h }),
                 covered: c.vmerge == VMerge::Continue,
-                table: wordcraft_doc::Path(path.to_vec()),
+                table: soratra_doc::Path(path.to_vec()),
                 row: ri,
                 cell: ci,
                 story,
@@ -1037,7 +1037,7 @@ fn region_of(t: &Table, style: Option<&TableStyleProps>, ri: usize, g: usize, sp
 /// The table style's text formatting in `region`: each part's character formatting and paragraph
 /// alignment over the last, lowest precedence first (ECMA-376 §17.7.6).
 fn region_text(st: &TableStyleProps, region: Region) -> CellText {
-    let mut chr = wordcraft_doc::CharProps::default();
+    let mut chr = soratra_doc::CharProps::default();
     let mut para = st.para.clone();
     for part in region.iter() {
         let f = st.part(part);
@@ -1119,7 +1119,7 @@ fn blocks_content(ctx: &mut Ctx, blocks: &Blocks, text: Option<&CellText>, depth
 }
 
 /// The list level `p` is in, for its indents (without counting it: measuring isn't laying out).
-fn list_level(ctx: &Ctx, p: &Paragraph) -> Option<wordcraft_doc::numbering::Level> {
+fn list_level(ctx: &Ctx, p: &Paragraph) -> Option<soratra_doc::numbering::Level> {
     let n = p.props.numbering.or_else(|| ctx.doc.styles.resolve_para(&p.props).numbering).filter(|n| n.num != 0)?;
     ctx.doc.numbering.level(n.num, n.level).cloned()
 }

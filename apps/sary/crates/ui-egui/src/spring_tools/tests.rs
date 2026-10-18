@@ -11,14 +11,14 @@ use crate::canvas::ViewXform;
 /// Frames are 1/60 s apart, so a hold is a count of frames.
 const DT: f32 = 1.0 / 60.0;
 
-fn harness(tool: Tool) -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness(tool: Tool) -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.sync_views();
     app.ui.extras.rulers = false;
     app.ui.tool = tool;
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).with_step_dt(DT).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -28,7 +28,7 @@ fn harness(tool: Tool) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let v = &mut h.state_mut().ui.views[0];
     v.zoom = 1.0;
@@ -38,7 +38,7 @@ fn harness(tool: Tool) -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn screen(h: &Harness<'static, PhotocraftApp>, x: f32, y: f32) -> Pos2 {
+fn screen(h: &Harness<'static, SaryApp>, x: f32, y: f32) -> Pos2 {
     let app = h.state();
     let v = &app.ui.views[0];
     let xf = ViewXform {
@@ -53,38 +53,38 @@ fn screen(h: &Harness<'static, PhotocraftApp>, x: f32, y: f32) -> Pos2 {
 }
 
 /// One key event with its modifiers, run as a frame.
-fn key_event(h: &mut Harness<'static, PhotocraftApp>, k: Key, pressed: bool, repeat: bool, m: Modifiers) {
+fn key_event(h: &mut Harness<'static, SaryApp>, k: Key, pressed: bool, repeat: bool, m: Modifiers) {
     h.event(Event::ModifiersChanged(m));
     h.event(Event::Key { key: k, physical_key: None, pressed, repeat, modifiers: m });
     h.run_steps(1);
 }
 
-fn down(h: &mut Harness<'static, PhotocraftApp>, k: Key) {
+fn down(h: &mut Harness<'static, SaryApp>, k: Key) {
     key_event(h, k, true, false, Modifiers::NONE);
 }
 
-fn up(h: &mut Harness<'static, PhotocraftApp>, k: Key) {
+fn up(h: &mut Harness<'static, SaryApp>, k: Key) {
     key_event(h, k, false, false, Modifiers::NONE);
     h.run_steps(2);
 }
 
 /// Wait `secs` of input time.
-fn wait(h: &mut Harness<'static, PhotocraftApp>, secs: f64) {
+fn wait(h: &mut Harness<'static, SaryApp>, secs: f64) {
     h.run_steps((secs / f64::from(DT)).ceil() as usize);
 }
 
-fn button(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, pressed: bool, m: Modifiers) {
+fn button(h: &mut Harness<'static, SaryApp>, p: Pos2, pressed: bool, m: Modifiers) {
     h.event(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed, modifiers: m });
     h.run_steps(1);
 }
 
-fn move_to(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32) {
+fn move_to(h: &mut Harness<'static, SaryApp>, x: f32, y: f32) {
     let p = screen(h, x, y);
     h.event(Event::PointerMoved(p));
     h.run_steps(1);
 }
 
-fn click(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifiers) {
+fn click(h: &mut Harness<'static, SaryApp>, x: f32, y: f32, m: Modifiers) {
     move_to(h, x, y);
     let p = screen(h, x, y);
     button(h, p, true, m);
@@ -228,8 +228,8 @@ fn letters_type_while_editing_text() {
     assert_eq!(h.state().ui.tool, Tool::Type);
     assert_eq!(h.state().ui.spring, None);
     let st = h.state().session.active().unwrap();
-    match &st.doc.layer(photocraft_doc::LayerId(id)).unwrap().content {
-        photocraft_doc::LayerContent::Text(t) => assert_eq!(t.text, "ab"),
+    match &st.doc.layer(sary_doc::LayerId(id)).unwrap().content {
+        sary_doc::LayerContent::Text(t) => assert_eq!(t.text, "ab"),
         _ => panic!("not text"),
     }
 }
@@ -249,7 +249,7 @@ fn a_tool_picked_while_a_letter_is_held_stands() {
 
 #[test]
 fn plain_functions_follow_the_rules() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.ui.tool = Tool::Eraser;
     // The current group's own key cycles; no spring.
     pressed(&mut app, 'E', Tool::Eraser, true, 0.0);

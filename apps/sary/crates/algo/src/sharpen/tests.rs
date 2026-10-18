@@ -1,6 +1,6 @@
 use super::*;
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_raster::{Interrupt, Surface};
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_raster::{Interrupt, Surface};
 use std::time::Instant;
 
 #[path = "reference.rs"]
@@ -308,16 +308,16 @@ fn cancellation_stops_inside_a_tile_before_publishing() {
 #[ignore = "release full-operation baseline/candidate comparison; run alone"]
 fn unsharp_performance() {
     let number = |name: &str, default: i32| std::env::var(name).ok().and_then(|s| s.parse::<i32>().ok()).unwrap_or(default);
-    let (w, h, reps) = (number("PHOTOCRAFT_UNSHARP_WIDTH", 1500), number("PHOTOCRAFT_UNSHARP_HEIGHT", 1000), number("PHOTOCRAFT_UNSHARP_REPS", 5));
+    let (w, h, reps) = (number("SARY_UNSHARP_WIDTH", 1500), number("SARY_UNSHARP_HEIGHT", 1000), number("SARY_UNSHARP_REPS", 5));
     assert!((1..=8192).contains(&w) && (1..=8192).contains(&h) && (1..=15).contains(&reps));
-    let depth = match number("PHOTOCRAFT_UNSHARP_DEPTH", 8) {
+    let depth = match number("SARY_UNSHARP_DEPTH", 8) {
         8 => SampleType::U8,
         16 => SampleType::U16,
         32 => SampleType::F32,
         _ => panic!("depth"),
     };
     let area = Rect::new(0, 0, w, h);
-    let channels = number("PHOTOCRAFT_UNSHARP_CHANNELS", 4);
+    let channels = number("SARY_UNSHARP_CHANNELS", 4);
     let (mode, alpha) = match channels {
         1 => (ColorMode::Grayscale, false),
         2 => (ColorMode::Grayscale, true),
@@ -327,9 +327,9 @@ fn unsharp_performance() {
         _ => panic!("channels 1..5"),
     };
     let surface = source(area, PixelFormat::new(mode, depth, alpha));
-    let measure = std::env::var("PHOTOCRAFT_UNSHARP_MODE").unwrap_or_else(|_| "paired".into());
+    let measure = std::env::var("SARY_UNSHARP_MODE").unwrap_or_else(|_| "paired".into());
     assert!(matches!(measure.as_str(), "paired" | "reference" | "candidate"));
-    let cases = std::env::var("PHOTOCRAFT_UNSHARP_CASES").unwrap_or_else(|_| "0.6:150:0,3:150:8,10:300:16,30:150:0".into());
+    let cases = std::env::var("SARY_UNSHARP_CASES").unwrap_or_else(|_| "0.6:150:0,3:150:8,10:300:16,30:150:0".into());
     for case in cases.split(',') {
         let values: Vec<f32> = case.split(':').map(|v| v.parse().unwrap()).collect();
         let (radius, amount, threshold) = (values[0], values[1], values[2]);
@@ -352,7 +352,7 @@ fn unsharp_performance() {
             }
             println!(
                 "{}",
-                serde_json::json!({"mode":measure,"width":w,"height":h,"channels":channels,"depth":number("PHOTOCRAFT_UNSHARP_DEPTH",8),"radius":radius,"amount":amount,"threshold":threshold,"workers":workers(),"runs_ms":times})
+                serde_json::json!({"mode":measure,"width":w,"height":h,"channels":channels,"depth":number("SARY_UNSHARP_DEPTH",8),"radius":radius,"amount":amount,"threshold":threshold,"workers":workers(),"runs_ms":times})
             );
             continue;
         }
@@ -384,7 +384,7 @@ fn unsharp_performance() {
         };
         println!(
             "{}",
-            serde_json::json!({"width":w,"height":h,"channels":channels,"depth":number("PHOTOCRAFT_UNSHARP_DEPTH",8),"radius":radius,"amount":amount,"threshold":threshold,"workers":workers(),"before_ms":a,"after_ms":b,"before_median_ms":median(&a),"after_median_ms":median(&b),"speedup":median(&a)/median(&b),"max_error":0})
+            serde_json::json!({"width":w,"height":h,"channels":channels,"depth":number("SARY_UNSHARP_DEPTH",8),"radius":radius,"amount":amount,"threshold":threshold,"workers":workers(),"before_ms":a,"after_ms":b,"before_median_ms":median(&a),"after_median_ms":median(&b),"speedup":median(&a)/median(&b),"max_error":0})
         );
     }
 }

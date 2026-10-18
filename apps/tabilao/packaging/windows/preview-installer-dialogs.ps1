@@ -23,7 +23,7 @@ Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
-public static class GridcraftMsiPreview {
+public static class TabilaoMsiPreview {
     [DllImport("msi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     public static extern uint MsiOpenDatabaseW(string path, IntPtr persist, out uint database);
     [DllImport("msi.dll")]
@@ -53,7 +53,7 @@ public static class GridcraftMsiPreview {
             if (owner != process) return true;
             var title = new StringBuilder(128);
             GetWindowText(window, title, title.Capacity);
-            if (title.ToString() != "GridCraft Setup") return true;
+            if (title.ToString() != "Tabilao Setup") return true;
             found = window;
             return false;
         }, IntPtr.Zero);
@@ -67,23 +67,23 @@ function Assert-MsiResult([uint32] $Result, [string] $Operation) {
 [uint32] $database = 0
 [uint32] $preview = 0
 try {
-  Assert-MsiResult ([GridcraftMsiPreview]::MsiOpenDatabaseW($Msi, [IntPtr]::Zero, [ref] $database)) 'Open read-only MSI'
-  $dialogs = 'DesktopShortcutDlg', 'SetupCompleteDlg', 'SetupCanceledDlg', 'SetupFailedDlg', 'GridcraftErrorDlg', 'FilesInUse'
+  Assert-MsiResult ([TabilaoMsiPreview]::MsiOpenDatabaseW($Msi, [IntPtr]::Zero, [ref] $database)) 'Open read-only MSI'
+  $dialogs = 'DesktopShortcutDlg', 'SetupCompleteDlg', 'SetupCanceledDlg', 'SetupFailedDlg', 'TabilaoErrorDlg', 'FilesInUse'
   foreach ($dialog in $dialogs) {
     # Give each dialog its own preview session; closing its handle releases the UI.
-    Assert-MsiResult ([GridcraftMsiPreview]::MsiEnableUIPreview($database, [ref] $preview)) "Enable preview for $dialog"
-    Assert-MsiResult ([GridcraftMsiPreview]::MsiPreviewDialogW($preview, $dialog)) "Preview $dialog"
+    Assert-MsiResult ([TabilaoMsiPreview]::MsiEnableUIPreview($database, [ref] $preview)) "Enable preview for $dialog"
+    Assert-MsiResult ([TabilaoMsiPreview]::MsiPreviewDialogW($preview, $dialog)) "Preview $dialog"
     $window = [IntPtr]::Zero
     $wait = [Diagnostics.Stopwatch]::StartNew()
     while ($window -eq [IntPtr]::Zero -and $wait.Elapsed.TotalSeconds -lt 5) {
       [Windows.Forms.Application]::DoEvents()
-      $window = [GridcraftMsiPreview]::FindDialog([uint32] $PID)
+      $window = [TabilaoMsiPreview]::FindDialog([uint32] $PID)
       Start-Sleep -Milliseconds 50
     }
     if ($window -eq [IntPtr]::Zero) { throw "No native window found for $dialog" }
     [Windows.Forms.Application]::DoEvents()
-    $rect = New-Object GridcraftMsiPreview+Rect
-    if (-not [GridcraftMsiPreview]::GetWindowRect($window, [ref] $rect)) { throw "Cannot measure $dialog" }
+    $rect = New-Object TabilaoMsiPreview+Rect
+    if (-not [TabilaoMsiPreview]::GetWindowRect($window, [ref] $rect)) { throw "Cannot measure $dialog" }
     $width = $rect.Right - $rect.Left
     $height = $rect.Bottom - $rect.Top
     if ($width -lt 1 -or $height -lt 1 -or $width -gt 4096 -or $height -gt 4096) { throw "Invalid preview dimensions for $dialog" }
@@ -92,7 +92,7 @@ try {
     try {
       $dc = $graphics.GetHdc()
       try {
-        if (-not [GridcraftMsiPreview]::PrintWindow($window, $dc, 0)) { throw "Capture failed for $dialog" }
+        if (-not [TabilaoMsiPreview]::PrintWindow($window, $dc, 0)) { throw "Capture failed for $dialog" }
       } finally { $graphics.ReleaseHdc($dc) }
       $colors = New-Object 'Collections.Generic.HashSet[int]'
       for ($y = 0; $y -lt $height; $y += [Math]::Max(1, [int] ($height / 32))) {
@@ -106,7 +106,7 @@ try {
       $graphics.Dispose()
       $bitmap.Dispose()
     }
-    Assert-MsiResult ([GridcraftMsiPreview]::MsiCloseHandle($preview)) "Close preview for $dialog"
+    Assert-MsiResult ([TabilaoMsiPreview]::MsiCloseHandle($preview)) "Close preview for $dialog"
     $preview = 0
     Write-Host "Saved native MSI dialog preview: $dialog"
   }
@@ -114,7 +114,7 @@ try {
     Set-Content -LiteralPath (Join-Path $OutputDir 'README.txt') -Encoding utf8
 } finally {
   if ($preview -ne 0) {
-    $null = [GridcraftMsiPreview]::MsiCloseHandle($preview)
+    $null = [TabilaoMsiPreview]::MsiCloseHandle($preview)
   }
-  if ($database -ne 0) { $null = [GridcraftMsiPreview]::MsiCloseHandle($database) }
+  if ($database -ne 0) { $null = [TabilaoMsiPreview]::MsiCloseHandle($database) }
 }

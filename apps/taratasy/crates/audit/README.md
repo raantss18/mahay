@@ -1,4 +1,4 @@
-# pdfcraft-audit
+# taratasy-audit
 
 Layer L4 (may use `edit`): verification tooling, the faux-redaction audit.
 
@@ -35,6 +35,6 @@ Limits, by design and documented rather than hidden:
 It fails closed: an undecodable content stream, malformed `/Annots`, form XObjects nested deeper
 than 32 or in a cycle, or a walk past the operator bound is an error, never "no findings".
 
-Surfaces: the `doc_audit_redactions` automation tool and `pdfcraft-cli audit`. Both report each
+Surfaces: the `doc_audit_redactions` automation tool and `taratasy-cli audit`. Both report each
 rectangle in points from the top-left of the page as displayed (y down, after `/Rotate`), like
 the other tools; `AuditFinding::rect` itself stays in PDF user space.

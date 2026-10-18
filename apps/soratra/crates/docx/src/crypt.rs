@@ -24,7 +24,7 @@ use zeroize::Zeroizing;
 use crate::DocxError;
 use crate::xml;
 
-/// The spin count Word uses, and WordCraft writes.
+/// The spin count Word uses, and Soratra writes.
 pub const DEFAULT_SPIN_COUNT: u32 = 100_000;
 /// The largest spin count the specification allows (§2.3.4.10 `ST_SpinCount`): it bounds the
 /// work a hostile file can ask for.
@@ -251,7 +251,7 @@ pub enum PasswordCheck {
     Correct,
     /// The password doesn't match.
     Incorrect,
-    /// The hash uses an algorithm or form WordCraft can't check, or is damaged. The protection
+    /// The hash uses an algorithm or form Soratra can't check, or is damaged. The protection
     /// must stay on: guessing would let any password through.
     Unsupported,
 }
@@ -407,7 +407,7 @@ fn stream<F: Read + std::io::Seek>(comp: &mut cfb::CompoundFile<F>, path: &str, 
     Ok(v)
 }
 
-/// The hash algorithms agile encryption names that WordCraft supports.
+/// The hash algorithms agile encryption names that Soratra supports.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Hash {
     Sha1,
@@ -642,8 +642,8 @@ fn parse_info(info: &[u8]) -> Result<Info, DocxError> {
     };
     match (major, minor) {
         (4, 4) => {}
-        (2..=4, 2) => return Err(bad("this file uses Standard encryption (Office 2007), which WordCraft can't open yet")),
-        (3 | 4, 3) => return Err(bad("this file uses extensible encryption, which WordCraft can't open")),
+        (2..=4, 2) => return Err(bad("this file uses Standard encryption (Office 2007), which Soratra can't open yet")),
+        (3 | 4, 3) => return Err(bad("this file uses extensible encryption, which Soratra can't open")),
         _ => return Err(bad(format!("unknown encryption version {major}.{minor}"))),
     }
     let root = xml::parse(info.get(8..).unwrap_or(&[]))?;
@@ -846,7 +846,7 @@ mod tests {
         assert_eq!(super::check_protection_password(&attrs, "Example"), Correct);
         assert_eq!(super::check_protection_password(&attrs, "example"), Incorrect);
         assert_eq!(super::check_protection_password(&attrs, ""), Incorrect);
-        // MD5 (and the other algorithms WordCraft lacks), hostile spin counts: refused.
+        // MD5 (and the other algorithms Soratra lacks), hostile spin counts: refused.
         assert_eq!(super::check_protection_password(&legacy("3", KNOWN_LEGACY_SHA1, "100000"), "Example"), Unsupported);
         assert_eq!(super::check_protection_password(&legacy("4", KNOWN_LEGACY_SHA1, "4294967295"), "Example"), Unsupported);
         assert_eq!(super::check_protection_password(&legacy("4", KNOWN_LEGACY_SHA1, "-1"), "Example"), Unsupported);
@@ -864,7 +864,7 @@ mod tests {
     use super::*;
 
     fn zip_package() -> Vec<u8> {
-        let mut doc = wordcraft_doc::Document::from_text("Top secret plans\nSecond paragraph");
+        let mut doc = soratra_doc::Document::from_text("Top secret plans\nSecond paragraph");
         doc.core.title = "Secret".into();
         crate::write(&doc).unwrap()
     }
@@ -880,7 +880,7 @@ mod tests {
         assert!(comp.is_stream("/\u{6}DataSpaces/TransformInfo/StrongEncryptionTransform/\u{6}Primary"));
         assert_eq!(decrypt(&enc, Some("pässwörd 🔑")).unwrap(), pkg);
         let doc = crate::read_with_password(&enc, Some("pässwörd 🔑")).unwrap();
-        assert!(doc.plain_text(wordcraft_doc::StoryRef::Body).contains("Top secret plans"));
+        assert!(doc.plain_text(soratra_doc::StoryRef::Body).contains("Top secret plans"));
         assert_eq!(doc.core.title, "Secret");
         // Without a password, or with the wrong one, it says so instead of opening blank.
         assert_eq!(crate::read(&enc), Err(DocxError::PasswordRequired));

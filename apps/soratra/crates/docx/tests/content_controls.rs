@@ -4,9 +4,9 @@
 
 use std::io::Write;
 
-use wordcraft_doc::control::{ControlKind, ControlLock, ListItem};
-use wordcraft_doc::{Block, ContentControl, Document, StoryRef};
-use wordcraft_docx::{read, write};
+use soratra_doc::control::{ControlKind, ControlLock, ListItem};
+use soratra_doc::{Block, ContentControl, Document, StoryRef};
+use soratra_docx::{read, write};
 
 const NS: &str = r#"xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml""#;
 const ROOT_RELS: &str = r#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>"#;
@@ -98,7 +98,7 @@ fn document_xml(docx: &[u8]) -> String {
 
 fn controls(d: &Document) -> Vec<ContentControl> {
     let mut out = Vec::new();
-    wordcraft_doc::control::walk_controls(&d.body, &mut |c| out.push(c.clone()));
+    soratra_doc::control::walk_controls(&d.body, &mut |c| out.push(c.clone()));
     out
 }
 
@@ -186,8 +186,8 @@ fn edited_documents_still_write_whole_controls() {
     let ranges = d.control_ranges(StoryRef::Body);
     let name = ranges.iter().find(|r| r.control.id == Some(7)).unwrap().clone();
     let intro = ranges.iter().find(|r| r.control.title == "Intro").unwrap().clone();
-    let from = wordcraft_doc::Pos { off: 3, ..intro.end.clone() };
-    let to = wordcraft_doc::Pos { off: name.start.off + 4, ..name.start.clone() };
+    let from = soratra_doc::Pos { off: 3, ..intro.end.clone() };
+    let to = soratra_doc::Pos { off: name.start.off + 4, ..name.start.clone() };
     d.delete_range(&from, &to).unwrap();
     // Both controls are still there, emptied where the deletion went through them.
     let after = d.control_ranges(StoryRef::Body);

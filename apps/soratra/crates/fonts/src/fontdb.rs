@@ -19,7 +19,7 @@ pub use user::{FONT_FILE_EXTS, FontFormat, Installed, MAX_FONT_FILE_BYTES, UserF
 pub const FALLBACK_FAMILY: &str = "Source Sans 3";
 
 /// The bundled fonts (OFL), as font file bytes. Japanese fonts are not bundled: they come from
-/// the optional craft-fonts build input ([`crate::japanese_document_fonts`]).
+/// the optional mahay-fonts build input ([`crate::japanese_document_fonts`]).
 pub fn bundled() -> &'static [&'static [u8]] {
     BUNDLED
 }
@@ -925,14 +925,14 @@ fn style_italic(style: &str) -> bool {
 }
 
 impl FontDb {
-    /// A database holding the bundled fonts, then the craft-fonts Japanese faces (Mincho first,
+    /// A database holding the bundled fonts, then the mahay-fonts Japanese faces (Mincho first,
     /// so they are the fallback for Japanese text after the requested and bundled fonts), then the
-    /// other craft-fonts faces: Simplified Chinese, for the ideographs the Japanese fonts lack, and
+    /// other mahay-fonts faces: Simplified Chinese, for the ideographs the Japanese fonts lack, and
     /// Arabic, so Arabic and Persian text draws without system fonts (#1652) (all empty without
-    /// `CRAFT_FONTS_DIR`), whose system font scan reads `font_dirs`.
+    /// `MAHAY_FONTS_DIR`), whose system font scan reads `font_dirs`.
     pub fn with_font_dirs(font_dirs: Vec<std::path::PathBuf>) -> Self {
         let mut faces = Vec::new();
-        let others = crate::CRAFT_FONTS.iter().filter(|f| !f.scripts.contains(&"Jpan"));
+        let others = crate::MAHAY_FONTS.iter().filter(|f| !f.scripts.contains(&"Jpan"));
         let craft = crate::japanese_document_fonts().into_iter().chain(others).map(|f| f.bytes);
         for data in BUNDLED.iter().copied().chain(craft) {
             for f in enumerate_faces(data) {
@@ -1786,10 +1786,10 @@ mod tests_sysfonts;
 #[cfg(test)]
 mod tests {
     #[test]
-    #[ignore = "requires a locally licensed kaiu.ttf; set WORDCRAFT_TEST_KAI_FONT"]
+    #[ignore = "requires a locally licensed kaiu.ttf; set SORATRA_TEST_KAI_FONT"]
     fn kai_contours_include_complete_character_body() {
         use kurbo::Shape;
-        let path = std::env::var_os("WORDCRAFT_TEST_KAI_FONT").expect("set WORDCRAFT_TEST_KAI_FONT");
+        let path = std::env::var_os("SORATRA_TEST_KAI_FONT").expect("set SORATRA_TEST_KAI_FONT");
         let db = super::FontDb::with_font_dirs(vec![]);
         db.set_system_fallback(false);
         assert!(db.add_font(std::fs::read(path).unwrap()) > 0);

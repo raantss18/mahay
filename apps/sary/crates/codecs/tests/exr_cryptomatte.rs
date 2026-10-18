@@ -8,7 +8,7 @@ use exr::meta::attribute::{AttributeValue, Text};
 use exr::prelude::{
     AnyChannel, AnyChannels, Blocks, Compression, Encoding, FlatSamples, ImageAttributes, IntegerBounds, Layer, LayerAttributes, LineOrder, WritableImage,
 };
-use photocraft_codecs::{Limits, cryptomatte_id, cryptomatte_key, cryptomatte_layers, cryptomatte_preview_color, decode_cryptomatte};
+use sary_codecs::{Limits, cryptomatte_id, cryptomatte_key, cryptomatte_layers, cryptomatte_preview_color, decode_cryptomatte};
 
 // -------------------------------------------------------------------------------------------
 // The official hash test vectors (cryptomatte_utilities_tests.py, CryptoHashing).

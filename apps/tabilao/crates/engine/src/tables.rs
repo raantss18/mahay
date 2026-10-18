@@ -1,8 +1,8 @@
 //! Table styles: how a cell inside a table looks (our own palettes, keyed by the familiar
 //! `TableStyleLight1…21 / Medium1…28 / Dark1…11` names so files round-trip).
 
-use gridcraft_core::{CellRef, RangeRef};
-use gridcraft_model::*;
+use tabilao_core::{CellRef, RangeRef};
+use tabilao_model::*;
 
 /// (family, number) from a style name, e.g. `TableStyleMedium2` → ("Medium", 2).
 pub fn parse_style_name(name: &str) -> (&'static str, u32) {
@@ -210,7 +210,7 @@ pub(crate) fn sync_headers(cx: &mut crate::cmd::Ctx) {
         // Headers are text: a number typed there, or a generated name, is written back as text.
         if name != text || !is_text {
             let style = sh.style_id(c);
-            sh.cells.set(c, Cell { value: gridcraft_core::Value::text(name.as_str()), style, ..Default::default() });
+            sh.cells.set(c, Cell { value: tabilao_core::Value::text(name.as_str()), style, ..Default::default() });
         }
         if !old.eq_ignore_ascii_case(&name) {
             renames.push((si, table, range, old, name));
@@ -227,7 +227,7 @@ pub(crate) fn sync_headers(cx: &mut crate::cmd::Ctx) {
             let Some(e) = f.expr() else { continue };
             let mut hit = false;
             let ne = e.map(&mut |x| match x {
-                gridcraft_formula::Expr::Struct(mut st) => {
+                tabilao_formula::Expr::Struct(mut st) => {
                     for (si, table, range, old, name) in &renames {
                         let this = if st.table.is_empty() { i == *si && range.contains(c) } else { st.table.eq_ignore_ascii_case(table) };
                         if this {
@@ -239,7 +239,7 @@ pub(crate) fn sync_headers(cx: &mut crate::cmd::Ctx) {
                             }
                         }
                     }
-                    gridcraft_formula::Expr::Struct(st)
+                    tabilao_formula::Expr::Struct(st)
                 }
                 o => o,
             });
@@ -253,7 +253,7 @@ pub(crate) fn sync_headers(cx: &mut crate::cmd::Ctx) {
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::Value;
+    use tabilao_core::Value;
     use serde_json::json;
 
     use crate::Session;
@@ -275,13 +275,13 @@ mod tests {
         let sh = d.wb.sheet(0).unwrap();
         let names: Vec<&str> = sh.tables[0].columns.iter().map(|c| c.name.as_str()).collect();
         assert_eq!(names, ["zz", "Column2", "ZZ2"]);
-        assert_eq!(sh.value(gridcraft_core::CellRef::new(0, 1)), Value::from("Column2"));
-        assert_eq!(sh.value(gridcraft_core::CellRef::new(0, 2)), Value::from("ZZ2"));
+        assert_eq!(sh.value(tabilao_core::CellRef::new(0, 1)), Value::from("Column2"));
+        assert_eq!(sh.value(tabilao_core::CellRef::new(0, 2)), Value::from("ZZ2"));
         s.execute("range.setValues", json!({"range": "A1", "values": [["x", "x", 5]]})).unwrap();
         let sh = s.doc().unwrap().wb.sheet(0).unwrap();
         let names: Vec<&str> = sh.tables[0].columns.iter().map(|c| c.name.as_str()).collect();
         assert_eq!(names, ["x", "x2", "5"]);
-        assert_eq!(sh.value(gridcraft_core::CellRef::new(0, 2)), Value::from("5"));
+        assert_eq!(sh.value(tabilao_core::CellRef::new(0, 2)), Value::from("5"));
     }
 
     #[test]

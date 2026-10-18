@@ -49,7 +49,7 @@ impl Cache {
     }
 }
 
-/// PdfCraft patch: a byte-budgeted cache of decoded images, keyed by everything a decode reads
+/// Taratasy patch: a byte-budgeted cache of decoded images, keyed by everything a decode reads
 /// ([`DecodedImageKey`]). Image-heavy pages decode thousands of images; without this every tile
 /// and every scale decodes them all again. Entries hold owned pixels, so a hit never changes
 /// them; when an insert would pass the budget the whole map is dropped (a fresh epoch), which
@@ -63,7 +63,7 @@ pub(crate) struct DecodedImageCache {
     pub(crate) preview: bool,
 }
 
-/// PdfCraft patch: what a decoded image depends on. Two images share an entry only when all of
+/// Taratasy patch: what a decoded image depends on. Two images share an entry only when all of
 /// it is equal:
 /// - where the stream's dictionary lies in the document's data (`dict_at`, `dict_len`): a
 ///   stream's data follows its dictionary, so this tells apart streams whose dictionaries are
@@ -73,7 +73,7 @@ pub(crate) struct DecodedImageCache {
 ///   `/BitsPerComponent`, filters, …) and its object (`obj`: the decryption key depends on it);
 /// - whether it is decoded as a mask, a stencil mask, raster or mask output, interpolation,
 ///   the decode target size (only for an image a JPX stream decodes, which is the only
-///   decode that reads it: PdfCraft patch 32), and preview or final quality.
+///   decode that reads it: Taratasy patch 32), and preview or final quality.
 ///
 /// A transfer function (graphics state `/TR`) also changes the pixels and has no cheap key, so
 /// an image drawn under one is not cached; neither is an inline image, whose dictionary lives in
@@ -96,7 +96,7 @@ pub(crate) struct DecodedImageKey {
 struct DecodedImageCacheInner {
     map: HashMap<DecodedImageKey, Option<Box<dyn Any + Send + Sync>>>,
     bytes: usize,
-    /// PdfCraft patch (32): how many keyed decodes ran (cache misses).
+    /// Taratasy patch (32): how many keyed decodes ran (cache misses).
     decodes: usize,
 }
 
@@ -108,7 +108,7 @@ impl DecodedImageCache {
         }
     }
 
-    /// PdfCraft patch (32): how many decodes the cache was asked to keep (its misses), for
+    /// Taratasy patch (32): how many decodes the cache was asked to keep (its misses), for
     /// diagnostics and tests. 0 when the lock is poisoned.
     pub(crate) fn decodes(&self) -> usize {
         self.inner.lock().map(|locked| locked.decodes).unwrap_or(0)

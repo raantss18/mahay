@@ -2,7 +2,7 @@
 //! every descriptor, bit depth and packing it reads, both byte orders, the header fields kept
 //! through a round trip, the bit-depth choice on export and the files it refuses (#1049).
 
-use photocraft_codecs::*;
+use sary_codecs::*;
 
 const HEADER: usize = 2048;
 const ELEMENT0: usize = 780;

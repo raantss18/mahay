@@ -3,7 +3,7 @@
 //! Each strip or tile holds one JPEG XL codestream (bare or in the ISO/IEC 18181-2 container)
 //! whose image is the segment's samples: one channel for CFA data, three for LinearRaw. Samsung
 //! Expert RAW writes LinearRaw this way. Decoding is done by `jxl-oxide`, a pure-Rust decoder;
-//! like heic-rs in `photocraft-heif`, every call into it runs under `catch_unwind` so a decoder
+//! like heic-rs in `sary-heif`, every call into it runs under `catch_unwind` so a decoder
 //! panic on a malformed file becomes [`RawError::Malformed`].
 //!
 //! The browser build (wasm32) leaves the decoder out: jxl-oxide added 0.88 MB to a wasm that
@@ -19,7 +19,7 @@ use crate::error::{RawError, Result};
 /// The browser build has no JPEG XL decoder (see the module docs).
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn decode(_src: &[u8], _w: usize, _h: usize, _samples: usize, _bits: u32, _limits: &Limits) -> Result<Vec<u16>> {
-    Err(RawError::unsupported("JPEG XL-compressed DNG (DNG 1.7) can't be opened in the browser version of PhotoCraft; open it in the desktop app"))
+    Err(RawError::unsupported("JPEG XL-compressed DNG (DNG 1.7) can't be opened in the browser version of Sary; open it in the desktop app"))
 }
 
 /// Decodes one segment into `w * h * samples` interleaved samples at `bits` per sample (the

@@ -26,12 +26,12 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use pdfcraft_render::{PageRenderer, RenderConfig, RenderRequest, RequestKind};
+use taratasy_render::{PageRenderer, RenderConfig, RenderRequest, RequestKind};
 
 /// `corpus/pdfjs/test/pdfs`, or `None` when nothing has been fetched.
 ///
 /// Panics when the checkout exists without the stamp `cargo xtask corpus` writes on a successful
-/// verification: an unverified corpus must fail loudly rather than skip, as in `pdfcraft-cos`'s
+/// verification: an unverified corpus must fail loudly rather than skip, as in `taratasy-cos`'s
 /// corpus tests.
 fn corpus() -> Option<std::path::PathBuf> {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus/pdfjs");
@@ -39,7 +39,7 @@ fn corpus() -> Option<std::path::PathBuf> {
         return None;
     }
     assert!(
-        dir.join(".pdfcraft-corpus.json").is_file(),
+        dir.join(".taratasy-corpus.json").is_file(),
         "{} exists but has not been verified against the pin; run `cargo xtask corpus`",
         dir.display()
     );

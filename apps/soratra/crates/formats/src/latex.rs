@@ -19,7 +19,7 @@
 //! environment nesting is depth-limited and the input size is capped.
 
 use crate::model::{self, Cell, FBlock, FTable, Flow, Fmt, Inline, Kind, ListInfo, Para};
-use wordcraft_doc::{Align, Document, Rgb};
+use soratra_doc::{Align, Document, Rgb};
 
 /// Largest `.tex` source imported (bytes); longer input is cut off.
 pub const MAX_SOURCE: usize = 32 << 20;
@@ -52,7 +52,7 @@ pub fn export(doc: &Document) -> String {
 
     let meta = &flow.meta;
     let mut o = String::new();
-    o.push_str("% Written by WordCraft (https://getartcraft.com/apps/wordcraft).\n");
+    o.push_str("% Written by Soratra (https://github.com/raantss18/mahay).\n");
     o.push_str("\\documentclass{article}\n");
     o.push_str("\\usepackage[T1]{fontenc}\n");
     if w.uses.ulem {
@@ -321,7 +321,7 @@ impl Writer {
                 Some(target) => format!("\\hyperlink{{{}}}{{{s}}}", escape_url(target)),
                 // A script, `file:`, UNC or other non-web target becomes plain text: a `\href`
                 // compiles to a PDF `/URI` action the reader would otherwise follow on click.
-                None if wordcraft_doc::link::is_safe_href(l) => format!("\\href{{{}}}{{{s}}}", escape_url(l)),
+                None if soratra_doc::link::is_safe_href(l) => format!("\\href{{{}}}{{{s}}}", escape_url(l)),
                 None => s,
             };
         }
@@ -329,7 +329,7 @@ impl Writer {
     }
 
     fn table(&mut self, t: &FTable) {
-        let cols = t.cols().clamp(1, wordcraft_doc::table::MAX_COLS);
+        let cols = t.cols().clamp(1, soratra_doc::table::MAX_COLS);
         let widths: Vec<f32> = if t.widths.len() == cols && t.widths.iter().all(|w| w.is_finite() && *w > 1.0) {
             let total: f32 = t.widths.iter().sum();
             // Scale a table wider than the page to fit.
@@ -462,7 +462,7 @@ fn escape_url(s: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Equations: WordCraft keeps them in the linear format (`x=(-b±√(b^2-4ac))/2a`).
+// Equations: Soratra keeps them in the linear format (`x=(-b±√(b^2-4ac))/2a`).
 
 /// Symbols with a LaTeX command: (character, command without the backslash).
 const MATH_SYMBOLS: &[(char, &str)] = &[
@@ -1692,14 +1692,14 @@ fn length_pt(s: &str) -> Option<f32> {
 /// Column widths of a `tabular` column spec, when every column has one (`p{3cm}`).
 fn spec_widths(spec: &str) -> (usize, Vec<f32>) {
     let (cols, widths) = spec_widths_at(spec, 0);
-    (cols.min(wordcraft_doc::table::MAX_COLS), if widths.len() == cols { widths } else { Vec::new() })
+    (cols.min(soratra_doc::table::MAX_COLS), if widths.len() == cols { widths } else { Vec::new() })
 }
 
 /// [`spec_widths`] at nesting `depth` of `*{n}{…}` repeats. The column count saturates and the
-/// widths stop growing past [`wordcraft_doc::table::MAX_COLS`], so nested repeats can't overflow
+/// widths stop growing past [`soratra_doc::table::MAX_COLS`], so nested repeats can't overflow
 /// or exhaust memory; the returned widths are empty unless every column has one.
 fn spec_widths_at(spec: &str, depth: usize) -> (usize, Vec<f32>) {
-    let max_cols = wordcraft_doc::table::MAX_COLS;
+    let max_cols = soratra_doc::table::MAX_COLS;
     let chars: Vec<char> = spec.chars().collect();
     let braces = closers(&chars, '{', '}');
     let mut cols = 0usize;
@@ -2601,7 +2601,7 @@ fn table(toks: &[Tok], spec: &str, depth: usize) -> FTable {
             }
             _ => {}
         }
-        if rows.len() >= wordcraft_doc::table::MAX_ROWS {
+        if rows.len() >= soratra_doc::table::MAX_ROWS {
             break;
         }
     }
@@ -2797,11 +2797,11 @@ mod tests {
         assert_eq!(spec_widths("*{2}{*{2}{l}}").0, 4);
         let deep = format!("{}l{}", "*{1}{".repeat(MAX_NEST + 5), "}".repeat(MAX_NEST + 5));
         let (cols, widths) = spec_widths(&deep);
-        assert!(cols <= wordcraft_doc::table::MAX_COLS && widths.is_empty());
+        assert!(cols <= soratra_doc::table::MAX_COLS && widths.is_empty());
         let wide = format!("{}p{{1cm}}{}", "*{64}{".repeat(30), "}".repeat(30));
         let (cols, widths) = spec_widths(&wide);
-        assert_eq!(cols, wordcraft_doc::table::MAX_COLS);
-        assert!(widths.len() <= wordcraft_doc::table::MAX_COLS);
+        assert_eq!(cols, soratra_doc::table::MAX_COLS);
+        assert!(widths.len() <= soratra_doc::table::MAX_COLS);
     }
 
     const ARTICLE: &str = r#"\documentclass[11pt]{article}
@@ -3012,21 +3012,21 @@ Caf\'e na\"ive \c{c}a \v{s}\'{e} and {\bfseries grouped bold} after.
     #[test]
     fn equations_survive_a_round_trip() {
         let mut d = Document::new();
-        let mut p = wordcraft_doc::Paragraph::with_text("Area ", Default::default());
+        let mut p = soratra_doc::Paragraph::with_text("Area ", Default::default());
         let n = p.len();
         p.insert_object(
             n,
-            wordcraft_doc::para::InlineObject::Equation { linear: "π r^2".into(), display: false, math: Default::default() },
+            soratra_doc::para::InlineObject::Equation { linear: "π r^2".into(), display: false, math: Default::default() },
             &Default::default(),
         )
         .unwrap();
-        d.body = vec![wordcraft_doc::para_block(p)];
+        d.body = vec![soratra_doc::para_block(p)];
         let tex = export(&d);
         assert!(tex.contains("$\\pi r^2$") && tex.contains("\\usepackage{amsmath}"), "{tex}");
         let back = import(tex.as_bytes());
-        let wordcraft_doc::Block::Para(bp) = &*back.body[0] else { panic!() };
+        let soratra_doc::Block::Para(bp) = &*back.body[0] else { panic!() };
         assert!(
-            bp.objects.iter().any(|o| matches!(o, wordcraft_doc::para::InlineObject::Equation { linear, .. } if linear == "π r^2")),
+            bp.objects.iter().any(|o| matches!(o, soratra_doc::para::InlineObject::Equation { linear, .. } if linear == "π r^2")),
             "{:?}",
             bp.objects
         );

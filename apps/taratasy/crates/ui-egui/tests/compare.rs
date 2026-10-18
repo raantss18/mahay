@@ -3,8 +3,8 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_engine::Session;
-use pdfcraft_ui_egui::{PdfCraftApp, RightPanel};
+use taratasy_engine::Session;
+use taratasy_ui_egui::{TaratasyApp, RightPanel};
 
 #[test]
 fn compare_two_versions() {
@@ -12,7 +12,7 @@ fn compare_two_versions() {
     let v1 = s.create_from_text("t", "Delivery within five days. Returns accepted.").unwrap().to_vec();
     let v2 = s.create_from_text("t", "Delivery within three days. Returns accepted for a week.").unwrap().to_vec();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("v1.pdf", None, v1.clone()).unwrap();
         app.open_bytes("v2.pdf", None, v2.clone()).unwrap();
@@ -40,9 +40,9 @@ fn compare_two_versions() {
     assert_eq!(h.state().views[old_i].compare_marks.len(), 2, "replaced words shaded on the old file too");
     assert!(h.state().views[old_i].flash.is_some(), "the old half jumped to the change");
     h.state_mut().views[i].zoom = 1.5;
-    h.state_mut().views[i].fit = pdfcraft_ui_egui::canvas::Fit::None;
+    h.state_mut().views[i].fit = taratasy_ui_egui::canvas::Fit::None;
     h.run_steps(3);
-    assert_eq!((h.state().views[old_i].zoom, h.state().views[old_i].fit), (1.5, pdfcraft_ui_egui::canvas::Fit::None), "the old half follows");
+    assert_eq!((h.state().views[old_i].zoom, h.state().views[old_i].fit), (1.5, taratasy_ui_egui::canvas::Fit::None), "the old half follows");
     h.get_by_label("New file only").click();
     h.run_steps(2);
     assert!(!h.state().compare.as_ref().unwrap().side_by_side);
@@ -59,15 +59,15 @@ fn compare_two_versions() {
     assert_eq!(h.state().session.get(h.state().active_ids().unwrap().1).unwrap().name, "Compare Report.pdf");
 }
 
-/// Writes a screenshot of the Compare panel when PDFCRAFT_SHOT is set (for review).
+/// Writes a screenshot of the Compare panel when TARATASY_SHOT is set (for review).
 #[test]
 fn compare_panel_screenshot() {
-    let Ok(out) = std::env::var("PDFCRAFT_SHOT") else { return };
+    let Ok(out) = std::env::var("TARATASY_SHOT") else { return };
     let s = Session::new();
     let v1 = s.create_from_text("t", "Delivery within five days. Returns accepted.").unwrap().to_vec();
     let v2 = s.create_from_text("t", "Delivery within three days. Returns accepted for a week.").unwrap().to_vec();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("v1.pdf", None, v1.clone()).unwrap();
         app.open_bytes("v2.pdf", None, v2.clone()).unwrap();
@@ -87,7 +87,7 @@ fn compare_panel_screenshot() {
 fn pdfa_dialog_verifies_and_converts() {
     let doc = Session::new().create_from_text("t", "Keep forever").unwrap().to_vec();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("keep.pdf", None, doc.clone()).unwrap();
         app
@@ -144,7 +144,7 @@ fn pdfa_dialog_shows_a_declared_pdfua() {
     ] {
         let doc = declaring(ids);
         let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.open_bytes("ua.pdf", None, doc.clone()).unwrap();
             app
@@ -159,9 +159,9 @@ fn pdfa_dialog_shows_a_declared_pdfua() {
 #[test]
 fn export_to_word_html_and_rtf() {
     let doc = Session::new().create_from_text("t", "Exported words").unwrap().to_vec();
-    let dir = std::env::temp_dir().join(format!("pdfcraft-office-ui-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-office-ui-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.open_bytes("e.pdf", None, doc).unwrap();
     for ext in ["docx", "pptx", "html", "rtf"] {

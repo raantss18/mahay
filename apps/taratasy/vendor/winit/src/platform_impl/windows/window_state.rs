@@ -325,7 +325,7 @@ impl WindowFlags {
         }
 
         if new.contains(WindowFlags::VISIBLE) {
-            // PdfCraft patch: a hidden window that becomes visible while maximized is shown with
+            // Taratasy patch: a hidden window that becomes visible while maximized is shown with
             // one `SW_MAXIMIZE`, and maximizing (below) waits until the window is visible
             // (rust-windowing/winit#4587). `ShowWindow(SW_MAXIMIZE)` shows a hidden window, so
             // restoring a maximized window that eframe keeps hidden until its first frame showed it

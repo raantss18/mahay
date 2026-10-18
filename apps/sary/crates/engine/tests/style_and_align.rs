@@ -2,11 +2,11 @@
 //! channel restrictions); align with an active selection aligns to it however many layers are
 //! selected (layers audit L2).
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
-fn layer(s: &Session, id: u64) -> photocraft_doc::Layer {
-    s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().clone()
+fn layer(s: &Session, id: u64) -> sary_doc::Layer {
+    s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().clone()
 }
 
 fn new_doc(s: &mut Session, mode: &str) -> (u64, u64) {
@@ -50,7 +50,7 @@ fn paste_layer_style_into_another_mode_keeps_blend_if_normalised() {
     s.execute("layer.layerStyle.copyLayerStyle", json!({"layer": a})).unwrap();
     let (c, _) = new_doc(&mut s, "cmyk");
     s.execute("layer.layerStyle.pasteLayerStyle", json!({"layer": c})).unwrap();
-    assert_eq!(layer(&s, c).blend_if, photocraft_doc::BlendIf::default());
+    assert_eq!(layer(&s, c).blend_if, sary_doc::BlendIf::default());
 }
 
 #[test]
@@ -103,13 +103,13 @@ fn a_groups_pass_through_pastes_onto_a_pixel_layer_as_normal() {
     let mut s = Session::new();
     let (a, _) = new_doc(&mut s, "rgb");
     let g = s.execute("layer.new.group", json!({})).unwrap()["layer"].as_u64().unwrap();
-    assert_eq!(layer(&s, g).blend, photocraft_color::BlendMode::PassThrough);
+    assert_eq!(layer(&s, g).blend, sary_color::BlendMode::PassThrough);
     s.execute("layer.layerStyle.copyLayerStyle", json!({"layer": g})).unwrap();
     s.execute("layer.layerStyle.pasteLayerStyle", json!({"layer": a})).unwrap();
-    assert_eq!(layer(&s, a).blend, photocraft_color::BlendMode::Normal, "Pass Through isn't a pixel layer's mode");
+    assert_eq!(layer(&s, a).blend, sary_color::BlendMode::Normal, "Pass Through isn't a pixel layer's mode");
     // Onto another group it stays Pass Through.
     let g2 = s.execute("layer.new.group", json!({})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.setProps", json!({"layer": g2, "blend": "Multiply"})).unwrap();
     s.execute("layer.layerStyle.pasteLayerStyle", json!({"layer": g2})).unwrap();
-    assert_eq!(layer(&s, g2).blend, photocraft_color::BlendMode::PassThrough);
+    assert_eq!(layer(&s, g2).blend, sary_color::BlendMode::PassThrough);
 }

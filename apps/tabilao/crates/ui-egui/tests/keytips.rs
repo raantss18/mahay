@@ -2,10 +2,10 @@
 
 use egui::{Event, Key, Modifiers, PointerButton, os::OperatingSystem};
 use egui_kittest::kittest::Queryable as _;
-use gridcraft_engine::Session;
-use gridcraft_engine::core::{CellRef, Value};
-use gridcraft_engine::model::HAlign;
-use gridcraft_ui_egui::SheetApp;
+use tabilao_engine::Session;
+use tabilao_engine::core::{CellRef, Value};
+use tabilao_engine::model::HAlign;
+use tabilao_ui_egui::SheetApp;
 use serde_json::json;
 
 type Harness = egui_kittest::Harness<'static, SheetApp>;
@@ -419,7 +419,7 @@ fn pending_sequences_are_silent_no_ops() {
 fn pending_sequences_go_live_when_the_command_lands() {
     // The command lands in the catalog (here: a test-registered stand-in).
     // The sequence must run it with no table edit.
-    gridcraft_engine::register_test_command("insert.equation", |s, _| {
+    tabilao_engine::register_test_command("insert.equation", |s, _| {
         s.execute("cell.set", json!({"cell": "Z9", "input": "live"}))?;
         Ok(json!({}))
     });
@@ -527,7 +527,7 @@ fn color_palette_navigates_with_arrows_and_enter_applies() {
     sequence(&mut h, &[Key::H, Key::H], false); // H,H opens the fill palette
     h.run_steps(3);
     key(&mut h, Key::ArrowDown); // highlight starts at theme row 0
-    key(&mut h, Key::ArrowRight); // -> row 0, col 1 = Craft theme dk1 (#000000)
+    key(&mut h, Key::ArrowRight); // -> row 0, col 1 = Mahay theme dk1 (#000000)
     key(&mut h, Key::Enter);
     h.run_steps(3);
     assert!(h.state().message.is_none() && h.state().toast.is_none(), "arrow+Enter must not error");
@@ -538,7 +538,7 @@ fn color_palette_navigates_with_arrows_and_enter_applies() {
 
 #[test]
 fn every_sequence_terminates_without_panicking() {
-    use gridcraft_ui_egui::keytips::keytip_table::SEQUENCES;
+    use tabilao_ui_egui::keytips::keytip_table::SEQUENCES;
     for (seq, _entry) in SEQUENCES {
         let mut h = harness(blank());
         key(&mut h, Key::F10); // arm

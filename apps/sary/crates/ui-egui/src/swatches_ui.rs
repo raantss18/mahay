@@ -1,4 +1,4 @@
-//! Window › Swatches: the swatch library (`photocraft_engine::presets::swatches`) in the shared
+//! Window › Swatches: the swatch library (`sary_engine::presets::swatches`) in the shared
 //! preset browser: groups with disclosure triangles, a colour grid with name tooltips, a context
 //! menu (Rename, Delete, Move to), and the footer (size · New Group · New Swatch · Delete).
 //!
@@ -7,14 +7,14 @@
 //! panel menu (the group's "…" button) adds New Swatch, New Group, Import/Replace (`.aco`,
 //! `.ase`), Export (`.aco`) and Export for Exchange (`.ase`) and Reset. Every action is a
 //! `swatches.*` engine command; this module only draws and dispatches. Colours are shown in the
-//! RGB working space through `photocraft-cms` (cached per library revision and colour settings).
+//! RGB working space through `sary-cms` (cached per library revision and colour settings).
 
 use std::sync::Arc;
 
 use egui::{Color32, CornerRadius, Rect};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::preset_panels::{Ev, GroupView, ItemView, Place, browser, run};
 
 /// The browser's panel key (selection, folder state and thumbnail size live under it).
@@ -28,13 +28,13 @@ fn c32(c: [f32; 3]) -> Color32 {
 }
 
 /// Display colours of every swatch, rebuilt when the library or the working spaces change.
-fn colors(app: &PhotocraftApp, ctx: &egui::Context) -> Arc<Vec<Vec<Color32>>> {
+fn colors(app: &SaryApp, ctx: &egui::Context) -> Arc<Vec<Vec<Color32>>> {
     let c = &app.session.color.settings;
     let key = egui::Id::new(("swatch-colors", app.session.presets.rev, &c.working_rgb, &c.working_cmyk, &c.working_gray));
     if let Some(v) = ctx.data(|d| d.get_temp::<Arc<Vec<Vec<Color32>>>>(key)) {
         return v;
     }
-    let conv = photocraft_engine::presets::swatches::SwatchConv::new(&app.session);
+    let conv = sary_engine::presets::swatches::SwatchConv::new(&app.session);
     let v: Arc<Vec<Vec<Color32>>> = Arc::new(app.session.presets.swatches.iter().map(|g| g.items.iter().map(|s| c32(conv.rgb(&s.color))).collect()).collect());
     ctx.data_mut(|d| {
         // Only the newest table is kept.
@@ -48,7 +48,7 @@ fn colors(app: &PhotocraftApp, ctx: &egui::Context) -> Arc<Vec<Vec<Color32>>> {
 }
 
 /// Set the foreground (or background) colour from a swatch.
-pub fn use_swatch(app: &mut PhotocraftApp, name: &str, background: bool) {
+pub fn use_swatch(app: &mut SaryApp, name: &str, background: bool) {
     let target = if background { "background" } else { "foreground" };
     if run(app, "swatches.use", json!({"swatch": name, "target": target})).is_some() && !background {
         // Clicking a swatch while characters are selected recolours them (#364).
@@ -57,7 +57,7 @@ pub fn use_swatch(app: &mut PhotocraftApp, name: &str, background: bool) {
 }
 
 /// The Swatches panel body.
-pub fn panel(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn panel(app: &mut SaryApp, ui: &mut egui::Ui) {
     let lib = &app.session.presets.swatches;
     let groups: Vec<GroupView> = lib
         .iter()
@@ -80,8 +80,8 @@ pub fn panel(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     }
 }
 
-fn handle(app: &mut PhotocraftApp, e: Ev, background: bool) {
-    let sel = |app: &mut PhotocraftApp, k: &str| {
+fn handle(app: &mut SaryApp, e: Ev, background: bool) {
+    let sel = |app: &mut SaryApp, k: &str| {
         app.ui.presets_ui.selected.insert(PANEL.into(), k.to_string());
     };
     match e {
@@ -115,7 +115,7 @@ fn handle(app: &mut PhotocraftApp, e: Ev, background: bool) {
 
 /// New Swatch: the foreground colour, named and selected, then renamed in place (Photoshop asks
 /// for the name).
-fn new_swatch(app: &mut PhotocraftApp) {
+fn new_swatch(app: &mut SaryApp) {
     let group = app
         .ui
         .presets_ui
@@ -130,7 +130,7 @@ fn new_swatch(app: &mut PhotocraftApp) {
     }
 }
 
-fn new_group(app: &mut PhotocraftApp) {
+fn new_group(app: &mut SaryApp) {
     if let Some(r) = run(app, "swatches.newGroup", json!({"name": "Group"})) {
         let g = r["group"].as_str().unwrap_or_default().to_string();
         app.ui.presets_ui.renaming = Some((PANEL.into(), format!("group:{g}"), g));
@@ -145,11 +145,11 @@ fn source(name: &str, bytes: &[u8]) -> Value {
         return json!({"path": name});
     }
     let _ = name;
-    json!({"data": photocraft_engine::paint::tile::b64_encode(bytes)})
+    json!({"data": sary_engine::paint::tile::b64_encode(bytes)})
 }
 
 /// Import an `.aco`/`.ase` file's bytes (File › Open, drag and drop, the panel menu).
-pub fn import_bytes(app: &mut PhotocraftApp, name: &str, bytes: &[u8], replace: bool) -> Result<Value, String> {
+pub fn import_bytes(app: &mut SaryApp, name: &str, bytes: &[u8], replace: bool) -> Result<Value, String> {
     let stem = std::path::Path::new(name).file_stem().map(|s| s.to_string_lossy().to_string()).filter(|s| !s.trim().is_empty());
     let mut p = source(name, bytes);
     p["mode"] = json!(if replace { "replace" } else { "append" });
@@ -176,13 +176,13 @@ pub fn import_bytes(app: &mut PhotocraftApp, name: &str, bytes: &[u8], replace: 
     Ok(r)
 }
 
-fn import_dialog(app: &mut PhotocraftApp, replace: bool) -> Result<Value, String> {
+fn import_dialog(app: &mut SaryApp, replace: bool) -> Result<Value, String> {
     app.pick_file_bytes(move |app, name, bytes| import_bytes(app, &name, &bytes, replace))
 }
 
-fn export_dialog(app: &mut PhotocraftApp, format: &str) -> Result<Value, String> {
+fn export_dialog(app: &mut SaryApp, format: &str) -> Result<Value, String> {
     let r = app.run("swatches.export", json!({"format": format}))?;
-    let bytes = r["data"].as_str().and_then(photocraft_engine::paint::tile::b64_decode).ok_or("the export returned no data")?;
+    let bytes = r["data"].as_str().and_then(sary_engine::paint::tile::b64_decode).ok_or("the export returned no data")?;
     let n = r["count"].as_u64().unwrap_or(0);
     app.pick_save(&format!("Swatches.{format}"), move |app, path| {
         let write = app.services.write.as_mut().ok_or("no writer configured")?;
@@ -197,7 +197,7 @@ fn export_dialog(app: &mut PhotocraftApp, format: &str) -> Result<Value, String>
 }
 
 /// The Swatches entries of the panel group's menu ("…").
-pub fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn panel_menu(app: &mut SaryApp, ui: &mut egui::Ui) {
     let empty = app.session.presets.swatches.iter().all(|g| g.items.is_empty());
     let mut act: Option<&str> = None;
     if ui.button(tl!("New Swatch…")).clicked() {
@@ -249,7 +249,7 @@ pub fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
 
 /// The Color Picker's Add to Swatches: the picked colour, in the model the user typed it in
 /// (CMYK or Lab values kept by the picker), else RGB.
-pub fn add_from_picker(app: &mut PhotocraftApp, f: &serde_json::Map<String, Value>) {
+pub fn add_from_picker(app: &mut SaryApp, f: &serde_json::Map<String, Value>) {
     let color = if let Some(c) = f.get("__cmyk").and_then(|v| serde_json::from_value::<[f32; 4]>(v.clone()).ok()) {
         json!({"model": "cmyk", "values": c.map(|v| v * 100.0)})
     } else if let Some(l) = f.get("__lab").and_then(|v| serde_json::from_value::<[f32; 3]>(v.clone()).ok()) {
@@ -273,7 +273,7 @@ mod tests {
     use egui::{Modifiers, vec2};
     use egui_kittest::Harness;
 
-    fn click(h: &mut Harness<'_, PhotocraftApp>, p: egui::Pos2, modifiers: Modifiers) {
+    fn click(h: &mut Harness<'_, SaryApp>, p: egui::Pos2, modifiers: Modifiers) {
         h.hover_at(p);
         // Held modifiers, as when the user holds Alt while clicking.
         h.event(egui::Event::ModifiersChanged(modifiers));
@@ -286,7 +286,7 @@ mod tests {
     }
 
     /// Drag from `from` to `to` in steps, as when a user drags a group header.
-    fn drag(h: &mut Harness<'_, PhotocraftApp>, from: egui::Pos2, to: egui::Pos2) {
+    fn drag(h: &mut Harness<'_, SaryApp>, from: egui::Pos2, to: egui::Pos2) {
         h.event(egui::Event::PointerMoved(from));
         h.run_steps(1);
         h.event(egui::Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -300,7 +300,7 @@ mod tests {
     }
 
     /// The first swatch: below the first group header (22 px), after the 8 px grid inset.
-    fn first_cell(h: &Harness<'_, PhotocraftApp>) -> egui::Pos2 {
+    fn first_cell(h: &Harness<'_, SaryApp>) -> egui::Pos2 {
         h.ctx.input(|i| i.viewport_rect()).min + vec2(8.0 + 12.0 + 8.0, 22.0 + 2.0 + 12.0 + 8.0)
     }
 
@@ -308,9 +308,9 @@ mod tests {
     /// right edge lands on the second swatch; with the preset grids' 4 px gap it hit nothing.
     #[test]
     fn swatches_touch_without_a_gap() {
-        let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let second = app.session.presets.swatches.first().and_then(|g| g.items.get(1)).map(|s| s.name.clone()).unwrap();
-        let mut h = Harness::builder().with_size(vec2(300.0, 300.0)).build_ui_state(|ui, app: &mut PhotocraftApp| panel(app, ui), app);
+        let mut h = Harness::builder().with_size(vec2(300.0, 300.0)).build_ui_state(|ui, app: &mut SaryApp| panel(app, ui), app);
         h.run_steps(2);
         assert_eq!(h.state().ui.presets_ui.selected.get(PANEL), None);
         let p = first_cell(&h);
@@ -321,7 +321,7 @@ mod tests {
     /// Clicking a swatch while characters are selected recolours them, not just the foreground.
     #[test]
     fn clicking_a_swatch_recolours_selected_type() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
         let id = app.run("type.create", json!({"text": "Hello world", "size": 40, "x": 20, "y": 100, "color": "#ffffff"})).unwrap()["layer"].as_u64().unwrap();
         app.ui.tool = Tool::Type;
@@ -338,14 +338,14 @@ mod tests {
         });
         // Recolour with a visible colour: put Red first.
         app.run("swatches.move", json!({"swatch": "Red", "to": "Grays", "position": 0})).unwrap();
-        let mut h = Harness::builder().with_size(vec2(300.0, 300.0)).build_ui_state(|ui, app: &mut PhotocraftApp| panel(app, ui), app);
+        let mut h = Harness::builder().with_size(vec2(300.0, 300.0)).build_ui_state(|ui, app: &mut SaryApp| panel(app, ui), app);
         h.run_steps(2);
         let p = first_cell(&h);
         click(&mut h, p, Modifiers::NONE);
         let red = [230.0 / 255.0, 40.0 / 255.0, 40.0 / 255.0, 1.0];
         assert_eq!(h.state().session.tools.foreground, red);
         let st = h.state().session.active().unwrap();
-        let Some(photocraft_doc::LayerContent::Text(t)) = st.doc.layer(photocraft_doc::LayerId(id)).map(|l| &l.content) else { panic!("type layer") };
+        let Some(sary_doc::LayerContent::Text(t)) = st.doc.layer(sary_doc::LayerId(id)).map(|l| &l.content) else { panic!("type layer") };
         let runs = t.char_runs();
         assert_eq!(runs[0].len, 5, "the selection is its own run");
         assert_eq!(runs[0].style.color.to_rgba8(), [230, 40, 40, 255]);
@@ -358,9 +358,9 @@ mod tests {
     fn the_footer_fits_below_a_full_list() {
         use egui_kittest::kittest::Queryable;
         for h_px in [80.0, 100.0, 120.0, 160.0, 300.0] {
-            let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
-            let mut h = Harness::builder().with_size(vec2(260.0, h_px)).build_ui_state(|ui, app: &mut PhotocraftApp| panel(app, ui), app);
-            PhotocraftApp::setup_context(&h.ctx, Default::default());
+            let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
+            let mut h = Harness::builder().with_size(vec2(260.0, h_px)).build_ui_state(|ui, app: &mut SaryApp| panel(app, ui), app);
+            SaryApp::setup_context(&h.ctx, Default::default());
             h.run_steps(3);
             let bottom = h.ctx.input(|i| i.viewport_rect()).max.y;
             let slider = h.get_by_role(egui::accesskit::Role::Slider).rect().max.y;
@@ -371,9 +371,9 @@ mod tests {
 
     #[test]
     fn alt_click_sets_the_background_and_selects() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.tools.background = [0.0, 0.0, 1.0, 1.0];
-        let mut h = Harness::builder().with_size(vec2(300.0, 300.0)).build_ui_state(|ui, app: &mut PhotocraftApp| panel(app, ui), app);
+        let mut h = Harness::builder().with_size(vec2(300.0, 300.0)).build_ui_state(|ui, app: &mut SaryApp| panel(app, ui), app);
         h.run_steps(2);
         let p = first_cell(&h);
         click(&mut h, p, Modifiers::ALT);
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn new_swatch_from_the_foreground_and_picker() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.tools.foreground = [0.5, 0.25, 1.0, 1.0];
         app.ui.presets_ui.selected.insert(PANEL.into(), "Dark Red".into());
         new_swatch(&mut app);
@@ -400,7 +400,7 @@ mod tests {
         f.insert("__cmyk".into(), json!([1.0, 0.0, 0.0, 0.0]));
         add_from_picker(&mut app, &f);
         let s = app.session.presets.swatches[0].items.last().unwrap();
-        assert_eq!(s.color, photocraft_engine::presets::swatches::SwatchColor::Cmyk([1.0, 0.0, 0.0, 0.0]));
+        assert_eq!(s.color, sary_engine::presets::swatches::SwatchColor::Cmyk([1.0, 0.0, 0.0, 0.0]));
     }
 
     #[test]
@@ -410,7 +410,7 @@ mod tests {
         let written: Written = Arc::default();
         let w = written.clone();
         let aco =
-            photocraft_psd::aco::write(&[photocraft_psd::aco::AcoSwatch { name: "Teal".into(), color: photocraft_psd::aco::AcoColor::Rgb([0, 32768, 32768]) }])
+            sary_psd::aco::write(&[sary_psd::aco::AcoSwatch { name: "Teal".into(), color: sary_psd::aco::AcoColor::Rgb([0, 32768, 32768]) }])
                 .unwrap();
         use crate::file_dialog::FileDialogAnswer;
         let answers = vec![
@@ -426,9 +426,9 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+        let mut app = SaryApp::new(sary_engine::Session::new(), services);
         // Each dialog answers at the end of the frame.
-        let frame = |app: &mut PhotocraftApp| app.poll_file_dialog(&egui::Context::default(), None);
+        let frame = |app: &mut SaryApp| app.poll_file_dialog(&egui::Context::default(), None);
         import_dialog(&mut app, false).unwrap();
         frame(&mut app);
         assert_eq!(app.session.presets.swatches.last().unwrap().name, "Ocean");
@@ -446,8 +446,8 @@ mod tests {
     /// state (UI state is serde, so it saves and reloads with the rest of the panel state).
     #[test]
     fn dragging_a_group_header_reorders_and_persists() {
-        let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
-        let mut h = Harness::builder().with_size(vec2(300.0, 4000.0)).build_ui_state(|ui, app: &mut PhotocraftApp| panel(app, ui), app);
+        let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
+        let mut h = Harness::builder().with_size(vec2(300.0, 4000.0)).build_ui_state(|ui, app: &mut SaryApp| panel(app, ui), app);
         h.run_steps(2);
         let headers = crate::preset_panels::last_group_headers(&h.ctx, PANEL);
         assert!(headers.len() >= 2, "the default library has folders: {headers:?}");

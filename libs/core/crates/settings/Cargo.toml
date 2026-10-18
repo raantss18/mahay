@@ -1,17 +1,17 @@
 [package]
-name = "craft-settings"
+name = "mahay-settings"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 rust-version.workspace = true
 repository.workspace = true
-description = "Shared settings storage for the Craft suite: platform folders, config.toml, atomic saves, recovery and migration"
+description = "Shared settings storage for the Mahay suite: platform folders, config.toml, atomic saves, recovery and migration"
 
 [lints]
 workspace = true
 
 [dependencies]
-craft-atomic = { workspace = true }
+mahay-atomic = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 toml_edit = { version = "0.25", features = ["serde"] }
 

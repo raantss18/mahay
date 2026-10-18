@@ -38,8 +38,8 @@ pub(super) struct Composite<'a> {
 
 impl Composite<'_> {
     pub fn draw(&mut self, dirty: Rect, brush: &BrushSettings, points: &[StrokePoint], mut paint: impl FnMut(Rect) -> Result<Region>) -> Result<Rect> {
-        let ctx = photocraft_paint::BrushContext::new(brush);
-        let mut generator = photocraft_paint::dynamics::DabGenerator::new(brush, 1.0);
+        let ctx = sary_paint::BrushContext::new(brush);
+        let mut generator = sary_paint::dynamics::DabGenerator::new(brush, 1.0);
         let (mut primary, mut dual) = (Vec::new(), Vec::new());
         generator.push(points, &mut primary, &mut dual);
         generator.finish(&mut primary, &mut dual);
@@ -111,8 +111,8 @@ impl Composite<'_> {
     #[allow(clippy::too_many_arguments)]
     fn fold_dab(
         &self,
-        ctx: &photocraft_paint::BrushContext,
-        dab: &photocraft_paint::Dab,
+        ctx: &sary_paint::BrushContext,
+        dab: &sary_paint::Dab,
         bounds: Rect,
         dst: Rect,
         dual: bool,
@@ -188,7 +188,7 @@ impl PatchStroke {
         Self { coverage: vec![0.0; len], depth: vec![0.0; len], paint: Region::new(rect, channels) }
     }
 
-    fn accumulate(&mut self, dab: &photocraft_paint::Dab, footprint: &PatchStroke, alpha: Option<usize>) {
+    fn accumulate(&mut self, dab: &sary_paint::Dab, footprint: &PatchStroke, alpha: Option<usize>) {
         let rect = self.paint.rect;
         for y in rect.y0..rect.y1 {
             for x in rect.x0..rect.x1 {

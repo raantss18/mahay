@@ -1,7 +1,7 @@
 //! Bounded tile scheduling for wide Motion Blur convolution.
 
-use photocraft_geom::Rect;
-use photocraft_raster::{Interrupt, Surface};
+use sary_geom::Rect;
+use sary_raster::{Interrupt, Surface};
 
 use super::motion_fft::{COORDINATE_LIMIT, Plan, ordinary_coordinates, worthwhile};
 use crate::{FilterParams, Image};
@@ -213,7 +213,7 @@ fn apply_inner(
 mod tests {
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    use photocraft_color::PixelFormat;
+    use sary_color::PixelFormat;
 
     use super::*;
 

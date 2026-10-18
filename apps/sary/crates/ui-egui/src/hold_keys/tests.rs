@@ -4,20 +4,20 @@
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::Harness;
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 use serde_json::json;
 
 use super::*;
 use crate::canvas::ViewXform;
 
-fn harness(tool: Tool) -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness(tool: Tool) -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.sync_views();
     app.ui.extras.rulers = false;
     app.ui.tool = tool;
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -27,7 +27,7 @@ fn harness(tool: Tool) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let v = &mut h.state_mut().ui.views[0];
     v.zoom = 1.0;
@@ -37,7 +37,7 @@ fn harness(tool: Tool) -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn screen(h: &Harness<'static, PhotocraftApp>, x: f32, y: f32) -> Pos2 {
+fn screen(h: &Harness<'static, SaryApp>, x: f32, y: f32) -> Pos2 {
     let app = h.state();
     let v = &app.ui.views[0];
     let xf = ViewXform {
@@ -65,7 +65,7 @@ fn platform(m: Modifiers) -> Modifiers {
     out
 }
 
-fn key(h: &mut Harness<'static, PhotocraftApp>, k: Key, pressed: bool, m: Modifiers) {
+fn key(h: &mut Harness<'static, SaryApp>, k: Key, pressed: bool, m: Modifiers) {
     let m = platform(m);
     h.event(Event::ModifiersChanged(m));
     h.event(Event::Key { key: k, physical_key: None, pressed, repeat: false, modifiers: m });
@@ -73,7 +73,7 @@ fn key(h: &mut Harness<'static, PhotocraftApp>, k: Key, pressed: bool, m: Modifi
 }
 
 /// A quick press and release in one frame (a tool letter held across frames springs, #2672).
-fn tap(h: &mut Harness<'static, PhotocraftApp>, k: Key, m: Modifiers) {
+fn tap(h: &mut Harness<'static, SaryApp>, k: Key, m: Modifiers) {
     let m = platform(m);
     h.input_mut().events.extend([
         Event::ModifiersChanged(m),
@@ -85,18 +85,18 @@ fn tap(h: &mut Harness<'static, PhotocraftApp>, k: Key, m: Modifiers) {
     h.run_steps(1);
 }
 
-fn button(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, down: bool, m: Modifiers) {
+fn button(h: &mut Harness<'static, SaryApp>, p: Pos2, down: bool, m: Modifiers) {
     h.event(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: down, modifiers: platform(m) });
     h.run_steps(1);
 }
 
-fn move_to(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32) {
+fn move_to(h: &mut Harness<'static, SaryApp>, x: f32, y: f32) {
     let p = screen(h, x, y);
     h.event(Event::PointerMoved(p));
     h.run_steps(2);
 }
 
-fn press_at(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32) {
+fn press_at(h: &mut Harness<'static, SaryApp>, x: f32, y: f32) {
     let p = screen(h, x, y);
     h.event(Event::PointerMoved(p));
     h.run_steps(1);
@@ -104,11 +104,11 @@ fn press_at(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32) {
     move_to(h, x + 8.0, y + 6.0);
 }
 
-fn selection(h: &Harness<'static, PhotocraftApp>) -> Rect {
+fn selection(h: &Harness<'static, SaryApp>) -> Rect {
     h.state().session.active().unwrap().doc.selection.as_ref().map_or(Rect::EMPTY, |s| s.content_bounds())
 }
 
-fn click(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifiers) {
+fn click(h: &mut Harness<'static, SaryApp>, x: f32, y: f32, m: Modifiers) {
     let p = screen(h, x, y);
     h.event(Event::PointerMoved(p));
     h.run_steps(1);
@@ -247,7 +247,7 @@ fn temporary_zoom_drag_is_a_scrubby_zoom() {
 }
 
 /// Changes only the held modifiers, as pressing or releasing ⌥ / ⌘ does with Space already down.
-fn hold_mods(h: &mut Harness<'static, PhotocraftApp>, m: Modifiers) {
+fn hold_mods(h: &mut Harness<'static, SaryApp>, m: Modifiers) {
     h.event(Event::ModifiersChanged(platform(m)));
     h.run_steps(1);
 }
@@ -337,7 +337,7 @@ fn rebound_temporary_zoom_uses_the_new_key_only() {
     assert!(!reposition_held(h.state(), &h.ctx));
 }
 
-fn fg_bg(h: &Harness<'static, PhotocraftApp>) -> ([f32; 4], [f32; 4]) {
+fn fg_bg(h: &Harness<'static, SaryApp>) -> ([f32; 4], [f32; 4]) {
     let t = &h.state().session.tools;
     (t.foreground, t.background)
 }
@@ -360,7 +360,7 @@ fn d_and_x_are_rebindable_commands() {
     assert_eq!(fg_bg(&h), ([0.0, 1.0, 0.0, 1.0], [1.0, 0.0, 0.0, 1.0]));
 }
 
-fn rgba(h: &Harness<'static, PhotocraftApp>, x: i32, y: i32) -> [f32; 4] {
+fn rgba(h: &Harness<'static, SaryApp>, x: i32, y: i32) -> [f32; 4] {
     h.state().session.active().unwrap().doc.layers.last().unwrap().surface().unwrap().rgba(x, y)
 }
 
@@ -407,7 +407,7 @@ fn fill_key_on_a_locked_layer_reports_instead_of_crashing() {
 
 #[test]
 fn keyboard_shortcuts_dialog_lists_the_keys_under_tools() {
-    let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     let items = crate::prefs_ui::shortcut_items(&app);
     let find = |id: &str| items.iter().find(|i| i.0 == id).map(|i| (i.2.clone(), i.3.clone()));
     let tools = || vec!["Tools".to_string()];
@@ -431,7 +431,7 @@ fn keyboard_shortcuts_dialog_lists_the_keys_under_tools() {
 #[test]
 fn agents_reposition_a_marquee_with_space() {
     use crate::control::{ControlRequest, Outcome, handle};
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     let ctx = egui::Context::default();
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     let mut call = |p: serde_json::Value| {
@@ -445,14 +445,14 @@ fn agents_reposition_a_marquee_with_space() {
     assert_eq!(sel, Rect::new(70, 50, 170, 110));
 }
 
-fn release(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifiers) {
+fn release(h: &mut Harness<'static, SaryApp>, x: f32, y: f32, m: Modifiers) {
     let p = screen(h, x, y);
     button(h, p, false, m);
 }
 
 /// A red square on a new layer for the ⌘ (Move) tests; Auto-Select, snapping and smart guides
 /// off so the drag offsets are exact.
-fn with_layer(h: &mut Harness<'static, PhotocraftApp>) -> photocraft_doc::LayerId {
+fn with_layer(h: &mut Harness<'static, SaryApp>) -> sary_doc::LayerId {
     let app = h.state_mut();
     app.run("layer.new.layer", json!({})).unwrap();
     let id = app.session.active().unwrap().active_layer.unwrap();
@@ -469,17 +469,17 @@ fn with_layer(h: &mut Harness<'static, PhotocraftApp>) -> photocraft_doc::LayerI
     id
 }
 
-fn bounds(h: &Harness<'static, PhotocraftApp>, id: photocraft_doc::LayerId) -> Rect {
+fn bounds(h: &Harness<'static, SaryApp>, id: sary_doc::LayerId) -> Rect {
     h.state().session.active().unwrap().doc.layer(id).unwrap().surface().unwrap().content_bounds()
 }
 
 /// A drag with `m` held throughout (the modifiers go down before the press, as on a keyboard).
-fn drag_with(h: &mut Harness<'static, PhotocraftApp>, m: Modifiers, x: f32, y: f32, x2: f32, y2: f32) {
+fn drag_with(h: &mut Harness<'static, SaryApp>, m: Modifiers, x: f32, y: f32, x2: f32, y2: f32) {
     drag_raw(h, platform(m), x, y, x2, y2);
 }
 
 /// [`drag_with`] with the modifiers exactly as given, for one platform's layout on any host.
-fn drag_raw(h: &mut Harness<'static, PhotocraftApp>, m: Modifiers, x: f32, y: f32, x2: f32, y2: f32) {
+fn drag_raw(h: &mut Harness<'static, SaryApp>, m: Modifiers, x: f32, y: f32, x2: f32, y2: f32) {
     h.event(Event::ModifiersChanged(m));
     h.run_steps(1);
     let p = screen(h, x, y);
@@ -592,7 +592,7 @@ fn cmd_drag_with_the_brush_inside_the_selection_floats_the_selected_pixels() {
     let n0 = h.state().session.active().unwrap().doc.layers.len();
     drag_with(&mut h, Modifiers::COMMAND, 130.0, 130.0, 170.0, 150.0);
     let st = h.state().session.active().unwrap();
-    let f = photocraft_engine::float_cmds::floating(st).expect("a floating piece");
+    let f = sary_engine::float_cmds::floating(st).expect("a floating piece");
     assert_eq!((f.layer, f.offset), (id, (40, 20)));
     assert_eq!(st.doc.layers.len(), n0, "no layer was added");
     assert_eq!(bounds(&h, id), Rect::new(100, 100, 160, 160), "the layer itself stayed");
@@ -651,13 +651,13 @@ fn cmd_is_not_the_move_tool_for_selection_hand_zoom_pen_shape_or_type_tools() {
 }
 
 /// The params of the last brush stroke (`paint.stroke`, or the Pencil's `paint.pencil`).
-fn last_stroke(app: &PhotocraftApp) -> serde_json::Value {
+fn last_stroke(app: &SaryApp) -> serde_json::Value {
     let journal = &app.session.journal;
     journal.iter().rev().find(|(id, _)| id == "paint.stroke" || id == "paint.pencil").map(|(_, p)| p.clone()).unwrap_or_default()
 }
 
 /// The `erase` flag of the last brush stroke.
-fn last_stroke_erases(h: &Harness<'static, PhotocraftApp>) -> Option<bool> {
+fn last_stroke_erases(h: &Harness<'static, SaryApp>) -> Option<bool> {
     last_stroke(h.state())["erase"].as_bool()
 }
 
@@ -718,11 +718,11 @@ fn rebound_brush_eraser_uses_the_new_key_only() {
 fn clear_in_the_mode_dropdown_erases_until_another_mode_is_chosen() {
     use crate::canvas::{ToolEvent, tool_event};
     use egui_kittest::kittest::{NodeT, Queryable};
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 120, "height": 80})).unwrap();
     app.ui.tool = Tool::Pencil;
     let mut h = Harness::builder().with_size(vec2(1600.0, 400.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
             }
@@ -730,9 +730,9 @@ fn clear_in_the_mode_dropdown_erases_until_another_mode_is_chosen() {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
     h.run_steps(4);
-    let combo = |h: &Harness<'static, PhotocraftApp>, current: &str| {
+    let combo = |h: &Harness<'static, SaryApp>, current: &str| {
         h.get_all_by_role(egui::accesskit::Role::ComboBox).find(|n| n.accesskit_node().value().as_deref() == Some(current)).unwrap().click();
     };
     combo(&h, "Normal");
@@ -740,7 +740,7 @@ fn clear_in_the_mode_dropdown_erases_until_another_mode_is_chosen() {
     h.get_by_label("Clear").click();
     h.run_steps(3);
     assert!(crate::paint_mouse::clears(h.state(), Tool::Pencil));
-    let stroke = |h: &mut Harness<'static, PhotocraftApp>| {
+    let stroke = |h: &mut Harness<'static, SaryApp>| {
         let (app, m) = (h.state_mut(), Modifiers::NONE);
         tool_event(app, ToolEvent::Down { x: 10.0, y: 40.0, pressure: 1.0 }, m);
         tool_event(app, ToolEvent::Move { x: 100.0, y: 40.0, pressure: 1.0 }, m);
@@ -788,11 +788,11 @@ fn a_held_key_keeps_a_pending_crop_and_another_tools_key_commits_it() {
     key(&mut h, Key::Space, false, Modifiers::NONE);
     h.run_steps(2);
     assert_eq!(h.state().ui.tool, Tool::Crop);
-    assert_eq!(h.state().session.active().unwrap().doc.size, photocraft_doc::Size::new(400, 300));
+    assert_eq!(h.state().session.active().unwrap().doc.size, sary_doc::Size::new(400, 300));
     assert!(crate::crop_ui::pending(h.state()));
     tap(&mut h, Key::V, Modifiers::NONE);
     h.run_steps(2);
     assert_eq!(h.state().ui.tool, Tool::Move);
-    assert_eq!(h.state().session.active().unwrap().doc.size, photocraft_doc::Size::new(200, 150));
+    assert_eq!(h.state().session.active().unwrap().doc.size, sary_doc::Size::new(200, 150));
     assert_eq!(h.state().ui.crop_rect, None);
 }

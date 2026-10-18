@@ -1,6 +1,6 @@
 # MCP conventions
 
-Start explicitly with `pdfcraft-cli mcp [--root DIR] [--compact] [--automation-read-root DIR] [--automation-write-root DIR]`. The server uses JSON lines on
+Start explicitly with `taratasy-cli mcp [--root DIR] [--compact] [--automation-read-root DIR] [--automation-write-root DIR]`. The server uses JSON lines on
 stdin/stdout, opens no port, and stops on EOF. `--root` confines all reads and writes, including
 commands invoked through the common tools. Logs stay on stderr.
 
@@ -11,15 +11,15 @@ script is read or server is started. Prefix a directory name beginning with `--`
 ## Confining file access
 
 ```sh
-pdfcraft-cli mcp --automation-read-root /work/project --automation-write-root /work/project/out
+taratasy-cli mcp --automation-read-root /work/project --automation-write-root /work/project/out
 ```
 
 ```json
-{"mcpServers": {"pdfcraft": {"command": "/abs/path/target/release/pdfcraft-cli",
+{"mcpServers": {"taratasy": {"command": "/abs/path/target/release/taratasy-cli",
   "args": ["mcp", "--automation-read-root", "/work/project", "--automation-write-root", "/work/project/out"]}}}
 ```
 
-The two flags (VectorCraft, PhotoCraft and the other Craft apps take the same ones, so one client
+The two flags (Tsipika, Sary and the other Mahay apps take the same ones, so one client
 config works across the suite) keep the agent to the folders you give it:
 
 - Every file a tool reads must lie inside the **read root**: `doc_open`, `page_insert_file`,
@@ -54,7 +54,7 @@ config works across the suite) keep the agent to the folders you give it:
 - `--root DIR` still works and can be combined with these flags. Both then apply: a path must be
   inside `--root` and inside the matching automation root.
 
-`pdfcraft-cli mcp` always runs the session in its own process (there is no flag to connect it to a
+`taratasy-cli mcp` always runs the session in its own process (there is no flag to connect it to a
 running app), so the roots cover every server it starts. The desktop app is not confined by them.
 
 What the roots do not cover: tools that take no path still read and change the open documents, and
@@ -101,8 +101,8 @@ harmlessly ignored; the server does not provide background export progress or ca
 
 ## Resources and protocol versions
 
-`pdfcraft://document` returns the session's document information (as `doc_inspect` without
-arguments), including an empty `documents` array before any PDF is opened. `pdfcraft://commands`
+`taratasy://document` returns the session's document information (as `doc_inspect` without
+arguments), including an empty `documents` array before any PDF is opened. `taratasy://commands`
 returns the command catalog (as `command_list`). Existing per-document info, text and page-image
 resources and their templates are preserved.
 

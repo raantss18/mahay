@@ -2,8 +2,8 @@
 //! layer is not a history step, so the state a step leaves behind targets what was selected just
 //! before the step, not what was selected when the state before it was made.
 
-use photocraft_doc::LayerId;
-use photocraft_engine::Session;
+use sary_doc::LayerId;
+use sary_engine::Session;
 use serde_json::json;
 
 fn target(s: &Session) -> (Option<LayerId>, Vec<LayerId>) {

@@ -6,13 +6,13 @@ This threat model covers the source repository's desktop, CLI, WebAssembly, form
 
 - confidentiality of user documents, metadata, credentials, and unrelated local files;
 - integrity of documents, preferences, filesystem contents, and application state;
-- availability of PhotoCraft and the host system;
+- availability of Sary and the host system;
 - integrity and provenance of release artifacts and dependencies;
 - predictable command execution and document fidelity.
 
 ## Threat actors
 
-- an author of a malicious image, PSD/PSB, `.pcraft`, profile, LUT, pattern, or embedded object;
+- an author of a malicious image, PSD/PSB, `.sary`, profile, LUT, pattern, or embedded object;
 - a malicious or compromised local process connecting to a loopback server;
 - a malicious, compromised, or over-privileged MCP client or automation agent;
 - a project/action file that induces unsafe paths or expensive commands;
@@ -22,7 +22,7 @@ This threat model covers the source repository's desktop, CLI, WebAssembly, form
 
 ```text
 untrusted files and bytes
-  PSD / PSB / raster / .pcraft / ICC / LUT / pattern / embedded content
+  PSD / PSB / raster / .sary / ICC / LUT / pattern / embedded content
 
 untrusted control data
   CLI arguments / filesystem paths / JSON-lines / MCP requests / agent commands
@@ -65,4 +65,4 @@ A vulnerable or malicious crate, action, installer tool, or signing environment 
 
 ## Non-goals and limits
 
-PhotoCraft is not currently a sandbox for hostile automation or hostile native code. Loopback transport, Rust memory safety, typed schemas, and file-format checks do not replace authentication, authorization, OS isolation, or operational least privilege. This document does not claim those missing controls are present.
+Sary is not currently a sandbox for hostile automation or hostile native code. Loopback transport, Rust memory safety, typed schemas, and file-format checks do not replace authentication, authorization, OS isolation, or operational least privilege. This document does not claim those missing controls are present.

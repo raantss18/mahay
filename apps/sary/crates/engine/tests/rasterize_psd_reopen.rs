@@ -3,15 +3,15 @@
 //! `SoLd`/`PlLd`); left on the rasterized layer, they made the reopened file a fill layer or
 //! smart object again and threw the pixels away. Photoshop writes none of them for a pixel layer.
 
-use photocraft_doc::{Document, LayerContent, LayerId};
-use photocraft_engine::Session;
+use sary_doc::{Document, LayerContent, LayerId};
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 fn id_of(r: Value) -> LayerId {
     LayerId(r["layer"].as_u64().unwrap())
 }
 
-fn kind(l: &photocraft_doc::Layer) -> &'static str {
+fn kind(l: &sary_doc::Layer) -> &'static str {
     match &l.content {
         LayerContent::Fill(_) => "fill",
         LayerContent::Smart(_) => "smart",
@@ -26,14 +26,14 @@ fn kind_named(doc: &Document, name: &str) -> &'static str {
 }
 
 fn reopen(doc: &Document) -> Document {
-    let out = photocraft_io::export(doc, "psd", &Default::default()).unwrap();
-    photocraft_io::import("x.psd", &out.bytes).unwrap().document
+    let out = sary_io::export(doc, "psd", &Default::default()).unwrap();
+    sary_io::import("x.psd", &out.bytes).unwrap().document
 }
 
 /// Whether the PSD written for `doc` gives the layer `name` any of `keys`.
 fn has_block(doc: &Document, name: &str, keys: &[&[u8; 4]]) -> bool {
-    let out = photocraft_io::export(doc, "psd", &Default::default()).unwrap();
-    let f = photocraft_psd::PsdFile::from_bytes(&out.bytes).unwrap();
+    let out = sary_io::export(doc, "psd", &Default::default()).unwrap();
+    let f = sary_psd::PsdFile::from_bytes(&out.bytes).unwrap();
     let rec = f.layers().iter().find(|r| r.name() == name).unwrap();
     keys.iter().any(|k| rec.block(k).is_some())
 }
@@ -87,7 +87,7 @@ fn raster_layer_with_stale_blocks_writes_none() {
     let fmt = doc.pixel_format();
     let l = doc.layer_mut(id).unwrap();
     assert!(l.psd_blocks.iter().any(|(k, _)| k == b"SoCo"));
-    l.content = LayerContent::Raster(photocraft_raster::Surface::new(fmt));
+    l.content = LayerContent::Raster(sary_raster::Surface::new(fmt));
     l.psd_blocks.push((*b"TySh", std::sync::Arc::new(vec![0; 8])));
     l.psd_blocks.push((*b"vscg", std::sync::Arc::new(vec![0; 8])));
     l.psd_blocks.push((*b"levl", std::sync::Arc::new(vec![0; 8])));
@@ -103,7 +103,7 @@ fn photoshop_fill_and_smart_layers_stay_rasterized() {
     for (file, want) in [("psd-tools/gradient-fill.psd", "fill"), ("photoshop/smart-filters/sf-none-plain.psd", "smart")] {
         let path = root.join(file);
         let bytes = std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e} (run `cargo xtask corpus --all`)", path.display()));
-        let doc = photocraft_io::import(file, &bytes).unwrap().document;
+        let doc = sary_io::import(file, &bytes).unwrap().document;
         let names: Vec<String> = doc.walk().into_iter().map(|(_, _, l)| l).filter(|l| kind(l) == want).map(|l| l.name.clone()).collect();
         assert!(!names.is_empty(), "{file}: no {want} layer");
         let refs: Vec<&str> = names.iter().map(String::as_str).collect();

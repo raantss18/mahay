@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn detects_latin_as_not_rtl() {
         assert!(!first_strong_is_rtl("Hello"));
-        assert!(!first_strong_is_rtl("DeckCraft"));
+        assert!(!first_strong_is_rtl("Seho"));
     }
 
     #[test]

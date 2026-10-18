@@ -3,15 +3,15 @@
 
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 
-fn app() -> PhotocraftApp {
-    PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default())
+fn app() -> SaryApp {
+    SaryApp::new(sary_engine::Session::new(), crate::Services::default())
 }
 
 /// Open New Document, set `fields`, press Create.
-fn create(app: &mut PhotocraftApp, fields: Value) {
+fn create(app: &mut SaryApp, fields: Value) {
     let f = app.new_document_fields();
     let id = app.ui.open_dialog(DialogKind::NewDocument, f);
     let d = app.ui.dialog_mut(id).unwrap();
@@ -87,7 +87,7 @@ fn created_documents_fill_the_recent_category() {
     let recent = app.session.presets.recent_documents.clone();
     assert_eq!(recent.iter().map(|r| (r.width, r.unit.as_str())).collect::<Vec<_>>(), [(1920, "px"), (640, "in")]);
     // The settings are kept with the preferences.
-    let mut restarted = photocraft_engine::Session::new();
+    let mut restarted = sary_engine::Session::new();
     restarted.load_prefs_json(&app.session.prefs_to_json()).unwrap();
     assert_eq!(restarted.presets.recent_documents, recent);
     // A recent card restores all of its settings but keeps the new document's name.

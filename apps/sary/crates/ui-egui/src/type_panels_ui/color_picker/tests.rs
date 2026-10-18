@@ -3,8 +3,8 @@ use crate::{canvas, dialogs, theme::ThemeKind};
 use egui::{Key, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 
-fn fixture(kind: Kind, depth: u32) -> (PhotocraftApp, u32) {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn fixture(kind: Kind, depth: u32) -> (SaryApp, u32) {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("prefs.set", json!({"path":"interface.language","value":"en"})).unwrap();
     app.run("file.new", json!({"width":320,"height":160,"depth":depth,"background":"transparent"})).unwrap();
     let layer = app.run("type.create", json!({"x":10,"y":55,"text":"Shared color","size":30})).unwrap()["layer"].as_u64().unwrap();
@@ -13,10 +13,10 @@ fn fixture(kind: Kind, depth: u32) -> (PhotocraftApp, u32) {
     app.run(&format!("{prefix}.apply"), json!({"id":id,"layer":layer})).unwrap();
     (app, id)
 }
-fn fields(app: &PhotocraftApp, id: u64) -> Map<String, Value> {
+fn fields(app: &SaryApp, id: u64) -> Map<String, Value> {
     app.ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.clone()
 }
-fn set(app: &mut PhotocraftApp, id: u64, color: &str) {
+fn set(app: &mut SaryApp, id: u64, color: &str) {
     app.ui.dialog_mut(id).unwrap().fields.insert("color".into(), json!(color));
 }
 
@@ -27,7 +27,7 @@ fn preview_is_cached_cancel_is_clean_and_ok_is_one_undo_step_at_all_depths() {
             let (mut app, id) = fixture(kind, depth);
             let st = app.session.active().unwrap();
             let (doc, rev, dirty, history) = (st.doc.clone(), st.revision, st.is_dirty(), st.history.past_len());
-            let original_pixels = photocraft_compose::flatten(&doc);
+            let original_pixels = sary_compose::flatten(&doc);
             let (x, y) =
                 (0..160).flat_map(|y| (0..320).map(move |x| (x, y))).find(|&(x, y)| original_pixels.get(x, y)[3] > 0.1).expect("fixture renders visible text");
             let picker = open(&mut app, kind, id).unwrap();
@@ -36,7 +36,7 @@ fn preview_is_cached_cancel_is_clean_and_ok_is_one_undo_step_at_all_depths() {
             let again = canvas::display_doc(&mut app, 0);
             assert!(Arc::ptr_eq(&shown, &again.0));
             assert_eq!(key, again.1);
-            assert_ne!(photocraft_compose::flatten(&shown).get(x, y), photocraft_compose::flatten(&doc).get(x, y));
+            assert_ne!(sary_compose::flatten(&shown).get(x, y), sary_compose::flatten(&doc).get(x, y));
             let st = app.session.active().unwrap();
             assert!(Arc::ptr_eq(&st.doc, &doc));
             assert_eq!((st.revision, st.is_dirty(), st.history.past_len()), (rev, dirty, history));
@@ -52,7 +52,7 @@ fn preview_is_cached_cancel_is_clean_and_ok_is_one_undo_step_at_all_depths() {
             let st = app.session.active().unwrap();
             assert_eq!(st.history.past_len(), history + 1);
             assert_eq!(serde_json::to_value(&st.doc.text_styles).unwrap(), serde_json::to_value(&shown.text_styles).unwrap());
-            assert_eq!(photocraft_compose::flatten(&st.doc).get(x, y), photocraft_compose::flatten(&shown).get(x, y));
+            assert_eq!(sary_compose::flatten(&st.doc).get(x, y), sary_compose::flatten(&shown).get(x, y));
             assert!(app.text_style_preview.is_none());
             app.run("edit.undo", json!({})).unwrap();
             assert_eq!(serde_json::to_value(&app.session.active().unwrap().doc.text_styles).unwrap(), serde_json::to_value(&doc.text_styles).unwrap());
@@ -65,7 +65,7 @@ fn preview_is_cached_cancel_is_clean_and_ok_is_one_undo_step_at_all_depths() {
 #[test]
 fn no_op_keeps_precise_imported_color_and_returning_to_original_removes_preview() {
     let (mut app, id) = fixture(Kind::Character, 32);
-    app.run("type.characterStyle.set", json!({"id":id,"attrs":{"color":photocraft_doc::Color::rgba(0.12345,0.67891,0.33333,0.45678)}})).unwrap();
+    app.run("type.characterStyle.set", json!({"id":id,"attrs":{"color":sary_doc::Color::rgba(0.12345,0.67891,0.33333,0.45678)}})).unwrap();
     let before = app.session.active().unwrap().doc.clone();
     let history = app.session.active().unwrap().history.past_len();
     let picker = open(&mut app, Kind::Character, id).unwrap();
@@ -134,7 +134,7 @@ fn inherited_colors_and_invalid_open_requests_are_atomic() {
     assert_eq!(color_picker_ui::hex(color(&app.session.active().unwrap().doc, Kind::Paragraph, 0).unwrap().to_rgb()), "#abcdef");
 }
 
-fn harness(kind: Kind) -> Harness<'static, PhotocraftApp> {
+fn harness(kind: Kind) -> Harness<'static, SaryApp> {
     let (mut app, id) = fixture(kind, 8);
     app.ui.type_panels.styles = true;
     app.ui.type_panels.styles_tab = usize::from(kind.paragraph());
@@ -148,7 +148,7 @@ fn harness(kind: Kind) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, ThemeKind::ProMedium);
+    SaryApp::setup_context(&h.ctx, ThemeKind::ProMedium);
     h.run_steps(4);
     h
 }

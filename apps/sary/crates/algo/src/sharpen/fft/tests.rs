@@ -1,7 +1,7 @@
 use super::*;
 use crate::sharpen::tests::{reference, source};
 use crate::{Ctx, image::Image};
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
+use sary_color::{ColorMode, PixelFormat, SampleType};
 
 fn compare(old: &Surface, new: &Surface, area: Rect) {
     let tolerance = match old.format().sample {

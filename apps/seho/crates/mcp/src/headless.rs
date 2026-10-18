@@ -1,9 +1,9 @@
 //! An in-process engine session that answers the engine-level control-channel methods itself.
 
-use deckcraft_engine::{Mods, PointerEvent, PointerKind, Session, ToolKind};
+use seho_engine::{Mods, PointerEvent, PointerKind, Session, ToolKind};
 use std::sync::Arc;
 
-use deckcraft_engine::file_access::{self, AutomationRoots};
+use seho_engine::file_access::{self, AutomationRoots};
 use serde_json::{Value, json};
 
 use crate::backend::Backend;
@@ -21,8 +21,8 @@ impl Default for Headless {
 }
 
 /// Hint appended to errors for methods that need a window.
-pub(crate) const NEEDS_APP: &str = "it needs the desktop app: start `deckcraft --control 7979` and run the MCP server \
-with `deckcraft-cli mcp --connect 7979`";
+pub(crate) const NEEDS_APP: &str = "it needs the desktop app: start `seho --control 7979` and run the MCP server \
+with `seho-cli mcp --connect 7979`";
 
 fn s<'a>(p: &'a Value, k: &str) -> Option<&'a str> {
     p.get(k).and_then(Value::as_str)
@@ -52,11 +52,11 @@ pub fn tool_kind(name: &str, preset: Option<&str>) -> Option<ToolKind> {
         "select" | "selection" | "arrow" => ToolKind::Select,
         "textBox" | "text" | "textbox" => ToolKind::TextBox,
         "shape" => ToolKind::Shape { preset: preset.unwrap_or("rect").to_string() },
-        "pen" => ToolKind::Ink { mode: "pen".into(), color: deckcraft_engine::model::Rgba::BLACK, width: 2.0 },
-        "highlighter" => ToolKind::Ink { mode: "highlighter".into(), color: deckcraft_engine::model::Rgba::rgb(255, 230, 0), width: 10.0 },
-        "eraser" => ToolKind::Ink { mode: "eraser".into(), color: deckcraft_engine::model::Rgba::BLACK, width: 2.0 },
-        other if deckcraft_engine::geom::preset::info(other).is_some() => ToolKind::Shape { preset: other.to_string() },
-        other if deckcraft_engine::tools::is_freeform_tool(other) => ToolKind::Shape { preset: other.to_string() },
+        "pen" => ToolKind::Ink { mode: "pen".into(), color: seho_engine::model::Rgba::BLACK, width: 2.0 },
+        "highlighter" => ToolKind::Ink { mode: "highlighter".into(), color: seho_engine::model::Rgba::rgb(255, 230, 0), width: 10.0 },
+        "eraser" => ToolKind::Ink { mode: "eraser".into(), color: seho_engine::model::Rgba::BLACK, width: 2.0 },
+        other if seho_engine::geom::preset::info(other).is_some() => ToolKind::Shape { preset: other.to_string() },
+        other if seho_engine::tools::is_freeform_tool(other) => ToolKind::Shape { preset: other.to_string() },
         _ => return None,
     })
 }
@@ -72,7 +72,7 @@ impl Headless {
     }
 
     /// Confine every file the session's commands read and write to `roots`
-    /// (`deckcraft-cli mcp --automation-read-root … --automation-write-root …`).
+    /// (`seho-cli mcp --automation-read-root … --automation-write-root …`).
     pub fn with_automation_roots(mut self, roots: Option<Arc<AutomationRoots>>) -> Self {
         self.roots = roots;
         self
@@ -81,7 +81,7 @@ impl Headless {
     fn exec(&mut self, id: &str, params: &Value) -> Result<Value, String> {
         let r = self.session.execute(id, params).map_err(|e| {
             let ui_only = ["app.", "view.", "window.", "ui."].iter().any(|p| id.starts_with(p));
-            if ui_only && deckcraft_engine::find_command(id).is_none() { format!("`{id}` is a UI command; {NEEDS_APP}") } else { e.to_string() }
+            if ui_only && seho_engine::find_command(id).is_none() { format!("`{id}` is a UI command; {NEEDS_APP}") } else { e.to_string() }
         });
         self.session.ui_requests.clear();
         r
@@ -115,17 +115,17 @@ impl Headless {
             return Err(format!("no slide {i}"));
         }
         let scale = p.get("scale").and_then(Value::as_f64).unwrap_or(1.0).clamp(0.05, 8.0);
-        let img = deckcraft_engine::render::render_slide(
+        let img = seho_engine::render::render_slide(
             &st.doc,
             i,
-            &deckcraft_engine::render::RenderOpts { scale, edit: p.get("edit").and_then(Value::as_bool).unwrap_or(false), ..Default::default() },
+            &seho_engine::render::RenderOpts { scale, edit: p.get("edit").and_then(Value::as_bool).unwrap_or(false), ..Default::default() },
         );
-        let png = img.to_png_at(deckcraft_engine::render::dpi_for_scale(scale));
+        let png = img.to_png_at(seho_engine::render::dpi_for_scale(scale));
         if let Some(path) = s(p, "path") {
-            deckcraft_engine::io::write_file(path, &png)?;
+            seho_engine::io::write_file(path, &png)?;
             return Ok(json!({"path": path, "width": img.width, "height": img.height}));
         }
-        Ok(json!({"png": deckcraft_engine::cmd::base64_encode(&png), "width": img.width, "height": img.height, "slide": i}))
+        Ok(json!({"png": seho_engine::cmd::base64_encode(&png), "width": img.width, "height": img.height, "slide": i}))
     }
 }
 

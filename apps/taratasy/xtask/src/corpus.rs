@@ -14,7 +14,7 @@
 //! makes this a sha256 check rather than a SHA-1 one.
 //!
 //! `cargo xtask corpus` fetches and verifies; `--update-pin` re-records the constants below after
-//! a deliberate bump. A successful verification writes `corpus/pdfjs/.pdfcraft-corpus.json`, the
+//! a deliberate bump. A successful verification writes `corpus/pdfjs/.taratasy-corpus.json`, the
 //! stamp that corpus tests look for so they never run against an unverified tree.
 
 use std::path::{Path, PathBuf};
@@ -37,7 +37,7 @@ pub const PDFJS_MANIFEST_SHA256: &str = "692bfde052a16b191314da14e770178436b7c41
 pub const PDFJS_FILES: usize = 1455;
 
 /// The stamp a verified fetch leaves behind, named so tests can look for it.
-pub const STAMP: &str = ".pdfcraft-corpus.json";
+pub const STAMP: &str = ".taratasy-corpus.json";
 
 /// `corpus/pdfjs`, the checkout.
 pub fn checkout() -> PathBuf {
@@ -251,7 +251,7 @@ mod tests {
     use super::*;
 
     fn tmp(name: &str) -> PathBuf {
-        let d = std::env::temp_dir().join(format!("pdfcraft-corpus-test-{}-{name}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("taratasy-corpus-test-{}-{name}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).expect("temp dir");
         d

@@ -1,10 +1,10 @@
 //! Morph of an outline: a frame shape whose geometry turns from the old shape's into its own (a
-//! circle into a star), with the points aligned by `deckcraft_geom::morph`.
+//! circle into a star), with the points aligned by `seho_geom::morph`.
 
-use deckcraft_geom::Xfrm;
-use deckcraft_geom::morph::{Fade, GeometryMorph};
-use deckcraft_geom::preset::Geometry;
-use deckcraft_model::{Geom, Shape, ShapeId};
+use seho_geom::Xfrm;
+use seho_geom::morph::{Fade, GeometryMorph};
+use seho_geom::preset::Geometry;
+use seho_model::{Geom, Shape, ShapeId};
 use kurbo::Vec2;
 
 use crate::shape_geometry;

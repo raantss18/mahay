@@ -2,7 +2,7 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::{Dialog, PdfCraftApp, QuickTool};
+use taratasy_ui_egui::{Dialog, TaratasyApp, QuickTool};
 
 const FIXTURE: &[u8] = b"%PDF-1.7
 1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
@@ -12,9 +12,9 @@ const FIXTURE: &[u8] = b"%PDF-1.7
 trailer << /Root 1 0 R >>
 %%EOF";
 
-fn harness() -> Harness<'static, PdfCraftApp> {
+fn harness() -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("doc.pdf", None, FIXTURE.to_vec()).unwrap();
         app.set_option("left", "closed").unwrap();
@@ -25,7 +25,7 @@ fn harness() -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn size(h: &Harness<'static, PdfCraftApp>, page: usize) -> (f32, f32) {
+fn size(h: &Harness<'static, TaratasyApp>, page: usize) -> (f32, f32) {
     let s = h.state();
     let p = &s.session.get(s.views[0].id).unwrap().info.pages[page];
     (p.width, p.height)

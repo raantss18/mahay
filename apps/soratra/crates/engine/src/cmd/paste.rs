@@ -1,7 +1,7 @@
 //! Paste Special: paste the clipboard in a chosen format (formatted, RTF, HTML, picture,
 //! unformatted), and the formatted content Paste and Merge Formatting take from other programs.
 //!
-//! The clipboard can hold several representations of the same content. WordCraft's own copy keeps
+//! The clipboard can hold several representations of the same content. Soratra's own copy keeps
 //! a rich fragment; the system clipboard gives text, and callers (agents, the CLI, a front end
 //! with a richer clipboard) may pass `html`, `rtf` or a `picture` too. Text that is itself RTF or
 //! HTML source can also be pasted as that format. Paste keeps the source formatting of another
@@ -11,8 +11,8 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use wordcraft_doc::edit::Fragment;
-use wordcraft_doc::{Block, Document, Paragraph};
+use soratra_doc::edit::Fragment;
+use soratra_doc::{Block, Document, Paragraph};
 
 use super::{delete_selection, sel_result};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -41,7 +41,7 @@ pub fn specs() -> Vec<CommandSpec> {
     ]
 }
 
-/// Clipboard text from the params (system clipboard), else WordCraft's own copy.
+/// Clipboard text from the params (system clipboard), else Soratra's own copy.
 fn clip_text(s: &Session, v: &Value) -> Option<String> {
     match p::str(v, "text") {
         Some(t) => Some(t.replace("\r\n", "\n")),
@@ -109,7 +109,7 @@ fn paste_special(s: &mut Session, v: &Value) -> CmdResult {
         return Ok(json!({"formats": formats_json(&ids)}));
     };
     let fmt = match fmt.to_ascii_lowercase().as_str() {
-        "formatted" | "keep" | "wordcraft" => "formatted",
+        "formatted" | "keep" | "soratra" => "formatted",
         "rtf" => "rtf",
         "html" => "html",
         "picture" | "png" | "image" => "picture",
@@ -137,7 +137,7 @@ fn paste_special(s: &mut Session, v: &Value) -> CmdResult {
         }
         "formatted" => s.clipboard.clone().ok_or_else(|| CmdError::Failed("the clipboard is empty".into()))?,
         "html" => adopt(s, import_html(&src)),
-        _ => adopt(s, wordcraft_formats::rtf::import(src.as_bytes()).map_err(|e| CmdError::Failed(format!("bad RTF: {e}")))?),
+        _ => adopt(s, soratra_formats::rtf::import(src.as_bytes()).map_err(|e| CmdError::Failed(format!("bad RTF: {e}")))?),
     };
     insert(s, frag)?;
     let mut r = sel_result(s)?;
@@ -154,7 +154,7 @@ const BLOCKQUOTE_INDENT: f32 = 36.0;
 /// an inch each side, rather than in the (centred, italic) Quote style. Opening an .html file keeps
 /// `<blockquote>` as Quote, so HTML round-trips.
 fn import_html(html: &str) -> Document {
-    let mut doc = wordcraft_formats::html::import(html_fragment(html));
+    let mut doc = soratra_formats::html::import(html_fragment(html));
     let (left, right) = blockquote_margins(html);
     for b in &mut doc.body {
         each_para(Arc::make_mut(b), 0, &mut |p| {
@@ -172,7 +172,7 @@ fn import_html(html: &str) -> Document {
 /// The left and right margins (points) the payload's `<style>` sheets give `blockquote` — LibreOffice
 /// writes `blockquote { margin-left: 1cm; margin-right: 1cm }` — else [`BLOCKQUOTE_INDENT`].
 fn blockquote_margins(html: &str) -> (f32, f32) {
-    let len = |v: &str| wordcraft_formats::html::css_len_pt(v).map(|x| x.clamp(0.0, 1584.0));
+    let len = |v: &str| soratra_formats::html::css_len_pt(v).map(|x| x.clamp(0.0, 1584.0));
     let (mut left, mut right) = (BLOCKQUOTE_INDENT, BLOCKQUOTE_INDENT);
     let lower = html.to_ascii_lowercase();
     let mut rest = lower.as_str();
@@ -248,13 +248,13 @@ pub fn rich_fragment(s: &mut Session, v: &Value) -> Option<Fragment> {
         Some(d) => d,
         None => {
             let rtf = fits("rtf").filter(|t| looks_like_rtf(t))?;
-            wordcraft_formats::rtf::import(rtf.as_bytes()).ok().filter(has_content)?
+            soratra_formats::rtf::import(rtf.as_bytes()).ok().filter(has_content)?
         }
     };
     Some(adopt(s, doc))
 }
 
-/// What Paste inserts: WordCraft's own copy while the system clipboard still holds it, else
+/// What Paste inserts: Soratra's own copy while the system clipboard still holds it, else
 /// another program's formatted copy (HTML, RTF), else the system clipboard's text.
 pub fn paste_fragment(s: &mut Session, v: &Value) -> Result<Fragment, CmdError> {
     let text = p::str(v, "text").map(|t| t.replace("\r\n", "\n"));
@@ -293,7 +293,7 @@ pub fn merge_formatting(s: &Session, frag: &mut Fragment) {
                 if src.italic == Some(true) {
                     run.props.italic = Some(true);
                 }
-                if src.underline.is_some_and(|u| u != wordcraft_doc::props::Underline::None) {
+                if src.underline.is_some_and(|u| u != soratra_doc::props::Underline::None) {
                     run.props.underline = src.underline;
                 }
                 if src.strike == Some(true) {
@@ -319,7 +319,7 @@ pub fn insert(s: &mut Session, mut frag: Fragment) -> Result<(), CmdError> {
         // What the last command cut, pasted again: the two ends of a move.
         let r = match super::moves::take_paste(s, &frag) {
             Some(r) => r,
-            None => super::new_revision(s, wordcraft_doc::RevisionKind::Insert),
+            None => super::new_revision(s, soratra_doc::RevisionKind::Insert),
         };
         rid = Some(r);
         for b in &mut frag.blocks {
@@ -373,7 +373,7 @@ pub(crate) fn each_para(b: &mut Block, depth: usize, f: &mut dyn FnMut(&mut Para
 }
 
 /// Point a tracked formatting change at its renumbered revision (dropped when it has none).
-fn remap_change<T>(c: &mut Option<Box<wordcraft_doc::props::PropChange<T>>>, rev: &dyn Fn(&mut Option<u32>)) {
+fn remap_change<T>(c: &mut Option<Box<soratra_doc::props::PropChange<T>>>, rev: &dyn Fn(&mut Option<u32>)) {
     let mut r = c.as_ref().map(|c| c.rev);
     rev(&mut r);
     match (r, c.as_mut()) {
@@ -429,7 +429,7 @@ fn adopt(s: &mut Session, src: Document) -> Fragment {
     for (i, a) in src.numbering.abstracts.iter().enumerate() {
         let id = next_abs.saturating_add(i as u32);
         abs_map.insert(a.id, id);
-        s.doc.numbering.abstracts.push(wordcraft_doc::numbering::AbstractNum { id, ..a.clone() });
+        s.doc.numbering.abstracts.push(soratra_doc::numbering::AbstractNum { id, ..a.clone() });
     }
     let next_num = s.doc.numbering.nums.iter().map(|n| n.id.saturating_add(1)).max().unwrap_or(1).max(1);
     let mut num_map = BTreeMap::new();
@@ -437,7 +437,7 @@ fn adopt(s: &mut Session, src: Document) -> Fragment {
         let id = next_num.saturating_add(i as u32);
         num_map.insert(n.id, id);
         let abstract_id = abs_map.get(&n.abstract_id).copied().unwrap_or(n.abstract_id);
-        s.doc.numbering.nums.push(wordcraft_doc::numbering::Num { id, abstract_id, ..n.clone() });
+        s.doc.numbering.nums.push(soratra_doc::numbering::Num { id, abstract_id, ..n.clone() });
     }
     for st in &src.styles.styles {
         if s.doc.styles.get(&st.id).is_none() {
@@ -481,7 +481,7 @@ fn adopt(s: &mut Session, src: Document) -> Fragment {
                 _ => p.props.num_change = None,
             }
             for o in &mut p.objects {
-                if let wordcraft_doc::InlineObject::Image { media: key, .. } = o
+                if let soratra_doc::InlineObject::Image { media: key, .. } = o
                     && let Some(k) = media.get(key.as_str())
                 {
                     *key = k.clone();
@@ -494,6 +494,6 @@ fn adopt(s: &mut Session, src: Document) -> Fragment {
     }
     unlink_sections(&mut blocks);
     // Text box stories the imported shapes show; pasting gives each a new story of its own.
-    let parts = src.parts.into_iter().filter(|(_, p)| p.kind == wordcraft_doc::PartKind::TextBox).collect();
+    let parts = src.parts.into_iter().filter(|(_, p)| p.kind == soratra_doc::PartKind::TextBox).collect();
     Fragment { blocks, parts }
 }

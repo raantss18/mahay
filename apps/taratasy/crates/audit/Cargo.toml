@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-audit"
+name = "taratasy-audit"
 description = "Verification tooling: audit documents for faux redactions (opaque covers over extractable text)"
 version.workspace = true
 edition.workspace = true
@@ -11,10 +11,10 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-content = { workspace = true }
-pdfcraft-edit = { workspace = true }
-pdfcraft-model = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-content = { workspace = true }
+taratasy-edit = { workspace = true }
+taratasy-model = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

@@ -13,10 +13,10 @@ pub struct Reader<'a> {
     pub data: &'a [u8],
     /// The current byte-offset.
     pub offset: usize,
-    /// PdfCraft patch: set when a read needed a byte past the end of `data`. A decision made from
+    /// Taratasy patch: set when a read needed a byte past the end of `data`. A decision made from
     /// such a read could change if more data followed (see `content::UntypedIter`).
     past_end: Cell<bool>,
-    // PdfCraft patch: bound direct-object nesting while skipping arrays and dictionaries
+    // Taratasy patch: bound direct-object nesting while skipping arrays and dictionaries
     // and while parsing dictionaries (`Dict::skip`, `Array::skip`, `parse_dict_with`).
     skip_depth: usize,
 }
@@ -34,14 +34,14 @@ impl<'a> Reader<'a> {
         Self { data, offset, past_end: Cell::new(false), skip_depth: 0 }
     }
 
-    /// PdfCraft patch: whether a read needed bytes past the end of the data since the flag was
+    /// Taratasy patch: whether a read needed bytes past the end of the data since the flag was
     /// last cleared.
     #[inline]
     pub(crate) fn looked_past_end(&self) -> bool {
         self.past_end.get()
     }
 
-    /// PdfCraft patch: clears the flag set by [`Reader::looked_past_end`].
+    /// Taratasy patch: clears the flag set by [`Reader::looked_past_end`].
     #[inline]
     pub(crate) fn clear_looked_past_end(&self) {
         self.past_end.set(false);
@@ -64,14 +64,14 @@ impl<'a> Reader<'a> {
     pub fn at_end(&self) -> bool {
         let at_end = self.offset >= self.data.len();
         if at_end {
-            // PdfCraft patch: a parser that stops at the end decides from it (see `past_end`).
+            // Taratasy patch: a parser that stops at the end decides from it (see `past_end`).
             self.past_end.set(true);
         }
 
         at_end
     }
 
-    /// PdfCraft patch: carries over whether `other`, a clone of this reader, looked past the end.
+    /// Taratasy patch: carries over whether `other`, a clone of this reader, looked past the end.
     #[inline]
     pub(crate) fn absorb_past_end(&self, other: &Reader<'_>) {
         if other.past_end.get() {

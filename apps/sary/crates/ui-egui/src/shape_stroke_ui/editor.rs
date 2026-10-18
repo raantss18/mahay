@@ -1,6 +1,6 @@
 //! A live, locally owned popup: egui's memory popup slot belongs to its child ComboBoxes.
 use egui::{Rect, Sense, Stroke, pos2, vec2};
-use photocraft_doc::{LineCap, LineJoin, StrokeAlign};
+use sary_doc::{LineCap, LineJoin, StrokeAlign};
 use serde::{Deserialize, Serialize};
 
 use super::StrokeOptions;
@@ -12,7 +12,7 @@ pub struct StrokeEditor {
     pub key: String,
     pub draft: StrokeOptions,
     pub original: StrokeOptions,
-    pub target: Option<(photocraft_doc::DocId, photocraft_doc::LayerId)>,
+    pub target: Option<(sary_doc::DocId, sary_doc::LayerId)>,
 }
 
 pub struct StrokeChange {
@@ -85,7 +85,7 @@ pub fn button(
     editor: &mut Option<StrokeEditor>,
     closed: bool,
     corners: bool,
-    target: Option<(photocraft_doc::DocId, photocraft_doc::LayerId)>,
+    target: Option<(sary_doc::DocId, sary_doc::LayerId)>,
     stroke_enabled: bool,
 ) -> Option<StrokeChange> {
     let label = if stroke_enabled { current.label() } else { "No Color" };
@@ -319,18 +319,18 @@ fn paint_sample(ui: &egui::Ui, rect: Rect, id: egui::Id, options: &StrokeOptions
         let width = (size.x * scale).ceil().max(1.0) as u32;
         let height = (size.y * scale).ceil().max(1.0) as u32;
         let path = if corners {
-            photocraft_vector::shapes::rounded_rect(12.0, 12.0, f64::from(size.x - 24.0), f64::from(size.y - 24.0), [0.0; 4])
+            sary_vector::shapes::rounded_rect(12.0, 12.0, f64::from(size.x - 24.0), f64::from(size.y - 24.0), [0.0; 4])
         } else {
-            let mut sp = photocraft_doc::Subpath::polygon(&[(4.0, f64::from(size.y / 2.0)), (f64::from(size.x - 4.0), f64::from(size.y / 2.0))]);
+            let mut sp = sary_doc::Subpath::polygon(&[(4.0, f64::from(size.y / 2.0)), (f64::from(size.x - 4.0), f64::from(size.y / 2.0))]);
             sp.closed = false;
-            photocraft_doc::Path::new(vec![sp])
+            sary_doc::Path::new(vec![sp])
         };
-        let path = path.transform(&photocraft_geom::Affine { m: [f64::from(scale), 0.0, 0.0, f64::from(scale), 0.0, 0.0] });
-        let shape = photocraft_doc::ShapeLayer {
+        let path = path.transform(&sary_geom::Affine { m: [f64::from(scale), 0.0, 0.0, f64::from(scale), 0.0, 0.0] });
+        let shape = sary_doc::ShapeLayer {
             path,
             stroke: Some(sample.stroke(
                 2.5 * scale,
-                photocraft_doc::Fill::Solid(photocraft_doc::Color::rgba(
+                sary_doc::Fill::Solid(sary_doc::Color::rgba(
                     f32::from(color.r()) / 255.0,
                     f32::from(color.g()) / 255.0,
                     f32::from(color.b()) / 255.0,
@@ -339,8 +339,8 @@ fn paint_sample(ui: &egui::Ui, rect: Rect, id: egui::Id, options: &StrokeOptions
             )),
             ..Default::default()
         };
-        let bounds = photocraft_geom::Rect::from_size(photocraft_geom::Size::new(width, height));
-        let pixels = photocraft_vector::CompiledShape::new(&shape, photocraft_vector::DEFAULT_TOLERANCE, bounds).render_rgba(bounds);
+        let bounds = sary_geom::Rect::from_size(sary_geom::Size::new(width, height));
+        let pixels = sary_vector::CompiledShape::new(&shape, sary_vector::DEFAULT_TOLERANCE, bounds).render_rgba(bounds);
         let bytes: Vec<u8> = pixels.iter().flat_map(|p| p.map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8)).collect();
         let texture = ui.ctx().load_texture(
             "stroke-sample",

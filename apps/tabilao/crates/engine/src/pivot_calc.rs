@@ -7,9 +7,9 @@
 //! bare (`Sales`) or in single quotes (`'Unit Price'`); cell references and defined names are not
 //! allowed. A calculated field may use other calculated fields; a cycle evaluates to `#REF!`.
 
-use gridcraft_core::{CellError, CellRef, Value};
-use gridcraft_formula::Expr;
-use gridcraft_model::{PivotTable, Workbook};
+use tabilao_core::{CellError, CellRef, Value};
+use tabilao_formula::Expr;
+use tabilao_model::{PivotTable, Workbook};
 
 /// Longest formula accepted.
 pub const MAX_FORMULA_LEN: usize = 8_192;
@@ -143,7 +143,7 @@ pub fn compile(formula: &str, field: &dyn Fn(&str) -> Option<String>) -> Result<
             }
         }
     }
-    let body = gridcraft_formula::parse(&out).map_err(|_| "The formula contains an error.".to_string())?;
+    let body = tabilao_formula::parse(&out).map_err(|_| "The formula contains an error.".to_string())?;
     let mut problem: Option<String> = None;
     body.walk(&mut |e| {
         if problem.is_some() {
@@ -186,7 +186,7 @@ pub fn eval(wb: &Workbook, c: &Compiled, args: &[Value]) -> Value {
         call.push(c.body.clone());
         Expr::Call("LET".into(), call)
     };
-    match gridcraft_calc::recalc::evaluate_expr(wb, 0, CellRef::default(), &expr).scalar() {
+    match tabilao_calc::recalc::evaluate_expr(wb, 0, CellRef::default(), &expr).scalar() {
         Value::Empty => Value::Number(0.0),
         v => v,
     }
@@ -336,12 +336,12 @@ mod tests {
     fn deep_and_cyclic_chains_are_bounded() {
         // 300 calculated fields, each using the previous one, and a two-field cycle.
         let mut pt = PivotTable::default();
-        pt.calculated_fields.push(gridcraft_model::PivotCalcField { name: "C0".into(), formula: "=Sales+1".into() });
+        pt.calculated_fields.push(tabilao_model::PivotCalcField { name: "C0".into(), formula: "=Sales+1".into() });
         for i in 1..300 {
-            pt.calculated_fields.push(gridcraft_model::PivotCalcField { name: format!("C{i}"), formula: format!("=C{}+1", i - 1) });
+            pt.calculated_fields.push(tabilao_model::PivotCalcField { name: format!("C{i}"), formula: format!("=C{}+1", i - 1) });
         }
-        pt.calculated_fields.push(gridcraft_model::PivotCalcField { name: "P".into(), formula: "=Q".into() });
-        pt.calculated_fields.push(gridcraft_model::PivotCalcField { name: "Q".into(), formula: "=P*2".into() });
+        pt.calculated_fields.push(tabilao_model::PivotCalcField { name: "P".into(), formula: "=Q".into() });
+        pt.calculated_fields.push(tabilao_model::PivotCalcField { name: "Q".into(), formula: "=P*2".into() });
         let set = CalcSet::new(&pt, &["Sales".to_string()]);
         let wb = Workbook::new();
         let sum = |_: &str| Value::Number(10.0);
@@ -352,8 +352,8 @@ mod tests {
         assert_eq!(set.index("P"), None, "P is past the cap of {MAX_CALC_FIELDS} fields");
         // A small cycle within the cap.
         let mut small = PivotTable::default();
-        small.calculated_fields.push(gridcraft_model::PivotCalcField { name: "P".into(), formula: "=Q".into() });
-        small.calculated_fields.push(gridcraft_model::PivotCalcField { name: "Q".into(), formula: "=P*2".into() });
+        small.calculated_fields.push(tabilao_model::PivotCalcField { name: "P".into(), formula: "=Q".into() });
+        small.calculated_fields.push(tabilao_model::PivotCalcField { name: "Q".into(), formula: "=P*2".into() });
         let set = CalcSet::new(&small, &["Sales".to_string()]);
         assert!(set.is_cyclic(0));
         assert_eq!(set.value(&wb, 0, &sum), Value::Error(CellError::Ref));

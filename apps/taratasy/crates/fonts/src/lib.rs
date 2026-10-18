@@ -1,4 +1,4 @@
-//! pdfcraft-fonts — font metrics and encodings for generated appearances (L2).
+//! taratasy-fonts — font metrics and encodings for generated appearances (L2).
 //!
 //! Standard-14 advance widths are exact (`Std14`, ISO 32000-2 Annex D). What remains approximate
 //! is everything that needs a font *program*: this crate reads font dictionaries, never embedded
@@ -18,7 +18,7 @@ pub mod source_shaping;
 mod std14;
 mod std14_metrics;
 pub use craft::{
-    CRAFT_FONTS, CraftFont, SHIPPORI_MINCHO, document_arabic_font, document_hebrew_font, document_japanese_font, document_japanese_font_for_style,
+    MAHAY_FONTS, MahayFont, SHIPPORI_MINCHO, document_arabic_font, document_hebrew_font, document_japanese_font, document_japanese_font_for_style,
     document_japanese_fonts_for_style, document_thai_font, ui_arabic_fonts, ui_chinese_fonts, ui_cjk_fonts, ui_hebrew_fonts, ui_japanese_fonts,
     ui_telugu_fonts, ui_thai_fonts,
 };
@@ -160,7 +160,7 @@ impl UnicodeCMap {
     }
 
     /// Encode `s`; tabs become spaces, and characters UCS-2 can't hold become `?` (check them
-    /// first with [`Self::first_unencodable`]: PdfCraft refuses such text rather than write `?`).
+    /// first with [`Self::first_unencodable`]: Taratasy refuses such text rather than write `?`).
     pub fn encode(self, s: &str) -> Vec<u8> {
         let mut out = Vec::with_capacity(s.len().saturating_mul(2));
         let mut units = [0u16; 2];
@@ -197,7 +197,7 @@ pub fn first_non_win_ansi(s: &str) -> Option<char> {
 
 /// The first character of `s` the standard fonts (Helvetica and the rest of the standard 14, in
 /// WinAnsiEncoding) can't draw, so that a generated appearance would show it as `?`. Line breaks
-/// don't count: appearances lay lines out themselves. PdfCraft refuses such text with
+/// don't count: appearances lay lines out themselves. Taratasy refuses such text with
 /// [`undrawable_message`] instead of writing `?` (AGENTS.md §4: never lose work silently).
 pub fn first_undrawable(s: &str) -> Option<char> {
     s.chars().find(|c| !matches!(c, '\n' | '\r') && !win_ansi_encodable(*c))
@@ -214,22 +214,22 @@ pub fn undrawable_message(what: &str, c: char) -> String {
     )
 }
 
-/// The private key on an annotation (a comment or a form field's widget) whose appearance PdfCraft
+/// The private key on an annotation (a comment or a form field's widget) whose appearance Taratasy
 /// drew with `?` in place of characters its fonts can't draw: a text string holding the first
 /// such character. The text itself (a field's `/V`, a comment's `/Contents`) is stored as typed;
 /// the mark lets flattening refuse to make that `?` permanent, lets an edit report it, and tells
 /// such an appearance apart from one another program drew with a font that has those characters.
 pub const UNDRAWN_MARK: &[u8] = b"PCUndrawn";
 
-/// The character [`UNDRAWN_MARK`] records on `d`, if PdfCraft drew its appearance with `?`.
-pub fn undrawn_mark(d: &pdfcraft_cos::Dict) -> Option<char> {
-    d.get(UNDRAWN_MARK).and_then(pdfcraft_cos::Object::as_string).and_then(|s| s.to_text().chars().next())
+/// The character [`UNDRAWN_MARK`] records on `d`, if Taratasy drew its appearance with `?`.
+pub fn undrawn_mark(d: &taratasy_cos::Dict) -> Option<char> {
+    d.get(UNDRAWN_MARK).and_then(taratasy_cos::Object::as_string).and_then(|s| s.to_text().chars().next())
 }
 
 /// Record (`Some`) or clear (`None`) [`UNDRAWN_MARK`] on `d`, for the appearance just drawn.
-pub fn set_undrawn_mark(d: &mut pdfcraft_cos::Dict, c: Option<char>) {
+pub fn set_undrawn_mark(d: &mut taratasy_cos::Dict, c: Option<char>) {
     match c {
-        Some(c) => d.set(UNDRAWN_MARK.to_vec(), pdfcraft_cos::PdfString::text(&c.to_string())),
+        Some(c) => d.set(UNDRAWN_MARK.to_vec(), taratasy_cos::PdfString::text(&c.to_string())),
         None => {
             d.remove(UNDRAWN_MARK);
         }
@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     fn the_undrawn_mark_records_one_character_and_clears() {
-        let mut d = pdfcraft_cos::Dict::new();
+        let mut d = taratasy_cos::Dict::new();
         assert_eq!(undrawn_mark(&d), None);
         set_undrawn_mark(&mut d, Some('𠀋'));
         assert_eq!(undrawn_mark(&d), Some('𠀋'), "beyond U+FFFF, as a UTF-16 text string");
@@ -288,7 +288,7 @@ mod tests {
         set_undrawn_mark(&mut d, None);
         assert!(!d.contains(UNDRAWN_MARK));
         // Another value under the key is not a character: no mark.
-        d.set(UNDRAWN_MARK.to_vec(), pdfcraft_cos::Object::Bool(true));
+        d.set(UNDRAWN_MARK.to_vec(), taratasy_cos::Object::Bool(true));
         assert_eq!(undrawn_mark(&d), None);
     }
 

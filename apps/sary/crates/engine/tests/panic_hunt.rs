@@ -1,8 +1,8 @@
 //! Fuzz every command with adversarial params; a command must return `Err`, never panic or hang.
 //! (Rule 9 in AGENTS.md.) Each command runs on its own thread with a timeout, so one bad command
 //! can't wedge the run — panics are caught and hangs are reported. Opt-in (slow):
-//! `cargo test -p photocraft-engine --test panic_hunt -- --ignored`.
-use photocraft_engine::{Session, command_specs};
+//! `cargo test -p sary-engine --test panic_hunt -- --ignored`.
+use sary_engine::{Session, command_specs};
 use serde_json::{Value, json};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -11,7 +11,7 @@ use std::time::Duration;
 
 fn fresh() -> Session {
     // Belt and braces with the EXTERNAL skip below: nothing in this process may reach a printer.
-    photocraft_engine::print_cmds::disable_printing();
+    sary_engine::print_cmds::disable_printing();
     let mut s = Session::new();
     s.execute("file.new", json!({"width": 24, "height": 16})).unwrap();
     s.execute("layer.new.layer", json!({})).unwrap();

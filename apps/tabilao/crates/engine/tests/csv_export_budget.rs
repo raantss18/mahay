@@ -1,7 +1,7 @@
 //! CSV and TSV export is capped: two cells far apart in a sheet would otherwise make a file as
 //! big as the whole rectangle between them. A refused export is an error and writes nothing.
 
-use gridcraft_engine::Session;
+use tabilao_engine::Session;
 use serde_json::json;
 
 fn two_far_cells() -> Session {
@@ -20,7 +20,7 @@ fn a_sparse_sheet_spanning_the_grid_is_refused_not_expanded() {
         assert!(err.contains("1048576 rows by 16384 columns") && err.contains("MiB"), "{format}: {err}");
     }
     // Save As and Export write no file, and the document stays as it was.
-    let dir = std::env::temp_dir().join(format!("gridcraft-csv-budget-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tabilao-csv-budget-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("big.csv");
     let err = s.execute("file.exportCsv", json!({"path": path.to_str().unwrap()})).unwrap_err().to_string();

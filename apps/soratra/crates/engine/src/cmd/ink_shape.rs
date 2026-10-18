@@ -9,7 +9,7 @@
 //! [`pair_arrow`] makes one arrow of two strokes: a line, and a head (an open V or a small closed
 //! triangle) whose apex sits at one of its ends. Anything else (scribbles, curves, letters) stays ink.
 
-use wordcraft_doc::freeform::MAX_POINTS;
+use soratra_doc::freeform::MAX_POINTS;
 
 /// A shape recognised in a stroke, in the stroke's own coordinates.
 #[derive(Clone, Debug, PartialEq)]

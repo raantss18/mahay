@@ -2,8 +2,8 @@
 //! specification, with tiny pictures generated in code. No file produced by Word is used.
 
 use proptest::prelude::*;
-use wordcraft_doc::para::{Anchor, InlineObject, ShapeKind, Wrap};
-use wordcraft_doc::props::Rgb;
+use soratra_doc::para::{Anchor, InlineObject, ShapeKind, Wrap};
+use soratra_doc::props::Rgb;
 
 use super::{StructSpec, grpprl, plc, read, struct_doc, structured_spec};
 use crate::officeart;
@@ -178,7 +178,7 @@ fn shapes_keep_kind_colours_wrap_and_text_box_text() {
     let Some(InlineObject::Shape { kind, fill, float, story, .. }) = p0.objects.get(1) else { panic!("{:?}", p0.objects) };
     assert_eq!((*kind, *fill, float.wrap), (ShapeKind::TextBox, None, Wrap::TopAndBottom));
     let part = story.and_then(|id| doc.parts.get(&id)).expect("text box story part");
-    assert_eq!(part.kind, wordcraft_doc::PartKind::TextBox);
+    assert_eq!(part.kind, soratra_doc::PartKind::TextBox);
     assert_eq!(part.blocks.first().and_then(|b| b.as_para()).map(|p| p.text.as_str()), Some("Inside"));
 }
 

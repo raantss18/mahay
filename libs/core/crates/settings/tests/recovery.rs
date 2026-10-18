@@ -1,7 +1,7 @@
 mod common;
 
 use common::{Theme, config_path, open_in, read_config, write_config};
-use craft_settings::{ReadOnlyReason, SettingsError, Source};
+use mahay_settings::{ReadOnlyReason, SettingsError, Source};
 
 #[test]
 fn syntax_error_moves_the_file_aside_and_uses_defaults() {
@@ -176,5 +176,5 @@ fn outside_file_with_failing_migration_is_not_overwritten() {
     assert!(matches!(result, Err(SettingsError::ReadOnly(_))), "{result:?}");
     assert!(store.is_read_only());
     assert_eq!(read_config(tmp.path()), external, "the outside file is left untouched");
-    assert!(matches!(store.tick(std::time::Instant::now()).status, craft_settings::SaveStatus::Idle), "no retries once read-only");
+    assert!(matches!(store.tick(std::time::Instant::now()).status, mahay_settings::SaveStatus::Idle), "no retries once read-only");
 }

@@ -23,11 +23,11 @@ use std::sync::{Arc, LazyLock, OnceLock};
 pub type ColorComponents = SmallVec<[f32; 4]>;
 
 std::thread_local! {
-    // PdfCraft patch (34): see `tint_transform_runs`.
+    // Taratasy patch (34): see `tint_transform_runs`.
     static TINT_TRANSFORM_RUNS: core::cell::Cell<u64> = const { core::cell::Cell::new(0) };
 }
 
-/// PdfCraft patch (34): how many colours this thread has run through a Separation or DeviceN
+/// Taratasy patch (34): how many colours this thread has run through a Separation or DeviceN
 /// tint transform, for diagnostics and tests. An image converted through patch (28)'s lookup
 /// table runs it once per possible sample value, not once per pixel. Per thread, so a caller
 /// counting its own render is not disturbed by renders on other threads.
@@ -35,7 +35,7 @@ pub fn tint_transform_runs() -> u64 {
     TINT_TRANSFORM_RUNS.with(core::cell::Cell::get)
 }
 
-/// PdfCraft patch (34): count `colours` runs of a tint transform (called once per batch).
+/// Taratasy patch (34): count `colours` runs of a tint transform (called once per batch).
 fn count_tint_transform_runs(colours: usize) {
     let colours = u64::try_from(colours).unwrap_or(u64::MAX);
     TINT_TRANSFORM_RUNS.with(|runs| runs.set(runs.get().saturating_add(colours)));
@@ -737,7 +737,7 @@ impl ToRgb for Lab {
         let [xw, yw, zw] = white_point;
 
         for (input, output) in input.chunks_exact(3).zip(output.chunks_exact_mut(3)) {
-            // PdfCraft patch: `manual_scale` means the components arrive
+            // Taratasy patch: `manual_scale` means the components arrive
             // normalised to [0, 1] (an `/Indexed` palette over Lab looks its
             // bytes up as `byte / 255`). Map them linearly onto L* 0..100 and
             // the a*/b* /Range (ISO 32000-2 §8.6.6.3) before converting.

@@ -4,23 +4,23 @@ mod common;
 use std::sync::Arc;
 
 use common::*;
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::{DocId, Document};
-use photocraft_format::*;
+use sary_color::{ColorMode, SampleType};
+use sary_doc::{DocId, Document};
+use sary_format::*;
 
 #[test]
 fn autosave_then_recover() {
     let dir = temp_dir("recovery");
     let doc = Arc::new(rich_doc(ColorMode::Rgb, SampleType::U16));
     let saver = Autosaver::new(&dir, "doc-1");
-    saver.request(doc.clone(), 7, Some("/work/a.pcraft".into()), SaveOptions::default());
+    saver.request(doc.clone(), 7, Some("/work/a.sary".into()), SaveOptions::default());
     let r = saver.flush().expect("a save ran");
     let stats = r.unwrap();
     assert!(stats.tiles_written > 0);
     let entries = list_recovery(&dir);
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].info.revision, 7);
-    assert_eq!(entries[0].info.original_path.as_deref(), Some("/work/a.pcraft"));
+    assert_eq!(entries[0].info.original_path.as_deref(), Some("/work/a.sary"));
     assert_eq!(entries[0].info.document_name, "Rich");
     assert_eq!(recover(&entries[0]).unwrap(), *doc);
     discard_recovery(&dir, &entries[0]).unwrap();
@@ -148,7 +148,7 @@ fn recovered_entries_survive_a_second_crash_until_saved_or_closed() {
     {
         let mut launch = RecoveryStore::new(&dir);
         launch.autosave(&Arc::new(a.clone()), 4, None);
-        launch.autosave(&Arc::new(b.clone()), 6, Some("/work/b.pcraft".into()));
+        launch.autosave(&Arc::new(b.clone()), 6, Some("/work/b.sary".into()));
     }
     assert_eq!(list_recovery(&dir).len(), 2);
     // Launch 2 recovers both and crashes before its first autosave: nothing may be lost.
@@ -242,10 +242,10 @@ fn sidecars_cannot_point_at_other_bundles() {
 /// the directory save (autosave's path) into a reported failure.
 #[test]
 fn failed_cleanup_after_commit_does_not_fail_the_save() {
-    let dir = temp_dir("cleanup-best-effort").join("doc.pcraft");
+    let dir = temp_dir("cleanup-best-effort").join("doc.sary");
     std::fs::create_dir_all(&dir).unwrap();
     let doc = rich_doc(ColorMode::Rgb, SampleType::U8);
-    let mut w = PcraftWriter::new();
+    let mut w = SaryWriter::new();
     w.save_dir(&doc, &dir, &SaveOptions::default()).unwrap();
     let stuck = dir.join("tiles").join("0000000000000000000000000000000000000000000000000000000000000000.zst");
     std::fs::create_dir_all(stuck.join("inner")).unwrap();

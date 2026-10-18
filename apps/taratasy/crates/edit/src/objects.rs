@@ -3,8 +3,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use pdfcraft_content::{Matrix, Op, Pieces};
-use pdfcraft_cos::{Dict, Document, Object};
+use taratasy_content::{Matrix, Op, Pieces};
+use taratasy_cos::{Dict, Document, Object};
 
 use crate::{Content, EditError};
 
@@ -235,7 +235,7 @@ fn translate_added(doc: &mut Document, page: usize, indexes: &[usize], offset: [
     if indexes.is_empty() {
         return Ok(());
     }
-    let p = pdfcraft_model::pages(doc).into_iter().nth(page).ok_or(EditError::NoSuchPage(page))?;
+    let p = taratasy_model::pages(doc).into_iter().nth(page).ok_or(EditError::NoSuchPage(page))?;
     let streams = checked_streams(doc, page)?;
     let (pieces, geometry) = added_geometry(doc, page)?;
     let ops = pieces.parse().ops;
@@ -267,7 +267,7 @@ fn translate_added(doc: &mut Document, page: usize, indexes: &[usize], offset: [
         .into_iter()
         .map(|(i, op)| {
             let original = ops.get(i).ok_or_else(|| EditError::Invalid("an added item placement is missing".into()))?;
-            let mut bytes = pdfcraft_content::serialize_ops(&[op]);
+            let mut bytes = taratasy_content::serialize_ops(&[op]);
             if bytes.last() == Some(&b'\n') {
                 bytes.pop();
             }
@@ -291,7 +291,7 @@ fn translate_added(doc: &mut Document, page: usize, indexes: &[usize], offset: [
 /// A missing or undecodable preceding stream can hide graphics state that affects every
 /// later item. Refuse group editing rather than inventing an inventory from partial data.
 fn checked_streams(doc: &Document, page: usize) -> Result<Vec<(Object, Vec<u8>)>, EditError> {
-    let p = pdfcraft_model::pages(doc).into_iter().nth(page).ok_or(EditError::NoSuchPage(page))?;
+    let p = taratasy_model::pages(doc).into_iter().nth(page).ok_or(EditError::NoSuchPage(page))?;
     let contents = match p.dict.get(b"Contents") {
         None => Vec::new(),
         Some(c) => match &*doc.resolve(c) {
@@ -318,7 +318,7 @@ fn checked_streams(doc: &Document, page: usize) -> Result<Vec<(Object, Vec<u8>)>
             .map_err(|_| EditError::Invalid("the page content cannot be decoded within its size limit".into()))?;
         remaining =
             remaining.checked_sub(bytes.len()).ok_or_else(|| EditError::Invalid("the page content is too large for group selection".into()))?;
-        let parsed = pdfcraft_content::parse(&bytes);
+        let parsed = taratasy_content::parse(&bytes);
         operations = operations.saturating_add(parsed.ops.len());
         if operations > 100_000 {
             return Err(EditError::Invalid("this page has too many content operations for group selection".into()));

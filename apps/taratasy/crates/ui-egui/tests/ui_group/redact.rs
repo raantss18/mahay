@@ -4,11 +4,11 @@
 use egui::Pos2;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::{Dialog, PdfCraftApp};
+use taratasy_ui_egui::{Dialog, TaratasyApp};
 
-fn harness() -> Harness<'static, PdfCraftApp> {
+fn harness() -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, include_bytes!("../data/form.pdf").to_vec()).unwrap();
         app.set_option("zoom", "150").unwrap();
@@ -24,13 +24,13 @@ fn harness() -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn at(h: &Harness<'static, PdfCraftApp>, x: f32, y: f32) -> Pos2 {
+fn at(h: &Harness<'static, TaratasyApp>, x: f32, y: f32) -> Pos2 {
     let r = h.state().views[0].page_screen_rect(0).expect("on screen");
     let k = r.width() / 300.0;
     r.min + egui::vec2(x * k, y * k)
 }
 
-fn marks(h: &Harness<'static, PdfCraftApp>) -> usize {
+fn marks(h: &Harness<'static, TaratasyApp>) -> usize {
     let s = h.state();
     s.session.get(s.views[0].id).unwrap().redaction_marks()
 }
@@ -99,10 +99,10 @@ fn redaction_codes_become_the_overlay_text() {
     h.run_steps(2);
     let prefs = &h.state().redact_prefs;
     assert_eq!(prefs.overlay_text(), "(b)(6), (b)(7)(C)", "codes in the set's order");
-    let pdfcraft_engine::Edit::AddAnnotation(a) = prefs.mark(0, vec![pdfcraft_engine::rect_quad([10.0, 10.0, 50.0, 30.0])], "T") else {
+    let taratasy_engine::Edit::AddAnnotation(a) = prefs.mark(0, vec![taratasy_engine::rect_quad([10.0, 10.0, 50.0, 30.0])], "T") else {
         panic!("a mark adds an annotation")
     };
-    assert!(matches!(a.shape, pdfcraft_engine::Shape::Redact { ref overlay, .. } if overlay == "(b)(6), (b)(7)(C)"));
+    assert!(matches!(a.shape, taratasy_engine::Shape::Redact { ref overlay, .. } if overlay == "(b)(6), (b)(7)(C)"));
     h.state_mut().redact_prefs.use_code = false;
     assert_eq!(h.state().redact_prefs.overlay_text(), "CONFIDENTIAL", "custom text is kept while codes are used");
 }
@@ -118,10 +118,10 @@ fn redaction_properties_survive_a_restart() {
         p.fill = None;
         p.use_overlay = true;
         p.use_code = true;
-        p.code_set = pdfcraft_engine::REDACTION_CODE_SETS[0];
+        p.code_set = taratasy_engine::REDACTION_CODE_SETS[0];
         p.codes = vec!["(b)(6)", "(b)(7)(C)"];
         p.overlay = "CONFIDENTIAL".into();
-        p.look.font = pdfcraft_engine::OverlayFont::Courier;
+        p.look.font = taratasy_engine::OverlayFont::Courier;
         p.look.size = 12.0;
         p.look.color = [0.0, 0.0, 1.0];
         p.look.align = 2;
@@ -138,29 +138,29 @@ fn redaction_properties_survive_a_restart() {
     h.get_by_label("OK").click();
     h.run_steps(2);
     let json = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.restore(&json);
     let p = &fresh.redact_prefs;
     assert_eq!(p.fill, None, "no colour is a saved choice, not a missing one");
     assert_eq!(p.overlay_text(), "(b)(6), (b)(7)(C)");
     assert_eq!(p.overlay, "CONFIDENTIAL");
-    assert_eq!(p.look.font, pdfcraft_engine::OverlayFont::Courier);
+    assert_eq!(p.look.font, taratasy_engine::OverlayFont::Courier);
     assert_eq!((p.look.size, p.look.color, p.look.align, p.look.repeat), (12.0, [0.0, 0.0, 1.0], 2, true));
     assert_eq!((p.outline, p.hover_fill, p.opacity), ([0.0, 0.5, 0.0], [1.0, 1.0, 0.0], 0.4));
     // The next mark takes the outline and opacity.
-    let pdfcraft_engine::Edit::AddAnnotation(a) = p.mark(0, vec![pdfcraft_engine::rect_quad([10.0, 10.0, 50.0, 30.0])], "T") else {
+    let taratasy_engine::Edit::AddAnnotation(a) = p.mark(0, vec![taratasy_engine::rect_quad([10.0, 10.0, 50.0, 30.0])], "T") else {
         panic!("a mark adds an annotation")
     };
     assert_eq!((a.style.color, a.style.opacity, a.style.fill), ([0.0, 0.5, 0.0], 0.4, None));
     // Settings are untrusted: a bad colour, an unknown code set and a code outside the set are
     // dropped, the rest kept.
-    let mut odd = PdfCraftApp::new();
+    let mut odd = TaratasyApp::new();
     odd.restore(
         r#"{"redact_prefs":{"outline":[2,0,0],"opacity":0.7,"code_set":"nope","codes":["(b)(6)","bogus"],"use_overlay":true,"use_code":true}}"#,
     );
     let p = &odd.redact_prefs;
     assert_eq!((p.outline, p.opacity), ([0.89, 0.13, 0.13], 0.7));
-    assert_eq!(p.code_set.id, pdfcraft_engine::REDACTION_CODE_SETS[0].id);
+    assert_eq!(p.code_set.id, taratasy_engine::REDACTION_CODE_SETS[0].id);
     assert_eq!(p.overlay_text(), "(b)(6)");
 }
 
@@ -183,7 +183,7 @@ fn redaction_properties_for_this_run_only_and_cancel() {
     h.run_steps(2);
     assert_eq!(h.state().redact_prefs.outline, [0.0, 0.0, 1.0], "used for this run");
     assert_eq!(h.state().redact_defaults.outline, [0.89, 0.13, 0.13], "not made the default");
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.restore(&h.state().persist());
     assert_eq!(fresh.redact_prefs.outline, [0.89, 0.13, 0.13], "the next run starts from the saved defaults");
     // Cancel discards the edits made while the dialog was open.
@@ -198,9 +198,9 @@ fn redaction_properties_for_this_run_only_and_cancel() {
 
 #[test]
 fn redacting_an_imported_word_list() {
-    let memo = pdfcraft_engine::Session::new().create_from_text("memo", "Call Ada today\nAda is private\nPublic line").unwrap().to_vec();
+    let memo = taratasy_engine::Session::new().create_from_text("memo", "Call Ada today\nAda is private\nPublic line").unwrap().to_vec();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("memo.pdf", None, memo.clone()).unwrap();
         app
@@ -210,24 +210,24 @@ fn redacting_an_imported_word_list() {
     h.run_steps(2);
     h.get_by_label("Multiple words or phrases");
     let list = b"  Ada \n\nprivate\nAda\nabsent\n".to_vec();
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::RedactWords, vec![("names.txt".into(), list)]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::RedactWords, vec![("names.txt".into(), list)]);
     let d = &h.state().redact_search;
-    assert_eq!((d.mode, d.words.as_str()), (pdfcraft_ui_egui::RedactSearchMode::Words, "Ada\nprivate\nabsent"));
+    assert_eq!((d.mode, d.words.as_str()), (taratasy_ui_egui::RedactSearchMode::Words, "Ada\nprivate\nabsent"));
     h.run_steps(2);
     h.get_by_label("3 word(s) or phrase(s)");
     h.get_by_label("Mark all").click();
     h.run_steps(3);
     assert_eq!((marks(&h), h.state().redact_search.found), (3, Some(3)));
     let too_big = vec![b'a'; 2 << 20];
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::RedactWords, vec![("huge.txt".into(), too_big)]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::RedactWords, vec![("huge.txt".into(), too_big)]);
     assert_eq!(h.state().redact_search.words, "Ada\nprivate\nabsent", "an oversized list changes nothing");
 }
 
 #[test]
 fn redaction_search_can_match_case_and_whole_words() {
-    let memo = pdfcraft_engine::Session::new().create_from_text("memo", "Ada ada Adaline\nAda beta betamax").unwrap().to_vec();
+    let memo = taratasy_engine::Session::new().create_from_text("memo", "Ada ada Adaline\nAda beta betamax").unwrap().to_vec();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("memo.pdf", None, memo.clone()).unwrap();
         app
@@ -253,7 +253,7 @@ fn removing_hidden_information_and_sanitizing() {
     h.get_by_label("Remove hidden information");
     {
         let d = &h.state().hidden_draft;
-        let fields = d.found.iter().find(|f| f.0 == pdfcraft_engine::Hidden::FormFields).unwrap();
+        let fields = d.found.iter().find(|f| f.0 == taratasy_engine::Hidden::FormFields).unwrap();
         assert_eq!((fields.1, fields.2), (5, true), "five fields, checked");
     }
     h.get_by_label("Remove").click();

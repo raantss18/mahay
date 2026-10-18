@@ -2,17 +2,17 @@
 //! canvas: at every bit depth and colour mode, for pixel layers and groups, following edits made
 //! while the box is open, and matching what the commit leaves.
 
-use photocraft_compose::Buffer;
-use photocraft_doc::{Layer, LayerId};
+use sary_compose::Buffer;
+use sary_doc::{Layer, LayerId};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::transform_fx::Plan;
 
 /// A 200 × 160 document with a 40 × 20 blue block at (60, 60) on its own layer, wearing a 4 px
 /// red outside Stroke.
-fn app(mode: &str, depth: u32) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(mode: &str, depth: u32) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 160, "mode": mode, "depth": depth})).unwrap();
     app.run("layer.new.layer", json!({"name": "styled"})).unwrap();
     app.run("select.rect", json!({"x": 60, "y": 60, "width": 40, "height": 20})).unwrap();
@@ -23,12 +23,12 @@ fn app(mode: &str, depth: u32) -> PhotocraftApp {
     app
 }
 
-fn begin(app: &mut PhotocraftApp) {
+fn begin(app: &mut SaryApp) {
     crate::transform_tool::begin(app, &egui::Context::default()).unwrap();
 }
 
 /// What the box draws for the styled layer at `zoom`: `None` when it draws the bare pixels.
-fn composite(app: &PhotocraftApp, zoom: f32) -> Option<(Buffer, Plan)> {
+fn composite(app: &SaryApp, zoom: f32) -> Option<(Buffer, Plan)> {
     let (_, frame) = crate::transform_tool::styled_frame(app, zoom, false)?;
     let (plan, work, level) = frame.plan()?;
     Some((frame.compose(&plan, &work, level)?, plan))
@@ -40,15 +40,15 @@ fn at(c: &(Buffer, Plan), x: f64, y: f64) -> [f32; 4] {
     if c.0.rect.contains(x, y) { c.0.get(x, y) } else { [0.0; 4] }
 }
 
-fn set_quad(app: &mut PhotocraftApp, quad: [[f64; 2]; 4]) {
+fn set_quad(app: &mut SaryApp, quad: [[f64; 2]; 4]) {
     app.ui.transform.as_mut().unwrap().quad = quad;
 }
 
-fn active(app: &PhotocraftApp) -> LayerId {
+fn active(app: &SaryApp) -> LayerId {
     app.session.active().unwrap().active_layer.unwrap()
 }
 
-fn edit_layer(app: &mut PhotocraftApp, f: impl FnOnce(&mut Layer)) {
+fn edit_layer(app: &mut SaryApp, f: impl FnOnce(&mut Layer)) {
     let id = active(app);
     app.session
         .edit("edit", |doc, _| {
@@ -103,7 +103,7 @@ fn the_preview_matches_the_committed_layer() {
         for l in solo.layers.iter_mut() {
             l.visible = l.id == id;
         }
-        let committed = photocraft_compose::render(&solo, plan.shown);
+        let committed = sary_compose::render(&solo, plan.shown);
         let premultiplied = |p: &[f32; 4]| [p[0] * p[3], p[1] * p[3], p[2] * p[3], p[3]];
         let (mut sum, mut off) = (0.0f64, 0usize);
         for (a, b) in shown.px.iter().zip(&committed.px) {
@@ -245,7 +245,7 @@ fn the_canvas_draws_the_styled_preview_and_reuses_it_between_frames() {
     h.run_steps(2);
     let steps = h.state().session.active().unwrap().history.entries().len();
     crate::transform_undo_tests::begin(&mut h);
-    let builds = |h: &egui_kittest::Harness<'static, PhotocraftApp>| crate::transform_tool::styled_frame(h.state(), 1.0, false).unwrap().0.builds();
+    let builds = |h: &egui_kittest::Harness<'static, SaryApp>| crate::transform_tool::styled_frame(h.state(), 1.0, false).unwrap().0.builds();
     assert_eq!(builds(&h), 1, "composited when the box opened");
     h.run_steps(5);
     assert_eq!(builds(&h), 1, "and kept while nothing changes");
@@ -273,5 +273,5 @@ fn the_canvas_draws_the_styled_preview_and_reuses_it_between_frames() {
     let app = h.state();
     assert!(app.ui.transform.is_none() && app.transform_preview.is_none());
     let st = app.session.active().unwrap();
-    assert!(photocraft_compose::effects::has_effects(st.doc.layer(st.active_layer.unwrap()).unwrap()));
+    assert!(sary_compose::effects::has_effects(st.doc.layer(st.active_layer.unwrap()).unwrap()));
 }

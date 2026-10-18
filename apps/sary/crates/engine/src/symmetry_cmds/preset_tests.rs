@@ -1,6 +1,6 @@
 use super::*;
 use crate::brush_cmds::LiveStroke;
-use photocraft_doc::{Layer, LayerMask};
+use sary_doc::{Layer, LayerMask};
 
 fn session(depth: u8, mode: &str) -> Session {
     let mut s = Session::new();

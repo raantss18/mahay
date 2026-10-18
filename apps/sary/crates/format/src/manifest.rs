@@ -1,5 +1,5 @@
 //! `manifest.json` schema. This is a *separate* serde model from
-//! `photocraft-doc` on purpose: the on-disk schema is versioned and migrated
+//! `sary-doc` on purpose: the on-disk schema is versioned and migrated
 //! independently of in-memory refactors.
 //!
 //! Binary payloads never live in JSON. Surfaces reference tiles
@@ -7,11 +7,11 @@
 //! (`blobs/<blake3>.zst`), both by the BLAKE3 hash of their uncompressed
 //! bytes (little-endian samples for tiles).
 
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{
     Adjustment, ClippingPath, Effect, Fill, GlobalLight, Guides, LabelColor, LiveShape, Locks, Path, ShapeStroke, SmartFilter, VectorMask, text,
 };
-use photocraft_geom::{Affine, Size};
+use sary_geom::{Affine, Size};
 use serde::{Deserialize, Serialize};
 
 /// Current manifest version written by this build.
@@ -23,7 +23,7 @@ pub type Hash = String;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Manifest {
     pub format_version: u32,
-    /// Free-form writer identification, e.g. `photocraft-format 0.1.0`.
+    /// Free-form writer identification, e.g. `sary-format 0.1.0`.
     pub generator: String,
     pub document: DocM,
     /// Optional previews present in the bundle.
@@ -70,10 +70,10 @@ pub struct DocM {
     pub patterns: Vec<PatternM>,
     /// Indexed Color palette.
     #[serde(default)]
-    pub color_table: Option<photocraft_doc::ColorTable>,
+    pub color_table: Option<sary_doc::ColorTable>,
     /// Duotone inks.
     #[serde(default)]
-    pub duotone: Option<photocraft_doc::Duotone>,
+    pub duotone: Option<sary_doc::Duotone>,
     /// Window › Layer Comps.
     #[serde(default)]
     pub layer_comps: Vec<LayerCompM>,
@@ -83,25 +83,25 @@ pub struct DocM {
     pub last_document_state: Option<LayerCompM>,
     /// Image › Variables and Data Sets.
     #[serde(default)]
-    pub variables: photocraft_doc::Variables,
+    pub variables: sary_doc::Variables,
     /// Window › Timeline.
     #[serde(default)]
-    pub timeline: Option<photocraft_doc::Timeline>,
+    pub timeline: Option<sary_doc::Timeline>,
     /// The JPEG quality / WebP encoding File › Save reuses.
-    #[serde(default, skip_serializing_if = "photocraft_doc::FileEncoding::is_empty")]
-    pub file_encoding: photocraft_doc::FileEncoding,
+    #[serde(default, skip_serializing_if = "sary_doc::FileEncoding::is_empty")]
+    pub file_encoding: sary_doc::FileEncoding,
     /// Image › Analysis: measurement scale, count groups, ruler.
     #[serde(default)]
-    pub measurement: photocraft_doc::Measurement,
+    pub measurement: sary_doc::Measurement,
     /// Note tool annotations.
     #[serde(default)]
-    pub notes: Vec<photocraft_doc::Note>,
+    pub notes: Vec<sary_doc::Note>,
     /// Character and paragraph styles.
     #[serde(default)]
-    pub text_styles: photocraft_doc::TextStyles,
+    pub text_styles: sary_doc::TextStyles,
     /// Web slices (user and layer-based; layer ids are remapped on load).
-    #[serde(default, skip_serializing_if = "photocraft_doc::Slices::is_empty")]
-    pub slices: photocraft_doc::Slices,
+    #[serde(default, skip_serializing_if = "sary_doc::Slices::is_empty")]
+    pub slices: sary_doc::Slices,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -177,7 +177,7 @@ pub struct VideoDataM {
     /// frame snapshots were stored.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub original_frames: Option<Vec<SurfaceM>>,
-    pub source: photocraft_doc::VideoSource,
+    pub source: sary_doc::VideoSource,
     pub fps: f32,
     #[serde(default)]
     pub show_altered: bool,
@@ -234,12 +234,12 @@ pub struct LayerM {
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub excluded_channels: u32,
     /// Blend If ranges (empty = everything blends).
-    #[serde(default, skip_serializing_if = "photocraft_doc::BlendIf::is_default")]
-    pub blend_if: photocraft_doc::BlendIf,
+    #[serde(default, skip_serializing_if = "sary_doc::BlendIf::is_default")]
+    pub blend_if: sary_doc::BlendIf,
     /// Advanced Blending switches (knockout, as-group, transparency shapes, masks hide effects);
     /// omitted at Photoshop's defaults, and missing in older files = the defaults.
-    #[serde(default, skip_serializing_if = "photocraft_doc::AdvancedBlending::is_default")]
-    pub advanced: photocraft_doc::AdvancedBlending,
+    #[serde(default, skip_serializing_if = "sary_doc::AdvancedBlending::is_default")]
+    pub advanced: sary_doc::AdvancedBlending,
     #[serde(default)]
     pub video: Option<VideoDataM>,
 }
@@ -255,7 +255,7 @@ pub enum ContentM {
         expanded: bool,
         /// Artboard (Layer › New › Artboard).
         #[serde(default)]
-        artboard: Option<photocraft_doc::Artboard>,
+        artboard: Option<sary_doc::Artboard>,
     },
     Adjustment {
         adjustment: Adjustment,
@@ -309,9 +309,9 @@ pub enum ContentM {
         #[serde(default)]
         filter_mask: Option<MaskM>,
         #[serde(default)]
-        warp: Option<photocraft_geom::warp::Warp>,
+        warp: Option<sary_geom::warp::Warp>,
         #[serde(default)]
-        stack_mode: Option<photocraft_doc::StackMode>,
+        stack_mode: Option<sary_doc::StackMode>,
         /// Distort / Perspective placement (row-major 3×3); absent for affine placements.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         perspective: Option<[f64; 9]>,
@@ -340,7 +340,7 @@ pub struct ChannelM {
     #[serde(default = "default_channel_opacity")]
     pub opacity: f32,
     #[serde(default)]
-    pub indicates: photocraft_doc::ColorIndicates,
+    pub indicates: sary_doc::ColorIndicates,
 }
 
 fn is_zero_u32(v: &u32) -> bool {
@@ -348,7 +348,7 @@ fn is_zero_u32(v: &u32) -> bool {
 }
 
 fn default_channel_color() -> Color {
-    photocraft_doc::AlphaChannel::DEFAULT_COLOR
+    sary_doc::AlphaChannel::DEFAULT_COLOR
 }
 
 fn default_channel_opacity() -> f32 {
@@ -380,8 +380,8 @@ mod channel_tests {
             "spot": null
         });
         let c: ChannelM = serde_json::from_value(old).unwrap();
-        assert_eq!(c.color, photocraft_doc::AlphaChannel::DEFAULT_COLOR);
+        assert_eq!(c.color, sary_doc::AlphaChannel::DEFAULT_COLOR);
         assert_eq!(c.opacity, 0.5);
-        assert_eq!(c.indicates, photocraft_doc::ColorIndicates::MaskedAreas);
+        assert_eq!(c.indicates, sary_doc::ColorIndicates::MaskedAreas);
     }
 }

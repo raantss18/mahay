@@ -6,9 +6,9 @@
 //! The document is untouched until then, so the move stays one History step.
 
 use egui::{CursorIcon, Modifiers, Pos2};
-use photocraft_algo::transform::Homography;
+use sary_algo::transform::Homography;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::{CamTransform, Tool, TransformSession};
 use crate::transform_tool::{Gesture, Hit};
@@ -29,12 +29,12 @@ impl Placement {
     }
 }
 
-pub(crate) fn active(app: &PhotocraftApp) -> bool {
+pub(crate) fn active(app: &SaryApp) -> bool {
     app.ui.cam_transform.is_some()
 }
 
 /// Put the box on the selection dropped `offset` away. False when there is no selection to box.
-pub(crate) fn begin(app: &mut PhotocraftApp, offset: [i32; 2]) -> bool {
+pub(crate) fn begin(app: &mut SaryApp, offset: [i32; 2]) -> bool {
     let Some((document, revision, canvas, sel)) =
         app.session.active().and_then(|st| Some((st.doc.id.0, st.revision, st.doc.bounds(), st.doc.selection.clone()?)))
     else {
@@ -96,7 +96,7 @@ pub(crate) fn placement(t: &CamTransform) -> Option<Placement> {
     ok.then_some(Placement { offset: [off[0] as i64, off[1] as i64], scale: [sx, sy], rotate })
 }
 
-pub(crate) fn cancel(app: &mut PhotocraftApp) {
+pub(crate) fn cancel(app: &mut SaryApp) {
     if app.ui.cam_transform.take().is_some() && !app.ui.status_error {
         // The box's hint is done with.
         app.ui.status.clear();
@@ -104,7 +104,7 @@ pub(crate) fn cancel(app: &mut PhotocraftApp) {
 }
 
 /// Drop the box when what it was made for changed: another tool, document or edit.
-pub(crate) fn cancel_stale(app: &mut PhotocraftApp) {
+pub(crate) fn cancel_stale(app: &mut SaryApp) {
     let Some(t) = &app.ui.cam_transform else { return };
     let valid = app.ui.tool == Tool::ContentAwareMove
         && app.session.active().is_some_and(|st| st.doc.id.0 == t.document && st.revision == t.revision && st.doc.selection.is_some());
@@ -114,7 +114,7 @@ pub(crate) fn cancel_stale(app: &mut PhotocraftApp) {
 }
 
 /// `paint.contentAwareMove`'s params for the box's placement and the options bar.
-pub(crate) fn params(app: &PhotocraftApp, place: &Placement) -> serde_json::Value {
+pub(crate) fn params(app: &SaryApp, place: &Placement) -> serde_json::Value {
     let mut p = crate::retouch_ui::content_aware_move_params(app, place.offset);
     if !place.is_plain_move() {
         p["scaleX"] = place.scale[0].into();
@@ -125,7 +125,7 @@ pub(crate) fn params(app: &PhotocraftApp, place: &Placement) -> serde_json::Valu
 }
 
 /// ↩ / ✓: the move with the transformed patch, as one background job and History step.
-pub(crate) fn commit(app: &mut PhotocraftApp) {
+pub(crate) fn commit(app: &mut SaryApp) {
     cancel_stale(app);
     let Some(t) = app.ui.cam_transform.clone() else { return };
     cancel(app);
@@ -143,7 +143,7 @@ pub(crate) fn commit(app: &mut PhotocraftApp) {
 
 /// Pointer input while the box is up: every press goes to it (the canvas is otherwise inert, as
 /// during Free Transform). Returns false when there is no box.
-pub(crate) fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -> bool {
+pub(crate) fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: Modifiers) -> bool {
     cancel_stale(app);
     let tol = crate::transform_tool::handle_tolerance(app);
     let legacy = app.session.prefs().general.use_legacy_free_transform;
@@ -183,7 +183,7 @@ pub(crate) fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -
 }
 
 /// The selection's outline where the box puts it, and the box.
-pub(crate) fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub(crate) fn draw(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let Some(t) = &app.ui.cam_transform else { return };
     if let Some((doc, _, segs)) = &app.outline_cache
         && doc.0 == t.document
@@ -201,7 +201,7 @@ pub(crate) fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform)
 }
 
 /// The Free Transform box's cursors over the box's handles.
-pub(crate) fn cursor(app: &PhotocraftApp, ctx: &egui::Context, xf: &ViewXform, p: Pos2) -> Option<CursorIcon> {
+pub(crate) fn cursor(app: &SaryApp, ctx: &egui::Context, xf: &ViewXform, p: Pos2) -> Option<CursorIcon> {
     let t = app.ui.cam_transform.as_ref().filter(|_| app.ui.tool == Tool::ContentAwareMove)?;
     let q = t.frame.quad;
     let h = t.gesture.map_or_else(|| crate::transform_tool::hit(&t.frame, xf.to_doc(p), crate::transform_tool::handle_tolerance(app)), |g| g.hit);

@@ -3,7 +3,7 @@
 
 mod common;
 use common::*;
-use photocraft_codecs::*;
+use sary_codecs::*;
 
 fn photo(w: u32, h: u32, layout: ChannelLayout) -> Image {
     synth(w, h, layout, SampleType::U8, 5, 0.03)

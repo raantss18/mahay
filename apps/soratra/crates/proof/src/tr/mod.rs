@@ -4,7 +4,7 @@
 //!   ([`dictionary`], found by [`crate::hunspell`]: `tr_TR.aff`/`tr_TR.dic` from the OS, a
 //!   package manager or LibreOffice; it is not bundled). Without it Turkish text gets no spelling
 //!   marks. Capitalized stems are proper nouns (`Ankara`); foreign names inflected with an apostrophe
-//!   are accepted (`WordCraft'ta`), and the user dictionary applies as in English.
+//!   are accepted (`Soratra'ta`), and the user dictionary applies as in English.
 //! - **Suggestions** tuned for Turkish ([`suggest`]): ASCII-diacritic restoration (`turkce` -> `Türkçe`),
 //!   common confusions (`yalnış` -> `yanlış`), detached particles (`geldimi` -> `geldi mi`), and typos.
 //! - **Grammar** ([`grammar`]): high-precision rules (reduplications, comma around conjunctions,
@@ -107,7 +107,7 @@ pub fn is_correct_with(d: &TrDict, word: &str) -> bool {
         return true;
     }
 
-    // Handle apostrophe for proper nouns (e.g., `Ankara'da`, `WordCraft'ta`)
+    // Handle apostrophe for proper nouns (e.g., `Ankara'da`, `Soratra'ta`)
     if let Some((stem, _suffix)) = w.split_once(['\'', '’'])
         && (d.contains(stem) || d.contains(&suggest::turkish_to_lower(stem)))
     {

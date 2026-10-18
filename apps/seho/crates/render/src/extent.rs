@@ -7,10 +7,10 @@
 //! The editor renders only what it needs: the slide, grown to take in the drawing that spills off
 //! it and is in view ([`pasteboard_region`]). A slide with nothing off it costs what it always did.
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::resolve::{self, Ctx};
-use deckcraft_model::style::{Effects, Line};
-use deckcraft_model::{Presentation, Shape, ShapeKind};
+use seho_geom::Xfrm;
+use seho_model::resolve::{self, Ctx};
+use seho_model::style::{Effects, Line};
+use seho_model::{Presentation, Shape, ShapeKind};
 use kurbo::Rect;
 
 use crate::MAX_SIDE;
@@ -205,16 +205,16 @@ mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used)]
 
     use super::*;
-    use deckcraft_model::Shape;
+    use seho_model::Shape;
 
-    fn black() -> deckcraft_model::ColorRef {
-        deckcraft_model::ColorRef::rgb(deckcraft_color::Rgba::BLACK)
+    fn black() -> seho_model::ColorRef {
+        seho_model::ColorRef::rgb(seho_color::Rgba::BLACK)
     }
 
     fn deck_with(x: f64, y: f64, w: f64, h: f64) -> Presentation {
         let mut p = Presentation::default();
         let sl = std::sync::Arc::make_mut(&mut p.slides[0]);
-        sl.shapes.push(Shape { id: deckcraft_model::ShapeId(900), xfrm: Some(Xfrm::new(x, y, w, h)), ..Default::default() });
+        sl.shapes.push(Shape { id: seho_model::ShapeId(900), xfrm: Some(Xfrm::new(x, y, w, h)), ..Default::default() });
         p
     }
 
@@ -252,7 +252,7 @@ mod tests {
         let mut p = deck_with(10.0, -100.0, 100.0, 50.0);
         let sh = std::sync::Arc::make_mut(&mut p.slides[0]).shapes.last_mut().unwrap();
         sh.effects = Some(Effects {
-            outer_shadow: Some(deckcraft_model::style::Shadow {
+            outer_shadow: Some(seho_model::style::Shadow {
                 color: black(),
                 blur: 10.0,
                 dist: 20.0,
@@ -271,7 +271,7 @@ mod tests {
         assert_eq!(
             spill(
                 None,
-                Some(&Effects { glow: Some(deckcraft_model::style::Glow { color: black(), radius: f64::MAX }), ..Default::default() }),
+                Some(&Effects { glow: Some(seho_model::style::Glow { color: black(), radius: f64::MAX }), ..Default::default() }),
                 1.0,
                 1.0
             ),
@@ -283,7 +283,7 @@ mod tests {
     fn master_graphics_off_the_slide_count_but_not_master_placeholders() {
         let mut p = Presentation::default();
         let m = std::sync::Arc::make_mut(&mut p.masters[0]);
-        m.shapes.push(Shape { id: deckcraft_model::ShapeId(901), xfrm: Some(Xfrm::new(-150.0, 10.0, 100.0, 50.0)), ..Default::default() });
+        m.shapes.push(Shape { id: seho_model::ShapeId(901), xfrm: Some(Xfrm::new(-150.0, 10.0, 100.0, 50.0)), ..Default::default() });
         assert!(slide_extent(&p, 0).x0 <= -150.0);
         assert!(layout_extent(&p, 0, None).x0 <= -150.0);
         assert!(layout_extent(&p, 0, Some(0)).x0 <= -150.0 || !p.masters[0].layouts[0].show_master_shapes);

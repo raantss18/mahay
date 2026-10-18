@@ -1,11 +1,11 @@
 //! Layout tab: page setup (margins, orientation, size, columns), breaks, line numbers, hyphenation.
 
 use serde_json::{Value, json};
-use wordcraft_doc::props::{Border, Borders};
-use wordcraft_doc::section::{
+use soratra_doc::props::{Border, Borders};
+use soratra_doc::section::{
     Columns, DocGrid, DocGridType, LineNumbering, MAX_CHAR_SPACE, MAX_GRID_PITCH, MAX_NOTE_START, MIN_GRID_PITCH, SectionProps, SectionStart,
 };
-use wordcraft_doc::{Block, Pos, StoryRef};
+use soratra_doc::{Block, Pos, StoryRef};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -50,7 +50,7 @@ pub fn specs() -> Vec<CommandSpec> {
         })
         .params(r#"{"section"?: SectionProps} (replaces the whole section, headers and footers included; checked like Size, Margins, Columns, Line Numbers, Footnotes and Page Borders: non-finite numbers and margins that leave no room for text are refused; page sides 7.2–1584 pt, 1–12 columns with 0–300 pt gaps, header/footer/gutter 0–1584 pt, page border width 0.25–6 pt and distance 0–31 pt, note start 1–32767, line numbers start 1–32767, countBy 1–100, distance 0–1584 pt are clamped)"#),
         CommandSpec::new("layout.verticalAlign", "Vertical Alignment", "Layout › Page Setup › Layout", |s, v| {
-            let va = wordcraft_doc::section::PageVAlign::parse(p::str(v, "value").unwrap_or_default());
+            let va = soratra_doc::section::PageVAlign::parse(p::str(v, "value").unwrap_or_default());
             with_sect(s, |x| x.valign = va)
         })
         .params(r#"{"value": "top|center|justify|bottom"} (also both|justified; anything else is top). Justified shares each page's spare room between its paragraphs and tables"#),
@@ -71,7 +71,7 @@ pub fn specs() -> Vec<CommandSpec> {
             sel_result(s)
         }),
         CommandSpec::new("layout.pageNumberFormat", "Format Page Numbers", "Insert › Header & Footer › Page Number", |s, v| {
-            let fmt = p::str(v, "format").map(wordcraft_doc::section::NumFormat::from_ooxml);
+            let fmt = p::str(v, "format").map(soratra_doc::section::NumFormat::from_ooxml);
             let start = p::u64(v, "start").map(|x| x.min(100_000) as u32);
             with_sect(s, |x| {
                 if let Some(f) = fmt {
@@ -94,7 +94,7 @@ pub fn specs() -> Vec<CommandSpec> {
 /// Line Numbers: on with a restart mode (`value`), or off (`none`). `start`, `countBy` and
 /// `distance` change the numbering's options and turn it on (keeping its restart mode).
 fn line_numbers(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_doc::section::LineNumberRestart as R;
+    use soratra_doc::section::LineNumberRestart as R;
     let mode = p::str(v, "value");
     if mode == Some("none") {
         return with_sect(s, |x| x.line_numbers = None);
@@ -163,20 +163,20 @@ fn manual_hyphenation(s: &mut Session, v: &Value) -> CmdResult {
         Some(f) if !f.is_null() => super::parse_pos(f).ok_or_else(|| CmdError::Params("bad `from`".into()))?,
         _ => s.sel.ordered().0,
     };
-    let lim = wordcraft_proof::hyphen::Limits::default();
+    let lim = soratra_proof::hyphen::Limits::default();
     let caps = s.doc.settings.hyphenate_caps;
     let layout = s.layout();
     let mut best: Option<(Pos, Value)> = None;
     for page in &layout.pages {
         for it in &page.items {
-            let wordcraft_layout::Placed::Lines { story, path, para, l0, l1, .. } = it else { continue };
+            let soratra_layout::Placed::Lines { story, path, para, l0, l1, .. } = it else { continue };
             if *story != StoryRef::Body {
                 continue;
             }
             let Some(text) = s.doc.para_at(&Pos { story: *story, path: path.clone(), off: 0 }).map(|p| p.text.clone()) else { continue };
             for li in (*l0).max(1)..*l1 {
                 let (Some(prev), Some(line)) = (para.lines.get(li - 1), para.lines.get(li)) else { continue };
-                if prev.end != wordcraft_layout::LineEnd::Wrap || prev.hyphen.is_some() {
+                if prev.end != soratra_layout::LineEnd::Wrap || prev.hyphen.is_some() {
                     continue;
                 }
                 let at = Pos { story: *story, path: path.clone(), off: line.start };
@@ -193,7 +193,7 @@ fn manual_hyphenation(s: &mut Session, v: &Value) -> CmdResult {
                 {
                     continue;
                 }
-                let points = wordcraft_proof::hyphen::hyphen_points(word, &lim);
+                let points = soratra_proof::hyphen::hyphen_points(word, &lim);
                 // The room left at the end of the line above, and the width of each first part.
                 let room = prev.right - prev.end_x();
                 let hyphen_w = para
@@ -244,7 +244,7 @@ pub(crate) fn with_sect(s: &mut Session, f: impl Fn(&mut SectionProps)) -> CmdRe
 
 /// The text direction Layout › Text Direction would change: the caret cell's, the text box's,
 /// or the section's.
-pub fn text_direction_at(s: &Session) -> wordcraft_doc::props::TextDirection {
+pub fn text_direction_at(s: &Session) -> soratra_doc::props::TextDirection {
     if let Some((tp, r, c)) = s.sel.focus.path.cell() {
         return s.doc.table(s.sel.focus.story, &tp).and_then(|t| t.rows.get(r)?.cells.get(c).map(|cl| cl.props.text_direction)).unwrap_or_default();
     }
@@ -257,7 +257,7 @@ pub fn text_direction_at(s: &Session) -> wordcraft_doc::props::TextDirection {
 /// Layout › Text Direction: like Word's button it works on what the caret is in — the selected
 /// table cells, the text box, or else the section.
 fn text_direction(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_doc::props::{TextDirection, TextVert};
+    use soratra_doc::props::{TextDirection, TextVert};
     let dir = match p::str(v, "value") {
         Some("horizontal" | "lrTb" | "horz") => Some(TextDirection::Horizontal),
         Some("down" | "tbRl" | "vert" | "rotate90") => Some(TextDirection::Down),
@@ -282,7 +282,7 @@ fn text_direction(s: &mut Session, v: &Value) -> CmdResult {
 
 /// The default font size (Normal style), which the character pitch is based on.
 fn grid_font_size(s: &Session) -> f32 {
-    let size = s.doc.styles.resolve_char(Some("Normal"), &wordcraft_doc::CharProps::default()).size;
+    let size = s.doc.styles.resolve_char(Some("Normal"), &soratra_doc::CharProps::default()).size;
     if size.is_finite() { size.clamp(1.0, 1584.0) } else { 10.5 }
 }
 
@@ -516,7 +516,7 @@ pub const MAX_PAGE_SIDE: f32 = 1584.0;
 
 fn size(s: &mut Session, v: &Value) -> CmdResult {
     let (w, h) = if let Some(n) = p::str(v, "name") {
-        let (_, w, h) = wordcraft_geom::PAPER_SIZES
+        let (_, w, h) = soratra_geom::PAPER_SIZES
             .iter()
             .find(|(name, _, _)| name.eq_ignore_ascii_case(n))
             .ok_or_else(|| CmdError::Params(format!("unknown paper `{n}`")))?;
@@ -620,7 +620,7 @@ fn selection_to_sections(s: &mut Session) -> Result<(), CmdError> {
     let after_break = |i: usize| i.checked_sub(1).is_some_and(|j| ends.contains(&j));
     // A selection that took a section break with it ends before that break.
     if b.off == 0 && block(&b) > block(&a) && after_break(block(&b)) {
-        let prev = Pos { path: wordcraft_doc::Path::top(block(&b) - 1), off: 0, ..b.clone() };
+        let prev = Pos { path: soratra_doc::Path::top(block(&b) - 1), off: 0, ..b.clone() };
         b = Pos { off: len(s, &prev), ..prev };
     }
     let last_block = s.doc.body.len().saturating_sub(1);
@@ -685,7 +685,7 @@ fn breaks(s: &mut Session, v: &Value) -> CmdResult {
     // selected text was deleted, so the first section lost its text).
     let old = s.sel.clone();
     let (at, end) = old.ordered();
-    if at.story != wordcraft_doc::StoryRef::Body || at.path.depth() > 0 {
+    if at.story != soratra_doc::StoryRef::Body || at.path.depth() > 0 {
         return Err(CmdError::Failed("section breaks go in the main text".into()));
     }
     // Section break: the paragraph before the caret ends a section with the current props; the
@@ -738,7 +738,7 @@ mod tests {
     use super::*;
 
     fn doc() -> Session {
-        Session::new(wordcraft_doc::Document::from_text("one\ntwo\nthree"))
+        Session::new(soratra_doc::Document::from_text("one\ntwo\nthree"))
     }
 
     fn with_section(f: impl Fn(&mut Value)) -> Value {
@@ -806,9 +806,9 @@ mod tests {
         let l = x.line_numbers.unwrap();
         assert_eq!((l.count_by, l.start, l.distance), (1, 1, 1584.0));
         let g = x.doc_grid.unwrap();
-        assert_eq!((g.line_pitch, g.char_space), (wordcraft_doc::section::MAX_GRID_PITCH, wordcraft_doc::section::MAX_CHAR_SPACE));
+        assert_eq!((g.line_pitch, g.char_space), (soratra_doc::section::MAX_GRID_PITCH, soratra_doc::section::MAX_CHAR_SPACE));
         assert_eq!(x.page_num_start, Some(100_000));
-        assert_eq!(x.footnote_pr.num_start, Some(wordcraft_doc::section::MAX_NOTE_START));
+        assert_eq!(x.footnote_pr.num_start, Some(soratra_doc::section::MAX_NOTE_START));
         assert_eq!(x.endnote_pr.num_start, Some(1));
         let b = x.page_borders.unwrap();
         let (t, lf) = (b.top.unwrap(), b.left.unwrap());
@@ -882,7 +882,7 @@ mod tests {
     /// Layout › Text Direction turns the section, or the table cell the caret is in; one undo step.
     #[test]
     fn text_direction_turns_the_section_or_the_cell() {
-        use wordcraft_doc::props::TextDirection;
+        use soratra_doc::props::TextDirection;
         let mut s = doc();
         s.run("layout.textDirection", &json!({"value": "down"})).unwrap();
         assert_eq!(sect(&s).text_direction, TextDirection::Down);
@@ -933,18 +933,18 @@ mod tests {
     /// opened again, both sections' text lays out on page 1, the second below the first.
     #[test]
     fn section_break_keeps_the_selected_text() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("one\ntwo"));
+        let mut s = Session::new(soratra_doc::Document::from_text("one\ntwo"));
         s.run("select.text", &json!({"text": "one"})).unwrap();
         s.run("layout.break", &json!({"kind": "continuous"})).unwrap();
         assert_eq!(s.selected_text(), "one");
         assert_eq!(s.doc.sections().len(), 2);
-        let texts = |d: &wordcraft_doc::Document| -> Vec<String> {
+        let texts = |d: &soratra_doc::Document| -> Vec<String> {
             d.body.iter().filter_map(|b| if let Block::Para(p) = &**b { Some(p.plain_text().to_string()) } else { None }).collect()
         };
         assert_eq!(texts(&s.doc), ["", "one", "two"]);
         // A backward selection in the middle of a paragraph keeps its text and direction too.
-        let mut s = Session::new(wordcraft_doc::Document::from_text("alpha beta\ngamma"));
-        let p = |off| Pos { story: StoryRef::Body, path: wordcraft_doc::Path::top(0), off };
+        let mut s = Session::new(soratra_doc::Document::from_text("alpha beta\ngamma"));
+        let p = |off| Pos { story: StoryRef::Body, path: soratra_doc::Path::top(0), off };
         s.sel = Selection { anchor: p(10), focus: p(6) };
         s.run("layout.break", &json!({"kind": "continuous"})).unwrap();
         assert_eq!(s.selected_text(), "beta");
@@ -952,11 +952,11 @@ mod tests {
         assert_eq!(texts(&s.doc), ["alpha ", "beta", "gamma"]);
 
         // The issue's document: "one", a continuous break, "two" — both on page 1 after a round trip.
-        let mut s = Session::new(wordcraft_doc::Document::from_text("one\ntwo"));
+        let mut s = Session::new(soratra_doc::Document::from_text("one\ntwo"));
         s.run("select.text", &json!({"text": "one"})).unwrap();
         s.run("caret.end", &json!({})).unwrap();
         s.run("layout.break", &json!({"kind": "continuous"})).unwrap();
-        let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let back = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
         assert_eq!(back.sections().len(), 2);
         assert_eq!(back.last_section.start, SectionStart::Continuous);
         let mut s = Session::new(back);
@@ -1035,7 +1035,7 @@ mod tests {
     /// and after the selection, the columns on the section between, the rest left alone.
     #[test]
     fn columns_apply_to_the_selected_text() {
-        let five = || Session::new(wordcraft_doc::Document::from_text("p1\np2\nalpha beta gamma\np4\np5"));
+        let five = || Session::new(soratra_doc::Document::from_text("p1\np2\nalpha beta gamma\np4\np5"));
         // A whole paragraph (a triple-click takes its mark): each break gets a paragraph of its own.
         let mut s = five();
         select(&mut s, (2, 0), (3, 0));
@@ -1093,8 +1093,8 @@ mod tests {
     /// restart mode, `none` turns numbering off.
     #[test]
     fn line_numbering_options() {
-        use wordcraft_doc::section::LineNumberRestart;
-        let mut s = Session::new(wordcraft_doc::Document::from_text("One\nTwo"));
+        use soratra_doc::section::LineNumberRestart;
+        let mut s = Session::new(soratra_doc::Document::from_text("One\nTwo"));
         s.run("layout.lineNumbers", &json!({"value": "restartSection", "start": 5, "countBy": 2, "distance": 18})).unwrap();
         let l = s.doc.last_section.line_numbers.clone().unwrap();
         assert_eq!((l.start, l.count_by, l.distance, l.restart), (5, 2, 18.0, LineNumberRestart::Section));
@@ -1111,7 +1111,7 @@ mod tests {
     /// there breaks the word.
     #[test]
     fn hyphenation_options_and_manual_hyphenation() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text(
+        let mut s = Session::new(soratra_doc::Document::from_text(
             &"a extraordinarily be uncharacteristic of responsibilities the considerations ".repeat(12),
         ));
         let r = s.run("layout.hyphenation", &json!({"zone": 36, "caps": false, "limit": 3})).unwrap();
@@ -1142,7 +1142,7 @@ mod tests {
         }
         // Some line of thirty or so starts with a long word that fits hyphenated above, whatever the font.
         assert!(found > 0, "no candidates");
-        assert_eq!(s.doc.plain_text(wordcraft_doc::StoryRef::Body).matches('\u{ad}').count(), found);
+        assert_eq!(s.doc.plain_text(soratra_doc::StoryRef::Body).matches('\u{ad}').count(), found);
         assert!(s.run("layout.manualHyphenation", &json!({"from": {"block": 999, "off": 0}})).unwrap()["done"] == true);
     }
 }

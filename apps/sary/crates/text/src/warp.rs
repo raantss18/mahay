@@ -1,14 +1,14 @@
 //! Warp Text: bends the glyph outlines of a type layer with one of Photoshop's fifteen warp
 //! styles (the PSD `warp` descriptor's `warpStyle`).
 //!
-//! The style math lives in `photocraft_geom::warp` (shared with Edit › Transform › Warp): our
+//! The style math lives in `sary_geom::warp` (shared with Edit › Transform › Warp): our
 //! own closed-form approximations of each style's look (observed behaviour, not Adobe's
 //! formulas), the identity at `bend = 0` and continuous in `bend`. The mapping is evaluated per
 //! point; the renderer subdivides long segments so straight edges bend.
 
-use photocraft_doc::text::{TextShape, TextWarp};
-use photocraft_doc::vector::Subpath;
-use photocraft_geom::warp::{StyleWarp, WarpStyle};
+use sary_doc::text::{TextShape, TextWarp};
+use sary_doc::vector::Subpath;
+use sary_geom::warp::{StyleWarp, WarpStyle};
 
 /// Warp styles in Photoshop's menu order: (PSD `warpStyle` value, short id used by commands).
 pub const STYLES: [(&str, &str); 15] = [
@@ -59,7 +59,7 @@ pub enum Placement {
 }
 
 /// A warp prepared for one layout: the shared style math of
-/// [`photocraft_geom::warp::StyleWarp`] (also used by Edit › Transform › Warp) over the text box,
+/// [`sary_geom::warp::StyleWarp`] (also used by Edit › Transform › Warp) over the text box,
 /// or a path the type runs along.
 #[derive(Clone, Debug)]
 pub struct Warp(Kind);

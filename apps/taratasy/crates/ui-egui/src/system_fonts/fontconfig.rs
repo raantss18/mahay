@@ -146,7 +146,7 @@ mod tests {
         fn new() -> Self {
             static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
             let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            let dir = std::env::temp_dir().join(format!("pdfcraft-fontconfig-{}-{n}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("taratasy-fontconfig-{}-{n}", std::process::id()));
             std::fs::create_dir(&dir).unwrap();
             Self(dir)
         }
@@ -163,7 +163,7 @@ mod tests {
                 .args(["--exact", &format!("system_fonts::fontconfig::tests::{test}"), "--nocapture"])
                 .env("FONTCONFIG_PATH", &self.0)
                 .env("FONTCONFIG_FILE", "fonts.conf")
-                .env("PDFCRAFT_FONTCONFIG_TEST_ROOT", &self.0)
+                .env("TARATASY_FONTCONFIG_TEST_ROOT", &self.0)
                 .output()
                 .unwrap();
             assert!(output.status.success(), "{}\n{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
@@ -187,7 +187,7 @@ mod tests {
 
     #[test]
     fn relative_includes_follow_each_including_config_under_fontconfig_path() {
-        if let Some(root) = std::env::var_os("PDFCRAFT_FONTCONFIG_TEST_ROOT") {
+        if let Some(root) = std::env::var_os("TARATASY_FONTCONFIG_TEST_ROOT") {
             let root = PathBuf::from(root);
             assert_eq!(config_path(), root.join("fonts.conf"));
             assert_eq!(font_files(&config_path()), vec![root.join("fonts/DejaVuSans.ttf")]);
@@ -205,7 +205,7 @@ mod tests {
 
     #[test]
     fn included_directories_ignore_disabled_backup_and_non_numbered_files() {
-        if let Some(root) = std::env::var_os("PDFCRAFT_FONTCONFIG_TEST_ROOT") {
+        if let Some(root) = std::env::var_os("TARATASY_FONTCONFIG_TEST_ROOT") {
             let root = PathBuf::from(root);
             assert_eq!(font_files(&config_path()), vec![root.join("fonts/DejaVuSans.ttf")]);
             return;

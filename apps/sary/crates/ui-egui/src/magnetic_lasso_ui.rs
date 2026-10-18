@@ -13,12 +13,12 @@
 //! the outline drawn, in one history step, and an action replays that outline.
 
 use egui::{Color32, Key, Modifiers, Pos2, Rect, Stroke, vec2};
-use photocraft_algo::magnetic::{self, Settings};
-use photocraft_engine::magnetic_cmds::EdgeSource;
+use sary_algo::magnetic::{self, Settings};
+use sary_engine::magnetic_cmds::EdgeSource;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::Tool;
 
@@ -53,12 +53,12 @@ impl MagneticLasso {
 #[derive(Default)]
 pub struct Runtime {
     source: Option<EdgeSource>,
-    /// Pointer moves were batched (`PhotocraftApp::defer_live_stroke`): trace once at the end.
+    /// Pointer moves were batched (`SaryApp::defer_live_stroke`): trace once at the end.
     pending: bool,
 }
 
 /// Detection settings from the options bar, for an event with pen `pressure`.
-fn settings(app: &PhotocraftApp, pressure: f32) -> Settings {
+fn settings(app: &SaryApp, pressure: f32) -> Settings {
     let o = &app.ui.tool_options;
     let mut width = f64::from(o.magnetic_width);
     // Stylus Pressure: pressing harder narrows the width (a pen only; a mouse has no pressure).
@@ -70,14 +70,14 @@ fn settings(app: &PhotocraftApp, pressure: f32) -> Settings {
 
 /// How far the border runs before a point fastens by itself (document px): 8 screen points at
 /// Frequency 100, 98 at 0, 47 at the default 57.
-fn spacing(app: &PhotocraftApp) -> f64 {
+fn spacing(app: &SaryApp) -> f64 {
     let f = app.ui.tool_options.magnetic_frequency;
     let f = if f.is_finite() { f64::from(f.clamp(0.0, 100.0)) } else { 57.0 };
     (8.0 + (100.0 - f) * 0.9) / f64::from(app.point_zoom().max(0.01))
 }
 
 /// Within this distance of the first point (document px), a click closes the border.
-fn close_radius(app: &PhotocraftApp) -> f64 {
+fn close_radius(app: &SaryApp) -> f64 {
     8.0 / f64::from(app.point_zoom().max(0.01))
 }
 
@@ -86,24 +86,24 @@ fn dist(a: [f64; 2], b: [f64; 2]) -> f64 {
 }
 
 /// The edge source for the active document, refreshed when the document or layer changed.
-fn source(app: &mut PhotocraftApp) -> Option<&mut EdgeSource> {
+fn source(app: &mut SaryApp) -> Option<&mut EdgeSource> {
     if !app.magnetic.source.as_ref().is_some_and(|s| s.is_current(&app.session)) {
         app.magnetic.source = EdgeSource::new(&app.session);
     }
     app.magnetic.source.as_mut()
 }
 
-fn snap(app: &mut PhotocraftApp, p: [f64; 2], s: Settings) -> [f64; 2] {
+fn snap(app: &mut SaryApp, p: [f64; 2], s: Settings) -> [f64; 2] {
     source(app).and_then(|src| src.snap(p, s)).unwrap_or(p)
 }
 
-fn trace(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2], guide: &[[f64; 2]], s: Settings) -> Vec<[f64; 2]> {
+fn trace(app: &mut SaryApp, from: [f64; 2], to: [f64; 2], guide: &[[f64; 2]], s: Settings) -> Vec<[f64; 2]> {
     let t = source(app).map(|src| src.trace(from, to, guide, s)).unwrap_or_default();
     if t.is_empty() { vec![from, to] } else { t }
 }
 
 /// Pointer events while the Magnetic Lasso is the tool (it takes them all).
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: Modifiers) -> bool {
     // ⌘ held makes it the Move tool (`hold_keys::cmd_moves`): nothing to take then.
     if app.active_tool() != Tool::MagneticLasso {
         return false;
@@ -117,7 +117,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -> bool 
     true
 }
 
-fn down(app: &mut PhotocraftApp, p: [f64; 2], pressure: f32, mods: Modifiers) {
+fn down(app: &mut SaryApp, p: [f64; 2], pressure: f32, mods: Modifiers) {
     let s = settings(app, pressure);
     if !app.ui.magnetic.active() {
         // The first fastening point; the modifiers held now set the selection mode.
@@ -161,7 +161,7 @@ fn down(app: &mut PhotocraftApp, p: [f64; 2], pressure: f32, mods: Modifiers) {
     fasten_live(app);
 }
 
-fn moved(app: &mut PhotocraftApp, p: [f64; 2], pressure: f32) {
+fn moved(app: &mut SaryApp, p: [f64; 2], pressure: f32) {
     if !app.ui.magnetic.active() {
         return;
     }
@@ -193,7 +193,7 @@ fn moved(app: &mut PhotocraftApp, p: [f64; 2], pressure: f32) {
 }
 
 /// Trace to the pointer once after a batch of pointer moves.
-pub fn flush(app: &mut PhotocraftApp) {
+pub fn flush(app: &mut SaryApp) {
     if std::mem::take(&mut app.magnetic.pending)
         && let Some(&p) = app.ui.magnetic.trail.last()
     {
@@ -203,7 +203,7 @@ pub fn flush(app: &mut PhotocraftApp) {
 }
 
 /// Add the pointer position `q` to the trail, keeping its points a few pixels apart.
-fn extend_trail(app: &mut PhotocraftApp, q: [f64; 2], s: Settings) {
+fn extend_trail(app: &mut SaryApp, q: [f64; 2], s: Settings) {
     let gap = (s.width / 4.0).clamp(1.0, 8.0);
     let t = &mut app.ui.magnetic.trail;
     match t.len() {
@@ -214,7 +214,7 @@ fn extend_trail(app: &mut PhotocraftApp, q: [f64; 2], s: Settings) {
 
 /// The pointer is at `q`: trace the live segment to the edge near it and, with `fasten`, fasten
 /// points behind the pointer while the live segment is long enough.
-fn follow(app: &mut PhotocraftApp, q: [f64; 2], s: Settings, fasten: bool) {
+fn follow(app: &mut SaryApp, q: [f64; 2], s: Settings, fasten: bool) {
     extend_trail(app, q, s);
     let target = snap(app, q, s);
     let every = spacing(app);
@@ -266,7 +266,7 @@ fn cut(p: &[[f64; 2]], len: f64) -> Option<(Vec<[f64; 2]>, [f64; 2])> {
 }
 
 /// Fasten the live segment: its end becomes a fastening point.
-fn fasten_live(app: &mut PhotocraftApp) {
+fn fasten_live(app: &mut SaryApp) {
     let m = &mut app.ui.magnetic;
     let live = std::mem::take(&mut m.live);
     let before = m.path.len();
@@ -284,7 +284,7 @@ fn fasten_live(app: &mut PhotocraftApp) {
 }
 
 /// An ⌥-drag ends: where it stopped is a fastening point.
-fn end_freehand(app: &mut PhotocraftApp) {
+fn end_freehand(app: &mut SaryApp) {
     let m = &mut app.ui.magnetic;
     if std::mem::take(&mut m.freehand) && m.anchors.last().is_some_and(|&a| a + 1 < m.path.len()) {
         m.anchors.push(m.path.len() - 1);
@@ -292,7 +292,7 @@ fn end_freehand(app: &mut PhotocraftApp) {
 }
 
 /// `p` is over the first point of a border long enough to close.
-fn near_start(app: &PhotocraftApp, p: [f64; 2]) -> bool {
+fn near_start(app: &SaryApp, p: [f64; 2]) -> bool {
     let m = &app.ui.magnetic;
     let r = close_radius(app);
     m.path.first().is_some_and(|&first| dist(first, p) <= r) && magnetic::length(&m.path) + magnetic::length(&m.live) > 2.0 * r
@@ -300,7 +300,7 @@ fn near_start(app: &PhotocraftApp, p: [f64; 2]) -> bool {
 
 /// Close the border and select it: the live segment fastens, then the last point joins the first
 /// along the edges, or with a straight segment with `straight`.
-pub fn close(app: &mut PhotocraftApp, straight: bool) {
+pub fn close(app: &mut SaryApp, straight: bool) {
     if !app.ui.magnetic.active() {
         return;
     }
@@ -319,7 +319,7 @@ pub fn close(app: &mut PhotocraftApp, straight: bool) {
 }
 
 /// Select the border as drawn (in the mode the first click set) and finish.
-fn commit(app: &mut PhotocraftApp) {
+fn commit(app: &mut SaryApp) {
     let m = std::mem::take(&mut app.ui.magnetic);
     app.magnetic = Runtime::default();
     if m.path.len() < 3 {
@@ -332,14 +332,14 @@ fn commit(app: &mut PhotocraftApp) {
 }
 
 /// Esc: drop the border.
-pub fn cancel(app: &mut PhotocraftApp) {
+pub fn cancel(app: &mut SaryApp) {
     app.ui.magnetic = MagneticLasso::default();
     app.magnetic = Runtime::default();
 }
 
 /// ⌫ / Delete: remove the last fastening point and the border back to the one before it; with only
 /// the first point left, cancel.
-pub fn remove_last_point(app: &mut PhotocraftApp) {
+pub fn remove_last_point(app: &mut SaryApp) {
     end_freehand(app);
     let m = &mut app.ui.magnetic;
     if m.anchors.len() <= 1 {
@@ -361,12 +361,12 @@ pub fn remove_last_point(app: &mut PhotocraftApp) {
 }
 
 /// A new-selection border is being drawn, so the selection it will replace is hidden.
-pub fn replaces_selection(app: &PhotocraftApp) -> bool {
+pub fn replaces_selection(app: &SaryApp) -> bool {
     app.ui.magnetic.active() && app.ui.magnetic.mode == "replace"
 }
 
 /// Once a frame: a border left behind by a tool or document switch is dropped.
-pub fn frame(app: &mut PhotocraftApp) {
+pub fn frame(app: &mut SaryApp) {
     let m = &app.ui.magnetic;
     if m.active() && (app.ui.tool != Tool::MagneticLasso || app.session.active().map(|d| d.doc.id.0) != Some(m.doc)) {
         cancel(app);
@@ -376,7 +376,7 @@ pub fn frame(app: &mut PhotocraftApp) {
 /// Keys while the Magnetic Lasso is the tool: ↩ closes the border along the edges (⌥↩ straight),
 /// Esc cancels it, ⌫ / Delete remove the last fastening point, and [ / ] change the detection width
 /// by 1 px. Returns whether a key was taken.
-pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     if app.ui.tool != Tool::MagneticLasso {
         return false;
     }
@@ -413,7 +413,7 @@ pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
 
 /// The border being drawn, its fastening points, and the closing mark when the pointer is over the
 /// first point.
-pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, hover: Option<Pos2>) {
+pub fn draw(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform, hover: Option<Pos2>) {
     let m = &app.ui.magnetic;
     if !m.active() {
         return;
@@ -438,8 +438,8 @@ pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, hover:
 
 /// The cursor over the canvas: a crosshair; Preferences › Cursors › Other Cursors › Precise also
 /// shows the detection width around it.
-pub fn cursor(app: &PhotocraftApp, painter: &egui::Painter, p: Pos2, zoom: f32) -> egui::CursorIcon {
-    if app.session.prefs().cursors.other == photocraft_engine::prefs::OtherCursor::Precise {
+pub fn cursor(app: &SaryApp, painter: &egui::Painter, p: Pos2, zoom: f32) -> egui::CursorIcon {
+    if app.session.prefs().cursors.other == sary_engine::prefs::OtherCursor::Precise {
         let r = (app.ui.tool_options.magnetic_width.clamp(1.0, 256.0) * zoom).max(2.0);
         painter.circle_stroke(p, r + 0.5, Stroke::new(1.0, Color32::from_black_alpha(140)));
         painter.circle_stroke(p, r, Stroke::new(1.0, Color32::from_white_alpha(220)));

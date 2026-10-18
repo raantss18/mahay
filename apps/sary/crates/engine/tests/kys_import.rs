@@ -1,7 +1,7 @@
 //! `edit.keyboardShortcuts {"importKys": <xml>}`: agents, the CLI and MCP import a Photoshop
 //! `.kys` set without the app's dialog (#1163).
-use photocraft_engine::Session;
-use photocraft_engine::prefs::normalize_shortcut;
+use sary_engine::Session;
+use sary_engine::prefs::normalize_shortcut;
 use serde_json::json;
 
 const SET: &str = "\u{feff}<?xml version=\"1.0\" encoding=\"UTF-8\"?>

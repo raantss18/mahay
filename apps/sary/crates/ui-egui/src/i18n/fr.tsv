@@ -15,8 +15,8 @@
 # particular not the French localisation of Adobe Photoshop. Add entries the same way.
 # Conventions: menus are nouns (Fichier, Édition, Image ...), commands are infinitives (Ouvrir…,
 # Enregistrer sous…), sentence case. French typography: a no-break space (U+00A0) before
-# « : ; ? ! » and "%", and inside guillemets « … ». Product and technology names (PhotoCraft,
-# ArtCraft, OpenType, Lab ...) stay as they are; RGB/CMYK read RVB/CMJN; the trailing "…" of
+# « : ; ? ! » and "%", and inside guillemets « … ». Product and technology names (Sary,
+# Mahay, OpenType, Lab ...) stay as they are; RGB/CMYK read RVB/CMJN; the trailing "…" of
 # dialog commands is kept.
 
 # Channel Options and New Spot Channel (#3761)
@@ -781,11 +781,11 @@
 	Timeline	Montage
 	Tool Presets	Préréglages d'outils
 	Tools	Outils
-	About PhotoCraft	À propos de PhotoCraft
-	PhotoCraft Website	Site web de PhotoCraft
-	PhotoCraft on GitHub	PhotoCraft sur GitHub
-	ArtCraft Website	Site web d'ArtCraft
-	Join the ArtCraft Discord…	Rejoindre le Discord d'ArtCraft…
+	About Sary	À propos de Sary
+	Sary Website	Site web de Sary
+	Sary on GitHub	Sary sur GitHub
+	Mahay Website	Site web d'Mahay
+	Join the Mahay Discord…	Rejoindre le Discord d'Mahay…
 	Report an Issue…	Signaler un problème…
 	WIA Support…	Prise en charge de WIA…
 	Apply	Appliquer
@@ -836,7 +836,7 @@
 	All Caps	Tout en capitales
 	All Slices	Toutes les tranches
 	All User Slices	Toutes les tranches utilisateur
-	All shortcuts reset to PhotoCraft defaults.	Tous les raccourcis ont été réinitialisés aux valeurs par défaut de PhotoCraft.
+	All shortcuts reset to Sary defaults.	Tous les raccourcis ont été réinitialisés aux valeurs par défaut de Sary.
 	Alt	Alt
 	Always use pressure for opacity	Toujours utiliser la pression pour l'opacité
 	Always use pressure for size	Toujours utiliser la pression pour la taille
@@ -1330,9 +1330,9 @@
 	Perspective Warp is not active	La déformation de la perspective n'est pas active
 	Perspective Warp: draw planes along the image's perspective, then switch to Warp	Déformation de la perspective : tracez des plans selon la perspective de l'image, puis passez à Déformer
 	Photo Filter	Filtre photo
-	PhotoCraft	PhotoCraft
-	PhotoCraft Manages Colors	PhotoCraft gère les couleurs
-	PhotoCraft — an open-source, native image editor written in Rust.	PhotoCraft — un éditeur d'images natif et libre, écrit en Rust.
+	Sary	Sary
+	Sary Manages Colors	Sary gère les couleurs
+	Sary — an open-source, native image editor written in Rust.	Sary — un éditeur d'images natif et libre, écrit en Rust.
 	Pin Depth:	Profondeur de l'épingle :
 	Pixel Length:	Longueur en pixels :
 	Pixels/Centimeter	Pixels/centimètre
@@ -1408,11 +1408,11 @@
 	Import Shortcuts…	Importer des raccourcis…
 	Load a keyboard shortcut set saved as .kys	Charger un jeu de raccourcis clavier enregistré en .kys
 	Imported {n} shortcuts from {file}. Click OK to keep them.	{n} raccourcis importés depuis {file}. Cliquez sur OK pour les conserver.
-	{n} commands are not in PhotoCraft.	{n} commandes n'existent pas dans PhotoCraft.
+	{n} commands are not in Sary.	{n} commandes n'existent pas dans Sary.
 	Keyboard shortcuts imported	Raccourcis clavier importés
 	Your keyboard shortcut set {set} is in use here: {n} shortcuts differ from the defaults. Edit › Keyboard Shortcuts shows them; Reset All to Defaults undoes this.	Votre jeu de raccourcis clavier {set} est utilisé ici : {n} raccourcis diffèrent des valeurs par défaut. Édition › Raccourcis clavier les affiche ; Tout rétablir par défaut annule l'import.
 	Import keyboard shortcuts?	Importer les raccourcis clavier ?
-	PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?	PhotoCraft a trouvé sur cet ordinateur votre jeu de raccourcis clavier {set} provenant d'un autre éditeur d'images : {n} de ses raccourcis diffèrent de ceux de PhotoCraft. L'importer ?
+	Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?	Sary a trouvé sur cet ordinateur votre jeu de raccourcis clavier {set} provenant d'un autre éditeur d'images : {n} de ses raccourcis diffèrent de ceux de Sary. L'importer ?
 	Edit › Keyboard Shortcuts › Reset All to Defaults undoes an import.	Édition › Raccourcis clavier › Tout rétablir par défaut annule un import.
 	Don't Import	Ne pas importer
 	The keyboard shortcut set was not imported: {error}	Le jeu de raccourcis clavier n'a pas été importé : {error}
@@ -1598,7 +1598,7 @@
 	Apple Watch 45mm	Apple Watch 45 mm
 	Aqua	Aqua
 	Art & Illustration	Art et illustration
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Background Eraser Tool	Outil Gomme d'arrière-plan
 	Bevel & Emboss	Biseau et relief
 	Blend Mode	Mode de fusion
@@ -1634,7 +1634,7 @@
 	Current Tool	Outil actif
 	Custom Shape Tool	Outil Forme personnalisée
 	Cyans	Cyans
-	Default PhotoCraft Size	Taille PhotoCraft par défaut
+	Default Sary Size	Taille Sary par défaut
 	Delete Workspace	Supprimer l'espace de travail
 	Diamond	Losange
 	Dimensions:	Dimensions :
@@ -1745,7 +1745,7 @@
 	Pen Tool	Outil Plume
 	Convert Point Tool	Outil Conversion de point
 	Photo	Photo
-	PhotoCraft website	Site web de PhotoCraft
+	Sary website	Site web de Sary
 	Picas	Picas
 	Pillow Emboss	Relief en coussin
 	Pixel Replacement	Remplacement de pixels
@@ -2072,7 +2072,7 @@
 	System Info	Informations système
 	More panels	Autres panneaux
 	More documents	Autres documents
-	These settings aren't available in PhotoCraft yet.	Ces paramètres ne sont pas encore disponibles dans PhotoCraft.
+	These settings aren't available in Sary yet.	Ces paramètres ne sont pas encore disponibles dans Sary.
 	Graphics	Graphismes
 	Reset GPU Backend	Réinitialiser le moteur GPU
 	Applies at next launch.	Prend effet au prochain démarrage.
@@ -2653,8 +2653,8 @@
 	Use Global Light	Utiliser la lumière globale
 	Native file drag-and-drop is unavailable	Le glisser-déposer natif de fichiers n'est pas disponible
 	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or copy the image in your file manager and paste it with {paste}.	Le glisser-déposer natif de fichiers n'est pas encore pris en charge sous Wayland. Utilisez Fichier › Ouvrir, ou copiez l'image dans votre gestionnaire de fichiers et collez-la avec {paste}.
-	To drop files, start PhotoCraft under XWayland: `{command}`	Pour déposer des fichiers, lancez PhotoCraft sous XWayland : `{command}`
-	Or set Preferences › Performance › Linux display server to X11: PhotoCraft then always starts under XWayland.	Ou réglez Préférences › Performances › Serveur d'affichage Linux sur X11 : PhotoCraft démarre alors toujours sous XWayland.
+	To drop files, start Sary under XWayland: `{command}`	Pour déposer des fichiers, lancez Sary sous XWayland : `{command}`
+	Or set Preferences › Performance › Linux display server to X11: Sary then always starts under XWayland.	Ou réglez Préférences › Performances › Serveur d'affichage Linux sur X11 : Sary démarre alors toujours sous XWayland.
 	Edit › Paste	Édition › Coller
 	Use File › Open, or paste a copied image with {paste}.	Utilisez Fichier › Ouvrir, ou collez une image copiée avec {paste}.
 	Mixer Brush Tool	Outil Pinceau mélangeur
@@ -2670,7 +2670,7 @@
 	Automatic uses GPU acceleration when available and falls back to CPU rendering on errors.	Le mode automatique utilise l'accélération GPU lorsqu'elle est disponible et repasse au rendu CPU en cas d'erreur.
 	Switched to CPU rendering	Passage au rendu CPU
 	GPU acceleration could not continue. Your documents are unchanged.	L'accélération GPU n'a pas pu continuer. Vos documents sont intacts.
-	PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter.	PhotoCraft utilise le compositeur d'images CPU. La fenêtre peut encore utiliser votre carte graphique.
+	Sary is using the CPU image compositor. The window may still use your graphics adapter.	Sary utilise le compositeur d'images CPU. La fenêtre peut encore utiliser votre carte graphique.
 	Retry GPU requires a restart. Save your work first.	Réessayer le GPU nécessite un redémarrage. Enregistrez votre travail au préalable.
 	Keep Using CPU	Continuer avec le CPU
 	Retry GPU	Réessayer le GPU
@@ -2743,7 +2743,7 @@ cameraRaw	Blending	Fusion
 	Use tablet pressure to change pen width	Utiliser la pression de la tablette pour modifier la largeur de la plume
 
 
-# About ▸ Contributors / Models (credits, craftrules standards/contributors.md)
+# About ▸ Contributors / Models (credits, mahay-rules standards/contributors.md)
 	About	À propos
 	Contributors	Contributeurs
 	Models	Modèles
@@ -2905,7 +2905,7 @@ fontWeight	Italic	Italique
 	Color to Alpha…	Couleur vers alpha…
 	Transparency Threshold	Seuil de transparence
 	Opacity Threshold	Seuil d'opacité
-	PhotoCraft — Screen Color Picker	PhotoCraft — Sélecteur de couleur d'écran
+	Sary — Screen Color Picker	Sary — Sélecteur de couleur d'écran
 
 	Rasterize svg groups deeper than	Pixelliser les groupes SVG au-delà de cette profondeur
 	0 turns this threshold off; SVG groups nested deeper than 100 levels are always rasterized.	0 désactive ce seuil ; les groupes SVG imbriqués sur plus de 100 niveaux sont toujours pixellisés.
@@ -3147,7 +3147,7 @@ curves	Smooth	Lisser
 	{name} (Photoshop)	{name} (Photoshop)
 	{message} ({note})	{message} ({note})
 @plural	Loaded {n} action from {file}|Loaded {n} actions from {file}	{n} action chargée depuis {file}|{n} actions chargées depuis {file}
-@plural	{n} step has no PhotoCraft equivalent yet|{n} steps have no PhotoCraft equivalent yet	{n} étape n’a pas encore d’équivalent dans PhotoCraft|{n} étapes n’ont pas encore d’équivalent dans PhotoCraft
+@plural	{n} step has no Sary equivalent yet|{n} steps have no Sary equivalent yet	{n} étape n’a pas encore d’équivalent dans Sary|{n} étapes n’ont pas encore d’équivalent dans Sary
 @plural	Saved {n} action to {file}|Saved {n} actions to {file}	{n} action enregistrée dans {file}|{n} actions enregistrées dans {file}
 @plural	{n} step with no Photoshop equivalent left out|{n} steps with no Photoshop equivalent left out	{n} étape sans équivalent Photoshop omise|{n} étapes sans équivalent Photoshop omises
 
@@ -3198,7 +3198,7 @@ curves	Smooth	Lisser
 	Clear Selected Guides	Effacer les repères sélectionnés
 	Delete this set	Supprimer ce jeu
 	New Set…	Nouveau jeu…
-	PhotoCraft Defaults	Valeurs par défaut de PhotoCraft
+	Sary Defaults	Valeurs par défaut de Sary
 	Save a list of these shortcuts as a web page	Enregistrer la liste de ces raccourcis en page web
 	Save the changes to this set	Enregistrer les modifications de ce jeu
 	Save these shortcuts as a .kys file	Enregistrer ces raccourcis dans un fichier .kys

@@ -1,6 +1,6 @@
-//! Regression for #1350: saving an inactive .pcraft file must not select it.
+//! Regression for #1350: saving an inactive .sary file must not select it.
 
-use photocraft_automation::Headless;
+use sary_automation::Headless;
 use serde_json::json;
 
 #[test]
@@ -11,7 +11,7 @@ fn indexed_native_save_preserves_active_document_and_future_command_target() {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     ));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("first.pcraft");
+    let path = dir.join("first.sary");
     let mut headless = Headless::trusted_local();
 
     headless.handle("doc.new", json!({"width": 2, "height": 2, "background": "white", "name": "first"})).unwrap();
@@ -25,7 +25,7 @@ fn indexed_native_save_preserves_active_document_and_future_command_target() {
     assert_eq!(headless.session.active_index(), Some(1), "save must not select document 0");
     let first = &headless.session.documents()[0];
     assert_eq!(first.path.as_deref(), path.to_str());
-    assert_eq!(first.doc.name, "first.pcraft");
+    assert_eq!(first.doc.name, "first.sary");
     assert_eq!(first.revision, first.saved_revision, "saved document is clean");
 
     headless.handle("engine.execute", json!({"command": "image.adjustments.invert", "params": {}})).unwrap();

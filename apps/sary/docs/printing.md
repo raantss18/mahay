@@ -2,16 +2,16 @@
 
 File › Print renders the flattened document onto one PDF page (paper size and orientation,
 position and scale, crop and registration marks, labels, colour handling) and hands that page
-to a printer. The rendering is `print_cmds.rs` in `photocraft-engine`, shared by the dialog, the
+to a printer. The rendering is `print_cmds.rs` in `sary-engine`, shared by the dialog, the
 batch commands and automation (`file.print`, `file.printOneCopy`); this page is about the hand-off.
 
 ## Routes to the printer
 
 | Route | When | What the user sees |
 |---|---|---|
-| **`craft-print`** (`lp` on CUPS, the Windows spooler) | Whenever `lp` is on the path (macOS, Linux outside a sandbox) or on Windows | `Sent to the printer (request id is Office-42)` |
-| **CUPS over IPP** (`photocraft-ipp`) | No `lp` on the path (a Flatpak) and a print server answers: `CUPS_SERVER`, then `/run/cups/cups.sock`, `/var/run/cups/cups.sock`, `/private/var/run/cupsd`, then `localhost:631`; always for a `printServer` named in the request | `Sent to the printer (job 42 on Office)` |
-| **Print portal** (`org.freedesktop.portal.Print`, desktop app on Linux) | No print server reachable or no printer set up, or always with `PHOTOCRAFT_PRINT_PORTAL=1` | The system print dialog, seeded with the copies and paper; the outcome goes to the log |
+| **`mahay-print`** (`lp` on CUPS, the Windows spooler) | Whenever `lp` is on the path (macOS, Linux outside a sandbox) or on Windows | `Sent to the printer (request id is Office-42)` |
+| **CUPS over IPP** (`sary-ipp`) | No `lp` on the path (a Flatpak) and a print server answers: `CUPS_SERVER`, then `/run/cups/cups.sock`, `/var/run/cups/cups.sock`, `/private/var/run/cupsd`, then `localhost:631`; always for a `printServer` named in the request | `Sent to the printer (job 42 on Office)` |
+| **Print portal** (`org.freedesktop.portal.Print`, desktop app on Linux) | No print server reachable or no printer set up, or always with `SARY_PRINT_PORTAL=1` | The system print dialog, seeded with the copies and paper; the outcome goes to the log |
 | **Print to PDF** | `output` given (the Output field of the dialog) | The file; nothing is spooled unless `send` is true |
 
 A route that exists but fails (an unknown printer, a job the queue refuses) is an error; only a
@@ -48,8 +48,8 @@ job went) and `pdf` (the page's path, only when `output` named one).
 | Variable | Effect |
 |---|---|
 | `CUPS_SERVER` | The print server, as CUPS itself reads it: `host[:port]` or a socket path |
-| `PHOTOCRAFT_PRINT_PORTAL=1` | Always use the system print dialog (the portal) instead of `lp` or CUPS directly |
-| `PHOTOCRAFT_PRINT_PORTAL=0` | Never use the portal; a missing print server is then an error |
+| `SARY_PRINT_PORTAL=1` | Always use the system print dialog (the portal) instead of `lp` or CUPS directly |
+| `SARY_PRINT_PORTAL=0` | Never use the portal; a missing print server is then an error |
 
 ## Verification
 
@@ -63,5 +63,5 @@ job went) and `pdf` (the page's path, only when `output` named one).
   `lp` taking the job when it is on the path; the IPP route when it is not (a child process
   with an empty path); the app's spooler when preferred, as the fallback without a printer, and
   skipped when a server is named; print to PDF untouched.
-- `apps/photocraft/src/print_portal.rs`: the request path rule and the paper/copies seeding of
+- `apps/sary/src/print_portal.rs`: the request path rule and the paper/copies seeding of
   the dialog (PWG names for the standard papers, millimetres for custom sizes).

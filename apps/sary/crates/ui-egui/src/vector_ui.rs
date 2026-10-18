@@ -3,13 +3,13 @@
 //! All edits go through the engine's `shape.*` / `path.*` commands.
 
 use egui::{Color32, Pos2, Rect, Sense, Stroke, pos2, vec2};
-use photocraft_doc::vector::Path;
-use photocraft_doc::{Document, LayerContent};
-use photocraft_geom::Affine;
+use sary_doc::vector::Path;
+use sary_doc::{Document, LayerContent};
+use sary_geom::Affine;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::{Tool, ToolOptions};
 use crate::theme::Tokens;
@@ -56,7 +56,7 @@ fn hex(c: [f32; 4]) -> String {
     format!("#{:02x}{:02x}{:02x}", c.r(), c.g(), c.b())
 }
 
-fn stroke_param(app: &PhotocraftApp) -> Value {
+fn stroke_param(app: &SaryApp) -> Value {
     let o = &app.ui.tool_options;
     if o.stroke_width <= 0.0 {
         return Value::Null;
@@ -118,7 +118,7 @@ pub fn shape_bounds(o: &ToolOptions, tool: Tool, start: [f64; 2], end: [f64; 2],
 }
 
 /// Finish a Shape-tool drag: ⇧ constrains proportions, ⌥ draws from the centre.
-pub fn finish_shape(app: &mut PhotocraftApp, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) {
+pub fn finish_shape(app: &mut SaryApp, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) {
     let Some(mut p) = shape_geometry(&app.ui.tool_options, tool, start, end, mods) else { return };
     if tool == Tool::CustomShape {
         // ⇧ keeps the shape's proportions (the rect is already squared).
@@ -134,31 +134,31 @@ pub fn finish_shape(app: &mut PhotocraftApp, tool: Tool, start: [f64; 2], end: [
     }
 }
 
-fn fill_param(app: &PhotocraftApp) -> Value {
+fn fill_param(app: &SaryApp) -> Value {
     if app.ui.tool_options.shape_fill { json!(app.session.tools.foreground) } else { Value::Null }
 }
 
 /// Create a shape layer from `shape.create` geometry with the options bar's fill and stroke: the
 /// end of a drag, and the Create Rectangle / Ellipse / … dialogs (`shape_dialog`).
-pub fn create_shape(app: &mut PhotocraftApp, mut geometry: Value) -> Result<Value, String> {
+pub fn create_shape(app: &mut SaryApp, mut geometry: Value) -> Result<Value, String> {
     geometry["fill"] = fill_param(app);
     geometry["stroke"] = stroke_param(app);
     app.run("shape.create", geometry)
 }
 
 /// The preview and command both use the full float tool colours, including transparent paint.
-fn shape_preview(app: &PhotocraftApp, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) -> Option<photocraft_doc::ShapeLayer> {
+fn shape_preview(app: &SaryApp, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) -> Option<sary_doc::ShapeLayer> {
     let o = &app.ui.tool_options;
     let geometry = shape_geometry(o, tool, start, end, mods)?;
     let path = if tool == Tool::CustomShape {
         let rect = geometry.get("rect").and_then(|r| serde_json::from_value::<[f64; 4]>(r.clone()).ok())?;
-        let groups = photocraft_engine::presets::shapes::all_groups(&app.session);
+        let groups = sary_engine::presets::shapes::all_groups(&app.session);
         let shape = groups.iter().flat_map(|g| &g.items).find(|s| s.name == app.ui.presets_ui.shape())?;
-        photocraft_engine::presets::shapes::fit(&shape.path, rect, mods.shift)
+        sary_engine::presets::shapes::fit(&shape.path, rect, mods.shift)
     } else {
-        photocraft_engine::vector_cmds::shape_path(&geometry).ok()?
+        sary_engine::vector_cmds::shape_path(&geometry).ok()?
     };
-    Some(photocraft_doc::ShapeLayer {
+    Some(sary_doc::ShapeLayer {
         path,
         fill: o.shape_fill.then(|| solid_paint(app.session.tools.foreground)),
         stroke: (o.stroke_width > 0.0).then(|| o.shape_stroke.stroke(o.stroke_width, solid_paint(app.session.tools.background))),
@@ -167,7 +167,7 @@ fn shape_preview(app: &PhotocraftApp, tool: Tool, start: [f64; 2], end: [f64; 2]
 }
 
 /// Shape-tool drag preview using the same path and vector stroke geometry as the commit.
-pub fn draw_shape_preview(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) {
+pub fn draw_shape_preview(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform, tool: Tool, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) {
     let Some(mut shape) = shape_preview(app, tool, start, end, mods) else { return };
     let path = shape.path.clone();
     let origin = xf.to_screen(0.0, 0.0);
@@ -209,7 +209,7 @@ fn on_closing_anchor(pen: &PenPath, x: f64, y: f64, tol: f64) -> bool {
 /// Would a click at `(x, y)` with `tool` close the path being drawn: the Pen over the first
 /// anchor, or the Curvature Pen over the first of three anchors or more? The canvas shows the
 /// close-path pointer there, as Photoshop does (#4596).
-pub fn closes_path_at(app: &PhotocraftApp, tool: Tool, x: f64, y: f64) -> bool {
+pub fn closes_path_at(app: &SaryApp, tool: Tool, x: f64, y: f64) -> bool {
     let Some(pen) = app.ui.pen.as_ref().filter(|p| !p.dragging && p.moving.is_none()) else { return false };
     match tool {
         Tool::Pen => !pen.curvature && on_closing_anchor(pen, x, y, 6.0 / app.point_zoom().max(0.01) as f64),
@@ -221,7 +221,7 @@ pub fn closes_path_at(app: &PhotocraftApp, tool: Tool, x: f64, y: f64) -> bool {
 /// Pen press: close on the first anchor, reshape the last anchor's outgoing handle,
 /// or add a new anchor (dragging a new anchor pulls symmetrical handles). With ⇧ a new anchor
 /// lands on the nearest 45° ray from the previous one, at the pointer's projection onto it.
-pub fn pen_down(app: &mut PhotocraftApp, x: f64, y: f64, shift: bool) {
+pub fn pen_down(app: &mut SaryApp, x: f64, y: f64, shift: bool) {
     let tol = 6.0 / app.point_zoom().max(0.01) as f64;
     let pen = app.ui.pen.get_or_insert_with(PenPath::default);
     if let Some(first) = pen.knots.first().map(|k| k[0])
@@ -259,7 +259,7 @@ pub fn pen_down(app: &mut PhotocraftApp, x: f64, y: f64, shift: bool) {
 
 /// Pen drag: pull out the handles of the anchor just placed. ⇧ (read live, as it is held)
 /// turns the handle to the nearest 45° direction from its anchor.
-pub fn pen_move(app: &mut PhotocraftApp, x: f64, y: f64, shift: bool) {
+pub fn pen_move(app: &mut SaryApp, x: f64, y: f64, shift: bool) {
     if let Some(pen) = app.ui.pen.as_mut()
         && pen.dragging
     {
@@ -284,7 +284,7 @@ fn shift_45(origin: [f64; 2], p: [f64; 2], shift: bool) -> [f64; 2] {
 /// These knots are editor-only gesture state, not document history until Enter or
 /// clicking the first anchor commits the path. Therefore Cmd/Ctrl+Z must consume one
 /// knot rather than undoing an unrelated, already committed document operation.
-pub fn pen_undo_last_point(app: &mut PhotocraftApp) -> bool {
+pub fn pen_undo_last_point(app: &mut SaryApp) -> bool {
     let Some(pen) = app.ui.pen.as_mut() else { return false };
     if pen.knots.pop().is_none() {
         return false;
@@ -308,7 +308,7 @@ pub fn pen_undo_last_point(app: &mut PhotocraftApp) -> bool {
     true
 }
 
-pub fn pen_up(app: &mut PhotocraftApp) {
+pub fn pen_up(app: &mut SaryApp) {
     let jitter = 2.0 / f64::from(app.point_zoom().max(0.01));
     let Some(pen) = app.ui.pen.as_mut() else { return };
     pen.dragging = false;
@@ -327,7 +327,7 @@ pub fn pen_up(app: &mut PhotocraftApp) {
 
 /// ⌥/Alt during a Pen drag breaks the pair of handles being pulled out: from then on only the
 /// outgoing handle follows the pointer and the incoming curve stays as it is (#3306).
-pub fn pen_break_handle(app: &mut PhotocraftApp) {
+pub fn pen_break_handle(app: &mut SaryApp) {
     let Some(pen) = app.ui.pen.as_mut().filter(|p| p.dragging && !p.adjusting_last) else { return };
     let Some(i) = pen.knots.len().checked_sub(1) else { return };
     if !pen.unlinked.contains(&i) {
@@ -338,7 +338,7 @@ pub fn pen_break_handle(app: &mut PhotocraftApp) {
 
 /// ⌥/Alt-press on the last anchor's outgoing handle while drawing grabs that handle alone: the
 /// drag turns it and the incoming curve stays put (#3306). False when the press misses it.
-pub fn pen_grab_handle(app: &mut PhotocraftApp, x: f64, y: f64) -> bool {
+pub fn pen_grab_handle(app: &mut SaryApp, x: f64, y: f64) -> bool {
     let tol = 6.0 / f64::from(app.point_zoom().max(0.01));
     let Some(pen) = app.ui.pen.as_mut() else { return false };
     let Some((i, k)) = pen.knots.len().checked_sub(1).zip(pen.knots.last()) else { return false };
@@ -390,24 +390,24 @@ fn fold_close(pen: &PenPath) -> Option<PenPath> {
 /// The Pen path being drawn as a document path (one open subpath), so ⌘/Ctrl (Direct Selection)
 /// can edit it in place while drawing (#4022).
 pub(crate) fn pen_path(pen: &PenPath) -> Path {
-    let pt = |q: [f64; 2]| photocraft_geom::Point::new(q[0], q[1]);
+    let pt = |q: [f64; 2]| sary_geom::Point::new(q[0], q[1]);
     let knots = pen
         .knots
         .iter()
         .enumerate()
-        .map(|(i, k)| photocraft_doc::Knot {
+        .map(|(i, k)| sary_doc::Knot {
             anchor: pt(k[0]),
             in_ctrl: pt(k[1]),
             out_ctrl: pt(k[2]),
             smooth: !pen.unlinked.contains(&i) && (k[1] != k[0] || k[2] != k[0]),
         })
         .collect();
-    Path::new(vec![photocraft_doc::vector::Subpath { closed: false, knots, op: Default::default() }])
+    Path::new(vec![sary_doc::vector::Subpath { closed: false, knots, op: Default::default() }])
 }
 
 /// The Pen path being drawn becomes `path`'s first subpath, edited with ⌘/Ctrl (Direct Selection);
 /// drawing carries on from its last anchor. A Curvature Pen path keeps following its anchors.
-pub(crate) fn pen_replace(app: &mut PhotocraftApp, path: &Path) {
+pub(crate) fn pen_replace(app: &mut SaryApp, path: &Path) {
     let Some(pen) = app.ui.pen.as_mut() else { return };
     let knots = path.subpaths.first().map(|s| s.knots.as_slice()).unwrap_or_default();
     pen.knots = knots.iter().map(knot_points).collect();
@@ -424,7 +424,7 @@ pub(crate) fn pen_replace(app: &mut PhotocraftApp, path: &Path) {
 }
 
 /// Finish the pen path: a work path (Path mode) or a new shape layer (Shape mode).
-pub fn pen_commit(app: &mut PhotocraftApp, closed: bool) {
+pub fn pen_commit(app: &mut SaryApp, closed: bool) {
     let Some(mut pen) = app.ui.pen.take() else { return };
     if app.ui.direct_selection.target == Some(crate::direct_select::PathRef::Pen) {
         // Its anchors are no longer the Pen's: the committed path is another path.
@@ -438,7 +438,7 @@ pub fn pen_commit(app: &mut PhotocraftApp, closed: bool) {
 
 /// Commit a finished Pen, Freeform Pen or Curvature Pen path, as one History step: a new shape
 /// layer (Shape mode), else a subpath of the targeted vector mask, else the work path.
-fn commit_path(app: &mut PhotocraftApp, pen: &PenPath, closed: bool) {
+fn commit_path(app: &mut SaryApp, pen: &PenPath, closed: bool) {
     if pen.knots.len() < 2 {
         return;
     }
@@ -456,7 +456,7 @@ fn commit_path(app: &mut PhotocraftApp, pen: &PenPath, closed: bool) {
         app.run("shape.create", json!({"kind": "path", "path": path, "fill": fill, "stroke": stroke}))
     } else if let Some((id, existing)) = targeted_vector_mask(app) {
         // A targeted vector mask takes the new subpath (#196), as in Photoshop.
-        let mut p = photocraft_engine::vector_cmds::path_json(&existing);
+        let mut p = sary_engine::vector_cmds::path_json(&existing);
         if let (Some(subs), Some(new)) = (p.get_mut("subpaths").and_then(Value::as_array_mut), path.get("subpaths").and_then(Value::as_array)) {
             subs.extend(new.iter().cloned());
         }
@@ -490,7 +490,7 @@ fn path_exists(doc: &Document, name: &str) -> bool {
 /// Freeform Pen release: fit the drag's trace within the options bar's Curve Fit and commit it
 /// as the Pen does. Releasing on the start point closes the path; a click draws nothing. The
 /// points at indices `straight` were ⌥-clicked: the segment into each one stays straight.
-pub fn freeform_finish(app: &mut PhotocraftApp, points: &[[f64; 3]], straight: &[usize]) {
+pub fn freeform_finish(app: &mut SaryApp, points: &[[f64; 3]], straight: &[usize]) {
     let trace: Vec<[f64; 2]> = points.iter().map(|p| [p[0], p[1]]).collect();
     let (Some(first), Some(last)) = (trace.first(), trace.last()) else { return };
     let tol = 6.0 / app.point_zoom().max(0.01) as f64;
@@ -498,7 +498,7 @@ pub fn freeform_finish(app: &mut PhotocraftApp, points: &[[f64; 3]], straight: &
     let closed = (first[0] - last[0]).hypot(first[1] - last[1]) < tol && length > 4.0 * tol;
     let fit = f64::from(app.ui.tool_options.curve_fit);
     let pen = if straight.is_empty() {
-        let Some(sub) = photocraft_vector::trace::fit_trace(&trace, fit, closed) else { return };
+        let Some(sub) = sary_vector::trace::fit_trace(&trace, fit, closed) else { return };
         let knots = sub.knots.iter().map(knot_points).collect();
         let unlinked = sub.knots.iter().enumerate().filter(|(_, k)| !k.smooth).map(|(i, _)| i).collect();
         (PenPath { knots, unlinked, ..Default::default() }, sub.closed)
@@ -508,7 +508,7 @@ pub fn freeform_finish(app: &mut PhotocraftApp, points: &[[f64; 3]], straight: &
     commit_path(app, &pen.0, pen.1);
 }
 
-fn knot_points(k: &photocraft_doc::Knot) -> [[f64; 2]; 3] {
+fn knot_points(k: &sary_doc::Knot) -> [[f64; 2]; 3] {
     [[k.anchor.x, k.anchor.y], [k.in_ctrl.x, k.in_ctrl.y], [k.out_ctrl.x, k.out_ctrl.y]]
 }
 
@@ -525,7 +525,7 @@ fn fit_with_straight_segments(trace: &[[f64; 2]], straight: &[usize], fit: f64, 
     for end in cuts {
         let run = trace.get(start..end).unwrap_or_default();
         let first = knots.len();
-        match photocraft_vector::trace::fit_trace(run, fit, false) {
+        match sary_vector::trace::fit_trace(run, fit, false) {
             Some(sub) => {
                 corners.extend(sub.knots.iter().enumerate().filter(|(_, k)| !k.smooth).map(|(i, _)| first + i));
                 knots.extend(sub.knots.iter().map(knot_points));
@@ -568,16 +568,16 @@ fn fit_with_straight_segments(trace: &[[f64; 2]], straight: &[usize], fit: f64, 
 fn curvature_refresh(pen: &mut PenPath, closed: bool) {
     let anchors: Vec<[f64; 2]> = pen.knots.iter().map(|k| k[0]).collect();
     let corners: Vec<bool> = (0..anchors.len()).map(|i| pen.unlinked.contains(&i)).collect();
-    pen.knots = photocraft_vector::edit::curvature_knots(&anchors, &corners, closed);
+    pen.knots = sary_vector::edit::curvature_knots(&anchors, &corners, closed);
 }
 
 /// The anchor of the Curvature Pen path being drawn under (x, y), for the cursor.
-pub(crate) fn curvature_anchor_at(app: &PhotocraftApp, x: f64, y: f64) -> Option<usize> {
+pub(crate) fn curvature_anchor_at(app: &SaryApp, x: f64, y: f64) -> Option<usize> {
     curvature_hit(app, x, y)
 }
 
 /// The Curvature Pen's anchor within a few screen pixels of (x, y).
-fn curvature_hit(app: &PhotocraftApp, x: f64, y: f64) -> Option<usize> {
+fn curvature_hit(app: &SaryApp, x: f64, y: f64) -> Option<usize> {
     let tol = 6.0 / app.point_zoom().max(0.01) as f64;
     let pen = app.ui.pen.as_ref().filter(|p| p.curvature)?;
     pen.knots
@@ -591,7 +591,7 @@ fn curvature_hit(app: &PhotocraftApp, x: f64, y: f64) -> Option<usize> {
 
 /// Curvature Pen press: clicking the first anchor closes the path, pressing another anchor
 /// grabs it to move, anywhere else adds a smooth anchor (still draggable until the release).
-pub fn curvature_down(app: &mut PhotocraftApp, x: f64, y: f64) {
+pub fn curvature_down(app: &mut SaryApp, x: f64, y: f64) {
     if app.ui.pen.as_ref().is_some_and(|p| !p.curvature) {
         pen_commit(app, false);
     }
@@ -608,7 +608,7 @@ pub fn curvature_down(app: &mut PhotocraftApp, x: f64, y: f64) {
     curvature_refresh(pen, false);
 }
 
-pub fn curvature_move(app: &mut PhotocraftApp, x: f64, y: f64) {
+pub fn curvature_move(app: &mut SaryApp, x: f64, y: f64) {
     if let Some(pen) = app.ui.pen.as_mut().filter(|p| p.curvature)
         && let Some(k) = pen.moving.and_then(|i| pen.knots.get_mut(i))
     {
@@ -617,7 +617,7 @@ pub fn curvature_move(app: &mut PhotocraftApp, x: f64, y: f64) {
     }
 }
 
-pub fn curvature_up(app: &mut PhotocraftApp) {
+pub fn curvature_up(app: &mut SaryApp) {
     if let Some(pen) = app.ui.pen.as_mut() {
         pen.moving = None;
     }
@@ -627,7 +627,7 @@ pub fn curvature_up(app: &mut PhotocraftApp) {
 /// (double-clicking empty canvas therefore places a corner point, as in Photoshop). With no path
 /// being drawn, an anchor of the active path toggles the same way and its subpath reflows
 /// (`path.convertPoint` with `curvature`), so a Pen-drawn corner rounds off.
-pub fn curvature_toggle(app: &mut PhotocraftApp, x: f64, y: f64) {
+pub fn curvature_toggle(app: &mut SaryApp, x: f64, y: f64) {
     if app.ui.pen.as_ref().is_none_or(|p| p.knots.is_empty()) {
         crate::direct_select::curvature_toggle_active(app, [x, y]);
         return;
@@ -644,7 +644,7 @@ pub fn curvature_toggle(app: &mut PhotocraftApp, x: f64, y: f64) {
 
 /// The path that path commands act on without a name: the one selected in the Paths panel, else
 /// the work path, else the selected layer's shape path or vector mask; `None` when there's none.
-pub fn active_path_name(app: &PhotocraftApp) -> Option<String> {
+pub fn active_path_name(app: &SaryApp) -> Option<String> {
     let st = app.session.active()?;
     let rows = path_rows(&st.doc, st.active_layer);
     let key = |r: &PathEntry| match r.kind {
@@ -662,7 +662,7 @@ pub fn takes_path_mask(id: &str) -> bool {
 }
 
 /// The work or saved path explicitly selected in the Paths panel (not a layer's own path).
-pub fn selected_document_path(app: &PhotocraftApp) -> Option<String> {
+pub fn selected_document_path(app: &SaryApp) -> Option<String> {
     let st = app.session.active()?;
     let sel = app.ui.selected_path.as_deref()?;
     let listed = path_rows(&st.doc, st.active_layer).iter().any(|r| match r.kind {
@@ -677,7 +677,7 @@ pub fn selected_document_path(app: &PhotocraftApp) -> Option<String> {
 /// as in Photoshop (#1419): the command gets it as `"path"` unless the caller set one (`null`
 /// opts out). Only an explicitly selected work or saved path counts; deselect it by clicking the
 /// panel's empty area.
-pub fn with_active_path(app: &PhotocraftApp, id: &str, params: Value) -> Value {
+pub fn with_active_path(app: &SaryApp, id: &str, params: Value) -> Value {
     if !takes_path_mask(id) || params.get("path").is_some() {
         return params;
     }
@@ -694,7 +694,7 @@ pub fn with_active_path(app: &PhotocraftApp, id: &str, params: Value) -> Value {
 /// ⌘↩ / Ctrl+Enter (#306): load a path as a selection, like Photoshop with a Pen or Path
 /// Selection tool or a path selected in the Paths panel. A path being drawn with the Pen is
 /// finished first and loads; otherwise [`active_path_name`]. `params` may set feather, mode…
-pub fn path_to_selection(app: &mut PhotocraftApp, params: Value) -> Result<Value, String> {
+pub fn path_to_selection(app: &mut SaryApp, params: Value) -> Result<Value, String> {
     if app.ui.pen.as_ref().is_some_and(|p| p.knots.len() >= 2) {
         // The finished path becomes the work path, or a shape layer's path or a vector mask.
         let on_layer = app.ui.tool_options.vector_mode == "shape" || targeted_vector_mask(app).is_some();
@@ -720,16 +720,16 @@ enum PathTarget {
 }
 
 /// The targeted vector mask of the active layer, if the Layers panel targets it.
-pub(crate) fn targeted_vector_mask(app: &PhotocraftApp) -> Option<(u64, Path)> {
+pub(crate) fn targeted_vector_mask(app: &SaryApp) -> Option<(u64, Path)> {
     let st = app.session.active()?;
     let l = st.active_layer.and_then(|id| st.doc.layer(id))?;
-    let targeted = app.ui.vector_mask_target || st.channel_view.target == photocraft_engine::channel_cmds::ChannelTarget::VectorMask;
+    let targeted = app.ui.vector_mask_target || st.channel_view.target == sary_engine::channel_cmds::ChannelTarget::VectorMask;
     (targeted && !matches!(l.content, LayerContent::Shape(_))).then_some(())?;
     l.vector_mask.as_ref().map(|m| (l.id.0, m.path.clone()))
 }
 
 /// The active shape layer's path, if the active layer is a shape layer.
-pub(crate) fn active_shape_path(app: &PhotocraftApp) -> Option<(u64, Path)> {
+pub(crate) fn active_shape_path(app: &SaryApp) -> Option<(u64, Path)> {
     let st = app.session.active()?;
     let l = st.active_layer.and_then(|id| st.doc.layer(id))?;
     match &l.content {
@@ -743,7 +743,7 @@ pub(crate) fn active_shape_path(app: &PhotocraftApp) -> Option<(u64, Path)> {
 /// targeted vector mask in front of it), as in Photoshop (#5702). It was drawn whenever one of
 /// these tools was active, but the key reached Edit › Clear, so it looked impossible to delete.
 /// Direct Selection and the Curvature Pen delete selected anchors in Photoshop, not the path.
-pub(crate) fn delete_key_deletes_work_path(app: &PhotocraftApp) -> bool {
+pub(crate) fn delete_key_deletes_work_path(app: &SaryApp) -> bool {
     matches!(app.ui.tool, Tool::Pen | Tool::FreeformPen | Tool::PathSelection)
         && app.ui.pen.is_none()
         && app.ui.transform.is_none()
@@ -753,7 +753,7 @@ pub(crate) fn delete_key_deletes_work_path(app: &PhotocraftApp) -> bool {
 
 /// The path Path Selection edits: the targeted vector mask, the active shape layer's path, else
 /// the work path.
-fn target_path(app: &PhotocraftApp) -> Option<(PathTarget, Path)> {
+fn target_path(app: &SaryApp) -> Option<(PathTarget, Path)> {
     if let Some((id, p)) = targeted_vector_mask(app) {
         return Some((PathTarget::VectorMask(id), p));
     }
@@ -765,7 +765,7 @@ fn target_path(app: &PhotocraftApp) -> Option<(PathTarget, Path)> {
 
 /// Edit › Free Transform Path (⌘T with Path Selection or Direct Selection): the path the
 /// box transforms (the one Path Selection edits) and `path.transform`'s params that name it.
-pub(crate) fn free_transform_path(app: &PhotocraftApp) -> Option<(Value, Path)> {
+pub(crate) fn free_transform_path(app: &SaryApp) -> Option<(Value, Path)> {
     if !matches!(app.ui.tool, Tool::PathSelection | Tool::DirectSelection) {
         return None;
     }
@@ -778,7 +778,7 @@ pub(crate) fn free_transform_path(app: &PhotocraftApp) -> Option<(Value, Path)> 
     Some((params, path))
 }
 
-fn point_in_subpath(sp: &photocraft_doc::vector::Subpath, pt: [f64; 2]) -> bool {
+fn point_in_subpath(sp: &sary_doc::vector::Subpath, pt: [f64; 2]) -> bool {
     if !sp.closed || sp.knots.len() < 3 {
         return false;
     }
@@ -801,7 +801,7 @@ fn point_in_subpath(sp: &photocraft_doc::vector::Subpath, pt: [f64; 2]) -> bool 
 /// The topmost visible shape layer under `at` (document coordinates):
 /// hits the shape path or anchor within `tol`, or any non-transparent pixel of the shape's raster surface,
 /// or point inside the shape's filled geometry.
-pub fn pick_shape_at(doc: &Document, at: [f64; 2], tol: f64) -> Option<photocraft_doc::LayerId> {
+pub fn pick_shape_at(doc: &Document, at: [f64; 2], tol: f64) -> Option<sary_doc::LayerId> {
     let (x, y) = (at[0].floor() as i32, at[1].floor() as i32);
     for (path, _, l) in doc.walk().iter().rev() {
         if !l.visible || !(1..=path.len()).all(|n| doc.layer_at(&path[..n]).is_some_and(|a| a.visible)) {
@@ -812,18 +812,18 @@ pub fn pick_shape_at(doc: &Document, at: [f64; 2], tol: f64) -> Option<photocraf
             continue;
         }
         if let LayerContent::Shape(sh) = &l.content {
-            if photocraft_vector::edit::hit(&sh.path, photocraft_geom::Point::new(at[0], at[1]), tol, &[]).is_some() {
+            if sary_vector::edit::hit(&sh.path, sary_geom::Point::new(at[0], at[1]), tol, &[]).is_some() {
                 return Some(l.id);
             }
             if sh.fill.is_some() {
                 if let Some(surf) = l.surface() {
                     let mut px = [[0.0f32; 4]; 1];
-                    surf.read_rgba_into(photocraft_doc::Rect::from_xywh(x, y, 1, 1), &mut px);
+                    surf.read_rgba_into(sary_doc::Rect::from_xywh(x, y, 1, 1), &mut px);
                     if px[0][3] > 0.0 {
                         return Some(l.id);
                     }
                 }
-                if let Some(photocraft_doc::LiveShape::Rect { rect, .. }) = &sh.live {
+                if let Some(sary_doc::LiveShape::Rect { rect, .. }) = &sh.live {
                     let x0 = rect[0].min(rect[0] + rect[2]);
                     let x1 = rect[0].max(rect[0] + rect[2]);
                     let y0 = rect[1].min(rect[1] + rect[3]);
@@ -832,7 +832,7 @@ pub fn pick_shape_at(doc: &Document, at: [f64; 2], tol: f64) -> Option<photocraf
                         return Some(l.id);
                     }
                 }
-                if let Some(photocraft_doc::LiveShape::Ellipse { rect }) = &sh.live {
+                if let Some(sary_doc::LiveShape::Ellipse { rect }) = &sh.live {
                     let rx = rect[2].abs() / 2.0;
                     let ry = rect[3].abs() / 2.0;
                     if rx > 1e-6 && ry > 1e-6 {
@@ -854,7 +854,7 @@ pub fn pick_shape_at(doc: &Document, at: [f64; 2], tol: f64) -> Option<photocraf
     None
 }
 
-pub fn path_selection_finish(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2]) {
+pub fn path_selection_finish(app: &mut SaryApp, start: [f64; 2], end: [f64; 2]) {
     let (dx, dy) = (end[0] - start[0], end[1] - start[1]);
     let tol = 6.0 / f64::from(app.point_zoom().max(0.01));
     if dx.abs() + dy.abs() < 0.5 {
@@ -875,11 +875,11 @@ pub fn path_selection_finish(app: &mut PhotocraftApp, start: [f64; 2], end: [f64
         PathTarget::Shape(id) => app.run("shape.edit", json!({"layer": id, "move": [dx.round(), dy.round()]})),
         PathTarget::VectorMask(id) => {
             let moved = path.transform(&Affine::translate(dx.round(), dy.round()));
-            app.run("layer.vectorMask.edit", json!({"layer": id, "path": photocraft_engine::vector_cmds::path_json(&moved)}))
+            app.run("layer.vectorMask.edit", json!({"layer": id, "path": sary_engine::vector_cmds::path_json(&moved)}))
         }
         PathTarget::Work => {
             let moved = path.transform(&Affine::translate(dx.round(), dy.round()));
-            app.run("path.set", json!({"name": "work", "path": photocraft_engine::vector_cmds::path_json(&moved)}))
+            app.run("path.set", json!({"name": "work", "path": sary_engine::vector_cmds::path_json(&moved)}))
         }
     };
 }
@@ -979,7 +979,7 @@ pub(crate) fn draw_handle(painter: &egui::Painter, anchor: Pos2, handle: Pos2, a
 }
 
 /// Work path / active shape path outlines, anchors, and the pen path in progress.
-pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, doc: &Document) {
+pub fn draw_overlay(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform, doc: &Document) {
     let tool = app.ui.tool;
     let accent = Tokens::get(painter.ctx()).accent;
     let to_scr = |q: [f64; 2]| xf.to_screen(q[0] as f32, q[1] as f32);
@@ -1091,7 +1091,7 @@ pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform
 // Options bars
 
 /// Options bar for vector tools; false for other tools.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bool {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui, tool: Tool) -> bool {
     if !(is_shape_tool(tool)
         || matches!(
             tool,
@@ -1220,7 +1220,7 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bo
             crate::widgets::vline(ui, 22.0);
             lbl(ui, tl!("Radius:"));
             let mut r = match target.as_ref().and_then(|s| s.live.as_ref()) {
-                Some(photocraft_doc::LiveShape::Rect { radii, .. }) => radii[0] as f32,
+                Some(sary_doc::LiveShape::Rect { radii, .. }) => radii[0] as f32,
                 _ => o.corner_radius,
             };
             if crate::widgets::value_field(ui, &mut r, 0.0..=10000.0, "px", 62.0).changed() {
@@ -1247,7 +1247,7 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bo
             crate::preset_panels::shape_picker(app, ui);
         }
         _ if matches!(tool, Tool::PathSelection | Tool::DirectSelection) => {
-            if let Some(photocraft_doc::LiveShape::Rect { radii, .. }) = target.as_ref().and_then(|s| s.live.as_ref()) {
+            if let Some(sary_doc::LiveShape::Rect { radii, .. }) = target.as_ref().and_then(|s| s.live.as_ref()) {
                 crate::widgets::vline(ui, 22.0);
                 lbl(ui, tl!("Radius:"));
                 let mut r = radii[0] as f32;
@@ -1285,14 +1285,14 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bo
 
 /// The shape layer the options bar edits.
 struct SelectedShape {
-    doc: photocraft_doc::DocId,
-    layer: photocraft_doc::LayerId,
-    fill: Option<photocraft_doc::Fill>,
-    stroke: Option<photocraft_doc::ShapeStroke>,
-    live: Option<photocraft_doc::LiveShape>,
+    doc: sary_doc::DocId,
+    layer: sary_doc::LayerId,
+    fill: Option<sary_doc::Fill>,
+    stroke: Option<sary_doc::ShapeStroke>,
+    live: Option<sary_doc::LiveShape>,
 }
 
-fn selected_shape(session: &photocraft_engine::Session) -> Option<SelectedShape> {
+fn selected_shape(session: &sary_engine::Session) -> Option<SelectedShape> {
     let st = session.active()?;
     let layer = st.active_layer?;
     match &st.doc.layer(layer)?.content {
@@ -1304,13 +1304,13 @@ fn selected_shape(session: &photocraft_engine::Session) -> Option<SelectedShape>
 // ---------------------------------------------------------------------------------------------
 // Properties (shape layers)
 
-fn solid_paint(c: [f32; 4]) -> photocraft_doc::Fill {
-    photocraft_doc::Fill::Solid(photocraft_doc::Color::rgba(c[0], c[1], c[2], c[3]))
+fn solid_paint(c: [f32; 4]) -> sary_doc::Fill {
+    sary_doc::Fill::Solid(sary_doc::Color::rgba(c[0], c[1], c[2], c[3]))
 }
 
-fn color_of(f: &photocraft_doc::Fill) -> Option<[f32; 4]> {
+fn color_of(f: &sary_doc::Fill) -> Option<[f32; 4]> {
     match f {
-        photocraft_doc::Fill::Solid(c) => {
+        sary_doc::Fill::Solid(c) => {
             let [r, g, b] = c.to_rgb();
             Some([r, g, b, c.alpha])
         }
@@ -1329,7 +1329,7 @@ fn enabled_stroke_width(width: f32) -> f32 {
 }
 
 /// Tool-bar paint changes affect the next shape; Properties edits the selected shape instead.
-fn set_tool_paint(app: &mut PhotocraftApp, stroke: bool, change: PaintChange) -> Result<(), String> {
+fn set_tool_paint(app: &mut SaryApp, stroke: bool, change: PaintChange) -> Result<(), String> {
     if let PaintChange::Color(color) = change {
         app.run("tools.setColors", if stroke { json!({"background": color}) } else { json!({"foreground": color}) })?;
     }
@@ -1360,7 +1360,7 @@ fn picker_rgba(hsva: egui::ecolor::Hsva) -> [f32; 4] {
 
 /// The shared compact picker keeps the float RGB paint and its alpha. Color32 is only display
 /// data: opening the picker must never quantize an existing high-depth colour or enable paint.
-fn swatch(ui: &mut egui::Ui, fill: Option<&photocraft_doc::Fill>, fallback: [f32; 4], tip: &str) -> Option<PaintChange> {
+fn swatch(ui: &mut egui::Ui, fill: Option<&sary_doc::Fill>, fallback: [f32; 4], tip: &str) -> Option<PaintChange> {
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(vec2(30.0, 22.0), Sense::click());
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ColorButton, ui.is_enabled(), tip));
@@ -1370,9 +1370,9 @@ fn swatch(ui: &mut egui::Ui, fill: Option<&photocraft_doc::Fill>, fallback: [f32
         (Some(c), _) => {
             ui.painter().rect_filled(r.shrink(1.0), t.radius_sm, rgba32(c));
         }
-        (None, Some(photocraft_doc::Fill::Gradient { stops, .. })) if !stops.is_empty() => {
+        (None, Some(sary_doc::Fill::Gradient { stops, .. })) if !stops.is_empty() => {
             // Gradient fills preview as a left-to-right ramp through their stops.
-            let rgb = |c: &photocraft_doc::Color| {
+            let rgb = |c: &sary_doc::Color| {
                 let v = c.to_rgba8();
                 Color32::from_rgba_unmultiplied(v[0], v[1], v[2], v[3])
             };
@@ -1476,7 +1476,7 @@ fn paint_gesture(ui: &egui::Ui, key: egui::Id) -> u64 {
 }
 
 /// Properties panel for a shape layer: Appearance (fill, stroke) and live shape geometry.
-pub fn shape_properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: photocraft_doc::LayerId) {
+pub fn shape_properties(app: &mut SaryApp, ui: &mut egui::Ui, id: sary_doc::LayerId) {
     if app.session.active().is_some_and(|st| {
         let locks = st.doc.effective_locks(id);
         locks.all || locks.pixels
@@ -1531,7 +1531,7 @@ pub fn shape_properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: photocra
             &style,
             &mut app.ui.stroke_editor,
             sh.path.subpaths.iter().all(|s| s.closed),
-            !matches!(sh.live, Some(photocraft_doc::LiveShape::Ellipse { .. })),
+            !matches!(sh.live, Some(sary_doc::LiveShape::Ellipse { .. })),
             app.session.active().map(|st| (st.doc.id, id)),
             stroke_enabled,
         ) {
@@ -1550,9 +1550,9 @@ pub fn shape_properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: photocra
             crate::widgets::value_field(ui, v, range, unit, 64.0).changed()
         };
         match live {
-            photocraft_doc::vector::LiveShape::Rect { rect, .. }
-            | photocraft_doc::vector::LiveShape::Ellipse { rect }
-            | photocraft_doc::vector::LiveShape::Polygon { rect, .. } => {
+            sary_doc::vector::LiveShape::Rect { rect, .. }
+            | sary_doc::vector::LiveShape::Ellipse { rect }
+            | sary_doc::vector::LiveShape::Polygon { rect, .. } => {
                 ui.horizontal(|ui| {
                     let (mut w, mut h) = (rect[2] as f32, rect[3] as f32);
                     let cw = num(ui, "W", &mut w, 1.0..=300000.0, "px");
@@ -1562,10 +1562,10 @@ pub fn shape_properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: photocra
                     }
                 });
             }
-            photocraft_doc::vector::LiveShape::Line { .. } => {}
+            sary_doc::vector::LiveShape::Line { .. } => {}
         }
         ui.vertical(|ui| match live {
-            photocraft_doc::vector::LiveShape::Rect { radii, .. } => {
+            sary_doc::vector::LiveShape::Rect { radii, .. } => {
                 // Keep the uniform workflow available after independent corner edits too.
                 ui.horizontal(|ui| {
                     let mut all = radii[0] as f32;
@@ -1586,7 +1586,7 @@ pub fn shape_properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: photocra
                     });
                 }
             }
-            photocraft_doc::vector::LiveShape::Polygon { sides, star_ratio, .. } => {
+            sary_doc::vector::LiveShape::Polygon { sides, star_ratio, .. } => {
                 ui.horizontal(|ui| {
                     let mut n = *sides as f32;
                     if num(ui, tl!("Sides"), &mut n, 3.0..=100.0, "") {
@@ -1599,7 +1599,7 @@ pub fn shape_properties(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: photocra
                 })
                 .inner
             }
-            photocraft_doc::vector::LiveShape::Line { weight, .. } => {
+            sary_doc::vector::LiveShape::Line { weight, .. } => {
                 ui.horizontal(|ui| {
                     let mut w = *weight as f32;
                     if num(ui, tl!("Weight"), &mut w, 1.0..=10000.0, "px") {
@@ -1666,7 +1666,7 @@ pub struct PathEntry {
 
 /// The Paths panel's rows, top to bottom: saved paths, the work path, then the selected layer's
 /// shape path ("<Layer> Shape Path") or vector mask ("<Layer> Vector Mask"), like Photoshop.
-pub fn path_rows(doc: &Document, active: Option<photocraft_doc::LayerId>) -> Vec<PathEntry> {
+pub fn path_rows(doc: &Document, active: Option<sary_doc::LayerId>) -> Vec<PathEntry> {
     let mut rows: Vec<_> = doc.paths.iter().map(|p| PathEntry { name: p.name.clone(), path: p.path.clone(), kind: PathRow::Saved }).collect();
     if let Some(wp) = &doc.work_path {
         rows.push(PathEntry { name: "Work Path".into(), path: wp.clone(), kind: PathRow::Work });
@@ -1727,7 +1727,7 @@ fn path_context_actions(entry: &PathEntry, doc: &Document) -> Vec<(&'static str,
             }
         }
         let copy_name = format!("{} copy {n}", entry.name);
-        actions.push(("Duplicate Path", "path.set", json!({"name": copy_name, "path": photocraft_engine::vector_cmds::path_json(&entry.path)})));
+        actions.push(("Duplicate Path", "path.set", json!({"name": copy_name, "path": sary_engine::vector_cmds::path_json(&entry.path)})));
     }
     if entry.kind != PathRow::Layer {
         actions.push(("Delete Path", "path.delete", json!({"name": key})));
@@ -1737,7 +1737,7 @@ fn path_context_actions(entry: &PathEntry, doc: &Document) -> Vec<(&'static str,
     actions
 }
 
-pub fn paths_panel(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn paths_panel(app: &mut SaryApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
         ui.label(egui::RichText::new(tl!("No document")).color(t.text_faint));
@@ -1919,18 +1919,18 @@ mod tests {
         }
         // Through path_lines too: a closed subpath of two curved segments.
         let mut path = Path::default();
-        path.subpaths.push(photocraft_doc::vector::Subpath {
+        path.subpaths.push(sary_doc::vector::Subpath {
             knots: vec![
-                photocraft_doc::vector::Knot {
-                    anchor: photocraft_geom::Point::new(0.0, 0.0),
-                    in_ctrl: photocraft_geom::Point::new(0.0, 40.0),
-                    out_ctrl: photocraft_geom::Point::new(0.0, -40.0),
+                sary_doc::vector::Knot {
+                    anchor: sary_geom::Point::new(0.0, 0.0),
+                    in_ctrl: sary_geom::Point::new(0.0, 40.0),
+                    out_ctrl: sary_geom::Point::new(0.0, -40.0),
                     smooth: true,
                 },
-                photocraft_doc::vector::Knot {
-                    anchor: photocraft_geom::Point::new(60.0, 0.0),
-                    in_ctrl: photocraft_geom::Point::new(60.0, -40.0),
-                    out_ctrl: photocraft_geom::Point::new(60.0, 40.0),
+                sary_doc::vector::Knot {
+                    anchor: sary_geom::Point::new(60.0, 0.0),
+                    in_ctrl: sary_geom::Point::new(60.0, -40.0),
+                    out_ctrl: sary_geom::Point::new(60.0, 40.0),
                     smooth: true,
                 },
             ],
@@ -1947,8 +1947,8 @@ mod tests {
             let mut a = app();
             a.ui.tool_options.stroke_width = 5.0;
             a.ui.tool_options.shape_stroke = crate::shape_stroke_ui::StrokeOptions {
-                cap: photocraft_doc::LineCap::Square,
-                join: photocraft_doc::LineJoin::Bevel,
+                cap: sary_doc::LineCap::Square,
+                join: sary_doc::LineJoin::Bevel,
                 dashes: vec![4.0, 2.0, 1.0, 3.0],
                 dash_offset: -0.5,
                 opacity: 0.4,
@@ -1973,8 +1973,8 @@ mod tests {
         }
     }
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 200, "height": 200})).unwrap();
         app.sync_views();
         app
@@ -1995,7 +1995,7 @@ mod tests {
         let entries = path_context_actions(&first, doc);
         assert_eq!(entries[0].1, "path.toSelection");
         assert_eq!(entries[0].2["name"], "First");
-        assert!(entries.iter().all(|(_, id, _)| photocraft_engine::commands::find(id).is_some()));
+        assert!(entries.iter().all(|(_, id, _)| sary_engine::commands::find(id).is_some()));
         let (_, id, params) = entries.into_iter().find(|(_, id, _)| *id == "path.toSelection").unwrap();
         app.run(id, params).unwrap();
         assert!(app.session.active().unwrap().doc.selection.is_some());
@@ -2024,7 +2024,7 @@ mod tests {
     }
 
     /// How many shapes the path overlay paints for `app` this frame.
-    fn overlay_shapes(app: &PhotocraftApp, ctx: &egui::Context) -> usize {
+    fn overlay_shapes(app: &SaryApp, ctx: &egui::Context) -> usize {
         let doc = app.session.active().unwrap().doc.clone();
         let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
             let rect = Rect::from_min_size(Pos2::ZERO, vec2(400.0, 400.0));
@@ -2050,7 +2050,7 @@ mod tests {
         app.run("path.set", json!({"path": path})).unwrap();
         assert!(app.session.active().unwrap().doc.work_path.is_some());
         finish_shape(&mut app, Tool::Rectangle, [100.0, 100.0], [160.0, 150.0], egui::Modifiers::NONE);
-        let toggle = |app: &mut PhotocraftApp, id: &str| crate::menus::invoke(app, &ctx, id, Value::Null).unwrap();
+        let toggle = |app: &mut SaryApp, id: &str| crate::menus::invoke(app, &ctx, id, Value::Null).unwrap();
         for tool in [Tool::Pen, Tool::PathSelection, Tool::DirectSelection, Tool::Rectangle] {
             app.ui.tool = tool;
             assert!(app.ui.view.show.target_path && app.ui.view.extras);
@@ -2115,9 +2115,9 @@ mod tests {
     fn shape_preview_is_the_committed_path() {
         let mut app = app();
         app.ui.tool_options.corner_radius = 8.0;
-        let preview = |app: &PhotocraftApp, tool, end| {
+        let preview = |app: &SaryApp, tool, end| {
             shape_geometry(&app.ui.tool_options, tool, [10.0, 10.0], end, egui::Modifiers::ALT)
-                .and_then(|p| photocraft_engine::vector_cmds::shape_path(&p).ok())
+                .and_then(|p| sary_engine::vector_cmds::shape_path(&p).ok())
         };
         for tool in [Tool::Rectangle, Tool::EllipseShape, Tool::Triangle, Tool::Polygon, Tool::Line] {
             let shown = preview(&app, tool, [60.0, 30.0]).unwrap();
@@ -2127,8 +2127,8 @@ mod tests {
             assert_eq!(sh.path, shown, "{tool:?}");
         }
         assert!(preview(&app, Tool::Rectangle, [10.2, 40.0]).is_none(), "too thin to draw");
-        assert!(photocraft_engine::vector_cmds::shape_path(&json!({"kind": "nope", "rect": [0, 0, 5, 5]})).is_err());
-        assert!(photocraft_engine::vector_cmds::shape_path(&json!({"kind": "rect"})).is_err());
+        assert!(sary_engine::vector_cmds::shape_path(&json!({"kind": "nope", "rect": [0, 0, 5, 5]})).is_err());
+        assert!(sary_engine::vector_cmds::shape_path(&json!({"kind": "rect"})).is_err());
     }
 
     #[test]
@@ -2245,7 +2245,7 @@ mod tests {
     fn a_new_pen_path_joins_the_selected_path() {
         let mut app = app();
         app.ui.tool = Tool::Pen;
-        let draw = |app: &mut PhotocraftApp, x: f64| {
+        let draw = |app: &mut SaryApp, x: f64| {
             for (dx, dy) in [(0.0, 0.0), (40.0, 0.0), (40.0, 40.0)] {
                 pen_down(app, x + dx, 20.0 + dy, false);
                 pen_up(app);
@@ -2253,7 +2253,7 @@ mod tests {
             pen_down(app, x + 0.5, 20.5, false); // close
             pen_up(app);
         };
-        let work = |app: &PhotocraftApp| app.session.active().unwrap().doc.work_path.clone().unwrap();
+        let work = |app: &SaryApp| app.session.active().unwrap().doc.work_path.clone().unwrap();
         draw(&mut app, 20.0);
         assert_eq!(app.ui.selected_path.as_deref(), Some("work"));
         draw(&mut app, 120.0);
@@ -2364,8 +2364,8 @@ mod tests {
     #[test]
     fn new_fill_layer_takes_the_selected_path_as_its_vector_mask() {
         let mut app = app();
-        let layer = |app: &PhotocraftApp, r: Result<Value, String>| {
-            let id = photocraft_doc::LayerId(r.unwrap()["layer"].as_u64().unwrap());
+        let layer = |app: &SaryApp, r: Result<Value, String>| {
+            let id = sary_doc::LayerId(r.unwrap()["layer"].as_u64().unwrap());
             app.session.active().unwrap().doc.layer(id).unwrap().clone()
         };
         // Drawing a work path with the Pen selects it.
@@ -2419,9 +2419,9 @@ mod tests {
         use crate::canvas::{ToolEvent, tool_event};
         let mut app = app();
         app.ui.tool = Tool::Pen;
-        let down = |app: &mut PhotocraftApp, x, y| tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, egui::Modifiers::NONE);
-        let move_to = |app: &mut PhotocraftApp, x, y| tool_event(app, ToolEvent::Move { x, y, pressure: 1.0 }, egui::Modifiers::NONE);
-        let up = |app: &mut PhotocraftApp, x, y| tool_event(app, ToolEvent::Up { x, y }, egui::Modifiers::NONE);
+        let down = |app: &mut SaryApp, x, y| tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, egui::Modifiers::NONE);
+        let move_to = |app: &mut SaryApp, x, y| tool_event(app, ToolEvent::Move { x, y, pressure: 1.0 }, egui::Modifiers::NONE);
+        let up = |app: &mut SaryApp, x, y| tool_event(app, ToolEvent::Up { x, y }, egui::Modifiers::NONE);
 
         down(&mut app, 20.0, 20.0);
         up(&mut app, 20.0, 20.0);
@@ -2495,12 +2495,12 @@ mod tests {
         let mut app = app();
         let created = app.run("shape.create", json!({"kind": "roundedRect", "rect": [10, 10, 150, 100], "radii": [5, 10, 15, 20]})).unwrap();
         let id = created["layer"].as_u64().unwrap();
-        let get_radii = |app: &PhotocraftApp| {
+        let get_radii = |app: &SaryApp| {
             let st = app.session.active().unwrap();
-            let shape = st.doc.layer(photocraft_doc::LayerId(id)).unwrap();
+            let shape = st.doc.layer(sary_doc::LayerId(id)).unwrap();
             match &shape.content {
                 LayerContent::Shape(sh) => match &sh.live {
-                    Some(photocraft_doc::vector::LiveShape::Rect { radii, .. }) => *radii,
+                    Some(sary_doc::vector::LiveShape::Rect { radii, .. }) => *radii,
                     _ => panic!("rectangle must remain a live shape"),
                 },
                 _ => panic!("expected shape layer"),
@@ -2543,21 +2543,21 @@ mod tests {
         let mut app = app();
         let id = app.run("shape.create", json!({"kind": "rect", "rect": [10, 10, 100, 60], "fill": "#3070c0"})).unwrap()["layer"].as_u64().unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1440.0, 900.0)).build_ui_state(
-            move |ui, app: &mut PhotocraftApp| {
+            move |ui, app: &mut SaryApp| {
                 // Fonts set up after the first frame only apply from the next one.
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
-                egui::Panel::right("properties").resizable(false).exact_size(285.0).show(ui, |ui| shape_properties(app, ui, photocraft_doc::LayerId(id)));
+                egui::Panel::right("properties").resizable(false).exact_size(285.0).show(ui, |ui| shape_properties(app, ui, sary_doc::LayerId(id)));
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Pro);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Pro);
         h.run_steps(4);
         let label = h.query_all(egui_kittest::kittest::by().label("Fill").include_labels()).next().expect("the Fill label").rect();
         // The swatch is right of its label.
         let swatch = egui::pos2(label.right() + 17.0, label.center().y);
-        let press = |h: &mut egui_kittest::Harness<'_, PhotocraftApp>, pos, pressed| {
+        let press = |h: &mut egui_kittest::Harness<'_, SaryApp>, pos, pressed| {
             h.event(egui::Event::PointerButton { pos, button: PointerButton::Primary, pressed, modifiers: egui::Modifiers::NONE });
             h.step();
         };
@@ -2566,13 +2566,13 @@ mod tests {
         press(&mut h, swatch, true);
         press(&mut h, swatch, false);
         h.run_steps(3);
-        let popup = |h: &egui_kittest::Harness<'_, PhotocraftApp>| {
+        let popup = |h: &egui_kittest::Harness<'_, SaryApp>| {
             h.ctx.memory(|m| m.areas().visible_layer_ids().into_iter().filter(|l| l.order == egui::Order::Foreground).find_map(|l| m.area_rect(l.id)))
         };
         let opened = popup(&h).expect("the picker opened");
-        let fill = |h: &egui_kittest::Harness<'_, PhotocraftApp>| {
+        let fill = |h: &egui_kittest::Harness<'_, SaryApp>| {
             let st = h.state().session.active().unwrap();
-            match &st.doc.layer(photocraft_doc::LayerId(id)).unwrap().content {
+            match &st.doc.layer(sary_doc::LayerId(id)).unwrap().content {
                 LayerContent::Shape(sh) => sh.fill.clone(),
                 _ => None,
             }
@@ -2602,7 +2602,7 @@ mod tests {
         let mut app = app();
         app.run("tools.setColors", json!({"foreground": "#ff0000", "background": "#0000ff"})).unwrap();
         finish_shape(&mut app, Tool::Rectangle, [20.0, 20.0], [120.0, 100.0], Default::default());
-        let shape = |app: &PhotocraftApp| {
+        let shape = |app: &SaryApp| {
             let st = app.session.active().unwrap();
             match &st.doc.layer(st.active_layer.unwrap()).unwrap().content {
                 LayerContent::Shape(sh) => (sh.fill.clone(), sh.stroke.clone()),
@@ -2611,16 +2611,16 @@ mod tests {
         };
         assert!(shape(&app).0.is_some() && shape(&app).1.is_none());
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1100.0, 48.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     ui.horizontal_centered(|ui| options_bar(app, ui, Tool::Rectangle));
                 }
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(4);
-        let click_fill = |h: &mut egui_kittest::Harness<'_, PhotocraftApp>| {
+        let click_fill = |h: &mut egui_kittest::Harness<'_, SaryApp>| {
             let label = h.query_all(egui_kittest::kittest::by().label("Fill:").include_labels()).next().expect("the Fill label").rect();
             let at = egui::pos2(label.right() + h.ctx.global_style().spacing.item_spacing.x + 7.0, label.center().y);
             h.hover_at(at);
@@ -2642,7 +2642,7 @@ mod tests {
         h.run_steps(2);
         let stroke = shape(h.state()).1.expect("the width field stroked the shape");
         assert_eq!(stroke.width, 6.0);
-        assert_eq!(stroke.paint, photocraft_doc::Fill::Solid(photocraft_doc::Color::rgba(0.0, 0.0, 1.0, 1.0)));
+        assert_eq!(stroke.paint, sary_doc::Fill::Solid(sary_doc::Color::rgba(0.0, 0.0, 1.0, 1.0)));
         // Fill off.
         click_fill(&mut h);
         assert_eq!(shape(h.state()).0, None, "unchecking Fill removed the shape's fill");
@@ -2666,7 +2666,7 @@ mod tests {
         let mut app = app();
         app.run("tools.setColors", json!({"foreground": "#ff0000", "background": "#0000ff"})).unwrap();
         finish_shape(&mut app, Tool::Rectangle, [20.0, 20.0], [120.0, 100.0], Default::default());
-        let shape = |app: &PhotocraftApp| {
+        let shape = |app: &SaryApp| {
             let st = app.session.active().unwrap();
             match &st.doc.layer(st.active_layer.unwrap()).unwrap().content {
                 LayerContent::Shape(sh) => (sh.fill.clone(), sh.stroke.clone()),
@@ -2675,16 +2675,16 @@ mod tests {
         };
         assert!(shape(&app).0.is_some() && shape(&app).1.is_none());
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1100.0, 48.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     ui.horizontal_centered(|ui| options_bar(app, ui, Tool::PathSelection));
                 }
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(4);
-        let click_fill = |h: &mut egui_kittest::Harness<'_, PhotocraftApp>| {
+        let click_fill = |h: &mut egui_kittest::Harness<'_, SaryApp>| {
             let label = h.query_all(egui_kittest::kittest::by().label("Fill:").include_labels()).next().expect("the Fill label").rect();
             let at = egui::pos2(label.right() + h.ctx.global_style().spacing.item_spacing.x + 7.0, label.center().y);
             h.hover_at(at);
@@ -2706,7 +2706,7 @@ mod tests {
         h.run_steps(2);
         let stroke = shape(h.state()).1.expect("the width field stroked the shape");
         assert_eq!(stroke.width, 6.0);
-        assert_eq!(stroke.paint, photocraft_doc::Fill::Solid(photocraft_doc::Color::rgba(0.0, 0.0, 1.0, 1.0)));
+        assert_eq!(stroke.paint, sary_doc::Fill::Solid(sary_doc::Color::rgba(0.0, 0.0, 1.0, 1.0)));
         // Fill toggle.
         click_fill(&mut h);
         assert_eq!(shape(h.state()).0, None, "unchecking Fill removed the shape's fill");

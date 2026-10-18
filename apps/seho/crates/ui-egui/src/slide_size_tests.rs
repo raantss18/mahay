@@ -1,4 +1,4 @@
-//! Slide sizes at the edges of what a loaded file can give (after `deckcraft_format::repair`):
+//! Slide sizes at the edges of what a loaded file can give (after `seho_format::repair`):
 //! the editor, sorter, slide show and presenter view open without panicking. (NaN and infinity
 //! are saved as null, which used to make the file fail to open.)
 #![allow(clippy::unwrap_used, clippy::expect_used)]
@@ -6,14 +6,14 @@
 use serde_json::json;
 
 use crate::{Services, SlideApp};
-use deckcraft_engine::Session;
+use seho_engine::Session;
 
 fn open_with_size(w: f64, h: f64) -> egui_kittest::Harness<'static, SlideApp> {
     // Written with the size, then opened the way File › Open does (load, then repair).
     let mut s = Session::with_new();
     s.execute("slide.new", &json!({})).unwrap();
-    std::sync::Arc::make_mut(&mut s.active_mut().unwrap().doc).slide_size = deckcraft_model::Size::new(w, h);
-    let path = std::env::temp_dir().join(format!("deckcraft-size-{}-{w}x{h}.deckcraft", std::process::id()));
+    std::sync::Arc::make_mut(&mut s.active_mut().unwrap().doc).slide_size = seho_model::Size::new(w, h);
+    let path = std::env::temp_dir().join(format!("seho-size-{}-{w}x{h}.seho", std::process::id()));
     s.execute("file.saveAs", &json!({"path": path.to_string_lossy()})).unwrap();
     let mut s = Session::new();
     s.execute("file.open", &json!({"path": path.to_string_lossy()})).unwrap();
@@ -50,7 +50,7 @@ fn extreme_loaded_slide_sizes_open_in_every_view() {
 #[test]
 fn the_canvas_fit_survives_a_zero_slide_size_in_memory() {
     let mut s = Session::with_new();
-    std::sync::Arc::make_mut(&mut s.active_mut().unwrap().doc).slide_size = deckcraft_model::Size::new(0.0, f64::NAN);
+    std::sync::Arc::make_mut(&mut s.active_mut().unwrap().doc).slide_size = seho_model::Size::new(0.0, f64::NAN);
     let app = SlideApp::new(s, Services::default());
     let (r, scale) = crate::canvas::layout(&app, egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1000.0, 700.0)));
     assert!(scale.is_finite() && scale > 0.0, "{scale}");

@@ -2,7 +2,7 @@
 //! move/resize/retype/restyle it, delete it. Geometry is in points from the top-left of the
 //! displayed page (y down), like every other tool.
 
-use pdfcraft_engine::{AddedContent, AddedText, Edit, FontFamily, TextAlign};
+use taratasy_engine::{AddedContent, AddedText, Edit, FontFamily, TextAlign};
 use serde_json::{Value, json};
 
 use crate::comments::parse_color;
@@ -223,7 +223,7 @@ impl Automation {
     }
 
     pub(crate) fn object_move(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::{MAX_MOVE_OBJECTS, ObjectKind, ObjectTarget};
+        use taratasy_engine::{MAX_MOVE_OBJECTS, ObjectKind, ObjectTarget};
         let page = self.page(a)?;
         let rows = a
             .get("objects")

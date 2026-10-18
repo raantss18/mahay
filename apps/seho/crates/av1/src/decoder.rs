@@ -206,7 +206,7 @@ pub struct Decoder {
     /// Frames submitted to the workers and not known to be finished (oldest first).
     in_flight: VecDeque<Arc<FrameSlot>>,
     max_in_flight: usize,
-    /// Bytes the picture store may take ([`deckcraft_bitstream::budget`]).
+    /// Bytes the picture store may take ([`seho_bitstream::budget`]).
     memory_budget: u64,
     /// Shown pictures not yet returned, in output order.
     out: VecDeque<Output>,
@@ -217,7 +217,7 @@ pub struct Decoder {
 /// Whether `pictures` frames of `width` x `height`, padded as `FrameBuf::new` pads them, fit in
 /// `budget` bytes.
 fn store_fits(width: u32, height: u32, color: &crate::header::ColorConfig, pictures: usize, budget: u64) -> bool {
-    let shape = deckcraft_bitstream::budget::PictureShape {
+    let shape = seho_bitstream::budget::PictureShape {
         width: u64::from(width).div_ceil(128) * 128 + 160,
         height: u64::from(height).div_ceil(128) * 128 + 160,
         shift_x: u32::from(color.subsampling_x),
@@ -291,7 +291,7 @@ impl Decoder {
             workers,
             in_flight: VecDeque::new(),
             max_in_flight: fthreads + 2,
-            memory_budget: deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET,
+            memory_budget: seho_bitstream::budget::DECODE_MEMORY_BUDGET,
             out: VecDeque::new(),
             pts: 0,
         }
@@ -1042,7 +1042,7 @@ mod guard_tests {
 #[cfg(test)]
 mod budget_tests {
     use super::*;
-    use deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET;
+    use seho_bitstream::budget::DECODE_MEMORY_BUDGET;
 
     fn color(mono: bool) -> crate::header::ColorConfig {
         crate::header::ColorConfig { mono_chrome: mono, subsampling_x: 1, subsampling_y: 1, ..Default::default() }

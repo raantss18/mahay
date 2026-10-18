@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-vector"
+name = "sary-vector"
 description = "Vector paths, shape layers, strokes and vector masks → anti-aliased coverage and surfaces"
 version.workspace = true
 edition.workspace = true
@@ -10,10 +10,10 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-photocraft-geom = { workspace = true }
-photocraft-color = { workspace = true }
-photocraft-raster = { workspace = true }
-photocraft-doc = { workspace = true }
+sary-geom = { workspace = true }
+sary-color = { workspace = true }
+sary-raster = { workspace = true }
+sary-doc = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rayon = { workspace = true }

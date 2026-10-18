@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use pdfcraft_engine::{Edit, ImageEdit, Session};
-use pdfcraft_render::{PageRenderer, RenderRequest, RequestKind};
+use taratasy_engine::{Edit, ImageEdit, Session};
+use taratasy_render::{PageRenderer, RenderRequest, RequestKind};
 
-fn pixels(bytes: Arc<Vec<u8>>, page: usize) -> pdfcraft_render::RenderedPage {
+fn pixels(bytes: Arc<Vec<u8>>, page: usize) -> taratasy_render::RenderedPage {
     let mut renderer = PageRenderer::new(bytes, Default::default());
     let rendered = renderer.render(RenderRequest { page, kind: RequestKind::Pixels, scale: 1.5, ..Default::default() });
     assert!(rendered.error.is_none(), "{:?}", rendered.error);
@@ -20,7 +20,7 @@ fn near(actual: [f64; 4], expected: [f64; 4]) {
 #[test]
 #[ignore = "requires an explicitly supplied local PDF with cropped artwork"]
 fn private_cropped_images_resize_save_reopen_and_undo() {
-    let path = std::env::var("PDFCRAFT_CLIPPED_ARTWORK_PDF").expect("supply a local PDF path");
+    let path = std::env::var("TARATASY_CLIPPED_ARTWORK_PDF").expect("supply a local PDF path");
     let original = Arc::new(std::fs::read(&path).unwrap());
     let mut session = Session::new();
     let id = session.open("private.pdf", None, original.clone(), None).unwrap();
@@ -86,7 +86,7 @@ fn private_cropped_images_resize_save_reopen_and_undo() {
                     }
                 }
                 let saved = session.save_bytes(id).unwrap();
-                let scratch = std::env::temp_dir().join(format!("pdfcraft-private-resize-{}.pdf", std::process::id()));
+                let scratch = std::env::temp_dir().join(format!("taratasy-private-resize-{}.pdf", std::process::id()));
                 std::fs::write(&scratch, saved.as_slice()).unwrap();
                 let disk = Arc::new(std::fs::read(&scratch).unwrap());
                 let mut reopened = Session::new();

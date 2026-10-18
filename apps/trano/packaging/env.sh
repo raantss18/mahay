@@ -4,10 +4,10 @@
 # Exports:
 #   ROOT                           workspace root
 #   VERSION                        [workspace.package] version from Cargo.toml
-#                                  (override: ARTCRAFT_LAUNCHER_VERSION)
+#                                  (override: TRANO_VERSION)
 #   DIST                           output directory for release artifacts (default: $ROOT/dist/release)
-#   ARTCRAFT_LAUNCHER_BUILD_SHA    git commit baked into the binaries (read by the app's build.rs)
-#   ARTCRAFT_LAUNCHER_BUILD_DATE   UTC build date, YYYY-MM-DD
+#   TRANO_BUILD_SHA    git commit baked into the binaries (read by the app's build.rs)
+#   TRANO_BUILD_DATE   UTC build date, YYYY-MM-DD
 #   CARGO_TARGET_DIR               cargo's target dir (default: $ROOT/target)
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,7 +22,7 @@ workspace_version() {
   ' "$ROOT/Cargo.toml"
 }
 
-VERSION="${ARTCRAFT_LAUNCHER_VERSION:-$(workspace_version)}"
+VERSION="${TRANO_VERSION:-$(workspace_version)}"
 if [ -z "$VERSION" ]; then
   echo "error: could not read [workspace.package] version from $ROOT/Cargo.toml" >&2
   exit 1
@@ -33,11 +33,11 @@ DIST="${DIST:-$ROOT/dist/release}"
 mkdir -p "$DIST"
 export DIST
 
-if [ -z "${ARTCRAFT_LAUNCHER_BUILD_SHA:-}" ]; then
-  ARTCRAFT_LAUNCHER_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+if [ -z "${TRANO_BUILD_SHA:-}" ]; then
+  TRANO_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
 fi
-export ARTCRAFT_LAUNCHER_BUILD_SHA
-export ARTCRAFT_LAUNCHER_BUILD_DATE="${ARTCRAFT_LAUNCHER_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
+export TRANO_BUILD_SHA
+export TRANO_BUILD_DATE="${TRANO_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 
 # Emit a GitHub Actions warning (plain stderr outside Actions).

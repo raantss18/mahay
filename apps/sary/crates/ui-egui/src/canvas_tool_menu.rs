@@ -2,12 +2,12 @@
 //! Transform box, text being edited with a Type tool, the pasteboard (outside the image) and a guide.
 
 use egui::Context;
-use photocraft_doc::LayerContent;
-use photocraft_engine::prefs::{self, CanvasColor};
+use sary_doc::LayerContent;
+use sary_engine::prefs::{self, CanvasColor};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::{PhotocraftApp, state::Tool};
+use crate::{SaryApp, state::Tool};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CanvasToolMenu {
@@ -171,7 +171,7 @@ const CANVAS_COLORS: [CanvasColor; 6] =
 
 /// Photoshop's Space+F (⇧Space+F backwards): the next pasteboard colour, round and round. Saved
 /// like a choice in the pasteboard menu (`interface.canvasColor`).
-pub fn cycle_canvas_color(app: &mut PhotocraftApp, backward: bool) -> Result<(), String> {
+pub fn cycle_canvas_color(app: &mut SaryApp, backward: bool) -> Result<(), String> {
     let n = CANVAS_COLORS.len();
     let at = CANVAS_COLORS.iter().position(|c| *c == app.session.prefs().interface.canvas_color).unwrap_or(0);
     let next = if backward { (at + n - 1) % n } else { (at + 1) % n };
@@ -198,7 +198,7 @@ pub const VIEW_MENU: &[Row] = &[
 pub const FILL_SCREEN: &str = "view.fillScreen";
 
 /// Photoshop's selection-tool context menu with an active selection, in its order. Its Generative
-/// Fill row has no PhotoCraft command and is left out. Rows stay visible and grey out exactly like
+/// Fill row has no Sary command and is left out. Rows stay visible and grey out exactly like
 /// their menu-bar twins.
 pub const SELECTION_MENU: &[Row] = &[
     Some(("Deselect", "select.deselect")),
@@ -318,14 +318,14 @@ pub fn rows(menu: &CanvasToolMenu) -> &'static [Row] {
 }
 
 /// Is `command` one of the open menu's rows, and enabled?
-pub fn available(app: &PhotocraftApp, menu: &CanvasToolMenu, command: &str) -> bool {
+pub fn available(app: &SaryApp, menu: &CanvasToolMenu, command: &str) -> bool {
     (rows(menu).iter().flatten().any(|(_, id)| *id == command) || is_spelling(menu, command)) && entry_enabled(app, menu, command)
 }
 
 /// Is `command` the transform box's current mode (checked in the transform menu)?
 /// Scale stays Free Transform's mode (only Free Transform is checked). Rotate is its own mode.
 /// Warp is not a box mode (it is its own session), and `for_command` would read it as Free.
-pub(crate) fn mode_checked(app: &PhotocraftApp, menu: &CanvasToolMenu, command: &str) -> bool {
+pub(crate) fn mode_checked(app: &SaryApp, menu: &CanvasToolMenu, command: &str) -> bool {
     if menu.guide {
         return command == "view.lockGuides" && app.ui.extras.lock_guides;
     }
@@ -342,29 +342,29 @@ pub(crate) fn mode_checked(app: &PhotocraftApp, menu: &CanvasToolMenu, command: 
 
 /// The type edit menu's checkmarks: the faux styles at the selection, the layer's orientation and
 /// anti-aliasing.
-fn type_checked(app: &PhotocraftApp, command: &str) -> bool {
-    use photocraft_doc::text::Orientation;
+fn type_checked(app: &SaryApp, command: &str) -> bool {
+    use sary_doc::text::Orientation;
     let Some(t) = crate::type_tool::target_text(app) else { return false };
     match command {
         FAUX_BOLD | FAUX_ITALIC => crate::type_tool::styles_at(app).is_some_and(|(c, _)| if command == FAUX_BOLD { c.faux_bold } else { c.faux_italic }),
         "type.orientation.horizontal" => t.orientation == Orientation::Horizontal,
         "type.orientation.vertical" => t.orientation == Orientation::Vertical,
-        c => c.strip_prefix("type.antiAlias.") == Some(photocraft_engine::type_extra_cmds::aa_name(t.antialias)),
+        c => c.strip_prefix("type.antiAlias.") == Some(sary_engine::type_extra_cmds::aa_name(t.antialias)),
     }
 }
 
 /// Is the Type tool editing text, so that a right-click opens the type edit menu?
-pub fn editing_text(app: &PhotocraftApp, tool: Tool) -> bool {
+pub fn editing_text(app: &SaryApp, tool: Tool) -> bool {
     tool.is_type() && app.ui.text_edit.is_some()
 }
 
 /// The misspelled word of the edited text under document point `doc`, with its suggestions.
-fn spelling_at(app: &mut PhotocraftApp, doc: [f64; 2]) -> Option<Spelling> {
+fn spelling_at(app: &mut SaryApp, doc: [f64; 2]) -> Option<Spelling> {
     let layer = app.ui.text_edit.as_ref()?.layer;
     if !doc.iter().all(|v| v.is_finite()) {
         return None;
     }
-    let at = crate::type_tool::offset_at(app, photocraft_doc::LayerId(layer), doc[0], doc[1]);
+    let at = crate::type_tool::offset_at(app, sary_doc::LayerId(layer), doc[0], doc[1]);
     let found = app.session.execute("edit.checkSpelling", json!({"action": "list", "layer": layer, "suggestions": MAX_SUGGESTIONS})).ok()?;
     let hit = found["misspellings"].as_array()?.iter().find(|m| {
         let (a, b) = (m["start"].as_u64().unwrap_or(u64::MAX) as usize, m["end"].as_u64().unwrap_or(0) as usize);
@@ -402,7 +402,7 @@ pub fn spelling_label_is_ui(id: &str) -> bool {
 }
 
 /// Right-click over a Free Transform box: its modes.
-pub fn open_transform(app: &mut PhotocraftApp, ctx: &Context, pos: [f32; 2]) -> bool {
+pub fn open_transform(app: &mut SaryApp, ctx: &Context, pos: [f32; 2]) -> bool {
     if !pos.iter().all(|v| v.is_finite()) {
         return false;
     }
@@ -433,7 +433,7 @@ fn pasteboard_choice(command: &str) -> Option<CanvasColor> {
 
 /// The engine command (and params) a pasteboard row runs, for the automation policy: every row
 /// changes a preference.
-pub fn engine_call(app: &PhotocraftApp, menu: &CanvasToolMenu, command: &str) -> (String, Value) {
+pub fn engine_call(app: &SaryApp, menu: &CanvasToolMenu, command: &str) -> (String, Value) {
     if menu.guide {
         let selected = crate::guide_select::selected(app);
         return match command {
@@ -467,7 +467,7 @@ fn spelling_call(menu: &CanvasToolMenu, command: &str) -> (String, Value) {
 /// Does a right-click with `tool` at document point `doc` open the pasteboard menu? Outside the
 /// image, for the tools whose right-click has no job there: not the painting tools (their Brush
 /// Preset picker or right-button erase), the Pen (its path menu) or text being edited.
-pub fn pasteboard_at(app: &PhotocraftApp, tool: Tool, doc: [f64; 2]) -> bool {
+pub fn pasteboard_at(app: &SaryApp, tool: Tool, doc: [f64; 2]) -> bool {
     let Some(st) = app.session.active() else { return false };
     let (w, h) = (f64::from(st.doc.size.width), f64::from(st.doc.size.height));
     let outside = doc.iter().all(|v| v.is_finite()) && (doc[0] < 0.0 || doc[1] < 0.0 || doc[0] >= w || doc[1] >= h);
@@ -475,7 +475,7 @@ pub fn pasteboard_at(app: &PhotocraftApp, tool: Tool, doc: [f64; 2]) -> bool {
 }
 
 /// Right-click on the pasteboard: its colour menu at screen point `pos`.
-pub fn open_pasteboard(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: [f32; 2]) -> bool {
+pub fn open_pasteboard(app: &mut SaryApp, ctx: &Context, tool: Tool, pos: [f32; 2]) -> bool {
     if !pos.iter().all(|v| v.is_finite()) {
         return false;
     }
@@ -500,7 +500,7 @@ pub fn open_pasteboard(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: 
 
 /// Right-click at document point `doc` on a guide that `tool` could drag (the Move tool, or ⌘ with
 /// a selection tool): select the guide and open the guide menu at screen point `pos`.
-pub fn open_guide(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, mods: egui::Modifiers, pos: [f32; 2], doc: [f64; 2]) -> bool {
+pub fn open_guide(app: &mut SaryApp, ctx: &Context, tool: Tool, mods: egui::Modifiers, pos: [f32; 2], doc: [f64; 2]) -> bool {
     if !pos.iter().all(|v| v.is_finite()) || !doc.iter().all(|v| v.is_finite()) {
         return false;
     }
@@ -528,7 +528,7 @@ pub fn open_guide(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, mods: egui
 
 /// A guide row: the two Selected Guides rows act on the selected guide; the rest are the View
 /// menu's commands.
-fn choose_guide(app: &mut PhotocraftApp, ctx: &Context, command: &str) -> Result<(), String> {
+fn choose_guide(app: &mut SaryApp, ctx: &Context, command: &str) -> Result<(), String> {
     match command {
         GUIDE_EDIT => crate::new_guide_ui::open_edit(app).map(|_| ()),
         GUIDE_CLEAR => crate::guide_select::delete_selected(app).map(|_| ()),
@@ -537,7 +537,7 @@ fn choose_guide(app: &mut PhotocraftApp, ctx: &Context, command: &str) -> Result
 }
 
 /// A pasteboard row: set the colour, or open the Color Picker on the custom one.
-fn choose_pasteboard(app: &mut PhotocraftApp, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
+fn choose_pasteboard(app: &mut SaryApp, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
     if command == PASTEBOARD_PICK {
         let rgb = prefs::parse_hex(&app.session.prefs().interface.canvas_custom_color).map_or([0.5; 3], |c| c.map(|v| f32::from(v) / 255.0));
         crate::color_picker_ui::open_for_target(app, "pasteboard", "Color Picker (Custom Canvas Color)", rgb);
@@ -547,7 +547,7 @@ fn choose_pasteboard(app: &mut PhotocraftApp, menu: &CanvasToolMenu, command: &s
     app.run(&command, params).map(|_| ())
 }
 
-pub fn entry_enabled(app: &PhotocraftApp, menu: &CanvasToolMenu, command: &str) -> bool {
+pub fn entry_enabled(app: &SaryApp, menu: &CanvasToolMenu, command: &str) -> bool {
     if menu.guide {
         return match command {
             GUIDE_EDIT | GUIDE_CLEAR => crate::guide_select::selected(app).is_some(),
@@ -610,13 +610,13 @@ pub fn entry_enabled(app: &PhotocraftApp, menu: &CanvasToolMenu, command: &str) 
     }
 }
 
-pub fn open(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: [f32; 2]) -> bool {
+pub fn open(app: &mut SaryApp, ctx: &Context, tool: Tool, pos: [f32; 2]) -> bool {
     open_at(app, ctx, tool, pos, None)
 }
 
 /// [`open`] for a right-click at document point `doc`: over a misspelled word of the text being
 /// edited, the menu starts with its spelling suggestions.
-pub fn open_at(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: [f32; 2], doc: Option<[f64; 2]>) -> bool {
+pub fn open_at(app: &mut SaryApp, ctx: &Context, tool: Tool, pos: [f32; 2], doc: Option<[f64; 2]>) -> bool {
     let text = editing_text(app, tool);
     if !(applies(tool) || text) || !pos.iter().all(|v| v.is_finite()) {
         return false;
@@ -635,7 +635,7 @@ pub fn open_at(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: [f32; 2]
 
 /// Right-click with the Zoom or Hand tool at screen point `pos`, over document point `doc`: the
 /// view menu.
-pub fn open_view(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: [f32; 2], doc: [f64; 2]) -> bool {
+pub fn open_view(app: &mut SaryApp, ctx: &Context, tool: Tool, pos: [f32; 2], doc: [f64; 2]) -> bool {
     if !is_view_tool(tool) || !pos.iter().all(|v| v.is_finite()) || !doc.iter().all(|v| v.is_finite()) {
         return false;
     }
@@ -660,7 +660,7 @@ pub fn open_view(app: &mut PhotocraftApp, ctx: &Context, tool: Tool, pos: [f32; 
 
 /// A view menu row. Zoom In and Zoom Out step about the right-clicked point, as a Zoom tool click
 /// does; the other rows run their View menu command.
-fn choose_view(app: &mut PhotocraftApp, ctx: &Context, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
+fn choose_view(app: &mut SaryApp, ctx: &Context, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
     let i = app.session.active_index().ok_or("no document")?;
     if command == FILL_SCREEN {
         let v = app.ui.views.get_mut(i).ok_or("no document view")?;
@@ -684,7 +684,7 @@ fn choose_view(app: &mut PhotocraftApp, ctx: &Context, menu: &CanvasToolMenu, co
     Ok(())
 }
 
-pub fn choose(app: &mut PhotocraftApp, ctx: &Context, command: &str) {
+pub fn choose(app: &mut SaryApp, ctx: &Context, command: &str) {
     let Some(menu) = app.ui.canvas_tool_menu.take() else { return };
     if !available(app, &menu, command) {
         return;
@@ -716,7 +716,7 @@ pub fn choose(app: &mut PhotocraftApp, ctx: &Context, command: &str) {
 
 /// A spelling row: replace the word under the pointer (the caret lands after the replacement), or
 /// add it to the user dictionary.
-fn choose_spelling(app: &mut PhotocraftApp, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
+fn choose_spelling(app: &mut SaryApp, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
     let (id, params) = engine_call(app, menu, command);
     let result = app.run(&id, params)?;
     if let Some(end) = result["end"].as_u64().map(|e| e as usize)
@@ -729,7 +729,7 @@ fn choose_spelling(app: &mut PhotocraftApp, menu: &CanvasToolMenu, command: &str
 
 /// A type edit row. Undo, Cut, Copy, Paste and Select All run as their Edit and Select menu items,
 /// which act on the text while it is being edited (Paste asks the window for the clipboard text).
-fn choose_type(app: &mut PhotocraftApp, ctx: &Context, command: &str) -> Result<(), String> {
+fn choose_type(app: &mut SaryApp, ctx: &Context, command: &str) -> Result<(), String> {
     match command {
         FAUX_BOLD | FAUX_ITALIC => {
             let bold = command == FAUX_BOLD;
@@ -749,7 +749,7 @@ fn choose_type(app: &mut PhotocraftApp, ctx: &Context, command: &str) -> Result<
 }
 
 /// A parameter dialog for `command` following `spec` (registry notation), prefilled with `fields`.
-fn spec_dialog(app: &mut PhotocraftApp, command: &str, label: &str, spec: &str, mut fields: serde_json::Map<String, serde_json::Value>) {
+fn spec_dialog(app: &mut SaryApp, command: &str, label: &str, spec: &str, mut fields: serde_json::Map<String, serde_json::Value>) {
     fields.insert("__command".into(), json!(command));
     fields.insert("__label".into(), json!(label));
     fields.insert("__filter".into(), json!(true));
@@ -762,11 +762,11 @@ fn spec_dialog(app: &mut PhotocraftApp, command: &str, label: &str, spec: &str, 
 const STROKE_PATH_SPEC: &str = r##"{"tool":"brush|pencil|eraser|backgroundEraser|cloneStamp|patternStamp|healingBrush|spotHealingBrush|historyBrush|blur|sharpen|smudge|dodge|burn|sponge|colorReplacement|mixerBrush"="brush","simulatePressure":bool=false}"##;
 
 /// The Stroke Path dialog for the path `name` (Paths panel menu, Alt-click on its Stroke button).
-pub(crate) fn stroke_path_dialog(app: &mut PhotocraftApp, name: &str) {
+pub(crate) fn stroke_path_dialog(app: &mut SaryApp, name: &str) {
     pen_dialog(app, "path.stroke", "Stroke Path…", name);
 }
 
-fn pen_dialog(app: &mut PhotocraftApp, command: &str, label: &str, name: &str) {
+fn pen_dialog(app: &mut SaryApp, command: &str, label: &str, name: &str) {
     let spec = match command {
         "edit.defineCustomShape" => r##"{"name":text}"##,
         "path.toSelection" => r##"{"feather":0..250=0,"antiAlias":bool=true,"mode":"replace|add|subtract|intersect"="replace"}"##,
@@ -796,7 +796,7 @@ fn pen_dialog(app: &mut PhotocraftApp, command: &str, label: &str, name: &str) {
     spec_dialog(app, command, label, spec, fields);
 }
 
-fn choose_pen(app: &mut PhotocraftApp, ctx: &Context, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
+fn choose_pen(app: &mut SaryApp, ctx: &Context, menu: &CanvasToolMenu, command: &str) -> Result<(), String> {
     if command == "select.isolateLayers" {
         crate::menus::invoke(app, ctx, command, json!({}))?;
         return Ok(());
@@ -828,7 +828,7 @@ fn menu_id() -> egui::Id {
     egui::Id::new("canvas-selection-menu")
 }
 
-pub fn show(app: &mut PhotocraftApp, ctx: &Context) {
+pub fn show(app: &mut SaryApp, ctx: &Context) {
     let Some(menu) = app.ui.canvas_tool_menu.clone() else { return };
     if ctx.input(|i| i.key_pressed(egui::Key::Escape))
         || app.ui.tool != menu.tool
@@ -894,13 +894,13 @@ mod tests {
     use egui::{Modifiers, PointerButton, Pos2, vec2};
     use egui_kittest::{Harness, kittest::Queryable};
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 32, "height": 32})).unwrap();
         app
     }
 
-    fn work_path(app: &mut PhotocraftApp) {
+    fn work_path(app: &mut SaryApp) {
         app.run(
             "path.set",
             json!({"name": "work", "path": {"subpaths": [{"closed": true, "knots": [
@@ -912,15 +912,15 @@ mod tests {
         .unwrap();
     }
 
-    fn choose_open(app: &mut PhotocraftApp, command: &str) {
+    fn choose_open(app: &mut SaryApp, command: &str) {
         assert!(open(app, &Context::default(), Tool::Pen, [10.0, 10.0]));
         choose(app, &Context::default(), command);
     }
 
-    fn harness(mut app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+    fn harness(mut app: SaryApp) -> Harness<'static, SaryApp> {
         app.sync_views();
         let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -929,12 +929,12 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
         h.run_steps(4);
         h
     }
 
-    fn right_click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, modifiers: Modifiers) {
+    fn right_click(h: &mut Harness<'static, SaryApp>, p: Pos2, modifiers: Modifiers) {
         h.event(egui::Event::ModifiersChanged(modifiers));
         h.event(egui::Event::PointerMoved(p));
         h.run_steps(1);
@@ -964,15 +964,15 @@ mod tests {
     }
 
     /// A type layer reading "Hello", being edited with every character selected.
-    fn editing_type(app: &mut PhotocraftApp) -> u64 {
+    fn editing_type(app: &mut SaryApp) -> u64 {
         app.ui.tool = Tool::Type;
         let id = app.run("type.create", json!({"text": "Hello", "size": 12, "x": 4, "y": 20})).unwrap()["layer"].as_u64().unwrap();
         crate::menus::invoke(app, &Context::default(), "type.editText", json!({})).unwrap();
         id
     }
 
-    fn text_of(app: &PhotocraftApp, id: u64) -> Option<photocraft_doc::TextLayer> {
-        match &app.session.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content {
+    fn text_of(app: &SaryApp, id: u64) -> Option<sary_doc::TextLayer> {
+        match &app.session.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content {
             LayerContent::Text(t) => Some(t.clone()),
             _ => None,
         }
@@ -984,7 +984,7 @@ mod tests {
         editing_type(&mut app);
         app.sync_views();
         let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -995,7 +995,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
         h.run_steps(4);
         let center = h.state().last_canvas_rect.center();
         right_click(&mut h, center, Modifiers::NONE);
@@ -1015,7 +1015,7 @@ mod tests {
         let mut app = app();
         let id = editing_type(&mut app);
         let ctx = Context::default();
-        let reopen = |app: &mut PhotocraftApp| assert!(open(app, &Context::default(), Tool::Type, [10.0, 10.0]));
+        let reopen = |app: &mut SaryApp| assert!(open(app, &Context::default(), Tool::Type, [10.0, 10.0]));
         // Faux Bold toggles the style of the selected characters, and shows checked.
         reopen(&mut app);
         let menu = app.ui.canvas_tool_menu.clone().unwrap();
@@ -1231,7 +1231,7 @@ mod tests {
         let app = app();
         let items = crate::menus::menu_items(&app);
         for (label, id) in [SELECTION_MENU, NO_SELECTION_MENU, PEN_MENU, TRANSFORM_MENU].into_iter().flatten().flatten() {
-            assert!(items.iter().any(|i| i.id == *id) || photocraft_engine::commands::find(id).is_some(), "{label}: unknown command {id}");
+            assert!(items.iter().any(|i| i.id == *id) || sary_engine::commands::find(id).is_some(), "{label}: unknown command {id}");
         }
     }
 
@@ -1321,13 +1321,13 @@ mod tests {
         }
     }
 
-    fn zoom_app(w: u32, h: u32) -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn zoom_app(w: u32, h: u32) -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": w, "height": h})).unwrap();
         app
     }
 
-    fn screen_of(app: &PhotocraftApp, doc: [f32; 2]) -> Pos2 {
+    fn screen_of(app: &SaryApp, doc: [f32; 2]) -> Pos2 {
         crate::canvas::ViewXform::active(app).unwrap().to_screen(doc[0], doc[1])
     }
 
@@ -1400,7 +1400,7 @@ mod tests {
         let p = screen_of(h.state(), [200.0, 150.0]);
         let area = crate::rulers::content_rect(h.state(), h.state().last_canvas_rect).size();
         let ppp = h.state().canvas_ppp();
-        let pick = |h: &mut Harness<'static, PhotocraftApp>, label: &str| {
+        let pick = |h: &mut Harness<'static, SaryApp>, label: &str| {
             right_click(h, p, Modifiers::NONE);
             h.get_by_label(label).click();
             h.run_steps(3);
@@ -1429,7 +1429,7 @@ mod tests {
         choose(&mut app, &Context::default(), "select.all");
         assert_eq!(app.session.journal.len(), before, "the view menu cannot run another menu's row");
         // With no document every row is greyed out and choosing one does nothing.
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         assert!(open_view(&mut app, &Context::default(), Tool::Hand, [1.0, 1.0], [1.0, 1.0]));
         let menu = app.ui.canvas_tool_menu.clone().unwrap();
         for (_, id) in VIEW_MENU.iter().flatten() {

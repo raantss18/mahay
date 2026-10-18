@@ -1,6 +1,6 @@
 //! Original ODS packages assembled in Rust, not files from another spreadsheet application.
 
-use gridcraft_core::{CellRef, RangeRef, Value};
+use tabilao_core::{CellRef, RangeRef, Value};
 
 use super::make_zip;
 use crate::{Format, IoError, read_ods, read_xlsx, sniff, write_xlsx};

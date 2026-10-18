@@ -1,7 +1,7 @@
 //! Clip groups through Release Clipping Mask, Merge Down, Merge Layers and Delete Hidden Layers,
 //! as in Photoshop (layers audit L2). The stack: Background, B, C1*, C2* (C1 and C2 clipped to B).
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 fn stack() -> (Session, [u64; 3]) {
@@ -21,7 +21,7 @@ fn stack() -> (Session, [u64; 3]) {
 }
 
 fn clipped(s: &Session, id: u64) -> bool {
-    s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().clipped
+    s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().clipped
 }
 
 #[test]

@@ -2,21 +2,21 @@
 
 use std::sync::Arc;
 
-use photocraft_color::{BlendMode, ColorMode, SampleType};
-use photocraft_doc::{Document, Layer, LayerContent, SmartContentsId, SmartFilter, SmartObject, SmartSource};
-use photocraft_geom::{Affine, Size};
-use photocraft_io::{ExportOptions, export, import, linked, smart_map};
-use photocraft_psd::{PsdFile, TaggedBlock};
-use photocraft_raster::Surface;
+use sary_color::{BlendMode, ColorMode, SampleType};
+use sary_doc::{Document, Layer, LayerContent, SmartContentsId, SmartFilter, SmartObject, SmartSource};
+use sary_geom::{Affine, Size};
+use sary_io::{ExportOptions, export, import, linked, smart_map};
+use sary_psd::{PsdFile, TaggedBlock};
+use sary_raster::Surface;
 
 fn fixture() -> Document {
     let mut source = Document::new("contents", Size::new(2, 2), ColorMode::Rgb, SampleType::U8);
     let mut pixels = Surface::new(source.pixel_format());
     pixels.fill_rect(source.bounds(), &[1.0, 0.0, 0.0, 1.0]);
     source.layers.push(Layer::new("red", LayerContent::Raster(pixels.clone())));
-    let bytes = photocraft_format::save_to_bytes(&source, &Default::default()).unwrap();
+    let bytes = sary_format::save_to_bytes(&source, &Default::default()).unwrap();
     let mut doc = Document::new("instances", Size::new(12, 4), ColorMode::Rgb, SampleType::U8);
-    let smart = SmartObject::new(SmartSource::Embedded { file_name: "contents.pcraft".into(), bytes: Arc::new(bytes) }, Affine::IDENTITY, Some(pixels));
+    let smart = SmartObject::new(SmartSource::Embedded { file_name: "contents.sary".into(), bytes: Arc::new(bytes) }, Affine::IDENTITY, Some(pixels));
     doc.layers.push(Layer::new("original", LayerContent::Smart(smart)));
     doc
 }
@@ -133,7 +133,7 @@ fn duplicated_imported_layer_keeps_source_but_gets_its_own_placement() {
         assert_eq!(original.placed, colliding);
         assert_ne!(original.placed, duplicate.placed);
         let filter_cache = after.global_blocks.iter().find(|b| &b.key == b"FEid").unwrap();
-        let filter_cache = photocraft_psd::filter_effects::FilterEffects::parse(&filter_cache.data).unwrap();
+        let filter_cache = sary_psd::filter_effects::FilterEffects::parse(&filter_cache.data).unwrap();
         assert_eq!(filter_cache.items.len(), 1);
         assert_eq!(filter_cache.items[0].id, duplicate.placed);
         assert_eq!(after.layers().iter().find(|l| l.name() == "original").unwrap().block(b"SoLd").unwrap().data, original_raw);
@@ -162,7 +162,7 @@ fn missing_source_identifiers_do_not_join_imported_contents() {
     record.blocks.retain(|b| !matches!(&b.key, b"SoLd" | b"SoLE" | b"PlLd"));
     record.blocks.push(TaggedBlock::new(*b"SoLd", data));
     *file.layers_mut() = vec![record.clone(), record];
-    let (doc, _) = photocraft_io::psd_to_document(&file);
+    let (doc, _) = sary_io::psd_to_document(&file);
     let LayerContent::Smart(a) = &doc.layers[0].content else { panic!("first smart object missing") };
     let LayerContent::Smart(b) = &doc.layers[1].content else { panic!("second smart object missing") };
     assert_ne!(a.contents_id, b.contents_id);
@@ -179,7 +179,7 @@ fn independent_unavailable_link_retains_separate_preserved_record() {
     // An opaque external item: the source UUID is known, but no embedded bytes can be loaded.
     block.data[8..12].copy_from_slice(b"liFE");
     let original_record = block.data.clone();
-    let (mut doc, _) = photocraft_io::psd_to_document(&file);
+    let (mut doc, _) = sary_io::psd_to_document(&file);
     let mut independent = doc.layers[0].duplicate();
     independent.name = "independent".into();
     let sm = smart_mut(&mut independent);
@@ -215,7 +215,7 @@ fn plld_only_layers_without_their_file_or_with_a_broken_record() {
     record.blocks.push(TaggedBlock::new(*b"PlLd", smart_map::plld_bytes(&spec, &mut Vec::new())));
     broken.blocks.push(TaggedBlock::new(*b"PlLd", b"plcL\0\0\0\x03\x05ab\0\0".to_vec()));
     *file.layers_mut() = vec![record, broken];
-    let (doc, warnings) = photocraft_io::psd_to_document(&file);
+    let (doc, warnings) = sary_io::psd_to_document(&file);
     let LayerContent::Smart(a) = &doc.layers[0].content else { panic!("PlLd layer is not a smart object") };
     assert_eq!(a.source, SmartSource::Linked { path: "missing".into() });
     for (x, y) in a.transform.m.iter().zip(rotated.m) {
@@ -232,7 +232,7 @@ fn plld_only_layers_without_their_file_or_with_a_broken_record() {
 /// the contents unavailable, so the warped pixels stay the rendering (#2465).
 #[test]
 fn plld_only_layers_keep_their_warp() {
-    use photocraft_geom::warp::{Warp, WarpStyle};
+    use sary_geom::warp::{Warp, WarpStyle};
     let (mut file, _) = round_trip(&fixture(), "psd");
     let bulge = Warp::preset(WarpStyle::Bulge, 35.0, [0.0, 0.0, 2.0, 2.0]);
     let spec = |warp| smart_map::PlacedSpec {
@@ -255,7 +255,7 @@ fn plld_only_layers_keep_their_warp() {
     cut.truncate(cut.len() - 40);
     broken.blocks.push(TaggedBlock::new(*b"PlLd", cut));
     *file.layers_mut() = vec![warped, flat, broken];
-    let (doc, warnings) = photocraft_io::psd_to_document(&file);
+    let (doc, warnings) = sary_io::psd_to_document(&file);
     let sm = |i: usize| match &doc.layers[i].content {
         LayerContent::Smart(s) => s,
         _ => panic!("layer {i} is not a smart object"),
@@ -285,13 +285,13 @@ fn sole_wins_over_plld() {
     };
     let mut record = file.layers()[0].clone();
     let sold = record.block(b"SoLd").expect("the fixture has SoLd").data.clone();
-    let (id, _) = photocraft_io::blocks::parse_smart(b"SoLd", &sold);
+    let (id, _) = sary_io::blocks::parse_smart(b"SoLd", &sold);
     assert!(!id.is_empty() && id != "plld-only");
     record.blocks.retain(|b| !matches!(&b.key, b"SoLd" | b"SoLE" | b"PlLd"));
     record.blocks.push(TaggedBlock::new(*b"PlLd", smart_map::plld_bytes(&spec, &mut Vec::new())));
     record.blocks.push(TaggedBlock::new(*b"SoLE", sold.clone()));
     *file.layers_mut() = vec![record];
-    let (doc, _) = photocraft_io::psd_to_document(&file);
+    let (doc, _) = sary_io::psd_to_document(&file);
     let LayerContent::Smart(sm) = &doc.layers[0].content else { panic!("not a smart object") };
     assert_eq!(sm.source, SmartSource::Linked { path: id });
     assert_eq!(sm.psd_raw.as_deref(), Some(&sold));
@@ -303,10 +303,10 @@ fn sole_wins_over_plld() {
 /// (no `SoLd` added) and reopens in the same place (#2465).
 #[test]
 fn plld_only_spilled_custom_warp_places_like_sold_and_round_trips_verbatim() {
-    use photocraft_geom::warp::{BezierMesh, Warp};
+    use sary_geom::warp::{BezierMesh, Warp};
     let (mut file, _) = round_trip(&fixture(), "psd");
     let mut record = file.layers()[0].clone();
-    let (id, _) = photocraft_io::blocks::parse_smart(b"SoLd", &record.block(b"SoLd").expect("the fixture has SoLd").data);
+    let (id, _) = sary_io::blocks::parse_smart(b"SoLd", &record.block(b"SoLd").expect("the fixture has SoLd").data);
     assert!(!id.is_empty());
     // The embedded source is 2 × 2; the mesh reaches from (-1, -0.5) to (3, 2.5).
     let bounds = [0.0, 0.0, 2.0, 2.0];
@@ -324,7 +324,7 @@ fn plld_only_spilled_custom_warp_places_like_sold_and_round_trips_verbatim() {
     cs2.blocks.push(TaggedBlock::new(*b"PlLd", plld.clone()));
     *file.layers_mut() = vec![with_sold, cs2];
 
-    let (doc, warnings) = photocraft_io::psd_to_document(&file);
+    let (doc, warnings) = sary_io::psd_to_document(&file);
     assert!(!warnings.iter().any(|w| w.contains("PlLd")), "{warnings:?}");
     let sm = |d: &Document, i: usize| match &d.layers[i].content {
         LayerContent::Smart(s) => s.clone(),

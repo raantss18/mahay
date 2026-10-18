@@ -16,10 +16,10 @@
 //!   resolution; Clear empties them; ⇄ and X swap W and H.
 
 use egui::{Modifiers, Stroke, StrokeKind, vec2};
-use photocraft_engine::prefs::Unit;
+use sary_engine::prefs::Unit;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::{Tool, ToolOptions};
 use crate::theme::Tokens;
 
@@ -187,7 +187,7 @@ pub fn set_custom_ratio_fields(o: &mut ToolOptions, width: f32, height: f32) {
 /// `image.crop`'s target params for the pending crop: `targetWidth`/`targetHeight` (whole px) when
 /// W and H are set, and `resolution` (ppi) when the resolution is; the Image Interpolation
 /// preference resamples.
-pub fn commit_params(app: &PhotocraftApp, p: &mut Value) {
+pub fn commit_params(app: &SaryApp, p: &mut Value) {
     let o = &app.ui.tool_options;
     if o.crop_ratio != WHR {
         return;
@@ -205,7 +205,7 @@ pub fn commit_params(app: &PhotocraftApp, p: &mut Value) {
 }
 
 /// Fills W, H (px) and the resolution from the active document, in W x H x Resolution mode.
-pub fn front_image(app: &mut PhotocraftApp) {
+pub fn front_image(app: &mut SaryApp) {
     let Some(d) = app.session.active().map(|st| (st.doc.size, f64::from(st.doc.resolution_dpi))) else { return };
     let (size, dpi) = d;
     let o = &mut app.ui.tool_options;
@@ -234,7 +234,7 @@ pub fn swap(o: &mut ToolOptions) -> bool {
 
 /// After the preset dropdown chose `crop_ratio`: a size preset fills the fields and Front Image
 /// reads the document, both leaving W x H x Resolution mode on.
-pub fn chosen(app: &mut PhotocraftApp) {
+pub fn chosen(app: &mut SaryApp) {
     let key = app.ui.tool_options.crop_ratio.clone();
     if key == FRONT {
         app.ui.tool_options.crop_ratio = WHR.into();
@@ -252,7 +252,7 @@ pub fn chosen(app: &mut PhotocraftApp) {
 
 /// I with the Crop tool (no text field focused, which the caller checks): Front Image. Returns
 /// true when the key was used; otherwise I stays the Eyedropper tool key.
-pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     if app.ui.tool != Tool::Crop || app.crop.drag.is_some() || app.session.active().is_none() {
         return false;
     }
@@ -313,14 +313,14 @@ pub fn fields(o: &mut ToolOptions, ui: &mut egui::Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::{Color, ColorMode, Document, SampleType, Size};
+    use sary_doc::{Color, ColorMode, Document, SampleType, Size};
 
-    fn app(depth: SampleType) -> PhotocraftApp {
+    fn app(depth: SampleType) -> SaryApp {
         let mut doc = Document::with_background("crop", Size::new(400, 300), ColorMode::Rgb, depth, Color::WHITE);
         doc.resolution_dpi = 72.0;
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.add_document(doc, None);
-        let mut app = PhotocraftApp::new(s, crate::Services::default());
+        let mut app = SaryApp::new(s, crate::Services::default());
         app.ui.tool = Tool::Crop;
         app.ui.extras.snap = false;
         app.ui.view.show.smart_guides = false;

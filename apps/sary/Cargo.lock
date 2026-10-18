@@ -1223,16 +1223,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "craft-docpath"
+name = "mahay-docpath"
 version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=82a24b006eefa036b43c09a67fb9a3fbd17ffe63#82a24b006eefa036b43c09a67fb9a3fbd17ffe63"
+source = "git+https://github.com/raantss18/mahay?rev=82a24b006eefa036b43c09a67fb9a3fbd17ffe63#82a24b006eefa036b43c09a67fb9a3fbd17ffe63"
 
 [[package]]
-name = "craft-print"
+name = "mahay-print"
 version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=3d37da389a3618ab9b76109da11416e9ca4ea719#3d37da389a3618ab9b76109da11416e9ca4ea719"
+source = "git+https://github.com/raantss18/mahay?rev=3d37da389a3618ab9b76109da11416e9ca4ea719#3d37da389a3618ab9b76109da11416e9ca4ea719"
 dependencies = [
- "craft-winprint-gdi",
+ "mahay-winprint-gdi",
  "miniz_oxide 0.8.9",
  "roxmltree",
  "tempfile",
@@ -1241,18 +1241,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "craft-ui"
+name = "mahay-ui"
 version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51eeb3de70e735c8ce87a59a7dedd47675"
+source = "git+https://github.com/raantss18/mahay?rev=5c874d51eeb3de70e735c8ce87a59a7dedd47675#5c874d51eeb3de70e735c8ce87a59a7dedd47675"
 dependencies = [
  "egui",
  "serde",
 ]
 
 [[package]]
-name = "craft-winprint-gdi"
+name = "mahay-winprint-gdi"
 version = "0.1.0"
-source = "git+https://github.com/storytold/winprint.rs?rev=417ac3c4d14d3da5485a99c7d5ce8f05664ec312#417ac3c4d14d3da5485a99c7d5ce8f05664ec312"
+source = "git+https://github.com/raantss18/winprint.rs?rev=417ac3c4d14d3da5485a99c7d5ce8f05664ec312#417ac3c4d14d3da5485a99c7d5ce8f05664ec312"
 dependencies = [
  "windows-sys 0.61.2",
 ]
@@ -4617,7 +4617,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft"
+name = "sary"
 version = "0.10.0"
 dependencies = [
  "arboard",
@@ -4634,19 +4634,19 @@ dependencies = [
  "objc2-app-kit 0.3.2",
  "objc2-foundation 0.3.2",
  "open",
- "photocraft-automation",
- "photocraft-cms",
- "photocraft-codecs",
- "photocraft-color",
- "photocraft-compose",
- "photocraft-doc",
- "photocraft-engine",
- "photocraft-format",
- "photocraft-geom",
- "photocraft-io",
- "photocraft-raster",
- "photocraft-tablet",
- "photocraft-ui-egui",
+ "sary-automation",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
+ "sary-raster",
+ "sary-tablet",
+ "sary-ui-egui",
  "resvg",
  "rfd",
  "ron",
@@ -4662,7 +4662,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-affinity"
+name = "sary-affinity"
 version = "0.10.0"
 dependencies = [
  "crc32fast",
@@ -4672,12 +4672,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-algo"
+name = "sary-algo"
 version = "0.10.0"
 dependencies = [
- "photocraft-color",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
  "rayon",
  "rustfft",
  "serde",
@@ -4685,19 +4685,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-automation"
+name = "sary-automation"
 version = "0.10.0"
 dependencies = [
  "base64 0.22.1",
  "cap-std",
  "getrandom 0.3.4",
- "photocraft-codecs",
- "photocraft-compose",
- "photocraft-doc",
- "photocraft-engine",
- "photocraft-format",
- "photocraft-geom",
- "photocraft-io",
+ "sary-codecs",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
  "rmcp",
  "schemars",
  "serde",
@@ -4707,21 +4707,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-cli"
+name = "sary-cli"
 version = "0.10.0"
 dependencies = [
- "photocraft-automation",
- "photocraft-codecs",
- "photocraft-engine",
- "photocraft-format",
- "photocraft-io",
+ "sary-automation",
+ "sary-codecs",
+ "sary-engine",
+ "sary-format",
+ "sary-io",
  "serde_json",
  "tokio",
  "winresource",
 ]
 
 [[package]]
-name = "photocraft-cms"
+name = "sary-cms"
 version = "0.10.0"
 dependencies = [
  "moxcms",
@@ -4729,7 +4729,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-codecs"
+name = "sary-codecs"
 version = "0.10.0"
 dependencies = [
  "exr",
@@ -4738,7 +4738,7 @@ dependencies = [
  "image",
  "image-webp",
  "jpeg-encoder",
- "photocraft-heif",
+ "sary-heif",
  "png 0.18.1",
  "proptest",
  "rayon",
@@ -4750,66 +4750,66 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-color"
+name = "sary-color"
 version = "0.10.0"
 dependencies = [
- "photocraft-cms",
+ "sary-cms",
  "serde",
 ]
 
 [[package]]
-name = "photocraft-compose"
+name = "sary-compose"
 version = "0.10.0"
 dependencies = [
  "criterion",
- "photocraft-color",
- "photocraft-doc",
- "photocraft-geom",
- "photocraft-paint",
- "photocraft-raster",
- "photocraft-vector",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-paint",
+ "sary-raster",
+ "sary-vector",
  "proptest",
  "rayon",
 ]
 
 [[package]]
-name = "photocraft-doc"
+name = "sary-doc"
 version = "0.10.0"
 dependencies = [
- "photocraft-color",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
  "serde",
  "serde_json",
 ]
 
 [[package]]
-name = "photocraft-engine"
+name = "sary-engine"
 version = "0.10.0"
 dependencies = [
  "blake3",
- "craft-print",
+ "mahay-print",
  "exr",
  "flate2",
- "photocraft-affinity",
- "photocraft-algo",
- "photocraft-cms",
- "photocraft-codecs",
- "photocraft-color",
- "photocraft-compose",
- "photocraft-doc",
- "photocraft-format",
- "photocraft-geom",
- "photocraft-io",
- "photocraft-ipp",
- "photocraft-ops",
- "photocraft-paint",
- "photocraft-plugins",
- "photocraft-psd",
- "photocraft-raster",
- "photocraft-raw",
- "photocraft-text",
- "photocraft-vector",
+ "sary-affinity",
+ "sary-algo",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-format",
+ "sary-geom",
+ "sary-io",
+ "sary-ipp",
+ "sary-ops",
+ "sary-paint",
+ "sary-plugins",
+ "sary-psd",
+ "sary-raster",
+ "sary-raw",
+ "sary-text",
+ "sary-vector",
  "rayon",
  "roxmltree",
  "serde",
@@ -4820,18 +4820,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-format"
+name = "sary-format"
 version = "0.10.0"
 dependencies = [
  "blake3",
  "crc32fast",
  "flate2",
  "libc",
- "photocraft-codecs",
- "photocraft-color",
- "photocraft-doc",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-codecs",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-raster",
  "proptest",
  "rustix 1.1.5",
  "ruzstd",
@@ -4841,59 +4841,59 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-geom"
+name = "sary-geom"
 version = "0.10.0"
 dependencies = [
  "serde",
 ]
 
 [[package]]
-name = "photocraft-gpu"
+name = "sary-gpu"
 version = "0.10.0"
 dependencies = [
  "half",
  "log",
- "photocraft-color",
- "photocraft-compose",
- "photocraft-doc",
- "photocraft-geom",
- "photocraft-raster",
- "photocraft-vector",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-geom",
+ "sary-raster",
+ "sary-vector",
  "pollster 1.0.1",
  "rayon",
  "wgpu",
 ]
 
 [[package]]
-name = "photocraft-heif"
+name = "sary-heif"
 version = "0.10.0"
 dependencies = [
  "heic-rs",
 ]
 
 [[package]]
-name = "photocraft-io"
+name = "sary-io"
 version = "0.10.0"
 dependencies = [
  "blake3",
- "craft-docpath",
+ "mahay-docpath",
  "crc32fast",
  "flate2",
- "photocraft-affinity",
- "photocraft-algo",
- "photocraft-cms",
- "photocraft-codecs",
- "photocraft-color",
- "photocraft-compose",
- "photocraft-doc",
- "photocraft-format",
- "photocraft-geom",
- "photocraft-paint",
- "photocraft-psd",
- "photocraft-raster",
- "photocraft-raw",
- "photocraft-text",
- "photocraft-vector",
+ "sary-affinity",
+ "sary-algo",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-format",
+ "sary-geom",
+ "sary-paint",
+ "sary-psd",
+ "sary-raster",
+ "sary-raw",
+ "sary-text",
+ "sary-vector",
  "proptest",
  "resvg",
  "roxmltree",
@@ -4902,34 +4902,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-ipp"
+name = "sary-ipp"
 version = "0.10.0"
 
 [[package]]
-name = "photocraft-ops"
+name = "sary-ops"
 version = "0.10.0"
 dependencies = [
- "photocraft-doc",
+ "sary-doc",
 ]
 
 [[package]]
-name = "photocraft-paint"
+name = "sary-paint"
 version = "0.10.0"
 dependencies = [
- "photocraft-color",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
  "serde",
  "serde_json",
 ]
 
 [[package]]
-name = "photocraft-plugins"
+name = "sary-plugins"
 version = "0.10.0"
 dependencies = [
- "photocraft-color",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
  "rayon",
  "serde",
  "serde_json",
@@ -4939,34 +4939,34 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-psd"
+name = "sary-psd"
 version = "0.10.0"
 dependencies = [
  "flate2",
- "photocraft-psd",
+ "sary-psd",
  "proptest",
  "serde",
  "thiserror 2.0.21",
 ]
 
 [[package]]
-name = "photocraft-raster"
+name = "sary-raster"
 version = "0.10.0"
 dependencies = [
- "photocraft-color",
- "photocraft-geom",
+ "sary-color",
+ "sary-geom",
  "proptest",
  "serde",
 ]
 
 [[package]]
-name = "photocraft-raw"
+name = "sary-raw"
 version = "0.10.0"
 dependencies = [
  "flate2",
  "image",
  "jxl-oxide",
- "photocraft-raw",
+ "sary-raw",
  "png 0.18.1",
  "rayon",
  "zune-core 0.5.3",
@@ -4975,7 +4975,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-tablet"
+name = "sary-tablet"
 version = "0.10.0"
 dependencies = [
  "block2 0.6.2",
@@ -4987,37 +4987,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-testkit"
+name = "sary-testkit"
 version = "0.10.0"
 dependencies = [
  "memory-stats",
- "photocraft-color",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-color",
+ "sary-geom",
+ "sary-raster",
  "serde_json",
 ]
 
 [[package]]
-name = "photocraft-text"
+name = "sary-text"
 version = "0.10.0"
 dependencies = [
  "flate2",
  "parley",
- "photocraft-color",
- "photocraft-doc",
- "photocraft-geom",
- "photocraft-psd",
- "photocraft-raster",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-psd",
+ "sary-raster",
  "skrifa",
 ]
 
 [[package]]
-name = "photocraft-ui-egui"
+name = "sary-ui-egui"
 version = "0.10.0"
 dependencies = [
  "base64 0.22.1",
- "craft-print",
- "craft-ui",
+ "mahay-print",
+ "mahay-ui",
  "eframe",
  "egui",
  "egui_extras",
@@ -5025,25 +5025,25 @@ dependencies = [
  "epaint_default_fonts",
  "flate2",
  "log",
- "photocraft-algo",
- "photocraft-cms",
- "photocraft-codecs",
- "photocraft-color",
- "photocraft-compose",
- "photocraft-doc",
- "photocraft-engine",
- "photocraft-format",
- "photocraft-geom",
- "photocraft-gpu",
- "photocraft-io",
- "photocraft-paint",
- "photocraft-plugins",
- "photocraft-psd",
- "photocraft-raster",
- "photocraft-raw",
- "photocraft-testkit",
- "photocraft-text",
- "photocraft-vector",
+ "sary-algo",
+ "sary-cms",
+ "sary-codecs",
+ "sary-color",
+ "sary-compose",
+ "sary-doc",
+ "sary-engine",
+ "sary-format",
+ "sary-geom",
+ "sary-gpu",
+ "sary-io",
+ "sary-paint",
+ "sary-plugins",
+ "sary-psd",
+ "sary-raster",
+ "sary-raw",
+ "sary-testkit",
+ "sary-text",
+ "sary-vector",
  "rayon",
  "serde",
  "serde_json",
@@ -5054,31 +5054,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-vector"
+name = "sary-vector"
 version = "0.10.0"
 dependencies = [
- "photocraft-color",
- "photocraft-doc",
- "photocraft-geom",
- "photocraft-raster",
+ "sary-color",
+ "sary-doc",
+ "sary-geom",
+ "sary-raster",
  "rayon",
 ]
 
 [[package]]
-name = "photocraft-web"
+name = "sary-web"
 version = "0.10.0"
 dependencies = [
  "eframe",
  "egui",
  "js-sys",
  "log",
- "photocraft-codecs",
- "photocraft-doc",
- "photocraft-engine",
- "photocraft-io",
- "photocraft-paint",
- "photocraft-psd",
- "photocraft-ui-egui",
+ "sary-codecs",
+ "sary-doc",
+ "sary-engine",
+ "sary-io",
+ "sary-paint",
+ "sary-psd",
+ "sary-ui-egui",
  "rfd",
  "serde_json",
  "wasm-bindgen",
@@ -5087,7 +5087,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "photocraft-web-boot"
+name = "sary-web-boot"
 version = "0.10.0"
 dependencies = [
  "flate2",
@@ -8447,7 +8447,7 @@ dependencies = [
 [[package]]
 name = "winprint"
 version = "0.2.1"
-source = "git+https://github.com/storytold/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9baf6b58937c401656634e42d33f00ddf49"
+source = "git+https://github.com/raantss18/winprint.rs?rev=5f80b9baf6b58937c401656634e42d33f00ddf49#5f80b9baf6b58937c401656634e42d33f00ddf49"
 dependencies = [
  "flate2",
  "fmt-derive",

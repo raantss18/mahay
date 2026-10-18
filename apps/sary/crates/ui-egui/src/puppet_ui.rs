@@ -11,13 +11,13 @@
 use std::sync::Arc;
 
 use egui::{Color32, Stroke, TextureHandle, pos2, vec2};
-use photocraft_algo::puppet::{ITERATIONS, PuppetDensity, PuppetMesh, PuppetMode, PuppetPin, PuppetSolver, PuppetWarp, build_mesh};
-use photocraft_doc::{Document, LayerId};
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_algo::puppet::{ITERATIONS, PuppetDensity, PuppetMesh, PuppetMode, PuppetPin, PuppetSolver, PuppetWarp, build_mesh};
+use sary_doc::{Document, LayerId};
+use sary_geom::Rect;
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 
 pub struct PuppetSession {
@@ -168,7 +168,7 @@ fn dist(a: [f64; 2], b: [f64; 2]) -> f64 {
 }
 
 /// Starts Puppet Warp on the active layer.
-pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context, command: &str) -> Result<(), String> {
+pub fn begin(app: &mut SaryApp, ctx: &egui::Context, command: &str) -> Result<(), String> {
     if app.ui.transform.is_some() {
         return Err("finish Free Transform first".into());
     }
@@ -213,7 +213,7 @@ pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context, command: &str) -> Res
     Ok(())
 }
 
-pub fn commit(app: &mut PhotocraftApp) {
+pub fn commit(app: &mut SaryApp) {
     let Some(s) = app.distort.puppet.take() else { return };
     if s.warp.is_identity() {
         return;
@@ -224,7 +224,7 @@ pub fn commit(app: &mut PhotocraftApp) {
 }
 
 /// Control channel: `edit.puppetWarp {"ui": {...}}` while the mode is active.
-pub fn control(app: &mut PhotocraftApp, ui: &Value) -> Result<Value, String> {
+pub fn control(app: &mut SaryApp, ui: &Value) -> Result<Value, String> {
     if ui.get("commit").and_then(Value::as_bool) == Some(true) {
         commit(app);
         return Ok(json!({"committed": true}));
@@ -266,7 +266,7 @@ pub fn control(app: &mut PhotocraftApp, ui: &Value) -> Result<Value, String> {
     Ok(s.describe())
 }
 
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) {
     let tol = crate::distort_ui::tolerance(app);
     let Some(s) = app.distort.puppet.as_mut() else { return };
     match ev {
@@ -361,7 +361,7 @@ pub fn draw(s: &PuppetSession, painter: &egui::Painter, xf: &ViewXform) {
     }
 }
 
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     let Some(s) = app.distort.puppet.as_mut() else { return };
     // Pin depth, rotation and Remove All Pins are undoable pin edits too.
     let pins_before = s.warp.pins.clone();
@@ -458,7 +458,7 @@ mod tests {
     #[test]
     fn session_is_dropped_when_another_document_becomes_active() {
         let ctx = egui::Context::default();
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 100, "height": 80, "depth": 8})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -491,7 +491,7 @@ mod tests {
     #[test]
     fn pin_edits_undo_and_redo_inside_the_session() {
         let ctx = egui::Context::default();
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 100, "height": 80, "depth": 8})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -502,8 +502,8 @@ mod tests {
             .unwrap();
         app.sync_views();
         crate::distort_ui::menu(&mut app, &ctx, "edit.puppetWarp", &json!({})).unwrap().unwrap();
-        let ev = |app: &mut PhotocraftApp, e| crate::distort_ui::pointer(app, e, egui::Modifiers::NONE);
-        let pins = |app: &PhotocraftApp| app.distort.puppet.as_ref().unwrap().warp.pins.iter().map(|p| p.dst).collect::<Vec<_>>();
+        let ev = |app: &mut SaryApp, e| crate::distort_ui::pointer(app, e, egui::Modifiers::NONE);
+        let pins = |app: &SaryApp| app.distort.puppet.as_ref().unwrap().warp.pins.iter().map(|p| p.dst).collect::<Vec<_>>();
         ev(&mut app, ToolEvent::Down { x: 25.0, y: 40.0, pressure: 1.0 });
         ev(&mut app, ToolEvent::Up { x: 25.0, y: 40.0 });
         ev(&mut app, ToolEvent::Down { x: 75.0, y: 40.0, pressure: 1.0 });
@@ -517,7 +517,7 @@ mod tests {
         crate::distort_ui::pointer(&mut app, ToolEvent::Down { x: 25.0, y: 40.0, pressure: 1.0 }, egui::Modifiers { alt: true, ..Default::default() });
         assert_eq!(pins(&app), [[75.0, 20.0]]);
         // ⌘Z, through the keyboard: the removed pin comes back, then the drag is undone.
-        let press = |app: &mut PhotocraftApp, modifiers: egui::Modifiers| {
+        let press = |app: &mut SaryApp, modifiers: egui::Modifiers| {
             let ev = egui::Event::Key { key: egui::Key::Z, physical_key: None, pressed: true, repeat: false, modifiers };
             let input = egui::RawInput { events: vec![ev], ..Default::default() };
             ctx.run_ui(input, |ui| assert!(crate::distort_ui::keys(app, ui.ctx()))).textures_delta.clear();
@@ -548,7 +548,7 @@ mod tests {
     #[test]
     fn pins_drag_and_commit_through_the_engine() {
         let ctx = egui::Context::default();
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 100, "height": 80, "depth": 8})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -559,7 +559,7 @@ mod tests {
             .unwrap();
         app.sync_views();
         crate::distort_ui::menu(&mut app, &ctx, "edit.puppetWarp", &json!({})).unwrap().unwrap();
-        let ev = |app: &mut PhotocraftApp, e| crate::distort_ui::pointer(app, e, egui::Modifiers::NONE);
+        let ev = |app: &mut SaryApp, e| crate::distort_ui::pointer(app, e, egui::Modifiers::NONE);
         // Two pins: hold the left end, drag the right end up.
         ev(&mut app, ToolEvent::Down { x: 25.0, y: 40.0, pressure: 1.0 });
         ev(&mut app, ToolEvent::Up { x: 25.0, y: 40.0 });
@@ -593,7 +593,7 @@ mod tests {
         // #951: remeshing to no vertices rebound the pins to a vertex that doesn't exist and
         // panicked. -50 is the options bar's minimum and also empties this 20 px tall bar.
         let ctx = egui::Context::default();
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 100, "height": 80, "depth": 8})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session

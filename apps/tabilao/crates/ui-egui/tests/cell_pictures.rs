@@ -5,9 +5,9 @@ use std::sync::{Arc, Mutex};
 
 use egui::{Rect, Shape, TextureId, vec2};
 use egui_kittest::kittest::Queryable;
-use gridcraft_engine::Session;
-use gridcraft_engine::core::{CellRef, Value};
-use gridcraft_ui_egui::{Inbox, Services, SheetApp, grid::Geo};
+use tabilao_engine::Session;
+use tabilao_engine::core::{CellRef, Value};
+use tabilao_ui_egui::{Inbox, Services, SheetApp, grid::Geo};
 use serde_json::json;
 
 fn png() -> Vec<u8> {
@@ -64,7 +64,7 @@ fn image_meshes(h: &egui_kittest::Harness<'static, SheetApp>) -> Vec<(Rect, Rect
 #[test]
 fn picture_file_pickers_preserve_placement_and_isolate_canceled_results() {
     let bytes = png();
-    let path = std::env::temp_dir().join(format!("gridcraft-cell-picture-ui-{}.png", std::process::id()));
+    let path = std::env::temp_dir().join(format!("tabilao-cell-picture-ui-{}.png", std::process::id()));
     std::fs::write(&path, &bytes).unwrap();
     let chosen = path.to_string_lossy().to_string();
     let mut h = harness(Services { pick_picture: Some(Box::new(move || Some(chosen.clone()))), ..Default::default() });
@@ -113,7 +113,7 @@ fn picture_file_pickers_preserve_placement_and_isolate_canceled_results() {
 fn pictures_fit_current_geometry_and_selection_cannot_erase_them() {
     let mut h = harness(Default::default());
     h.state_mut()
-        .run("insert.picture", json!({"base64": gridcraft_engine::io::base64_encode(&png()), "placement": "cell", "alt": "Three stripes"}))
+        .run("insert.picture", json!({"base64": tabilao_engine::io::base64_encode(&png()), "placement": "cell", "alt": "Three stripes"}))
         .unwrap();
     h.state_mut().run("home.rowHeight", json!({"height": 100})).unwrap();
     h.state_mut().run("home.columnWidth", json!({"width": 150})).unwrap();

@@ -1,6 +1,6 @@
 [package]
-name = "artcraft-launcher-ui-egui"
-description = "ArtCraft Launcher's egui interface, shared by the desktop and web builds"
+name = "trano-ui-egui"
+description = "Mahay Trano's egui interface, shared by the desktop and web builds"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,7 +11,7 @@ publish = false
 workspace = true
 
 [dependencies]
-artcraft-launcher-core = { workspace = true }
+trano-core = { workspace = true }
 egui = { workspace = true }
 egui_extras = { workspace = true, features = ["image", "svg"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }

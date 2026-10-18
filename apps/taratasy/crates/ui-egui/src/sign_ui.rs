@@ -5,13 +5,13 @@
 use std::path::PathBuf;
 
 use egui::{Align, Color32, CornerRadius, Layout, Pos2, Rect, Stroke, vec2};
-use pdfcraft_engine::sign::{self, Appearance, AppearanceLabels, Certificate, DigitalId, Name, PrivateKey};
-use pdfcraft_engine::{SignOptions, SignatureImage, SignatureInfo, SignatureStatus};
+use taratasy_engine::sign::{self, Appearance, AppearanceLabels, Certificate, DigitalId, Name, PrivateKey};
+use taratasy_engine::{SignOptions, SignatureImage, SignatureInfo, SignatureStatus};
 
 use crate::canvas::{DocView, PageXform, Snapshot, SnapshotKind};
 use crate::fill_sign::SavedSig;
 use crate::theme::{self, Tokens};
-use crate::{PdfCraftApp, icons, widgets};
+use crate::{TaratasyApp, icons, widgets};
 
 /// A digital ID the app knows about (Acrobat: Digital ID files). The file stays where it is;
 /// its password is asked for at each signing.
@@ -22,7 +22,7 @@ pub struct DigitalIdEntry {
     pub issuer: String,
     pub email: String,
     pub expires: String,
-    /// Why the ID can't sign (a Windows store certificate whose key PdfCraft can't use): shown
+    /// Why the ID can't sign (a Windows store certificate whose key Taratasy can't use): shown
     /// greyed with the reason, and never selectable.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub unusable: Option<String>,
@@ -151,7 +151,7 @@ pub struct SignView {
 }
 
 /// Drag a signature rectangle on one page (Digitally sign, Certify (visible signature)).
-pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, xf: &PageXform, page: usize, info: &pdfcraft_render::DocInfo, view: &mut DocView) {
+pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, xf: &PageXform, page: usize, info: &taratasy_render::DocInfo, view: &mut DocView) {
     let pointer = ui.input(|i| i.pointer.hover_pos());
     let origin = ui.input(|i| i.pointer.press_origin());
     if pointer.is_some_and(|p| xf.rect.contains(p)) {
@@ -185,8 +185,8 @@ pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, xf: &PageXform, p
     }
 }
 
-/// Where new digital IDs are saved: next to the recovery folder (`…/PdfCraft/Digital IDs`, or
-/// `PdfCraftData/Digital IDs` in portable mode).
+/// Where new digital IDs are saved: next to the recovery folder (`…/Taratasy/Digital IDs`, or
+/// `TaratasyData/Digital IDs` in portable mode).
 fn id_dir() -> Option<PathBuf> {
     crate::recovery::RecoveryStore::default_dir().and_then(|d| d.parent().map(|p| p.join("Digital IDs")))
 }
@@ -265,7 +265,7 @@ fn entry_unusable(u: &sign::windows::Unusable) -> DigitalIdEntry {
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// Export certificate: write `c` as PEM into a chosen folder, named after its subject.
     pub(crate) fn export_certificate(&mut self, c: &Certificate) {
         let name = format!("{}.cer", crate::files::attachment_file_name(&c.display_name()));
@@ -513,7 +513,7 @@ impl PdfCraftApp {
             }
             // Scanned paper becomes transparent, as for Fill & Sign image signatures.
             let image = std::fs::File::open(path)
-                .map_err(pdfcraft_engine::signature_image::SignatureImageError::from)
+                .map_err(taratasy_engine::signature_image::SignatureImageError::from)
                 .and_then(SignatureImage::read)
                 .and_then(|image| image.remove_white_background(245, 35));
             match (image, app.sign_draft.as_mut()) {
@@ -636,7 +636,7 @@ impl PdfCraftApp {
 }
 
 /// Draw the signing dialogs; returns `true` when the dialog should close.
-pub(crate) fn dialog(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> bool {
+pub(crate) fn dialog(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens) -> bool {
     let Some(step) = app.sign_draft.as_ref().map(|d| d.step) else { return true };
     match step {
         SignStep::Choose => choose(ui, app, t),
@@ -659,7 +659,7 @@ fn error(ui: &mut egui::Ui, err: &Option<String>) {
     }
 }
 
-fn choose(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> bool {
+fn choose(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens) -> bool {
     title(ui, "Sign with a Digital ID");
     ui.label(tl!("Choose the digital ID that you want to use for signing:"));
     ui.add_space(6.0);
@@ -769,7 +769,7 @@ fn choose(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> bool {
     close
 }
 
-fn configure(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> bool {
+fn configure(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens) -> bool {
     title(ui, "Configure a Digital ID for Signing");
     let Some(d) = app.sign_draft.as_mut() else { return true };
     let mut close = false;
@@ -972,7 +972,7 @@ fn preview(
     ui.painter().galley(egui::pos2(x, inner.center().y - galley.size().y / 2.0), galley, Color32::BLACK);
 }
 
-fn sign_as(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> bool {
+fn sign_as(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens) -> bool {
     let ids = app.digital_ids.clone();
     // The time as the signature will show it (signing takes the session clock then).
     let date = sign::pdf::display_date(&app.session.signing_date());
@@ -1067,9 +1067,9 @@ fn sign_as(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> bool {
             ui.label("");
             ui.label(
                 egui::RichText::new(if entry.path.starts_with("windows:") {
-                    tl!("The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.")
+                    tl!("The key is in the Windows certificate store, which may ask to allow Taratasy to use it.")
                 } else {
-                    tl!("The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.")
+                    tl!("The key is in the macOS Keychain, which may ask to allow Taratasy to use it.")
                 })
                 .small()
                 .color(t.text_muted),
@@ -1481,7 +1481,7 @@ mod tests {
     fn scratch() -> PathBuf {
         static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
         let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let d = std::env::temp_dir().join(format!("pdfcraft-sign-ui-{}-{n}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("taratasy-sign-ui-{}-{n}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -1490,7 +1490,7 @@ mod tests {
     /// Create a digital ID named "Grace Hopper" in `dir`, as Configure New Digital ID ▸ Create
     /// does. Returns where it was saved.
     fn create_in(dir: &std::path::Path) -> Result<PathBuf, String> {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.export_dir_override = Some(dir.to_string_lossy().into_owned());
         let mut draft = SignDraft::new(0, None, None, None, &[]);
         // P-256 keeps the test fast.
@@ -1509,7 +1509,7 @@ mod tests {
         std::fs::create_dir_all(&out).unwrap();
         let key = PrivateKey::generate_p256().unwrap();
         let cert = Certificate::self_signed(&Name::build("../x", "", "", "", ""), &key, sign::Time::from_unix(0), 1, &[1]).unwrap();
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.export_dir_override = Some(out.to_string_lossy().into_owned());
         app.export_certificate(&cert);
         let written: Vec<_> = std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().file_name()).collect();
@@ -1590,7 +1590,7 @@ mod tests {
         let dir = scratch();
         let file = dir.join("old.p12");
         std::fs::write(&file, b"not opened").unwrap();
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.digital_ids = vec![listed("windows:abc", "Store"), listed(&file.to_string_lossy(), "Old"), listed("/ids/new.p12", "New")];
         let mut draft = SignDraft::new(0, None, None, None, &app.digital_ids);
         draft.selected = Some(2);
@@ -1609,7 +1609,7 @@ mod tests {
         // leaves only the store ID, which isn't saved.
         assert!(app.remove_digital_id(1));
         assert_eq!(app.sign_draft.as_ref().unwrap().selected, Some(0));
-        let mut fresh = PdfCraftApp::new();
+        let mut fresh = TaratasyApp::new();
         fresh.restore(&app.persist());
         assert!(fresh.digital_ids.is_empty(), "the removal survives a restart: {:?}", fresh.digital_ids);
         let _ = std::fs::remove_dir_all(&dir);

@@ -4,34 +4,34 @@
 use egui::{Modifiers, PointerButton, Pos2, Rect, accesskit::Role, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
-use photocraft_doc::LayerId;
+use sary_doc::LayerId;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::layer_row_ui::{Indicator, RowRects, recorded};
 
 /// `a` with a Drop Shadow and a Color Overlay, and `b` above it without effects.
-fn harness() -> (Harness<'static, PhotocraftApp>, LayerId, LayerId) {
-    let mut s = photocraft_engine::Session::new();
+fn harness() -> (Harness<'static, SaryApp>, LayerId, LayerId) {
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 64, "height": 48})).unwrap();
     let a = s.execute("layer.new.layer", json!({"name": "a"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.layerStyle.dropShadow", json!({})).unwrap();
     s.execute("layer.layerStyle.colorOverlay", json!({"color": "#ff8000"})).unwrap();
     let b = s.execute("layer.new.layer", json!({"name": "b"})).unwrap()["layer"].as_u64().unwrap();
     let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(s, crate::Services::default())
     });
     h.run_steps(8);
     (h, LayerId(a), LayerId(b))
 }
 
-fn row(h: &Harness<'_, PhotocraftApp>, id: LayerId) -> RowRects {
+fn row(h: &Harness<'_, SaryApp>, id: LayerId) -> RowRects {
     recorded(&h.ctx).into_iter().find(|r| r.layer == id.0).unwrap()
 }
 
 /// The effect row `name` under layer `id`'s row.
-fn effect_row(h: &Harness<'_, PhotocraftApp>, id: LayerId, name: &str) -> Rect {
+fn effect_row(h: &Harness<'_, SaryApp>, id: LayerId, name: &str) -> Rect {
     let layer = row(h, id).row;
     h.query_all_by_role(Role::Button)
         .filter(|n| n.accesskit_node().label().as_deref() == Some(name))
@@ -40,12 +40,12 @@ fn effect_row(h: &Harness<'_, PhotocraftApp>, id: LayerId, name: &str) -> Rect {
         .unwrap_or_else(|| panic!("no {name} row under the layer"))
 }
 
-fn effects(h: &Harness<'_, PhotocraftApp>, id: LayerId) -> Vec<&'static str> {
-    h.state().session.active().unwrap().doc.layer(id).unwrap().effects.items.iter().map(photocraft_doc::Effect::label).collect()
+fn effects(h: &Harness<'_, SaryApp>, id: LayerId) -> Vec<&'static str> {
+    h.state().session.active().unwrap().doc.layer(id).unwrap().effects.items.iter().map(sary_doc::Effect::label).collect()
 }
 
 /// A real press, drag and release, `modifiers` held throughout.
-fn drag(h: &mut Harness<'_, PhotocraftApp>, from: Pos2, to: Pos2, modifiers: Modifiers) {
+fn drag(h: &mut Harness<'_, SaryApp>, from: Pos2, to: Pos2, modifiers: Modifiers) {
     h.event(egui::Event::ModifiersChanged(modifiers));
     h.hover_at(from);
     h.run_steps(1);
@@ -86,7 +86,7 @@ fn dragging_effects_onto_a_layer_moves_them_and_alt_copies() {
 }
 
 /// The Layers panel footer's Delete button.
-fn trash_button(h: &Harness<'_, PhotocraftApp>) -> Pos2 {
+fn trash_button(h: &Harness<'_, SaryApp>) -> Pos2 {
     h.query_all_by_role(Role::Button).find(|n| n.accesskit_node().label().as_deref() == Some("Delete layer")).unwrap().rect().center()
 }
 

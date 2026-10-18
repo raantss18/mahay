@@ -6,7 +6,7 @@
 
 use serde_json::{Map, Value};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Whether holding Alt turns Cancel into Reset for this dialog's fields.
 pub fn supported(fields: &Map<String, Value>) -> bool {
@@ -17,7 +17,7 @@ pub fn supported(fields: &Map<String, Value>) -> bool {
 }
 
 /// Apply Reset in place. No-op when the dialog has not opted in.
-pub fn apply(app: &mut PhotocraftApp, ctx: &egui::Context, fields: &mut Map<String, Value>) {
+pub fn apply(app: &mut SaryApp, ctx: &egui::Context, fields: &mut Map<String, Value>) {
     if fields.get("__altReset") == Some(&Value::Bool(false)) {
         return;
     }

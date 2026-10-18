@@ -1,6 +1,6 @@
 //! Detect Apple's first-key Korean IME fallback. Never compose or rewrite text.
 //!
-//! PdfCraft patch: from rust-windowing/winit#4744 (see `WinitView::key_down`).
+//! Taratasy patch: from rust-windowing/winit#4744 (see `WinitView::key_down`).
 #[derive(Debug, Default)]
 pub(super) struct ImeStartup {
     source: String,

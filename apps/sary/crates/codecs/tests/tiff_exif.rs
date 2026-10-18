@@ -2,7 +2,7 @@
 //! written as the TIFF's own directories (IFD0 pointing to them, as cameras and Photoshop write
 //! them) and read back into a block.
 
-use photocraft_codecs::*;
+use sary_codecs::*;
 
 /// A classic TIFF stream builder for EXIF blocks: directories of (tag, type, count, value bytes).
 struct Block {

@@ -2,7 +2,7 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_model::{ShapeKind, defaults};
+use seho_model::{ShapeKind, defaults};
 
 fn png() -> Vec<u8> {
     let mut out = Cursor::new(vec![]);
@@ -14,7 +14,7 @@ fn png() -> Vec<u8> {
 
 /// An exported deck with `parts` added (or replaced) and `edit` applied to every part's text.
 fn with_parts(parts: &[(&str, Vec<u8>)], edit: impl Fn(&str, String) -> String) -> Vec<u8> {
-    let base = deckcraft_pptx::export(&defaults::new_presentation(None)).expect("export");
+    let base = seho_pptx::export(&defaults::new_presentation(None)).expect("export");
     let mut z = zip::ZipArchive::new(Cursor::new(base)).expect("zip");
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let o = zip::write::SimpleFileOptions::default();
@@ -76,7 +76,7 @@ fn ole_deck(spid_in_vml: &str) -> Vec<u8> {
 }
 
 fn object_preview(bytes: &[u8]) -> Option<Vec<u8>> {
-    let p = deckcraft_pptx::import(bytes).expect("import");
+    let p = seho_pptx::import(bytes).expect("import");
     let s = p.slides[0].shapes.iter().find(|s| s.name == "Object 3").expect("object");
     match &s.kind {
         ShapeKind::Opaque { preview, label, .. } => {

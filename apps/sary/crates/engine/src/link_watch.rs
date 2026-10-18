@@ -1,7 +1,7 @@
 //! Linked smart objects follow their files while the document is open, as in Photoshop
 //! ("Linked Smart Objects update automatically when the Photoshop document is open, provided the
 //! source file has changed", <https://helpx.adobe.com/photoshop/desktop/create-manage-layers/smart-objects/update-linked-smart-objects.html>):
-//! a file another app saves (VectorCraft, LightCraft, Illustrator) updates its layers without
+//! a file another app saves (Tsipika, Hazavana, Illustrator) updates its layers without
 //! Layer › Smart Objects › Update Modified Content.
 //!
 //! The active document's linked files are compared by size and modification time with what they
@@ -23,7 +23,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use photocraft_doc::{Document, LayerContent, LayerId, SmartSource};
+use sary_doc::{Document, LayerContent, LayerId, SmartSource};
 use serde_json::{Value, json};
 
 use crate::{EngineError, Result, Session};
@@ -177,13 +177,13 @@ impl Session {
 
 #[cfg(test)]
 mod tests {
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
     use serde_json::json;
 
     use crate::{EngineError, Session};
 
     fn dir(name: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("photocraft-link-watch-{name}-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("sary-link-watch-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -218,7 +218,7 @@ mod tests {
     }
 
     fn centre(s: &Session) -> [f32; 3] {
-        let p = photocraft_compose::render(&s.active().unwrap().doc, Rect::new(20, 20, 21, 21)).px[0];
+        let p = sary_compose::render(&s.active().unwrap().doc, Rect::new(20, 20, 21, 21)).px[0];
         [p[0], p[1], p[2]]
     }
 

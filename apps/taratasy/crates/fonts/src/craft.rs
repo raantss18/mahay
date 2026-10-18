@@ -1,11 +1,11 @@
-//! Fonts from the optional craft-fonts build input (<https://github.com/storytold/craft-fonts>).
+//! Fonts from the optional mahay-fonts build input (<https://github.com/raantss18/mahay>).
 //!
-//! `build.rs` embeds every font in craft-fonts' manifest when PdfCraft is built with
-//! `CRAFT_FONTS_DIR=<checkout>`; otherwise [`CRAFT_FONTS`] is empty and everything here returns
+//! `build.rs` embeds every font in mahay-fonts' manifest when Taratasy is built with
+//! `MAHAY_FONTS_DIR=<checkout>`; otherwise [`MAHAY_FONTS`] is empty and everything here returns
 //! nothing. Callers must work either way.
 
-/// A font from the optional craft-fonts build input (empty unless built with `CRAFT_FONTS_DIR`).
-pub struct CraftFont {
+/// A font from the optional mahay-fonts build input (empty unless built with `MAHAY_FONTS_DIR`).
+pub struct MahayFont {
     pub family: &'static str,
     pub style: &'static str,
     /// ISO 15924 scripts the font is for, e.g. `"Jpan"`.
@@ -13,9 +13,9 @@ pub struct CraftFont {
     pub bytes: &'static [u8],
 }
 
-include!(concat!(env!("OUT_DIR"), "/craft_fonts.rs"));
+include!(concat!(env!("OUT_DIR"), "/mahay_fonts.rs"));
 
-impl CraftFont {
+impl MahayFont {
     /// Whether the font is meant for `script` (ISO 15924, e.g. `"Jpan"`).
     pub fn covers(&self, script: &str) -> bool {
         self.scripts.contains(&script)
@@ -27,68 +27,68 @@ impl CraftFont {
     }
 }
 
-/// The `Jpan` craft-fonts faces in the order the interface prefers them: BIZ UDPGothic (a UI
-/// face) first, then the rest in manifest order. Empty without craft-fonts.
-pub fn ui_japanese_fonts() -> Vec<&'static CraftFont> {
-    let mut fonts: Vec<&CraftFont> = CRAFT_FONTS.iter().filter(|f| f.covers("Jpan")).collect();
+/// The `Jpan` mahay-fonts faces in the order the interface prefers them: BIZ UDPGothic (a UI
+/// face) first, then the rest in manifest order. Empty without mahay-fonts.
+pub fn ui_japanese_fonts() -> Vec<&'static MahayFont> {
+    let mut fonts: Vec<&MahayFont> = MAHAY_FONTS.iter().filter(|f| f.covers("Jpan")).collect();
     // Stable: manifest order within each group.
     fonts.sort_by_key(|f| f.family != "BIZ UDPGothic");
     fonts
 }
 
-/// The `Hans` craft-fonts faces for Simplified Chinese interface text, in manifest order.
-/// Empty when built without craft-fonts (Chinese text then shows the font system's
-/// replacement glyph, the same degraded mode as Japanese without craft-fonts).
-pub fn ui_chinese_fonts() -> Vec<&'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.covers("Hans")).collect()
+/// The `Hans` mahay-fonts faces for Simplified Chinese interface text, in manifest order.
+/// Empty when built without mahay-fonts (Chinese text then shows the font system's
+/// replacement glyph, the same degraded mode as Japanese without mahay-fonts).
+pub fn ui_chinese_fonts() -> Vec<&'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.covers("Hans")).collect()
 }
 
-/// The `Arab` craft-fonts faces for Arabic-script interface text (file names, document titles),
-/// in manifest order. Empty when built without craft-fonts or when it has no Arabic face.
-pub fn ui_arabic_fonts() -> Vec<&'static CraftFont> {
-    arabic(CRAFT_FONTS.iter())
+/// The `Arab` mahay-fonts faces for Arabic-script interface text (file names, document titles),
+/// in manifest order. Empty when built without mahay-fonts or when it has no Arabic face.
+pub fn ui_arabic_fonts() -> Vec<&'static MahayFont> {
+    arabic(MAHAY_FONTS.iter())
 }
 
 /// The face for Arabic text written into PDFs: the first `Arab` face. `None` when built without
-/// craft-fonts or when its revision has no Arabic face.
-pub fn document_arabic_font() -> Option<&'static CraftFont> {
+/// mahay-fonts or when its revision has no Arabic face.
+pub fn document_arabic_font() -> Option<&'static MahayFont> {
     ui_arabic_fonts().into_iter().next()
 }
 
-fn arabic<'a>(faces: impl IntoIterator<Item = &'a CraftFont>) -> Vec<&'a CraftFont> {
+fn arabic<'a>(faces: impl IntoIterator<Item = &'a MahayFont>) -> Vec<&'a MahayFont> {
     faces.into_iter().filter(|f| f.covers("Arab")).collect()
 }
 
-/// The `Telu` craft-fonts faces for Telugu interface text (the Telugu catalog, file names,
-/// document titles), in manifest order. Empty when built without craft-fonts or when it has no
+/// The `Telu` mahay-fonts faces for Telugu interface text (the Telugu catalog, file names,
+/// document titles), in manifest order. Empty when built without mahay-fonts or when it has no
 /// Telugu face.
-pub fn ui_telugu_fonts() -> Vec<&'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.covers("Telu")).collect()
+pub fn ui_telugu_fonts() -> Vec<&'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.covers("Telu")).collect()
 }
 
 /// Thai faces shared by the interface and PDF text writer.
-pub fn ui_thai_fonts() -> Vec<&'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.covers("Thai")).collect()
+pub fn ui_thai_fonts() -> Vec<&'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.covers("Thai")).collect()
 }
 
-pub fn document_thai_font() -> Option<&'static CraftFont> {
+pub fn document_thai_font() -> Option<&'static MahayFont> {
     ui_thai_fonts().into_iter().next()
 }
 
-/// The `Hebr` craft-fonts faces for Hebrew interface text (file names, document titles, text
-/// being edited), in manifest order. Empty when built without craft-fonts or when it has no
+/// The `Hebr` mahay-fonts faces for Hebrew interface text (file names, document titles, text
+/// being edited), in manifest order. Empty when built without mahay-fonts or when it has no
 /// Hebrew face.
-pub fn ui_hebrew_fonts() -> Vec<&'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.covers("Hebr")).collect()
+pub fn ui_hebrew_fonts() -> Vec<&'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.covers("Hebr")).collect()
 }
 
 /// The face for Hebrew text written into PDFs: the `Hebr` face of the asked weight, else its
-/// Regular, else any `Hebr` face. `None` without craft-fonts or without a Hebrew face.
-pub fn document_hebrew_font(bold: bool) -> Option<&'static CraftFont> {
-    hebrew_face(CRAFT_FONTS, bold)
+/// Regular, else any `Hebr` face. `None` without mahay-fonts or without a Hebrew face.
+pub fn document_hebrew_font(bold: bool) -> Option<&'static MahayFont> {
+    hebrew_face(MAHAY_FONTS, bold)
 }
 
-fn hebrew_face(faces: &[CraftFont], bold: bool) -> Option<&CraftFont> {
+fn hebrew_face(faces: &[MahayFont], bold: bool) -> Option<&MahayFont> {
     let hebr = || faces.iter().filter(|f| f.covers("Hebr"));
     let style = if bold { "Bold" } else { "Regular" };
     hebr().find(|f| f.style == style).or_else(|| hebr().find(|f| f.style == "Regular")).or_else(|| hebr().next())
@@ -102,12 +102,12 @@ fn hebrew_face(faces: &[CraftFont], bold: bool) -> Option<&CraftFont> {
 /// from Japanese faces) lands in a different face than its neighbours; the mixed vertical
 /// metrics then sink it below the line. Preferring the UI language's face keeps one line in
 /// one face with one baseline.
-pub fn ui_cjk_fonts(prefer_hans: bool) -> Vec<&'static CraftFont> {
-    order_cjk(CRAFT_FONTS.iter(), prefer_hans)
+pub fn ui_cjk_fonts(prefer_hans: bool) -> Vec<&'static MahayFont> {
+    order_cjk(MAHAY_FONTS.iter(), prefer_hans)
 }
 
-fn order_cjk<'a>(faces: impl IntoIterator<Item = &'a CraftFont>, prefer_hans: bool) -> Vec<&'a CraftFont> {
-    let mut out: Vec<&'a CraftFont> = faces.into_iter().filter(|f| f.covers("Hans") || f.covers("Jpan")).collect();
+fn order_cjk<'a>(faces: impl IntoIterator<Item = &'a MahayFont>, prefer_hans: bool) -> Vec<&'a MahayFont> {
+    let mut out: Vec<&'a MahayFont> = faces.into_iter().filter(|f| f.covers("Hans") || f.covers("Jpan")).collect();
     let first = if prefer_hans { "Hans" } else { "Jpan" };
     // The preferred script's faces first (a face covering both counts as preferred); within each
     // group the Japanese UI face (BIZ UDPGothic, not a serif) leads, otherwise manifest order
@@ -117,32 +117,32 @@ fn order_cjk<'a>(faces: impl IntoIterator<Item = &'a CraftFont>, prefer_hans: bo
 }
 
 /// The face for Japanese text written into PDFs (serif document text): Shippori Mincho, then
-/// BIZ UDMincho, then any other regular `Jpan` face. `None` without craft-fonts.
-pub fn document_japanese_font() -> Option<&'static CraftFont> {
-    document_face(CRAFT_FONTS, true, false)
+/// BIZ UDMincho, then any other regular `Jpan` face. `None` without mahay-fonts.
+pub fn document_japanese_font() -> Option<&'static MahayFont> {
+    document_face(MAHAY_FONTS, true, false)
 }
 
 /// A real Japanese document face matching serif/sans and weight where available.
 /// Sans text prefers BIZ UDPGothic Bold or Regular. Missing weights fall back to Regular;
 /// serif text keeps the document Mincho preference. No synthetic weight or slant is applied.
-/// `None` without craft-fonts. The small web input currently has only Gothic Regular.
-pub fn document_japanese_font_for_style(serif: bool, bold: bool) -> Option<&'static CraftFont> {
-    document_face(CRAFT_FONTS, serif, bold)
+/// `None` without mahay-fonts. The small web input currently has only Gothic Regular.
+pub fn document_japanese_font_for_style(serif: bool, bold: bool) -> Option<&'static MahayFont> {
+    document_face(MAHAY_FONTS, serif, bold)
 }
 
 /// Every `Jpan` face that can stand in for the document text, the best match for the style first
 /// (the face [`document_japanese_font_for_style`] returns), then the others. Not every face has
 /// every glyph (their coverage of e.g. Cyrillic differs), so a caller can move on to the next one.
-/// Empty without craft-fonts.
-pub fn document_japanese_fonts_for_style(serif: bool, bold: bool) -> Vec<&'static CraftFont> {
-    document_faces(CRAFT_FONTS, serif, bold)
+/// Empty without mahay-fonts.
+pub fn document_japanese_fonts_for_style(serif: bool, bold: bool) -> Vec<&'static MahayFont> {
+    document_faces(MAHAY_FONTS, serif, bold)
 }
 
-fn document_face(faces: &[CraftFont], serif: bool, bold: bool) -> Option<&CraftFont> {
+fn document_face(faces: &[MahayFont], serif: bool, bold: bool) -> Option<&MahayFont> {
     document_faces(faces, serif, bold).into_iter().next()
 }
 
-fn document_faces(faces: &[CraftFont], serif: bool, bold: bool) -> Vec<&CraftFont> {
+fn document_faces(faces: &[MahayFont], serif: bool, bold: bool) -> Vec<&MahayFont> {
     let jpan = || faces.iter().filter(|f| f.covers("Jpan"));
     let mut preferred = Vec::new();
     if !serif {
@@ -153,7 +153,7 @@ fn document_faces(faces: &[CraftFont], serif: bool, bold: bool) -> Vec<&CraftFon
     for family in ["Shippori Mincho", "BIZ UDMincho"] {
         preferred.extend(jpan().find(|f| f.family == family && f.style == "Regular"));
     }
-    let mut out: Vec<&CraftFont> = Vec::new();
+    let mut out: Vec<&MahayFont> = Vec::new();
     for face in preferred.into_iter().chain(jpan().filter(|f| f.style == "Regular")).chain(jpan()) {
         if !out.iter().any(|f| std::ptr::eq(*f, face)) {
             out.push(face);
@@ -179,8 +179,8 @@ const fn str_eq(a: &str, b: &str) -> bool {
 
 const fn find(family: &str, style: &str) -> Option<&'static [u8]> {
     let mut i = 0;
-    while i < CRAFT_FONTS.len() {
-        let f = &CRAFT_FONTS[i];
+    while i < MAHAY_FONTS.len() {
+        let f = &MAHAY_FONTS[i];
         if str_eq(f.family, family) && str_eq(f.style, style) {
             return Some(f.bytes);
         }
@@ -189,8 +189,8 @@ const fn find(family: &str, style: &str) -> Option<&'static [u8]> {
     None
 }
 
-/// Shippori Mincho Regular from craft-fonts, the preferred face for Japanese document text.
-/// `None` when PdfCraft was built without craft-fonts.
+/// Shippori Mincho Regular from mahay-fonts, the preferred face for Japanese document text.
+/// `None` when Taratasy was built without mahay-fonts.
 pub static SHIPPORI_MINCHO: Option<&[u8]> = find("Shippori Mincho", "Regular");
 
 #[cfg(test)]
@@ -204,10 +204,10 @@ mod tests {
         static LATN: &[&str] = &["Latn"];
         static JPAN_LATN: &[&str] = &["Jpan", "Latn"];
         static HANS_LATN: &[&str] = &["Hans", "Latn"];
-        let biz_bold = CraftFont { family: "BIZ UDPGothic", style: "Bold", scripts: JPAN_LATN, bytes: BYTES };
-        let biz = CraftFont { family: "BIZ UDPGothic", style: "Regular", scripts: JPAN_LATN, bytes: BYTES };
-        let hans = CraftFont { family: "FakeHans", style: "Regular", scripts: HANS_LATN, bytes: BYTES };
-        let inter = CraftFont { family: "Inter", style: "Regular", scripts: LATN, bytes: BYTES };
+        let biz_bold = MahayFont { family: "BIZ UDPGothic", style: "Bold", scripts: JPAN_LATN, bytes: BYTES };
+        let biz = MahayFont { family: "BIZ UDPGothic", style: "Regular", scripts: JPAN_LATN, bytes: BYTES };
+        let hans = MahayFont { family: "FakeHans", style: "Regular", scripts: HANS_LATN, bytes: BYTES };
+        let inter = MahayFont { family: "Inter", style: "Regular", scripts: LATN, bytes: BYTES };
         let faces = [biz_bold, biz, hans, inter];
         // Chinese mode: the Hans group first (manifest order), then Japanese.
         let zh: Vec<&str> = order_cjk([&faces[0], &faces[2], &faces[1]], true).iter().map(|f| f.family).collect();
@@ -218,7 +218,7 @@ mod tests {
         // Latin-only faces are never interface CJK fallbacks.
         assert!(order_cjk(&faces, true).iter().all(|f| f.covers("Hans") || f.covers("Jpan")));
         // A serif listed first in the manifest never leads the Japanese group, in either mode.
-        let mincho = CraftFont { family: "Shippori Mincho", style: "Regular", scripts: JPAN_LATN, bytes: BYTES };
+        let mincho = MahayFont { family: "Shippori Mincho", style: "Regular", scripts: JPAN_LATN, bytes: BYTES };
         let zh: Vec<&str> = order_cjk([&mincho, &faces[2], &faces[1]], true).iter().map(|f| f.family).collect();
         assert_eq!(zh, ["FakeHans", "BIZ UDPGothic", "Shippori Mincho"]);
         let ja: Vec<&str> = order_cjk([&mincho, &faces[2], &faces[1]], false).iter().map(|f| f.family).collect();
@@ -228,10 +228,10 @@ mod tests {
     #[test]
     fn document_faces_match_style_without_inventing_missing_weights() {
         let faces = [
-            CraftFont { family: "Shippori Mincho", style: "Regular", scripts: &["Jpan"], bytes: b"serif" },
-            CraftFont { family: "BIZ UDPGothic", style: "Regular", scripts: &["Jpan"], bytes: b"sans" },
-            CraftFont { family: "BIZ UDPGothic", style: "Bold", scripts: &["Jpan"], bytes: b"bold" },
-            CraftFont { family: "BIZ UDPGothic", style: "Bold", scripts: &["Latn"], bytes: b"not-japanese" },
+            MahayFont { family: "Shippori Mincho", style: "Regular", scripts: &["Jpan"], bytes: b"serif" },
+            MahayFont { family: "BIZ UDPGothic", style: "Regular", scripts: &["Jpan"], bytes: b"sans" },
+            MahayFont { family: "BIZ UDPGothic", style: "Bold", scripts: &["Jpan"], bytes: b"bold" },
+            MahayFont { family: "BIZ UDPGothic", style: "Bold", scripts: &["Latn"], bytes: b"not-japanese" },
         ];
         assert_eq!(document_face(&faces, false, false).unwrap().bytes, b"sans");
         assert_eq!(document_face(&faces, false, true).unwrap().bytes, b"bold");
@@ -254,25 +254,25 @@ mod tests {
         static BYTES: &[u8] = b"fake";
         static ARAB_LATN: &[&str] = &["Arab", "Latn"];
         static JPAN: &[&str] = &["Jpan"];
-        let naskh = CraftFont { family: "FakeNaskh", style: "Regular", scripts: ARAB_LATN, bytes: BYTES };
-        let biz = CraftFont { family: "BIZ UDPGothic", style: "Regular", scripts: JPAN, bytes: BYTES };
-        let kufi = CraftFont { family: "FakeKufi", style: "Regular", scripts: ARAB_LATN, bytes: BYTES };
+        let naskh = MahayFont { family: "FakeNaskh", style: "Regular", scripts: ARAB_LATN, bytes: BYTES };
+        let biz = MahayFont { family: "BIZ UDPGothic", style: "Regular", scripts: JPAN, bytes: BYTES };
+        let kufi = MahayFont { family: "FakeKufi", style: "Regular", scripts: ARAB_LATN, bytes: BYTES };
         let faces = [naskh, biz, kufi];
         let ar: Vec<&str> = arabic(&faces).iter().map(|f| f.family).collect();
         assert_eq!(ar, ["FakeNaskh", "FakeKufi"]);
         // An Arabic face is never a CJK fallback, and the other way round.
         assert!(order_cjk(&faces, false).iter().all(|f| f.family == "BIZ UDPGothic"));
-        assert_eq!(ui_arabic_fonts().len(), CRAFT_FONTS.iter().filter(|f| f.covers("Arab")).count());
+        assert_eq!(ui_arabic_fonts().len(), MAHAY_FONTS.iter().filter(|f| f.covers("Arab")).count());
     }
 
     /// Family-name prefixes `build.rs` never embeds (its own `BARRED_FAMILIES`): Adobe's type
     /// designs, which includes Noto CJK (Source Han under another name).
     const BARRED_FAMILIES: [&str; 5] = ["Source Han", "Source Serif", "Source Sans", "Noto Sans CJK", "Noto Serif CJK"];
 
-    /// Whatever the craft-fonts checkout holds, no Adobe type design is embedded (AGENTS.md §1.1).
+    /// Whatever the mahay-fonts checkout holds, no Adobe type design is embedded (AGENTS.md §1.1).
     #[test]
     fn barred_families_are_never_embedded() {
-        for face in CRAFT_FONTS {
+        for face in MAHAY_FONTS {
             assert!(!BARRED_FAMILIES.iter().any(|barred| face.family.starts_with(barred)), "{} is embedded", face.name());
         }
         assert!(BARRED_FAMILIES.iter().any(|barred| "Noto Sans CJK SC".starts_with(barred)));
@@ -283,35 +283,35 @@ mod tests {
     fn hebrew_document_faces_follow_the_weight() {
         static HEBR_LATN: &[&str] = &["Hebr", "Latn"];
         let faces = [
-            CraftFont { family: "BIZ UDPGothic", style: "Bold", scripts: &["Jpan"], bytes: b"not-hebrew" },
-            CraftFont { family: "FakeHebrew", style: "Regular", scripts: HEBR_LATN, bytes: b"regular" },
-            CraftFont { family: "FakeHebrew", style: "Bold", scripts: HEBR_LATN, bytes: b"bold" },
+            MahayFont { family: "BIZ UDPGothic", style: "Bold", scripts: &["Jpan"], bytes: b"not-hebrew" },
+            MahayFont { family: "FakeHebrew", style: "Regular", scripts: HEBR_LATN, bytes: b"regular" },
+            MahayFont { family: "FakeHebrew", style: "Bold", scripts: HEBR_LATN, bytes: b"bold" },
         ];
         assert_eq!(hebrew_face(&faces, false).map(|f| f.bytes), Some(&b"regular"[..]));
         assert_eq!(hebrew_face(&faces, true).map(|f| f.bytes), Some(&b"bold"[..]));
         // No bold face: Regular, never a face of another script.
         assert_eq!(hebrew_face(&faces[..2], true).map(|f| f.bytes), Some(&b"regular"[..]));
         assert!(hebrew_face(&faces[..1], false).is_none());
-        assert_eq!(ui_hebrew_fonts().len(), CRAFT_FONTS.iter().filter(|f| f.covers("Hebr")).count());
-        assert_eq!(document_hebrew_font(false).is_some(), CRAFT_FONTS.iter().any(|f| f.covers("Hebr")));
+        assert_eq!(ui_hebrew_fonts().len(), MAHAY_FONTS.iter().filter(|f| f.covers("Hebr")).count());
+        assert_eq!(document_hebrew_font(false).is_some(), MAHAY_FONTS.iter().any(|f| f.covers("Hebr")));
     }
 
     #[test]
-    fn craft_fonts_are_optional_and_consistent() {
-        // Holds with or without CRAFT_FONTS_DIR.
-        assert_eq!(SHIPPORI_MINCHO.is_some(), CRAFT_FONTS.iter().any(|f| f.family == "Shippori Mincho" && f.style == "Regular"));
-        assert_eq!(document_japanese_font().is_some(), CRAFT_FONTS.iter().any(|f| f.covers("Jpan")));
+    fn mahay_fonts_are_optional_and_consistent() {
+        // Holds with or without MAHAY_FONTS_DIR.
+        assert_eq!(SHIPPORI_MINCHO.is_some(), MAHAY_FONTS.iter().any(|f| f.family == "Shippori Mincho" && f.style == "Regular"));
+        assert_eq!(document_japanese_font().is_some(), MAHAY_FONTS.iter().any(|f| f.covers("Jpan")));
         let ui = ui_japanese_fonts();
-        assert_eq!(ui.len(), CRAFT_FONTS.iter().filter(|f| f.covers("Jpan")).count());
+        assert_eq!(ui.len(), MAHAY_FONTS.iter().filter(|f| f.covers("Jpan")).count());
         let ui_zh = ui_chinese_fonts();
-        assert_eq!(ui_zh.len(), CRAFT_FONTS.iter().filter(|f| f.covers("Hans")).count());
-        if CRAFT_FONTS.is_empty() {
-            eprintln!("built without craft-fonts (CRAFT_FONTS_DIR unset): no Japanese faces, as expected");
+        assert_eq!(ui_zh.len(), MAHAY_FONTS.iter().filter(|f| f.covers("Hans")).count());
+        if MAHAY_FONTS.is_empty() {
+            eprintln!("built without mahay-fonts (MAHAY_FONTS_DIR unset): no Japanese faces, as expected");
             assert!(SHIPPORI_MINCHO.is_none() && ui.is_empty() && ui_zh.is_empty());
             return;
         }
-        assert!(CRAFT_FONTS.iter().all(|f| !f.bytes.is_empty()));
-        if CRAFT_FONTS.iter().any(|f| f.family == "BIZ UDPGothic") {
+        assert!(MAHAY_FONTS.iter().all(|f| !f.bytes.is_empty()));
+        if MAHAY_FONTS.iter().any(|f| f.family == "BIZ UDPGothic") {
             assert_eq!(ui.first().map(|f| f.family), Some("BIZ UDPGothic"));
         }
         assert_eq!(document_japanese_font().map(|f| f.family), Some("Shippori Mincho"));

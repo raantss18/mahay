@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_color::{PixelFormat, SampleType};
+use sary_color::{PixelFormat, SampleType};
 
 fn fmt(s: SampleType) -> PixelFormat {
     PixelFormat::new(ColorMode::Rgb, s, true)

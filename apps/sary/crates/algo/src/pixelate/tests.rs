@@ -1,6 +1,6 @@
 use super::*;
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_raster::Surface;
 
 fn fixture(rect: Rect, ctx: &Ctx, pattern: u32) -> Image {
     let n = PixelFormat::new(ctx.mode, SampleType::F32, ctx.alpha).channels();

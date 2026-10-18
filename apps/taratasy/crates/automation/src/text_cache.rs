@@ -3,8 +3,8 @@
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Weak};
 
-use pdfcraft_engine::DocId;
-use pdfcraft_render::{PageText, TextGlyph};
+use taratasy_engine::DocId;
+use taratasy_render::{PageText, TextGlyph};
 
 const BYTE_BUDGET: usize = 64 * 1024 * 1024;
 // Also bound bookkeeping for documents with thousands of empty pages.

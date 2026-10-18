@@ -3,11 +3,11 @@
 //! offers a report or the differences as comments.
 
 use egui::{Align, Color32, Layout};
-use pdfcraft_engine::DocId;
-use pdfcraft_engine::compare::{Comparison, Kind};
+use taratasy_engine::DocId;
+use taratasy_engine::compare::{Comparison, Kind};
 
 use crate::theme::{self, Tokens};
-use crate::{PdfCraftApp, RightPanel, widgets};
+use crate::{TaratasyApp, RightPanel, widgets};
 
 /// The last comparison.
 pub struct CompareState {
@@ -39,12 +39,12 @@ pub enum PanelAction {
 }
 
 pub fn colour(kind: Kind) -> Color32 {
-    let [r, g, b] = pdfcraft_engine::compare::colour(kind);
+    let [r, g, b] = taratasy_engine::compare::colour(kind);
     Color32::from_rgb((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
 /// The Compare Files dialog: pick the older document. Returns (compare, cancel).
-pub(crate) fn body(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> (bool, bool) {
+pub(crate) fn body(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens) -> (bool, bool) {
     ui.label(egui::RichText::new(tl!("Compare Files")).font(theme::semibold(18.0)));
     ui.add_space(8.0);
     let Some((_, new)) = app.active_ids() else { return (false, true) };
@@ -162,7 +162,7 @@ pub(crate) fn panel(ui: &mut egui::Ui, t: &Tokens, state: &Option<CompareState>,
     action
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// Compare the chosen older document with the active one and show the differences.
     pub fn run_compare(&mut self) {
         let Some((i, new)) = self.active_ids() else { return };
@@ -287,7 +287,7 @@ impl PdfCraftApp {
 
 /// The two halves of a side-by-side comparison, as view indexes (old, new), when the active
 /// document is the new file of a comparison shown side by side and the old file is open too.
-pub(crate) fn side_by_side(app: &PdfCraftApp, index: usize) -> Option<(usize, usize)> {
+pub(crate) fn side_by_side(app: &TaratasyApp, index: usize) -> Option<(usize, usize)> {
     let c = app.compare.as_ref().filter(|c| c.side_by_side)?;
     let new = app.views.get(index).filter(|v| v.id == c.new)?;
     let old = app.views.iter().position(|v| v.id == c.old)?;
@@ -297,7 +297,7 @@ pub(crate) fn side_by_side(app: &PdfCraftApp, index: usize) -> Option<(usize, us
 /// Side by side: the old file on the left, the new on the right, each a page view of its own
 /// with its shading, scrolled and zoomed together. The half the pointer is over leads; the
 /// other follows its zoom, layout and scroll offset.
-pub(crate) fn compare_area(app: &mut PdfCraftApp, old: usize, new: usize, ui: &mut egui::Ui) {
+pub(crate) fn compare_area(app: &mut TaratasyApp, old: usize, new: usize, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let rect = ui.available_rect_before_wrap();
     let gap = 1.0;

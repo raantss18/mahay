@@ -105,17 +105,17 @@ pub struct InterpreterSettings {
     /// Note that this feature is currently not fully implemented yet, so some
     /// annotations might be missing.
     pub render_annotations: bool,
-    /// PdfCraft patch: hide comments (markup annotations) but keep form fields (`/Widget`)
+    /// Taratasy patch: hide comments (markup annotations) but keep form fields (`/Widget`)
     /// and links, for the viewer's "Hide all comments".
     pub hide_comments: bool,
-    /// PdfCraft patch: viewer overrides for optional content groups (object number, generation,
+    /// Taratasy patch: viewer overrides for optional content groups (object number, generation,
     /// visible), applied on top of the document's default configuration (Layers panel toggles).
     pub ocg_overrides: Arc<Vec<(i32, i32, bool)>>,
-    /// PdfCraft patch: once this is `true`, interpretation stops before the next content
+    /// Taratasy patch: once this is `true`, interpretation stops before the next content
     /// operator. What was drawn is then incomplete, so only set it when the output will be
     /// thrown away (a viewer's render whose result nobody can receive any more).
     pub cancelled: Option<Arc<AtomicBool>>,
-    /// PdfCraft patch: a low-detail render for previews (page backdrops, thumbnails). Images
+    /// Taratasy patch: a low-detail render for previews (page backdrops, thumbnails). Images
     /// that would cover only a few device pixels are skipped: redrawing them at full detail
     /// costs a decode and a resample each for pixels nobody can see. Never set it for a final
     /// render (tiles, whole pages, print, export).
@@ -155,7 +155,7 @@ pub enum InterpreterWarning {
     UnsupportedFont,
     /// An image failed to decode.
     ImageDecodeFailure,
-    /// PdfCraft patch (18): a page content stream was skipped after exhausting its safety budget.
+    /// Taratasy patch (18): a page content stream was skipped after exhausting its safety budget.
     ContentTruncated,
 }
 
@@ -167,7 +167,7 @@ pub fn interpret_page<'a>(
 ) {
     let resources = page.resources();
     let mut content = page.content_reader();
-    // PdfCraft patch: the page's own contents count against its content budget too, where they
+    // Taratasy patch: the page's own contents count against its content budget too, where they
     // are decoded whole. Streamed content is only ever held a window at a time.
     crate::context::charge_content(content.materialized_len());
     interpret_content(&mut content, resources, context, device);
@@ -175,25 +175,25 @@ pub fn interpret_page<'a>(
     if context.settings.render_annotations
         && let Some(annot_arr) = page.raw().get::<Array<'_>>(ANNOTS)
     {
-        // PdfCraft patch (29): bracket the annotations so devices can tell their paints from
+        // Taratasy patch (29): bracket the annotations so devices can tell their paints from
         // the document's own (the reading-colours setting recolours the document, not comments).
         device.begin_annotations();
         for annot in annot_arr.iter::<Dict<'_>>() {
             let flags = annot.get::<u32>(F).unwrap_or(0);
 
             // Annotation should be hidden (Hidden = bit 2, NoView = bit 6).
-            // PdfCraft patch: NoView was not honoured upstream.
+            // Taratasy patch: NoView was not honoured upstream.
             if flags & (2 | 32) != 0 {
                 continue;
             }
-            // PdfCraft patch: "Hide all comments" keeps widgets and links.
+            // Taratasy patch: "Hide all comments" keeps widgets and links.
             if context.settings.hide_comments
                 && !matches!(annot.get::<hayro_syntax::object::Name<'_>>(SUBTYPE).as_deref(), Some(b"Widget" | b"Link"))
             {
                 continue;
             }
 
-            // PdfCraft patch: `/N` may be a stream or a dictionary of appearance states selected
+            // Taratasy patch: `/N` may be a stream or a dictionary of appearance states selected
             // by `/AS` (checkboxes, radio buttons, …). Upstream only handled the stream form.
             let normal = annot.get::<Dict<'_>>(AP).and_then(|ap| {
                 ap.get::<Stream<'_>>(N).or_else(|| {
@@ -235,7 +235,7 @@ pub fn interpret_page<'a>(
                 // corner with the greatest x and y coordinates) of the
                 // transformed appearance box to the corresponding corners
                 // of the annotation’s rectangle.
-                // PdfCraft patch: the translation is taken after scaling (it was
+                // Taratasy patch: the translation is taken after scaling (it was
                 // `/Rect.x0 - box.x0`, right only for a box at the origin or a scale of 1).
                 let (sx, sy) = (
                     annot_rect.width() / transformed_rect.width(),
@@ -250,7 +250,7 @@ pub fn interpret_page<'a>(
                     annot_rect.y0 - sy * transformed_rect.y0,
                 ]);
 
-                // PdfCraft patch: a /BBox or /Matrix that collapses the appearance box to a line
+                // Taratasy patch: a /BBox or /Matrix that collapses the appearance box to a line
                 // or a point leaves nothing to map onto /Rect: the scales above divide by zero,
                 // and the infinite or NaN matrix reached the device with everything the
                 // appearance draws. Clipped to such a box the appearance shows nothing, so skip
@@ -274,7 +274,7 @@ pub fn interpret_page<'a>(
                 context.pop_root_transform();
                 context.restore_state(device);
             } else if annot.get::<hayro_syntax::object::Name<'_>>(SUBTYPE).as_deref() == Some(b"Highlight") {
-                // PdfCraft patch: a Highlight without a usable normal appearance was not drawn.
+                // Taratasy patch: a Highlight without a usable normal appearance was not drawn.
                 draw_highlight_without_appearance(&annot, context, device);
             }
         }
@@ -282,8 +282,8 @@ pub fn interpret_page<'a>(
     }
 }
 
-/// PdfCraft patch: the normal appearance of a Highlight annotation that has none (ISO 32000-2
-/// §12.5.6.10), drawn as PdfCraft draws its own highlights (pdfcraft-annot): each /QuadPoints
+/// Taratasy patch: the normal appearance of a Highlight annotation that has none (ISO 32000-2
+/// §12.5.6.10), drawn as Taratasy draws its own highlights (taratasy-annot): each /QuadPoints
 /// quadrilateral filled with /C at /CA opacity, blended with Multiply so the marked-up content
 /// stays legible. /QuadPoints that aren't groups of eight numbers, or a /C that isn't a gray, RGB
 /// or CMYK colour (absent or empty means transparent), draw nothing.
@@ -346,7 +346,7 @@ fn interpret_window<'a>(
     device: &mut impl Device<'a>,
 ) {
     while let Some(op) = ops.next() {
-        // PdfCraft patch: stop when the caller cancelled (see `InterpreterSettings::cancelled`).
+        // Taratasy patch: stop when the caller cancelled (see `InterpreterSettings::cancelled`).
         if context.settings.cancelled.as_ref().is_some_and(|c| c.load(Ordering::Relaxed)) {
             break;
         }
@@ -620,7 +620,7 @@ fn interpret_window<'a>(
 
                 device.begin_marked_content(bdc.0, mcid);
 
-                // PdfCraft patch (25): hand the device the sequence's `/ActualText`, from an inline
+                // Taratasy patch (25): hand the device the sequence's `/ActualText`, from an inline
                 // property list or one named in the resources' `/Properties`.
                 let actual = dict_or_stream(bdc.1)
                     .map(|(props, _)| props.clone())
@@ -781,7 +781,7 @@ fn interpret_window<'a>(
             TypedInstruction::ShapeGlyph(_) => {}
             TypedInstruction::XObject(x) => {
                 let cache = context.interpreter_cache.object_cache.clone();
-                // PdfCraft patch: decoded images are cached per quality (preview or final).
+                // Taratasy patch: decoded images are cached per quality (preview or final).
                 let decoded_cache = context
                     .interpreter_cache
                     .decoded_cache
@@ -803,7 +803,7 @@ fn interpret_window<'a>(
                 let warning_sink = context.settings.warning_sink.clone();
                 let transfer_function = context.get().graphics_state.transfer_function.clone();
                 let cache = context.interpreter_cache.object_cache.clone();
-                // PdfCraft patch: inline images are not cached (see `DecodedImageKey`).
+                // Taratasy patch: inline images are not cached (see `DecodedImageKey`).
                 if let Some(x_object) = ImageXObject::new(
                     i.0,
                     |name| context.get_color_space(resources, name),
@@ -892,17 +892,17 @@ pub fn interpret<'a>(
     while context.num_states() > num_states {
         context.restore_state(device);
     }
-    // PdfCraft patch (18): say that content was skipped, so a truncated page isn't a clean render.
+    // Taratasy patch (18): say that content was skipped, so a truncated page isn't a clean render.
     if crate::context::content_was_truncated() {
         (context.settings.warning_sink)(InterpreterWarning::ContentTruncated);
     }
 }
 
-/// PdfCraft patch: the bytes of a window of page content. A window grows only while an instruction
+/// Taratasy patch: the bytes of a window of page content. A window grows only while an instruction
 /// at its end is incomplete.
 const CONTENT_WINDOW: usize = 64 << 10;
 
-/// PdfCraft patch: interprets the content of a page a window at a time, so the decoded content is
+/// Taratasy patch: interprets the content of a page a window at a time, so the decoded content is
 /// never all in memory (see `ContentReader`). A window ends at an instruction that is not complete
 /// yet: its bytes are kept, and the next window starts with them.
 fn interpret_content<'a>(
@@ -950,7 +950,7 @@ fn interpret_content<'a>(
     while context.num_states() > num_states {
         context.restore_state(device);
     }
-    // PdfCraft patch (18): say that content was skipped, so a truncated page isn't a clean render.
+    // Taratasy patch (18): say that content was skipped, so a truncated page isn't a clean render.
     if cut || content.truncated() || crate::context::content_was_truncated() {
         (context.settings.warning_sink)(InterpreterWarning::ContentTruncated);
     }

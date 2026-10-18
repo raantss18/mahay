@@ -7,11 +7,11 @@ use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_model::chart::{Chart, ChartType};
-use deckcraft_model::style::PictureFill;
-use deckcraft_model::table::Table;
-use deckcraft_model::text::{Action, Hyperlink, Paragraph, Run, RunProps, TextBody};
-use deckcraft_model::{Comment, Geom, PhType, Presentation, ShapeKind, Slide, defaults};
+use seho_model::chart::{Chart, ChartType};
+use seho_model::style::PictureFill;
+use seho_model::table::Table;
+use seho_model::text::{Action, Hyperlink, Paragraph, Run, RunProps, TextBody};
+use seho_model::{Comment, Geom, PhType, Presentation, ShapeKind, Slide, defaults};
 
 fn png(w: u32, h: u32, rgb: [u8; 3]) -> Vec<u8> {
     let img = image::RgbImage::from_pixel(w, h, image::Rgb(rgb));
@@ -20,17 +20,17 @@ fn png(w: u32, h: u32, rgb: [u8; 3]) -> Vec<u8> {
     out.into_inner()
 }
 
-fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> deckcraft_model::Shape {
-    deckcraft_model::Shape {
-        id: deckcraft_model::ShapeId(p.alloc_id().expect("id")),
+fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> seho_model::Shape {
+    seho_model::Shape {
+        id: seho_model::ShapeId(p.alloc_id().expect("id")),
         name: name.into(),
-        xfrm: Some(deckcraft_geom::Xfrm::new(x, y, w, h)),
+        xfrm: Some(seho_geom::Xfrm::new(x, y, w, h)),
         ..Default::default()
     }
 }
 
 fn new_slide(p: &mut Presentation, title: &str) -> Slide {
-    let layout = defaults::layout_of_kind(p, deckcraft_model::LayoutType::TitleOnly).unwrap_or_default();
+    let layout = defaults::layout_of_kind(p, seho_model::LayoutType::TitleOnly).unwrap_or_default();
     let mut s = defaults::new_slide(p, layout).expect("slide");
     if let Some(t) = s.shapes.first_mut() {
         t.text = Some(TextBody::from_text(title));
@@ -43,7 +43,7 @@ fn talk() -> Presentation {
     let mut p = defaults::new_presentation(None);
     p.props.title = "Quarterly review".into();
     p.props.subject = "Owned corpus".into();
-    p.props.author = "DeckCraft tests".into();
+    p.props.author = "Seho tests".into();
     let img = p.add_media("mark.png", "image/png", png(4, 4, [20, 90, 160])).expect("media");
 
     {
@@ -284,14 +284,14 @@ fn lost<'a>(origin: &'a BTreeMap<String, usize>, saved: &BTreeMap<String, usize>
 /// saving again does not change the package's part names or text.
 fn round_trip(label: &str, bytes: &[u8]) -> (Pkg, Pkg) {
     let origin = Pkg::open(bytes);
-    let once = deckcraft_pptx::export(&deckcraft_pptx::import(bytes).unwrap_or_else(|e| panic!("{label}: import: {e}")))
+    let once = seho_pptx::export(&seho_pptx::import(bytes).unwrap_or_else(|e| panic!("{label}: import: {e}")))
         .unwrap_or_else(|e| panic!("{label}: save: {e}"));
     let saved = Pkg::open(&once);
     let origin_text = xml_text(&origin.parts);
     let missing = lost(&origin_text, &xml_text(&saved.parts));
     assert!(missing.is_empty(), "{label}: text lost on save: {missing:?}");
     assert_eq!(content_counts(&origin.parts), content_counts(&saved.parts), "{label}: content parts changed");
-    let again = deckcraft_pptx::export(&deckcraft_pptx::import(&once).unwrap_or_else(|e| panic!("{label}: reopen: {e}")))
+    let again = seho_pptx::export(&seho_pptx::import(&once).unwrap_or_else(|e| panic!("{label}: reopen: {e}")))
         .unwrap_or_else(|e| panic!("{label}: second save: {e}"));
     let saved2 = Pkg::open(&again);
     assert_eq!(saved.parts.keys().collect::<Vec<_>>(), saved2.parts.keys().collect::<Vec<_>>(), "{label}: part names changed on the second save");
@@ -325,7 +325,7 @@ fn notes_header_deck() -> Vec<u8> {
         t.text = Some(TextBody::from_text("Quarterly review"));
     }
     s.notes = TextBody::from_text("Pause after the title");
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let pkg = Pkg::open(&bytes);
     let master = pkg.parts.get("ppt/notesMasters/notesMaster1.xml").expect("notes master").clone();
     let xml = String::from_utf8(master).expect("utf8");
@@ -345,7 +345,7 @@ fn placeholder_text(p: &Presentation, kind: PhType) -> String {
 
 #[test]
 fn owned_corpus_round_trip_keeps_parts_and_text() {
-    let talk_bytes = deckcraft_pptx::export(&talk()).expect("talk");
+    let talk_bytes = seho_pptx::export(&talk()).expect("talk");
     let (origin, saved) = round_trip("talk", &talk_bytes);
     let text = xml_text(&origin.parts);
     for s in [
@@ -362,7 +362,7 @@ fn owned_corpus_round_trip_keeps_parts_and_text() {
         "Amount due",
         "Ada checks the axis",
         "Owned corpus",
-        "DeckCraft tests",
+        "Seho tests",
         "https://example.org/north?q=1&x=2",
         "Open the report",
     ] {
@@ -374,11 +374,11 @@ fn owned_corpus_round_trip_keeps_parts_and_text() {
 
     let notes = notes_header_deck();
     let _ = round_trip("notes header", &notes);
-    let opened = deckcraft_pptx::import(&notes).expect("import notes header");
+    let opened = seho_pptx::import(&notes).expect("import notes header");
     assert_eq!(placeholder_text(&opened, PhType::Header), "Acme review");
     assert_eq!(placeholder_text(&opened, PhType::Footer), "Do not circulate");
-    let saved = deckcraft_pptx::export(&opened).expect("save notes header");
-    let reopened = deckcraft_pptx::import(&saved).expect("reopen notes header");
+    let saved = seho_pptx::export(&opened).expect("save notes header");
+    let reopened = seho_pptx::import(&saved).expect("reopen notes header");
     assert_eq!(placeholder_text(&reopened, PhType::Header), "Acme review");
     assert_eq!(placeholder_text(&reopened, PhType::Footer), "Do not circulate");
     assert_eq!(reopened.slides[0].notes_text(), "Pause after the title");

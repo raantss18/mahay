@@ -1,4 +1,4 @@
-# Where PdfCraft falls short of Acrobat Pro
+# Where Taratasy falls short of Acrobat Pro
 
 > **Last reviewed:** 2026-10-15 · **Last updated:** 2026-10-15 · **Change:** minor (gap 12: reading order is scored, not just word F1) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** minor (M1: raw-deflate fallback preserves decoding-limit errors; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
@@ -98,7 +98,7 @@ update the numbers.
   removes a distinct neighbour whose glyph box overlaps (#1316); a second drawing on the same
   baseline is still replaced. Estimates are unchanged.
 
-- **Missing:** robust in-place editing of text PdfCraft didn't write: subset fonts without the
+- **Missing:** robust in-place editing of text Taratasy didn't write: subset fonts without the
   needed glyphs, CJK and right-to-left text, rotated text, lists, superscript/subscript, keeping
   structure tags, find and replace in edit mode; vector and object editing; arrange and align.
 - **Evidence:** `edit.text-edit` is partial (font reused or Helvetica substituted);
@@ -121,10 +121,10 @@ update the numbers.
   [#728](https://github.com/storytold/pdfcraft/issues/728),
   [#758](https://github.com/storytold/pdfcraft/issues/758),
   [#689](https://github.com/storytold/pdfcraft/issues/689) (Flatpak). `AGENTS.md` §1.1 bars Noto
-  CJK (Source Han rebranded), so craft-fonts needs another openly licensed Hans face.
+  CJK (Source Han rebranded), so mahay-fonts needs another openly licensed Hans face.
 - **Impact:** the second-largest language group sees a broken interface although the catalog is 97%
   translated.
-- **Estimate:** 6–12 h (font sourcing in craft-fonts plus the fallback chain). **Doc:**
+- **Estimate:** 6–12 h (font sourcing in mahay-fonts plus the fallback chain). **Doc:**
   [localization-parity.md](localization-parity.md).
 
 ### 6. Open-issue backlog of wrong results in shipped features
@@ -207,12 +207,12 @@ update the numbers.
   into structure trees with unusual layouts (only a direct Document root with a direct
   ParentTree Nums array is extended),
   visual Tags, Order and Content panels, Reading Order tool, table editor, Make Accessible action,
-  Read Out Loud; full keyboard operation of PdfCraft itself and a screen-reader audit.
+  Read Out Loud; full keyboard operation of Taratasy itself and a screen-reader audit.
 - **Evidence:** all 32 checker rules, figure alt text, tag property and sibling order edits, and
   a bounded auto-tag preview exist. Apply writes valid structure and parent-tree links for
   text-only files; it refuses mixed content and existing tags;
   `a11y.keyboard-only` (P0) planned, `a11y.app-screen-reader` partial.
-- **Impact:** most untagged files still need another editor to build their structure; PdfCraft itself is
+- **Impact:** most untagged files still need another editor to build their structure; Taratasy itself is
   not yet usable without a mouse.
 - **Estimate:** 40–70 h. **Doc:** [target-app-parity.md](target-app-parity.md).
 
@@ -264,7 +264,7 @@ update the numbers.
   another purely because `pdftotext` makes it in one place and not the other. The corpus-wide
   first reading has not been taken yet.
 - **Evidence:** text extraction (word-F1 0.98 against `pdftotext`) and now rendering (above); qpdf
-  checks written output on every CI run since `PDFCRAFT_ORACLES_REQUIRED`. Acrobat captures must
+  checks written output on every CI run since `TARATASY_ORACLES_REQUIRED`. Acrobat captures must
   stay local in `plan/acrobat/` (clean-room, `AGENTS.md` §1.1).
 - **Still missing:** Acrobat itself as the reference rather than other open renderers; form
   calculation and signature validation; the interop suite that opens every kind of output we write
@@ -390,7 +390,7 @@ update the numbers.
 | 2026-10-12 | minor | #1316: replacing a line or paragraph keeps a neighbouring line whose glyph box overlaps. Gap 3 remains. Estimates unchanged. |
 | 2026-10-12 | minor | Exclusive image crops resize with their pixels across nested states, intervening operators and content streams; shared clips remain fixed. Synthetic engine/tool regressions and private image save/reopen checks; estimates unchanged. |
 | 2026-10-12 | minor | Gap 13: measured large-file memory; edits no longer keep the previous working file while writing the next (peak 3 → 2 copies); file-backed input recorded as blocked on gap 2 |
-| 2026-10-11 | minor | Closed gap 4: the web build prints through the browser's print dialog (sheets drawn by PdfCraft at 150–300 dpi, one per printed page); number kept |
+| 2026-10-11 | minor | Closed gap 4: the web build prints through the browser's print dialog (sheets drawn by Taratasy at 150–300 dpi, one per printed page); number kept |
 | 2026-10-11 | minor | Word invoice failure #773 has synthetic regression coverage; broader Office conversion remains gap 8. |
 | 2026-10-11 | minor | Contributor fork: mixed-style visual regions, source-font space reuse and a read-only textless background. Embedded sfnt source faces and Mac subset Unicode mappings keep edit baselines stable; live frames follow Apply/Save geometry as text grows or shrinks. Engine/tool/UI regressions and private all-page checks cover the changes; full matching font import, CFF, range styles, shaping and private Chinese typing checks added; legacy programs and general fidelity remain open; estimates unchanged |
 | 2026-10-11 | patch | Gap 2: 23 hayro-interpret and 10 hayro patches after axial and radial shadings became native gradients (backport of hayro 0.8) |

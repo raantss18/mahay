@@ -5,7 +5,7 @@ use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
 
-use crate::{PhotocraftApp, Services, Tool};
+use crate::{SaryApp, Services, Tool};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Popup {
@@ -14,10 +14,10 @@ enum Popup {
     Brush,
 }
 
-fn harness(tool: Tool, selection: bool, scale: f32) -> Harness<'static, PhotocraftApp> {
+fn harness(tool: Tool, selection: bool, scale: f32) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).with_pixels_per_point(scale).with_step_dt(1.0 / 60.0).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Services::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.run("layer.new.layer", json!({"name": "Color"})).unwrap();
         app.run("edit.fill", json!({"color": "#cc6644"})).unwrap();
@@ -31,16 +31,16 @@ fn harness(tool: Tool, selection: bool, scale: f32) -> Harness<'static, Photocra
     h
 }
 
-fn fractional_point(h: &Harness<'_, PhotocraftApp>, scale: f32) -> Pos2 {
+fn fractional_point(h: &Harness<'_, SaryApp>, scale: f32) -> Pos2 {
     let center = crate::rulers::content_rect(h.state(), h.state().last_canvas_rect).center();
     pos2(((center.x * scale).floor() + 0.75) / scale, ((center.y * scale).floor() + 0.75) / scale)
 }
 
-fn press(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, button: PointerButton, pressed: bool, modifiers: Modifiers) {
+fn press(h: &mut Harness<'_, SaryApp>, at: Pos2, button: PointerButton, pressed: bool, modifiers: Modifiers) {
     h.input_mut().events.push(Event::PointerButton { pos: at, button, pressed, modifiers });
 }
 
-fn tap(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, modifiers: Modifiers, same_frame: bool) {
+fn tap(h: &mut Harness<'_, SaryApp>, at: Pos2, modifiers: Modifiers, same_frame: bool) {
     h.event(Event::ModifiersChanged(modifiers));
     h.event(Event::PointerMoved(at));
     h.run_steps(2);
@@ -54,13 +54,13 @@ fn tap(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, modifiers: Modifiers, same_
     h.run_steps(3);
 }
 
-fn document_state(h: &Harness<'_, PhotocraftApp>) -> impl PartialEq + use<> {
+fn document_state(h: &Harness<'_, SaryApp>) -> impl PartialEq + use<> {
     let state = h.state().session.active().unwrap();
     let strokes = h.state().session.journal.iter().filter(|(id, _)| id == "paint.stroke").count();
     (state.doc.clone(), state.revision, state.history.past_len(), state.active_layer, state.selected_layers(), strokes)
 }
 
-fn is_open(h: &Harness<'_, PhotocraftApp>, popup: Popup) -> bool {
+fn is_open(h: &Harness<'_, SaryApp>, popup: Popup) -> bool {
     let ui = &h.state().ui;
     match popup {
         Popup::Tool => ui.canvas_tool_menu.is_some(),
@@ -69,7 +69,7 @@ fn is_open(h: &Harness<'_, PhotocraftApp>, popup: Popup) -> bool {
     }
 }
 
-fn dismiss_outside(h: &mut Harness<'_, PhotocraftApp>, popup: Popup) {
+fn dismiss_outside(h: &mut Harness<'_, SaryApp>, popup: Popup) {
     // The status-bar corner is outside every popup and does not edit the document.
     let at = pos2(1190.0, 790.0);
     h.event(Event::PointerMoved(at));
@@ -187,7 +187,7 @@ fn secondary_taps_keep_other_canvas_tool_menus_open() {
     }
 }
 
-fn control_tap(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, popup: Popup) {
+fn control_tap(h: &mut Harness<'_, SaryApp>, at: Pos2, popup: Popup) {
     use crate::control::{ControlRequest, Outcome, handle};
 
     let [x, y] = crate::canvas::ViewXform::active(h.state()).unwrap().to_doc(at);

@@ -1,6 +1,6 @@
 //! Read-only commands for agents: inspect the workbook, read ranges, cell details.
 
-use gridcraft_core::{CellRef, RangeRef, Value};
+use tabilao_core::{CellRef, RangeRef, Value};
 use serde_json::{Value as Json, json};
 
 use super::*;

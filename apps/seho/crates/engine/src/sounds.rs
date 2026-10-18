@@ -1,4 +1,4 @@
-//! Built-in transition sounds, synthesised on demand so DeckCraft ships no sound files: short
+//! Built-in transition sounds, synthesised on demand so Seho ships no sound files: short
 //! mono 16-bit WAVs named like PowerPoint's (Chime, Click, Camera, Whoosh, Drum Roll, Laser).
 
 use std::f64::consts::TAU;
@@ -98,7 +98,7 @@ mod tests {
         for (id, _) in BUILTIN {
             let bytes = builtin(id).unwrap_or_default();
             assert!(bytes.len() > 44, "{id}");
-            let info = deckcraft_media::probe(&std::sync::Arc::new(bytes)).expect(id);
+            let info = seho_media::probe(&std::sync::Arc::new(bytes)).expect(id);
             assert!(info.audio.is_some() && info.playable(), "{id}");
             assert!(info.duration() > 0.01 && info.duration() < 2.0, "{id}: {}", info.duration());
         }

@@ -1,6 +1,6 @@
 //! Original BIFF12 records and ZIP packages assembled in Rust from the public format schema.
-use gridcraft_core::{CellError, CellRef, DateSystem, RangeRef, Value};
-use gridcraft_model::Visibility;
+use tabilao_core::{CellError, CellRef, DateSystem, RangeRef, Value};
+use tabilao_model::Visibility;
 
 use super::make_zip;
 use crate::{Format, read_xlsb, read_xlsx, sniff, write_xlsx};

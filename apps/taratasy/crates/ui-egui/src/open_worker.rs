@@ -6,8 +6,8 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Condvar, Mutex, PoisonError};
 
 use crate::RecoveryStore;
-use pdfcraft_engine::{OpenContext, PreparedDocument, SourceKind};
-use pdfcraft_render::OpenError;
+use taratasy_engine::{OpenContext, PreparedDocument, SourceKind};
+use taratasy_render::OpenError;
 
 const MAX_QUEUED_OPENS: usize = 16;
 
@@ -60,7 +60,7 @@ impl OpenWorker {
     pub fn new(#[cfg(test)] gate: Option<Arc<PrepareGate>>) -> std::io::Result<Self> {
         let queue = Arc::new((Mutex::new(Queue { jobs: VecDeque::new(), shutdown: false, repaint: None }), Condvar::new()));
         let worker_queue = queue.clone();
-        std::thread::Builder::new().name("pdfcraft-open".into()).spawn(move || run(worker_queue))?;
+        std::thread::Builder::new().name("taratasy-open".into()).spawn(move || run(worker_queue))?;
         Ok(Self {
             queue,
             #[cfg(test)]
@@ -165,7 +165,7 @@ fn prepare(job: Job) -> ResultKind {
             Ok(bytes) => Arc::new(bytes),
             Err(error) => return ResultKind::ReadFailed(error.to_string()),
         },
-        Input::RemotePath(path) => match pdfcraft_engine::read_remote_document(path) {
+        Input::RemotePath(path) => match taratasy_engine::read_remote_document(path) {
             Ok(bytes) => Arc::new(bytes),
             Err(error) => return ResultKind::RemoteFailed(error.to_string()),
         },
@@ -175,7 +175,7 @@ fn prepare(job: Job) -> ResultKind {
         },
         Input::Bytes(bytes) => bytes.clone(),
     };
-    if matches!(pdfcraft_engine::source_kind(&job.name, &bytes), Some(SourceKind::Image | SourceKind::Text)) {
+    if matches!(taratasy_engine::source_kind(&job.name, &bytes), Some(SourceKind::Image | SourceKind::Text)) {
         return ResultKind::Conversion(bytes);
     }
     let result = job.context.prepare_open(job.name, job.path, bytes.clone(), job.password.as_deref());

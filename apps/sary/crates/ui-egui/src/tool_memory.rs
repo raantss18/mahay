@@ -8,11 +8,11 @@
 
 use serde_json::{Map, Value};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::{Tool, ToolOptions};
 
 /// Explicit choices override temporary pen and held-key tools, even when selecting the same tool.
-pub(crate) fn select(app: &mut PhotocraftApp, tool: Tool) {
+pub(crate) fn select(app: &mut SaryApp, tool: Tool) {
     app.stylus.tool_before_eraser = None;
     app.ui.spring = None;
     app.ui.tool = tool;
@@ -21,7 +21,7 @@ pub(crate) fn select(app: &mut PhotocraftApp, tool: Tool) {
 /// Temporary canvas overrides do not change `ui.tool`. Spring-loaded letters and the pen's
 /// eraser end do, so remember the tool they will return to instead. A different explicit choice
 /// (or beginning a type edit) owns the tool and stands, just as in `spring_tools::tick`.
-fn selected(app: &PhotocraftApp) -> Tool {
+fn selected(app: &SaryApp) -> Tool {
     let tool = if app.ui.tool == Tool::Eraser { app.stylus.tool_before_eraser.unwrap_or(app.ui.tool) } else { app.ui.tool };
     if let Some(s) = &app.ui.spring
         && tool == s.tool
@@ -43,7 +43,7 @@ fn changed(o: &ToolOptions) -> Value {
 
 /// Remember the selected tool and its options once the user lets go of the pointer. Run every
 /// frame, so choices made through the control channel or a tool preset are remembered too.
-pub fn persist(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn persist(app: &mut SaryApp, ctx: &egui::Context) {
     if ctx.input(|i| i.pointer.any_down()) {
         return;
     }
@@ -69,13 +69,13 @@ pub fn persist(app: &mut PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// Flush the final choice on normal exit, even if no further frame ran after the tool changed.
-pub(crate) fn save_on_exit(app: &mut PhotocraftApp) -> Result<(), String> {
+pub(crate) fn save_on_exit(app: &mut SaryApp) -> Result<(), String> {
     persist(app, &egui::Context::default());
     crate::prefs_ui::save_preferences(app)
 }
 
 /// Restore the selected tool before the first frame and its options field by field.
-pub fn restore(app: &mut PhotocraftApp) {
+pub fn restore(app: &mut SaryApp) {
     let saved = app.session.prefs().selected_tool.clone();
     if !saved.is_null() {
         match serde_json::from_value::<Tool>(saved) {

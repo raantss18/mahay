@@ -1,5 +1,5 @@
-use pdfcraft_automation::{Automation, Content};
-use pdfcraft_engine::Session;
+use taratasy_automation::{Automation, Content};
+use taratasy_engine::Session;
 use serde_json::{Value, json};
 
 fn result(auto: &mut Automation, args: Value) -> Value {
@@ -189,7 +189,7 @@ fn batch_ocr_uses_existing_models_or_reports_the_missing_models_per_file() {
     std::fs::write(dir.path().join("page.pdf"), pdf()).unwrap();
     let mut auto = Automation::new().with_root(dir.path()).unwrap();
     let report = result(&mut auto, json!({"paths":["page.pdf"],"steps":["ocr","optimize"],"out_dir":"out"}));
-    if pdfcraft_engine::ocr::available() {
+    if taratasy_engine::ocr::available() {
         assert_eq!(report["completed"], 1, "{report}");
         assert_eq!(report["files"][0]["steps"][0]["skipped_pages"], 1);
         assert!(dir.path().join("out/page.pdf").exists());
@@ -233,7 +233,7 @@ fn mcp_batch_errors_keep_the_structured_per_file_report() {
     std::fs::write(dir.path().join("broken.pdf"), b"broken").unwrap();
     let input = json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"doc_batch","arguments":{"paths":["broken.pdf"],"steps":["optimize"],"out_dir":"out"}}}).to_string() + "\n";
     let mut out = Vec::new();
-    pdfcraft_automation::mcp::McpServer::new(Automation::new().with_root(dir.path()).unwrap()).serve(input.as_bytes(), &mut out).unwrap();
+    taratasy_automation::mcp::McpServer::new(Automation::new().with_root(dir.path()).unwrap()).serve(input.as_bytes(), &mut out).unwrap();
     let report: Value = serde_json::from_slice(&out).unwrap();
     assert_eq!(report["result"]["isError"], true, "{report}");
     assert_eq!(report["result"]["structuredContent"]["failed"], 1);

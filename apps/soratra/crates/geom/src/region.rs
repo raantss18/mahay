@@ -121,12 +121,12 @@ impl Region {
 
     /// The system region from the locale variables `var` reads (the process environment) and,
     /// when none is set, the platform's first preferred locale `platform` gives. One tag for
-    /// everything first (`WORDCRAFT_REGION`, then `LC_ALL`); otherwise Unix sets each convention
+    /// everything first (`SORATRA_REGION`, then `LC_ALL`); otherwise Unix sets each convention
     /// on its own: numbers (`LC_NUMERIC`, else `LANG`), paper (`LC_PAPER`) and measurement
     /// (`LC_MEASUREMENT`). Empty, `C` and `POSIX` values count as unset.
     pub fn from_locale_vars(var: impl Fn(&str) -> Option<String>, platform: impl FnOnce() -> Option<String>) -> Region {
         let var = |name: &str| var(name).filter(|v| usable_locale(v));
-        if let Some(tag) = var("WORDCRAFT_REGION").or_else(|| var("LC_ALL")) {
+        if let Some(tag) = var("SORATRA_REGION").or_else(|| var("LC_ALL")) {
             return Region::from_tag(&tag);
         }
         let base = var("LC_NUMERIC").or_else(|| var("LANG")).unwrap_or_else(|| platform().unwrap_or_default());
@@ -224,7 +224,7 @@ mod tests {
         assert_eq!(Region::from_locale_vars(env(&[("LANG", "it_IT.UTF-8")]), none).paper().0, "A4");
         assert_eq!(Region::from_locale_vars(env(&[("LANG", "en_US.UTF-8")]), none).paper().0, "Letter");
         assert_eq!(Region::from_locale_vars(env(&[("LANG", "it_IT.UTF-8"), ("LC_ALL", "en_US")]), none).paper().0, "Letter");
-        assert_eq!(Region::from_locale_vars(env(&[("LANG", "en_US"), ("WORDCRAFT_REGION", "de-DE")]), none).territory, "DE");
+        assert_eq!(Region::from_locale_vars(env(&[("LANG", "en_US"), ("SORATRA_REGION", "de-DE")]), none).territory, "DE");
         assert_eq!(Region::from_locale_vars(env(&[("LANG", "en_US"), ("LC_PAPER", "it_IT")]), none).paper().0, "A4");
         assert_eq!(Region::from_locale_vars(env(&[("LANG", "C.UTF-8")]), || Some("it-IT".into())).territory, "IT");
         assert_eq!(Region::from_locale_vars(env(&[]), none), Region::default());

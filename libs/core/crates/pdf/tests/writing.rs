@@ -5,12 +5,12 @@ use backend::configure::{Archival, PdfVersion};
 use backend::geom::{PathBuilder, Rect, Size};
 use backend::page::PageSettings;
 use backend::paint::Fill;
-use craft_pdf::write::{self, Metadata, WriteError, Writer, backend};
+use mahay_pdf::write::{self, Metadata, WriteError, Writer, backend};
 
 fn document(compress: bool) -> Vec<u8> {
     let metadata = Metadata {
-        creator: "Craft writer contract".into(),
-        producer: "Craft writer contract".into(),
+        creator: "Mahay writer contract".into(),
+        producer: "Mahay writer contract".into(),
         title: Some("Synthetic export".into()),
         authors: vec!["Test author".into()],
         description: Some("Original synthetic artwork".into()),
@@ -43,7 +43,7 @@ fn writes_pages_metadata_and_selected_version_without_a_renderer() {
         let bytes = document(compress);
         assert!(bytes.starts_with(b"%PDF-1.6"));
         let text = String::from_utf8_lossy(&bytes);
-        for value in ["Synthetic export", "Test author", "Craft writer contract", "Original synthetic artwork"] {
+        for value in ["Synthetic export", "Test author", "Mahay writer contract", "Original synthetic artwork"] {
             assert!(text.contains(value), "missing {value}");
         }
         let pdf = hayro_syntax::Pdf::new(std::sync::Arc::new(bytes.clone())).unwrap();
@@ -164,7 +164,7 @@ fn embedded_pages_can_be_written_without_interpretation_or_rasterization() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn native_unbalanced_surface_cleanup_survives_in_a_subprocess() {
-    const CHILD: &str = "CRAFT_PDF_SURFACE_PANIC_PROBE";
+    const CHILD: &str = "MAHAY_PDF_SURFACE_PANIC_PROBE";
     if std::env::var_os(CHILD).is_some() {
         let result: Result<(), AppError> = write::guard(|| {
             let mut writer = Writer::new(Default::default(), Metadata::default());

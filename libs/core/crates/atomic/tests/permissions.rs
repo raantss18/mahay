@@ -1,6 +1,6 @@
 #![cfg(unix)]
 
-use craft_atomic::{NewFilePermissions, WriteOptions, atomic_write, write_new};
+use mahay_atomic::{NewFilePermissions, WriteOptions, atomic_write, write_new};
 use std::fs::{self, File, Permissions};
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
@@ -12,7 +12,7 @@ struct TempDir(PathBuf);
 impl TempDir {
     fn new() -> io::Result<Self> {
         static N: AtomicU64 = AtomicU64::new(0);
-        let path = std::env::temp_dir().join(format!("craft-permissions-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+        let path = std::env::temp_dir().join(format!("mahay-permissions-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
         fs::create_dir(&path)?;
         Ok(Self(path))
     }
@@ -32,9 +32,9 @@ fn child(dir: &Path, mask: &str, expected: &str, check_acl: bool) -> io::Result<
     let output = Command::new("sh")
         .args(["-c", "umask \"$1\"; exec \"$2\" --exact permission_child --nocapture", "permissions", mask])
         .arg(std::env::current_exe()?)
-        .env("CRAFT_PERMISSION_TEST_DIR", dir)
-        .env("CRAFT_PERMISSION_TEST_EXPECTED", expected)
-        .env("CRAFT_PERMISSION_TEST_ACL", if check_acl { "1" } else { "0" })
+        .env("MAHAY_PERMISSION_TEST_DIR", dir)
+        .env("MAHAY_PERMISSION_TEST_EXPECTED", expected)
+        .env("MAHAY_PERMISSION_TEST_ACL", if check_acl { "1" } else { "0" })
         .output()?;
     assert!(output.status.success(), "umask {mask}:\n{}\n{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
     assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"), "child must execute its test");
@@ -52,9 +52,9 @@ fn normal_creation_matches_os_permissions() -> io::Result<()> {
 
 #[test]
 fn permission_child() -> io::Result<()> {
-    let Some(dir) = std::env::var_os("CRAFT_PERMISSION_TEST_DIR") else { return Ok(()) };
+    let Some(dir) = std::env::var_os("MAHAY_PERMISSION_TEST_DIR") else { return Ok(()) };
     let dir = Path::new(&dir);
-    let expected = u32::from_str_radix(&std::env::var("CRAFT_PERMISSION_TEST_EXPECTED").map_err(io::Error::other)?, 8).map_err(io::Error::other)?;
+    let expected = u32::from_str_radix(&std::env::var("MAHAY_PERMISSION_TEST_EXPECTED").map_err(io::Error::other)?, 8).map_err(io::Error::other)?;
     let ordinary = dir.join("ordinary");
     fs::write(&ordinary, b"ordinary")?;
     assert_eq!(mode(&ordinary)?, expected);
@@ -78,7 +78,7 @@ fn permission_child() -> io::Result<()> {
         }
         assert_eq!(mode(&path)?, expected, "{tag}");
         assert_eq!(fs::read(&path)?, payload);
-        if std::env::var("CRAFT_PERMISSION_TEST_ACL").as_deref() == Ok("1") {
+        if std::env::var("MAHAY_PERMISSION_TEST_ACL").as_deref() == Ok("1") {
             let acl = |p: &Path| -> io::Result<Vec<u8>> {
                 let output = Command::new("getfacl").args(["-c", "-n"]).arg(p).output()?;
                 assert!(output.status.success());
@@ -124,7 +124,7 @@ fn permission_child() -> io::Result<()> {
         assert_eq!(result.map_err(|e| e.kind()), Err(io::ErrorKind::StorageFull));
         assert!(!path.exists());
     }
-    assert!(fs::read_dir(dir)?.all(|e| e.is_ok_and(|e| !e.file_name().to_string_lossy().ends_with(".craft_tmp"))));
+    assert!(fs::read_dir(dir)?.all(|e| e.is_ok_and(|e| !e.file_name().to_string_lossy().ends_with(".mahay_tmp"))));
     Ok(())
 }
 

@@ -1,7 +1,7 @@
 //! Just enough of the Compound File Binary (CFB/OLE2) container to tell a password-protected
 //! presentation apart: PowerPoint wraps an encrypted `.pptx` in a CFB holding `EncryptionInfo`
 //! and `EncryptedPackage` streams (ECMA-376 / [MS-OFFCRYPTO]) instead of a zip. Every read is
-//! bounds-checked and every loop bounded. Copied from GridCraft's `crates/xlsx/src/cfb.rs`.
+//! bounds-checked and every loop bounded. Copied from Tabilao's `crates/xlsx/src/cfb.rs`.
 
 /// The CFB signature at the start of the file.
 const SIGNATURE: [u8; 8] = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
@@ -176,10 +176,10 @@ mod tests {
     #[test]
     fn a_password_protected_presentation_is_named_as_such() {
         let locked = build(&["EncryptionInfo", "EncryptedPackage"]);
-        let err = deckcraft_engine::cmd::file::open_presentation("Locked.pptx", &locked).unwrap_err().to_string();
+        let err = seho_engine::cmd::file::open_presentation("Locked.pptx", &locked).unwrap_err().to_string();
         assert!(err.contains("Locked.pptx is password-protected"), "{err}");
         let ppt = build(&["PowerPoint Document", "Current User"]);
-        let err = deckcraft_engine::cmd::file::open_presentation("Old.ppt", &ppt).unwrap_err().to_string();
+        let err = seho_engine::cmd::file::open_presentation("Old.ppt", &ppt).unwrap_err().to_string();
         assert!(!err.contains("password"), "{err}");
     }
 }

@@ -15,7 +15,7 @@ fn peak_rss_bytes() -> Option<u64> {
 #[cfg(target_os = "linux")]
 #[test]
 fn pnm_decode_peak_memory_stays_near_the_output_size() {
-    use photocraft_codecs::*;
+    use sary_codecs::*;
 
     const SIDE: u32 = 4096; // 16 MiB of 8-bit gray output
     let out_bytes = (SIDE * SIDE) as u64;

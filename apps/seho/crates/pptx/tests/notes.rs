@@ -4,8 +4,8 @@
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_model::defaults;
-use deckcraft_model::text::{Bullet, ParaProps, TextBody};
+use seho_model::defaults;
+use seho_model::text::{Bullet, ParaProps, TextBody};
 
 const NOTES: &str = "ppt/notesSlides/notesSlide1.xml";
 
@@ -19,7 +19,7 @@ const NOTES_XML: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"
 fn deck() -> Vec<u8> {
     let mut p = defaults::new_presentation(None);
     Arc::make_mut(&mut p.slides[0]).notes = TextBody::from_text("placeholder");
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut src = zip::ZipArchive::new(Cursor::new(bytes)).expect("zip");
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let mut found = false;
@@ -62,17 +62,17 @@ fn assert_formatted(notes: &TextBody) {
 
 #[test]
 fn notes_import_keeps_bold_levels_and_indents() {
-    let p = deckcraft_pptx::import(&deck()).expect("import");
+    let p = seho_pptx::import(&deck()).expect("import");
     assert_formatted(&p.slides[0].notes);
 }
 
 #[test]
 fn notes_formatting_survives_a_round_trip() {
-    let p = deckcraft_pptx::import(&deck()).expect("import");
-    let again = deckcraft_pptx::import(&deckcraft_pptx::export(&p).expect("export")).expect("reimport");
+    let p = seho_pptx::import(&deck()).expect("import");
+    let again = seho_pptx::import(&seho_pptx::export(&p).expect("export")).expect("reimport");
     assert_formatted(&again.slides[0].notes);
     // And the written XML says so, for PowerPoint.
-    let bytes = deckcraft_pptx::export(&again).expect("export");
+    let bytes = seho_pptx::export(&again).expect("export");
     let mut z = zip::ZipArchive::new(Cursor::new(bytes)).expect("zip");
     let mut xml = String::new();
     z.by_name(NOTES).expect("notes part").read_to_string(&mut xml).expect("utf-8");

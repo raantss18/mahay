@@ -1,7 +1,7 @@
 //! Original border diagrams, painted with the same strokes as worksheet cells.
 
 use egui::{Align2, Color32, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use gridcraft_engine::model::{BorderStyle, Borders, Theme};
+use tabilao_engine::model::{BorderStyle, Borders, Theme};
 
 use crate::grid::paint_border;
 use crate::theme::{self, Tokens};

@@ -1,5 +1,5 @@
-//! What this build calls itself. A local or patched build sets `PDFCRAFT_BUILD_LABEL` at compile
-//! time (`PDFCRAFT_BUILD_LABEL=titlebar cargo build`, or through `packaging/linux/package.sh`), so
+//! What this build calls itself. A local or patched build sets `TARATASY_BUILD_LABEL` at compile
+//! time (`TARATASY_BUILD_LABEL=titlebar cargo build`, or through `packaging/linux/package.sh`), so
 //! it can be told from the release of the same version. The version itself stays the release's:
 //! the update check compares it with published releases.
 
@@ -7,7 +7,7 @@
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// The compile-time build label, if any.
-pub const LABEL: Option<&str> = option_env!("PDFCRAFT_BUILD_LABEL");
+pub const LABEL: Option<&str> = option_env!("TARATASY_BUILD_LABEL");
 
 /// The version as shown to people: `0.7.1`, or `0.7.1 (titlebar)` for a labelled build.
 pub fn version() -> String {

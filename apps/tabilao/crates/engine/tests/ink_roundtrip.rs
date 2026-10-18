@@ -1,9 +1,9 @@
 //! Native ink remains editable after XLSX saves, including a save after an unrelated cell edit.
 
-use gridcraft_engine::Session;
-use gridcraft_engine::cmd::draw::{ink_points, ink_width};
-use gridcraft_engine::core::{CellRef, Value};
-use gridcraft_engine::model::{Shape, ShapeKind};
+use tabilao_engine::Session;
+use tabilao_engine::cmd::draw::{ink_points, ink_width};
+use tabilao_engine::core::{CellRef, Value};
+use tabilao_engine::model::{Shape, ShapeKind};
 use serde_json::json;
 
 fn workbook() -> Session {

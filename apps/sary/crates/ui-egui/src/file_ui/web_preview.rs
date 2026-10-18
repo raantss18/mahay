@@ -2,7 +2,7 @@
 use super::*;
 
 /// Export dimensions, using the same percent/width/height precedence as web_document.
-pub fn dimensions(doc: &photocraft_doc::Document, p: &Value) -> Result<(f64, f64), String> {
+pub fn dimensions(doc: &sary_doc::Document, p: &Value) -> Result<(f64, f64), String> {
     let (w0, h0) = (f64::from(doc.size.width).max(1.0), f64::from(doc.size.height).max(1.0));
     let positive = |k: &str| p.get(k).and_then(Value::as_f64).filter(|v| v.is_finite() && *v > 0.0);
     let (w, h) = match (positive("percent"), positive("width"), positive("height")) {
@@ -18,7 +18,7 @@ pub fn dimensions(doc: &photocraft_doc::Document, p: &Value) -> Result<(f64, f64
     Ok((w.round().max(1.0), h.round().max(1.0)))
 }
 
-pub fn prepare_table(app: &PhotocraftApp, f: &mut Map<String, Value>) -> Result<(), String> {
+pub fn prepare_table(app: &SaryApp, f: &mut Map<String, Value>) -> Result<(), String> {
     if !matches!(s(f, "format", "jpeg").as_str(), "gif" | "png8") {
         return Ok(());
     }
@@ -59,7 +59,7 @@ pub fn prepare_table(app: &PhotocraftApp, f: &mut Map<String, Value>) -> Result<
         }
         let (doc, _, _) = web_cmds::web_document(&st.doc, &proxy, &settings).map_err(|e| e.to_string())?;
         f.insert("__paletteApproximate".into(), json!(scale < 1.0));
-        let buf = photocraft_compose::flatten(&doc);
+        let buf = sary_compose::flatten(&doc);
         let mut optimized =
             web_cmds::optimize(&buf.px, doc.size.width as usize, doc.bounds(), &settings, None, None, doc.resolution_dpi, false).map_err(|e| e.to_string())?;
         // Tiny transparent features may disappear in the proxy; keep room for their index.
@@ -137,7 +137,7 @@ pub fn optimized(ui: &mut egui::Ui, key: egui::Id, signature: &str, p: &Value, p
     } else {
         let settings = WebSettings::from_params(&base, "preview").map_err(|e| e.to_string())?;
         let encoded = Arc::new(
-            web_cmds::optimize(px, w as usize, photocraft_geom::Rect::new(0, 0, w as i32, h as i32), &settings, None, None, 72.0, true)
+            web_cmds::optimize(px, w as usize, sary_geom::Rect::new(0, 0, w as i32, h as i32), &settings, None, None, 72.0, true)
                 .map_err(|e| e.to_string())?,
         );
         ui.data_mut(|d| d.insert_temp(key, (signature, encoded.clone())));
@@ -306,7 +306,7 @@ mod tests {
     #[test]
     fn absurd_dimensions_and_navigation_fields_are_safe() {
         let doc =
-            photocraft_doc::Document::new("fixture", photocraft_geom::Size::new(100, 50), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+            sary_doc::Document::new("fixture", sary_geom::Size::new(100, 50), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
         assert!(dimensions(&doc, &json!({"percent": 1e308})).is_err());
         assert!(dimensions(&doc, &json!({"width": 1e300})).is_err());
         let f = serde_json::from_value::<Map<String, Value>>(json!({"__zoom": 1e300, "__center": [1e300, -1e300]})).unwrap();

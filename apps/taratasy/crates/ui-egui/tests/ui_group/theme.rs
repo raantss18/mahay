@@ -2,12 +2,12 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::PdfCraftApp;
-use pdfcraft_ui_egui::theme::{ThemeKind, ThemePreference, Tokens};
+use taratasy_ui_egui::TaratasyApp;
+use taratasy_ui_egui::theme::{ThemeKind, ThemePreference, Tokens};
 
-fn harness() -> Harness<'static, PdfCraftApp> {
+fn harness() -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1100.0, 800.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app
     });
@@ -16,7 +16,7 @@ fn harness() -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn assert_theme(h: &Harness<'static, PdfCraftApp>, preference: ThemePreference, kind: ThemeKind) {
+fn assert_theme(h: &Harness<'static, TaratasyApp>, preference: ThemePreference, kind: ThemeKind) {
     assert_eq!(h.state().theme_preference, preference);
     assert_eq!(h.state().theme, kind);
     assert_eq!(Tokens::get(&h.ctx).kind, kind);
@@ -30,12 +30,12 @@ fn assert_theme(h: &Harness<'static, PdfCraftApp>, preference: ThemePreference, 
 }
 
 /// A click on the title bar's theme button cycles Light, Dark, System.
-fn click_toolbar(h: &mut Harness<'static, PdfCraftApp>, label: &str) {
+fn click_toolbar(h: &mut Harness<'static, TaratasyApp>, label: &str) {
     h.get_by_label(&format!("Display theme: {label}")).click();
     h.run_steps(3);
 }
 
-fn open_view_menu(h: &mut Harness<'static, PdfCraftApp>) {
+fn open_view_menu(h: &mut Harness<'static, TaratasyApp>) {
     h.get_by_label("Menu").click();
     h.run_steps(2);
     h.get_by_label("View ⏵").hover();
@@ -85,16 +85,16 @@ fn toolbar_and_view_menu_share_three_state_preferences() {
 #[test]
 fn saved_preferences_restore_with_legacy_light_dark_settings() {
     for (value, preference) in [("light", ThemePreference::Light), ("dark", ThemePreference::Dark), ("system", ThemePreference::System)] {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.set_option("theme", value).unwrap();
         let saved = app.persist();
-        let mut restored = PdfCraftApp::new();
+        let mut restored = TaratasyApp::new();
         restored.set_option("language", "en").unwrap();
         restored.restore(&saved);
         assert_eq!(restored.theme_preference, preference);
     }
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.restore(r#"{"theme":"Dark"}"#);
     assert_eq!(app.theme_preference, ThemePreference::Dark);
@@ -109,7 +109,7 @@ fn saved_preferences_restore_with_legacy_light_dark_settings() {
 
 #[test]
 fn commands_and_options_apply_before_the_first_frame() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.run_command("view.theme.dark");
     assert_eq!(app.theme_preference, ThemePreference::Dark);
@@ -131,7 +131,7 @@ fn commands_and_options_apply_before_the_first_frame() {
 #[test]
 fn restored_system_tracks_native_input_without_rewriting_saved_preference() {
     let mut h = Harness::builder().with_size(egui::vec2(1100.0, 800.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.restore(r#"{"theme":"System"}"#);
         app
@@ -159,7 +159,7 @@ fn restored_system_tracks_native_input_without_rewriting_saved_preference() {
 
 #[test]
 fn unknown_system_uses_light_after_a_manual_dark_choice() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_theme_preference(ThemePreference::Dark);
     app.set_theme_preference(ThemePreference::System);
     assert_eq!(app.theme, ThemeKind::Light);
@@ -187,7 +187,7 @@ fn native_appearance_remains_inherited_for_every_saved_choice() {
         let observed = commands.clone();
         let mut h = Harness::builder().with_size(egui::vec2(1100.0, 800.0)).build_eframe(move |cc| {
             cc.egui_ctx.add_plugin(commands);
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.set_theme_preference(preference);
             app
@@ -210,7 +210,7 @@ fn native_appearance_remains_inherited_for_every_saved_choice() {
 #[test]
 fn preferences_theme_cards_and_use_system_setting_stay_in_sync() {
     use egui::accesskit::Role;
-    fn mode_shown(h: &Harness<'static, PdfCraftApp>) -> String {
+    fn mode_shown(h: &Harness<'static, TaratasyApp>) -> String {
         let combo =
             h.get_by(|n| n.role() == Role::ComboBox && n.value().is_some_and(|v| ["Use system setting", "Light", "Dark"].contains(&v.as_str())));
         combo.value().unwrap_or_default()

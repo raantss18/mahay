@@ -8,8 +8,8 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::fmt::Write as _;
 
-use deckcraft_geom::preset::FillMode;
-use deckcraft_model::CustomPath;
+use seho_geom::preset::FillMode;
+use seho_model::CustomPath;
 
 use crate::xml::{A, El, W};
 

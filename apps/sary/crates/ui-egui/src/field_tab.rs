@@ -105,34 +105,34 @@ mod tests {
     use egui_kittest::{Harness, kittest::Queryable};
     use serde_json::{Value, json};
 
-    use crate::PhotocraftApp;
+    use crate::SaryApp;
     use crate::state::{DialogKind, UiState};
 
-    fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+    fn harness(app: SaryApp) -> Harness<'static, SaryApp> {
         let h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_ui_state(|ui, app| crate::dialogs::show(app, ui.ctx()), app);
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h
     }
 
-    fn fields(h: &Harness<'static, PhotocraftApp>) -> serde_json::Map<String, Value> {
+    fn fields(h: &Harness<'static, SaryApp>) -> serde_json::Map<String, Value> {
         h.state().ui.dialogs.first().map(|d| d.fields.clone()).expect("the dialog is open")
     }
 
-    fn num(h: &Harness<'static, PhotocraftApp>, key: &str) -> f64 {
+    fn num(h: &Harness<'static, SaryApp>, key: &str) -> f64 {
         fields(h).get(key).and_then(Value::as_f64).unwrap_or(f64::NAN)
     }
 
-    fn tab(h: &mut Harness<'static, PhotocraftApp>) {
+    fn tab(h: &mut Harness<'static, SaryApp>) {
         h.key_press(egui::Key::Tab);
         h.run_steps(2);
     }
 
-    fn arrow(h: &mut Harness<'static, PhotocraftApp>, key: egui::Key, m: egui::Modifiers) {
+    fn arrow(h: &mut Harness<'static, SaryApp>, key: egui::Key, m: egui::Modifiers) {
         h.key_press_modifiers(m, key);
         h.run_steps(2);
     }
 
-    fn type_text(h: &mut Harness<'static, PhotocraftApp>, text: &str) {
+    fn type_text(h: &mut Harness<'static, SaryApp>, text: &str) {
         for c in text.chars() {
             h.event(egui::Event::Text(c.to_string()));
             h.run_steps(1);
@@ -143,9 +143,9 @@ mod tests {
     /// sliders), ⇧Tab back, and ↑ / ↓ step the focused field by 1 (⇧: 10).
     #[test]
     fn hue_saturation_tabs_through_its_fields_and_arrows_step_them() {
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width": 64, "height": 48})).unwrap();
-        let mut h = harness(PhotocraftApp::new(s, crate::Services::default()));
+        let mut h = harness(SaryApp::new(s, crate::Services::default()));
         crate::adjust_dialog::open(h.state_mut(), "image.adjustments.hueSaturation").unwrap();
         h.run_steps(3);
         assert_eq!(h.ctx.memory(|m| m.focused()), None, "nothing is focused to begin with");
@@ -184,7 +184,7 @@ mod tests {
     /// New Document opens with the name selected; Tab goes Width → Height → Resolution and wraps.
     #[test]
     fn new_document_opens_on_the_name_and_tabs_to_width_then_height() {
-        let mut h = harness(PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default()));
+        let mut h = harness(SaryApp::new(sary_engine::Session::new(), crate::Services::default()));
         h.state_mut().ui.open_dialog(DialogKind::NewDocument, UiState::new_document_fields());
         h.run_steps(3);
         assert!(h.get_by_role(Role::TextInput).is_focused(), "the name field has focus");
@@ -218,7 +218,7 @@ mod tests {
     /// Tab is the dialog's: the modal underneath never sees it, and a dialog with no fields swallows it.
     #[test]
     fn tab_in_a_dialog_without_fields_does_nothing() {
-        let mut h = harness(PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default()));
+        let mut h = harness(SaryApp::new(sary_engine::Session::new(), crate::Services::default()));
         h.state_mut().ui.open_dialog(DialogKind::About, Default::default());
         h.run_steps(3);
         tab(&mut h);

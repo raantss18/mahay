@@ -1,6 +1,6 @@
 # Paint.NET documents
 
-PhotoCraft opens PDN3 `.pdn` files natively, without Paint.NET, Python, .NET or an external
+Sary opens PDN3 `.pdn` files natively, without Paint.NET, Python, .NET or an external
 converter. File › Open, recent files, drops, the CLI and automation use the shared importer.
 The browser file picker also accepts `.pdn`.
 
@@ -12,10 +12,10 @@ separate Paint.NET variants because their edge cases differ. The blend menus sta
 layer that uses one of these six modes lists its own mode after Photoshop's, and other layers don't
 show them.
 
-PDN support is **import only**. Save opens Save As and suggests `.pcraft`, which preserves the
+PDN support is **import only**. Save opens Save As and suggests `.sary`, which preserves the
 layers and every blend mode. Exporting as `.pdn` fails with an explanatory error. PSD cannot
 represent six Paint.NET variants; exporting those as PSD reports that their blending was
-changed to Normal. Use `.pcraft` for continued editing, and PNG for a flattened rendering.
+changed to Normal. Use `.sary` for continued editing, and PNG for a flattened rendering.
 
 The reader supports PDN3's typed NRBF objects, both numeric and older blend-operation records,
 BGRA32 surfaces with padded rows, shared pixel memory, and gzip or raw numbered pixel chunks.
@@ -32,16 +32,16 @@ padding, reversed chunks, old/new mode records, native saves, cancellation and m
 The GPU parity tests include the additional modes. Local real-file checks are opt-in:
 
 ```sh
-PDN_TEST_DIR=/path/to/pdn-and-png-exports cargo test -p photocraft-io --test pdn_corpus -- --ignored --nocapture
-PDN_TEST_FILE=/path/to/layered.pdn cargo test -p photocraft-engine --test pdn -- --ignored
+PDN_TEST_DIR=/path/to/pdn-and-png-exports cargo test -p sary-io --test pdn_corpus -- --ignored --nocapture
+PDN_TEST_FILE=/path/to/layered.pdn cargo test -p sary-engine --test pdn -- --ignored
 ```
 
 Each PDN in `PDN_TEST_DIR` needs a corresponding `.png` export with the same basename. The
-test checks pixels against that export and verifies layer preservation through `.pcraft`.
+test checks pixels against that export and verifies layer preservation through `.sary`.
 Keep real-file corpora outside the application repository.
 
 The local Paint.NET 4.0.10 corpus (14 small texture documents, 1–8 layers) also matches its
-embedded full-size previews within 2.142/255. Older Paint.NET rounded between layers; PhotoCraft
+embedded full-size previews within 2.142/255. Older Paint.NET rounded between layers; Sary
 keeps floating-point precision, so layered composites are not necessarily byte-identical.
 A supplied 5.x document (1280×720, 11 layers, header version `5.3.8488.42200`) passes editing,
 painting, undo/redo and native-save checks. Its embedded 256×144 preview matches a Catmull–Rom

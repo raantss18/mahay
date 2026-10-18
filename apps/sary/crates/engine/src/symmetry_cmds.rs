@@ -1,8 +1,8 @@
 //! Per-document painting symmetry: straight presets or a sampled Bézier path.
 //! Path samples reflect across their nearest segment, including curved paths.
 
-use photocraft_doc::{LayerContent, vector::Path};
-use photocraft_paint::{
+use sary_doc::{LayerContent, vector::Path};
+use sary_paint::{
     StrokePoint,
     symmetry::{PresetSymmetry, SymmetryMode},
 };
@@ -222,13 +222,13 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::vector::Subpath;
+    use sary_doc::vector::Subpath;
 
     #[test]
     fn curved_axis_reflects_near_local_segment() {
         let mut subpath = Subpath::polyline(&[(10.0, 0.0), (10.0, 20.0)]);
-        subpath.knots[0].out_ctrl = photocraft_geom::Point::new(20.0, 0.0);
-        subpath.knots[1].in_ctrl = photocraft_geom::Point::new(20.0, 20.0);
+        subpath.knots[0].out_ctrl = sary_geom::Point::new(20.0, 0.0);
+        subpath.knots[1].in_ctrl = sary_geom::Point::new(20.0, 20.0);
         let axis = SymmetryAxis::from_path("work".into(), &Path::new(vec![subpath])).unwrap();
         assert!(axis.segments.len() > 1);
         let reflected = axis.reflect(StrokePoint::new(20.0, 10.0, 1.0));

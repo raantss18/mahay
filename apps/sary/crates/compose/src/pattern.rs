@@ -8,7 +8,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use photocraft_doc::{ColorMode, Pattern, PixelFormat, Rect, SampleType};
+use sary_doc::{ColorMode, Pattern, PixelFormat, Rect, SampleType};
 
 pub(crate) const PREPARED_PATTERN_BYTES: usize = 64 << 20;
 const MAX_PREPARED_PATTERNS: usize = 64;
@@ -44,7 +44,7 @@ impl<'a> PreparedPatterns<'a> {
     }
 
     pub(crate) fn get(&self, id: &str, name: &str) -> Option<Arc<Tile>> {
-        let p = photocraft_doc::pattern::find(self.patterns, id, name)?;
+        let p = sary_doc::pattern::find(self.patterns, id, name)?;
         if !p.is_paintable() {
             return None;
         }
@@ -100,8 +100,8 @@ pub fn pattern_rgba(p: &Pattern, mode: ColorMode) -> Vec<[f32; 4]> {
         let fmt = PixelFormat::new(mode, SampleType::F32, true);
         let mut v = [0.0f32; 5];
         for q in &mut px {
-            let n = photocraft_raster::from_rgba_into(&fmt, *q, &mut v);
-            *q = photocraft_raster::to_rgba(&fmt, v.get(..n).unwrap_or_default());
+            let n = sary_raster::from_rgba_into(&fmt, *q, &mut v);
+            *q = sary_raster::to_rgba(&fmt, v.get(..n).unwrap_or_default());
         }
     }
     px
@@ -233,7 +233,7 @@ pub fn render(tile: &Tile, place: &Placement, rect: Rect) -> Vec<[f32; 4]> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::{PixelFormat, Surface};
+    use sary_doc::{PixelFormat, Surface};
 
     fn checker() -> Pattern {
         let mut s = Surface::new(PixelFormat::RGBA8);

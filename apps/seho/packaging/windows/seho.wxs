@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Seho MSI (WiX Toolset v5: `dotnet tool install -g wix`). Built by package.ps1:
+
+    wix build seho.wxs -arch x64 -d Version=1.2.3 -d BinDir=... -d IconPath=... -o out.msi
+
+  Per-machine install into Program Files, a Start Menu shortcut, `.seho` owned by
+  Seho, and Seho offered under "Open with" for .pptx/.potx/.ppsx (without taking over
+  the user's default app for them).
+
+  UpgradeCode is fixed for Seho forever (playbook §6); never change it.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Seho"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="6F9C69E7-7825-40D2-BF26-C274DA676425"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Seho presentations and slide shows" Manufacturer="Learning Machines LLC" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Seho is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="SehoIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="SehoIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Seho" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="Seho" Level="1">
+      <ComponentGroupRef Id="SehoFiles" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="SehoFiles" Directory="INSTALLFOLDER">
+      <Component Id="SehoApp" Guid="D87EA444-41A4-4C19-922E-66D1A29461FF">
+        <File Id="SehoExe" Source="$(var.BinDir)\seho.exe" KeyPath="yes">
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Seho"
+              Description="Seho presentations and slide shows" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
+              Icon="SehoIcon.ico" IconIndex="0" />
+        </File>
+
+        <!-- .seho: Seho's own format. -->
+        <ProgId Id="Seho.Presentation" Description="Seho Presentation" Icon="SehoExe" IconIndex="0">
+          <Extension Id="seho" ContentType="application/x-seho">
+            <Verb Id="open" Command="Open" TargetFile="SehoExe" Argument="&quot;%1&quot;" />
+          </Extension>
+        </ProgId>
+
+        <!-- "Open with" for PowerPoint formats, without becoming the default. -->
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\seho.exe" Name="FriendlyAppName" Value="Seho" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\seho.exe\shell\open\command" Value="&quot;[#SehoExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\seho.exe\SupportedTypes" Name=".seho" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\seho.exe\SupportedTypes" Name=".pptx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\seho.exe\SupportedTypes" Name=".potx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\seho.exe\SupportedTypes" Name=".ppsx" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.pptx\OpenWithProgids" Name="Seho.Presentation" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.potx\OpenWithProgids" Name="Seho.Presentation" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.ppsx\OpenWithProgids" Name="Seho.Presentation" Value="" Type="string" />
+
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\seho.exe" Value="[#SehoExe]" Type="string" />
+      </Component>
+
+      <Component Id="SehoCli">
+        <File Id="SehoCliExe" Source="$(var.BinDir)\seho-cli.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

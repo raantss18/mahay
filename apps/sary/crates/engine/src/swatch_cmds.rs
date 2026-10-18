@@ -3,14 +3,14 @@
 //! Photoshop `.aco` and Adobe Swatch Exchange `.ase` files.
 //!
 //! The library is [`PresetState::swatches`](crate::presets::PresetState) (model and colour
-//! conversions in [`crate::presets::swatches`]); file parsing is `photocraft_psd::{aco, ase}`.
+//! conversions in [`crate::presets::swatches`]); file parsing is `sary_psd::{aco, ase}`.
 //! Swatches are addressed by name (names are kept unique across the library, as for the other
 //! presets), optionally narrowed by `group`, or by `index` (position across all groups, in
 //! panel order). Like the other preset commands they change the preferences document, not a
 //! document's history.
 
-use photocraft_psd::aco::{AcoColor, AcoSwatch};
-use photocraft_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch};
+use sary_psd::aco::{AcoColor, AcoSwatch};
+use sary_psd::ase::{AseColor, AseEntry, AseFile, AseKind, AseSwatch};
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -469,11 +469,11 @@ pub fn read_file(bytes: &[u8], format: Format, group: &str) -> std::result::Resu
     let fallback = |i: usize, name: &str| if name.trim().is_empty() { format!("Swatch {}", i + 1) } else { clip(name.trim()) };
     match format {
         Format::Aco => {
-            let f = photocraft_psd::aco::parse(bytes).map_err(|e| format!("not a readable .aco swatch file: {e}"))?;
+            let f = sary_psd::aco::parse(bytes).map_err(|e| format!("not a readable .aco swatch file: {e}"))?;
             let books = f.swatches.iter().filter(|s| matches!(s.color, AcoColor::Other { .. })).count();
             if books > 0 {
                 warnings.push(format!(
-                    "{books} swatches use a colour book or colour space PhotoCraft can't show; they are kept (shown gray) and saved back unchanged"
+                    "{books} swatches use a colour book or colour space Sary can't show; they are kept (shown gray) and saved back unchanged"
                 ));
             }
             let items = f
@@ -485,7 +485,7 @@ pub fn read_file(bytes: &[u8], format: Format, group: &str) -> std::result::Resu
             out.push(Group::new(group, items));
         }
         Format::Ase => {
-            let f = photocraft_psd::ase::parse(bytes).map_err(|e| format!("not a readable .ase swatch file: {e}"))?;
+            let f = sary_psd::ase::parse(bytes).map_err(|e| format!("not a readable .ase swatch file: {e}"))?;
             let mut skipped = 0;
             let mut n = 0usize;
             let mut conv = |s: &AseSwatch| -> Option<Swatch> {
@@ -538,7 +538,7 @@ pub fn write_file(groups: &[Group<Swatch>], format: Format) -> std::result::Resu
                 warnings.push(".aco files don't mark spot or global colours; save as .ase to keep them".into());
             }
             let n = swatches.len();
-            let bytes = photocraft_psd::aco::write(&swatches).map_err(|e| e.to_string())?;
+            let bytes = sary_psd::aco::write(&swatches).map_err(|e| e.to_string())?;
             Ok((bytes, n, warnings))
         }
         Format::Ase => {
@@ -563,7 +563,7 @@ pub fn write_file(groups: &[Group<Swatch>], format: Format) -> std::result::Resu
             if books > 0 {
                 warnings.push(format!("{books} colour-book swatches can't be stored in an .ase file and were left out (save as .aco to keep them)"));
             }
-            let bytes = photocraft_psd::ase::write(&AseFile { entries }).map_err(|e| e.to_string())?;
+            let bytes = sary_psd::ase::write(&AseFile { entries }).map_err(|e| e.to_string())?;
             Ok((bytes, n, warnings))
         }
     }
@@ -574,7 +574,7 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     let (bytes, stem) = crate::preset_import_cmds::file_bytes(p, CMD, ".aco or .ase file")?;
     let format = match str_param(p, "format") {
         Some(f) => Format::parse(f).ok_or_else(|| bad(CMD, format!("unknown format `{f}` (aco|ase)")))?,
-        None if bytes.starts_with(photocraft_psd::ase::SIGNATURE) => Format::Ase,
+        None if bytes.starts_with(sary_psd::ase::SIGNATURE) => Format::Ase,
         None if matches!(bytes.get(..2), Some([0, 1] | [0, 2])) => Format::Aco,
         None => ext_format(str_param(p, "path")).ok_or_else(|| bad(CMD, "not an .aco or .ase swatch file"))?,
     };
@@ -670,7 +670,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
             crate::file_cmds::write_file(path, &bytes)?;
             out["path"] = json!(path);
         }
-        None => out["data"] = json!(photocraft_paint::tile::b64_encode(&bytes)),
+        None => out["data"] = json!(sary_paint::tile::b64_encode(&bytes)),
     }
     Ok(out)
 }

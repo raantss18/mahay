@@ -1,8 +1,8 @@
 //! Text boxes' text direction, alignment and linked boxes (Shape Format › Text).
 
 use super::*;
-use wordcraft_doc::props::{TextVert, VAlign};
-use wordcraft_doc::{PartKind, Pos, TextBody, para_block};
+use soratra_doc::props::{TextVert, VAlign};
+use soratra_doc::{PartKind, Pos, TextBody, para_block};
 
 fn lay(doc: &Document) -> DocLayout {
     let mut c = LayoutCache::new();
@@ -16,7 +16,7 @@ fn text_box(d: &mut Document, para: usize, text: &str, w: f32, h: f32, body: Tex
         p.body = body;
     }
     let shape = InlineObject::Shape {
-        kind: wordcraft_doc::para::ShapeKind::TextBox,
+        kind: soratra_doc::para::ShapeKind::TextBox,
         w,
         h,
         fill: None,

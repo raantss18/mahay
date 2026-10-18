@@ -1,6 +1,6 @@
 #[cfg(unix)]
-use craft_atomic::{NewFilePermissions, WriteOptions, atomic_write, write_new};
-use craft_atomic::{atomic_write_with, or_plain_fsync, write_new_with};
+use mahay_atomic::{NewFilePermissions, WriteOptions, atomic_write, write_new};
+use mahay_atomic::{atomic_write_with, or_plain_fsync, write_new_with};
 use std::cell::Cell;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -10,7 +10,7 @@ struct TempDir(PathBuf);
 impl TempDir {
     fn new(tag: &str) -> Self {
         static N: AtomicU64 = AtomicU64::new(0);
-        let d = std::env::temp_dir().join(format!("craft-atomic-int-{tag}-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+        let d = std::env::temp_dir().join(format!("mahay-atomic-int-{tag}-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).ok();
         Self(d)
@@ -30,7 +30,7 @@ impl Drop for TempDir {
 fn assert_no_temp(dir: &Path) {
     let leftovers: Vec<_> = std::fs::read_dir(dir)
         .ok()
-        .map(|entries| entries.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).filter(|n| n.ends_with(".craft_tmp")).collect())
+        .map(|entries| entries.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).filter(|n| n.ends_with(".mahay_tmp")).collect())
         .unwrap_or_default();
     assert!(leftovers.is_empty(), "temporary files left behind: {leftovers:?}");
 }

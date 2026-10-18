@@ -5,7 +5,7 @@ https://thenounproject.com/icon/magnetic-lasso-tool-177513/
 licensed under Creative Commons Attribution 3.0 Unported (CC BY 3.0),
 https://creativecommons.org/licenses/by/3.0/
 
-Changes by PhotoCraft contributors: redrawn as a 24 x 24 SVG on PhotoCraft's toolbar grid, with
+Changes by Sary contributors: redrawn as a 24 x 24 SVG on Sary's toolbar grid, with
 round-capped strokes in place of the original line weights, so it can be tinted and rasterized
 like the other toolbar icons.
 

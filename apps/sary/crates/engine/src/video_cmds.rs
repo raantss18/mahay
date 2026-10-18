@@ -1,11 +1,11 @@
 //! Layer › Video Layers (and Rasterize › Video). A video layer holds a stack of frames; the
 //! layer's displayed raster content is the frame at the timeline playhead, kept in sync by [`sync`]
 //! after any edit or navigation. Paint, fills and filters edit that displayed content, so [`store`]
-//! writes it back into the playhead's frame before anything re-syncs. Headless and scriptable. Frame persistence in `.pcraft` is a
+//! writes it back into the playhead's frame before anything re-syncs. Headless and scriptable. Frame persistence in `.sary` is a
 //! follow-up; a saved document keeps the current frame as the layer's content.
 
-use photocraft_doc::{Document, Layer, LayerContent, Timeline, VideoData};
-use photocraft_raster::Surface;
+use sary_doc::{Document, Layer, LayerContent, Timeline, VideoData};
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -106,7 +106,7 @@ fn edit_video(s: &mut Session, label: &str, f: impl FnOnce(&mut VideoData, usize
     Ok(json!({"frames": count}))
 }
 
-fn blank_of(fmt: photocraft_color::PixelFormat) -> Surface {
+fn blank_of(fmt: sary_color::PixelFormat) -> Surface {
     Surface::new(fmt)
 }
 
@@ -244,12 +244,12 @@ fn fps_from_delays(delays: &[u32]) -> Option<f32> {
 /// Load frames from `path`: a single image (1 frame, or every frame of an animated GIF), or a
 /// directory of images (sorted = an image sequence). Each becomes a full raster frame in the
 /// document's format.
-fn load_frames(path: &str, fmt: photocraft_color::PixelFormat) -> Result<Footage> {
+fn load_frames(path: &str, fmt: sary_color::PixelFormat) -> Result<Footage> {
     let p = std::path::Path::new(path);
     let is_img = |f: &std::path::Path| {
         matches!(
             f.extension().and_then(|e| e.to_str()).map(|e| e.to_ascii_lowercase()).as_deref(),
-            Some("png" | "jpg" | "jpeg" | "tif" | "tiff" | "webp" | "bmp" | "gif" | "tga" | "exr" | "pcraft" | "psd")
+            Some("png" | "jpg" | "jpeg" | "tif" | "tiff" | "webp" | "bmp" | "gif" | "tga" | "exr" | "sary" | "psd")
         )
     };
     let files: Vec<std::path::PathBuf> = if p.is_dir() {
@@ -271,8 +271,8 @@ fn load_frames(path: &str, fmt: photocraft_color::PixelFormat) -> Result<Footage
     for f in &files {
         let bytes = std::fs::read(f).map_err(|e| EngineError::Other(format!("read `{}`: {e}", f.display())))?;
         let name = f.to_string_lossy();
-        if photocraft_codecs::detect(&bytes) == Some(photocraft_codecs::Format::Gif) {
-            photocraft_io::import_gif_frames(&name, &bytes, &mut |doc, delay_ms| {
+        if sary_codecs::detect(&bytes) == Some(sary_codecs::Format::Gif) {
+            sary_io::import_gif_frames(&name, &bytes, &mut |doc, delay_ms| {
                 frames.push(crate::file_cmds::flattened(&doc, fmt));
                 delays.push(delay_ms);
                 Ok(())
@@ -283,7 +283,7 @@ fn load_frames(path: &str, fmt: photocraft_color::PixelFormat) -> Result<Footage
         let mut doc = crate::file_cmds::import(&name, &bytes)?;
         // A Targa's alpha opens as a channel (as in Photoshop); a frame's alpha is transparency.
         if f.extension().is_some_and(|e| e.eq_ignore_ascii_case("tga")) {
-            photocraft_io::tga_alpha_channel_to_transparency(&mut doc);
+            sary_io::tga_alpha_channel_to_transparency(&mut doc);
         }
         frames.push(crate::file_cmds::flattened(&doc, fmt));
     }
@@ -314,7 +314,7 @@ fn new_from_file(s: &mut Session, p: &Value) -> Result<Value> {
         let mut l = Layer::raster(name, fmt);
         let mut v = VideoData::new(frames, fps);
         v.original_frames = Some(v.frames.clone());
-        v.source = photocraft_doc::VideoSource::File { path: path.clone() };
+        v.source = sary_doc::VideoSource::File { path: path.clone() };
         l.video = Some(v);
         let id = doc.insert_above(*active, l);
         *active = Some(id);
@@ -335,7 +335,7 @@ fn replace_footage(s: &mut Session, p: &Value) -> Result<Value> {
     edit_video(s, "Replace Footage", move |v, _| {
         v.original_frames = Some(frames.clone());
         v.frames = frames;
-        v.source = photocraft_doc::VideoSource::File { path: path.clone() };
+        v.source = sary_doc::VideoSource::File { path: path.clone() };
         Ok(())
     })
 }
@@ -362,7 +362,7 @@ fn reload_frame(s: &mut Session, _p: &Value) -> Result<Value> {
             .ok_or_else(|| EngineError::BadParams { cmd: "layer.videoLayers.reloadFrame".into(), msg: "not a video layer".into() })?;
         (v.source.clone(), st.doc.pixel_format())
     };
-    let photocraft_doc::VideoSource::File { path } = src else {
+    let sary_doc::VideoSource::File { path } = src else {
         return Err(EngineError::BadParams { cmd: "layer.videoLayers.reloadFrame".into(), msg: "this layer has no file source to reload".into() });
     };
     // The footage path is stored in the document.
@@ -461,7 +461,7 @@ pub fn render_video_with(
                 return Err(cancelled());
             }
         }
-        let gif = photocraft_codecs::web::encode_gif_animated(w as u32, h as u32, &gframes, true).map_err(|e| EngineError::Other(e.to_string()))?;
+        let gif = sary_codecs::web::encode_gif_animated(w as u32, h as u32, &gframes, true).map_err(|e| EngineError::Other(e.to_string()))?;
         let name = format!("{stem}.gif");
         write(&name, &gif)?;
         if !progress(frames, frames) {
@@ -472,7 +472,7 @@ pub fn render_video_with(
     }
 
     // Image sequence.
-    let opts = photocraft_io::ExportOptions::default();
+    let opts = sary_io::ExportOptions::default();
     let mut files = Vec::new();
     for f in 0..frames {
         let mut doc = base.clone();
@@ -481,7 +481,7 @@ pub fn render_video_with(
         }
         sync(&mut doc);
         let path = format!("{stem}_{f:04}.{format}");
-        let bytes = photocraft_io::export(&doc, format, &opts).map(|r| r.bytes).map_err(|e| EngineError::Other(format!("render frame {f}: {e}")))?;
+        let bytes = sary_io::export(&doc, format, &opts).map(|r| r.bytes).map_err(|e| EngineError::Other(format!("render frame {f}: {e}")))?;
         write(&path, &bytes)?;
         files.push(path);
         if !progress(f + 1, frames) {
@@ -494,8 +494,8 @@ pub fn render_video_with(
 /// One animated GIF frame from straight RGBA pixels, as Save for Web's GIF does (#3061): pixels
 /// under 50 % opacity get the frame's transparent index, the rest are drawn opaque, and the
 /// palette is built from the visible pixels with one entry kept for transparency.
-fn gif_frame(mut px: Vec<[f32; 4]>, w: usize, delay_cs: u16) -> Result<photocraft_codecs::web::GifFrame> {
-    use photocraft_algo::quantize::{self, Dither, Forced, PaletteKind};
+fn gif_frame(mut px: Vec<[f32; 4]>, w: usize, delay_cs: u16) -> Result<sary_codecs::web::GifFrame> {
+    use sary_algo::quantize::{self, Dither, Forced, PaletteKind};
     let transparent = px.iter().any(|p| p[3] < 0.5);
     let visible: Vec<[f32; 4]> = px.iter().filter(|p| p[3] >= 0.5).map(|p| [p[0], p[1], p[2], 1.0]).collect();
     // A fully transparent frame still needs a palette.
@@ -507,7 +507,7 @@ fn gif_frame(mut px: Vec<[f32; 4]>, w: usize, delay_cs: u16) -> Result<photocraf
         pal.len() - 1
     });
     let indices = quantize::quantize(&mut px, w, &pal, Dither::None, 1.0, t);
-    Ok(photocraft_codecs::web::GifFrame { indices, palette: pal, transparent: t.map(|i| i as u8), delay_cs })
+    Ok(sary_codecs::web::GifFrame { indices, palette: pal, transparent: t.map(|i| i as u8), delay_cs })
 }
 
 macro_rules! spec {

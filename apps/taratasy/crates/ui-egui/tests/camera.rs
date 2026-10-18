@@ -3,7 +3,7 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::{PdfCraftApp, QuickTool};
+use taratasy_ui_egui::{TaratasyApp, QuickTool};
 
 const FIXTURE: &[u8] = b"%PDF-1.7
 1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
@@ -13,9 +13,9 @@ const FIXTURE: &[u8] = b"%PDF-1.7
 trailer << /Root 1 0 R >>
 %%EOF";
 
-fn harness() -> Harness<'static, PdfCraftApp> {
+fn harness() -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("doc.pdf", None, FIXTURE.to_vec()).unwrap();
         app.set_option("left", "closed").unwrap();
@@ -26,13 +26,13 @@ fn harness() -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn size(h: &Harness<'static, PdfCraftApp>, page: usize) -> (f32, f32) {
+fn size(h: &Harness<'static, TaratasyApp>, page: usize) -> (f32, f32) {
     let s = h.state();
     let p = &s.session.get(s.views[0].id).unwrap().info.pages[page];
     (p.width, p.height)
 }
 
-fn undo_label(h: &Harness<'static, PdfCraftApp>) -> Option<String> {
+fn undo_label(h: &Harness<'static, TaratasyApp>) -> Option<String> {
     let s = h.state();
     s.session.get(s.views[0].id).unwrap().can_undo().map(str::to_owned)
 }
@@ -94,7 +94,7 @@ fn the_clean_up_level_enhances_again_from_the_photo_and_keeps_the_turn() {
     h.get_by_label("Enhance page").click();
     h.run_steps(4);
     let done = h.state().views[0].camera_done.unwrap();
-    assert_eq!((done.look, done.level, done.steps), (pdfcraft_engine::camera_clean::Look::Colour, 50, 1), "enhanced in colour at the default level");
+    assert_eq!((done.look, done.level, done.steps), (taratasy_engine::camera_clean::Look::Colour, 50, 1), "enhanced in colour at the default level");
     h.get_by_label("Rotate clockwise").click();
     h.run_steps(4);
     let turned = size(&h, 0);
@@ -105,7 +105,7 @@ fn the_clean_up_level_enhances_again_from_the_photo_and_keeps_the_turn() {
     if let Some(d) = view.camera_done.as_mut() {
         d.level = 100;
     }
-    view.pending_action = Some(pdfcraft_ui_egui::canvas::ViewAction::CameraLevel);
+    view.pending_action = Some(taratasy_ui_egui::canvas::ViewAction::CameraLevel);
     h.run_steps(4);
     let done = h.state().views[0].camera_done.unwrap();
     assert_eq!((done.applied.1, done.steps, done.turns), (100, 2, 90));
@@ -122,7 +122,7 @@ fn the_clean_up_level_enhances_again_from_the_photo_and_keeps_the_turn() {
 
 #[test]
 fn choosing_a_look_enhances_again() {
-    use pdfcraft_engine::camera_clean::Look;
+    use taratasy_engine::camera_clean::Look;
     let mut h = harness();
     assert!(h.state_mut().execute("ocr.enhance_camera"));
     h.run_steps(3);
@@ -192,7 +192,7 @@ fn the_level_leaves_the_page_alone_when_another_edit_came_in_between() {
     {
         let s = h.state_mut();
         let id = s.views[0].id;
-        s.session.apply(id, pdfcraft_engine::Edit::RotatePages { pages: vec![0], degrees: 90 }).unwrap();
+        s.session.apply(id, taratasy_engine::Edit::RotatePages { pages: vec![0], degrees: 90 }).unwrap();
     }
     h.run_steps(2);
     let before = size(&h, 0);
@@ -202,7 +202,7 @@ fn the_level_leaves_the_page_alone_when_another_edit_came_in_between() {
     if let Some(d) = view.camera_done.as_mut() {
         d.level = 100;
     }
-    view.pending_action = Some(pdfcraft_ui_egui::canvas::ViewAction::CameraLevel);
+    view.pending_action = Some(taratasy_ui_egui::canvas::ViewAction::CameraLevel);
     h.run_steps(4);
     assert_eq!(size(&h, 0), before, "the page is not warped again");
     let done = h.state().views[0].camera_done.unwrap();

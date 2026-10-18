@@ -1,7 +1,7 @@
 use super::*;
 use crate::{Recoverable, Services};
-use photocraft_doc::{Color, ColorMode, Document, SampleType, Size};
-use photocraft_engine::Session;
+use sary_doc::{Color, ColorMode, Document, SampleType, Size};
+use sary_engine::Session;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
@@ -46,7 +46,7 @@ fn gated(doc: Document) -> (Recoverable, mpsc::Receiver<()>, mpsc::Sender<()>, m
     (item, start, release, finish)
 }
 
-fn frame(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn frame(app: &mut SaryApp, ctx: &egui::Context) {
     ctx.run_ui(egui::RawInput::default(), |ui| {
         tick(app, ui.ctx());
         crate::jobs_ui::tick(app, ui.ctx());
@@ -55,7 +55,7 @@ fn frame(app: &mut PhotocraftApp, ctx: &egui::Context) {
     .clear();
 }
 
-fn settle(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn settle(app: &mut SaryApp, ctx: &egui::Context) {
     let deadline = Instant::now() + Duration::from_secs(10);
     loop {
         frame(app, ctx);
@@ -78,7 +78,7 @@ fn recovery_is_deferred_until_after_app_construction() {
         })),
         ..Default::default()
     };
-    let app = PhotocraftApp::new(Session::new(), services);
+    let app = SaryApp::new(Session::new(), services);
     assert!(app.session.prefs().file_handling.recover_on_launch);
     assert_eq!(calls.load(Ordering::SeqCst), 0, "recovery must not hold up creation of the application window");
 }
@@ -90,7 +90,7 @@ fn recovery_keeps_frames_and_editing_live_and_adopts_the_admitted_document() {
     let original = doc.clone();
     let (pending, started, release, finished) = gated(doc);
     let (services, log) = services(vec![pending]);
-    let mut app = PhotocraftApp::new(Session::new(), services);
+    let mut app = SaryApp::new(Session::new(), services);
     let ctx = egui::Context::default();
     assert!(app.session.documents().is_empty());
     frame(&mut app, &ctx);
@@ -134,7 +134,7 @@ fn cancelling_recovery_skips_the_queue_and_never_adopts_a_late_result() {
         }),
     };
     let (services, log) = services(vec![pending, second]);
-    let mut app = PhotocraftApp::new(Session::new(), services);
+    let mut app = SaryApp::new(Session::new(), services);
     let ctx = egui::Context::default();
     frame(&mut app, &ctx);
     started.recv_timeout(Duration::from_secs(10)).unwrap();
@@ -157,7 +157,7 @@ fn cancelling_recovery_skips_the_queue_and_never_adopts_a_late_result() {
 fn failed_recovery_reports_the_error_and_continues_to_the_next_entry() {
     let broken = Recoverable { key: "broken".into(), name: "Broken".into(), path: None, load: Box::new(|| Err("corrupt tile".into())) };
     let (services, log) = services(vec![broken, entry("good", document("Good"))]);
-    let mut app = PhotocraftApp::new(Session::new(), services);
+    let mut app = SaryApp::new(Session::new(), services);
     let ctx = egui::Context::default();
     settle(&mut app, &ctx);
     assert_eq!(app.session.documents().len(), 1);
@@ -172,7 +172,7 @@ fn disabled_recovery_never_discovers_or_decodes_entries() {
     let called = calls.clone();
     let mut session = Session::new();
     session.execute("prefs.set", json!({"path": "fileHandling.recoverOnLaunch", "value": false})).unwrap();
-    let mut app = PhotocraftApp::new(
+    let mut app = SaryApp::new(
         session,
         Services {
             recover: Some(Box::new(move || {

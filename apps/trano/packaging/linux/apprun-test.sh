@@ -8,28 +8,28 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-APP_ID=ai.storyteller.artcraft-launcher
+APP_ID=ai.storyteller.trano
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # Fake AppDir with the real AppRun, .desktop template, icons, and a stub binary.
-APPDIR="$TMP/ArtCraftLauncher.AppDir"
+APPDIR="$TMP/MahayLauncher.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
 install -Dm644 "$HERE/$APP_ID.desktop" "$APPDIR/usr/share/applications/$APP_ID.desktop"
 mkdir -p "$APPDIR/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$APPDIR/usr/share/icons/"
-printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/artcraft-launcher"
-chmod +x "$APPDIR/usr/bin/artcraft-launcher"
+printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/trano"
+chmod +x "$APPDIR/usr/bin/trano"
 
-APPIMAGE="$TMP/artcraft-launcher test.AppImage" # spaces on purpose: Exec must stay quoted
+APPIMAGE="$TMP/trano test.AppImage" # spaces on purpose: Exec must stay quoted
 : >"$APPIMAGE"
 export APPIMAGE
 export HOME="$TMP/home"
 export XDG_DATA_HOME="$HOME/.local/share"
 mkdir -p "$HOME"
-unset DESKTOPINTEGRATION ARTCRAFT_LAUNCHER_NO_DESKTOP_INTEGRATION
+unset DESKTOPINTEGRATION TRANO_NO_DESKTOP_INTEGRATION
 
 # Record cache refreshes without needing a desktop or GTK installation.
 export REAL_CACHE_UPDATER
@@ -96,7 +96,7 @@ cp "$DESKTOP" "$TMP/generated-entry"
 
 # 6. Opt-out installs nothing.
 rm -rf "$XDG_DATA_HOME"
-ARTCRAFT_LAUNCHER_NO_DESKTOP_INTEGRATION=1 "$APPDIR/AppRun" >/dev/null || fail "opt-out launch exited non-zero"
+TRANO_NO_DESKTOP_INTEGRATION=1 "$APPDIR/AppRun" >/dev/null || fail "opt-out launch exited non-zero"
 [ ! -e "$XDG_DATA_HOME" ] || fail "opt-out still integrated"
 
 # 7. An unwritable data dir never blocks the launch.
@@ -150,13 +150,13 @@ cmp -s "$DESKTOP" "$TMP/custom-wrapper-entry" || fail "quoted absolute wrapper o
 # 12b. Unmarked legacy entries cannot establish ownership, even with a plain Exec.
 legacy="$TMP/legacy.AppImage"
 : >"$legacy"
-sed -e '/^X-ArtCraft-Launcher-Generated-Exec=/d' -e "s|^Exec=.*|Exec=\"$legacy\"|" "$TMP/generated-entry" >"$DESKTOP"
+sed -e '/^X-Mahay-Launcher-Generated-Exec=/d' -e "s|^Exec=.*|Exec=\"$legacy\"|" "$TMP/generated-entry" >"$DESKTOP"
 cp "$DESKTOP" "$TMP/legacy-entry"
 "$APPDIR/AppRun" >/dev/null || fail "launch with legacy entry failed"
 cmp -s "$DESKTOP" "$TMP/legacy-entry" || fail "ambiguous legacy entry overwritten"
 
 # 12c. Duplicate executable or ownership keys are ambiguous and stay untouched.
-for key in Exec X-ArtCraft-Launcher-Generated-Exec; do
+for key in Exec X-Mahay-Launcher-Generated-Exec; do
   cp "$TMP/generated-entry" "$DESKTOP"
   grep "^$key=" "$TMP/generated-entry" >>"$DESKTOP"
   cp "$DESKTOP" "$TMP/duplicate-entry"
@@ -165,7 +165,7 @@ for key in Exec X-ArtCraft-Launcher-Generated-Exec; do
 done
 
 # The uncustomized entry refreshed after the move keeps a matching ownership marker.
-grep -Fxq "X-ArtCraft-Launcher-Generated-Exec=\"$(readlink -f "$APPIMAGE")\"" "$TMP/generated-entry" || fail "generated executable marker missing or stale"
+grep -Fxq "X-Mahay-Launcher-Generated-Exec=\"$(readlink -f "$APPIMAGE")\"" "$TMP/generated-entry" || fail "generated executable marker missing or stale"
 
 # 13. Refresh a changed icon, and tolerate a cache updater that fails.
 printf '#!/bin/sh\nexit 1\n' >"$TMP/tools/gtk-update-icon-cache"

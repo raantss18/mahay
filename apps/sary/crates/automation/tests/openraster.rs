@@ -2,7 +2,7 @@
 //! it): save a layered document as .ora, reopen it with its layers, edit it and save it back in
 //! place.
 
-use photocraft_automation::Headless;
+use sary_automation::Headless;
 use serde_json::json;
 
 fn tmp(name: &str) -> std::path::PathBuf {
@@ -30,7 +30,7 @@ fn layered_documents_save_reopen_and_save_in_place_as_openraster() {
     exec(&mut h, "paint.stroke", json!({"points": [[4, 4], [30, 20]], "size": 6, "hardness": 1.0, "color": "#ff0000"}));
     let top = h.session.active().unwrap().doc.layers.last().unwrap().id.0;
     exec(&mut h, "layer.setProps", json!({"layer": top, "name": "Ink", "opacity": 0.5, "blend": "Multiply"}));
-    let before = photocraft_compose::flatten(&h.session.active().unwrap().doc);
+    let before = sary_compose::flatten(&h.session.active().unwrap().doc);
 
     let saved = h.handle("doc.save", json!({"path": path_str})).unwrap();
     assert!(saved["warnings"].as_array().is_none_or(Vec::is_empty), "{saved}");
@@ -43,16 +43,16 @@ fn layered_documents_save_reopen_and_save_in_place_as_openraster() {
     let doc = &h.session.active().unwrap().doc;
     assert_eq!(doc.layers.len(), 2, "{opened}");
     let ink = doc.layers.last().unwrap();
-    assert_eq!((ink.name.as_str(), ink.opacity, ink.blend), ("Ink", 0.5, photocraft_doc::BlendMode::Multiply));
-    assert_eq!(photocraft_compose::flatten(doc).px, before.px);
+    assert_eq!((ink.name.as_str(), ink.opacity, ink.blend), ("Ink", 0.5, sary_doc::BlendMode::Multiply));
+    assert_eq!(sary_compose::flatten(doc).px, before.px);
 
     // Edit, then a pathless save writes the .ora back in place and clears dirty.
     exec(&mut h, "image.adjustments.invert", json!({}));
     assert!(h.session.active().unwrap().is_dirty());
     h.handle("doc.save", json!({})).unwrap();
     assert!(!h.session.active().unwrap().is_dirty());
-    let reread = photocraft_io::import("art.ora", &std::fs::read(&path).unwrap()).unwrap().document;
-    assert_eq!(photocraft_compose::flatten(&reread).px, photocraft_compose::flatten(&h.session.active().unwrap().doc).px);
+    let reread = sary_io::import("art.ora", &std::fs::read(&path).unwrap()).unwrap().document;
+    assert_eq!(sary_compose::flatten(&reread).px, sary_compose::flatten(&h.session.active().unwrap().doc).px);
     std::fs::remove_dir_all(dir).unwrap();
 }
 

@@ -1,0 +1,23 @@
+[package]
+name = "soratra-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Soratra command line: convert, inspect, render, run commands, MCP server"
+
+[[bin]]
+name = "soratra-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+soratra-doc = { workspace = true }
+soratra-engine = { workspace = true }
+soratra-render = { workspace = true }
+soratra-mcp = { workspace = true }
+soratra-zotero = { workspace = true }
+serde_json = { workspace = true }
+sys-locale = "0.3"

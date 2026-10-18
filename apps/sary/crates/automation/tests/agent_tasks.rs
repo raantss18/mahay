@@ -5,7 +5,7 @@
 
 use std::io::Write;
 
-use photocraft_automation::{AuthorizedWorkspace, PhotocraftMcp};
+use sary_automation::{AuthorizedWorkspace, SaryMcp};
 use rmcp::model::{CallToolRequestParams, CallToolResult, ClientConfig};
 use rmcp::service::RunningService;
 use rmcp::{ClientHandler, RoleClient, ServiceExt};
@@ -29,7 +29,7 @@ async fn connect(root: &std::path::Path) -> (Conn, Server) {
     let (s, c) = tokio::io::duplex(1 << 20);
     let workspace = AuthorizedWorkspace::new(Some(root), Some(root)).expect("test workspace");
     let server = tokio::spawn(async move {
-        if let Ok(running) = PhotocraftMcp::headless_with_workspace(workspace).serve(s).await {
+        if let Ok(running) = SaryMcp::headless_with_workspace(workspace).serve(s).await {
             let _ = running.waiting().await;
         }
     });
@@ -94,9 +94,9 @@ fn gradient_png(dir: &std::path::Path) -> &'static str {
             px.extend_from_slice(&[(x * 4) as u8, (y * 5) as u8, 128]);
         }
     }
-    let img = photocraft_codecs::Image::from_u8(w, h, photocraft_codecs::ChannelLayout::Rgb, px).unwrap();
+    let img = sary_codecs::Image::from_u8(w, h, sary_codecs::ChannelLayout::Rgb, px).unwrap();
     let path = dir.join("gradient.png");
-    std::fs::File::create(&path).unwrap().write_all(&photocraft_codecs::encode(&img, photocraft_codecs::Format::Png, &Default::default()).unwrap()).unwrap();
+    std::fs::File::create(&path).unwrap().write_all(&sary_codecs::encode(&img, sary_codecs::Format::Png, &Default::default()).unwrap()).unwrap();
     "gradient.png"
 }
 
@@ -121,7 +121,7 @@ async fn agent_completes_ten_scripted_tasks() {
     assert_eq!(t["effects"]["items"][0]["kind"], "Drop Shadow", "task 1: {t}");
     let out = dir.join("card.png");
     tool(&c, "doc_export", json!({"path": "card.png"})).await;
-    let card = photocraft_codecs::decode(&std::fs::read(&out).unwrap()).unwrap();
+    let card = sary_codecs::decode(&std::fs::read(&out).unwrap()).unwrap();
     assert_eq!(card.dimensions(), (200, 120), "task 1");
     tool(&c, "doc_close", json!({})).await;
 
@@ -216,9 +216,9 @@ async fn agent_completes_ten_scripted_tasks() {
     // 10. Prepare for print: convert to CMYK and save natively, then reopen.
     run(&c, "image.mode.cmyk", json!({"intent": "perceptual"})).await;
     assert_eq!(inspect(&c).await["mode"], "Cmyk", "task 10");
-    tool(&c, "doc_save", json!({"path": "print.pcraft"})).await;
+    tool(&c, "doc_save", json!({"path": "print.sary"})).await;
     tool(&c, "doc_close", json!({})).await;
-    tool(&c, "doc_open", json!({"path": "print.pcraft"})).await;
+    tool(&c, "doc_open", json!({"path": "print.sary"})).await;
     let doc = inspect(&c).await;
     assert_eq!((doc["mode"].as_str(), doc["width"].as_u64()), (Some("Cmyk"), Some(45)), "task 10");
     assert_eq!(doc["layers"].as_array().unwrap().len(), 4, "task 10");
@@ -278,11 +278,11 @@ async fn agent_edits_text_by_position() {
     std::fs::remove_dir_all(dir).unwrap();
 }
 
-async fn connect_headless(headless: photocraft_automation::Headless) -> (Conn, Server) {
+async fn connect_headless(headless: sary_automation::Headless) -> (Conn, Server) {
     let (s, c) = tokio::io::duplex(1 << 20);
     let server = tokio::spawn(async move {
-        let backend = photocraft_automation::Backend::Headless(std::sync::Arc::new(std::sync::Mutex::new(headless)));
-        if let Ok(running) = PhotocraftMcp::with_backend(backend).serve(s).await {
+        let backend = sary_automation::Backend::Headless(std::sync::Arc::new(std::sync::Mutex::new(headless)));
+        if let Ok(running) = SaryMcp::with_backend(backend).serve(s).await {
             let _ = running.waiting().await;
         }
     });
@@ -326,8 +326,8 @@ async fn agent_records_and_replays_an_action() {
 async fn agent_play_refuses_a_recorded_file_open() {
     let dir = tmp("actions-auth");
     let workspace = AuthorizedWorkspace::new(Some(&dir), Some(&dir)).expect("test workspace");
-    let mut headless = photocraft_automation::Headless::with_workspace(workspace);
-    headless.session.actions.list.push(photocraft_engine::actions_cmds::Action {
+    let mut headless = sary_automation::Headless::with_workspace(workspace);
+    headless.session.actions.list.push(sary_engine::actions_cmds::Action {
         name: "Open".into(),
         steps: vec![("file.open".into(), json!({"path": "/etc/passwd"})), ("layer.new.layer".into(), json!({}))],
         disabled: Default::default(),

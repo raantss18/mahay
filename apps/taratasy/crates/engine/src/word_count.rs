@@ -2,8 +2,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use pdfcraft_cos::{Dict, ObjRef, Object};
-use pdfcraft_render::{PageRenderer, text::TextFilter};
+use taratasy_cos::{Dict, ObjRef, Object};
+use taratasy_render::{PageRenderer, text::TextFilter};
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::export::ExportSource;
@@ -98,7 +98,7 @@ fn excluded_role(role: &[u8], options: Options) -> bool {
         || (options.exclude_images && role == b"Figure")
 }
 
-fn standard_role(doc: &pdfcraft_cos::Document, map: &Dict, role: &[u8]) -> Vec<u8> {
+fn standard_role(doc: &taratasy_cos::Document, map: &Dict, role: &[u8]) -> Vec<u8> {
     let mut role = role.to_vec();
     for _ in 0..32 {
         let Some(next) = map.get(&role).map(|o| doc.resolve(o)).and_then(|o| o.as_name().map(<[u8]>::to_vec)) else { break };
@@ -117,13 +117,13 @@ type Exclusions = HashMap<usize, HashSet<i32>>;
 /// expose: retain their page's MCID-tagged text instead of excluding an unrelated same-numbered
 /// span. Explicit Table/Code/Figure marked-content tags still work on those pages.
 fn exclusions(source: &ExportSource, options: Options) -> Result<(Exclusions, bool), String> {
-    let doc = pdfcraft_cos::Document::open_with_password(source.bytes.clone(), source.config.password.as_deref()).map_err(|e| e.to_string())?;
+    let doc = taratasy_cos::Document::open_with_password(source.bytes.clone(), source.config.password.as_deref()).map_err(|e| e.to_string())?;
     let catalog = doc.root().and_then(|id| doc.get(id).as_dict().cloned()).unwrap_or_default();
     let Some(root) = catalog.get(b"StructTreeRoot").map(|o| doc.resolve(o)).and_then(|o| o.as_dict().cloned()) else {
         return Ok((HashMap::new(), options.exclude_tables || options.exclude_code));
     };
     let roles = root.get(b"RoleMap").map(|o| doc.resolve(o)).and_then(|o| o.as_dict().cloned()).unwrap_or_default();
-    let pages = pdfcraft_model::pages(&doc);
+    let pages = taratasy_model::pages(&doc);
     let page_index: HashMap<_, _> = pages.iter().enumerate().map(|(index, page)| (page.obj, index)).collect();
     let mut stack = root.get(b"K").map(|k| vec![(k.clone(), None::<ObjRef>, false, 0usize)]).unwrap_or_default();
     let mut seen = HashSet::new();
@@ -301,7 +301,7 @@ mod tests {
     fn word_count_retains_form_namespaces_and_reports_the_limitation() {
         let body = "/Span << /MCID 0 >> BDC BT /F1 12 Tf 10 220 Td (Page words) Tj ET EMC /Fm Do";
         let mut src = source(&[body], "/StructTreeRoot << /K << /S /Table /Pg 4 0 R /K 0 >> >>");
-        let mut doc = pdfcraft_cos::Document::open(src.bytes.clone()).unwrap();
+        let mut doc = taratasy_cos::Document::open(src.bytes.clone()).unwrap();
         let page = ObjRef::new(4, 0);
         let mut resources = doc.get(page).as_dict().unwrap().get(b"Resources").unwrap().as_dict().unwrap().clone();
         let mut form = Dict::new();
@@ -309,7 +309,7 @@ mod tests {
         form.set(b"Subtype".to_vec(), Object::Name(b"Form".to_vec()));
         form.set(b"BBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 200.into(), 300.into()]));
         form.set(b"Resources".to_vec(), resources.clone());
-        let form = doc.add(pdfcraft_cos::Stream::from_raw(form, b"/Span << /MCID 0 >> BDC BT /F1 12 Tf 10 180 Td (Form words) Tj ET EMC".to_vec()));
+        let form = doc.add(taratasy_cos::Stream::from_raw(form, b"/Span << /MCID 0 >> BDC BT /F1 12 Tf 10 180 Td (Form words) Tj ET EMC".to_vec()));
         let mut objects = Dict::new();
         objects.set(b"Fm".to_vec(), form);
         resources.set(b"XObject".to_vec(), objects);
@@ -319,7 +319,7 @@ mod tests {
         })
         .unwrap();
         doc.update_dict(ObjRef::new(2, 0), |d| d.set(b"Resources".to_vec(), resources)).unwrap();
-        src.bytes = std::sync::Arc::new(pdfcraft_cos::write_full(&doc, &Default::default()).unwrap());
+        src.bytes = std::sync::Arc::new(taratasy_cos::write_full(&doc, &Default::default()).unwrap());
         let report = count(src, &[0], Options { exclude_tables: true, ..Options::default() }, |_| true).unwrap();
         assert_eq!(report.total.words, 4, "the unrelated form's MCID must not be excluded");
         assert!(report.unclassified_structure);

@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
-use pdfcraft_optimize::{Compression, ImageSettings, Settings, SpaceCategory, audit_space, effective_resolutions, optimize};
+use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
+use taratasy_optimize::{Compression, ImageSettings, Settings, SpaceCategory, audit_space, effective_resolutions, optimize};
 
 fn image(doc: &mut Document, w: u32, h: u32, n: usize, jpeg: bool, smask: Option<ObjRef>) -> ObjRef {
     // A smooth gradient with a little texture (photo-like).
@@ -94,7 +94,7 @@ fn images_are_measured_where_drawn_and_downsampled() {
         &[("A", masked), ("B", photo), ("C", twice)],
         "q 72 0 0 72 36 36 cm /A Do Q q 1 0 0 1 100 100 cm 600 0 0 400 0 0 cm /B Do Q q 72 0 0 72 0 0 cm /C Do Q q 288 0 0 288 300 300 cm /C Do Q",
     );
-    let pages = pdfcraft_annot::page_refs(&doc).unwrap();
+    let pages = taratasy_annot::page_refs(&doc).unwrap();
     let ppi = effective_resolutions(&doc, &pages);
     assert_eq!(ppi[&big].round(), 600.0);
     assert_eq!(ppi[&small].round(), 50.0);
@@ -122,9 +122,9 @@ fn images_are_measured_where_drawn_and_downsampled() {
 
     // The optimized file opens, and the page still shows the picture where it was.
     let reopened = Document::open(Arc::new(after_bytes.clone())).unwrap();
-    assert_eq!(pdfcraft_annot::page_refs(&reopened).unwrap().len(), 2);
-    let mut r = pdfcraft_render::PageRenderer::new(Arc::new(after_bytes), pdfcraft_render::RenderConfig::default());
-    let out = r.render(pdfcraft_render::RenderRequest { page: 0, scale: 1.0, ..Default::default() });
+    assert_eq!(taratasy_annot::page_refs(&reopened).unwrap().len(), 2);
+    let mut r = taratasy_render::PageRenderer::new(Arc::new(after_bytes), taratasy_render::RenderConfig::default());
+    let out = r.render(taratasy_render::RenderRequest { page: 0, scale: 1.0, ..Default::default() });
     assert!(out.error.is_none(), "{:?}", out.error);
     // Top-left image area (36..180 x 600..744 user → y from the top 48..192): drawn, not white.
     let i = ((100 * out.width + 100) * 4) as usize;
@@ -351,7 +351,7 @@ fn invalid_links_and_unreferenced_destinations_go() {
         d.set(b"Dest".to_vec(), dest);
         Object::Ref(doc.add(Object::Dict(d)))
     };
-    let s = |t: &str| Object::String(pdfcraft_cos::PdfString::literal(t.as_bytes().to_vec()));
+    let s = |t: &str| Object::String(taratasy_cos::PdfString::literal(t.as_bytes().to_vec()));
     let annots = vec![
         link(&mut doc, Object::Array(vec![Object::Ref(p), Object::name("Fit")])),
         link(&mut doc, Object::Array(vec![Object::Ref(ObjRef::new(999, 0)), Object::name("Fit")])),
@@ -395,7 +395,7 @@ fn invalid_links_and_unreferenced_destinations_go() {
 
 #[test]
 fn progress_is_reported_per_image_and_a_refusal_cancels() {
-    use pdfcraft_optimize::{OptimizeError, Stage, optimize_with_progress};
+    use taratasy_optimize::{OptimizeError, Stage, optimize_with_progress};
     let build = || {
         let mut doc = Document::new_empty();
         let a = image(&mut doc, 300, 300, 3, false, None);
@@ -831,7 +831,7 @@ fn printed_page(rows: usize, jpeg: impl Fn(usize) -> bool, edit: impl Fn(usize, 
 
 /// The images the first page's content stream draws, by name, with their streams.
 fn drawn_images(doc: &Document) -> Vec<Stream> {
-    let pages = pdfcraft_annot::page_refs(doc).unwrap();
+    let pages = taratasy_annot::page_refs(doc).unwrap();
     let p = doc.get(pages[0]).as_dict().cloned().unwrap();
     let res = doc.resolve(p.get(b"Resources").unwrap()).as_dict().cloned().unwrap();
     let xo = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
@@ -839,7 +839,7 @@ fn drawn_images(doc: &Document) -> Vec<Stream> {
         Object::Stream(s) => s.decoded().unwrap(),
         _ => panic!("contents"),
     };
-    pdfcraft_content::parse(&c)
+    taratasy_content::parse(&c)
         .ops
         .iter()
         .filter(|o| o.is("Do"))
@@ -874,7 +874,7 @@ fn a_page_picture_printed_as_one_pixel_strips_is_merged_into_one_image() {
 
 #[test]
 fn the_mobile_preset_makes_a_printed_page_small() {
-    use pdfcraft_optimize::Preset;
+    use taratasy_optimize::Preset;
     let (doc, _) = printed_page(200, |_| true, |_, s| s);
     let bytes = |d: &Document| write_full(d, &SaveOptions::default()).unwrap().len();
     let before = bytes(&doc);
@@ -938,7 +938,7 @@ fn a_deeply_nested_form_is_measured_at_its_largest_use() {
             for c in &pages {
                 page(&mut doc, &[("F", outer)], c);
             }
-            let refs = pdfcraft_annot::page_refs(&doc).unwrap();
+            let refs = taratasy_annot::page_refs(&doc).unwrap();
             assert_eq!(effective_resolutions(&doc, &refs)[&img].round(), 150.0, "{levels} levels, {label}");
             optimize(&mut doc, &Settings::default()).unwrap();
             assert_eq!(stream(&doc, img).dict.int(b"Width"), Some(1200), "{levels} levels, {label}");
@@ -960,7 +960,7 @@ fn a_form_drawing_itself_is_walked_once_per_use() {
     d.dict.set(b"Resources".to_vec(), Object::Dict(resources(x)));
     doc.set(f, Object::Stream(d));
     page(&mut doc, &[("F", f)], "q 72 0 0 72 36 36 cm /F Do Q");
-    let refs = pdfcraft_annot::page_refs(&doc).unwrap();
+    let refs = taratasy_annot::page_refs(&doc).unwrap();
     // Only the outer use: the cycle isn't followed, and doesn't count as a missed use.
     assert_eq!(effective_resolutions(&doc, &refs)[&img].round(), 1200.0);
 }
@@ -981,7 +981,7 @@ fn a_shared_form_without_resources_draws_each_callers_image() {
         outers.push(inner);
     }
     page(&mut doc, &[("A", outers[0]), ("B", outers[1])], "q 72 0 0 72 36 36 cm /A Do Q q 576 0 0 576 18 100 cm /B Do Q");
-    let refs = pdfcraft_annot::page_refs(&doc).unwrap();
+    let refs = taratasy_annot::page_refs(&doc).unwrap();
     let ppi = effective_resolutions(&doc, &refs);
     assert_eq!(ppi[&a].round(), 1200.0);
     assert_eq!(ppi.get(&b).map(|p| p.round()), Some(150.0));
@@ -999,7 +999,7 @@ fn images_are_not_resampled_when_some_uses_could_not_be_measured() {
         &[("F", deep), ("Im", img), ("O", other)],
         "q 72 0 0 72 36 36 cm /Im Do Q q 72 0 0 72 200 36 cm /O Do Q q 576 0 0 576 18 100 cm /F Do Q",
     );
-    let refs = pdfcraft_annot::page_refs(&doc).unwrap();
+    let refs = taratasy_annot::page_refs(&doc).unwrap();
     let ppi = effective_resolutions(&doc, &refs);
     assert_eq!((ppi[&img], ppi[&other]), (f64::INFINITY, f64::INFINITY));
     optimize(&mut doc, &Settings::default()).unwrap();
@@ -1019,6 +1019,6 @@ fn images_are_not_resampled_when_some_uses_could_not_be_measured() {
         next = label;
     }
     page(&mut doc, &names, "q 72 0 0 72 36 36 cm /F1 Do Q");
-    let refs = pdfcraft_annot::page_refs(&doc).unwrap();
+    let refs = taratasy_annot::page_refs(&doc).unwrap();
     assert_eq!(effective_resolutions(&doc, &refs)[&img], f64::INFINITY);
 }

@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use deckcraft_model::anim::{ANIMATIONS, AnimClass, AnimStart, Animation, TextBuild, animation_info};
+use seho_model::anim::{ANIMATIONS, AnimClass, AnimStart, Animation, TextBuild, animation_info};
 use serde_json::{Value, json};
 
 use super::*;
@@ -177,7 +177,7 @@ pub fn default_path(effect: &str, option: &str) -> String {
         "turns" => format!("M 0 0 L {} {} C {} {} {dx} {} {dx} {dy} E", dx * 0.5, dy * 0.5, dx, dy * 0.5, dy * 0.75),
         "shapes" => "M 0 0 C 0.1 0 0.1 0.15 0 0.15 C -0.1 0.15 -0.1 0 0 0 Z E".into(),
         "loops" => "M 0 0 C 0.1 -0.1 0.2 0.1 0.1 0.1 C 0 0.1 0.1 -0.1 0.25 0 E".into(),
-        other => deckcraft_model::anim::preset_path(other).unwrap_or_else(|| format!("M 0 0 L {dx} {dy} E")),
+        other => seho_model::anim::preset_path(other).unwrap_or_else(|| format!("M 0 0 L {dx} {dy} E")),
     }
 }
 
@@ -287,7 +287,7 @@ fn timing(s: &mut Session, p: &Value) -> Result<Value> {
     let delay = p.get("delay").and_then(Value::as_u64).map(|v| v.min(600_000) as u32);
     let repeat = p.get("repeat").and_then(Value::as_u64).map(|v| v.min(u32::MAX as u64) as u32);
     let rewind = bool_param(p, "rewind");
-    let trigger = p.get("trigger").map(|v| v.as_u64().and_then(|x| u32::try_from(x).ok()).map(deckcraft_model::ShapeId));
+    let trigger = p.get("trigger").map(|v| v.as_u64().and_then(|x| u32::try_from(x).ok()).map(seho_model::ShapeId));
     each_target(s, p, |a| {
         if let Some(x) = start {
             a.start = x;
@@ -393,7 +393,7 @@ fn painter_apply(s: &mut Session, p: &Value) -> Result<Value> {
         sl.animations.retain(|a| !ids.contains(&a.shape));
         let mut added = 0;
         for id in &ids {
-            let paras = deckcraft_model::find_shape(&sl.shapes, *id).and_then(|sh| sh.text.as_ref()).map_or(0, |t| t.paragraphs.len());
+            let paras = seho_model::find_shape(&sl.shapes, *id).and_then(|sh| sh.text.as_ref()).map_or(0, |t| t.paragraphs.len());
             for a in &painted {
                 let mut cloned = a.clone();
                 cloned.shape = *id;
@@ -453,7 +453,7 @@ mod tests {
 
         // Pick animations from shape 1
         s.select(|_, sel| {
-            sel.shapes = vec![deckcraft_model::ShapeId(id1 as u32)];
+            sel.shapes = vec![seho_model::ShapeId(id1 as u32)];
         })
         .unwrap();
         let res = s.execute("animation.painter", &json!({})).unwrap();
@@ -463,7 +463,7 @@ mod tests {
 
         // Apply animations to shape 2
         s.select(|_, sel| {
-            sel.shapes = vec![deckcraft_model::ShapeId(id2 as u32)];
+            sel.shapes = vec![seho_model::ShapeId(id2 as u32)];
         })
         .unwrap();
         let applied = s.execute("animation.painterApply", &json!({})).unwrap();

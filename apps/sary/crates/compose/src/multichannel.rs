@@ -6,8 +6,8 @@
 //! how Photoshop previews spot channels. An alpha-type channel of a Multichannel document
 //! (selected / masked areas) still prints, as a transparent black ink, like Photoshop shows it.
 
-use photocraft_doc::Document;
-use photocraft_geom::Rect;
+use sary_doc::Document;
+use sary_geom::Rect;
 
 use crate::Buffer;
 
@@ -16,7 +16,7 @@ pub fn inks(doc: &Document, rect: Rect) -> Buffer {
     let mut buf = Buffer::filled(rect, [1.0, 1.0, 1.0, 1.0]);
     let mut vals = Vec::new();
     for ch in &doc.channels {
-        let (ink, solidity) = ch.spot.unwrap_or((photocraft_color::Color::BLACK, 0.0));
+        let (ink, solidity) = ch.spot.unwrap_or((sary_color::Color::BLACK, 0.0));
         if ch.surface.content_bounds().intersect(&rect).is_empty() {
             continue;
         }
@@ -40,14 +40,14 @@ pub fn inks(doc: &Document, rect: Rect) -> Buffer {
 
 /// The starting backdrop of a document render: the inks for Multichannel, else transparent.
 pub(crate) fn backdrop(doc: &Document, rect: Rect) -> Buffer {
-    if doc.mode == photocraft_color::ColorMode::Multichannel { inks(doc, rect) } else { Buffer::transparent(rect) }
+    if doc.mode == sary_color::ColorMode::Multichannel { inks(doc, rect) } else { Buffer::transparent(rect) }
 }
 
 #[cfg(test)]
 mod tests {
-    use photocraft_color::{Color, ColorMode, PixelFormat, SampleType};
-    use photocraft_doc::{AlphaChannel, Document, Size};
-    use photocraft_raster::Surface;
+    use sary_color::{Color, ColorMode, PixelFormat, SampleType};
+    use sary_doc::{AlphaChannel, Document, Size};
+    use sary_raster::Surface;
 
     use super::*;
 

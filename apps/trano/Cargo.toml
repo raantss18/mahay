@@ -7,7 +7,7 @@ version = "0.5.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.90"
-repository = "https://github.com/storytold/craft-launcher"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
@@ -17,9 +17,9 @@ dbg_macro = "warn"
 todo = "warn"
 
 [workspace.dependencies]
-artcraft-launcher-core = { path = "crates/core" }
-artcraft-launcher-ui-egui = { path = "crates/ui-egui" }
-artcraft-launcher-native = { path = "crates/native" }
+trano-core = { path = "crates/core" }
+trano-ui-egui = { path = "crates/ui-egui" }
+trano-native = { path = "crates/native" }
 egui = "0.36"
 eframe = { version = "0.36", default-features = false }
 egui_extras = { version = "0.36", default-features = false }
@@ -44,3 +44,15 @@ inherits = "release"
 opt-level = "s"
 lto = "fat"
 strip = "debuginfo"
+
+# Android release: whole-program LTO and no symbols, for the smallest .so.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true
+
+[patch.crates-io]
+# Android backends through mahay-android (system document picker, clipboard); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+arboard = { path = "../../libs/core/vendor/arboard" }

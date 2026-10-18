@@ -9,9 +9,9 @@
 //! Units: Levels and Curves in 0–255 levels; percentages for the rest (as in Photoshop's dialogs);
 //! colours as `"#rrggbb"` or `[r, g, b]` in 0–1.
 
-use photocraft_color::ColorMode;
-use photocraft_doc::Adjustment;
-use photocraft_doc::adjust::{CURVE_MAP_LEN, CurvePoint, HueRange, LevelsChannel, ToneSpace, curve_map, curve_map_outputs};
+use sary_color::ColorMode;
+use sary_doc::Adjustment;
+use sary_doc::adjust::{CURVE_MAP_LEN, CurvePoint, HueRange, LevelsChannel, ToneSpace, curve_map, curve_map_outputs};
 use serde_json::{Map, Value, json};
 
 use crate::{EngineError, Result};
@@ -513,7 +513,7 @@ fn lut_at(lut: &[f32], x: f32) -> f32 {
 
 /// A point curve drawn into a pencil-mode map (Photoshop switching to "Draw to modify the curve").
 pub fn points_to_map(points: &[CurvePoint]) -> Vec<CurvePoint> {
-    let lut = photocraft_compose::adjust::curve_lut(points);
+    let lut = sary_compose::adjust::curve_lut(points);
     let last = (CURVE_MAP_LEN - 1) as f32;
     curve_map(&(0..CURVE_MAP_LEN).map(|k| lut_at(&lut, k as f32 / last)).collect::<Vec<_>>())
 }
@@ -527,7 +527,7 @@ pub fn map_to_points(map: &[CurvePoint]) -> Vec<CurvePoint> {
     let at = |k: usize| CurvePoint { input: k as f32 / last as f32, output: target.get(k).copied().unwrap_or(0.0) };
     let mut pts = vec![at(0), at(last)];
     while pts.len() < MAX_FITTED_POINTS {
-        let lut = photocraft_compose::adjust::curve_lut(&pts);
+        let lut = sary_compose::adjust::curve_lut(&pts);
         let worst = (0..CURVE_MAP_LEN)
             .map(|k| (k, (lut_at(&lut, k as f32 / last as f32) - target.get(k).copied().unwrap_or(0.0)).abs()))
             .max_by(|a, b| a.1.total_cmp(&b.1));
@@ -687,10 +687,10 @@ fn rgb_luma(rgb: [f32; 3]) -> f32 {
 /// A non-monotone or flat curve may not have an exact inverse; the first nearest LUT entry gives
 /// a deterministic best fit.
 fn inverse_master_target(master: &[CurvePoint], target: f32) -> f32 {
-    if photocraft_doc::adjust::is_identity_curve(master) {
+    if sary_doc::adjust::is_identity_curve(master) {
         return target;
     }
-    let lut = photocraft_compose::adjust::curve_lut(master);
+    let lut = sary_compose::adjust::curve_lut(master);
     let Some(denominator) = lut.len().checked_sub(1).filter(|last| *last > 0) else { return target };
     let mut best_input = target;
     let mut best_error = f32::INFINITY;
@@ -747,7 +747,7 @@ fn set_levels_gamma(c: &mut LevelsChannel, sample: f32, target: f32) {
     }
     let reached = |gamma: f32| {
         let trial = LevelsChannel { gamma, ..c.clone() };
-        (photocraft_compose::adjust::levels(&trial, sample) - c.out_black) / span
+        (sary_compose::adjust::levels(&trial, sample) - c.out_black) / span
     };
     let (mut lo, mut hi) = (0.01f32.ln(), 9.99f32.ln());
     for _ in 0..40 {
@@ -877,13 +877,13 @@ pub fn eyedropper_from_params(s: &crate::Session, kind: &str, p: &Value) -> Resu
 /// layer adjusts (the composite with the layer hidden, like its Properties histogram), so clicking
 /// the same pixel again maps it the same way. The picker edits the layer's adjustment with the
 /// other keys of `p` merged over it. `None` without the key.
-pub fn layer_eyedropper(s: &crate::Session, layer: photocraft_doc::LayerId, p: &Value) -> Result<Option<Adjustment>> {
+pub fn layer_eyedropper(s: &crate::Session, layer: sary_doc::LayerId, p: &Value) -> Result<Option<Adjustment>> {
     let Some(e) = p.get("eyedropper") else { return Ok(None) };
     let d = s.active().ok_or(EngineError::NoDocument)?;
     let l = d.doc.layer(layer).ok_or(EngineError::NoLayer(layer))?;
     let (kind, adj) = match &l.content {
-        photocraft_doc::LayerContent::Adjustment(adj @ Adjustment::Curves { .. }) => ("curves", adj),
-        photocraft_doc::LayerContent::Adjustment(adj @ Adjustment::Levels { .. }) => ("levels", adj),
+        sary_doc::LayerContent::Adjustment(adj @ Adjustment::Curves { .. }) => ("curves", adj),
+        sary_doc::LayerContent::Adjustment(adj @ Adjustment::Levels { .. }) => ("levels", adj),
         _ => return Err(bad(EYEDROPPER, "`eyedropper` applies to Levels and Curves adjustment layers only")),
     };
     let mut rest = p.clone();
@@ -898,7 +898,7 @@ pub fn layer_eyedropper(s: &crate::Session, layer: photocraft_doc::LayerId, p: &
 const EYEDROPPER: &str = "eyedropper";
 
 /// The picker and sample of an `eyedropper` param; `at` samples `doc` with layer `hide` hidden.
-fn eyedropper_sample(doc: &photocraft_doc::Document, hide: Option<photocraft_doc::LayerId>, e: &Value) -> Result<(CurvesEyedropper, [f32; 3])> {
+fn eyedropper_sample(doc: &sary_doc::Document, hide: Option<sary_doc::LayerId>, e: &Value) -> Result<(CurvesEyedropper, [f32; 3])> {
     const CMD: &str = EYEDROPPER;
     let picker = match e.get("point").and_then(Value::as_str) {
         Some("black") => CurvesEyedropper::Black,
@@ -1039,7 +1039,7 @@ fn curves(r: &Reader<'_>, base: Option<&Adjustment>, mode: ColorMode) -> Result<
         }
     }
     let [c0, c1, c2, black] = chans;
-    let identity = if pencil { is_identity_map(&black) } else { photocraft_doc::adjust::is_identity_curve(&black) };
+    let identity = if pencil { is_identity_map(&black) } else { sary_doc::adjust::is_identity_curve(&black) };
     let black = if space == ToneSpace::Cmyk && !identity { black } else { Vec::new() };
     Ok(Adjustment::Curves { master, per_channel: [c0, c1, c2], space, black, pencil })
 }
@@ -1233,7 +1233,7 @@ mod tests {
     }
 
     fn tone_output(adjustment: &Adjustment, sample: [f32; 3]) -> [f32; 3] {
-        let luts = photocraft_compose::adjust::tone_luts(adjustment);
+        let luts = sary_compose::adjust::tone_luts(adjustment);
         std::array::from_fn(|channel| {
             let row = &luts[channel];
             let position = sample[channel].clamp(0.0, 1.0) * (row.len().saturating_sub(1)) as f32;
@@ -1482,7 +1482,7 @@ mod tests {
         assert!(px.iter().take(3).all(|v| *v > 0.99), "the sample becomes white: {px:?}");
         let curve = s.active().unwrap().doc.clone();
         s.execute("layer.setAdjustment", pick).unwrap();
-        let same = |a: &photocraft_doc::Document, b: &photocraft_doc::Document| a.layers.last().map(|l| &l.content) == b.layers.last().map(|l| &l.content);
+        let same = |a: &sary_doc::Document, b: &sary_doc::Document| a.layers.last().map(|l| &l.content) == b.layers.last().map(|l| &l.content);
         assert!(same(&curve, &s.active().unwrap().doc), "sampled below the layer, not through it");
         s.execute("edit.undo", json!({})).unwrap();
         s.execute("edit.undo", json!({})).unwrap();
@@ -1677,7 +1677,7 @@ mod tests {
         s.execute("layer.newAdjustmentLayer.curves", json!({})).unwrap();
         let id = s.active().unwrap().active_layer.unwrap();
         let l = s.active().unwrap().doc.layer(id).unwrap().clone();
-        assert!(matches!(l.content, photocraft_doc::LayerContent::Adjustment(Adjustment::Curves { space: ToneSpace::Cmyk, .. })));
+        assert!(matches!(l.content, sary_doc::LayerContent::Adjustment(Adjustment::Curves { space: ToneSpace::Cmyk, .. })));
     }
 
     #[test]
@@ -1687,7 +1687,7 @@ mod tests {
         s.execute("layer.setAdjustment", json!({"highlights": [0, 0, -20]})).unwrap();
         let id = s.active().unwrap().active_layer.unwrap();
         let adj = |s: &crate::Session| match &s.active().unwrap().doc.layer(id).unwrap().content {
-            photocraft_doc::LayerContent::Adjustment(a) => a.clone(),
+            sary_doc::LayerContent::Adjustment(a) => a.clone(),
             _ => panic!(),
         };
         assert!(matches!(adj(&s), Adjustment::ColorBalance { midtones: [30.0, 0.0, 0.0], highlights: [0.0, 0.0, -20.0], .. }));

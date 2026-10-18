@@ -1,0 +1,37 @@
+[package]
+name = "sary-cli"
+description = "Headless Sary: convert, inspect, run commands, batch, MCP server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[features]
+# Open HEIC/HEIF photos (the optional sary-heif crate). Not default so distributors choose
+# it; official builds (CI, packaging/, release) build with `--features heif`.
+heif = ["sary-codecs/heif"]
+
+[lints]
+workspace = true
+
+[lib]
+name = "sary_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sary-cli"
+path = "src/main.rs"
+
+[dependencies]
+sary-automation = { path = "../../crates/automation" }
+sary-engine = { workspace = true }
+sary-io = { workspace = true }
+sary-format = { path = "../../crates/format" }
+sary-codecs = { workspace = true }
+serde_json = { workspace = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+[build-dependencies]
+# Icon + VERSIONINFO for sary-cli.exe; build.rs only uses it when targeting Windows.
+winresource = "0.1"
+

@@ -2,8 +2,8 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-14 · **Change:** minor (§12.4.4: page transitions and display times read) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
-How much of ISO 32000-2 (PDF 2.0) and the PDF subset standards PdfCraft implements, set against
-what Acrobat Pro implements. This is PdfCraft's equivalent of a "geometry" or "codec" checklist:
+How much of ISO 32000-2 (PDF 2.0) and the PDF subset standards Taratasy implements, set against
+what Acrobat Pro implements. This is Taratasy's equivalent of a "geometry" or "codec" checklist:
 the parts of the format users never see named but always feel. Feature-level detail is in
 `parity/acrobat-features.toml`; the gaps are ranked in [gaps.md](gaps.md).
 
@@ -17,7 +17,7 @@ are borrowed; PDF 2.0 additions and most subset standards are missing. **150–2
 
 ## ISO 32000-2 by clause
 
-| Clause | Topic | Acrobat | PdfCraft | Evidence / what's missing |
+| Clause | Topic | Acrobat | Taratasy | Evidence / what's missing |
 |---|---|---|---|---|
 | §7.2–7.5 | Syntax, objects, file structure, xref tables and streams, object streams, hybrid files, incremental updates | full | **own**, tolerant, repairs damaged files | `crates/cos`; corpus 958 files; fuzzed nightly |
 | §7.4 | Stream filters: Flate, LZW, ASCII85, ASCIIHex, RunLength, predictors | full | **own** | `crates/filters` |
@@ -31,7 +31,7 @@ are borrowed; PDF 2.0 additions and most subset standards are missing. **150–2
 | §7.12 | Extensions dictionary | yes | preserved | |
 | §8 | Graphics: paths, colour spaces, patterns, shadings, images, XObjects | full | **borrowed** renderer; own content parser and serializer (`crates/content`) for editing and redaction | rendering P0s partial |
 | §8.6 | ICC-based colour, output intents, colour management | full | ICC preserved; sRGB output intent for PDF/A; no colour management settings or soft proofing | `print.color-management` planned |
-| §9 | Text and fonts: Type 1, TrueType, OpenType/CFF, Type 3, CID-keyed, CMaps, ToUnicode | full | **borrowed** rendering; own text extraction (word-F1 0.98); standard-14 metrics for generated appearances; embedded fonts reused for editing, else Helvetica | `view.render-type3`, `view.render-cid-fonts` partial; no own font engine; no font embedding/subsetting for arbitrary new text beyond craft-fonts Japanese |
+| §9 | Text and fonts: Type 1, TrueType, OpenType/CFF, Type 3, CID-keyed, CMaps, ToUnicode | full | **borrowed** rendering; own text extraction (word-F1 0.98); standard-14 metrics for generated appearances; embedded fonts reused for editing, else Helvetica | `view.render-type3`, `view.render-cid-fonts` partial; no own font engine; no font embedding/subsetting for arbitrary new text beyond mahay-fonts Japanese |
 | §10 | Rendering: transfer functions, halftones, overprint, smoothness | full | borrowed; no overprint preview | `print.overprint-preview` planned |
 | §11 | Transparency: blend modes, soft masks, groups, knockout | full | borrowed (knockout shipped) | `view.render-transparency` partial |
 | §12.1–12.3 | Viewer preferences, page layout, page labels, outlines, destinations | full | **own**: initial view, page labels, bookmarks edit and from structure, named destinations rewired on copy | named-destination editing panel planned |
@@ -57,7 +57,7 @@ are borrowed; PDF 2.0 additions and most subset standards are missing. **150–2
 
 ## Annotations (§12.5.6)
 
-| Type | Acrobat | PdfCraft | Notes |
+| Type | Acrobat | Taratasy | Notes |
 |---|---|---|---|
 | Text (note), Popup | create, edit | create, edit; pop-ups not movable windows | `comment.popups` planned |
 | Link | create, edit | create, edit, from URLs | `edit.link-*` |
@@ -78,10 +78,10 @@ are borrowed; PDF 2.0 additions and most subset standards are missing. **150–2
 
 ## Actions (§12.6.4)
 
-| Action | Acrobat | PdfCraft |
+| Action | Acrobat | Taratasy |
 |---|---|---|
 | GoTo | yes | yes (page with Fit; named destinations and zoom partial) |
-| GoToR | yes | partial: local PDF paths open in a PdfCraft tab; `/F` strings and file-spec dictionaries (`/UF`, then `/F`), source-relative paths, and explicit numeric-page destinations are supported. Automation uses the same resolver and `--root` confinement. Named destinations open at the target's default view with a warning; `/NewWindow` is a tab hint. Network/URL file systems are refused. |
+| GoToR | yes | partial: local PDF paths open in a Taratasy tab; `/F` strings and file-spec dictionaries (`/UF`, then `/F`), source-relative paths, and explicit numeric-page destinations are supported. Automation uses the same resolver and `--root` confinement. Named destinations open at the target's default view with a warning; `/NewWindow` is a tab hint. Network/URL file systems are refused. |
 | GoToE | yes | none (preserved; the Optimizer can remove invalid ones) |
 | Launch | yes (restricted) | none |
 | Thread | yes | none |
@@ -98,7 +98,7 @@ are borrowed; PDF 2.0 additions and most subset standards are missing. **150–2
 
 ## Digital signatures (§12.8, ETSI EN 319 142 PAdES)
 
-| Capability | Acrobat | PdfCraft |
+| Capability | Acrobat | Taratasy |
 |---|---|---|
 | Sub-filters `adbe.pkcs7.detached`, `ETSI.CAdES.detached`; read `adbe.pkcs7.sha1`, `adbe.x509.rsa_sha1` | yes | yes |
 | PAdES B-B | yes | yes (PKCS #12, macOS Keychain, Windows store with PIN) |
@@ -114,7 +114,7 @@ are borrowed; PDF 2.0 additions and most subset standards are missing. **150–2
 
 ## Subset standards
 
-| Standard | Acrobat | PdfCraft | Hours |
+| Standard | Acrobat | Taratasy | Hours |
 |---|---|---|---|
 | PDF/A-1a/b (ISO 19005-1) | verify, convert | none | |
 | PDF/A-2a/b/u, PDF/A-3a/b/u | verify, convert | **partial**: 2b and 3b structural rules and conversion (sRGB intent; not CMYK) | |

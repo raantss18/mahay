@@ -2,17 +2,17 @@
 //! paths Direct Selection edits, one history step per click.
 
 use egui::Modifiers;
-use photocraft_doc::vector::Path;
-use photocraft_geom::Point;
+use sary_doc::vector::Path;
+use sary_geom::Point;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, tool_event};
 use crate::direct_select::PathRef;
 use crate::state::Tool;
 
-fn app(tool: Tool) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(tool: Tool) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.session.execute("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.sync_views();
     app.ui.tool = tool;
@@ -20,7 +20,7 @@ fn app(tool: Tool) -> PhotocraftApp {
 }
 
 /// A square work path; knot 1 at (120, 40) is smooth, so the top edge (0 → 1) is a curve.
-fn with_path(app: &mut PhotocraftApp) {
+fn with_path(app: &mut SaryApp) {
     let path = json!({"subpaths": [{"closed": true, "knots": [
         [40, 40],
         {"anchor": [120, 40], "in": [100, 20], "out": [140, 60], "smooth": true},
@@ -30,15 +30,15 @@ fn with_path(app: &mut PhotocraftApp) {
     app.run("path.set", json!({"name": "work", "path": path})).unwrap();
 }
 
-fn work(app: &PhotocraftApp) -> Path {
+fn work(app: &SaryApp) -> Path {
     app.session.active().unwrap().doc.work_path.clone().unwrap()
 }
 
-fn steps(app: &PhotocraftApp) -> usize {
+fn steps(app: &SaryApp) -> usize {
     app.session.active().unwrap().history.entries().len()
 }
 
-fn click(app: &mut PhotocraftApp, at: [f64; 2], mods: Modifiers) {
+fn click(app: &mut SaryApp, at: [f64; 2], mods: Modifiers) {
     tool_event(app, ToolEvent::Down { x: at[0], y: at[1], pressure: 1.0 }, mods);
     tool_event(app, ToolEvent::Up { x: at[0], y: at[1] }, mods);
 }
@@ -77,7 +77,7 @@ fn add_on_a_curve_splits_it_where_clicked() {
     let mut app = app(Tool::AddAnchorPoint);
     with_path(&mut app);
     let seg = work(&app).subpaths[0].segments()[0];
-    let on = photocraft_vector::edit::eval(&seg, 0.5);
+    let on = sary_vector::edit::eval(&seg, 0.5);
     click(&mut app, [on.x, on.y], Modifiers::NONE);
     let p = work(&app);
     let k = p.subpaths[0].knots[1];
@@ -85,10 +85,10 @@ fn add_on_a_curve_splits_it_where_clicked() {
     // The two halves still pass through the old curve's quarter points.
     let halves = &p.subpaths[0].segments()[..2];
     for t in [0.25, 0.75] {
-        let old = photocraft_vector::edit::eval(&seg, t);
+        let old = sary_vector::edit::eval(&seg, t);
         let near = halves
             .iter()
-            .flat_map(|s| (0..=400).map(move |i| photocraft_vector::edit::eval(s, f64::from(i) / 400.0)))
+            .flat_map(|s| (0..=400).map(move |i| sary_vector::edit::eval(s, f64::from(i) / 400.0)))
             .fold(f64::MAX, |d, q| d.min((q.x - old.x).hypot(q.y - old.y)));
         assert!(near < 0.1, "t={t}: {near}");
     }
@@ -231,7 +231,7 @@ fn the_pen_cursor_shows_what_auto_add_delete_would_do() {
     assert_eq!(badge(&app, Tool::Pen, Modifiers::NONE), None);
 }
 
-fn pen_anchors(app: &PhotocraftApp) -> Vec<[f64; 2]> {
+fn pen_anchors(app: &SaryApp) -> Vec<[f64; 2]> {
     app.ui.pen.as_ref().map(|p| p.knots.iter().map(|k| k[0]).collect()).unwrap_or_default()
 }
 

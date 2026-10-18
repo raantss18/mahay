@@ -1,6 +1,6 @@
-//! # photocraft-format
+//! # sary-format
 //!
-//! The native, lossless `.pcraft` document bundle (architecture §9).
+//! The native, lossless `.sary` document bundle (architecture §9).
 //!
 //! ```text
 //! manifest.json            versioned document tree (see [`manifest`])
@@ -11,14 +11,14 @@
 //! ```
 //!
 //! A bundle is either a ZIP archive (STORE entries) or a directory with the
-//! same layout. Saving is incremental: [`PcraftWriter`] remembers what it
+//! same layout. Saving is incremental: [`SaryWriter`] remembers what it
 //! already compressed/wrote, so only new tiles are encoded. Directory saves
 //! verify existing content-addressed objects once per writer and folder,
 //! rechecking files whose size or modification time changes; they replace
 //! damaged or missing objects and garbage-collect unreferenced ones.
 //!
 //! This crate sits at L3 next to the compositor, so it does not render.
-//! Callers pass previews in [`SaveOptions`]; `photocraft-io` does that.
+//! Callers pass previews in [`SaveOptions`]; `sary-io` does that.
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -34,8 +34,8 @@ pub mod zip;
 
 use std::path::Path;
 
-use photocraft_doc::Document;
-use photocraft_raster::Rgba8Image;
+use sary_doc::Document;
+use sary_raster::Rgba8Image;
 
 pub use atomic::{atomic_write, atomic_write_progress};
 #[cfg(not(target_arch = "wasm32"))]
@@ -44,22 +44,22 @@ pub use autosave::{Autosaver, RecoveryEntry, discard_recovery, list_recovery, re
 pub use convert::MAX_GROUP_DEPTH;
 pub use manifest::{FORMAT_VERSION, Manifest};
 pub use read::read_file;
-pub use store::{ByteSource, DEFAULT_REVERIFY_BUDGET, PcraftWriter, SaveStats, read_entry};
+pub use store::{ByteSource, DEFAULT_REVERIFY_BUDGET, SaryWriter, SaveStats, read_entry};
 
 /// File extension of the native format.
-pub const EXTENSION: &str = "pcraft";
+pub const EXTENSION: &str = "sary";
 
 #[derive(Debug, thiserror::Error)]
 pub enum FormatError {
-    #[error("corrupt .pcraft bundle: {0}")]
+    #[error("corrupt .sary bundle: {0}")]
     Corrupt(String),
-    #[error("unsupported .pcraft feature: {0}")]
+    #[error("unsupported .sary feature: {0}")]
     Unsupported(String),
     #[error("bundle written by a newer version (format {found}, this build reads up to {supported})")]
     TooNew { found: u32, supported: u32 },
     #[error("limit exceeded: {0}")]
     LimitExceeded(String),
-    #[error("`{path}` is NaN or infinite, which a .pcraft manifest cannot hold; reset that value and save again")]
+    #[error("`{path}` is NaN or infinite, which a .sary manifest cannot hold; reset that value and save again")]
     NonFinite { path: String },
     #[error("I/O: {0}")]
     Io(#[from] std::io::Error),
@@ -130,7 +130,7 @@ impl Default for LoadOptions {
 /// `true` when ZIP bytes contain a `manifest.json` entry.
 ///
 /// Bundles written here place the manifest first; re-zipped bundles may reorder entries.
-pub fn is_pcraft(bytes: &[u8]) -> bool {
+pub fn is_sary(bytes: &[u8]) -> bool {
     if !bytes.starts_with(b"PK\x03\x04") {
         return false;
     }
@@ -143,10 +143,10 @@ pub fn is_pcraft(bytes: &[u8]) -> bool {
     zip::ZipReader::new(bytes).is_ok_and(|archive| archive.find("manifest.json").is_some())
 }
 
-/// Save to an in-memory ZIP bundle (one-shot; use [`PcraftWriter`] for
+/// Save to an in-memory ZIP bundle (one-shot; use [`SaryWriter`] for
 /// incremental saves).
 pub fn save_to_bytes(doc: &Document, opts: &SaveOptions) -> Result<Vec<u8>> {
-    PcraftWriter::new().save_zip(doc, opts).map(|(b, _)| b)
+    SaryWriter::new().save_zip(doc, opts).map(|(b, _)| b)
 }
 
 /// Load a ZIP bundle from memory.

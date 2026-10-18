@@ -3,9 +3,9 @@
 //! test devices), and use synthetic pixels instead of event photographs.
 
 use super::*;
-use photocraft_compose::Buffer;
-use photocraft_doc::SampleType;
-use photocraft_geom::Rect;
+use sary_compose::Buffer;
+use sary_doc::SampleType;
+use sary_geom::Rect;
 
 fn read_mips(gpu: &GpuCanvas, key: u64) -> Vec<Vec<[f32; 4]>> {
     let renderer = gpu.rs.renderer.read();
@@ -51,7 +51,7 @@ fn read_mips(gpu: &GpuCanvas, key: u64) -> Vec<Vec<[f32; 4]>> {
 
 #[test]
 fn canvas_mips_preserve_opaque_pixels_and_partial_updates() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let rs = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| egui_kittest::wgpu::create_render_state(wgpu_setup(), Default::default())));
     let Ok(rs) = rs else {
         eprintln!("skipping mip readback: no GPU adapter");

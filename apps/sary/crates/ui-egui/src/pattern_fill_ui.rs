@@ -8,11 +8,11 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use photocraft_doc::{DocId, Document, Fill, LayerContent};
-use photocraft_engine::pattern_fill_cmds as cmds;
+use sary_doc::{DocId, Document, Fill, LayerContent};
+use sary_engine::pattern_fill_cmds as cmds;
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 
 const MARK: &str = "__patternFill";
@@ -49,7 +49,7 @@ fn fields(command: &str, target: Value, values: Value) -> Map<String, Value> {
 }
 
 /// Edit the active Pattern Fill layer (its thumbnail, Layer › Layer Content Options…).
-pub(crate) fn open(app: &mut PhotocraftApp) -> Option<u64> {
+pub(crate) fn open(app: &mut SaryApp) -> Option<u64> {
     let st = app.session.active()?;
     let layer = st.active_layer?;
     let LayerContent::Fill(Fill::Pattern { scale, id, angle, link, phase, .. }) = &st.doc.layer(layer)?.content else { return None };
@@ -60,19 +60,19 @@ pub(crate) fn open(app: &mut PhotocraftApp) -> Option<u64> {
 
 /// Layer › New Fill Layer › Pattern…: the dialog in front of creating the layer, starting from
 /// the Patterns panel's pattern at 100 %, 0° and linked, as in Photoshop.
-pub(crate) fn open_new(app: &mut PhotocraftApp) -> Result<u64, String> {
-    if let Some(Err(why)) = photocraft_engine::commands::find(cmds::CREATE).map(|c| (c.enabled)(&app.session)) {
+pub(crate) fn open_new(app: &mut SaryApp) -> Result<u64, String> {
+    if let Some(Err(why)) = sary_engine::commands::find(cmds::CREATE).map(|c| (c.enabled)(&app.session)) {
         return Err(why);
     }
     let st = app.session.active().ok_or("no document open")?;
-    let pattern = photocraft_engine::pattern_cmds::resolve(&app.session, "").ok_or("no patterns")?;
+    let pattern = sary_engine::pattern_cmds::resolve(&app.session, "").ok_or("no patterns")?;
     let values = json!({"pattern": pattern.id, "scale": 100.0, "angle": 0.0, "link": true, "phase": [0.0, 0.0]});
     let f = fields(cmds::CREATE, json!({"document": st.doc.id.0}), values);
     Ok(app.ui.open_dialog(crate::state::DialogKind::Command, f))
 }
 
 /// The command and its params: the target plus the dialog's values.
-fn command(app: &PhotocraftApp, f: &Map<String, Value>) -> Option<(&'static str, Value)> {
+fn command(app: &SaryApp, f: &Map<String, Value>) -> Option<(&'static str, Value)> {
     let cmd = match f.get("__command").and_then(Value::as_str)? {
         cmds::SET => cmds::SET,
         cmds::CREATE => cmds::CREATE,
@@ -100,13 +100,13 @@ fn unchanged(f: &Map<String, Value>) -> bool {
 }
 
 /// The document the dialog targets, if it is still the active one.
-fn target_is_active(app: &PhotocraftApp, f: &Map<String, Value>) -> bool {
+fn target_is_active(app: &SaryApp, f: &Map<String, Value>) -> bool {
     let target = f.get("__params").and_then(|p| p.get("document")).and_then(Value::as_u64);
     app.session.active().is_some_and(|st| target == Some(st.doc.id.0))
 }
 
 /// OK: one engine command. A stale document never receives the edit.
-pub(crate) fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub(crate) fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     if !target_is_active(app, f) {
         return Err("the target document is no longer active".into());
     }
@@ -118,7 +118,7 @@ pub(crate) fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result
 }
 
 /// The canvas preview while the dialog is open: the document as OK would leave it.
-pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Document>, u64)> {
+pub(crate) fn display_doc(app: &mut SaryApp, idx: usize) -> Option<(Arc<Document>, u64)> {
     let dialog = app.ui.dialogs.iter().rev().find(|d| owns(&d.fields));
     let Some(d) = dialog else {
         app.pattern_fill_preview = None;
@@ -145,7 +145,7 @@ pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Do
     (st.doc.id.0, st.revision, d.id, params.to_string()).hash(&mut hash);
     let key = (1 << 47) | (hash.finish() & ((1 << 36) - 1));
     let (document, revision, dialog) = (st.doc.id, st.revision, d.id);
-    let shown = Arc::new(photocraft_engine::mode_cmds::display_document(&doc).unwrap_or(doc));
+    let shown = Arc::new(sary_engine::mode_cmds::display_document(&doc).unwrap_or(doc));
     app.pattern_fill_preview = Some(Preview { document, revision, dialog, params, shown: shown.clone(), key });
     Some((shown, key))
 }
@@ -156,7 +156,7 @@ fn num(f: &Map<String, Value>, k: &str, d: f64) -> f32 {
 
 /// The dialog body, in Photoshop's layout: the pattern with Snap to Origin beside it, then
 /// Angle, Scale and Link with Layer.
-pub(crate) fn body(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+pub(crate) fn body(app: &SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     ui.spacing_mut().item_spacing.y = 6.0;
     ui.horizontal(|ui| {
         let pat = f.get("pattern").and_then(Value::as_str).unwrap_or_default().to_string();

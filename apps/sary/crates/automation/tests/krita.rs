@@ -1,7 +1,7 @@
 //! Krita documents through the agent surface (`doc.open`, `engine.execute`, `doc.save`, as MCP
 //! and the CLI use it): open a .kra with its layers, edit it, and save it as OpenRaster.
 
-use photocraft_automation::Headless;
+use sary_automation::Headless;
 use serde_json::json;
 
 /// A tiled pixel file with one raw 64x64 tile of `bgra` at (0, 0). Krita writes a raw tile
@@ -27,7 +27,7 @@ fn kra() -> Vec<u8> {
 <layer nodetype="shapelayer" name="Speech bubble" filename="layer3"/>
 <layer nodetype="paintlayer" name="Paper" colorspacename="RGBA" filename="layer4" compositeop="normal" opacity="255" visible="1"/>
 </layers></IMAGE></DOC>"#;
-    let mut z = photocraft_format::zip::ZipWriter::new();
+    let mut z = sary_format::zip::ZipWriter::new();
     z.add("mimetype", b"application/x-krita").unwrap();
     z.add("maindoc.xml", maindoc.as_bytes()).unwrap();
     z.add("art/layers/layer2", &tiles([0, 0, 255, 255])).unwrap();
@@ -53,8 +53,8 @@ fn krita_documents_open_with_layers_and_save_as_openraster() {
     let names: Vec<&str> = doc.layers.iter().map(|l| l.name.as_str()).collect();
     assert_eq!(names, ["Paper", "Inks"]);
     let line = doc.layers[1].children().unwrap()[0].clone();
-    assert_eq!((line.name.as_str(), line.blend), ("Line", photocraft_doc::BlendMode::Multiply));
-    let flat = photocraft_compose::flatten(doc);
+    assert_eq!((line.name.as_str(), line.blend), ("Line", sary_doc::BlendMode::Multiply));
+    let flat = sary_compose::flatten(doc);
     assert!((flat.px[0][1] - 0.2).abs() < 0.01, "80% red multiplied over white: {:?}", flat.px[0]);
 
     // Read-only source: the file itself is never overwritten as Krita.
@@ -62,7 +62,7 @@ fn krita_documents_open_with_layers_and_save_as_openraster() {
     exec(&mut h, "layer.setProps", json!({"layer": line.id.0, "opacity": 0.5}));
     let ora = dir.join("art.ora");
     h.handle("doc.save", json!({"path": ora.to_str().unwrap()})).unwrap();
-    let back = photocraft_io::import("art.ora", &std::fs::read(&ora).unwrap()).unwrap().document;
+    let back = sary_io::import("art.ora", &std::fs::read(&ora).unwrap()).unwrap().document;
     assert_eq!(back.layers.len(), 2);
     assert_eq!(back.layers[1].children().unwrap()[0].opacity, 0.5);
     let _ = std::fs::remove_dir_all(&dir);

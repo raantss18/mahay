@@ -521,7 +521,7 @@ impl DngSpec {
             jxl_segments: Vec::new(),
             lossy_segments: Vec::new(),
             profile_gain_table_map: None,
-            make: "Photocraft".into(),
+            make: "Sary".into(),
             model: "Synthetic".into(),
             ifd0_extra: Vec::new(),
         }

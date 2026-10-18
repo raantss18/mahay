@@ -6,11 +6,11 @@
 use std::sync::{Arc, Mutex};
 
 use egui::{Align, Layout};
-use pdfcraft_engine::export::{ExportSource, Exporter, ImageFormat};
+use taratasy_engine::export::{ExportSource, Exporter, ImageFormat};
 
 use crate::marks_ui::PageRange;
 use crate::theme::{self, Tokens};
-use crate::{PdfCraftApp, widgets};
+use crate::{TaratasyApp, widgets};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExportKind {
@@ -38,7 +38,7 @@ impl Default for ExportDraft {
 /// Progress of a background export: (done, total, final message once finished).
 pub type ExportStatus = Arc<Mutex<Option<(usize, usize, Option<String>)>>>;
 
-pub(crate) fn body(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens, kind: ExportKind) -> (bool, bool) {
+pub(crate) fn body(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens, kind: ExportKind) -> (bool, bool) {
     let count = app.active_ids().and_then(|(_, id)| app.session.get(id)).map(|d| d.info.pages.len()).unwrap_or(0);
     let d = &mut app.export_draft;
     ui.label(
@@ -148,12 +148,12 @@ fn run(
     };
     if kind == ExportKind::AllImages {
         set(0, None);
-        let out = match pdfcraft_engine::export::extract_images(&src, &pages, min_side) {
+        let out = match taratasy_engine::export::extract_images(&src, &pages, min_side) {
             Ok(o) => o,
             Err(e) => return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e.to_string())]),
         };
         for (k, img) in out.images.iter().enumerate() {
-            if let Err(e) = sink(&pdfcraft_engine::export::image_file_name(&stem, img, k + 1, src.pages), img.data.clone()) {
+            if let Err(e) = sink(&taratasy_engine::export::image_file_name(&stem, img, k + 1, src.pages), img.data.clone()) {
                 return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e.to_string())]);
             }
         }
@@ -215,7 +215,7 @@ fn run(
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// Start exporting the active document with the dialog's settings.
     pub(crate) fn start_export(&mut self, kind: ExportKind) {
         // What's typed in a form field is part of the document (#166).
@@ -254,7 +254,7 @@ impl PdfCraftApp {
                 if inline {
                     work(); // tests and automation: synchronous
                 } else {
-                    std::thread::Builder::new().name("pdfcraft-export".into()).spawn(work).ok();
+                    std::thread::Builder::new().name("taratasy-export".into()).spawn(work).ok();
                 }
                 app.export_status = Some(status);
             };

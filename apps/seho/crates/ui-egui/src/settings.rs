@@ -1,5 +1,5 @@
 //! The desktop app's settings files, `ui.json` ([`UiState`]) and `prefs.json`
-//! ([`deckcraft_engine::Prefs`]), in the per-user settings folder. They are files on disk that a
+//! ([`seho_engine::Prefs`]), in the per-user settings folder. They are files on disk that a
 //! crash, a full disk or a hand edit can leave damaged, so reading never fails and never trusts
 //! them: an unreadable, oversized or malformed file gives the defaults, and the values of a
 //! well-formed one are brought into range ([`UiState::sanitized`], `Prefs::sanitized`). Writing
@@ -7,7 +7,7 @@
 
 use std::path::Path;
 
-use deckcraft_engine::Prefs;
+use seho_engine::Prefs;
 
 use crate::UiState;
 
@@ -67,7 +67,7 @@ mod tests {
     use super::*;
 
     fn dir(name: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!("deckcraft-settings-{}-{name}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("seho-settings-{}-{name}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -115,7 +115,7 @@ mod tests {
         assert_eq!(ui.recent.len(), crate::RECENT_MAX);
         assert_eq!(prefs.grid_spacing, Prefs::default().grid_spacing);
         assert_eq!(prefs.duplicate_offset, 1000.0);
-        assert_eq!(prefs.undo_limit, deckcraft_engine::MAX_UNDO_LIMIT);
+        assert_eq!(prefs.undo_limit, seho_engine::MAX_UNDO_LIMIT);
         assert_eq!(prefs.recovery_minutes, 0.1);
         assert_eq!(prefs.author.chars().count(), 256);
         // A zero or negative zoom means "fit".
@@ -153,7 +153,7 @@ mod tests {
             ..Default::default()
         };
         for ui in [hostile.clone().sanitized(), UiState { zoom: Some(1.0e4), ..Default::default() }] {
-            let mut app = crate::SlideApp::new(deckcraft_engine::Session::with_new(), crate::Services::default());
+            let mut app = crate::SlideApp::new(seho_engine::Session::with_new(), crate::Services::default());
             // The second case is not sanitized: the canvas keeps a stray zoom in range itself.
             app.ui = ui;
             let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_ui_state(

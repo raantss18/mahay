@@ -1,7 +1,7 @@
 //! Fonts added at run time (#582): `font.add`, `font.list`, `font.remove`.
 
 use serde_json::json;
-use wordcraft_doc::Pos;
+use soratra_doc::Pos;
 
 use crate::Session;
 use crate::cmd::insert::base64_encode;
@@ -38,7 +38,7 @@ fn an_added_font_is_listed_and_lays_out_text_already_set_in_it() {
     const FAMILY: &str = "Cmdfont Face 4";
     // Narrow letters: set monospaced they take far more room than in any proportional font.
     const TEXT: &str = "illicit little lilies fill tiny jill";
-    let mut s = Session::new(wordcraft_doc::Document::new());
+    let mut s = Session::new(soratra_doc::Document::new());
     let mono = text_end_x(&mut s, "JetBrains Mono", TEXT);
     // Not installed yet: the text falls back to another font.
     let missing = text_end_x(&mut s, FAMILY, TEXT);
@@ -86,7 +86,7 @@ fn adding_a_font_never_changes_text_that_does_not_use_it() {
 
 #[test]
 fn bad_font_input_is_an_error() {
-    let mut s = Session::new(wordcraft_doc::Document::new());
+    let mut s = Session::new(soratra_doc::Document::new());
     for p in [
         json!({"data": base64_encode(b"definitely not a font")}),
         json!({"data": "%%% not base64"}),

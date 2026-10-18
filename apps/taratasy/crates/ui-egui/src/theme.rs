@@ -24,7 +24,7 @@ pub enum ThemePreference {
 
 impl ThemePreference {
     /// The colours to draw. `system` is what the operating system says, `None` when it says
-    /// nothing; `fallback` is supplied by the caller. PdfCraft uses Light for an unknown desktop.
+    /// nothing; `fallback` is supplied by the caller. Taratasy uses Light for an unknown desktop.
     pub fn resolve(self, system: Option<bool>, fallback: ThemeKind) -> ThemeKind {
         match self {
             Self::Light => ThemeKind::Light,
@@ -122,7 +122,7 @@ impl Tokens {
     }
 
     pub fn get(ctx: &egui::Context) -> Self {
-        ctx.data(|d| d.get_temp::<Tokens>(egui::Id::new("pdfcraft-theme"))).unwrap_or_else(|| Self::for_kind(ThemeKind::Light))
+        ctx.data(|d| d.get_temp::<Tokens>(egui::Id::new("taratasy-theme"))).unwrap_or_else(|| Self::for_kind(ThemeKind::Light))
     }
 
     pub fn dark(&self) -> bool {
@@ -228,19 +228,19 @@ pub const SYSTEM_TAMIL_FALLBACK: &str = "system-tamil-fallback";
 /// What [`install_fonts_for`] installs: [`font_definitions_for`], then, on desktop, one face
 /// already installed on this machine. It only draws characters no embedded face has.
 ///
-/// - In a Chinese interface built without a `Hans` craft-fonts face (every release so far,
+/// - In a Chinese interface built without a `Hans` mahay-fonts face (every release so far,
 ///   #826), it is a Chinese system face (Microsoft YaHei, PingFang, …), placed before the
-///   Japanese craft-fonts faces: they lack hundreds of the catalog's characters (欢, 导, 签, …),
+///   Japanese mahay-fonts faces: they lack hundreds of the catalog's characters (欢, 导, 签, …),
 ///   and one line drawn from two faces with different vertical metrics would not sit on one
 ///   baseline.
 /// - Otherwise it is the last fallback of every family (an Arabic file name in a build without
-///   craft-fonts).
+///   mahay-fonts).
 ///
 /// Installed Devanagari, Telugu, Sinhala and Tamil faces, when there are, end every family just
 /// before that one, so Hindi, Telugu (#1531), Sinhala and Tamil (#1688) text, such as a file
 /// name, draws in a build without such faces.
 ///
-/// `PDFCRAFT_SYSTEM_FONTS=0` leaves them out.
+/// `TARATASY_SYSTEM_FONTS=0` leaves them out.
 pub fn installed_font_definitions(cjk: CjkPreference) -> FontDefinitions {
     #[cfg_attr(target_arch = "wasm32", expect(unused_mut))]
     let mut fonts = font_definitions_for(cjk == CjkPreference::SimplifiedChinese);
@@ -261,14 +261,14 @@ pub fn installed_font_definitions(cjk: CjkPreference) -> FontDefinitions {
             }
         }
         let need = match cjk {
-            _ if !pdfcraft_fonts::ui_chinese_fonts().is_empty() => Need::Other,
+            _ if !taratasy_fonts::ui_chinese_fonts().is_empty() => Need::Other,
             CjkPreference::SimplifiedChinese => Need::Hans,
             CjkPreference::TraditionalChinese => Need::Hant,
             CjkPreference::Default => Need::Other,
         };
         if let Some(data) = fallback(need) {
             fonts.font_data.insert(SYSTEM_FALLBACK.to_owned(), data);
-            let japanese: Vec<String> = pdfcraft_fonts::ui_japanese_fonts().iter().map(|f| f.name()).collect();
+            let japanese: Vec<String> = taratasy_fonts::ui_japanese_fonts().iter().map(|f| f.name()).collect();
             for stack in fonts.families.values_mut() {
                 let at = match need {
                     Need::Other => None,
@@ -282,8 +282,8 @@ pub fn installed_font_definitions(cjk: CjkPreference) -> FontDefinitions {
 }
 
 /// The interface fonts: Inter (and JetBrains Mono for code) first, then egui's defaults, then
-/// the CJK, Arabic, Telugu, Hebrew and Thai faces of the optional craft-fonts build input as the
-/// last fallback in every family. Without craft-fonts there is no Japanese, Chinese, Arabic,
+/// the CJK, Arabic, Telugu, Hebrew and Thai faces of the optional mahay-fonts build input as the
+/// last fallback in every family. Without mahay-fonts there is no Japanese, Chinese, Arabic,
 /// Telugu, Hebrew or Thai face here.
 pub fn font_definitions() -> FontDefinitions {
     font_definitions_for(false)
@@ -342,7 +342,7 @@ fn baseline_drop(primary: [f32; 3], fallback: [f32; 3]) -> f32 {
 /// every proportional family; the monospace family's JetBrains Mono differs from it by 0.004 em,
 /// well under a pixel. A face that doesn't parse is left as it is (egui will skip it anyway).
 pub(crate) fn on_interface_baseline(mut data: FontData) -> FontData {
-    let primary = vertical_metrics(pdfcraft_fonts::INTER_REGULAR, 0);
+    let primary = vertical_metrics(taratasy_fonts::INTER_REGULAR, 0);
     if let (Some(primary), Some(fallback)) = (primary, vertical_metrics(&data.font, data.index)) {
         data.tweak.y_offset_factor = -baseline_drop(primary, fallback);
     }
@@ -361,7 +361,7 @@ fn font_definitions_for_platform(prefer_hans: bool, platform: FontPolicyPlatform
         fonts.font_data.insert(name.to_owned(), Arc::new(data));
     };
     // Shared with typed signatures' fallback glyphs, so the font is embedded once.
-    add(&mut fonts, "Inter", pdfcraft_fonts::INTER_REGULAR);
+    add(&mut fonts, "Inter", taratasy_fonts::INTER_REGULAR);
     add(&mut fonts, "Inter-Medium", include_bytes!("../../../assets/fonts/Inter-Medium.ttf"));
     add(&mut fonts, "Inter-SemiBold", include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf"));
     add(&mut fonts, "JetBrainsMono", include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf"));
@@ -370,8 +370,8 @@ fn font_definitions_for_platform(prefer_hans: bool, platform: FontPolicyPlatform
     // Keep missing Latin/Cyrillic letters in the app's own faces (for example Bulgarian ѝ,
     // absent from JetBrains Mono), before egui's defaults or optional system/CJK fallbacks.
     fonts.families.entry(FontFamily::Monospace).or_default().insert(1, "Inter".to_owned());
-    // The same static bytes pdfcraft-fonts uses for Japanese/Chinese text in PDFs: one copy, not two.
-    for face in pdfcraft_fonts::ui_cjk_fonts(prefer_hans) {
+    // The same static bytes taratasy-fonts uses for Japanese/Chinese text in PDFs: one copy, not two.
+    for face in taratasy_fonts::ui_cjk_fonts(prefer_hans) {
         let name = face.name();
         // Japanese and Chinese faces have distinct family names, so no collision here.
         if !fonts.font_data.contains_key(&name) {
@@ -384,11 +384,11 @@ fn font_definitions_for_platform(prefer_hans: bool, platform: FontPolicyPlatform
     // Arabic-script faces (file names, document titles), Telugu faces (the Telugu interface,
     // file names), Hebrew faces (file names, text being edited) and Thai faces after the CJK ones; the
     // ranges don't overlap.
-    for face in pdfcraft_fonts::ui_arabic_fonts()
+    for face in taratasy_fonts::ui_arabic_fonts()
         .into_iter()
-        .chain(pdfcraft_fonts::ui_telugu_fonts())
-        .chain(pdfcraft_fonts::ui_hebrew_fonts())
-        .chain(pdfcraft_fonts::ui_thai_fonts())
+        .chain(taratasy_fonts::ui_telugu_fonts())
+        .chain(taratasy_fonts::ui_hebrew_fonts())
+        .chain(taratasy_fonts::ui_thai_fonts())
     {
         let name = face.name();
         if !fonts.font_data.contains_key(&name) {
@@ -426,7 +426,7 @@ pub fn apply(ctx: &egui::Context, kind: ThemeKind) {
     // Our saved choice owns the palette; both egui branches receive it below.
     ctx.set_theme(egui::ThemePreference::System);
     let t = Tokens::for_kind(kind);
-    ctx.data_mut(|d| d.insert_temp(egui::Id::new("pdfcraft-theme"), t));
+    ctx.data_mut(|d| d.insert_temp(egui::Id::new("taratasy-theme"), t));
     let mut v = if t.dark() { Visuals::dark() } else { Visuals::light() };
     v.panel_fill = t.panel;
     v.window_fill = t.card;
@@ -598,7 +598,7 @@ mod tests {
     fn baselines(fallback: FontData, size: f32, text: &str) -> Vec<f32> {
         let factor = fallback.tweak.y_offset_factor;
         let mut defs = FontDefinitions::empty();
-        defs.font_data.insert("Inter".into(), Arc::new(FontData::from_static(pdfcraft_fonts::INTER_REGULAR)));
+        defs.font_data.insert("Inter".into(), Arc::new(FontData::from_static(taratasy_fonts::INTER_REGULAR)));
         defs.font_data.insert("fallback".into(), Arc::new(fallback));
         defs.families.insert(FontFamily::Proportional, vec!["Inter".into(), "fallback".into()]);
         let mut fonts = Fonts::new(TextOptions::default(), defs);
@@ -616,7 +616,7 @@ mod tests {
         // As egui lays it out by itself, Ǆ sits ~4 pt off H's baseline: the bug (#1676).
         let raw = baselines(FontData::from_static(dancing), size, "HǄ");
         assert!((raw[1] - raw[0]).abs() > 3.0, "the test fonts must differ: {raw:?}");
-        let drop = baseline_drop(vertical_metrics(pdfcraft_fonts::INTER_REGULAR, 0).unwrap(), vertical_metrics(dancing, 0).unwrap());
+        let drop = baseline_drop(vertical_metrics(taratasy_fonts::INTER_REGULAR, 0).unwrap(), vertical_metrics(dancing, 0).unwrap());
         assert!((raw[1] - raw[0] - size * drop).abs() <= 1.0, "baseline_drop predicts egui: {raw:?} vs {drop}");
         // On the interface baseline, to the pixel.
         let aligned = baselines(on_interface_baseline(FontData::from_static(dancing)), size, "HǄ");

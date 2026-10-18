@@ -1,5 +1,5 @@
 [package]
-name = "craft-docpath"
+name = "mahay-docpath"
 description = "Decide whether a file path or file URL stored in a document refers to a local file."
 version.workspace = true
 edition.workspace = true

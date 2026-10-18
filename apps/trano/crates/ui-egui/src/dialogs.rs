@@ -1,8 +1,8 @@
 //! Modal dialogs: release notes, uninstall confirmation, settings.
 
 use crate::i18n::fmt;
-use artcraft_launcher_core::protocol::Command;
-use artcraft_launcher_core::{Os, PackageKind};
+use trano_core::protocol::Command;
+use trano_core::{Os, PackageKind};
 use egui::{RichText, vec2};
 
 use crate::app::{Dialog, Host, LauncherUi};
@@ -112,11 +112,11 @@ impl LauncherUi {
         close
     }
 
-    fn launcher_update_dialog(&mut self, ui: &mut egui::Ui, r: &artcraft_launcher_core::Release) -> bool {
+    fn launcher_update_dialog(&mut self, ui: &mut egui::Ui, r: &trano_core::Release) -> bool {
         let t = Tokens::get(ui.ctx());
         ui.set_width(480.0f32.min(ui.ctx().content_rect().width() - 80.0));
-        let title = fmt(tl!("ArtCraft Launcher {version} is available."), &[("version", &r.version_label())]);
-        Self::title(ui, Some(crate::icons::artcraft_mark()), &title, "");
+        let title = fmt(tl!("Mahay Trano {version} is available."), &[("version", &r.version_label())]);
+        Self::title(ui, Some(crate::icons::mahay_mark()), &title, "");
         ui.label(RichText::new(tl!("A new version is available. Would you like to relaunch with the updated version?")).color(t.muted));
         ui.add_space(14.0);
         let mut close = false;
@@ -155,14 +155,14 @@ impl LauncherUi {
         ui.set_width(420.0);
         Self::title(ui, crate::icons::app(id), &fmt(tl!("Uninstall {name}?"), &[("name", entry.app.name)]), "");
         let how = match entry.installed.as_ref().map(|i| i.source) {
-            Some(artcraft_launcher_core::InstallSource::MacApp) => tl!("The app will be moved to the Trash. Your documents and settings stay."),
-            Some(artcraft_launcher_core::InstallSource::Msi) => {
+            Some(trano_core::InstallSource::MacApp) => tl!("The app will be moved to the Trash. Your documents and settings stay."),
+            Some(trano_core::InstallSource::Msi) => {
                 tl!("Windows will remove it like any installed program. Your documents and settings stay.")
             }
             Some(
-                artcraft_launcher_core::InstallSource::Deb
-                | artcraft_launcher_core::InstallSource::Rpm
-                | artcraft_launcher_core::InstallSource::Pacman,
+                trano_core::InstallSource::Deb
+                | trano_core::InstallSource::Rpm
+                | trano_core::InstallSource::Pacman,
             ) => tl!("Your system's package manager will remove it, and may ask for your password. Your documents and settings stay."),
             _ => tl!("The app will be removed. Your documents and settings stay."),
         };
@@ -267,9 +267,9 @@ impl LauncherUi {
         ui.set_max_height((viewport.height() - 80.0).max(0.0));
         ui.spacing_mut().scroll = egui::style::ScrollStyle { foreground_color: true, ..egui::style::ScrollStyle::solid() };
         let title_top = ui.cursor().top();
-        Self::title(ui, Some(crate::icons::artcraft_mark()), tl!("Settings"), &format!("ArtCraft Launcher {}", env!("CARGO_PKG_VERSION")));
+        Self::title(ui, Some(crate::icons::mahay_mark()), tl!("Settings"), &format!("Mahay Trano {}", env!("CARGO_PKG_VERSION")));
         let title_height = ui.cursor().top() - title_top;
-        let quit_width = widgets::button_width(ui, tl!("Quit ArtCraft Launcher"), 0.0);
+        let quit_width = widgets::button_width(ui, tl!("Quit Mahay Trano"), 0.0);
         let done_width = widgets::button_width(ui, tl!("Done"), 90.0);
         let stack_actions = self.caps.manage_apps && quit_width + done_width + ui.spacing().item_spacing.x > ui.available_width();
         let footer_height = if stack_actions { 2.0 * theme::CONTROL_H + ui.spacing().item_spacing.y } else { theme::CONTROL_H };
@@ -281,7 +281,7 @@ impl LauncherUi {
         ui.add_space(24.0);
         let mut close = false;
         let quit = |ui: &mut egui::Ui, host: &mut dyn Host| {
-            if self.caps.manage_apps && widgets::button(ui, tl!("Quit ArtCraft Launcher"), Kind::Secondary, 0.0).clicked() {
+            if self.caps.manage_apps && widgets::button(ui, tl!("Quit Mahay Trano"), Kind::Secondary, 0.0).clicked() {
                 host.quit();
             }
         };
@@ -445,7 +445,7 @@ impl LauncherUi {
                     .on_hover_text(tl!("When on, opening the launcher from the menu bar brings its window to the desktop you're on. When off, macOS switches you to the desktop the window was on."));
             }
             if let Some(mut on) = host.login_item()
-                && ui.checkbox(&mut on, tl!("Start ArtCraft Launcher when I log in")).changed()
+                && ui.checkbox(&mut on, tl!("Start Mahay Trano when I log in")).changed()
                 && let Err(e) = host.set_login_item(on)
             {
                 let ctx = ui.ctx().clone();
@@ -454,10 +454,10 @@ impl LauncherUi {
         }
 
         section(ui, tl!("Community"));
-        ui.label(RichText::new(tl!("Questions, ideas and news from the ArtCraft team")).color(t.muted));
+        ui.label(RichText::new(tl!("Questions, ideas and news from the Mahay team")).color(t.muted));
         ui.add_space(6.0);
         ui.horizontal_wrapped(|ui| {
-            use artcraft_launcher_core::catalog::{GITHUB_URL, WEBSITE_URL};
+            use trano_core::catalog::{GITHUB_URL, WEBSITE_URL};
             if widgets::button(ui, tl!("Join the Discord"), Kind::Primary, 0.0).on_hover_text(self.discord_url).clicked() {
                 ui.ctx().open_url(egui::OpenUrl::new_tab(self.discord_url));
             }
@@ -468,7 +468,7 @@ impl LauncherUi {
                 ui.ctx().open_url(egui::OpenUrl::new_tab(GITHUB_URL));
             }
             // Wrap the social links as a group so their icons stay together.
-            let count = artcraft_launcher_core::catalog::SOCIAL.len() as f32;
+            let count = trano_core::catalog::SOCIAL.len() as f32;
             let width = count * (16.0 + 8.0) + (count - 1.0).max(0.0) * 4.0;
             ui.allocate_ui_with_layout(vec2(width, theme::CONTROL_H), egui::Layout::left_to_right(egui::Align::Center), |ui| {
                 ui.spacing_mut().item_spacing.x = 4.0;

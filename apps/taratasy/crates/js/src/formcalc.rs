@@ -2554,7 +2554,7 @@ pub(crate) fn run_formcalc_at(
 pub fn run_formcalc_within(script: &str, event: &XfaEvent, doc: &XfaDoc, root: XfaNode, limits: Limits, timeout: std::time::Duration) -> XfaOutcome {
     let (script, event, doc) = (script.to_string(), event.clone(), doc.clone());
     // FormCalc has no engine to start: its time (and its own deadline) begins at once.
-    run_within("pdfcraft-formcalc", timeout, move |started| {
+    run_within("taratasy-formcalc", timeout, move |started| {
         started();
         run_formcalc_at(&script, &event, &doc, root, limits, Some(timeout))
     })

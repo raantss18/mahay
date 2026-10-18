@@ -5,18 +5,18 @@ use egui::{Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::blur_pins::{COMMAND, IRIS, Iris, Pin, SPIN, TILT, pins, selected};
 use crate::canvas::ViewXform;
 
 /// A 400×300 document at 400 %, so it fills the window round the dialog, with Field Blur open.
-fn harness(selection: bool) -> Harness<'static, PhotocraftApp> {
+fn harness(selection: bool) -> Harness<'static, SaryApp> {
     harness_for(COMMAND, selection)
 }
 
 /// [`harness`] with the Blur Gallery `command` open.
-fn harness_for(command: &str, selection: bool) -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness_for(command: &str, selection: bool) -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     if selection {
         app.run("select.rect", json!({"x": 100, "y": 50, "width": 200, "height": 100})).unwrap();
@@ -24,7 +24,7 @@ fn harness_for(command: &str, selection: bool) -> Harness<'static, PhotocraftApp
     app.sync_views();
     app.ui.extras.rulers = false;
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -35,7 +35,7 @@ fn harness_for(command: &str, selection: bool) -> Harness<'static, PhotocraftApp
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let v = &mut h.state_mut().ui.views[0];
     (v.zoom, v.center, v.fit_pending) = (4.0, [200.0, 150.0], false);
@@ -44,11 +44,11 @@ fn harness_for(command: &str, selection: bool) -> Harness<'static, PhotocraftApp
     h
 }
 
-fn fields(h: &Harness<'static, PhotocraftApp>) -> serde_json::Map<String, serde_json::Value> {
+fn fields(h: &Harness<'static, SaryApp>) -> serde_json::Map<String, serde_json::Value> {
     h.state().ui.dialogs.last().unwrap().fields.clone()
 }
 
-fn xf(h: &Harness<'static, PhotocraftApp>) -> ViewXform {
+fn xf(h: &Harness<'static, SaryApp>) -> ViewXform {
     let app = h.state();
     let v = &app.ui.views[0];
     ViewXform {
@@ -61,17 +61,17 @@ fn xf(h: &Harness<'static, PhotocraftApp>) -> ViewXform {
     }
 }
 
-fn button(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, down: bool) {
+fn button(h: &mut Harness<'static, SaryApp>, p: Pos2, down: bool) {
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: down, modifiers: Modifiers::NONE });
     h.run_steps(1);
 }
 
-fn move_to(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
+fn move_to(h: &mut Harness<'static, SaryApp>, p: Pos2) {
     h.event(egui::Event::PointerMoved(p));
     h.run_steps(1);
 }
 
-fn drag(h: &mut Harness<'static, PhotocraftApp>, path: &[Pos2]) {
+fn drag(h: &mut Harness<'static, SaryApp>, path: &[Pos2]) {
     move_to(h, path[0]);
     button(h, path[0], true);
     for p in &path[1..] {
@@ -82,7 +82,7 @@ fn drag(h: &mut Harness<'static, PhotocraftApp>, path: &[Pos2]) {
 }
 
 /// Where pin `p` is on screen.
-fn on_screen(h: &Harness<'static, PhotocraftApp>, p: Pin, bounds: [f64; 4]) -> Pos2 {
+fn on_screen(h: &Harness<'static, SaryApp>, p: Pin, bounds: [f64; 4]) -> Pos2 {
     let (x, y) = (bounds[0] + p.x * (bounds[2] - bounds[0]), bounds[1] + p.y * (bounds[3] - bounds[1]));
     xf(h).to_screen(x as f32, y as f32)
 }
@@ -180,7 +180,7 @@ fn proxy_previews_scale_the_pins_blur() {
 
 /// Screen point of an Iris pin's local point `(u, v)` (1 = on the outline along that axis), on the
 /// 400×300 canvas (shorter side 300), as the engine places it.
-fn iris_at(h: &Harness<'static, PhotocraftApp>, p: Pin, u: f64, v: f64) -> Pos2 {
+fn iris_at(h: &Harness<'static, SaryApp>, p: Pin, u: f64, v: f64) -> Pos2 {
     let s = p.iris.unwrap();
     let (cx, cy) = (p.x * 400.0, p.y * 300.0);
     let (x, y) = (u * s.rx * 300.0, v * s.ry * 300.0);
@@ -188,7 +188,7 @@ fn iris_at(h: &Harness<'static, PhotocraftApp>, p: Pin, u: f64, v: f64) -> Pos2 
     xf(h).to_screen((cx + x * cos - y * sin) as f32, (cy + x * sin + y * cos) as f32)
 }
 
-fn only_pin(h: &Harness<'static, PhotocraftApp>) -> Pin {
+fn only_pin(h: &Harness<'static, SaryApp>) -> Pin {
     pins(&fields(h))[0]
 }
 
@@ -276,7 +276,7 @@ fn iris_pins_are_cleaned() {
     h.run_steps(2);
 }
 
-fn at_doc(h: &Harness<'static, PhotocraftApp>, x: f64, y: f64) -> Pos2 {
+fn at_doc(h: &Harness<'static, SaryApp>, x: f64, y: f64) -> Pos2 {
     xf(h).to_screen(x as f32, y as f32)
 }
 
@@ -384,7 +384,7 @@ fn spin_blur_handles_and_its_angle_ring() {
 /// gets the command's default shape back, and Spin Blur and Tilt-Shift their defaults too.
 #[test]
 fn alt_reset_starts_again_from_one_pin() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     let id = crate::filter_dialog::open(&mut app, COMMAND).unwrap();
     let mut fields = app.ui.dialog_mut(id).unwrap().fields.clone();

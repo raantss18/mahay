@@ -8,8 +8,8 @@
 use egui::{Sense, Ui, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
-use wordcraft_doc::{Block, Source, StyleKind};
-use wordcraft_engine::cmd::references::FieldCode;
+use soratra_doc::{Block, Source, StyleKind};
+use soratra_engine::cmd::references::FieldCode;
 
 use crate::WordApp;
 use crate::dialogs::{Dialog, buttons};
@@ -364,7 +364,7 @@ pub struct CrossRefForm {
 
 impl CrossRefForm {
     pub fn read(app: &WordApp, to: &str) -> CrossRefForm {
-        let targets: Vec<String> = wordcraft_engine::cmd::citations::ref_targets(&app.session, to).into_iter().map(|(t, _)| t).collect();
+        let targets: Vec<String> = soratra_engine::cmd::citations::ref_targets(&app.session, to).into_iter().map(|(t, _)| t).collect();
         let selected = (!targets.is_empty()).then_some(0);
         CrossRefForm { to: to.into(), show: "text".into(), targets, selected }
     }
@@ -498,7 +498,7 @@ pub struct IndexForm {
 /// The first field in the body whose name is `name`.
 fn body_field(app: &WordApp, name: &str) -> Option<FieldCode> {
     app.session.doc.body.iter().filter_map(|b| b.as_para()).flat_map(|p| p.objects.iter()).find_map(|o| match o {
-        wordcraft_doc::InlineObject::Field { instr, .. } => {
+        soratra_doc::InlineObject::Field { instr, .. } => {
             Some(FieldCode::parse(instr)).filter(|f| f.name == name && (name != "TOC" || !f.has('c')))
         }
         _ => None,
@@ -713,7 +713,7 @@ impl TocForm {
     /// The table in the document, or the defaults for a new one.
     pub fn read(app: &WordApp) -> TocForm {
         let f = body_field(app, "TOC").unwrap_or_else(|| FieldCode::parse(r#"TOC \o "1-3" \h \z \u"#));
-        let levels = f.arg('o').and_then(wordcraft_engine::cmd::references::level_range).map_or(3, |r| r.1);
+        let levels = f.arg('o').and_then(soratra_engine::cmd::references::level_range).map_or(3, |r| r.1);
         let listed: Vec<(String, u8)> = f
             .arg('t')
             .map(|t| {
@@ -743,9 +743,9 @@ impl TocForm {
             page_numbers: !f.has('n'),
             right_align: f.arg('p').is_none_or(|p| p.contains('\t')),
             leader: match leader {
-                Some(wordcraft_doc::props::TabLeader::None) => "none",
-                Some(wordcraft_doc::props::TabLeader::Hyphen) => "hyphen",
-                Some(wordcraft_doc::props::TabLeader::Underscore) => "underscore",
+                Some(soratra_doc::props::TabLeader::None) => "none",
+                Some(soratra_doc::props::TabLeader::Hyphen) => "hyphen",
+                Some(soratra_doc::props::TabLeader::Underscore) => "underscore",
                 _ => "dot",
             }
             .into(),
@@ -1133,14 +1133,14 @@ fn sources_ui(app: &mut WordApp, ui: &mut Ui, selected: &mut Option<usize>) -> N
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::{InlineObject, StoryRef};
-    use wordcraft_engine::Session;
+    use soratra_doc::{InlineObject, StoryRef};
+    use soratra_engine::Session;
 
     use super::*;
     use crate::Services;
 
     fn app(text: &str) -> WordApp {
-        WordApp::new(Session::new(wordcraft_doc::Document::from_text(text)), Services::default())
+        WordApp::new(Session::new(soratra_doc::Document::from_text(text)), Services::default())
     }
 
     fn form(a: &WordApp) -> RefsDialog {

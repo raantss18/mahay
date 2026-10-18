@@ -4,7 +4,7 @@
 //! Files that carry XMP state the title and author twice, and viewers that read XMP first show
 //! the packet's value, so changing only `/Info` leaves the file disagreeing with itself. Each
 //! information key maps to the XMP property PDF/A pairs it with (ISO 19005-1 §6.7.3, the same
-//! mapping `pdfcraft-preflight` writes): Title → `dc:title`, Author → `dc:creator`, Subject →
+//! mapping `taratasy-preflight` writes): Title → `dc:title`, Author → `dc:creator`, Subject →
 //! `dc:description`, Keywords → `pdf:Keywords`, Creator → `xmp:CreatorTool`, Producer →
 //! `pdf:Producer`.
 //!
@@ -13,7 +13,7 @@
 //! none, and a packet this can't edit safely (not UTF-8, no `rdf:RDF`, too large to decode) is
 //! left as it was.
 
-use pdfcraft_cos::{Document, Object, Stream};
+use taratasy_cos::{Document, Object, Stream};
 
 use crate::OrganizeError;
 use crate::pdfx::esc;

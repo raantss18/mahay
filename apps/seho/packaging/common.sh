@@ -4,10 +4,10 @@
 #
 # Exports:
 #   ROOT                    workspace root
-#   VERSION                 [workspace.package] version from Cargo.toml (override: DECKCRAFT_VERSION)
+#   VERSION                 [workspace.package] version from Cargo.toml (override: SEHO_VERSION)
 #   DIST                    output directory for release artifacts (default: $ROOT/dist/release)
-#   DECKCRAFT_BUILD_SHA    git commit shown in the About dialog (crates/ui-egui/src/dialogs.rs version_line)
-#   DECKCRAFT_BUILD_DATE    UTC build date, YYYY-MM-DD
+#   SEHO_BUILD_SHA    git commit shown in the About dialog (crates/ui-egui/src/dialogs.rs version_line)
+#   SEHO_BUILD_DATE    UTC build date, YYYY-MM-DD
 #   CARGO_TARGET_DIR        cargo's target dir (default: $ROOT/target)
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,7 +22,7 @@ workspace_version() {
   ' "$ROOT/Cargo.toml"
 }
 
-VERSION="${DECKCRAFT_VERSION:-$(workspace_version)}"
+VERSION="${SEHO_VERSION:-$(workspace_version)}"
 if [ -z "$VERSION" ]; then
   echo "error: could not read [workspace.package] version from $ROOT/Cargo.toml" >&2
   exit 1
@@ -33,11 +33,11 @@ DIST="${DIST:-$ROOT/dist/release}"
 mkdir -p "$DIST"
 export DIST
 
-if [ -z "${DECKCRAFT_BUILD_SHA:-}" ]; then
-  DECKCRAFT_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+if [ -z "${SEHO_BUILD_SHA:-}" ]; then
+  SEHO_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
 fi
-export DECKCRAFT_BUILD_SHA
-export DECKCRAFT_BUILD_DATE="${DECKCRAFT_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
+export SEHO_BUILD_SHA
+export SEHO_BUILD_DATE="${SEHO_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 
 # Emit a GitHub Actions warning (plain stderr outside Actions).
@@ -54,12 +54,12 @@ copy_docs() {
   copy_font_licences "$dest"
 }
 
-# Builds made with craft-fonts (CRAFT_FONTS_DIR, set by the release workflow) embed its fonts, so
-# the package carries their licences as OFL-<family-dir>.txt. Nothing without CRAFT_FONTS_DIR.
+# Builds made with mahay-fonts (MAHAY_FONTS_DIR, set by the release workflow) embed its fonts, so
+# the package carries their licences as OFL-<family-dir>.txt. Nothing without MAHAY_FONTS_DIR.
 copy_font_licences() {
   local dest="$1" f
-  [ -n "${CRAFT_FONTS_DIR:-}" ] || return 0
-  for f in "$CRAFT_FONTS_DIR"/fonts/*/OFL.txt; do
+  [ -n "${MAHAY_FONTS_DIR:-}" ] || return 0
+  for f in "$MAHAY_FONTS_DIR"/fonts/*/OFL.txt; do
     if [ -f "$f" ]; then cp "$f" "$dest/OFL-$(basename "$(dirname "$f")").txt"; fi
   done
 }

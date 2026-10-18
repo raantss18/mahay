@@ -1,50 +1,50 @@
 //! The menu bar from the keyboard (#4988): Alt / F10 focus the bar, Alt+letter opens a menu,
 //! letters run rows, and the shortcuts wait while the bar has the keyboard.
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::menu_keys::Keys;
 use crate::menu_nav::{Nav, is_open};
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
     app.sync_views();
     app
 }
 
 /// The menu bar alone, as `menu_nav_tests` drives it.
-fn bar() -> Harness<'static, PhotocraftApp> {
+fn bar() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1280.0, 720.0)).build_ui_state(
         |ui, app| {
             crate::menus::menu_bar(app, ui);
         },
         app(),
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(3);
     h
 }
 
-fn key(h: &mut Harness<'static, PhotocraftApp>, k: egui::Key) {
+fn key(h: &mut Harness<'static, SaryApp>, k: egui::Key) {
     h.key_press(k);
     h.run_steps(3);
 }
 
-fn alt_key(h: &mut Harness<'static, PhotocraftApp>, k: egui::Key) {
+fn alt_key(h: &mut Harness<'static, SaryApp>, k: egui::Key) {
     h.event_modifiers(egui::Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::ALT }, egui::Modifiers::ALT);
     h.run_steps(3);
 }
 
 /// A tap on Alt: down, then up with nothing else pressed between.
-fn alt_tap(h: &mut Harness<'static, PhotocraftApp>) {
+fn alt_tap(h: &mut Harness<'static, SaryApp>) {
     h.key_down(egui::Key::AltLeft);
     h.run_steps(2);
     h.key_up(egui::Key::AltLeft);
     h.run_steps(3);
 }
 
-fn rows(h: &Harness<'static, PhotocraftApp>, level: usize) -> Vec<crate::menu_nav::Row> {
+fn rows(h: &Harness<'static, SaryApp>, level: usize) -> Vec<crate::menu_nav::Row> {
     Nav::current(&h.ctx).rows.get(level).cloned().unwrap_or_default()
 }
 
@@ -190,7 +190,7 @@ fn underlined_text_marks_the_mnemonic_once_and_keeps_the_prefix() {
 #[test]
 fn the_shortcuts_wait_while_the_keyboard_is_on_the_bar() {
     let mut h = Harness::builder().with_size(egui::vec2(1280.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
         let mut app = app();
         app.services.native_menu = None;
         app

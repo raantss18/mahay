@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 const MAX_REPLY_BYTES: u64 = 16 * 1024 * 1024;
 
 /// Something that answers control-channel methods (`engine.execute`, `document.inspect`,
-/// `ui.pointer`, `ui.render`, …). See `deckcraft_ui_egui::control` for the full list.
+/// `ui.pointer`, `ui.render`, …). See `seho_ui_egui::control` for the full list.
 pub trait Backend {
     /// Call one method. `Ok` carries the `result`, `Err` the error message.
     fn call(&mut self, method: &str, params: Value) -> Result<Value, String>;
@@ -21,7 +21,7 @@ pub trait Backend {
     fn describe(&self) -> String;
 }
 
-/// A running DeckCraft app, reached through its loopback control port.
+/// A running Seho app, reached through its loopback control port.
 pub struct Remote {
     addr: String,
     conn: Option<(BufReader<TcpStream>, TcpStream)>,
@@ -127,13 +127,13 @@ impl Backend for Remote {
             self.conn = None;
             self.send(&line).map_err(|e| {
                 self.conn = None;
-                format!("DeckCraft app at {} is not reachable: {e}", self.addr)
+                format!("Seho app at {} is not reachable: {e}", self.addr)
             })?;
         }
         self.receive(id).map_err(|e| {
             self.conn = None;
             format!(
-                "lost the reply from the DeckCraft app at {} ({e}); the command may or may not have run, check the document before retrying",
+                "lost the reply from the Seho app at {} ({e}); the command may or may not have run, check the document before retrying",
                 self.addr
             )
         })?
@@ -144,7 +144,7 @@ impl Backend for Remote {
     }
 
     fn describe(&self) -> String {
-        format!("connected to the DeckCraft app at {}", self.addr)
+        format!("connected to the Seho app at {}", self.addr)
     }
 }
 

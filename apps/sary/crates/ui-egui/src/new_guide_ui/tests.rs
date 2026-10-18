@@ -4,25 +4,25 @@ use super::*;
 use crate::menus::invoke as menu;
 
 /// One 4 × 2 inch document at 100 ppi, with the rulers in `unit`.
-fn app(unit: &str) -> (PhotocraftApp, egui::Context) {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(unit: &str) -> (SaryApp, egui::Context) {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 200, "resolution": 100})).unwrap();
     app.run("prefs.set", json!({"path": "unitsAndRulers.rulers", "value": unit})).unwrap();
     app.sync_views();
     (app, egui::Context::default())
 }
 
-fn open(app: &mut PhotocraftApp, ctx: &egui::Context) -> u64 {
+fn open(app: &mut SaryApp, ctx: &egui::Context) -> u64 {
     menu(app, ctx, "view.newGuide", json!({})).unwrap()["dialog"].as_u64().unwrap()
 }
 
-fn set(app: &mut PhotocraftApp, d: u64, orientation: &str, position: &str) {
+fn set(app: &mut SaryApp, d: u64, orientation: &str, position: &str) {
     let f = &mut app.ui.dialog_mut(d).unwrap().fields;
     f.insert("orientation".into(), json!(orientation));
     f.insert("position".into(), json!(position));
 }
 
-fn guides(app: &PhotocraftApp) -> (Vec<f64>, Vec<f64>) {
+fn guides(app: &SaryApp) -> (Vec<f64>, Vec<f64>) {
     let g = &app.session.active().unwrap().doc.guides;
     (g.horizontal.clone(), g.vertical.clone())
 }
@@ -88,7 +88,7 @@ fn remembered_values_that_no_longer_parse_are_ignored() {
     assert_eq!((f["orientation"].as_str(), f["position"].as_str()), (Some("horizontal"), Some("0 mm")));
 }
 
-fn color_of(app: &PhotocraftApp, vertical: bool, position: f64) -> Option<[u8; 3]> {
+fn color_of(app: &SaryApp, vertical: bool, position: f64) -> Option<[u8; 3]> {
     app.session.active().unwrap().doc.guides.color(vertical, position)
 }
 

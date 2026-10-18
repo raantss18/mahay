@@ -10,16 +10,16 @@
 
 use std::collections::HashSet;
 
-use deckcraft_model::{MediaId, Presentation, Shape, Slide};
+use seho_model::{MediaId, Presentation, Shape, Slide};
 
 macro_rules! walkers {
     ($($m:tt)?) => {
-        use deckcraft_model::chart::Chart;
-        use deckcraft_model::style::{Fill, Line, PictureFill};
-        use deckcraft_model::table::{Table, TableBorder, TablePartStyle, TableStyleDef};
-        use deckcraft_model::text::{Hyperlink, ListStyle, ParaProps, RunProps, TextBody, Bullet};
-        use deckcraft_model::theme::Theme;
-        use deckcraft_model::{Background, EmbeddedFont, Layout, Master, MediaId, Shape, ShapeKind, Slide};
+        use seho_model::chart::Chart;
+        use seho_model::style::{Fill, Line, PictureFill};
+        use seho_model::table::{Table, TableBorder, TablePartStyle, TableStyleDef};
+        use seho_model::text::{Hyperlink, ListStyle, ParaProps, RunProps, TextBody, Bullet};
+        use seho_model::theme::Theme;
+        use seho_model::{Background, EmbeddedFont, Layout, Master, MediaId, Shape, ShapeKind, Slide};
 
         /// Deepest group nesting walked (the model's other walkers stop at 64 too).
         const MAX_DEPTH: usize = 64;
@@ -321,9 +321,9 @@ fn collect(walk: impl FnOnce(&mut visit::F)) -> Vec<MediaId> {
 mod tests {
     use std::sync::Arc;
 
-    use deckcraft_model::style::{Artistic, Fill, PictureFill};
-    use deckcraft_model::text::{Action, Bullet, Hyperlink};
-    use deckcraft_model::{Background, MediaClip, ShapeKind, defaults};
+    use seho_model::style::{Artistic, Fill, PictureFill};
+    use seho_model::text::{Action, Bullet, Hyperlink};
+    use seho_model::{Background, MediaClip, ShapeKind, defaults};
 
     use super::*;
 
@@ -345,7 +345,7 @@ mod tests {
             kind: ShapeKind::Media(MediaClip { media: MediaId(9003), poster: Some(MediaId(9004)), ..Default::default() }),
             ..Default::default()
         };
-        let mut text = deckcraft_model::text::TextBody::from_text("x");
+        let mut text = seho_model::text::TextBody::from_text("x");
         if let Some(para) = text.paragraphs.first_mut() {
             para.props.bullet = Some(Bullet::Picture { media: MediaId(9007) });
         }
@@ -369,7 +369,7 @@ mod tests {
         if let Some(m) = p.masters.first_mut() {
             Arc::make_mut(m).theme.format.bg_fills.push(Fill::Picture(pf(9009)));
         }
-        p.embedded_fonts.push(deckcraft_model::EmbeddedFont { regular: Some(MediaId(9010)), ..Default::default() });
+        p.embedded_fonts.push(seho_model::EmbeddedFont { regular: Some(MediaId(9010)), ..Default::default() });
         p
     }
 

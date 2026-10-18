@@ -1,19 +1,19 @@
 //! Save identity belongs to the editable document, after a successful write only.
 
-use crate::{ExportSettings, PhotocraftApp, Services, menus};
-use photocraft_engine::Session;
+use crate::{ExportSettings, SaryApp, Services, menus};
+use sary_engine::Session;
 use serde_json::json;
 use std::{cell::RefCell, rc::Rc};
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(
         Session::new(),
         Services {
             import: Some(Box::new(|name, bytes, max_svg_group_depth| {
-                photocraft_io::import_with_svg_group_depth(name, bytes, max_svg_group_depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())
+                sary_io::import_with_svg_group_depth(name, bytes, max_svg_group_depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())
             })),
             export: Some(Box::new(|doc, path, _| {
-                photocraft_io::export(doc, path, &Default::default()).map(|r| (r.bytes, r.warnings)).map_err(|e| e.to_string())
+                sary_io::export(doc, path, &Default::default()).map(|r| (r.bytes, r.warnings)).map_err(|e| e.to_string())
             })),
             write: Some(Box::new(|_, _| Ok(()))),
             automation_write: Some(Box::new(|_, _| Ok(()))),
@@ -25,7 +25,7 @@ fn app() -> PhotocraftApp {
     app
 }
 
-fn identity(app: &PhotocraftApp) -> (String, Option<String>, u64, u64) {
+fn identity(app: &SaryApp) -> (String, Option<String>, u64, u64) {
     let st = app.session.active().unwrap();
     (st.doc.name.clone(), st.path.clone(), st.revision, st.saved_revision)
 }
@@ -48,7 +48,7 @@ fn new_document_psd_and_subsequent_save_as_adopt_the_written_file_name() {
         menus::invoke(&mut app, &ctx, "file.saveAs", json!({"path": "作品/My image.PSD"})).unwrap();
         assert_eq!(identity(&app), ("My image.PSD".into(), Some("作品/My image.PSD".into()), revision, revision));
         assert_eq!(app.session.active().unwrap().doc.id, id);
-        let reopened = photocraft_io::import("My image.PSD", &bytes.borrow()).unwrap();
+        let reopened = sary_io::import("My image.PSD", &bytes.borrow()).unwrap();
         assert_eq!(reopened.document.size, app.session.active().unwrap().doc.size);
         assert_eq!(reopened.document.depth.bits(), depth);
         menus::invoke(&mut app, &ctx, "file.saveAs", json!({"path": "作品/次の画像.psd"})).unwrap();
@@ -232,25 +232,25 @@ fn maximize_compatibility_preference_reaches_the_exporter() {
 /// a WebP lossy (at its quality) or lossless; a new document keeps the codec defaults.
 #[test]
 fn save_settings_start_at_the_opened_files_encoding() {
-    use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
+    use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
     let px: Vec<u8> = (0..32u32 * 24).flat_map(|i| [(i * 3) as u8, (i / 32 * 9) as u8, (i % 97) as u8]).collect();
     let img = Image::from_raw(32, 24, ChannelLayout::Rgb, SampleType::U8, px).unwrap();
     let mut app = app();
     assert_eq!(app.save_settings().jpeg_quality, None);
     assert!(app.save_settings().webp_lossless);
 
-    let jpeg = photocraft_codecs::encode(&img, Format::Jpeg, &EncodeOptions { jpeg_quality: 65, ..Default::default() }).unwrap();
+    let jpeg = sary_codecs::encode(&img, Format::Jpeg, &EncodeOptions { jpeg_quality: 65, ..Default::default() }).unwrap();
     app.open_bytes("photo.jpg", &jpeg).unwrap();
     let q = app.save_settings().jpeg_quality.unwrap();
     assert!(q.abs_diff(65) <= 2, "estimated {q}");
 
-    let lossy = photocraft_codecs::encode(&img, Format::WebP, &EncodeOptions { webp_lossless: false, webp_quality: 80, ..Default::default() }).unwrap();
+    let lossy = sary_codecs::encode(&img, Format::WebP, &EncodeOptions { webp_lossless: false, webp_quality: 80, ..Default::default() }).unwrap();
     app.open_bytes("photo.webp", &lossy).unwrap();
     let s = app.save_settings();
     assert!(!s.webp_lossless);
     assert!(s.webp_quality.unwrap().abs_diff(80) <= 2, "{:?}", s.webp_quality);
 
-    let lossless = photocraft_codecs::encode(&img, Format::WebP, &EncodeOptions::default()).unwrap();
+    let lossless = sary_codecs::encode(&img, Format::WebP, &EncodeOptions::default()).unwrap();
     app.open_bytes("art.webp", &lossless).unwrap();
     assert!(app.save_settings().webp_lossless);
 }

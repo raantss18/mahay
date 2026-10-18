@@ -2,7 +2,7 @@
 //! developing (in linear light, before the tone curve), and its adaptive black point.
 //!
 //! Measured black-box from Photoshop 25.4 opening 29 Nikon D4 NEFs through Camera Raw (each slider
-//! at ±100 and +50, exposure ±1), against PhotoCraft's own linear development of the same files:
+//! at ±100 and +50, exposure ±1), against Sary's own linear development of the same files:
 //!
 //! * The change is a gain in linear light: exposure −1 gives the same gains, so Camera Raw applies
 //!   it before its tone curve.

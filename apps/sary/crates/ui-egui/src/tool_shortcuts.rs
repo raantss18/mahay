@@ -1,7 +1,7 @@
 //! Toolbar tools in Edit › Keyboard Shortcuts (#4086). Explicit assignments select an
 //! individual tool; unchanged tools keep Photoshop's shared keys and Shift cycling.
 
-use crate::{PhotocraftApp, state::Tool};
+use crate::{SaryApp, state::Tool};
 
 pub(crate) fn id(tool: Tool) -> String {
     let mut name = format!("{tool:?}");
@@ -21,11 +21,11 @@ pub(crate) fn default(tool: Tool) -> Option<String> {
     (tool.key() != '\0').then(|| tool.key().to_string())
 }
 
-pub(crate) fn shortcut(app: &PhotocraftApp, tool: Tool) -> Option<String> {
+pub(crate) fn shortcut(app: &SaryApp, tool: Tool) -> Option<String> {
     crate::shortcuts::effective_shortcut(app, &id(tool), default(tool).as_deref())
 }
 
-pub(crate) fn uses_default(app: &PhotocraftApp, tool: Tool) -> bool {
+pub(crate) fn uses_default(app: &SaryApp, tool: Tool) -> bool {
     !app.session.prefs().shortcuts.contains_key(&id(tool))
 }
 
@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn every_toolbar_tool_has_a_unique_live_shortcut_row() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         let items = crate::prefs_ui::shortcut_items(&app);
         let mut ids = std::collections::HashSet::new();
@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn toolbar_hints_follow_assignments_removal_and_reset() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         assert_eq!(shortcut(&app, Tool::Pencil).as_deref(), Some("B"));
         assert_eq!(shortcut(&app, Tool::SingleRowMarquee), None);
         app.run("prefs.set", json!({"path": "shortcuts.tools.select.pencil", "value": "F6"})).unwrap();
@@ -76,10 +76,10 @@ mod tests {
 
     #[test]
     fn a_remapped_tool_letter_does_not_steal_text_input() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("prefs.set", json!({"path": "shortcuts.tools.select.pencil", "value": "Q"})).unwrap();
         let mut h = egui_kittest::Harness::builder().build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 ui.text_edit_singleline(&mut app.ui.status).request_focus();
                 crate::shortcuts::handle(app, ui.ctx());
             },
@@ -104,7 +104,7 @@ mod engine_table_tests {
     fn the_engines_tool_table_matches_the_tools() {
         let ours: Vec<(String, &str, Option<String>)> = Tool::ALL.into_iter().map(|t| (id(t), t.label(), default(t))).collect();
         let engine: Vec<(String, &str, Option<String>)> =
-            photocraft_engine::shell_commands::TOOLS.iter().map(|(i, n, k)| (i.to_string(), *n, k.map(str::to_string))).collect();
-        assert_eq!(ours, engine, "update photocraft_engine::shell_commands::TOOLS");
+            sary_engine::shell_commands::TOOLS.iter().map(|(i, n, k)| (i.to_string(), *n, k.map(str::to_string))).collect();
+        assert_eq!(ours, engine, "update sary_engine::shell_commands::TOOLS");
     }
 }

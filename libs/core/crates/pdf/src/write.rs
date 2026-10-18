@@ -1,4 +1,4 @@
-//! PDF authoring shared by Craft apps, using Krilla's drawing primitives.
+//! PDF authoring shared by Mahay apps, using Krilla's drawing primitives.
 //!
 //! Applications supply already laid-out pages and retain their document models, font
 //! licensing and fallback policy, export presets, tagging semantics and postprocessing.
@@ -9,7 +9,7 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 pub use krilla as backend;
 
 // Require the root workspace patch; an unpatched backend can abort during unwind.
-const _: bool = backend::CRAFT_UNWIND_POISONING;
+const _: bool = backend::MAHAY_UNWIND_POISONING;
 
 use backend::configure::{Archival, Configuration, ConfigurationBuilder, ConfigurationError, PdfVersion};
 use backend::text::{Font, Tag};

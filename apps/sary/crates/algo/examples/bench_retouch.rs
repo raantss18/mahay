@@ -1,9 +1,9 @@
 //! Timing of the retouch kernels alone (no document plumbing): Poisson seamless clone and
 //! PatchMatch completion on a disc-shaped region, RGBA.
-//! `cargo run --release -p photocraft-algo --example bench_retouch`
+//! `cargo run --release -p sary-algo --example bench_retouch`
 use std::time::Instant;
 
-use photocraft_algo::{inpaint, poisson};
+use sary_algo::{inpaint, poisson};
 
 fn main() {
     for d in [50usize, 100, 200, 300] {

@@ -1,4 +1,4 @@
-# craft-pdf
+# mahay-pdf
 
 Shared PDF infrastructure with independent optional features. Applications own document
 models, editing, layout, font policy, worker scheduling, output presets and printing.
@@ -55,9 +55,9 @@ Cancellation is polled between operators, so a decoder may finish before noticin
 
 ## Backend provenance and consumer pins
 
-The shared reader vendors the current patched Hayro trees from PdfCraft revision
+The shared reader vendors the current patched Hayro trees from Taratasy revision
 `7437bde378f43856eada40af25b983812e615e8a`. See
-[`vendor/README.craft-reader.md`](../../vendor/README.craft-reader.md) for the transfer and
+[`vendor/README.mahay-reader.md`](../../vendor/README.mahay-reader.md) for the transfer and
 local patches. Lopdf, COS editing, inspection fallback and application caches remain app-owned.
 
 The patched 0.7 reader also carries focused compatibility changes from Hayro 0.8:
@@ -70,11 +70,11 @@ than exposing a partial page list. These changes do not imply full equivalence t
 the vendor notes record the boundaries. Existing consumers remain on their immutable
 revision until they explicitly adopt a new one.
 
-Consumers pin `craft-pdf` and their required root `[patch.crates-io]` entries to the same full
-`https://github.com/storytold/craft-libs` revision. Cargo ignores dependency-local patches.
+Consumers pin `mahay-pdf` and their required root `[patch.crates-io]` entries to the same full
+`https://github.com/raantss18/mahay` revision. Cargo ignores dependency-local patches.
 Reader consumers patch `hayro-syntax`, `hayro-interpret` and `hayro-jbig2`; raster consumers
 also patch `hayro`. Writer consumers patch `krilla`. A plain `write` consumer does not need
-reader patches. Keep unrelated craft-ui/craft-print versions unchanged when adopting PDF.
+reader patches. Keep unrelated mahay-ui/mahay-print versions unchanged when adopting PDF.
 A pinned commit must be available remotely before a fresh public checkout can resolve it.
 
 Synthetic native and WASM contracts cover opening, caller limits, alpha, geometry, settings,
@@ -100,7 +100,7 @@ covered by `cargo test --workspace` alone.
 
 Plain `write` retains Krilla raster images without its optional text shaper. Applications
 that supply shaped glyphs do not need that shaper. Adapters that call `draw_text`, such as
-DeckCraft, also need `write-simple-text` when adopting this revision. `write-pdf` adds
+Seho, also need `write-simple-text` when adopting this revision. `write-pdf` adds
 embedded-PDF support independently of text shaping.
 
 The writer pins Krilla 0.8.2, with a local unwind-cleanup patch documented in
@@ -137,7 +137,7 @@ failures. Font preparation bounds do not impose a total memory, output-size or t
 PDF serialization. Individual unsupported fonts still follow each app's existing outline
 fallback and warning behavior.
 
-Run `cargo test -p craft-pdf --no-default-features --features write`, and repeat with
+Run `cargo test -p mahay-pdf --no-default-features --features write`, and repeat with
 `--features write-pdf` and `--all-features`. The same writer contracts run with
 `--target wasm32-unknown-unknown` and a matching `wasm-bindgen-test-runner`. They exercise
 metadata, page sizes, versions, reproducibility, typed validation failures, malformed fonts,
@@ -150,22 +150,22 @@ Consumers pin both the facade and patched writer to the same full commit:
 
 ```toml
 [workspace.dependencies]
-craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "<full-commit-id>", version = "=0.1.0", default-features = false, features = ["write"] }
+mahay-pdf = { git = "https://github.com/raantss18/mahay", rev = "<full-commit-id>", version = "=0.1.0", default-features = false, features = ["write"] }
 
 [patch.crates-io]
-krilla = { git = "https://github.com/storytold/craft-libs", rev = "<full-commit-id>", version = "=0.8.2" }
+krilla = { git = "https://github.com/raantss18/mahay", rev = "<full-commit-id>", version = "=0.8.2" }
 ```
 
 Choose `write-pdf` only when embedding PDF pages. Cargo ignores dependency workspaces'
 root patches; copy the Krilla patch into the consuming workspace. A compile-time marker
 rejects unpatched Krilla. Check the normal dependency graph separately from the test graph
 and ensure there is one Krilla source, including uses through `krilla-svg`. This writer
-migration does not change an application's reader backend or its other craft-libs pins.
+migration does not change an application's reader backend or its other mahay-libs pins.
 The selected revision must be remotely available before fresh consumers can resolve it.
 Local path replacements are development-only and should not be committed to an app.
 
 Run `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings` and
-`cargo test --workspace`, then test `craft-pdf` with `--features write` and
+`cargo test --workspace`, then test `mahay-pdf` with `--features write` and
 `--features write-pdf` (the default feature set intentionally enables no PDF operations).
 Run the same writer contracts on `wasm32-unknown-unknown` with a matching
 `wasm-bindgen-test-runner`. Native recovery tests are subprocess or unwind checks;
@@ -195,9 +195,9 @@ No PDF test fonts are stored in this repository. Obtain the licensed fixtures li
 one directory using the listed names, then run:
 
 ```sh
-CRAFT_PDF_TEST_FONT_DIR=/absolute/path/to/licensed-fonts \
-RUSTFLAGS="--cfg craft_pdf_unicode_fixtures" \
-cargo test -p craft-pdf --all-features --test unicode_writing
+MAHAY_PDF_TEST_FONT_DIR=/absolute/path/to/licensed-fonts \
+RUSTFLAGS="--cfg mahay_pdf_unicode_fixtures" \
+cargo test -p mahay-pdf --all-features --test unicode_writing
 ```
 
 Repeat with `--target wasm32-unknown-unknown` and the matching test runner for

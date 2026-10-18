@@ -1,10 +1,10 @@
 //! Laid-out text and click areas of a slide, in slide coordinates, without drawing — for exports
 //! that put real text over a raster (PDF text layer, links) and for text extraction.
 
-use deckcraft_model::resolve::{self, Ctx};
-use deckcraft_model::text::{Hyperlink, TextBody};
-use deckcraft_model::{Presentation, Shape, ShapeId, ShapeKind};
-use deckcraft_text::{Opts, TextLayout};
+use seho_model::resolve::{self, Ctx};
+use seho_model::text::{Hyperlink, TextBody};
+use seho_model::{Presentation, Shape, ShapeId, ShapeKind};
+use seho_text::{Opts, TextLayout};
 use kurbo::{Affine, Rect};
 
 use crate::{SlideFields, shape_geometry, table};
@@ -78,8 +78,8 @@ pub fn place_slide(pres: &Presentation, index: usize) -> Placed {
 /// The header, date, footer and page-number text of a notes or handout `master`, laid out in its
 /// placeholders (master points) with their own formatting and wrapping, for page `n`. The page
 /// number placeholder shows `n` in its first run's formatting.
-pub fn place_master_texts(pres: &Presentation, master: &deckcraft_model::Master, n: usize) -> Vec<PlacedText> {
-    use deckcraft_model::PhType;
+pub fn place_master_texts(pres: &Presentation, master: &seho_model::Master, n: usize) -> Vec<PlacedText> {
+    use seho_model::PhType;
     let mut out = Placed::default();
     let ctx = Ctx::for_master(pres, master);
     let fields = SlideFields::new(u32::try_from(n).unwrap_or(u32::MAX), pres.header_footer.footer_text.clone(), &crate::RenderOpts::default());
@@ -90,7 +90,7 @@ pub fn place_master_texts(pres: &Presentation, master: &deckcraft_model::Master,
             let props =
                 body.paragraphs.first().and_then(|p| p.runs.first().map(|r| r.props.clone()).or(Some(p.end_props.clone()))).unwrap_or_default();
             let mut para = body.paragraphs.first().cloned().unwrap_or_default();
-            para.runs = vec![deckcraft_model::text::Run::with(n.to_string(), props)];
+            para.runs = vec![seho_model::text::Run::with(n.to_string(), props)];
             body.paragraphs = vec![para];
             s.text = Some(body);
         }
@@ -124,7 +124,7 @@ fn place(out: &mut Placed, rctx: &Ctx, fields: &SlideFields, s: &Shape, parent: 
     match &s.kind {
         ShapeKind::Group { children, child } => {
             let ch = Rect::new(child.x, child.y, child.x + child.w, child.y + child.h);
-            let gm = parent * deckcraft_geom::group_child_affine(&x, ch);
+            let gm = parent * seho_geom::group_child_affine(&x, ch);
             for c in children {
                 place(out, rctx, fields, c, gm, depth + 1, me, own);
             }
@@ -150,7 +150,7 @@ fn place(out: &mut Placed, rctx: &Ctx, fields: &SlideFields, s: &Shape, parent: 
 /// Lay out `body` in text rect `tr` of shape `s` (shape-local → slide `m`) and record it and its hyperlinks.
 #[allow(clippy::too_many_arguments)]
 fn place_text(out: &mut Placed, rctx: &Ctx, fields: &SlideFields, owner: ShapeId, s: &Shape, body: &TextBody, tr: Rect, m: Affine) {
-    let layout = deckcraft_text::layout(rctx, s, body, &Opts { rect: tr, fields, prompt_color: None, no_shrink: false });
+    let layout = seho_text::layout(rctx, s, body, &Opts { rect: tr, fields, prompt_color: None, no_shrink: false });
     let m = crate::text_transform(m, tr, layout.rotation);
     // Text hyperlinks: one box per line segment of a linked run.
     for run in layout.runs.iter().filter(|r| r.link && !r.glyphs.is_empty()) {
@@ -182,12 +182,12 @@ fn run_link(body: &TextBody, para: usize, at: usize) -> Option<Hyperlink> {
 /// The outlines of shape `s`'s text as drawn, in the space `m` maps shape-local points to, and
 /// the colour of its first visible run: what Merge Shapes turns letters into. Empty when the
 /// shape has no text.
-pub fn text_outline(rctx: &Ctx, s: &Shape, m: Affine) -> (kurbo::BezPath, Option<deckcraft_color::Rgba>) {
+pub fn text_outline(rctx: &Ctx, s: &Shape, m: Affine) -> (kurbo::BezPath, Option<seho_color::Rgba>) {
     let mut out = kurbo::BezPath::new();
     let Some(body) = s.text.as_ref().filter(|b| !b.is_empty()) else { return (out, None) };
     let x = resolve::xfrm(rctx, s);
     let tr = shape_geometry(s, x.w, x.h).text_rect;
-    let layout = deckcraft_text::layout(rctx, s, body, &Opts { rect: tr, fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false });
+    let layout = seho_text::layout(rctx, s, body, &Opts { rect: tr, fields: &seho_text::NoFields, prompt_color: None, no_shrink: false });
     let m = crate::text_transform(m, tr, layout.rotation);
     let mut first = None;
     for run in &layout.runs {

@@ -4,8 +4,8 @@
 //! sampler. The hot loop keeps channels together, reads each bilinear tap once,
 //! and preserves the upstream alpha arithmetic for every sample.
 
-use photocraft_geom::Rect;
-use photocraft_raster::Interrupt;
+use sary_geom::Rect;
+use sary_raster::Interrupt;
 
 use crate::image::Image;
 use crate::{Ctx, RadialMethod, RadialQuality};

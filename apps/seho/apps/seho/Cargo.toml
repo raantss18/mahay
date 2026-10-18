@@ -1,0 +1,33 @@
+[package]
+name = "seho"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Seho desktop app"
+publish = false
+default-run = "seho"
+
+[lints]
+workspace = true
+
+[dependencies]
+seho-engine = { workspace = true }
+seho-ui-egui = { workspace = true }
+seho-media = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "links", "wayland", "x11"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[build-dependencies]
+# Icon + VERSIONINFO for seho.exe; build.rs only uses it when the target is Windows.
+winresource = "0.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rfd = { workspace = true }
+arboard = { workspace = true, features = ["image-data"] }
+image = { workspace = true }
+cpal = "0.16"
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+winit = { version = "0.30", default-features = false, features = ["x11"] }

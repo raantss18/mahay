@@ -32,7 +32,7 @@ fn visible_blocks_come_first_nearest_the_view_centre() {
 }
 
 struct Gpu {
-    harness: egui_kittest::Harness<'static, PhotocraftApp>,
+    harness: egui_kittest::Harness<'static, SaryApp>,
     observer: GpuCanvas,
 }
 
@@ -47,8 +47,8 @@ fn gpu_app() -> Option<Gpu> {
             .with_max_steps(64)
             .wgpu_setup(crate::gpu_canvas::wgpu_setup())
             .build_eframe(move |cc| {
-                PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-                let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+                SaryApp::setup_context(&cc.egui_ctx, Default::default());
+                let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
                 if let Some(rs) = cc.wgpu_render_state.as_ref() {
                     *observer_out.lock().expect("observer") = Some(GpuCanvas::new(rs));
                     app.set_wgpu(rs.clone());
@@ -67,7 +67,7 @@ fn gpu_app() -> Option<Gpu> {
 
 /// A document the wgpu compositor leaves to the CPU (knockout on its top layer, which also has
 /// Blend If).
-fn cpu_only_document(app: &mut PhotocraftApp, w: u32, h: u32) -> DocId {
+fn cpu_only_document(app: &mut SaryApp, w: u32, h: u32) -> DocId {
     app.run("file.new", json!({"width": w, "height": h, "background": "#336699"})).expect("new");
     app.run("layer.new.layer", json!({})).expect("layer");
     app.run("edit.fill", json!({"color": "#cc8844"})).expect("fill");
@@ -105,7 +105,7 @@ fn assert_matches_synchronous(g: &mut Gpu, doc: DocId) {
 
 #[test]
 fn a_full_cpu_refresh_draws_in_the_background_with_the_synchronous_pixels() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut g) = gpu_app() else { return };
     let doc = cpu_only_document(g.harness.state_mut(), 2600, 1700);
     g.harness.step();
@@ -119,7 +119,7 @@ fn a_full_cpu_refresh_draws_in_the_background_with_the_synchronous_pixels() {
 
 #[test]
 fn an_edit_during_a_redraw_is_not_overwritten_by_blocks_drawn_before_it() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut g) = gpu_app() else { return };
     // 4×3 blocks: the worker can't hand them all over before the next frame.
     let doc = cpu_only_document(g.harness.state_mut(), 4096, 3072);
@@ -141,7 +141,7 @@ fn an_edit_during_a_redraw_is_not_overwritten_by_blocks_drawn_before_it() {
 
 #[test]
 fn an_edit_damaging_most_of_a_large_document_is_drawn_in_the_background_too() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut g) = gpu_app() else { return };
     let doc = cpu_only_document(g.harness.state_mut(), 2600, 1700);
     settle(&mut g);
@@ -159,7 +159,7 @@ fn an_edit_damaging_most_of_a_large_document_is_drawn_in_the_background_too() {
 
 #[test]
 fn closing_the_document_stops_its_redraw() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut g) = gpu_app() else { return };
     let doc = cpu_only_document(g.harness.state_mut(), 4096, 3072);
     g.harness.step();
@@ -171,7 +171,7 @@ fn closing_the_document_stops_its_redraw() {
 
 #[test]
 fn hiding_a_large_layer_over_the_gpu_budget_redraws_in_the_background() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut g) = gpu_app() else { return };
     // A layer covering most, but not all, of the document: hiding it damages a large rect that
     // isn't the whole canvas.

@@ -1,13 +1,13 @@
-//! pdfcraft-create — create PDFs from nothing, images or text (L4). See the README.
+//! taratasy-create — create PDFs from nothing, images or text (L4). See the README.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
+use taratasy_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
 
 mod extract;
 mod upright_image;
 pub use extract::{ExtractedImage, ImageExport, extract_images, image_file};
-use pdfcraft_fonts::{literal, win_ansi, wrap};
+use taratasy_fonts::{literal, win_ansi, wrap};
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum CreateError {
@@ -51,7 +51,7 @@ fn add_page(doc: &mut Document, w: f64, h: f64, resources: Dict, content: Option
 fn set_title(doc: &mut Document, title: &str) {
     let mut info = Dict::new();
     info.set(b"Title".to_vec(), PdfString::text(title));
-    info.set(b"Producer".to_vec(), PdfString::text("PdfCraft"));
+    info.set(b"Producer".to_vec(), PdfString::text("Taratasy"));
     let r = doc.add(info);
     doc.trailer_mut().set(b"Info".to_vec(), Object::Ref(r));
 }
@@ -630,11 +630,11 @@ fn turkish_code_page(bytes: &[u8]) -> bool {
 
 /// Plain text set in Helvetica on pages of `page` size with 1-inch margins. Text Helvetica can't
 /// draw (outside Western European) is refused with [`CreateError::Invalid`] naming the line and
-/// the character; text PdfCraft generates goes through [`from_text_escaped`] instead.
+/// the character; text Taratasy generates goes through [`from_text_escaped`] instead.
 pub fn from_text(title: &str, text: &str, page: (f64, f64), font_size: f64) -> Result<Document, CreateError> {
     // Helvetica in WinAnsiEncoding: text it can't draw is refused with where it is, not set as `?`.
     if let Some((line, c)) = first_undrawable_line(text) {
-        return Err(CreateError::Invalid(pdfcraft_fonts::undrawable_message(&format!("the text (line {line})"), c)));
+        return Err(CreateError::Invalid(taratasy_fonts::undrawable_message(&format!("the text (line {line})"), c)));
     }
     set_text(title, text, page, font_size)
 }
@@ -642,14 +642,14 @@ pub fn from_text(title: &str, text: &str, page: (f64, f64), font_size: f64) -> R
 /// The line (1-based) and character of the first one Helvetica can't draw. Line breaks, tabs and
 /// form feeds (new pages) are layout, not drawn.
 fn first_undrawable_line(text: &str) -> Option<(usize, char)> {
-    text.split('\n').enumerate().find_map(|(i, l)| pdfcraft_fonts::first_undrawable(&l.replace('\u{c}', "")).map(|c| (i + 1, c)))
+    text.split('\n').enumerate().find_map(|(i, l)| taratasy_fonts::first_undrawable(&l.replace('\u{c}', "")).map(|c| (i + 1, c)))
 }
 
-/// What a PDF made from text PdfCraft generated says, in its first line, about characters it
+/// What a PDF made from text Taratasy generated says, in its first line, about characters it
 /// wrote as `[U+XXXX]`.
 pub const ESCAPED_NOTE: &str = "Characters Helvetica can't draw are written as [U+XXXX] code points.";
 
-/// [`from_text`] for text PdfCraft generates from documents (a comment summary, a compare
+/// [`from_text`] for text Taratasy generates from documents (a comment summary, a compare
 /// report), which may quote any language. Each character Helvetica can't draw is written as
 /// `[U+XXXX]` instead of being refused or set as `?`, so nothing is lost, and the first line says
 /// so ([`ESCAPED_NOTE`]). Returns the document and how many characters were written that way.
@@ -657,7 +657,7 @@ pub fn from_text_escaped(title: &str, text: &str, page: (f64, f64), font_size: f
     let mut escaped = 0usize;
     let mut out = String::with_capacity(text.len());
     for c in text.chars() {
-        if matches!(c, '\n' | '\r' | '\u{c}') || pdfcraft_fonts::first_undrawable(c.encode_utf8(&mut [0; 4])).is_none() {
+        if matches!(c, '\n' | '\r' | '\u{c}') || taratasy_fonts::first_undrawable(c.encode_utf8(&mut [0; 4])).is_none() {
             out.push(c);
         } else {
             escaped = escaped.saturating_add(1);

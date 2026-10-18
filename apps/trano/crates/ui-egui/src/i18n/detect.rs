@@ -50,13 +50,13 @@ pub(super) fn first_supported<'a>(tags: impl IntoIterator<Item = &'a str>) -> Op
     tags.into_iter().find_map(lang_from_tag)
 }
 
-/// `ARTCRAFT_LAUNCHER_LOCALE` overrides everything; then the OS's preferred UI languages
+/// `TRANO_LOCALE` overrides everything; then the OS's preferred UI languages
 /// (`sys-locale`: `LANGUAGE`/`LC_*`/`LANG` on Linux and the BSDs, the preferred-languages list on
 /// macOS, which apps opened from the Finder need since they inherit no `LANG`, and the user's UI
 /// languages on Windows).
 #[cfg(not(target_arch = "wasm32"))]
 fn detect_system_lang() -> Lang {
-    if let Some(l) = std::env::var("ARTCRAFT_LAUNCHER_LOCALE").ok().and_then(|v| first_supported(v.split(':'))) {
+    if let Some(l) = std::env::var("TRANO_LOCALE").ok().and_then(|v| first_supported(v.split(':'))) {
         return l;
     }
     let locales: Vec<String> = sys_locale::get_locales().collect();

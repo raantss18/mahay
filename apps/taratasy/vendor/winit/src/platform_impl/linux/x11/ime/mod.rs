@@ -194,7 +194,7 @@ impl Ime {
         }
     }
 
-    // PdfCraft patch: returns whether the window's input context was replaced, so the caller can
+    // Taratasy patch: returns whether the window's input context was replaced, so the caller can
     // focus the new one (rust-windowing/winit#4727).
     pub fn set_ime_allowed(
         &mut self,

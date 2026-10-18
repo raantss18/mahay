@@ -1,4 +1,4 @@
-//! Geometry primitives shared by every PhotoCraft crate.
+//! Geometry primitives shared by every Sary crate.
 //!
 //! Document space is integer pixels with the origin at the canvas top-left.
 //! Layers may extend beyond the canvas (negative coordinates are valid).

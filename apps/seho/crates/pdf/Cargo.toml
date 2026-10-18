@@ -1,19 +1,19 @@
 [package]
-name = "deckcraft-pdf"
+name = "seho-pdf"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DeckCraft PDF export (craft-pdf/Krilla): slides, notes pages and handouts with a selectable text layer, links and bookmarks"
+description = "Seho PDF export (mahay-pdf/Krilla): slides, notes pages and handouts with a selectable text layer, links and bookmarks"
 
 [lints]
 workspace = true
 
 [dependencies]
-deckcraft-model = { workspace = true }
-deckcraft-fonts = { workspace = true }
-deckcraft-text = { workspace = true }
-deckcraft-render = { workspace = true }
-craft-pdf = { workspace = true }
+seho-model = { workspace = true }
+seho-fonts = { workspace = true }
+seho-text = { workspace = true }
+seho-render = { workspace = true }
+mahay-pdf = { workspace = true }
 kurbo = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
@@ -27,6 +27,6 @@ wasm-bindgen-test = "0.3"
 
 # Off the web build, krilla compresses each slide's artwork on a background thread while the next
 # slide renders (the same bytes, in parallel). The root patch selects the same pinned
-# backend as craft-pdf; this dependency only enables its native compression feature.
+# backend as mahay-pdf; this dependency only enables its native compression feature.
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 krilla = { version = "=0.8.2", features = ["rayon"] }

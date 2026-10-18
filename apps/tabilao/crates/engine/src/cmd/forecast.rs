@@ -6,9 +6,9 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, RangeRef, Value};
-use gridcraft_functions::Timeline;
-use gridcraft_model::{Anchor, Cell, Chart, ChartKind, Formula, LegendPos, Series, Sheet, StyleId, Table, TableColumn, TotalsFn};
+use tabilao_core::{CellRef, RangeRef, Value};
+use tabilao_functions::Timeline;
+use tabilao_model::{Anchor, Cell, Chart, ChartKind, Formula, LegendPos, Series, Sheet, StyleId, Table, TableColumn, TotalsFn};
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -184,7 +184,7 @@ fn options(p: &Json) -> Result<Options> {
 }
 
 fn col_letters(c: u32) -> String {
-    gridcraft_core::col_to_letters(c)
+    tabilao_core::col_to_letters(c)
 }
 
 fn forecast_sheet(s: &mut Session, p: &Json) -> Result<Json> {
@@ -226,7 +226,7 @@ fn forecast_sheet(s: &mut Session, p: &Json) -> Result<Json> {
     let time_param = |key: &str| -> Result<Option<f64>> {
         match p.get(key) {
             Some(Json::Number(n)) => Ok(n.as_f64()),
-            Some(Json::String(t)) if !t.trim().is_empty() => match gridcraft_core::parse::parse_input(t.trim(), sys).value {
+            Some(Json::String(t)) if !t.trim().is_empty() => match tabilao_core::parse::parse_input(t.trim(), sys).value {
                 Value::Number(x) => Ok(Some(x)),
                 _ => Err(bad(CMD, format!("`{key}` is not a number or a date: `{t}`"))),
             },
@@ -369,7 +369,7 @@ fn forecast_sheet(s: &mut Session, p: &Json) -> Result<Json> {
         for c in 0..width {
             sheet.cols.insert(
                 c,
-                gridcraft_model::LineInfo {
+                tabilao_model::LineInfo {
                     size: Some(match c {
                         0 | 1 => 90.0,
                         2 => 130.0,
@@ -400,7 +400,7 @@ fn forecast_sheet(s: &mut Session, p: &Json) -> Result<Json> {
             table_type: None,
             connection_id: None,
         });
-        let q = gridcraft_formula::quote_sheet(&sheet_name);
+        let q = tabilao_formula::quote_sheet(&sheet_name);
         let col_ref = |c: u32| format!("{q}!${0}$2:${0}${end_row}", col_letters(c));
         let series = (1..width)
             .map(|c| Series {
@@ -465,7 +465,7 @@ fn steps_to(timeline: &Timeline, end: f64, cap: u32) -> Result<u32> {
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::{CellRef, Value};
+    use tabilao_core::{CellRef, Value};
     use serde_json::json;
 
     use crate::Session;
@@ -576,7 +576,7 @@ mod tests {
         assert_eq!(formula(&s, 0, "C18"), "FORECAST.ETS(A18,$B$2:$B$17,$A$2:$A$17,4,0,7)");
         assert_eq!(value(&s, 0, "D1"), Value::Empty);
         let sh = s.doc().unwrap().wb.sheet(0).unwrap();
-        assert_eq!(sh.charts.first().map(|c| c.kind), Some(gridcraft_model::ChartKind::ColumnClustered));
+        assert_eq!(sh.charts.first().map(|c| c.kind), Some(tabilao_model::ChartKind::ColumnClustered));
         // Errors: end before the data, bad seasonality, uneven timeline, one column only.
         s.execute("sheet.activate", json!({"sheet": "Sheet1"})).unwrap();
         assert!(s.execute("data.forecastSheet", json!({"range": "Sheet1!A1:B17", "end": 3})).is_err());

@@ -22,8 +22,8 @@ use std::io::{Cursor, Read, Write};
 
 use quick_xml::XmlVersion;
 use quick_xml::events::{BytesStart, Event};
-use wordcraft_doc::section::{Columns, SectionStart};
-use wordcraft_doc::{Align, Document, RevisionKind, Rgb, SectionProps};
+use soratra_doc::section::{Columns, SectionStart};
+use soratra_doc::{Align, Document, RevisionKind, Rgb, SectionProps};
 
 use crate::model::{self, Cell, FBlock, FTable, Flow, Fmt, Inline, Kind, ListInfo, Meta, Para, RevMark, make_img, mime_of};
 
@@ -364,7 +364,7 @@ impl Writer {
                     }
                     // A script, `file:`, UNC or other non-web target is written as plain text, as
                     // the HTML and Markdown exporters do (LibreOffice follows `file:`/UNC hrefs).
-                    let link = f.link.as_deref().filter(|l| wordcraft_doc::link::is_safe_href(l));
+                    let link = f.link.as_deref().filter(|l| soratra_doc::link::is_safe_href(l));
                     if let Some(l) = link {
                         out.push_str(&format!("<text:a xlink:type=\"simple\" xlink:href=\"{}\">", x(l)));
                     }
@@ -761,7 +761,7 @@ fn now_unix() -> i64 {
     }
 }
 
-fn styles_xml(sec: &wordcraft_doc::SectionProps, body_font: &str) -> String {
+fn styles_xml(sec: &soratra_doc::SectionProps, body_font: &str) -> String {
     let mut s = format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-styles {NS}><office:styles>");
     s.push_str(&format!(
         "<style:default-style style:family=\"paragraph\"><style:paragraph-properties fo:margin-bottom=\"8pt\"/><style:text-properties fo:font-family=\"'{}'\" fo:font-size=\"12pt\"/></style:default-style>",
@@ -797,7 +797,7 @@ fn styles_xml(sec: &wordcraft_doc::SectionProps, body_font: &str) -> String {
 
 fn meta_xml(m: &Meta) -> String {
     let mut s =
-        format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-meta {NS}><office:meta><meta:generator>WordCraft</meta:generator>");
+        format!("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-meta {NS}><office:meta><meta:generator>Soratra</meta:generator>");
     if !m.title.is_empty() {
         s.push_str(&format!("<dc:title>{}</dc:title>", x(&m.title)));
     }
@@ -836,7 +836,7 @@ pub fn export(doc: &Document) -> Result<Vec<u8>, String> {
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<office:document-content {NS}>{}<office:body><office:text>\n{tracked}{body}</office:text></office:body></office:document-content>\n",
         w.automatic_styles()
     );
-    let body_font = doc.styles.default_chr.font.clone().unwrap_or_else(|| wordcraft_doc::styles::BODY_FONT.to_string());
+    let body_font = doc.styles.default_chr.font.clone().unwrap_or_else(|| soratra_doc::styles::BODY_FONT.to_string());
     let styles = styles_xml(&doc.last_section, &body_font);
     let meta = meta_xml(&flow.meta);
     let mut manifest = String::from(
@@ -1991,7 +1991,7 @@ impl Body<'_> {
             "table-row" => {
                 if let Some(t) = self.tables.last_mut() {
                     let r = std::mem::take(&mut t.row);
-                    if !r.is_empty() && t.rows.len() < wordcraft_doc::table::MAX_ROWS {
+                    if !r.is_empty() && t.rows.len() < soratra_doc::table::MAX_ROWS {
                         t.rows.push(r);
                     }
                 }
@@ -2539,7 +2539,7 @@ mod tests {
             <style:master-page style:name="Standard" style:page-layout-name="pm2"/>
             <style:master-page style:name="Other" style:page-layout-name="pm1"/>
             </office:master-styles></office:document-styles>"#;
-        let mut sec = wordcraft_doc::SectionProps::default();
+        let mut sec = soratra_doc::SectionProps::default();
         apply_page_layout(xml, &mut sec);
         assert!(sec.landscape);
         assert_eq!((sec.page_w, sec.page_h, sec.margin_left, sec.margin_top), (720.0, 360.0, 72.0, 72.0));
@@ -2558,14 +2558,14 @@ mod tests {
             )
         };
         // Huge values: the page is capped at 22 inches and margins at the page's longer side.
-        let mut sec = wordcraft_doc::SectionProps::default();
+        let mut sec = soratra_doc::SectionProps::default();
         apply_page_layout(styles("1e30pt", "1e30in", "1e30pt").as_bytes(), &mut sec);
         assert_eq!((sec.page_w, sec.page_h), (1584.0, 1584.0));
         assert_eq!((sec.margin_top, sec.margin_left), (1584.0, 1584.0));
         // Negative, zero, tiny and non-numeric values leave the defaults alone.
-        let def = wordcraft_doc::SectionProps::default();
+        let def = soratra_doc::SectionProps::default();
         for (w, h, m) in [("-10in", "-5in", "-1in"), ("0pt", "0pt", "NaNpt"), ("1pt", "2pt", "infpt"), ("NaN", "inf", "x")] {
-            let mut sec = wordcraft_doc::SectionProps::default();
+            let mut sec = soratra_doc::SectionProps::default();
             apply_page_layout(styles(w, h, m).as_bytes(), &mut sec);
             assert_eq!((sec.page_w, sec.page_h), (def.page_w, def.page_h), "{w} {h}");
             assert_eq!((sec.margin_top, sec.margin_right), (def.margin_top, def.margin_right), "{m}");
@@ -2617,7 +2617,7 @@ mod tests {
 
     #[test]
     fn master_pages_and_column_sections_become_sections() {
-        use wordcraft_doc::section::SectionStart;
+        use soratra_doc::section::SectionStart;
         let doc = import(&sections_package()).unwrap();
         let secs = doc.sections();
         let summary: Vec<_> =
@@ -2637,11 +2637,11 @@ mod tests {
         assert!((cols.space - 28.35).abs() < 0.01 && cols.separator, "{cols:?}");
         // Each section ends on its own last paragraph; the wide one ends after its table.
         let text = |i: usize| match doc.body.get(i).map(|b| &**b) {
-            Some(wordcraft_doc::Block::Para(p)) => p.plain_text().to_string(),
+            Some(soratra_doc::Block::Para(p)) => p.plain_text().to_string(),
             _ => String::from("<not a paragraph>"),
         };
         assert_eq!(text(secs[0].0), "More opening words");
-        assert!(matches!(doc.body.get(secs[1].0 - 1).map(|b| &**b), Some(wordcraft_doc::Block::Table(_))));
+        assert!(matches!(doc.body.get(secs[1].0 - 1).map(|b| &**b), Some(soratra_doc::Block::Table(_))));
         assert_eq!(text(secs[2].0), "Right column text");
         assert_eq!(text(secs[3].0), "Last line");
     }
@@ -2691,7 +2691,7 @@ mod tests {
         // Review of #1379: a table style can name a master page too (ODF 1.3 §19.509), with its
         // page-number restart on `style:table-properties`. An empty name on a child style means
         // "no page style here", and a page-number restart without a master page starts nothing.
-        use wordcraft_doc::section::SectionStart;
+        use soratra_doc::section::SectionStart;
         let styles = format!(
             r#"<office:document-styles {NS_T}><office:styles><style:style style:name="WideParent" style:family="paragraph" style:master-page-name="Wide"/></office:styles><office:automatic-styles>
             <style:page-layout style:name="pU"><style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm"><style:columns fo:column-count="1" fo:column-gap="0cm"/></style:page-layout-properties></style:page-layout>
@@ -2715,9 +2715,9 @@ mod tests {
         let secs = doc.sections();
         let summary: Vec<_> = secs.iter().map(|(i, s)| (*i, s.start, s.landscape, s.page_num_start)).collect();
         assert_eq!(summary, [(2, SectionStart::NextPage, false, None), (4, SectionStart::NextPage, true, Some(1))]);
-        assert!(matches!(doc.body.get(3).map(|b| &**b), Some(wordcraft_doc::Block::Table(_))));
+        assert!(matches!(doc.body.get(3).map(|b| &**b), Some(soratra_doc::Block::Table(_))));
         // A one-column page layout keeps the default column gap.
-        assert_eq!(secs[0].1.columns, wordcraft_doc::section::Columns::default());
+        assert_eq!(secs[0].1.columns, soratra_doc::section::Columns::default());
     }
 
     // --- Tracked changes (ODF 1.3 Part 3 §5.5) -------------------------------------------------
@@ -2739,13 +2739,13 @@ mod tests {
     }
 
     /// Each body paragraph as (text, revision kind) runs, plus its mark's revision kind.
-    type RevRuns = Vec<(Vec<(String, Option<wordcraft_doc::RevisionKind>)>, Option<wordcraft_doc::RevisionKind>)>;
+    type RevRuns = Vec<(Vec<(String, Option<soratra_doc::RevisionKind>)>, Option<soratra_doc::RevisionKind>)>;
 
     fn rev_runs(doc: &Document) -> RevRuns {
         let kind = |i: Option<u32>| i.and_then(|i| doc.revisions.get(i as usize)).map(|r| r.kind);
         doc.body
             .iter()
-            .filter_map(|b| if let wordcraft_doc::Block::Para(p) = &**b { Some(p) } else { None })
+            .filter_map(|b| if let soratra_doc::Block::Para(p) = &**b { Some(p) } else { None })
             .map(|p| {
                 let runs = p.run_ranges().map(|(r, cp)| (p.text[r].to_string(), kind(cp.del).or(kind(cp.ins)))).collect();
                 (runs, kind(p.mark.del).or(kind(p.mark.ins)))
@@ -2764,7 +2764,7 @@ mod tests {
 
     #[test]
     fn tracked_insertion_and_deletion_import_with_authors_and_dates() {
-        use wordcraft_doc::RevisionKind::{Delete, Insert};
+        use soratra_doc::RevisionKind::{Delete, Insert};
         let doc = import(&insertion_and_deletion()).unwrap();
         let s = |v: &str| v.to_string();
         assert_eq!(rev_runs(&doc), vec![(vec![(s("Keep "), None), (s("new "), Some(Insert)), (s("old "), Some(Delete)), (s("words."), None)], None)]);
@@ -2775,7 +2775,7 @@ mod tests {
 
     #[test]
     fn tracked_deletion_across_paragraphs_keeps_the_deleted_paragraph_mark() {
-        use wordcraft_doc::RevisionKind::Delete;
+        use soratra_doc::RevisionKind::Delete;
         // "First tail¶head rest." with "tail¶head " deleted: the body holds the merged paragraph.
         let regions = region("d1", "deletion", "Bob", "2024-03-02T11:30:00", "<text:p>tail</text:p><text:p>head<text:s/></text:p>");
         let doc = import(&tracked(&regions, r#"<text:p>First <text:change text:change-id="d1"/>rest.</text:p>"#)).unwrap();
@@ -2798,7 +2798,7 @@ mod tests {
         assert_eq!(revs(&back), revs(&doc));
         assert_eq!(back.settings.track_changes, doc.settings.track_changes);
         // The inserted paragraph mark survives: "added¶" is part of the insertion.
-        assert_eq!(rev_runs(&doc)[2].1, Some(wordcraft_doc::RevisionKind::Insert));
+        assert_eq!(rev_runs(&doc)[2].1, Some(soratra_doc::RevisionKind::Insert));
     }
 
     #[test]
@@ -2828,14 +2828,14 @@ mod tests {
     type Marks = Vec<(Vec<(String, bool, bool)>, (bool, bool))>;
 
     fn marks(doc: &Document) -> Marks {
-        fn walk(bl: &wordcraft_doc::Blocks, out: &mut Marks) {
+        fn walk(bl: &soratra_doc::Blocks, out: &mut Marks) {
             for b in bl {
                 match &**b {
-                    wordcraft_doc::Block::Para(p) => out.push((
+                    soratra_doc::Block::Para(p) => out.push((
                         p.run_ranges().map(|(r, cp)| (p.text[r].to_string(), cp.ins.is_some(), cp.del.is_some())).collect(),
                         (p.mark.ins.is_some(), p.mark.del.is_some()),
                     )),
-                    wordcraft_doc::Block::Table(t) => {
+                    soratra_doc::Block::Table(t) => {
                         for r in &t.rows {
                             for c in &r.cells {
                                 walk(&c.blocks, out);
@@ -2931,7 +2931,7 @@ mod tests {
         for src in ["a\t b", "a\t  b", "a\t   éa", "é\t 😀a", "a\t\t b"] {
             let doc = Document::from_text(src);
             let back = import(&export(&doc).unwrap()).unwrap();
-            assert_eq!(back.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), src, "{src:?}");
+            assert_eq!(back.plain_text(soratra_doc::StoryRef::Body).trim_end(), src, "{src:?}");
         }
     }
 }

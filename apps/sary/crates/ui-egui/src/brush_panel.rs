@@ -15,18 +15,18 @@
 //! (`locks` in the brush, applied by the engine). The Brushes tab lives in [`crate::brushes_tab`].
 
 use egui::{Color32, CornerRadius, Sense, Stroke, vec2};
-use photocraft_engine::BrushSettings;
-use photocraft_engine::paint;
+use sary_engine::BrushSettings;
+use sary_engine::paint;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
 use crate::brush_preview;
 use crate::theme::{self, Tokens};
-use crate::{PhotocraftApp, icons, widgets};
+use crate::{SaryApp, icons, widgets};
 
 pub use crate::brush_preview::{preview_pixels, preview_sig};
 pub use crate::brush_sections::section_body;
-pub use photocraft_engine::brush_cmds::brush_patch;
+pub use sary_engine::brush_cmds::brush_patch;
 
 /// Sections in Photoshop's order. The bool says whether the section has an enable box.
 pub const SECTIONS: [(&str, bool); 13] = [
@@ -161,11 +161,11 @@ pub fn section_lock(b: &mut BrushSettings, i: usize) -> Option<&mut bool> {
 }
 
 /// Send the panel's edits (`before` → `after`) through `tools.setBrush`.
-pub fn commit(app: &mut PhotocraftApp, before: &BrushSettings, after: &BrushSettings) {
+pub fn commit(app: &mut SaryApp, before: &BrushSettings, after: &BrushSettings) {
     send(app, before, after, None);
 }
 
-fn send(app: &mut PhotocraftApp, before: &BrushSettings, after: &BrushSettings, key: Option<String>) -> bool {
+fn send(app: &mut SaryApp, before: &BrushSettings, after: &BrushSettings, key: Option<String>) -> bool {
     if before == after {
         return false;
     }
@@ -203,7 +203,7 @@ fn gesture(ctx: &egui::Context) -> u64 {
 /// [`commit`] as part of a gesture: every call of one drag carries the same `coalesce` key, so
 /// the engine journals the drag as a single `tools.setBrush` (Rule 1: one command per gesture).
 /// Call it every frame (it tracks presses even when nothing changed).
-pub fn commit_gesture(app: &mut PhotocraftApp, ctx: &egui::Context, before: &BrushSettings, after: &BrushSettings) {
+pub fn commit_gesture(app: &mut SaryApp, ctx: &egui::Context, before: &BrushSettings, after: &BrushSettings) {
     let g = gesture(ctx);
     if send(app, before, after, Some(format!("brush-ui:{g}"))) && !ctx.input(|i| i.pointer.any_down()) {
         ctx.data_mut(|d| d.get_temp_mut_or_default::<(u64, u64)>(egui::Id::new(GESTURE)).0 += 1);
@@ -231,7 +231,7 @@ pub(crate) fn new_preset_name(presets: &[paint::BrushPreset]) -> String {
     (1..).map(|n| format!("Brush {n}")).find(|n| !presets.iter().any(|p| &p.name == n)).unwrap_or_else(|| "Brush".into())
 }
 
-pub(crate) fn run_or_status(app: &mut PhotocraftApp, id: &str, p: Value) {
+pub(crate) fn run_or_status(app: &mut SaryApp, id: &str, p: Value) {
     if let Err(e) = app.run(id, p) {
         app.ui.status = e;
     }
@@ -243,7 +243,7 @@ pub(crate) fn full_uv() -> egui::Rect {
 
 /// Clicking a controls section shows and enables it; the final five rows only toggle, keeping
 /// the current controls open. The lock on the right is a separate hit target.
-fn section_list(app: &mut PhotocraftApp, ui: &mut egui::Ui, b: &mut BrushSettings) {
+fn section_list(app: &mut SaryApp, ui: &mut egui::Ui, b: &mut BrushSettings) {
     let t = Tokens::get(ui.ctx());
     ui.vertical(|ui| {
         ui.set_width(150.0);
@@ -343,7 +343,7 @@ fn section_list(app: &mut PhotocraftApp, ui: &mut egui::Ui, b: &mut BrushSetting
     });
 }
 
-fn settings_tab(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+fn settings_tab(app: &mut SaryApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let before = app.session.tools.brush.clone();
     let mut b = before.clone();
@@ -448,7 +448,7 @@ pub fn clear_brush_controls(current: &BrushSettings) -> BrushSettings {
 }
 
 /// Copy the current brush's Texture settings to other painting tools that have Texture enabled.
-pub fn copy_texture_to_other_tools(app: &mut PhotocraftApp) {
+pub fn copy_texture_to_other_tools(app: &mut SaryApp) {
     let texture = app.session.tools.brush.texture.clone();
     for (_, brush) in &mut app.ui.tool_brushes {
         if brush.texture.enabled {
@@ -458,7 +458,7 @@ pub fn copy_texture_to_other_tools(app: &mut PhotocraftApp) {
 }
 
 /// The Brush Settings panel menu actions (hamburger menu).
-pub fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn panel_menu(app: &mut SaryApp, ui: &mut egui::Ui) {
     if ui.button(tl!("New Brush Preset…")).clicked() {
         let name = new_preset_name(&app.session.tools.presets);
         run_or_status(app, "brush.presets.save", json!({ "name": name }));
@@ -475,11 +475,11 @@ pub fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
         commit(app, &before, &cleared);
         ui.close();
     }
-    let has_locks = app.session.tools.brush.locks != photocraft_paint::brush::SectionLocks::default();
+    let has_locks = app.session.tools.brush.locks != sary_paint::brush::SectionLocks::default();
     if ui.add_enabled(has_locks, egui::Button::new(tl!("Reset All Locked Settings"))).clicked() {
         let before = app.session.tools.brush.clone();
         let mut after = before.clone();
-        after.locks = photocraft_paint::brush::SectionLocks::default();
+        after.locks = sary_paint::brush::SectionLocks::default();
         commit(app, &before, &after);
         ui.close();
     }
@@ -490,7 +490,7 @@ pub fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     }
 }
 
-pub fn window(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn window(app: &mut SaryApp, ctx: &egui::Context) {
     if !app.ui.panels.brush_settings {
         return;
     }

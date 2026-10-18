@@ -34,7 +34,7 @@ pub(crate) fn decode(
         invert_black: params.get::<bool>(BLACK_IS_1).unwrap_or(false),
     };
 
-    // PdfCraft patch: refuse absurd sizes before the decoder allocates for them.
+    // Taratasy patch: refuse absurd sizes before the decoder allocates for them.
     if !super::ccitt_size_ok(settings.columns, settings.rows) {
         return None;
     }

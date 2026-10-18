@@ -8,7 +8,7 @@ use smallvec::SmallVec;
 use std::array;
 use std::ops::Rem;
 
-// PdfCraft patch: calculator color/transfer functions normally contain a handful of operators.
+// Taratasy patch: calculator color/transfer functions normally contain a handful of operators.
 // Bound every parsed branch and every executed operator as well as recursive procedure depth.
 // A shared budget is never reset when entering an `if` or `ifelse` branch.
 const MAX_CALCULATOR_DEPTH: usize = 64;
@@ -291,7 +291,7 @@ fn eval_inner(
                 one_f!(|n: f32| n.floor());
             }
             PostScriptOp::Idiv => {
-                // PdfCraft patch: zero divisors and MIN / -1 have no integer result.
+                // Taratasy patch: zero divisors and MIN / -1 have no integer result.
                 let n2 = arg_stack.pop()?.as_f32() as i32;
                 let n1 = arg_stack.pop()?.as_f32() as i32;
                 let quotient = n1.checked_div(n2).or_else(|| {
@@ -335,7 +335,7 @@ fn eval_inner(
             }
             PostScriptOp::Bitshift => {
                 two_f!(|n1: f32, n2: f32| {
-                    // PdfCraft patch: PLRM, bitshift, discards shifted-out bits and fills
+                    // Taratasy patch: PLRM, bitshift, discards shifted-out bits and fills
                     // with zeroes. All bits are gone at >= 32; use the signed word's bit
                     // pattern for negative operands, and never negate MIN for right shifts.
                     let num = n1 as i32 as u32;

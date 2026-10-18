@@ -1,4 +1,4 @@
-//! GridCraft's icon set, drawn in code on a 16×16 design grid (original artwork; see
+//! Tabilao's icon set, drawn in code on a 16×16 design grid (original artwork; see
 //! ATTRIBUTION.md). Large ribbon icons use the same drawings at 32×32 with accent colours.
 
 use egui::epaint::{CubicBezierShape, PathShape, PathStroke};

@@ -1,12 +1,12 @@
-# pdfcraft-xfa
+# taratasy-xfa
 
-XFA forms (XFA 3.3, the template and layout parts). Layer L3; depends on `pdfcraft-cos` and
-`pdfcraft-fonts` only.
+XFA forms (XFA 3.3, the template and layout parts). Layer L3; depends on `taratasy-cos` and
+`taratasy-fonts` only.
 
 A dynamic XFA form is a PDF shell around an XML template (`/AcroForm /XFA`): one placeholder page
 ("requires Adobe Reader") and `/NeedsRendering true`. Viewers without an XFA engine show the
 placeholder. This crate reads the template, lays it out, and writes ordinary pages and AcroForm
-fields into the document, so everything else in PdfCraft (rendering, filling, saving, printing,
+fields into the document, so everything else in Taratasy (rendering, filling, saving, printing,
 the automation tools) works on it unchanged. The engine does this when it opens such a form.
 
 ## What it does
@@ -61,30 +61,30 @@ be measured exponentially often in their nesting. A measurement budget backs thi
   engine runs initialize and calculate on open, change, exit, validate and calculate after a
   field changes, and click for buttons.
 
-  Private keys PdfCraft writes (other viewers ignore them):
+  Private keys Taratasy writes (other viewers ignore them):
 
   | Key | Where | Holds |
   | --- | --- | --- |
   | `/PCSom` | generated fields | the field's SOM path, so values go back to the data |
   | `/PCXfaLayout` | AcroForm | what laying out produced, so a saved form is not laid out again |
   | `/PCXfaOverrides` | AcroForm | `<< /Presence << /som (hidden) … >> /Access << /som (readOnly) … >> >>`: presence and access scripts set, by SOM path (instance 0 of a repeating subform stands for all); applied to the template before every layout, so undo, save and reopen keep them. Adobe's viewers draw from the XFA packets and don't read it; at most 10 000 entries are read or written |
-  | `/PCXfaClick` | generated push buttons | `true`: the template has a click script for this button. Such buttons carry no `/A`: XFA JavaScript is not Acrobat JavaScript, so it is never written as a `/S /JavaScript` action other viewers would run. PdfCraft finds the script by the field's `/PCSom` |
+  | `/PCXfaClick` | generated push buttons | `true`: the template has a click script for this button. Such buttons carry no `/A`: XFA JavaScript is not Acrobat JavaScript, so it is never written as a `/S /JavaScript` action other viewers would run. Taratasy finds the script by the field's `/PCSom` |
 
 ## API sketch
 
 ```rust
-if pdfcraft_xfa::is_dynamic(&doc) {
-    let report = pdfcraft_xfa::render_into(&mut doc)?;   // pages, fields, warnings
-    for f in pdfcraft_forms::fields(&doc) { pdfcraft_forms::redraw_field(&mut doc, &f.name)?; }
+if taratasy_xfa::is_dynamic(&doc) {
+    let report = taratasy_xfa::render_into(&mut doc)?;   // pages, fields, warnings
+    for f in taratasy_forms::fields(&doc) { taratasy_forms::redraw_field(&mut doc, &f.name)?; }
 }
-let form = pdfcraft_xfa::layout_xml(template_xml)?;       // pages of items, for tests
+let form = taratasy_xfa::layout_xml(template_xml)?;       // pages of items, for tests
 ```
 
 ## Deliberately not done (yet)
 
 - **Data binding** is the default one only: explicit `bind ref` expressions, global binding and
   data descriptions are not followed (a data description is kept as written, not checked).
-- **Scripting.** JavaScript (boa) and FormCalc (a native interpreter, `pdfcraft_js::formcalc`)
+- **Scripting.** JavaScript (boa) and FormCalc (a native interpreter, `taratasy_js::formcalc`)
   share one object model, one set of effects and one set of budgets. FormCalc covers the
   language and the common built-ins (arithmetic, logical, string, date/time, financial, unit);
   not locale-aware pictures beyond simple number and date ones, or `Get`/`Post`/`Put` (refused).

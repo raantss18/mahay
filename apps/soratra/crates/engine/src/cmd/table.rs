@@ -2,9 +2,9 @@
 
 use super::table_formula::parse_number;
 use serde_json::{Value, json};
-use wordcraft_doc::collate::{SortKey, sort_key};
-use wordcraft_doc::props::{Align, Border, BorderStyle, Borders, HeightRule, Rgb, TextDirection, VAlign};
-use wordcraft_doc::{Block, Document, Paragraph, Path, Pos, RevisionKind, StoryRef, Table, para_block};
+use soratra_doc::collate::{SortKey, sort_key};
+use soratra_doc::props::{Align, Border, BorderStyle, Borders, HeightRule, Rgb, TextDirection, VAlign};
+use soratra_doc::{Block, Document, Paragraph, Path, Pos, RevisionKind, StoryRef, Table, para_block};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -160,7 +160,7 @@ pub fn specs() -> Vec<CommandSpec> {
             }
             let set = |x: Option<&str>, cur: &Option<String>| match x {
                 Some(x) if x.trim().is_empty() => None,
-                Some(x) => Some(wordcraft_doc::para::cap_alt(x)),
+                Some(x) => Some(soratra_doc::para::cap_alt(x)),
                 None => cur.clone(),
             };
             with_table(s, |t| {
@@ -219,7 +219,7 @@ fn autofit(s: &mut Session, v: &Value) -> CmdResult {
         "contents" => {
             let t = s.doc.table(story, &tp).ok_or_else(|| CmdError::Disabled("the cursor isn't in a table".into()))?;
             let avail = (tw - t.props.indent.filter(|i| i.is_finite()).unwrap_or(0.0).max(0.0)).max(72.0);
-            let widths = wordcraft_layout::autofit_widths(&wordcraft_layout::measure_table_columns(&s.doc, t), avail);
+            let widths = soratra_layout::autofit_widths(&soratra_layout::measure_table_columns(&s.doc, t), avail);
             with_table(s, |t| {
                 t.props.fixed = false;
                 t.props.width = None;
@@ -436,7 +436,7 @@ pub fn selected_cells(s: &Session) -> Vec<(usize, usize)> {
     v
 }
 
-fn with_cells(s: &mut Session, f: impl Fn(&mut wordcraft_doc::Cell)) -> CmdResult {
+fn with_cells(s: &mut Session, f: impl Fn(&mut soratra_doc::Cell)) -> CmdResult {
     let (tp, _, _) = cell(s)?;
     let cells = selected_cells(s);
     let t = s.doc.table_mut(s.sel.focus.story, &tp)?;
@@ -550,7 +550,7 @@ fn del_col(s: &mut Session, _: &Value) -> CmdResult {
     let mut cols = std::collections::BTreeSet::new();
     for (rr, cc) in cells {
         let g = t.grid_col(rr, cc);
-        let span = t.rows.get(rr).and_then(|x| x.cells.get(cc)).map_or(1, wordcraft_doc::Cell::span);
+        let span = t.rows.get(rr).and_then(|x| x.cells.get(cc)).map_or(1, soratra_doc::Cell::span);
         cols.extend(g..g.saturating_add(span).min(t.grid.len()));
     }
     if cols.is_empty() {
@@ -789,7 +789,7 @@ fn split_table(s: &mut Session, _: &Value) -> CmdResult {
     let tail_rows = t.rows.split_off(r);
     // Content controls closing after the table now close after its second part.
     let close = std::mem::take(&mut t.controls.close);
-    let controls = wordcraft_doc::ControlWrap { open: Vec::new(), close };
+    let controls = soratra_doc::ControlWrap { open: Vec::new(), close };
     let tail = Table { props: t.props.clone(), grid: t.grid.clone(), rows: tail_rows, controls };
     let after = tp.with_last(tp.last() + 1);
     s.doc.insert_block(story, &after, Block::Para(Paragraph::new()))?;
@@ -842,12 +842,12 @@ fn borders(s: &mut Session, v: &Value) -> CmdResult {
     })
 }
 
-pub(crate) fn cell_text(c: &wordcraft_doc::Cell) -> String {
+pub(crate) fn cell_text(c: &soratra_doc::Cell) -> String {
     c.blocks.iter().filter_map(|b| b.as_para().map(|p| p.plain_text())).collect::<Vec<_>>().join("\n")
 }
 
 /// The language of a cell's text: that of its first paragraph with text.
-fn cell_lang(doc: &wordcraft_doc::Document, c: &wordcraft_doc::Cell) -> Option<String> {
+fn cell_lang(doc: &soratra_doc::Document, c: &soratra_doc::Cell) -> Option<String> {
     c.blocks.iter().filter_map(|b| b.as_para()).find(|p| !p.plain_text().trim().is_empty()).and_then(|p| super::para_lang(doc, p))
 }
 
@@ -926,7 +926,7 @@ fn formula(s: &mut Session, v: &Value) -> CmdResult {
     let at = s.sel.focus.clone();
     let end = s.doc.insert_object(
         &at,
-        wordcraft_doc::InlineObject::Field {
+        soratra_doc::InlineObject::Field {
             instr: instr.clone(),
             result: text.clone(),
             locked: false,
@@ -1020,7 +1020,7 @@ fn select_cells(s: &mut Session, tp: &Path, which: Option<(usize, Option<usize>)
 /// The grid columns cell `c` of row `r` covers (first, last).
 pub(super) fn grid_cols(t: &Table, r: usize, c: usize) -> (usize, usize) {
     let g = t.grid_col(r, c);
-    let span = t.rows.get(r).and_then(|row| row.cells.get(c)).map_or(1, wordcraft_doc::Cell::span);
+    let span = t.rows.get(r).and_then(|row| row.cells.get(c)).map_or(1, soratra_doc::Cell::span);
     (g, g + span - 1)
 }
 
@@ -1219,14 +1219,14 @@ pub fn text_table_lines(s: &Session) -> Result<Vec<String>, CmdError> {
 /// paragraph with more fields than that carries on over the next rows.
 pub fn text_table_cells(lines: &[String], sep: Option<char>, columns: Option<usize>) -> (Vec<Vec<&str>>, usize) {
     let Some(sep) = sep else {
-        let cols = columns.unwrap_or(1).clamp(1, wordcraft_doc::table::MAX_COLS);
+        let cols = columns.unwrap_or(1).clamp(1, soratra_doc::table::MAX_COLS);
         return (lines.chunks(cols).map(|ch| ch.iter().map(String::as_str).collect()).collect(), cols);
     };
     let cols = columns.unwrap_or_else(|| lines.iter().map(|l| l.split(sep).count()).max().unwrap_or(1)).max(1);
     let mut rows = Vec::new();
     for l in lines {
         let fields: Vec<&str> = l.split(sep).collect();
-        rows.extend(fields.chunks(cols.min(wordcraft_doc::table::MAX_COLS)).map(<[&str]>::to_vec));
+        rows.extend(fields.chunks(cols.min(soratra_doc::table::MAX_COLS)).map(<[&str]>::to_vec));
     }
     (rows, cols)
 }
@@ -1260,16 +1260,16 @@ fn from_text(s: &mut Session, v: &Value) -> CmdResult {
             _ => return Err(CmdError::Params("`width` must be between 0 and 1584 pt (22 in)".into())),
         },
     };
-    let columns = p::u64(v, "columns").map(|n| n.clamp(1, wordcraft_doc::table::MAX_COLS as u64) as usize);
+    let columns = p::u64(v, "columns").map(|n| n.clamp(1, soratra_doc::table::MAX_COLS as u64) as usize);
     let (a, b) = s.sel.ordered();
     let lines = text_table_lines(s)?;
     let (cells, cols) = text_table_cells(&lines, sep, columns);
     // A table has at most 63 columns; a longer row would lose its last fields.
-    if cols > wordcraft_doc::table::MAX_COLS {
+    if cols > soratra_doc::table::MAX_COLS {
         return Err(CmdError::Failed("a table can have at most 63 columns".into()));
     }
-    if cells.len() > wordcraft_doc::table::MAX_ROWS {
-        return Err(CmdError::Failed(format!("a table can have at most {} rows", wordcraft_doc::table::MAX_ROWS)));
+    if cells.len() > soratra_doc::table::MAX_ROWS {
+        return Err(CmdError::Failed(format!("a table can have at most {} rows", soratra_doc::table::MAX_ROWS)));
     }
     let width = super::page::sect(s).text_width();
     let mut t = Table::new(cells.len().max(1), cols, width);

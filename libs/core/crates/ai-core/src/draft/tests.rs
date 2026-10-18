@@ -24,12 +24,12 @@ fn every_preset_with_an_address_makes_a_valid_connection() {
 }
 
 #[test]
-fn artcraft_api_key_preset_is_distinct_from_unverified_account_access() {
-    let p = PRESETS.iter().find(|p| p.key == "artcraft-omni").unwrap();
-    assert_eq!(p.provider, "artcraft-omni");
+fn mahay_api_key_preset_is_distinct_from_unverified_account_access() {
+    let p = PRESETS.iter().find(|p| p.key == "mahay-omni").unwrap();
+    assert_eq!(p.provider, "mahay-omni");
     assert!(p.needs_key);
     assert_eq!(p.endpoint, "https://api.storyteller.ai");
-    assert!(!PRESETS.iter().any(|p| p.key == "artcraft-account"));
+    assert!(!PRESETS.iter().any(|p| p.key == "mahay-account"));
     let prepared = with_key(ConnectionDraft::from_preset(p), "test-key").prepare(&[]).unwrap();
     assert_eq!(prepared.connection.models.len(), 2);
     assert!(prepared.connection.models.iter().any(|m| m.id.as_str() == "nano_banana"));

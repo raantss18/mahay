@@ -5,7 +5,7 @@ use egui::{Rect, pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::{ThemeKind, Tokens};
 
 const SIZE: egui::Vec2 = vec2(900.0, 200.0);
@@ -14,12 +14,12 @@ fn bottom_id() -> egui::Id {
     egui::Id::new("status-bar-test-bottom")
 }
 
-fn harness(kind: ThemeKind) -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness(kind: ThemeKind) -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 1080, "height": 1080, "resolution": 72, "background": "white"})).unwrap();
     app.sync_views();
     let mut h = Harness::builder().with_size(SIZE).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             // The first frame runs before `setup_context` installs the theme's fonts.
             if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 // Where the bar goes: the bottom of the harness's (margined) root Ui.
@@ -30,7 +30,7 @@ fn harness(kind: ThemeKind) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, kind);
+    SaryApp::setup_context(&h.ctx, kind);
     h.run_steps(3);
     h
 }
@@ -62,20 +62,20 @@ fn status_bar_controls_sit_inside_the_bar_with_even_margins() {
     }
 }
 
-fn cursor_warp(h: &Harness<'_, PhotocraftApp>) -> Option<egui::Pos2> {
+fn cursor_warp(h: &Harness<'_, SaryApp>) -> Option<egui::Pos2> {
     h.output().viewport_output.values().flat_map(|v| &v.commands).find_map(|c| match c {
         egui::ViewportCommand::CursorPosition(p) => Some(*p),
         _ => None,
     })
 }
 
-fn fullscreen(h: &mut Harness<'_, PhotocraftApp>, on: bool) {
+fn fullscreen(h: &mut Harness<'_, SaryApp>, on: bool) {
     h.input_mut().viewports.entry(egui::ViewportId::ROOT).or_default().fullscreen = Some(on);
     h.state_mut().ui.views[0].zoom = 10.0;
     h.run_steps(2);
 }
 
-fn begin_zoom_drag(h: &mut Harness<'_, PhotocraftApp>) -> egui::Pos2 {
+fn begin_zoom_drag(h: &mut Harness<'_, SaryApp>) -> egui::Pos2 {
     let start = h.get_by_role(egui::accesskit::Role::SpinButton).rect().center();
     h.hover_at(start);
     h.run_steps(1);
@@ -208,12 +208,12 @@ fn appearance_toggle_preserves_pro_layout_and_has_no_fit_button() {
     // Switch to Light mode (top-bar appearance button).
     let ctx = h.ctx.clone();
     crate::prefs_ui::cycle_appearance(h.state_mut(), &ctx);
-    if h.state().session.prefs().interface.appearance_mode == photocraft_engine::prefs::AppearanceMode::Auto {
+    if h.state().session.prefs().interface.appearance_mode == sary_engine::prefs::AppearanceMode::Auto {
         crate::prefs_ui::cycle_appearance(h.state_mut(), &ctx);
     }
     crate::prefs_ui::tick(h.state_mut(), &ctx);
     h.run_steps(3);
-    assert_eq!(h.state().session.prefs().interface.appearance_mode, photocraft_engine::prefs::AppearanceMode::Light);
+    assert_eq!(h.state().session.prefs().interface.appearance_mode, sary_engine::prefs::AppearanceMode::Light);
     assert_eq!(h.state().ui.theme, ThemeKind::ProLight);
     assert!(Tokens::get(&h.ctx).pro);
     assert!(h.query_by_label("Fit").is_none(), "Fit button must not appear in light mode (#5016)");

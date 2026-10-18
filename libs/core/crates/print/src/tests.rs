@@ -72,7 +72,7 @@ fn driverless_printers_join_the_list_without_a_queue() {
 }
 
 /// Set on the child process when a test runs this test binary as a stand-in for `lp`.
-const STAND_IN_LP: &str = "CRAFT_STAND_IN_LP";
+const STAND_IN_LP: &str = "MAHAY_STAND_IN_LP";
 
 /// Not a test of its own: [`stand_in_lp`] re-runs this binary with only this test selected, and it
 /// then plays `lp`. It records its arguments and stdin in the folder named by [`STAND_IN_LP`], or,
@@ -102,13 +102,13 @@ fn stand_in_lp(record: &std::ffi::OsStr) -> std::process::Command {
 
 #[test]
 fn print_jobs_reach_lp_on_stdin_never_through_a_shared_temp_folder() {
-    // The job used to be written to `<temp>/craft-print-<pid>/job-<time>.pdf` and handed to `lp`
+    // The job used to be written to `<temp>/mahay-print-<pid>/job-<time>.pdf` and handed to `lp`
     // by name. In a shared /tmp another local user can predict that folder, create it first (or
     // plant a symlink there) and so read every printed document or swap the file before `lp`
     // reads it. Piping the job to `lp` leaves nothing on disk.
     static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
     let record =
-        std::env::temp_dir().join(format!("craft-print-test-{}-{}", std::process::id(), N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
+        std::env::temp_dir().join(format!("mahay-print-test-{}-{}", std::process::id(), N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)));
     std::fs::create_dir(&record).unwrap();
     // Bigger than any pipe buffer, so the spooler must read while the job is still being written.
     let pdf: Vec<u8> = b"%PDF-1.7 synthetic print job\n".iter().copied().cycle().take(3 << 20).collect();
@@ -120,7 +120,7 @@ fn print_jobs_reach_lp_on_stdin_never_through_a_shared_temp_folder() {
     assert!(sent.is_ok(), "{sent:?}");
     assert_eq!(args.unwrap(), "-n 1 -t memo.pdf -o collate=true -o fit-to-page=false", "no file argument: lp reads the job from stdin");
     assert!(stdin.unwrap() == pdf, "lp receives the whole job on stdin");
-    let predictable = std::env::temp_dir().join(format!("craft-print-{}", std::process::id()));
+    let predictable = std::env::temp_dir().join(format!("mahay-print-{}", std::process::id()));
     assert!(!predictable.exists(), "nothing is created at {predictable:?}, a name other local users can predict");
 }
 

@@ -189,7 +189,7 @@ fn custom_pages_per_sheet_never_overfill_the_grid() {
     assert!(matches!(layout(&sizes, &settings(vec![0], grid(0))), Err(PrintError::Invalid(_))));
     // The imposed PDF has one page per sheet.
     let out = impose(&fixture(7), &settings((0..7).collect(), Layout::multiple(3))).unwrap();
-    assert_eq!(pdfcraft_model::pages(&Document::open(Arc::new(out)).unwrap()).len(), 3);
+    assert_eq!(taratasy_model::pages(&Document::open(Arc::new(out)).unwrap()).len(), 3);
 }
 
 #[test]
@@ -232,7 +232,7 @@ fn imposed_pdf_has_the_sheets_and_honours_comments_and_forms() {
     let doc = fixture(3);
     let out = impose(&doc, &settings(vec![0, 1, 2], Layout::multiple(2))).unwrap();
     let printed = Document::open(Arc::new(out.clone())).unwrap();
-    let pages = pdfcraft_model::pages(&printed);
+    let pages = taratasy_model::pages(&printed);
     assert_eq!(pages.len(), 2);
     assert_eq!(pages[0].crop(&printed), [0.0, 0.0, 792.0, 612.0]);
     // The source pages are form XObjects holding their content.
@@ -497,8 +497,8 @@ fn printer_option_defaults_and_job_arguments() {
 mod cups_options {
     use crate::spool;
 
-    const RECORD: &str = "PDFCRAFT_LPOPTIONS_TEST_RECORD";
-    const ANSWER: &str = "PDFCRAFT_LPOPTIONS_TEST_ANSWER";
+    const RECORD: &str = "TARATASY_LPOPTIONS_TEST_RECORD";
+    const ANSWER: &str = "TARATASY_LPOPTIONS_TEST_ANSWER";
 
     /// The child process stands in for lpoptions, recording its real arguments.
     #[test]
@@ -523,7 +523,7 @@ mod cups_options {
         for _ in 0..32 {
             let mut nonce = [0; 16];
             random.read_exact(&mut nonce).unwrap();
-            let path = std::env::temp_dir().join(format!("pdfcraft-cups-options-{:032x}", u128::from_be_bytes(nonce)));
+            let path = std::env::temp_dir().join(format!("taratasy-cups-options-{:032x}", u128::from_be_bytes(nonce)));
             // Atomic creation, private permissions from the outset; never reuse an existing
             // path (including a symlink) in the shared temporary directory.
             match std::fs::DirBuilder::new().mode(0o700).create(&path) {
@@ -700,15 +700,15 @@ fn text_direction_is_read_from_text_and_form_matrices() {
 fn imposed_pages_preserve_large_user_unit_matrices() {
     let (unit, mode) = (75000.0, SizeMode::Fit);
     let mut doc = fixture(1);
-    let page = pdfcraft_model::pages(&doc)[0].obj;
+    let page = taratasy_model::pages(&doc)[0].obj;
     doc.update_dict(page, |d| d.set(b"UserUnit".to_vec(), Object::Real(unit))).unwrap();
     let out = impose(&doc, &Settings { content: Content::Document, ..settings(vec![0], Layout::Size(mode)) }).unwrap();
     let printed = Document::open(Arc::new(out)).unwrap();
-    let page = &pdfcraft_model::pages(&printed)[0];
+    let page = &taratasy_model::pages(&printed)[0];
     let contents = printed.resolve(page.dict.get(b"Contents").unwrap());
     let Object::Stream(stream) = &*contents else { panic!("sheet content") };
     let bytes = stream.decoded().unwrap();
-    let parsed = pdfcraft_content::parse(&bytes);
+    let parsed = taratasy_content::parse(&bytes);
     assert_eq!(parsed.skipped, 0);
     let cms: Vec<_> = parsed.ops.iter().filter(|op| op.is("cm")).collect();
     assert_eq!(cms.len(), 2, "placement and source-to-display matrices");

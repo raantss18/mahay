@@ -4,7 +4,7 @@
 //! `cargo xtask corpus --pixls` fetches, `cargo xtask test-corpus` runs.
 #![cfg(feature = "corpus")]
 
-use photocraft_raw::{Limits, RawError, RawFormat};
+use sary_raw::{Limits, RawError, RawFormat};
 use std::path::PathBuf;
 
 fn pixls(name: &str) -> PathBuf {
@@ -101,7 +101,7 @@ const WANTS: &[Want] = &[
 fn decode_matches_the_measured_oracles() {
     for w in WANTS {
         let bytes = std::fs::read(pixls(w.file)).unwrap_or_else(|e| panic!("{}: {e}", w.file));
-        let s = photocraft_raw::decode(&bytes, &Limits::default()).unwrap_or_else(|e| panic!("{}: {e}", w.file));
+        let s = sary_raw::decode(&bytes, &Limits::default()).unwrap_or_else(|e| panic!("{}: {e}", w.file));
         assert_eq!(s.format, w.format, "{}", w.file);
         assert_eq!(s.make.as_deref(), Some(w.make), "{}", w.file);
         assert_eq!(s.model.as_deref(), Some(w.model), "{}", w.file);
@@ -119,8 +119,8 @@ fn decode_matches_the_measured_oracles() {
 fn developing_produces_the_crop_in_16bit_rgb() {
     for w in WANTS {
         let bytes = std::fs::read(pixls(w.file)).unwrap_or_else(|e| panic!("{}: {e}", w.file));
-        let s = photocraft_raw::decode(&bytes, &Limits::default()).unwrap_or_else(|e| panic!("{}: {e}", w.file));
-        let d = photocraft_raw::develop_sensor(&s, &photocraft_raw::DevelopOptions::default()).unwrap_or_else(|e| panic!("{}: {e}", w.file));
+        let s = sary_raw::decode(&bytes, &Limits::default()).unwrap_or_else(|e| panic!("{}: {e}", w.file));
+        let d = sary_raw::develop_sensor(&s, &sary_raw::DevelopOptions::default()).unwrap_or_else(|e| panic!("{}: {e}", w.file));
         assert_eq!((d.width as usize, d.height as usize), (s.crop.width, s.crop.height), "{}", w.file);
         assert_eq!(d.rgb.len(), d.width as usize * d.height as usize * 3, "{}", w.file);
         // A real exposure covers a sane share of the range and never leaves it.
@@ -139,7 +139,7 @@ fn developing_produces_the_crop_in_16bit_rgb() {
         assert!(lo < black_cap, "{}: developed blacks at {lo}", w.file);
         assert!(hi > u16::MAX / 4, "{}: developed highlights at {hi}", w.file);
         // Deterministic: a second develop of the same sensor gives the same pixels.
-        let d2 = photocraft_raw::develop_sensor(&s, &photocraft_raw::DevelopOptions::default()).unwrap();
+        let d2 = sary_raw::develop_sensor(&s, &sary_raw::DevelopOptions::default()).unwrap();
         assert_eq!(d.rgb, d2.rgb, "{}", w.file);
     }
 }
@@ -150,7 +150,7 @@ fn developing_produces_the_crop_in_16bit_rgb() {
 fn modern_lossy_nef_preserves_brightness_at_both_depths() {
     for (file, black, white) in [("DSC_0751.NEF", 1008.0, 16383.0), ("DSC_0754.NEF", 252.0, 4095.0)] {
         let bytes = std::fs::read(pixls(file)).unwrap();
-        let s = photocraft_raw::decode(&bytes, &Limits::default()).unwrap();
+        let s = sary_raw::decode(&bytes, &Limits::default()).unwrap();
         assert_eq!(s.model.as_deref(), Some("NIKON Z 6"));
         assert_eq!((s.width, s.height), (6064, 4040));
         assert_eq!(s.black.values, vec![black; 4]);
@@ -160,7 +160,7 @@ fn modern_lossy_nef_preserves_brightness_at_both_depths() {
         assert!(f32::from(max) > white * 0.9, "{file}: maximum {max}");
         let mean = s.data.iter().map(|v| f64::from(*v)).sum::<f64>() / s.data.len() as f64;
         assert!(mean > f64::from(black) * 1.5, "{file}: mean {mean}");
-        let d = photocraft_raw::develop_sensor(&s, &photocraft_raw::DevelopOptions::default()).unwrap();
+        let d = sary_raw::develop_sensor(&s, &sary_raw::DevelopOptions::default()).unwrap();
         assert_eq!((d.width, d.height), (6048, 4024));
         assert!(d.rgb.iter().copied().max().unwrap() > 32768, "{file}: black development");
     }
@@ -170,11 +170,11 @@ fn modern_lossy_nef_preserves_brightness_at_both_depths() {
 fn packed_nef_opens_full_sensor_and_metadata_crop_at_both_depths() {
     for (file, first) in [("DSC_0750.NEF", [3539, 3761, 3640, 3904]), ("DSC_0753.NEF", [866, 932, 881, 948])] {
         let bytes = std::fs::read(pixls(file)).unwrap();
-        let s = photocraft_raw::decode(&bytes, &Limits::default()).unwrap();
+        let s = sary_raw::decode(&bytes, &Limits::default()).unwrap();
         assert_eq!((s.width, s.height), (6064, 4040));
         assert_eq!(&s.data[..4], &first);
-        assert_eq!(s.crop, photocraft_raw::Rect::new(8, 8, 6048, 4024));
-        let d = photocraft_raw::develop_sensor(&s, &Default::default()).unwrap();
+        assert_eq!(s.crop, sary_raw::Rect::new(8, 8, 6048, 4024));
+        let d = sary_raw::develop_sensor(&s, &Default::default()).unwrap();
         assert_eq!((d.width, d.height), (6048, 4024));
     }
 }
@@ -184,7 +184,7 @@ fn packed_nef_opens_full_sensor_and_metadata_crop_at_both_depths() {
 #[test]
 fn packed_orf_reports_the_documented_gap() {
     let bytes = std::fs::read(pixls("_7061961_copy.ORF")).unwrap();
-    let err = photocraft_raw::decode(&bytes, &Limits::default()).unwrap_err();
+    let err = sary_raw::decode(&bytes, &Limits::default()).unwrap_err();
     assert!(matches!(err, RawError::Unsupported(ref m) if m.contains("Olympus compressed")), "{err}");
-    assert!(photocraft_raw::embedded_preview(&bytes).is_some(), "the camera's JPEG preview is still reachable");
+    assert!(sary_raw::embedded_preview(&bytes).is_some(), "the camera's JPEG preview is still reachable");
 }

@@ -1,4 +1,4 @@
-//! Camera profiles measured by PhotoCraft, for raw formats that carry no colour description of
+//! Camera profiles measured by Sary, for raw formats that carry no colour description of
 //! their own (DNG does; Nikon NEF does not).
 //!
 //! Clean-room: every number here comes from our own measurements of the camera's output, never

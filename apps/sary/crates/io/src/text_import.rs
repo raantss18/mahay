@@ -1,6 +1,6 @@
 //! Type layers read from a file, made ready for the canvas and the panels.
 
-use photocraft_doc::{Document, Layer, LayerContent, TextLayer};
+use sary_doc::{Document, Layer, LayerContent, TextLayer};
 
 /// Largest type raster the import draws on its own (pixels). The model comes from an untrusted
 /// file: an absurd type size, scale or box must not make opening it allocate gigabytes (the
@@ -9,15 +9,15 @@ use photocraft_doc::{Document, Layer, LayerContent, TextLayer};
 pub(crate) const MAX_RENDER_PIXELS: u64 = 64 * 1024 * 1024;
 
 /// Renders `t` from its model unless its ink would exceed [`MAX_RENDER_PIXELS`].
-fn render_bounded(eng: &mut photocraft_text::TextEngine, t: &mut TextLayer, dpi: f32, format: photocraft_color::PixelFormat) {
+fn render_bounded(eng: &mut sary_text::TextEngine, t: &mut TextLayer, dpi: f32, format: sary_color::PixelFormat) {
     let layout = eng.layout(t, dpi);
-    let warp = photocraft_text::render::layout_deform(&layout, t);
-    let ink = photocraft_text::render::ink_rect_warped(&layout, &t.transform, warp.as_ref());
+    let warp = sary_text::render::layout_deform(&layout, t);
+    let ink = sary_text::render::ink_rect_warped(&layout, &t.transform, warp.as_ref());
     if u64::from(ink.width()).saturating_mul(u64::from(ink.height())) > MAX_RENDER_PIXELS {
-        t.cache = Some(photocraft_raster::Surface::new(photocraft_color::PixelFormat { alpha: true, ..format }));
+        t.cache = Some(sary_raster::Surface::new(sary_color::PixelFormat { alpha: true, ..format }));
         return;
     }
-    let r = photocraft_text::render::rasterize_warped(&layout, &t.transform, format, t.antialias, warp.as_ref());
+    let r = sary_text::render::rasterize_warped(&layout, &t.transform, format, t.antialias, warp.as_ref());
     t.cache = Some(r.surface);
 }
 
@@ -29,7 +29,7 @@ fn render_bounded(eng: &mut photocraft_text::TextEngine, t: &mut TextLayer, dpi:
 ///   let Photoshop re-render on open) is rendered from its model, instead of staying empty
 ///   until it is edited.
 pub(crate) fn prepare(doc: &mut Document) {
-    fn visit(layers: &mut [Layer], eng: &mut photocraft_text::TextEngine, dpi: f32, format: photocraft_color::PixelFormat) {
+    fn visit(layers: &mut [Layer], eng: &mut sary_text::TextEngine, dpi: f32, format: sary_color::PixelFormat) {
         for l in layers {
             match &mut l.content {
                 LayerContent::Text(t) => {
@@ -67,6 +67,6 @@ pub(crate) fn prepare(doc: &mut Document) {
     }
     let dpi = doc.resolution_dpi;
     let format = doc.pixel_format();
-    let mut eng = photocraft_text::shared().lock().unwrap_or_else(|e| e.into_inner());
+    let mut eng = sary_text::shared().lock().unwrap_or_else(|e| e.into_inner());
     visit(&mut doc.layers, &mut eng, dpi, format);
 }

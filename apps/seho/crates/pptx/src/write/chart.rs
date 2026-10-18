@@ -1,8 +1,8 @@
 //! Chart parts: a `c:chartSpace` with cached categories and values.
 //! An unchanged chart also keeps the embedded workbook and the other parts it points at.
 
-use deckcraft_model::chart::{Chart, ChartType, Series, Trendline, TrendlineType};
-use deckcraft_model::style::Fill;
+use seho_model::chart::{Chart, ChartType, Series, Trendline, TrendlineType};
+use seho_model::style::Fill;
 
 use crate::opc::{NS_A, NS_C, NS_R};
 
@@ -40,7 +40,7 @@ fn simple_fill(w: &mut W, f: &Fill) {
     }
 }
 
-fn sp_pr(w: &mut W, fill: Option<&Fill>, line: Option<&deckcraft_model::Line>) {
+fn sp_pr(w: &mut W, fill: Option<&Fill>, line: Option<&seho_model::Line>) {
     if fill.is_none() && line.is_none() {
         return;
     }
@@ -971,7 +971,7 @@ mod region_map_tests {
 
 #[cfg(test)]
 mod tests {
-    use deckcraft_model::chart::{Chart, ChartType};
+    use seho_model::chart::{Chart, ChartType};
 
     #[test]
     fn reversed_category_axis_round_trips() {

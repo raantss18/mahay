@@ -3,25 +3,25 @@
 # exports VERSION, RELEASE and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: pdfcraft
+name: taratasy
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
 # semver: 0.2.0-rc.1 becomes 0.2.0~rc.1 in deb/rpm, so pre-releases sort before the release.
 version_schema: semver
-# 1 for releases; 1.<label> for a labelled local build (PDFCRAFT_BUILD_LABEL), which sorts after
+# 1 for releases; 1.<label> for a labelled local build (TARATASY_BUILD_LABEL), which sorts after
 # the release of the same version and before the next one.
 release: ${RELEASE}
 section: graphics
 priority: optional
-maintainer: ${PDFCRAFT_MAINTAINER}
+maintainer: ${TARATASY_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/pdfcraft
+homepage: https://github.com/raantss18/mahay
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native PDF workbench: read, comment, fill and sign forms,
   organize, combine, split, edit, redact, protect and export PDFs.
-  Includes pdfcraft-cli, a headless command runner and opt-in MCP server.
+  Includes taratasy-cli, a headless command runner and opt-in MCP server.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
@@ -67,11 +67,11 @@ overrides:
       - xdg-desktop-portal
 
 contents:
-  - src: ${STAGE}/usr/bin/pdfcraft
-    dst: /usr/bin/pdfcraft
+  - src: ${STAGE}/usr/bin/taratasy
+    dst: /usr/bin/taratasy
     file_info: { mode: 0755 }
-  - src: ${STAGE}/usr/bin/pdfcraft-cli
-    dst: /usr/bin/pdfcraft-cli
+  - src: ${STAGE}/usr/bin/taratasy-cli
+    dst: /usr/bin/taratasy-cli
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/

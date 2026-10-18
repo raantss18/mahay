@@ -2,12 +2,12 @@
 //! text. A run's language is its BCP 47 tag (`w:lang` in .docx, `CharProps::lang` in the model),
 //! resolved with [`ProofLang::from_tag`].
 
-/// A language WordCraft can proof, or [`ProofLang::Other`] for one it can't.
+/// A language Soratra can proof, or [`ProofLang::Other`] for one it can't.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ProofLang {
     /// English, any region (`en`, `en-US`, `en-GB`…): the public-domain Moby word list, the
     /// English grammar rules and the English hyphenation dictionary and patterns. Also text with
-    /// no language at all (WordCraft's default editing language is US English, like Word's).
+    /// no language at all (Soratra's default editing language is US English, like Word's).
     #[default]
     En,
     /// Polish (`pl`, `pl-PL`): the installed Hunspell dictionary (when there is one), the Polish grammar rules and the Polish
@@ -52,7 +52,7 @@ impl ProofLang {
         [ProofLang::En, ProofLang::Pl, ProofLang::Pt, ProofLang::It, ProofLang::Hr, ProofLang::Tr, ProofLang::Ru, ProofLang::Cs, ProofLang::Id];
 
     /// The proofing language of a BCP 47 tag (`pl-PL`, `en_GB`, `PL`…). Only the primary subtag
-    /// counts. No tag (or an empty one) is English, WordCraft's default editing language.
+    /// counts. No tag (or an empty one) is English, Soratra's default editing language.
     pub fn from_tag(tag: Option<&str>) -> ProofLang {
         let Some(tag) = tag.map(str::trim).filter(|t| !t.is_empty()) else { return ProofLang::En };
         let primary = tag.split(['-', '_']).next().unwrap_or("");
@@ -98,7 +98,7 @@ impl ProofLang {
         }
     }
 
-    /// Does WordCraft check spelling and grammar in this language?
+    /// Does Soratra check spelling and grammar in this language?
     pub fn is_proofed(self) -> bool {
         Self::PROOFED.contains(&self)
     }

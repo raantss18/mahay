@@ -1,23 +1,23 @@
 [package]
-name = "deckcraft-ui-egui"
+name = "seho-ui-egui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DeckCraft egui frontend (PowerPoint-style UI); swappable — nothing below depends on it"
+description = "Seho egui frontend (PowerPoint-style UI); swappable — nothing below depends on it"
 
 [lints]
 workspace = true
 
 [dependencies]
-deckcraft-geom = { workspace = true }
-deckcraft-color = { workspace = true }
-deckcraft-model = { workspace = true }
-deckcraft-fonts = { workspace = true }
-deckcraft-text = { workspace = true }
-deckcraft-render = { workspace = true }
-deckcraft-anim = { workspace = true }
-deckcraft-engine = { workspace = true }
-deckcraft-media = { workspace = true }
+seho-geom = { workspace = true }
+seho-color = { workspace = true }
+seho-model = { workspace = true }
+seho-fonts = { workspace = true }
+seho-text = { workspace = true }
+seho-render = { workspace = true }
+seho-anim = { workspace = true }
+seho-engine = { workspace = true }
+seho-media = { workspace = true }
 egui = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

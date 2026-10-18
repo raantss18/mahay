@@ -2,7 +2,7 @@
 //!
 //! Many Linux desktops move a window with Alt+drag: Cinnamon (Linux Mint's default), MATE, Xfce,
 //! and KDE before Plasma 6. Their window manager grabs every Alt+left press, so the click never
-//! reaches PhotoCraft: the Brush's ⌥ Eyedropper samples nothing, the Clone Stamp gets no source
+//! reaches Sary: the Brush's ⌥ Eyedropper samples nothing, the Clone Stamp gets no source
 //! point and the Zoom tool does not zoom out (#3137), while the ⌥ cursor still shows (the keyboard is not grabbed until the press). Nothing in
 //! the app can win that grab back, but its signature is clear: the pointer "leaves" the window from
 //! well inside the canvas while ⌥ is held with a tool whose ⌥-click matters (X11 and Wayland report
@@ -12,7 +12,7 @@
 
 use egui::{Context, Event, Id, Pos2, Rect};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// How far inside the canvas the pointer must be for a "leave" to count as a grab rather than
@@ -39,7 +39,7 @@ pub(crate) fn message() -> &'static str {
 
 /// Watch one canvas view's frame for an ⌥-click the window manager grabbed. `rect` is the view's
 /// canvas area, `tool` the tool in effect, `active` false while a dialog owns the canvas.
-pub(crate) fn watch(app: &mut PhotocraftApp, ctx: &Context, id: Id, rect: Rect, tool: Tool, active: bool) {
+pub(crate) fn watch(app: &mut SaryApp, ctx: &Context, id: Id, rect: Rect, tool: Tool, active: bool) {
     let (gone, hover, mods, down, focused) =
         ctx.input(|i| (i.events.iter().any(|e| matches!(e, Event::PointerGone)), i.pointer.hover_pos(), i.modifiers, i.pointer.any_down(), i.focused));
     let mut w = ctx.data(|d| d.get_temp::<Watch>(id)).unwrap_or_default();

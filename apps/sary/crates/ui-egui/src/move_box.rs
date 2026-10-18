@@ -6,7 +6,7 @@
 
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 
 /// The marquee being dragged, in document pixels.
@@ -20,7 +20,7 @@ pub(crate) struct LayerBox {
 
 /// A Move-tool press that Auto-Select found nothing under: start the marquee at `p`. The press
 /// started a Move gesture's snapping and ⇧/⌥ handling, which a marquee has none of.
-pub(crate) fn begin(app: &mut PhotocraftApp, p: [f64; 2], add: bool) {
+pub(crate) fn begin(app: &mut SaryApp, p: [f64; 2], add: bool) {
     app.layer_box = Some(LayerBox { start: p, end: p, add });
     app.prefs_rt.snap = None;
     app.prefs_rt.snap_lines.clear();
@@ -28,13 +28,13 @@ pub(crate) fn begin(app: &mut PhotocraftApp, p: [f64; 2], add: bool) {
 }
 
 /// No visible layer has pixels at document point `p` (locked ones included).
-pub(crate) fn empty_at(app: &mut PhotocraftApp, p: [f64; 2]) -> bool {
+pub(crate) fn empty_at(app: &mut SaryApp, p: [f64; 2]) -> bool {
     app.run("layer.pickAt", json!({"x": p[0], "y": p[1], "list": true})).is_ok_and(|v| v["layers"].as_array().is_some_and(Vec::is_empty))
 }
 
 /// The pointer moves or is released while a marquee is dragged (unsnapped, unconstrained): true
 /// when the event was the marquee's.
-pub(crate) fn pointer(app: &mut PhotocraftApp, ev: ToolEvent) -> bool {
+pub(crate) fn pointer(app: &mut SaryApp, ev: ToolEvent) -> bool {
     let Some(b) = app.layer_box.as_mut() else { return false };
     match ev {
         // A press never continues a marquee (one left over from a lost release).
@@ -66,7 +66,7 @@ pub(crate) fn pointer(app: &mut PhotocraftApp, ev: ToolEvent) -> bool {
 }
 
 /// The marquee as marching ants.
-pub(crate) fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub(crate) fn draw(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let Some(b) = app.layer_box else { return };
     let r = egui::Rect::from_two_pos(xf.to_screen(b.start[0] as f32, b.start[1] as f32), xf.to_screen(b.end[0] as f32, b.end[1] as f32));
     crate::tool_feedback::draw_ants(painter, &[r.left_top(), r.right_top(), r.right_bottom(), r.left_bottom()], true);
@@ -76,11 +76,11 @@ pub(crate) fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform)
 mod tests {
     use serde_json::json;
 
-    use crate::PhotocraftApp;
+    use crate::SaryApp;
     use crate::canvas::{ToolEvent, tool_event};
     use crate::state::Tool;
 
-    fn drag(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2], m: egui::Modifiers) {
+    fn drag(app: &mut SaryApp, from: [f64; 2], to: [f64; 2], m: egui::Modifiers) {
         tool_event(app, ToolEvent::Down { x: from[0], y: from[1], pressure: 1.0 }, m);
         tool_event(app, ToolEvent::Move { x: to[0], y: to[1], pressure: 1.0 }, m);
         tool_event(app, ToolEvent::Up { x: to[0], y: to[1] }, m);
@@ -90,7 +90,7 @@ mod tests {
     /// nothing.
     #[test]
     fn a_drag_from_an_empty_spot_selects_the_layers_it_touches() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         let mut ids = Vec::new();
@@ -119,7 +119,7 @@ mod tests {
     /// open the move-lock dialog, and releasing selects the unlocked layer the box touches.
     #[test]
     fn a_drag_on_the_locked_background_selects_instead_of_erroring() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 80, "height": 60})).unwrap();
         app.sync_views();
         app.run("layer.new.layer", json!({})).unwrap();

@@ -3,8 +3,8 @@
 use std::cmp::Ordering;
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, RangeRef, Value, sort_compare};
-use gridcraft_model::*;
+use tabilao_core::{CellRef, RangeRef, Value, sort_compare};
+use tabilao_model::*;
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -121,7 +121,7 @@ pub fn specs() -> Vec<CommandSpec> {
 
 fn col_param(v: Option<&Json>, base: u32) -> Option<u32> {
     match v? {
-        Json::String(s) => gridcraft_core::letters_to_col(s.trim_start_matches('$')),
+        Json::String(s) => tabilao_core::letters_to_col(s.trim_start_matches('$')),
         Json::Number(n) => n.as_u64().and_then(|o| u32::try_from(o).ok()).and_then(|o| base.checked_add(o)),
         _ => None,
     }
@@ -306,7 +306,7 @@ fn do_sort(s: &mut Session, r: RangeRef, header: bool, keys: Vec<SortKey>, by_co
                     && let Some(f) = &c.formula
                     && let Some(e) = f.expr()
                 {
-                    let shifted = gridcraft_formula::adjust::shift_relative(e, dst.row as i64 - src.row as i64, dst.col as i64 - src.col as i64);
+                    let shifted = tabilao_formula::adjust::shift_relative(e, dst.row as i64 - src.row as i64, dst.col as i64 - src.col as i64);
                     c.formula = Some(Arc::new(Formula::from_expr(shifted)));
                 }
                 if let Some(picture) = sh.cell_pictures.get(&src) {
@@ -548,10 +548,10 @@ fn filter_by(s: &mut Session, p: &Json) -> Result<Json> {
 
 /// Does a value pass a custom comparison (`>`, `=*abc*`, `<>x`…)?
 fn custom_ok(v: &Value, text: &str, op: &str, crit: &str) -> bool {
-    let num = gridcraft_core::parse::parse_number_text(crit);
+    let num = tabilao_core::parse::parse_number_text(crit);
     let cmp = match (v.as_f64(), num) {
         (Some(a), Some(b)) => a.partial_cmp(&b),
-        _ => Some(gridcraft_core::compare_text(text, crit)),
+        _ => Some(tabilao_core::compare_text(text, crit)),
     };
     let wild = || super::edit::wildcard(&text.to_lowercase(), &crit.to_lowercase());
     match op {
@@ -984,12 +984,12 @@ pub fn list_items(wb: &Workbook, sheet: usize, dv: &Validation) -> Vec<String> {
     let f = dv.f1.trim();
     if f.starts_with('"')
         || (!f.contains('!')
-            && gridcraft_formula::parse(f).map(|e| !matches!(e, gridcraft_formula::Expr::Ref(_) | gridcraft_formula::Expr::Name(_))).unwrap_or(true))
+            && tabilao_formula::parse(f).map(|e| !matches!(e, tabilao_formula::Expr::Ref(_) | tabilao_formula::Expr::Name(_))).unwrap_or(true))
     {
         return f.trim_matches('"').split(',').map(|x| x.trim().to_string()).filter(|x| !x.is_empty()).collect();
     }
     let at = dv.ranges.first().map(|r| r.start).unwrap_or_default();
-    match gridcraft_calc::evaluate(wb, sheet, at, f) {
+    match tabilao_calc::evaluate(wb, sheet, at, f) {
         Value::Array(a) => a.data.iter().filter(|v| !v.is_empty()).map(Value::display).collect(),
         v if !v.is_empty() && !v.is_error() => vec![v.display()],
         _ => vec![],
@@ -1006,7 +1006,7 @@ pub fn check_validation(wb: &Workbook, sheet: usize, at: CellRef, input: &str) -
     if input.is_empty() && dv.allow_blank {
         return None;
     }
-    let v = gridcraft_core::parse::parse_input(input, wb.date_system).value;
+    let v = tabilao_core::parse::parse_input(input, wb.date_system).value;
     // The formulas are written for the first cell of the range and see the value being entered,
     // as in Excel (a custom `=A1>10` on A1:A9 checks A5's new value at A5).
     let first = dv.ranges.first().map(|r| r.start).unwrap_or(at);
@@ -1022,7 +1022,7 @@ pub fn check_validation(wb: &Workbook, sheet: usize, at: CellRef, input: &str) -
         entered = w;
         &entered
     };
-    let eval = |f: &str| gridcraft_calc::evaluate(wb, sheet, at, &formula_at(f, first, at));
+    let eval = |f: &str| tabilao_calc::evaluate(wb, sheet, at, &formula_at(f, first, at));
     let num = |f: &str| eval(f).to_number().ok();
     let ok = match dv.kind {
         ValidationKind::List => list_items(wb, sheet, dv).iter().any(|x| x.eq_ignore_ascii_case(input)),
@@ -1058,8 +1058,8 @@ fn formula_at(f: &str, first: CellRef, at: CellRef) -> String {
     if first == at {
         return f.to_string();
     }
-    match gridcraft_formula::parse(f.trim_start_matches('=')) {
-        Ok(e) => gridcraft_formula::print(&gridcraft_formula::adjust::shift_relative(
+    match tabilao_formula::parse(f.trim_start_matches('=')) {
+        Ok(e) => tabilao_formula::print(&tabilao_formula::adjust::shift_relative(
             e,
             at.row as i64 - first.row as i64,
             at.col as i64 - first.col as i64,
@@ -1075,7 +1075,7 @@ pub(super) fn move_rule_formula(f: &str, first: CellRef, to: CellRef) -> String 
         return f.to_string();
     }
     let moved = formula_at(f, first, to);
-    let has_relative = gridcraft_formula::parse(f.trim_start_matches('=')).is_ok_and(|e| gridcraft_formula::print(&e) != moved);
+    let has_relative = tabilao_formula::parse(f.trim_start_matches('=')).is_ok_and(|e| tabilao_formula::print(&e) != moved);
     let eq = if f.starts_with('=') { "=" } else { "" };
     if has_relative { format!("{eq}{moved}") } else { f.to_string() }
 }

@@ -67,8 +67,8 @@ multiplication, element-size limits and input length are checked before allocati
 ## Reproduce
 
 ```sh
-cargo test --release -p photocraft-algo distance_transform_release_comparison -- --ignored --nocapture
-EDT_WORKERS=1 cargo test --release -p photocraft-algo distance_transform_release_comparison -- --ignored --nocapture
+cargo test --release -p sary-algo distance_transform_release_comparison -- --ignored --nocapture
+EDT_WORKERS=1 cargo test --release -p sary-algo distance_transform_release_comparison -- --ignored --nocapture
 ```
 
 The previous scalar implementation is retained only in the test module as the reference

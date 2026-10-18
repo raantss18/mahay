@@ -1,6 +1,6 @@
 use super::*;
-use photocraft_psd::atn::{AtnAction, AtnEvent, AtnFile, AtnItem};
-use photocraft_psd::descriptor::{Descriptor, Id, ReferenceItem, UnicodeString, Value as D};
+use sary_psd::atn::{AtnAction, AtnEvent, AtnFile, AtnItem};
+use sary_psd::descriptor::{Descriptor, Id, ReferenceItem, UnicodeString, Value as D};
 use serde_json::json;
 
 fn item(event: &str, label: &str, d: Option<Descriptor>) -> AtnItem {
@@ -12,11 +12,11 @@ fn item(event: &str, label: &str, d: Option<Descriptor>) -> AtnItem {
 }
 
 fn b64(bytes: &[u8]) -> String {
-    photocraft_paint::tile::b64_encode(bytes)
+    sary_paint::tile::b64_encode(bytes)
 }
 
 /// A set with a mapped filter, an adjustment layer, selection steps, a layer by name, a Stop,
-/// a Play, a tool selection (no document effect) and an event PhotoCraft has no command for.
+/// a Play, a tool selection (no document effect) and an event Sary has no command for.
 fn sample() -> AtnFile {
     let levels = desc("Lvls").with(
         "Adjs",
@@ -139,7 +139,7 @@ fn save_round_trips_through_photoshop_events() {
     let r = s.execute("actions.save", json!({"set": "Test Set"})).unwrap();
     assert_eq!(r["actions"], json!(["Soften", "Finish"]));
     assert_eq!(r["skipped"], json!([]));
-    let saved = photocraft_paint::tile::b64_decode(r["data"].as_str().unwrap()).unwrap();
+    let saved = sary_paint::tile::b64_decode(r["data"].as_str().unwrap()).unwrap();
     let file = atn::parse(&saved).unwrap();
     assert_eq!(file.name.to_string_lossy(), "Test Set");
     assert_eq!(file.actions[0].function_key, 3);
@@ -933,7 +933,7 @@ fn distressing_and_remove_white_shapes_import_and_play() {
     let r = s.execute("actions.play", json!({"action": "Remove White"})).unwrap();
     assert!(r.get("failed").is_none(), "{r}");
     let d = &s.active().unwrap().doc;
-    assert_eq!(d.mode, photocraft_color::ColorMode::Grayscale);
+    assert_eq!(d.mode, sary_color::ColorMode::Grayscale);
     let l = d.layers.last().unwrap();
     assert!(!d.is_background(l.id), "Layer From Background");
     let surf = l.surface().unwrap();
@@ -998,7 +998,7 @@ fn remove_white_clears_the_targeted_layer_not_the_converted_background() {
     assert!(r.get("failed").is_none(), "{r}");
     let st = s.active().unwrap();
     assert_eq!(st.active_layer.map(|l| l.0), Some(art), "the art layer stays targeted");
-    let art = st.doc.layer(photocraft_doc::LayerId(art)).unwrap().surface().unwrap();
+    let art = st.doc.layer(sary_doc::LayerId(art)).unwrap().surface().unwrap();
     assert!(art.sample_channel(2, 2, 1) < 0.01, "the art's white is cleared");
     assert!(art.sample_channel(20, 15, 1) > 0.99, "the black stays");
     let bottom = st.doc.layers.first().unwrap();

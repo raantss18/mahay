@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (column select #740, multi-object move #844, Shift-⌘-G #810 fixed) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
-How PdfCraft's tools, panels, shortcuts and feel compare with Acrobat Pro's current interface (the
+How Taratasy's tools, panels, shortcuts and feel compare with Acrobat Pro's current interface (the
 2023+ "new Acrobat": All tools pane on the left, quick-action toolbar, Home view). Behaviour is
 observed clean-room (`plan/acrobat/02-ui-ux.md`, local-only; `AGENTS.md` §2); nothing from Adobe's
 interface is copied. Gaps ranked in [gaps.md](gaps.md).
@@ -22,7 +22,7 @@ No dump of Acrobat's menu tree has been diffed against the registry yet (gap 24)
 
 ## Shell and navigation
 
-| Element | Acrobat | PdfCraft | Status |
+| Element | Acrobat | Taratasy | Status |
 |---|---|---|---|
 | Home view (recent files, recommended tools) | yes | yes | shipped |
 | All tools pane, tool sets | yes | yes, with milestone badges | shipped |
@@ -39,7 +39,7 @@ No dump of Acrobat's menu tree has been diffed against the registry yet (gap 24)
 
 ## Tools, handles and precision
 
-| Behaviour | Acrobat | PdfCraft | Status / evidence |
+| Behaviour | Acrobat | Taratasy | Status / evidence |
 |---|---|---|---|
 | Zoom: wheel, pinch, keys, marquee, fit page/width/height/visible | yes | yes | shipped |
 | Fixed zoom percentages match Acrobat's physical size | yes | differ (#739, documented in #736) | gap |
@@ -60,7 +60,7 @@ No dump of Acrobat's menu tree has been diffed against the registry yet (gap 24)
 
 ## Shortcuts and modifiers
 
-| Item | Acrobat | PdfCraft | Status |
+| Item | Acrobat | Taratasy | Status |
 |---|---|---|---|
 | Platform shortcuts for registered commands | yes | yes; ⌘ on macOS, Ctrl elsewhere (#695) | shipped; find bar still shows ⌘ on Windows (#746) |
 | Keyboard shortcuts reference | yes | yes | shipped |
@@ -69,7 +69,7 @@ No dump of Acrobat's menu tree has been diffed against the registry yet (gap 24)
 
 ## Dialogs and preferences
 
-| Item | Acrobat | PdfCraft | Status |
+| Item | Acrobat | Taratasy | Status |
 |---|---|---|---|
 | Print dialog with preview | yes | yes | shipped |
 | Document Properties (description, security, fonts, initial view, custom, advanced) | yes | all but Custom and XMP | partial |

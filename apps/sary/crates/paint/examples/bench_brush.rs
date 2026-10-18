@@ -2,20 +2,20 @@
 //! 6016×6016 RGBA8 layer, fed in 16-point chunks (as interactive painting would), compositing the
 //! dirty tiles after each chunk.
 //!
-//! `cargo run --release -p photocraft-paint --example bench_brush`
+//! `cargo run --release -p sary-paint --example bench_brush`
 
 use std::time::Instant;
 
-use photocraft_color::{PixelFormat, SampleType};
-use photocraft_geom::Rect;
-use photocraft_paint::*;
-use photocraft_raster::Surface;
+use sary_color::{PixelFormat, SampleType};
+use sary_geom::Rect;
+use sary_paint::*;
+use sary_raster::Surface;
 
 fn run(fmt: PixelFormat, label: &str, brush: &BrushSettings) {
     let n = 6016;
-    let mut s = Surface::with_default(fmt, &photocraft_raster::from_rgba(&fmt, [1.0; 4]));
+    let mut s = Surface::with_default(fmt, &sary_raster::from_rgba(&fmt, [1.0; 4]));
     // Materialise the layer like a real photo layer.
-    s.fill_rect(Rect::new(0, 0, n, n), &photocraft_raster::from_rgba(&fmt, [0.8, 0.7, 0.6, 1.0]));
+    s.fill_rect(Rect::new(0, 0, n, n), &sary_raster::from_rgba(&fmt, [0.8, 0.7, 0.6, 1.0]));
     let pts: Vec<StrokePoint> = (0..500)
         .map(|i| {
             let t = i as f64 / 499.0;

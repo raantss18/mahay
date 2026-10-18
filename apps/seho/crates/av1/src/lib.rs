@@ -4,7 +4,7 @@
 //! See the crate README for the conformance status of each decoding stage.
 
 // Items used only by stages still being written (inter prediction, post filters).
-// Spec-style indexed loops (FilmCraft allows this lint workspace-wide).
+// Spec-style indexed loops (Hetsika allows this lint workspace-wide).
 #![allow(clippy::needless_range_loop)]
 #![allow(dead_code)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable))]

@@ -10,9 +10,9 @@ pub const STAGING_ATTEMPTS: usize = 16;
 /// Where the suffix goes in a staging name. Each caller keeps the form it has always used.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StagingName {
-    /// `.{name}.{suffix}.pdfcraft-tmp`, used by the automation tools.
+    /// `.{name}.{suffix}.taratasy-tmp`, used by the automation tools.
     SuffixThenTag,
-    /// `.{name}.pdfcraft-{suffix}.tmp`, used by the desktop app's save.
+    /// `.{name}.taratasy-{suffix}.tmp`, used by the desktop app's save.
     TagThenSuffix,
 }
 
@@ -39,8 +39,8 @@ pub fn create_staging(
     }
     for suffix in suffixes.into_iter().take(STAGING_ATTEMPTS) {
         let tmp = dir.join(match form {
-            StagingName::SuffixThenTag => format!(".{stem}.{suffix:016x}.pdfcraft-tmp"),
-            StagingName::TagThenSuffix => format!(".{stem}.pdfcraft-{suffix:016x}.tmp"),
+            StagingName::SuffixThenTag => format!(".{stem}.{suffix:016x}.taratasy-tmp"),
+            StagingName::TagThenSuffix => format!(".{stem}.taratasy-{suffix:016x}.tmp"),
         });
         match std::fs::OpenOptions::new().write(true).create_new(true).open(&tmp) {
             Ok(file) => return Ok((tmp, file)),
@@ -126,7 +126,7 @@ mod tests {
 
     /// A fresh, empty folder for one test.
     fn test_dir(test: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("pdfcraft-platform-staging-{}-{test}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-platform-staging-{}-{test}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
@@ -142,9 +142,9 @@ mod tests {
     fn each_form_keeps_its_exact_name() {
         let dir = test_dir("forms");
         let (tools, _) = create_staging(&dir, "out.pdf", StagingName::SuffixThenTag, [0xab]).unwrap();
-        assert_eq!(file_name(&tools), ".out.pdf.00000000000000ab.pdfcraft-tmp");
+        assert_eq!(file_name(&tools), ".out.pdf.00000000000000ab.taratasy-tmp");
         let (desktop, _) = create_staging(&dir, "out.pdf", StagingName::TagThenSuffix, [0xab]).unwrap();
-        assert_eq!(file_name(&desktop), ".out.pdf.pdfcraft-00000000000000ab.tmp");
+        assert_eq!(file_name(&desktop), ".out.pdf.taratasy-00000000000000ab.tmp");
         assert_eq!(std::fs::read(&tools).unwrap(), b"", "a new, empty file");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -155,10 +155,10 @@ mod tests {
         // One byte, then four-byte characters: the 128-byte limit falls inside the 32nd one.
         let name = format!("a{}.pdf", "\u{1F600}".repeat(40));
         let (tmp, _) = create_staging(&dir, &name, StagingName::SuffixThenTag, [1]).unwrap();
-        assert_eq!(file_name(&tmp), format!(".a{}.0000000000000001.pdfcraft-tmp", "\u{1F600}".repeat(31)));
+        assert_eq!(file_name(&tmp), format!(".a{}.0000000000000001.taratasy-tmp", "\u{1F600}".repeat(31)));
         // One-byte characters: exactly 128 of them are kept.
         let (tmp, _) = create_staging(&dir, &"x".repeat(200), StagingName::SuffixThenTag, [2]).unwrap();
-        assert_eq!(file_name(&tmp), format!(".{}.0000000000000002.pdfcraft-tmp", "x".repeat(128)));
+        assert_eq!(file_name(&tmp), format!(".{}.0000000000000002.taratasy-tmp", "x".repeat(128)));
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     fn only_the_first_sixteen_names_are_tried() {
         let dir = test_dir("cap");
-        let name = |s: u64| dir.join(format!(".out.pdf.{s:016x}.pdfcraft-tmp"));
+        let name = |s: u64| dir.join(format!(".out.pdf.{s:016x}.taratasy-tmp"));
         for s in 1..=STAGING_ATTEMPTS as u64 {
             std::fs::write(name(s), "PLANTED").unwrap();
         }

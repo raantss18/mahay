@@ -126,7 +126,7 @@ fn shifted_tiles_match_a_whole_mask_at_canvas_edges() {
         segment::{ImageSampler, RgbImage},
         selection::Region,
     };
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
     let (w, h) = (611usize, 317usize);
     let img = RgbImage::from_fn(w, h, |_, _| [0.5; 3]);
     let sampler = ImageSampler { img: &img, origin: (0, 0) };
@@ -239,7 +239,7 @@ fn tiled_refinement_release_comparison() {
         segment::{ImageSampler, RgbImage, trim_region},
         selection::Region,
     };
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
     use std::{hint::black_box, time::Instant};
     assert!(!cfg!(debug_assertions), "run with --release");
     for (w, h) in [(6000usize, 4000usize), (7200, 5000)] {

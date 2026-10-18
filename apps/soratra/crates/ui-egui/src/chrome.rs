@@ -2,7 +2,7 @@
 
 use egui::{Align2, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::json;
-use wordcraft_doc::StoryRef;
+use soratra_doc::StoryRef;
 
 use crate::theme::{Tokens, TypeRung, medium, paint_text, regular, semibold, text_width};
 use crate::{WordApp, icons};
@@ -304,7 +304,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
                             t.on_accent,
                         );
                         ui.painter().text(pos2(r.min.x + 24.0, r.center().y), Align2::LEFT_CENTER, tl!("Discord"), medium(11.5), t.on_accent);
-                        if resp.on_hover_text(tl!("Join the ArtCraft community on Discord")).clicked() {
+                        if resp.on_hover_text(tl!("Join the Mahay community on Discord")).clicked() {
                             let _ = app.run("ui.discord", json!({}));
                         }
                         ui.add_space(8.0);
@@ -347,7 +347,7 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
             // Centred title.
             let title = if !app.has_document() {
                 // No document open (#1129): the app's name alone.
-                "WordCraft".to_string()
+                "Soratra".to_string()
             } else {
                 format!(
                     "{} — {}",
@@ -437,7 +437,7 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                 let wtxt = if app.session.sel.is_collapsed() || crate::objects::selected(app).is_some() {
                     crate::i18n::fmt(tl!("{words} words"), &[("words", &words.to_string())])
                 } else {
-                    let sw = wordcraft_doc::count_words(&app.session.selected_text());
+                    let sw = soratra_doc::count_words(&app.session.selected_text());
                     crate::i18n::fmt(tl!("{selected} of {words} words"), &[("selected", &sw.to_string()), ("words", &words.to_string())])
                 };
                 if st(ui, &wtxt).clicked() {
@@ -452,7 +452,7 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                 let shown = if missing.is_some() { crate::i18n::fmt(tl!("{language} (no dictionary)"), &[("language", &lang)]) } else { lang.clone() };
                 let tip = match missing {
                     Some(name) => crate::i18n::fmt(
-                        tl!("No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations."),
+                        tl!("No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations."),
                         &[("language", &lang), ("name", name)],
                     ),
                     None => tl!("Language").to_string(),
@@ -518,8 +518,8 @@ pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
                     let mode = app.session.view.mode;
                     let read = app.session.view.read_mode;
                     for (icon, id, name, on) in [
-                        ("webLayout", "view.webLayout", tl!("Web Layout"), mode == wordcraft_layout::ViewMode::Web),
-                        ("printLayout", "view.printLayout", tl!("Print Layout"), mode == wordcraft_layout::ViewMode::Print && !read),
+                        ("webLayout", "view.webLayout", tl!("Web Layout"), mode == soratra_layout::ViewMode::Web),
+                        ("printLayout", "view.printLayout", tl!("Print Layout"), mode == soratra_layout::ViewMode::Print && !read),
                         ("readMode", "view.readMode", tl!("Read Mode"), read),
                     ] {
                         let (r, resp) = ui.allocate_exact_size(vec2(22.0, 20.0), Sense::click());
@@ -612,7 +612,7 @@ mod tests {
     /// row undoes three steps at once.
     #[test]
     fn undo_list_matches_the_session_and_undoes_up_to_the_clicked_row() {
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         a.run("text.insert", json!({"text": "Hello"})).unwrap();
         a.run("select.all", json!({})).unwrap();
         a.run("format.bold", json!({})).unwrap();
@@ -640,7 +640,7 @@ mod tests {
         let third = ctx.read_response(undo_list_row_id(2)).unwrap();
         click(&ctx, &mut n, third.rect.center(), &mut a);
         assert_eq!(a.session.undo_history(), ["Typing"], "three steps undone in one go");
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body), "Hello");
+        assert_eq!(a.session.doc.plain_text(soratra_doc::StoryRef::Body), "Hello");
         frame(&ctx, &mut n, vec![], &mut a);
         assert!(!egui::Popup::is_id_open(&ctx, popup), "the list closes");
     }
@@ -649,7 +649,7 @@ mod tests {
     /// left must not shift with it.
     #[test]
     fn status_bar_controls_hold_still_across_zoom_levels() {
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         let ctx = ctx();
         ctx.enable_accesskit();
         let names = ["Focus", "Print Layout", "Web Layout"];

@@ -239,7 +239,7 @@ impl Type1Kind {
     }
 
     fn char_code_to_unicode(&self, code: u8) -> Option<char> {
-        // PdfCraft patch: an Annex D.2 alias code reads as the ordinary character; see
+        // Taratasy patch: an Annex D.2 alias code reads as the ordinary character; see
         // `Encoding::text_alias`. `code_to_ps_name` is shared with glyph lookup and stays as it
         // is, so the alias is applied here, after `/Differences` has had its say.
         if !self.encodings.contains_key(&code)
@@ -344,7 +344,7 @@ impl CffKind {
     }
 
     fn char_code_to_unicode(&self, code: u8) -> Option<char> {
-        // PdfCraft patch: an Annex D.2 alias code reads as the ordinary character; see
+        // Taratasy patch: an Annex D.2 alias code reads as the ordinary character; see
         // `Encoding::text_alias`. `code_to_ps_name` is shared with glyph lookup and stays as it
         // is, so the alias is applied here, after `/Differences` has had its say.
         if !self.encodings.contains_key(&code)

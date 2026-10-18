@@ -1,9 +1,9 @@
 //! The gradient editor of the Format pane (shape fill and slide background): preset variations,
 //! type, direction, angle and a stop bar (add, drag, recolour, set transparency, remove stops).
 
-use deckcraft_color::{ColorScheme, ColorTransform, SchemeSlot};
-use deckcraft_model::ColorRef;
-use deckcraft_model::style::{Gradient, GradientShape, GradientStop};
+use seho_color::{ColorScheme, ColorTransform, SchemeSlot};
+use seho_model::ColorRef;
+use seho_model::style::{Gradient, GradientShape, GradientStop};
 use egui::{Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
 

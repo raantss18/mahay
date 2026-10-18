@@ -1,26 +1,26 @@
 //! #5052: the actual Brush options caption and field form one scrub target.
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use egui::{Modifiers, Pos2, Rect, pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 
-fn harness() -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness() -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.ui.tool = crate::state::Tool::Brush;
     app.session.tools.brush.hardness = 0.5;
     let mut h = Harness::builder().with_size(vec2(1400.0, 60.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 crate::panels::options_bar(app, ui);
             }
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
     h.run_steps(4);
     h
 }
 
-fn geometry(h: &Harness<'_, PhotocraftApp>) -> (Rect, Rect) {
+fn geometry(h: &Harness<'_, SaryApp>) -> (Rect, Rect) {
     let label = h.get_by_label("Hardness").rect();
     let field = h
         .get_all_by_role(egui::accesskit::Role::SpinButton)
@@ -31,7 +31,7 @@ fn geometry(h: &Harness<'_, PhotocraftApp>) -> (Rect, Rect) {
     (label, field)
 }
 
-fn drag(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, dx: f32, mods: Modifiers) {
+fn drag(h: &mut Harness<'_, SaryApp>, at: Pos2, dx: f32, mods: Modifiers) {
     h.hover_at(at);
     h.run();
     h.drag_at(at);
@@ -83,7 +83,7 @@ fn options_hardness_gap_and_suffix_scrub() {
     }
 }
 
-fn click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
+fn click(h: &mut Harness<'_, SaryApp>, at: Pos2) {
     h.hover_at(at);
     h.run();
     h.drag_at(at);

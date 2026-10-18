@@ -8,9 +8,9 @@
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 
-use gridcraft_core::date::datetime_from_serial;
-use gridcraft_core::{CellError, CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value};
-use gridcraft_model::*;
+use tabilao_core::date::datetime_from_serial;
+use tabilao_core::{CellError, CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value};
+use tabilao_model::*;
 
 use crate::pivot_calc::CalcSet;
 
@@ -69,7 +69,7 @@ pub fn quote_sheet(name: &str) -> String {
 
 /// Absolute reference text for a range on a sheet: `Sheet1!$A$1:$E$20`.
 pub fn range_text(sheet_name: &str, r: RangeRef) -> String {
-    let abs = |c: CellRef| format!("${}${}", gridcraft_core::col_to_letters(c.col), c.row as u64 + 1);
+    let abs = |c: CellRef| format!("${}${}", tabilao_core::col_to_letters(c.col), c.row as u64 + 1);
     format!("{}!{}:{}", quote_sheet(sheet_name), abs(r.start), abs(r.end))
 }
 
@@ -1528,7 +1528,7 @@ pub fn links_to(link: &str, sheet: &str, pivot: &str) -> bool {
 fn rows_ref(sheet: &str, origin: CellRef, col: u32, rows: &[u32]) -> Option<String> {
     let q = quote_sheet(sheet);
     let c = origin.col.checked_add(col)?;
-    let letters = gridcraft_core::col_to_letters(c);
+    let letters = tabilao_core::col_to_letters(c);
     let mut parts: Vec<String> = Vec::new();
     let mut i = 0;
     while let Some(&start) = rows.get(i) {

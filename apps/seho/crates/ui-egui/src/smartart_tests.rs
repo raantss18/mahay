@@ -1,7 +1,7 @@
 //! The SmartArt Text Pane driven like a person would: type in a line, Enter for a new line, Tab
 //! to demote.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
 use serde_json::json;
@@ -10,7 +10,7 @@ use crate::{Services, SlideApp};
 
 fn levels(h: &Harness<'_, SlideApp>) -> Vec<(String, u8)> {
     let st = h.state().session.active().unwrap();
-    let (_, d) = deckcraft_engine::cmd::smartart::selected(st).unwrap();
+    let (_, d) = seho_engine::cmd::smartart::selected(st).unwrap();
     d.nodes.into_iter().map(|n| (n.text, n.level)).collect()
 }
 
@@ -71,7 +71,7 @@ fn home_convert_to_smartart_gallery_converts_the_text() {
     h.get_by_role_and_label(egui::accesskit::Role::Button, "Basic Block List").click();
     h.run_steps(3);
     let st = h.state().session.active().unwrap();
-    let (_, d) = deckcraft_engine::cmd::smartart::selected(st).expect("the text became a SmartArt graphic");
+    let (_, d) = seho_engine::cmd::smartart::selected(st).expect("the text became a SmartArt graphic");
     assert_eq!(d.kind, "blockList");
     assert_eq!(d.nodes.len(), 3);
 }
@@ -94,7 +94,7 @@ fn layout_gallery_shows_cached_pictures_and_previews_on_hover() {
     h.get_by_label("Layouts").click();
     h.run_steps(3);
     let first = h.state().textures.smartart_cached();
-    assert!(first >= deckcraft_engine::cmd::smartart::LAYOUTS.len().min(8), "gallery pictures were drawn: {first}");
+    assert!(first >= seho_engine::cmd::smartart::LAYOUTS.len().min(8), "gallery pictures were drawn: {first}");
     h.get_by_role_and_label(egui::accesskit::Role::Button, "Vertical Box List").hover();
     h.run_steps(3);
     if let Ok(path) = std::env::var("SMARTART_GALLERY_PNG") {
@@ -107,5 +107,5 @@ fn layout_gallery_shows_cached_pictures_and_previews_on_hover() {
     h.get_by_role_and_label(egui::accesskit::Role::Button, "Vertical Box List").click();
     h.run_steps(3);
     let st = h.state().session.active().unwrap();
-    assert_eq!(deckcraft_engine::cmd::smartart::selected(st).unwrap().1.kind, "verticalBoxList");
+    assert_eq!(seho_engine::cmd::smartart::selected(st).unwrap().1.kind, "verticalBoxList");
 }

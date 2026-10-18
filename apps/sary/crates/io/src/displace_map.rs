@@ -11,16 +11,16 @@
 //! ```
 //!
 //! The whole `filterFX` item (with the map) is kept verbatim in the params as a template
-//! ([`TEMPLATE_KEY`]), so the filter re-renders, survives `.pcraft` and is written back to PSD
+//! ([`TEMPLATE_KEY`]), so the filter re-renders, survives `.sary` and is written back to PSD
 //! with only the editable settings replaced. Anything else (another mode, a missing or truncated
 //! map, unknown enum values) stays an opaque [`super::UNSUPPORTED_FILTER`].
 
 use std::sync::Arc;
 
-use photocraft_algo::Image;
-use photocraft_doc::SmartFilter;
-use photocraft_geom::Rect;
-use photocraft_psd::descriptor::{Descriptor, Id, Value};
+use sary_algo::Image;
+use sary_doc::SmartFilter;
+use sary_geom::Rect;
+use sary_psd::descriptor::{Descriptor, Id, Value};
 use serde_json::{Value as J, json};
 
 use super::{blend_options, from_hex, get_desc, int, set, to_hex};
@@ -101,7 +101,7 @@ pub(super) fn import_params(item: &Descriptor) -> Option<J> {
     fltr_map(item)?;
     // Neutral blending in the template: the model's own fields replace it on export.
     let mut template = item.clone();
-    let neutral = SmartFilter { command: String::new(), params: J::Null, blend: photocraft_color::BlendMode::Normal, opacity: 1.0, visible: true };
+    let neutral = SmartFilter { command: String::new(), params: J::Null, blend: sary_color::BlendMode::Normal, opacity: 1.0, visible: true };
     set(&mut template, "blendOptions", blend_options(&neutral));
     set(&mut template, "enab", Value::Boolean(true));
     params.as_object_mut()?.insert(TEMPLATE_KEY.into(), json!(to_hex(&template.to_bytes())));
@@ -194,13 +194,13 @@ mod tests {
     fn item(map: Vec<u8>) -> Descriptor {
         let e = |t: &str, v: &str| Value::Enumerated { type_id: Id::new(t), value: Id::new(v) };
         Descriptor::new("filterFX")
-            .with("Nm  ", Value::Text(photocraft_psd::descriptor::UnicodeString::new_nul("Displace...")))
+            .with("Nm  ", Value::Text(sary_psd::descriptor::UnicodeString::new_nul("Displace...")))
             .with(
                 "blendOptions",
                 blend_options(&SmartFilter {
                     command: String::new(),
                     params: J::Null,
-                    blend: photocraft_color::BlendMode::Normal,
+                    blend: sary_color::BlendMode::Normal,
                     opacity: 1.0,
                     visible: true,
                 }),

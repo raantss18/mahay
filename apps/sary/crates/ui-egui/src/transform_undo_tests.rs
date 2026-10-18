@@ -6,19 +6,19 @@ use egui::{Key, Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::Tool;
 
 /// A 400 × 300 document with a 100 × 60 red rectangle on its own layer at (100, 100), the Move
 /// tool active, at 100 %.
-pub(crate) fn harness() -> Harness<'static, PhotocraftApp> {
+pub(crate) fn harness() -> Harness<'static, SaryApp> {
     harness_tool(Tool::Move)
 }
 
 /// The same document with a chosen tool selected (e.g. Hand, #2302).
-fn harness_tool(tool: Tool) -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness_tool(tool: Tool) -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.run("layer.new.layer", json!({})).unwrap();
     app.run("select.rect", json!({"x": 100, "y": 100, "width": 100, "height": 60})).unwrap();
@@ -28,7 +28,7 @@ fn harness_tool(tool: Tool) -> Harness<'static, PhotocraftApp> {
     app.ui.extras.rulers = false;
     app.ui.tool = tool;
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -38,7 +38,7 @@ fn harness_tool(tool: Tool) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let v = &mut h.state_mut().ui.views[0];
     v.zoom = 1.0;
@@ -48,7 +48,7 @@ fn harness_tool(tool: Tool) -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn screen(h: &Harness<'static, PhotocraftApp>, p: [f64; 2]) -> Pos2 {
+fn screen(h: &Harness<'static, SaryApp>, p: [f64; 2]) -> Pos2 {
     let app = h.state();
     let v = &app.ui.views[0];
     let xf = ViewXform {
@@ -63,7 +63,7 @@ fn screen(h: &Harness<'static, PhotocraftApp>, p: [f64; 2]) -> Pos2 {
 }
 
 /// Press at document point `from`, drag to `to` in a few steps and release.
-pub(crate) fn drag(h: &mut Harness<'static, PhotocraftApp>, from: [f64; 2], to: [f64; 2]) {
+pub(crate) fn drag(h: &mut Harness<'static, SaryApp>, from: [f64; 2], to: [f64; 2]) {
     let (a, b) = (screen(h, from), screen(h, to));
     h.event(egui::Event::PointerMoved(a));
     h.run_steps(1);
@@ -77,21 +77,21 @@ pub(crate) fn drag(h: &mut Harness<'static, PhotocraftApp>, from: [f64; 2], to: 
     h.run_steps(3);
 }
 
-pub(crate) fn begin(h: &mut Harness<'static, PhotocraftApp>) {
+pub(crate) fn begin(h: &mut Harness<'static, SaryApp>) {
     let ctx = h.ctx.clone();
     crate::menus::invoke(h.state_mut(), &ctx, "edit.freeTransform", json!({})).unwrap();
     h.run_steps(2);
 }
 
-fn quad(h: &Harness<'static, PhotocraftApp>) -> [[f64; 2]; 4] {
+fn quad(h: &Harness<'static, SaryApp>) -> [[f64; 2]; 4] {
     h.state().ui.transform.as_ref().expect("transforming").quad
 }
 
-fn history(h: &Harness<'static, PhotocraftApp>) -> usize {
+fn history(h: &Harness<'static, SaryApp>) -> usize {
     h.state().session.active().unwrap().history.entries().len()
 }
 
-fn key(h: &mut Harness<'static, PhotocraftApp>, m: Modifiers, k: Key) {
+fn key(h: &mut Harness<'static, SaryApp>, m: Modifiers, k: Key) {
     h.key_press_modifiers(m, k);
     h.run_steps(2);
 }
@@ -105,12 +105,12 @@ fn free_transform_starts_where_the_selected_pixels_were_moved() {
     let mut h = harness();
     h.state_mut().run("select.rect", json!({"x": 100, "y": 100, "width": 100, "height": 60})).unwrap();
     drag(&mut h, [150.0, 130.0], [250.0, 180.0]);
-    assert_eq!(photocraft_engine::float_cmds::floating(h.state().session.active().unwrap()).unwrap().offset, (100, 50));
+    assert_eq!(sary_engine::float_cmds::floating(h.state().session.active().unwrap()).unwrap().offset, (100, 50));
     begin(&mut h);
     assert_eq!(quad(&h), [[200.0, 150.0], [300.0, 150.0], [300.0, 210.0], [200.0, 210.0]]);
     let st = h.state().session.active().unwrap();
-    assert!(photocraft_engine::float_cmds::floating(st).is_none());
-    assert_eq!(st.doc.selection.as_ref().unwrap().content_bounds(), photocraft_geom::Rect::new(200, 150, 300, 210));
+    assert!(sary_engine::float_cmds::floating(st).is_none());
+    assert_eq!(st.doc.selection.as_ref().unwrap().content_bounds(), sary_geom::Rect::new(200, 150, 300, 210));
 }
 
 /// Scale ×2, then down again, then ⌘Z: back to the ×2 box, not the fill before the transform.
@@ -157,7 +157,7 @@ fn undo_steps_back_through_the_transform_not_the_document() {
 
 /// `engine.execute` over the control channel (and MCP, which goes through it) as a programmatic
 /// caller: the result's `ok` flag.
-fn execute(h: &mut Harness<'static, PhotocraftApp>, command: &str) -> bool {
+fn execute(h: &mut Harness<'static, SaryApp>, command: &str) -> bool {
     let ctx = h.ctx.clone();
     let (req, _rx) = crate::control::ControlRequest::new("engine.execute", json!({"command": command}));
     let crate::control::Outcome::Done(reply) = crate::control::handle(h.state_mut(), &ctx, &req) else {
@@ -195,7 +195,7 @@ fn automation_undo_steps_through_the_transform() {
     assert_eq!(history(&h), steps - 1, "the fill is undone");
 }
 
-fn width(h: &Harness<'static, PhotocraftApp>) -> u32 {
+fn width(h: &Harness<'static, SaryApp>) -> u32 {
     let st = h.state().session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().content_bounds().width()
 }
@@ -294,7 +294,7 @@ fn holding_space_still_pans_while_transforming() {
     begin(&mut h);
     let q0 = quad(&h);
     let center0 = h.state().ui.views[0].center;
-    let space = |h: &mut Harness<'static, PhotocraftApp>, down: bool| {
+    let space = |h: &mut Harness<'static, SaryApp>, down: bool| {
         h.event(egui::Event::Key { key: Key::Space, physical_key: None, pressed: down, repeat: false, modifiers: Modifiers::NONE });
         h.run_steps(1);
     };
@@ -311,7 +311,7 @@ fn transform_preview_stays_visible_while_panning() {
     let mut h = harness();
     begin(&mut h);
     let texture = h.state().transform_preview.as_ref().unwrap().texture.pick(&h.ctx, 1.0, 1.0, false).0;
-    let has_preview = |h: &Harness<'static, PhotocraftApp>| {
+    let has_preview = |h: &Harness<'static, SaryApp>| {
         h.output().shapes.iter().any(|clipped| matches!(&clipped.shape, egui::epaint::Shape::Mesh(mesh) if mesh.texture_id == texture))
     };
     assert!(has_preview(&h), "the transformed pixels are visible before panning");
@@ -362,7 +362,7 @@ fn picking_another_layer_applies_the_transform_of_moved_selected_pixels() {
     h.run_steps(3);
     assert!(h.state().ui.transform.is_none(), "picking another layer applies the transform");
     let st = h.state().session.active().unwrap();
-    let landed = photocraft_geom::Rect::new(220, 160, 320, 220);
+    let landed = sary_geom::Rect::new(220, 160, 320, 220);
     let (pixels, selection) = (st.doc.layer(layer).unwrap().surface().unwrap().content_bounds(), st.doc.selection.as_ref().map(|s| s.content_bounds()));
     assert_eq!((pixels, selection), (landed, Some(landed)));
 }
@@ -382,7 +382,7 @@ fn free_transform_opens_on_the_selection_and_moves_it_with_the_pixels() {
     key(&mut h, Modifiers::NONE, Key::Enter);
     assert!(h.state().ui.transform.is_none());
     let st = h.state().session.active().unwrap();
-    assert_eq!(st.doc.selection.as_ref().unwrap().content_bounds(), photocraft_geom::Rect::new(110, 110, 210, 230));
+    assert_eq!(st.doc.selection.as_ref().unwrap().content_bounds(), sary_geom::Rect::new(110, 110, 210, 230));
     // What stayed (160..200 × 100..160) and what moved (to 150..210 × 130..190).
-    assert_eq!(st.doc.layer(layer).unwrap().surface().unwrap().content_bounds(), photocraft_geom::Rect::new(150, 100, 210, 190));
+    assert_eq!(st.doc.layer(layer).unwrap().surface().unwrap().content_bounds(), sary_geom::Rect::new(150, 100, 210, 190));
 }

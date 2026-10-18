@@ -1,8 +1,8 @@
 //! A dense 24 MP document with 50 COW snapshots: trim alone and record + trim.
-//! Run with `cargo run --release -p photocraft-ops --example bench_history_trim`.
+//! Run with `cargo run --release -p sary-ops --example bench_history_trim`.
 //! Add `-- --layered` for 150 layers sharing the initial photo (about 2.8 M tile visits).
-use photocraft_doc::{Color, ColorMode, Document, Layer, SampleType, Size};
-use photocraft_ops::{History, LayerTarget};
+use sary_doc::{Color, ColorMode, Document, Layer, SampleType, Size};
+use sary_ops::{History, LayerTarget};
 use std::hint::black_box;
 use std::sync::Arc;
 use std::time::Instant;

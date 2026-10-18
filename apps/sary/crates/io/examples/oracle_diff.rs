@@ -1,16 +1,16 @@
 //! Compare our composite with Photoshop's merged image for one PSD (rendering-fidelity work).
 //!
 //! ```sh
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd [N]          # layers + first N pixels
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 png out.png # ours | Photoshop | diff heatmap
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 col [x]     # column samples
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 row y x0 x1 # row samples
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 worst [n]   # n worst pixels
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 grid x0 y0 x1 y1 [ch] # value grids
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 layerpx x y  # each layer's pixel
-//! cargo run --release -p photocraft-io --example oracle_diff -- corpus/psd             # every file: max err, bad %, PASS/DIFF
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 dump prefix # raw f32 planes for offline fitting
-//! cargo run --release -p photocraft-io --example oracle_diff -- file.psd 0 bylayer    # max error around each layer
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd [N]          # layers + first N pixels
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 png out.png # ours | Photoshop | diff heatmap
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 col [x]     # column samples
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 row y x0 x1 # row samples
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 worst [n]   # n worst pixels
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 grid x0 y0 x1 y1 [ch] # value grids
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 layerpx x y  # each layer's pixel
+//! cargo run --release -p sary-io --example oracle_diff -- corpus/psd             # every file: max err, bad %, PASS/DIFF
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 dump prefix # raw f32 planes for offline fitting
+//! cargo run --release -p sary-io --example oracle_diff -- file.psd 0 bylayer    # max error around each layer
 //! SCALE=4 …                                                                         # upscale the png
 //! HIDE_ADJ=1 …                                                                        # adjustment layers hidden
 //! ONLY="name,name" …                                                                  # only these top-level layers (+ the bottom one)
@@ -23,16 +23,16 @@ fn main() {
         return;
     }
     let bytes = std::fs::read(&path).unwrap();
-    let file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
-    let mut imp = photocraft_io::import(&path, &bytes).unwrap();
+    let file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
+    let mut imp = sary_io::import(&path, &bytes).unwrap();
     if std::env::var_os("HIDE_ADJ").is_some() {
         // Composite without adjustment layers (their input, for fitting transfer curves).
-        fn hide(ls: &mut [photocraft_doc::Layer]) {
+        fn hide(ls: &mut [sary_doc::Layer]) {
             for l in ls {
-                if matches!(l.content, photocraft_doc::LayerContent::Adjustment(_)) {
+                if matches!(l.content, sary_doc::LayerContent::Adjustment(_)) {
                     l.visible = false;
                 }
-                if let photocraft_doc::LayerContent::Group(g) = &mut l.content {
+                if let sary_doc::LayerContent::Group(g) = &mut l.content {
                     hide(&mut g.children);
                 }
             }
@@ -61,10 +61,10 @@ fn main() {
             l.fill_cache.is_some(),
             l.visible
         );
-        if let photocraft_doc::LayerContent::Adjustment(a) = &l.content {
+        if let sary_doc::LayerContent::Adjustment(a) = &l.content {
             println!("    {}", format!("{a:?}").chars().take(800).collect::<String>());
         }
-        if let photocraft_doc::LayerContent::Fill(f) = &l.content {
+        if let sary_doc::LayerContent::Fill(f) = &l.content {
             println!("    {f:?}");
         }
         if let Some(m) = &l.mask {
@@ -89,7 +89,7 @@ fn main() {
             }
             println!("    alpha bounds ({x0},{y0})-({x1},{y1})");
         }
-        if let photocraft_doc::LayerContent::Shape(sh) = &l.content {
+        if let sary_doc::LayerContent::Shape(sh) = &l.content {
             println!(
                 "    shape path bounds {:?} subpaths {} rule {:?} inverted {} fill {} stroke {} outline {}",
                 sh.path.control_bounds(),
@@ -98,7 +98,7 @@ fn main() {
                 sh.path.inverted,
                 sh.fill.is_some(),
                 sh.stroke.is_some(),
-                photocraft_compose::effect_outline(l).is_some()
+                sary_compose::effect_outline(l).is_some()
             );
             if std::env::var_os("PATHS").is_some() {
                 for s in &sh.path.subpaths {
@@ -109,9 +109,9 @@ fn main() {
         if let Some(vm) = &l.vector_mask {
             println!("    vector mask bounds {:?}", vm.path.control_bounds());
         }
-        println!("    clipped {} frame {:?} bounds {:?}", l.clipped, photocraft_compose::fill_frame(l, doc.bounds()), l.surface().map(|s| s.content_bounds()));
+        println!("    clipped {} frame {:?} bounds {:?}", l.clipped, sary_compose::fill_frame(l, doc.bounds()), l.surface().map(|s| s.content_bounds()));
         for e in &l.effects.items {
-            if let photocraft_doc::Effect::GradientOverlay { common, gradient, .. } = e
+            if let sary_doc::Effect::GradientOverlay { common, gradient, .. } = e
                 && common.enabled
             {
                 let g = format!("{gradient:?}");
@@ -124,15 +124,15 @@ fn main() {
         for (k, v) in &l.psd_blocks {
             if k == b"lfx2" || k == b"lmfx" {
                 // Recursively list descriptor keys (effects), skipping colour stop lists.
-                fn walk(d: &photocraft_psd::descriptor::Descriptor, depth: usize, out: &mut Vec<String>) {
+                fn walk(d: &sary_psd::descriptor::Descriptor, depth: usize, out: &mut Vec<String>) {
                     for (k, v) in &d.items {
                         let key = match k {
-                            photocraft_psd::descriptor::Id::Code(c) => String::from_utf8_lossy(c).to_string(),
+                            sary_psd::descriptor::Id::Code(c) => String::from_utf8_lossy(c).to_string(),
                             other => String::from_utf8_lossy(other.as_bytes()).to_string(),
                         };
                         let vs = format!("{v:?}");
                         match v {
-                            photocraft_psd::descriptor::Value::Descriptor(sub) => {
+                            sary_psd::descriptor::Value::Descriptor(sub) => {
                                 out.push(format!("{}{key}:", "  ".repeat(depth)));
                                 walk(sub, depth + 1, out);
                             }
@@ -140,7 +140,7 @@ fn main() {
                         }
                     }
                 }
-                if let Ok((vd, _)) = photocraft_psd::descriptor::VersionedDescriptor::parse_prefix(&v[4..]) {
+                if let Ok((vd, _)) = sary_psd::descriptor::VersionedDescriptor::parse_prefix(&v[4..]) {
                     let mut out = Vec::new();
                     walk(&vd.descriptor, 3, &mut out);
                     for l in out.iter().filter(|l| !l.trim_start().starts_with("Clrs") && !l.trim_start().starts_with("Trns")) {
@@ -149,13 +149,13 @@ fn main() {
                 }
             }
             if k == b"TySh"
-                && let Some(Ok((vd, _))) = v.get(52..).map(photocraft_psd::descriptor::VersionedDescriptor::parse_prefix)
+                && let Some(Ok((vd, _))) = v.get(52..).map(sary_psd::descriptor::VersionedDescriptor::parse_prefix)
             {
                 // Text bounds (text space) and the transform.
                 let t: Vec<f64> = (0..6).map(|i| f64::from_be_bytes(v[2 + i * 8..10 + i * 8].try_into().unwrap())).collect();
                 println!("    TySh transform {t:?}");
                 for key in ["bounds", "boundingBox"] {
-                    if let Some(photocraft_psd::descriptor::Value::Descriptor(d)) = vd.descriptor.get(key) {
+                    if let Some(sary_psd::descriptor::Value::Descriptor(d)) = vd.descriptor.get(key) {
                         let n: Vec<String> = d.items.iter().map(|(k, v)| format!("{}={v:?}", String::from_utf8_lossy(k.as_bytes()))).collect();
                         println!("    TySh {key}: {}", n.join(" "));
                     }
@@ -163,7 +163,7 @@ fn main() {
             }
             if k == b"GdFl" {
                 // Skip the 4-byte version before the descriptor.
-                if let Ok((vd, _)) = photocraft_psd::descriptor::VersionedDescriptor::parse_prefix(v) {
+                if let Ok((vd, _)) = sary_psd::descriptor::VersionedDescriptor::parse_prefix(v) {
                     println!(
                         "    GdFl keys: {:?}",
                         vd.descriptor
@@ -173,7 +173,7 @@ fn main() {
                             .map(|(k, v)| format!(
                                 "{:?}={}",
                                 match k {
-                                    photocraft_psd::descriptor::Id::Code(c) => String::from_utf8_lossy(c).to_string(),
+                                    sary_psd::descriptor::Id::Code(c) => String::from_utf8_lossy(c).to_string(),
                                     other => format!("{other:?}"),
                                 },
                                 format!("{v:?}").chars().take(120).collect::<String>()
@@ -185,22 +185,22 @@ fn main() {
         }
     }
     if std::env::var_os("DUMP_FX").is_some() {
-        fn walk(d: &photocraft_psd::descriptor::Descriptor, depth: usize) {
+        fn walk(d: &sary_psd::descriptor::Descriptor, depth: usize) {
             for (k, v) in &d.items {
                 let key = String::from_utf8_lossy(k.as_bytes()).to_string();
                 if key == "Clrs" || key == "Trns" {
                     continue;
                 }
                 match v {
-                    photocraft_psd::descriptor::Value::Descriptor(sub) => {
+                    sary_psd::descriptor::Value::Descriptor(sub) => {
                         println!("{}{key}:", "  ".repeat(depth));
                         walk(sub, depth + 1);
                     }
-                    photocraft_psd::descriptor::Value::Text(t) => println!("{}{key} = {:?}", "  ".repeat(depth), t.to_string_lossy()),
-                    photocraft_psd::descriptor::Value::List(items) if items.iter().all(|i| matches!(i, photocraft_psd::descriptor::Value::Descriptor(_))) => {
+                    sary_psd::descriptor::Value::Text(t) => println!("{}{key} = {:?}", "  ".repeat(depth), t.to_string_lossy()),
+                    sary_psd::descriptor::Value::List(items) if items.iter().all(|i| matches!(i, sary_psd::descriptor::Value::Descriptor(_))) => {
                         println!("{}{key} = [{} items]", "  ".repeat(depth), items.len());
                         for (i, it) in items.iter().enumerate() {
-                            if let photocraft_psd::descriptor::Value::Descriptor(sub) = it {
+                            if let sary_psd::descriptor::Value::Descriptor(sub) = it {
                                 println!("{}[{i}]:", "  ".repeat(depth + 1));
                                 walk(sub, depth + 2);
                             }
@@ -213,14 +213,14 @@ fn main() {
         for rec in file.layers() {
             println!("-- layer {:?} rect {:?}", String::from_utf8_lossy(&rec.name), rec.rect);
             if let Some(b) = rec.block(b"lmfx").or(rec.block(b"lfx2")).or(rec.block(b"lfxs"))
-                && let Ok((vd, _)) = photocraft_psd::descriptor::VersionedDescriptor::parse_prefix(&b.data[4..])
+                && let Ok((vd, _)) = sary_psd::descriptor::VersionedDescriptor::parse_prefix(&b.data[4..])
             {
                 walk(&vd.descriptor, 1);
             }
         }
     }
-    let ours = photocraft_compose::flatten(doc).px;
-    let merged = photocraft_io::merged_composite(&file).unwrap();
+    let ours = sary_compose::flatten(doc).px;
+    let merged = sary_io::merged_composite(&file).unwrap();
     if std::env::args().nth(3).as_deref() == Some("png") {
         // ours | photoshop | diff heatmap, side by side (over white).
         let out = std::env::args().nth(4).expect("out.png");
@@ -256,9 +256,9 @@ fn main() {
             (img, w, h)
         };
         let image =
-            photocraft_codecs::Image::from_raw((w * 3) as u32, h as u32, photocraft_codecs::ChannelLayout::Rgba, photocraft_codecs::SampleType::U8, img)
+            sary_codecs::Image::from_raw((w * 3) as u32, h as u32, sary_codecs::ChannelLayout::Rgba, sary_codecs::SampleType::U8, img)
                 .unwrap();
-        std::fs::write(&out, photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap()).unwrap();
+        std::fs::write(&out, sary_codecs::encode(&image, sary_codecs::Format::Png, &Default::default()).unwrap()).unwrap();
         println!("wrote {out}");
         return;
     }
@@ -275,8 +275,8 @@ fn main() {
         wr(format!("{out}_ps.f32"), &merged);
         let mut meta = format!("{} {}\n", doc.size.width, doc.size.height);
         for (i, l) in doc.layers.iter().enumerate() {
-            let b = photocraft_compose::surface_to_buffer(
-                l.surface().unwrap_or(&photocraft_raster::Surface::new(photocraft_color::PixelFormat::RGBA8)),
+            let b = sary_compose::surface_to_buffer(
+                l.surface().unwrap_or(&sary_raster::Surface::new(sary_color::PixelFormat::RGBA8)),
                 doc.bounds(),
             );
             wr(format!("{out}_L{i}.f32"), &b.px);
@@ -323,20 +323,20 @@ fn main() {
         for (_, _, l) in doc.walk() {
             let Some(sf) = l.surface() else { continue };
             let cb = sf.content_bounds();
-            let mut b = photocraft_geom::Rect::new(i32::MAX, i32::MAX, i32::MIN, i32::MIN);
+            let mut b = sary_geom::Rect::new(i32::MAX, i32::MAX, i32::MIN, i32::MIN);
             for y in cb.y0..cb.y1 {
                 for x in cb.x0..cb.x1 {
                     let p = sf.pixel(x, y);
                     if p[p.len() - 1] > 0.0 {
-                        b = photocraft_geom::Rect::new(b.x0.min(x), b.y0.min(y), b.x1.max(x + 1), b.y1.max(y + 1));
+                        b = sary_geom::Rect::new(b.x0.min(x), b.y0.min(y), b.x1.max(x + 1), b.y1.max(y + 1));
                     }
                 }
             }
             if b.x0 > b.x1 {
                 continue;
             }
-            let m = photocraft_compose::effects::margin(l);
-            let r = photocraft_geom::Rect::new((b.x0 - m).max(0), (b.y0 - m).max(0), (b.x1 + m).min(w), (b.y1 + m).min(h));
+            let m = sary_compose::effects::margin(l);
+            let r = sary_geom::Rect::new((b.x0 - m).max(0), (b.y0 - m).max(0), (b.x1 + m).min(w), (b.y1 + m).min(h));
             let (mut worst, mut at, mut bad) = (0.0f32, (0, 0), 0usize);
             for y in r.y0..r.y1 {
                 for x in r.x0..r.x1 {
@@ -392,9 +392,9 @@ fn main() {
         let a: Vec<i32> = (5..9).map(|i| std::env::args().nth(i).and_then(|s| s.parse().ok()).unwrap_or(0)).collect();
         let w = doc.size.width as usize;
         let l = doc.walk().into_iter().map(|t| t.2).find(|l| l.name == name).expect("layer");
-        let r = photocraft_geom::Rect::new(a[0], a[1], a[2], a[3]);
+        let r = sary_geom::Rect::new(a[0], a[1], a[2], a[3]);
         let cov = match &l.content {
-            photocraft_doc::LayerContent::Shape(sh) => photocraft_vector::path_coverage(&sh.path, r),
+            sary_doc::LayerContent::Shape(sh) => sary_vector::path_coverage(&sh.path, r),
             _ => vec![0.0; r.width() as usize * r.height() as usize],
         };
         for y in r.y0..r.y1 {
@@ -458,13 +458,13 @@ fn corpus_summary(root: &std::path::Path) {
     let row = |p: &std::path::PathBuf| -> Row {
         let name = p.strip_prefix(root).unwrap_or(p).display().to_string();
         let Ok(bytes) = std::fs::read(p) else { return (name, None) };
-        let Ok(file) = photocraft_psd::PsdFile::from_bytes(&bytes) else { return (name, None) };
-        let Ok(imp) = photocraft_io::import(&name, &bytes) else { return (name, None) };
+        let Ok(file) = sary_psd::PsdFile::from_bytes(&bytes) else { return (name, None) };
+        let Ok(imp) = sary_io::import(&name, &bytes) else { return (name, None) };
         if file.has_real_merged_data() == Some(false) || file.layers().is_empty() {
             return (name, None);
         }
-        let Ok(merged) = photocraft_io::merged_composite(&file) else { return (name, None) };
-        let ours = photocraft_compose::flatten(&imp.document).px;
+        let Ok(merged) = sary_io::merged_composite(&file) else { return (name, None) };
+        let ours = sary_compose::flatten(&imp.document).px;
         let mut m = 0.0f32;
         let mut bad = 0usize;
         for (a, b) in ours.iter().zip(&merged) {

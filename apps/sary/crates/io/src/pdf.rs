@@ -9,8 +9,8 @@
 
 use std::io::Write as _;
 
-use photocraft_color::{ColorMode, PixelFormat};
-use photocraft_doc::Document;
+use sary_color::{ColorMode, PixelFormat};
+use sary_doc::Document;
 
 use crate::{ExportResult, IoError};
 
@@ -190,8 +190,8 @@ pub fn export(doc: &Document) -> std::result::Result<ExportResult, IoError> {
     };
     let fmt = doc.pixel_format();
     let n = fmt.channels().max(1);
-    let canvas = photocraft_geom::Rect::new(0, 0, w as i32, h as i32);
-    let surface = photocraft_compose::flatten_to_surface(doc, PixelFormat::new(fmt.mode, fmt.sample, true), None);
+    let canvas = sary_geom::Rect::new(0, 0, w as i32, h as i32);
+    let surface = sary_compose::flatten_to_surface(doc, PixelFormat::new(fmt.mode, fmt.sample, true), None);
     let values = surface.read_region(canvas);
     let to8 = |v: f32| (v.clamp(0.0, 1.0) * 255.0).round() as u8;
     // Straight alpha, composited here over paper: white in RGB/Gray (1 = full light), zero ink

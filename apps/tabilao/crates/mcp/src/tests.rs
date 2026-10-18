@@ -48,7 +48,7 @@ fn err_code(v: &Value) -> i64 {
 }
 
 fn tmp(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("gridcraft-mcp-test-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tabilao-mcp-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir.join(name)
 }
@@ -62,7 +62,7 @@ fn initialize_and_version_negotiation() {
         rpc(&mut s, 1, "initialize", json!({"protocolVersion": PROTOCOL_VERSION, "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}));
     let r = &v["result"];
     assert_eq!(r["protocolVersion"], PROTOCOL_VERSION);
-    assert_eq!(r["serverInfo"]["name"], "gridcraft");
+    assert_eq!(r["serverInfo"]["name"], "tabilao");
     assert!(r["capabilities"]["tools"].is_object());
     assert!(r["capabilities"]["resources"].is_object());
     assert!(r["instructions"].as_str().unwrap().contains("headless"));
@@ -143,7 +143,7 @@ fn malformed_input_never_panics() {
     assert_eq!(err_code(&rpc(&mut s, 7, "tools/call", json!({"name": "insert_chart", "arguments": {"range": "A1", "type": "piechart"}}))), -32602);
     assert_eq!(err_code(&rpc(&mut s, 8, "tools/call", json!({"name": "get_cell", "arguments": {"cell": "A1", "bogus": 1}}))), -32602);
     assert_eq!(err_code(&rpc(&mut s, 9, "resources/read", json!({}))), -32602);
-    assert_eq!(err_code(&rpc(&mut s, 10, "resources/read", json!({"uri": "gridcraft://nope"}))), -32002);
+    assert_eq!(err_code(&rpc(&mut s, 10, "resources/read", json!({"uri": "tabilao://nope"}))), -32002);
     // Responses and unknown notifications are ignored.
     assert_eq!(s.handle_line(r#"{"jsonrpc":"2.0","id":7,"result":{}}"#), None);
     assert_eq!(s.handle_line(r#"{"jsonrpc":"2.0","method":"notifications/whatever"}"#), None);
@@ -180,14 +180,14 @@ fn resources() {
     let mut s = server();
     let v = rpc(&mut s, 1, "resources/list", json!({}));
     let uris: Vec<&str> = v["result"]["resources"].as_array().unwrap().iter().map(|r| r["uri"].as_str().unwrap()).collect();
-    assert_eq!(uris, ["gridcraft://workbook", "gridcraft://commands", "gridcraft://functions"]);
+    assert_eq!(uris, ["tabilao://workbook", "tabilao://commands", "tabilao://functions"]);
     for uri in uris {
         let v = rpc(&mut s, 2, "resources/read", json!({"uri": uri}));
         let text = v["result"]["contents"][0]["text"].as_str().unwrap();
         let parsed: Value = serde_json::from_str(text).unwrap();
         assert!(!parsed.is_null(), "{uri}");
     }
-    let v = rpc(&mut s, 3, "resources/read", json!({"uri": "gridcraft://functions"}));
+    let v = rpc(&mut s, 3, "resources/read", json!({"uri": "tabilao://functions"}));
     assert!(v["result"]["contents"][0]["text"].as_str().unwrap().contains("VLOOKUP"));
 }
 

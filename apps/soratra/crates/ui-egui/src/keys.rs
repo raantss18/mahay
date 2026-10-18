@@ -357,7 +357,7 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                     continue;
                 }
                 // Escape puts the pen or eraser down (back to selecting).
-                if key == Key::Escape && app.session.view.draw.mode != wordcraft_engine::cmd::draw::DrawMode::Select {
+                if key == Key::Escape && app.session.view.draw.mode != soratra_engine::cmd::draw::DrawMode::Select {
                     app.canvas.ink = None;
                     let _ = app.run("draw.select", json!({}));
                     continue;
@@ -384,15 +384,15 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                 // it (#1538). The anchor position is just after the box's object character.
                 if key == Key::Escape
                     && crate::canvas::in_text_box(app)
-                    && let wordcraft_doc::StoryRef::Part(id) = app.session.sel.focus.story
+                    && let soratra_doc::StoryRef::Part(id) = app.session.sel.focus.story
                     && let Some(end) = app.session.doc.text_box_anchor(id)
-                    && let Some(off) = end.off.checked_sub(wordcraft_doc::para::OBJ.len_utf8())
+                    && let Some(off) = end.off.checked_sub(soratra_doc::para::OBJ.len_utf8())
                 {
-                    let start = wordcraft_doc::Pos { off, ..end.clone() };
+                    let start = soratra_doc::Pos { off, ..end.clone() };
                     let _ = app.run("select.range", json!({"anchor": start, "focus": end}));
                     continue;
                 }
-                if key == Key::Escape && matches!(app.session.sel.focus.story, wordcraft_doc::StoryRef::Part(_)) && app.session.sel.is_collapsed() {
+                if key == Key::Escape && matches!(app.session.sel.focus.story, soratra_doc::StoryRef::Part(_)) && app.session.sel.is_collapsed() {
                     let _ = app.run("insert.closeHeader", json!({}));
                     continue;
                 }
@@ -527,7 +527,7 @@ fn finish_alt_code(app: &mut WordApp) {
     let mut params = json!({"code": code});
     if system_composes {
         // Windows: the code pages of the system locale (Polish 1250/852, Russian 1251/866…).
-        let (ansi, oem) = wordcraft_engine::cmd::text::system_code_pages();
+        let (ansi, oem) = soratra_engine::cmd::text::system_code_pages();
         params = json!({"code": code, "ansi": ansi, "oem": oem});
         // The system's composed character comes as text after the digits' swallowed text.
         app.canvas.swallow_text = false;
@@ -596,7 +596,7 @@ fn delete_surrounding(app: &mut WordApp, before: usize, after: usize) {
     // The formatting typing at the caret would use: that of the erased text (or set for it).
     let props = s.typing_props();
     app.session.sel =
-        wordcraft_engine::Selection { anchor: wordcraft_doc::Pos { off: start, ..f.clone() }, focus: wordcraft_doc::Pos { off: end, ..f.clone() } };
+        soratra_engine::Selection { anchor: soratra_doc::Pos { off: start, ..f.clone() }, focus: soratra_doc::Pos { off: end, ..f.clone() } };
     let caret = f;
     if join {
         app.session.join_next_undo();
@@ -605,7 +605,7 @@ fn delete_surrounding(app: &mut WordApp, before: usize, after: usize) {
         app.canvas.ime_join_text = Some(props);
     } else {
         // Refused (a protected document): leave the caret where it was.
-        app.session.sel = wordcraft_engine::Selection::caret(caret);
+        app.session.sel = soratra_engine::Selection::caret(caret);
     }
 }
 
@@ -628,7 +628,7 @@ fn alt_code_echoed(app: &mut WordApp, echo: &AltCodeEcho, text: &str) -> bool {
         let ours =
             start.filter(|_| s.sel.is_collapsed()).filter(|st| s.doc.para_at(&f).and_then(|p| p.text.get(*st..f.off)) == Some(echo.typed.as_str()));
         if let Some(start) = ours {
-            app.session.sel = wordcraft_engine::Selection { anchor: wordcraft_doc::Pos { off: start, ..f.clone() }, focus: f };
+            app.session.sel = soratra_engine::Selection { anchor: soratra_doc::Pos { off: start, ..f.clone() }, focus: f };
             let _ = app.run("text.insert", json!({"text": text}));
         }
     }
@@ -746,18 +746,18 @@ mod tests {
         if cfg!(target_os = "macos") {
             return;
         }
-        let doc_text = |a: &WordApp| a.session.doc.plain_text(wordcraft_doc::StoryRef::Body);
+        let doc_text = |a: &WordApp| a.session.doc.plain_text(soratra_doc::StoryRef::Body);
         let ctx = egui::Context::default();
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         // Windows reads codes in the system locale's code pages (0233 is é in 1252 and 1250, й in
         // 1251); elsewhere the ANSI page is 1252 and the OEM page the locale's own. The app records
         // the locale when it starts, so ask after `WordApp::new`.
         let (ansi, oem_page) = if cfg!(target_os = "windows") {
-            wordcraft_engine::cmd::text::system_code_pages()
+            soratra_engine::cmd::text::system_code_pages()
         } else {
-            (1252, wordcraft_engine::cmd::text::system_oem_code_page())
+            (1252, soratra_engine::cmd::text::system_oem_code_page())
         };
-        let typed = wordcraft_engine::cmd::text::alt_code_char("0233", ansi, oem_page).unwrap_or('?');
+        let typed = soratra_engine::cmd::text::alt_code_char("0233", ansi, oem_page).unwrap_or('?');
         let alt = Modifiers { alt: true, ..Default::default() };
         let key = |key, pressed, modifiers| egui::Event::Key { key, physical_key: Some(key), pressed, repeat: false, modifiers };
         let frame = |a: &mut WordApp, events: Vec<egui::Event>| {
@@ -785,7 +785,7 @@ mod tests {
             frame(&mut a, vec![key(k, true, alt), key(k, false, alt)]);
         }
         frame(&mut a, vec![key(Key::AltLeft, false, alt), egui::Event::ModifiersChanged(Modifiers::NONE)]);
-        let oem = wordcraft_engine::cmd::text::alt_code_char("233", ansi, oem_page);
+        let oem = soratra_engine::cmd::text::alt_code_char("233", ansi, oem_page);
         assert_eq!(doc_text(&a).trim_end(), format!("{typed}é{}", oem.unwrap_or('?')));
         // A bare Alt tap still opens keytips.
         frame(&mut a, vec![egui::Event::ModifiersChanged(alt), key(Key::AltLeft, true, alt)]);
@@ -794,7 +794,7 @@ mod tests {
     }
 
     fn alt_frame_app() -> (egui::Context, WordApp) {
-        let a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         (egui::Context::default(), a)
     }
 
@@ -817,7 +817,7 @@ mod tests {
         alt_frame(&ctx, &mut a, vec![alt_key(Key::Num5, true, false)]);
         assert_eq!(a.canvas.alt_code, "65");
         alt_frame(&ctx, &mut a, vec![egui::Event::ModifiersChanged(Modifiers::NONE)]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "A");
+        assert_eq!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).trim_end(), "A");
     }
 
     /// Switching to another window mid-code drops the digits: releasing Alt later types nothing.
@@ -831,7 +831,7 @@ mod tests {
         alt_frame(&ctx, &mut a, vec![egui::Event::WindowFocused(false)]);
         assert_eq!(a.canvas.alt_code, "");
         alt_frame(&ctx, &mut a, vec![egui::Event::WindowFocused(true), egui::Event::ModifiersChanged(Modifiers::NONE)]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "");
+        assert_eq!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).trim_end(), "");
     }
 
     /// Windows composes Alt codes with the system's code pages: for a code up to 255 its
@@ -840,7 +840,7 @@ mod tests {
     #[test]
     fn system_composed_alt_code_character_wins_up_to_255() {
         let (ctx, mut a) = alt_frame_app();
-        let text = |a: &WordApp| a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end().to_string();
+        let text = |a: &WordApp| a.session.doc.plain_text(soratra_doc::StoryRef::Body).trim_end().to_string();
         let _ = a.run("text.typeCode", json!({"code": "0185", "ansi": 1252}));
         a.canvas.alt_code_echo = Some(AltCodeEcho { typed: "¹".into(), system_composes: true, byte_code: true });
         alt_frame(&ctx, &mut a, vec![egui::Event::Text("ą".into())]);
@@ -856,7 +856,7 @@ mod tests {
     }
 
     fn body(a: &WordApp) -> String {
-        a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end_matches(['\r', '\n']).to_string()
+        a.session.doc.plain_text(soratra_doc::StoryRef::Body).trim_end_matches(['\r', '\n']).to_string()
     }
 
     fn surround(before_chars: usize, after_chars: usize) -> egui::Event {
@@ -915,9 +915,9 @@ mod tests {
             a.run("caret.right", json!({})).unwrap();
         }
         alt_frame(&ctx, &mut a, vec![surround(usize::MAX, usize::MAX)]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "one\n\nthree");
+        assert_eq!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).trim_end(), "one\n\nthree");
         alt_frame(&ctx, &mut a, vec![surround(5, 5), egui::Event::Text("2".into())]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "one\n2\nthree");
+        assert_eq!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).trim_end(), "one\n2\nthree");
     }
 
     /// The agent's rewrite belongs to the typing it corrects: one Undo takes back the typing

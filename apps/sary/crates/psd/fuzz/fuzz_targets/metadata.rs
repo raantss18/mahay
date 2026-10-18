@@ -7,7 +7,7 @@
 //! stability -- byte stability alone would also pass if the writer silently dropped a field).
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::metadata::{parse_shmd, write_shmd};
+use sary_psd::metadata::{parse_shmd, write_shmd};
 fuzz_target!(|data: &[u8]| {
     let Ok(items) = parse_shmd(data) else { return };
     let out = write_shmd(&items);

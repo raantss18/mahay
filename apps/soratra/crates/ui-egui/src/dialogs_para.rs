@@ -5,7 +5,7 @@
 use egui::{Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
-use wordcraft_doc::props::{Border, BorderStyle, Borders, Rgb, TabAlign, TabLeader, TabStop};
+use soratra_doc::props::{Border, BorderStyle, Borders, Rgb, TabAlign, TabLeader, TabStop};
 
 use crate::WordApp;
 use crate::dialogs::{buttons, color_menu};
@@ -22,10 +22,10 @@ const LEADERS: [(TabLeader, &str, &str); 5] = [
     (TabLeader::MiddleDot, "4 ······", "······"),
 ];
 
-/// [`wordcraft_doc::props::TAB_POS_EPS`]: the engine replaces stops within this tolerance.
-const SAME_POS: f32 = wordcraft_doc::props::TAB_POS_EPS;
+/// [`soratra_doc::props::TAB_POS_EPS`]: the engine replaces stops within this tolerance.
+const SAME_POS: f32 = soratra_doc::props::TAB_POS_EPS;
 
-fn unit() -> wordcraft_geom::Unit {
+fn unit() -> soratra_geom::Unit {
     crate::options::unit()
 }
 
@@ -472,7 +472,7 @@ impl BordersForm {
     pub fn read(app: &WordApp, tab: u8) -> Option<BordersForm> {
         let s = &app.session;
         let rp = s.doc.para_at(&s.sel.focus).map(|p| s.doc.styles.resolve_para(&p.props))?;
-        let sect = wordcraft_engine::cmd::page::sect(s);
+        let sect = soratra_engine::cmd::page::sect(s);
         let mut f = BordersForm {
             tab: tab.min(2),
             para: LineForm::read(rp.borders.as_ref()),
@@ -750,10 +750,10 @@ fn draw_line(p: &egui::Painter, [a, b]: [egui::Pos2; 2], style: BorderStyle, wid
 mod tests {
     use super::*;
     use crate::dialogs::Dialog;
-    use wordcraft_engine::Session;
+    use soratra_engine::Session;
 
     fn app_with(text: &str) -> WordApp {
-        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = WordApp::new(Session::new(soratra_doc::Document::new()), crate::Services::default());
         let _ = app.run("document.setText", json!({"text": text}));
         app
     }
@@ -858,8 +858,8 @@ mod tests {
         f.set_leader(9, TabLeader::Dot);
 
         // What the position field parses: the interface unit by default, any unit spelled out.
-        assert_eq!(wordcraft_geom::parse_measure("1.5", wordcraft_geom::Unit::Inches), Some(108.0));
-        assert_eq!(wordcraft_geom::parse_measure("2,54 cm", wordcraft_geom::Unit::Inches), Some(72.0));
+        assert_eq!(soratra_geom::parse_measure("1.5", soratra_geom::Unit::Inches), Some(108.0));
+        assert_eq!(soratra_geom::parse_measure("2,54 cm", soratra_geom::Unit::Inches), Some(72.0));
     }
 
     /// New adds a row at the next free multiple of the default interval — skipping taken and

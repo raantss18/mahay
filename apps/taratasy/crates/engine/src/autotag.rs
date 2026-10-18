@@ -43,7 +43,7 @@ impl Document {
         }
         let editor = self.editor.as_ref().ok_or("the document can't be read")?;
         let existing_structure = editor.cos.root().is_some_and(|r| editor.cos.get(r).as_dict().is_some_and(|d| d.contains(b"StructTreeRoot")));
-        let blocks = pdfcraft_edit::text_blocks(&editor.cos, page).map_err(|e| e.to_string())?;
+        let blocks = taratasy_edit::text_blocks(&editor.cos, page).map_err(|e| e.to_string())?;
         if blocks.len() > MAX_BLOCKS {
             return Err(format!("page {} has too many text blocks to preview (maximum {MAX_BLOCKS})", page.saturating_add(1)));
         }

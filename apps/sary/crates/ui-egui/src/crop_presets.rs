@@ -19,7 +19,7 @@
 use egui::vec2;
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::crop_size::{self, PX_PER_CM, PX_PER_IN, WHR};
 use crate::state::{DialogKind, Tool, ToolOptions};
 
@@ -46,7 +46,7 @@ enum Choice {
 }
 
 /// The saved crop presets: (name, crop fields of its `toolOptions`), in saved order.
-pub fn user_presets(app: &PhotocraftApp) -> Vec<(String, Map<String, Value>)> {
+pub fn user_presets(app: &SaryApp) -> Vec<(String, Map<String, Value>)> {
     app.session
         .presets
         .tool_presets
@@ -75,7 +75,7 @@ fn matches(o: &ToolOptions, fields: &Map<String, Value>) -> bool {
 }
 
 /// The number of a length or resolution as the preset name shows it ("8.5", "300").
-fn number(v: f64, unit: photocraft_engine::prefs::Unit) -> String {
+fn number(v: f64, unit: sary_engine::prefs::Unit) -> String {
     let s = crop_size::format_length(v, unit);
     s.split_once(' ').map_or(s.clone(), |(n, _)| n.to_string())
 }
@@ -83,7 +83,7 @@ fn number(v: f64, unit: photocraft_engine::prefs::Unit) -> String {
 /// What New Crop Preset would save from `o`: the crop fields and the name it suggests. `None` when
 /// there is nothing to save (W x H x Resolution without both W and H, or no numeric ratio).
 pub fn savable(o: &ToolOptions) -> Option<(Map<String, Value>, String)> {
-    use photocraft_engine::prefs::Unit;
+    use sary_engine::prefs::Unit;
     if o.crop_ratio == WHR {
         let (w, wu) = crop_size::parse_length(&o.crop_width, Unit::Pixels)?;
         let (h, hu) = crop_size::parse_length(&o.crop_height, Unit::Pixels)?;
@@ -134,7 +134,7 @@ fn button_label(o: &ToolOptions, builtin: &[(String, &'static str)], users: &[(S
 
 /// The options bar's preset dropdown: the built-in entries ([`crop_size::dropdown_options`]), the
 /// saved crop presets before Front Image, then New Crop Preset… and Delete Crop Preset….
-pub fn dropdown(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn dropdown(app: &mut SaryApp, ui: &mut egui::Ui) {
     let builtin = crop_size::dropdown_options();
     let users = user_presets(app);
     let o = &app.ui.tool_options;
@@ -189,7 +189,7 @@ pub fn dropdown(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
 }
 
 /// A newly chosen ratio fills the editable custom W/H fields (free Ratio clears them, #3188).
-fn sync_custom_ratio_fields(app: &mut PhotocraftApp) {
+fn sync_custom_ratio_fields(app: &mut SaryApp) {
     if app.ui.tool_options.crop_ratio != crop_size::WHR {
         crop_size::select_custom_ratio(&mut app.ui.tool_options);
     }
@@ -197,13 +197,13 @@ fn sync_custom_ratio_fields(app: &mut PhotocraftApp) {
 
 /// Choose a saved crop preset: its fields fill the options bar (`tool.presets.select`, the same
 /// as clicking it in the Tool Presets panel).
-pub fn select(app: &mut PhotocraftApp, name: &str) {
+pub fn select(app: &mut SaryApp, name: &str) {
     crate::preset_panels::select_tool_preset(app, name);
 }
 
 /// Open New Crop Preset with the name made from the current values. `None` (nothing opens) when
 /// there is nothing to save; an open one is reused.
-pub fn open_new(app: &mut PhotocraftApp) -> Option<u64> {
+pub fn open_new(app: &mut SaryApp) -> Option<u64> {
     let (fields, name) = savable(&app.ui.tool_options)?;
     if let Some(d) = app.ui.dialogs.iter().find(|d| d.fields.contains_key(NEW_MARK)) {
         return Some(d.id);
@@ -213,7 +213,7 @@ pub fn open_new(app: &mut PhotocraftApp) -> Option<u64> {
 }
 
 /// Open Delete Crop Preset. `None` when no crop preset is saved; an open one is reused.
-pub fn open_delete(app: &mut PhotocraftApp) -> Option<u64> {
+pub fn open_delete(app: &mut SaryApp) -> Option<u64> {
     if user_presets(app).is_empty() {
         return None;
     }
@@ -235,7 +235,7 @@ fn new_name(fields: &Map<String, Value>) -> Option<String> {
 }
 
 /// The names a Delete Crop Preset dialog selected that are saved crop presets.
-fn delete_names(app: &PhotocraftApp, fields: &Map<String, Value>) -> Vec<String> {
+fn delete_names(app: &SaryApp, fields: &Map<String, Value>) -> Vec<String> {
     let saved = user_presets(app);
     let picked: Vec<&str> = fields.get("selected").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).collect()).unwrap_or_default();
     saved.into_iter().map(|(n, _)| n).filter(|n| picked.contains(&n.as_str())).collect()
@@ -243,7 +243,7 @@ fn delete_names(app: &PhotocraftApp, fields: &Map<String, Value>) -> Vec<String>
 
 /// Whether OK (and Enter) may confirm the dialog: a name to save, a preset to delete. True for any
 /// other dialog.
-pub fn can_confirm(app: &PhotocraftApp, fields: &Map<String, Value>) -> bool {
+pub fn can_confirm(app: &SaryApp, fields: &Map<String, Value>) -> bool {
     if fields.contains_key(NEW_MARK) {
         new_name(fields).is_some()
     } else if fields.contains_key(DELETE_MARK) {
@@ -253,7 +253,7 @@ pub fn can_confirm(app: &PhotocraftApp, fields: &Map<String, Value>) -> bool {
     }
 }
 
-pub fn body(app: &PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
+pub fn body(app: &SaryApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
     if fields.contains_key(NEW_MARK) {
         new_body(ui, fields);
     } else {
@@ -282,7 +282,7 @@ fn new_body(ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
     fields.insert("name".into(), json!(name));
 }
 
-fn delete_body(app: &PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
+fn delete_body(app: &SaryApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
     let saved = user_presets(app);
     let mut selected: Vec<String> =
         fields.get("selected").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_str).map(str::to_string).collect()).unwrap_or_default();
@@ -316,7 +316,7 @@ fn delete_body(app: &PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, 
 }
 
 /// OK: save the preset, or delete the selected ones.
-pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, fields: &Map<String, Value>) -> Result<Value, String> {
     if fields.contains_key(NEW_MARK) {
         let name = new_name(fields).ok_or(tl!("Enter a name for the crop preset"))?;
         let options = crop_fields(fields.get("options").unwrap_or(&Value::Null));
@@ -335,24 +335,24 @@ pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::{Color, ColorMode, Document, SampleType, Size};
+    use sary_doc::{Color, ColorMode, Document, SampleType, Size};
     use std::{cell::RefCell, rc::Rc};
 
-    fn app_with(services: crate::Services) -> PhotocraftApp {
+    fn app_with(services: crate::Services) -> SaryApp {
         let mut doc = Document::with_background("crop", Size::new(400, 300), ColorMode::Rgb, SampleType::U8, Color::WHITE);
         doc.resolution_dpi = 72.0;
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.add_document(doc, None);
-        let mut app = PhotocraftApp::new(s, services);
+        let mut app = SaryApp::new(s, services);
         app.ui.tool = Tool::Crop;
         app
     }
 
-    fn app() -> PhotocraftApp {
+    fn app() -> SaryApp {
         app_with(crate::Services::default())
     }
 
-    fn whr(app: &mut PhotocraftApp, w: &str, h: &str, r: &str, unit: &str) {
+    fn whr(app: &mut SaryApp, w: &str, h: &str, r: &str, unit: &str) {
         let o = &mut app.ui.tool_options;
         o.crop_ratio = WHR.into();
         o.crop_width = w.into();
@@ -361,7 +361,7 @@ mod tests {
         o.crop_resolution_unit = unit.into();
     }
 
-    fn names(app: &PhotocraftApp) -> Vec<String> {
+    fn names(app: &SaryApp) -> Vec<String> {
         user_presets(app).into_iter().map(|(n, _)| n).collect()
     }
 
@@ -490,7 +490,7 @@ mod tests {
         }
         assert_eq!(names(&app).len(), 3);
         // A preset from a hand-edited file with odd options is listed and selecting it is harmless.
-        app.session.presets.tool_presets.push(photocraft_engine::presets::tools::ToolPreset {
+        app.session.presets.tool_presets.push(sary_engine::presets::tools::ToolPreset {
             name: "Odd".into(),
             tool: "crop".into(),
             options: json!({"toolOptions": {"crop_ratio": 5, "crop_width": []}}),
@@ -506,7 +506,7 @@ mod tests {
         use crate::control::{ControlRequest, Outcome, handle};
         let mut app = app();
         let ctx = egui::Context::default();
-        let call = |app: &mut PhotocraftApp, m: &str, p: Value| {
+        let call = |app: &mut SaryApp, m: &str, p: Value| {
             let (r, _rx) = ControlRequest::new(m, p);
             match handle(app, &ctx, &r) {
                 Outcome::Done(v) => v,
@@ -532,7 +532,7 @@ mod tests {
     fn options_bar_dropdown_offers_new_and_delete() {
         use egui_kittest::kittest::{NodeT, Queryable};
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1400.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             let mut app = app();
             whr(&mut app, "", "", "", PX_PER_IN);
             app

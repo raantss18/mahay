@@ -1,11 +1,11 @@
 //! A modal color transaction for a named text style; the canvas preview never edits the session.
 use std::sync::Arc;
 
-use photocraft_doc::{Color, DocId, Document};
+use sary_doc::{Color, DocId, Document};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
-use crate::{PhotocraftApp, color_picker_ui, state::DialogKind};
+use crate::{SaryApp, color_picker_ui, state::DialogKind};
 
 const TARGET: &str = "__textStyleColor";
 
@@ -57,7 +57,7 @@ fn color(doc: &Document, kind: Kind, id: u32) -> Result<Color, String> {
     serde_json::from_value(attrs.get("color").cloned().ok_or("enable the style's Color attribute first")?).map_err(|_| "invalid text style color".into())
 }
 
-fn validate(app: &PhotocraftApp, t: &Target) -> Result<(), String> {
+fn validate(app: &SaryApp, t: &Target) -> Result<(), String> {
     let st = app.session.active().ok_or("no active document")?;
     if st.doc.id != t.document || st.revision != t.revision {
         return Err("text style color document changed while the picker was open".into());
@@ -71,7 +71,7 @@ fn validate(app: &PhotocraftApp, t: &Target) -> Result<(), String> {
 }
 
 /// Validate before changing either the panel state or the dialog stack. Also used by automation.
-pub(crate) fn open(app: &mut PhotocraftApp, kind: Kind, id: u32) -> Result<u64, String> {
+pub(crate) fn open(app: &mut SaryApp, kind: Kind, id: u32) -> Result<u64, String> {
     if !app.ui.dialogs.is_empty() {
         return Err("close the current dialog before opening a text style color picker".into());
     }
@@ -95,7 +95,7 @@ fn chosen(fields: &Map<String, Value>) -> Result<String, String> {
     fields.get("color").and_then(Value::as_str).and_then(color_picker_ui::parse_hex).map(color_picker_ui::hex).ok_or("invalid picker color".into())
 }
 
-pub(crate) fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
+pub(crate) fn confirm(app: &mut SaryApp, fields: &Map<String, Value>) -> Result<Value, String> {
     let t = target(fields)?;
     validate(app, &t)?;
     let color = chosen(fields)?;
@@ -106,7 +106,7 @@ pub(crate) fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> R
     app.run(t.kind.command(), json!({"id": t.id, "attrs": {"color": color}}))
 }
 
-pub(crate) fn prune(app: &mut PhotocraftApp) {
+pub(crate) fn prune(app: &mut SaryApp) {
     let invalid: Vec<_> =
         app.ui.dialogs.iter().filter(|d| owns(&d.fields) && target(&d.fields).and_then(|t| validate(app, &t)).is_err()).map(|d| d.id).collect();
     app.ui.dialogs.retain(|d| !invalid.contains(&d.id));
@@ -116,7 +116,7 @@ pub(crate) fn prune(app: &mut PhotocraftApp) {
 }
 
 /// CPU and GPU canvases use the same isolated document; unchanged frames reuse its Arc.
-pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Document>, u64)> {
+pub(crate) fn display_doc(app: &mut SaryApp, idx: usize) -> Option<(Arc<Document>, u64)> {
     prune(app);
     let d = app.ui.dialogs.last().filter(|d| owns(&d.fields))?;
     let t = target(&d.fields).ok()?;
@@ -139,7 +139,7 @@ pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Do
     }
     let key = (egui::Id::new((t.document.0, t.revision, d.id, t.kind.paragraph(), t.id, &color)).value() & ((1 << 60) - 1)) | (1 << 60);
     if app.text_style_preview.as_ref().map(|p| p.key) != Some(key) {
-        let shown = photocraft_engine::type_styles_cmds::preview_options(&st.doc, &json!({"id": t.id, "attrs": {"color": color}}), t.kind.paragraph())
+        let shown = sary_engine::type_styles_cmds::preview_options(&st.doc, &json!({"id": t.id, "attrs": {"color": color}}), t.kind.paragraph())
             .map(Arc::new)
             .map_err(|e| e.to_string());
         if let Err(error) = &shown {

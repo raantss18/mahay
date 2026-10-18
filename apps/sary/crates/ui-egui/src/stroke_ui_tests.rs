@@ -2,14 +2,14 @@ use serde_json::json;
 
 use super::*;
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
     app.run("file.new", json!({"width": 40, "height": 30, "background": "transparent"})).unwrap();
     app.run("tools.setColors", json!({"foreground": "#ff0000", "background": "#0000ff"})).unwrap();
     app
 }
 
-fn pixel(app: &PhotocraftApp, x: i32, y: i32) -> [f32; 4] {
+fn pixel(app: &SaryApp, x: i32, y: i32) -> [f32; 4] {
     let st = app.session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().rgba(x, y)
 }
@@ -33,7 +33,7 @@ fn menu_and_canvas_invocations_open_options_but_explicit_params_run_directly() {
     assert!(app.ui.dialogs.is_empty(), "explicit params must not show a modal dialog");
     assert!(pixel(&app, 10, 15)[1] > 0.98);
 
-    let mut empty = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    let mut empty = SaryApp::new(sary_engine::Session::new(), Default::default());
     assert!(crate::menus::invoke(&mut empty, &ctx, COMMAND, json!({})).is_err());
     assert!(empty.ui.dialogs.is_empty());
 }
@@ -92,9 +92,9 @@ fn preferences_remember_all_choices_and_reject_corrupt_values() {
     }
     crate::dialogs::confirm(&mut app, id).unwrap();
     let saved = app.session.prefs_to_json();
-    let mut restored = photocraft_engine::Session::new();
+    let mut restored = sary_engine::Session::new();
     restored.load_prefs_json(&saved).unwrap();
-    let mut again = PhotocraftApp::new(restored, Default::default());
+    let mut again = SaryApp::new(restored, Default::default());
     again.run("file.new", json!({"width": 40, "height": 30, "background": "transparent"})).unwrap();
     again.run("tools.setColors", json!({"foreground": "#ff0000"})).unwrap();
     let remembered = fields(&again);
@@ -150,7 +150,7 @@ fn stroke_dialog_labels_are_translated_in_every_catalog() {
     }
 }
 
-/// The Stroke dialog's colour swatch opens PhotoCraft's Color Picker on the stroke colour (as in
+/// The Stroke dialog's colour swatch opens Sary's Color Picker on the stroke colour (as in
 /// Photoshop), not egui's compact popup; OK sets the stroke colour, not the foreground, and the
 /// stroke is drawn in it.
 #[test]
@@ -158,7 +158,7 @@ fn the_color_swatch_opens_the_color_picker() {
     use egui_kittest::Harness;
     use egui_kittest::kittest::Queryable;
     let mut h = Harness::builder().with_size(egui::vec2(1280.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
         app()
     });
     h.run_steps(6);
@@ -171,7 +171,7 @@ fn the_color_swatch_opens_the_color_picker() {
     h.get_by_label("Stroke color").click();
     h.run_steps(4);
     let picker = crate::color_picker_ui::top(h.state()).expect("the swatch opens the Color Picker");
-    let field = |h: &Harness<'_, PhotocraftApp>, d: u64, k: &str| h.state().ui.dialogs.iter().find(|x| x.id == d).and_then(|x| x.fields.get(k).cloned());
+    let field = |h: &Harness<'_, SaryApp>, d: u64, k: &str| h.state().ui.dialogs.iter().find(|x| x.id == d).and_then(|x| x.fields.get(k).cloned());
     assert_eq!(field(&h, picker, "color"), Some(json!("#20a040")));
     assert_eq!(field(&h, picker, "__label"), Some(json!("Color Picker (Stroke Color)")));
     assert!(!egui::Popup::is_any_open(&h.ctx), "no egui colour popup");

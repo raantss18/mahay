@@ -2,7 +2,7 @@
 //! mode, so they composite as the same colour painted on a pixel layer does (#1905).
 
 use crate::Session;
-use photocraft_doc::{ColorMode, Fill, LayerContent};
+use sary_doc::{ColorMode, Fill, LayerContent};
 use serde_json::{Value, json};
 
 const BLUE: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
@@ -43,7 +43,7 @@ fn active_fill(s: &Session) -> Fill {
     }
 }
 
-fn fill_colors(f: &Fill) -> Vec<photocraft_doc::Color> {
+fn fill_colors(f: &Fill) -> Vec<sary_doc::Color> {
     match f {
         Fill::Solid(c) => vec![*c],
         Fill::Gradient { stops, .. } => stops.iter().map(|s| s.1).collect(),
@@ -113,7 +113,7 @@ fn gradient_edits_keep_colours_in_the_document_mode() {
 fn rgb_documents_keep_rgb_fill_colours() {
     let mut s = session("rgb", 8);
     s.execute("layer.newFillLayer.solidColor", json!({"color": "#0000ff"})).unwrap();
-    assert_eq!(active_fill(&s), Fill::Solid(photocraft_doc::Color::rgb(0.0, 0.0, 1.0)));
+    assert_eq!(active_fill(&s), Fill::Solid(sary_doc::Color::rgb(0.0, 0.0, 1.0)));
     assert!(close(pixel(&mut s, 10, 10), BLUE, 1e-6));
 }
 

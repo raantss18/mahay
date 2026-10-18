@@ -1,6 +1,6 @@
 //! Measurement tools share the engine's PDF user-space geometry and scale semantics.
 use crate::{Args, Automation, Result, ToolError, failed};
-use pdfcraft_engine::{
+use taratasy_engine::{
     Edit, Style,
     measure::{self, Kind, NewMeasurement, Scale},
 };

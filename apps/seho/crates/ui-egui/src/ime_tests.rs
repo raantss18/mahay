@@ -7,7 +7,7 @@ use egui::{Event, FontId, ImeEvent};
 use serde_json::json;
 
 use crate::{Services, SlideApp};
-use deckcraft_engine::Session;
+use seho_engine::Session;
 
 fn harness(session: Session) -> egui_kittest::Harness<'static, SlideApp> {
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1280.0, 800.0)).build_ui_state(
@@ -58,7 +58,7 @@ fn korean_composes_in_a_slide_text_box() {
         assert_eq!(title_text(h.state()), pre, "the preedit is shown in place, replacing the last");
         assert_eq!(undo_len(h.state()), undo0, "no undo step while composing");
         let st = h.state().session.active().unwrap();
-        assert!(!deckcraft_engine::cmd::text::composition_underlines(st).is_empty(), "underlined while composing");
+        assert!(!seho_engine::cmd::text::composition_underlines(st).is_empty(), "underlined while composing");
     }
     h.run_steps(1);
     let ime = h.output().platform_output.ime.unwrap();
@@ -67,7 +67,7 @@ fn korean_composes_in_a_slide_text_box() {
     h.run_steps(2);
     assert_eq!(title_text(h.state()), "한글");
     assert!(h.state().session.active().unwrap().composition.is_none());
-    assert!(deckcraft_engine::cmd::text::composition_underlines(h.state().session.active().unwrap()).is_empty());
+    assert!(seho_engine::cmd::text::composition_underlines(h.state().session.active().unwrap()).is_empty());
     assert_eq!(undo_len(h.state()), undo0 + 1, "the composition is one undo step");
 
     // Escape cancels a composition: an empty preedit, and the text is as it was.
@@ -91,7 +91,7 @@ fn japanese_conversion_shows_the_active_part() {
     h.state_mut().run("text.edit", json!({"id": title})).unwrap();
     h.event(Event::Ime(ImeEvent::Preedit { text: "日本ご".into(), active_range_chars: Some(2..3) }));
     h.run_steps(2);
-    let u = deckcraft_engine::cmd::text::composition_underlines(h.state().session.active().unwrap());
+    let u = seho_engine::cmd::text::composition_underlines(h.state().session.active().unwrap());
     assert_eq!(u.iter().filter(|x| x.2).count(), 1, "{u:?}");
     let undo0 = undo_len(h.state());
     h.key_press(egui::Key::End);
@@ -168,7 +168,7 @@ fn korean_composes_in_the_notes_pane() {
 /// Does some font on this machine (embedded or installed) draw every letter of `s`? Machines
 /// without a Korean or Chinese font (a bare Linux runner) can't draw it in the interface either.
 fn system_has(s: &str) -> bool {
-    s.chars().filter(|c| !c.is_whitespace()).all(|c| deckcraft_fonts::FontDb::global().fallback_for(c, u32::MAX).is_some_and(|f| !f.is_color()))
+    s.chars().filter(|c| !c.is_whitespace()).all(|c| seho_fonts::FontDb::global().fallback_for(c, u32::MAX).is_some_and(|f| !f.is_color()))
 }
 
 /// #101: a Korean file name, title, notes and comments, a Japanese slide and a Chinese section are

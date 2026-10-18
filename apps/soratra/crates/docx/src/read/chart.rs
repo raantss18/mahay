@@ -7,9 +7,9 @@
 
 use std::f64::consts::{FRAC_PI_2, TAU};
 
-use wordcraft_doc::graphic::{GraphicItem, PathSeg, TextAlign};
-use wordcraft_doc::para::ShapeKind;
-use wordcraft_doc::props::Rgb;
+use soratra_doc::graphic::{GraphicItem, PathSeg, TextAlign};
+use soratra_doc::para::ShapeKind;
+use soratra_doc::props::Rgb;
 
 use super::drawing_color::{fill_colour, slot};
 use crate::units::{int, measure};
@@ -87,7 +87,7 @@ fn title_block(out: &mut Vec<GraphicItem>, t: &str, area: Rect) -> Rect {
     Rect { y: area.y + lh + PAD, h: (area.h - lh - PAD).max(1.0), ..area }
 }
 
-/// A chart whose plot area holds only chart types WordCraft doesn't draw (radar, stock…): its
+/// A chart whose plot area holds only chart types Soratra doesn't draw (radar, stock…): its
 /// frame with a light border, its title and a line saying which type it is, so it isn't blank
 /// space. Nothing when the plot area has no chart type at all, or a supported one with nothing
 /// to draw.
@@ -111,7 +111,7 @@ fn placeholder(out: &mut Vec<GraphicItem>, space: &El, theme: &[Rgb], w: f32, h:
     text(out, line, &clip_text(&msg, area.w, size), size, TextAlign::Center, false);
 }
 
-/// What a placeholder calls a chart type element WordCraft doesn't draw.
+/// What a placeholder calls a chart type element Soratra doesn't draw.
 fn unsupported_name(name: &str) -> &'static str {
     match name {
         "c:radarChart" => "Radar chart",
@@ -1696,7 +1696,7 @@ fn arc(segs: &mut Vec<PathSeg>, (cx, cy, r): (f64, f64, f64), a: f64, b: f64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_doc::THEME_COLORS;
+    use soratra_doc::THEME_COLORS;
 
     const NS: &str =
         r#"xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main""#;

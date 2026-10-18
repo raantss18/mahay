@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
+use sary_color::{ColorMode, PixelFormat, SampleType};
 #[test]
 fn shared_interpolation_matches_original_at_all_depths_and_edges() {
     let bounds = Rect::new(-13, -9, 39, 26);

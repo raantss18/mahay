@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://getartcraft.com/">
+  <a href="https://github.com/raantss18/mahay">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
+      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/mahay-logo-white.svg">
+      <img alt="Mahay" src="docs/brand/mahay-logo.svg" width="200">
     </picture>
   </a>
 </p>
 
-<h1 align="center">DeckCraft</h1>
+<h1 align="center">Seho</h1>
 
 <p align="center">
   <b>Presentations and slide shows; an open-source, clean-room reimplementation of Microsoft PowerPoint, rebuilt in pure Rust.</b>
@@ -28,22 +28,22 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://discord.gg/mahay"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/deckcraft"><b>DeckCraft on getartcraft.com</b></a> ·
-  <a href="https://getartcraft.com/">ArtCraft</a> ·
-  <a href="https://getartcraft.com/apps">All Crafting Apps</a>
+  <a href="https://github.com/raantss18/mahay"><b>Seho on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay</a> ·
+  <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
 
 > [!NOTE]
-> **ArtCraft is a community of artists from all walks of life.** Painters, photographers,
+> **Mahay is a community of artists from all walks of life.** Painters, photographers,
 > filmmakers, illustrators, designers, animators, hobbyists, and people who picked up a pencil
-> last week. If you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/artcraft).**
+> last week. If you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/mahay).**
 
 <p align="center">
-  <img alt="DeckCraft editing a slide: ribbon, slide thumbnails with sections, a process diagram on the canvas, notes and status bar" src="docs/images/editor.png" width="900">
+  <img alt="Seho editing a slide: ribbon, slide thumbnails with sections, a process diagram on the canvas, notes and status bar" src="docs/images/editor.png" width="900">
 </p>
 
 <p align="center">
@@ -52,13 +52,13 @@
   <a href="#agents-cli-and-mcp">Agents, CLI and MCP</a> ·
   <a href="#roadmap">Roadmap</a> ·
   <a href="#downloads">Downloads</a> ·
-  <a href="#the-crafting-apps">The Crafting Apps</a> ·
+  <a href="#the-crafting-apps">The Mahay apps</a> ·
   <a href="#license-and-credits">License</a>
 </p>
 
 ## What works today
 
-DeckCraft is in alpha, heading for beta (see the [roadmap](ROADMAP.md)).
+Seho is in alpha, heading for beta (see the [roadmap](ROADMAP.md)).
 Today it can:
 
 - **Make decks**: slide masters and eleven layouts with placeholders that inherit position and
@@ -86,79 +86,79 @@ Today it can:
   </tr>
   <tr>
     <td width="50%"><img alt="Slide Sorter view with transitions under each slide" src="docs/images/slide-sorter.png"><br><sub>Slide Sorter with each slide's transition</sub></td>
-    <td width="50%"><img alt="DeckCraft in dark mode showing a chart slide" src="docs/images/dark-mode.png"><br><sub>Dark mode, with a native chart</sub></td>
+    <td width="50%"><img alt="Seho in dark mode showing a chart slide" src="docs/images/dark-mode.png"><br><sub>Dark mode, with a native chart</sub></td>
   </tr>
 </table>
 
 <p align="center">
   <img alt="All eight slides of the Northern Lights sample deck" src="docs/images/sample-deck.png" width="900"><br>
-  <sub>The built-in sample deck, rendered by <code>deckcraft-cli render --sample --all</code></sub>
+  <sub>The built-in sample deck, rendered by <code>seho-cli render --sample --all</code></sub>
 </p>
 
 ## Getting started
 
-PDF export uses the shared `craft-pdf` writer with import features disabled. See
+PDF export uses the shared `mahay-pdf` writer with import features disabled. See
 [`crates/pdf/README.md`](crates/pdf/README.md) for the dependency and validation requirements.
 
 ```sh
-git clone https://github.com/storytold/deckcraft
-cd deckcraft
-cargo run --release -p deckcraft-cli -- render --sample --all --scale 1 out/
+git clone https://github.com/raantss18/mahay
+cd seho
+cargo run --release -p seho-cli -- render --sample --all --scale 1 out/
 ```
 
 On Linux, the build also needs the ALSA headers for slide-show sound: `alsa-lib-devel` on Fedora,
 `libasound2-dev` on Debian and Ubuntu, `alsa-lib` on Arch. Without them it stops at `alsa-sys`.
 
-Fonts come from [craft-fonts](https://github.com/storytold/craft-fonts): clone it next to this repo
-(`../craft-fonts`) and local builds pick it up automatically; without it DeckCraft uses your system
+Fonts come from [mahay-fonts](https://github.com/raantss18/mahay): clone it next to this repo
+(`../mahay-fonts`) and local builds pick it up automatically; without it Seho uses your system
 fonts.
 
-Each [GitHub release](https://github.com/storytold/deckcraft/releases) has ready-made builds, on Linux as
+Each [GitHub release](https://github.com/raantss18/mahay/releases) has ready-made builds, on Linux as
 an AppImage, a `.deb`, an `.rpm` and a tarball. On Gentoo, the community [::snakebyte
 overlay](https://github.com/switch87/snakebyte-overlay) packages the Linux release as
-`app-office/deckcraft-bin` (not maintained by the DeckCraft team):
+`app-office/seho-bin` (not maintained by the Seho team):
 
 ```sh
 eselect repository add snakebyte git https://github.com/switch87/snakebyte-overlay.git
 emaint sync -r snakebyte
-echo 'app-office/deckcraft-bin ~amd64' >> /etc/portage/package.accept_keywords/deckcraft
-emerge --ask app-office/deckcraft-bin
+echo 'app-office/seho-bin ~amd64' >> /etc/portage/package.accept_keywords/seho
+emerge --ask app-office/seho-bin
 ```
 
 ### Logs
 
-The desktop app writes its `log` records to standard error and to `logs/deckcraft.log` in the
-settings directory, beside `ui.json` and `prefs.json` (Linux `~/.config/deckcraft/logs/`, or
-`$XDG_CONFIG_HOME/deckcraft/logs/`; macOS `~/Library/Application Support/DeckCraft/logs/`; Windows
-`%APPDATA%\DeckCraft\logs\`). A start from a desktop menu or the Dock has no terminal, so this file
+The desktop app writes its `log` records to standard error and to `logs/seho.log` in the
+settings directory, beside `ui.json` and `prefs.json` (Linux `~/.config/seho/logs/`, or
+`$XDG_CONFIG_HOME/seho/logs/`; macOS `~/Library/Application Support/Seho/logs/`; Windows
+`%APPDATA%\Seho\logs\`). A start from a desktop menu or the Dock has no terminal, so this file
 is what to attach to a bug report: the crash guard's panic report, a failed crash-recovery save,
 PowerPoint parts skipped on import and audio output problems land there. Each launch moves the
-previous log to `deckcraft.1.log` (and that one to `deckcraft.2.log`), so the log of a run that
+previous log to `seho.1.log` (and that one to `seho.2.log`), so the log of a run that
 crashed survives the next start. The file stops growing at 16 MiB. `--version` writes no file.
 
 | Variable | Effect |
 |---|---|
-| `RUST_LOG` | Log levels for standard error and the log file. Default: `info` for DeckCraft's own crates, `warn` for everything else. env_logger-style directives replace that, e.g. `RUST_LOG=debug`, `RUST_LOG=warn,deckcraft_pptx=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*` covers every target starting with it (`deckcraft*=debug`). |
+| `RUST_LOG` | Log levels for standard error and the log file. Default: `info` for Seho's own crates, `warn` for everything else. env_logger-style directives replace that, e.g. `RUST_LOG=debug`, `RUST_LOG=warn,seho_pptx=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*` covers every target starting with it (`seho*=debug`). |
 
-The logger is `apps/deckcraft/src/logging.rs`; the realtime audio callback does not log. The web
+The logger is `apps/seho/src/logging.rs`; the realtime audio callback does not log. The web
 app logs to the browser console instead.
 
 ## Agents, CLI and MCP
 
-Every action in DeckCraft is a command with a stable id, so people, scripts and AI agents use the
+Every action in Seho is a command with a stable id, so people, scripts and AI agents use the
 same verbs:
 
 ```sh
-deckcraft-cli commands format.          # list commands
-deckcraft-cli run --sample --cmd 'slide.new={"layout":"titleOnly","title":"Hello"}' --save hello.deckcraft
-deckcraft-cli mcp                       # MCP server over stdio (headless)
-deckcraft-cli mcp --connect 7990        # drive the running app (deckcraft --control 7990)
-deckcraft-cli mcp --automation-read-root DIR --automation-write-root DIR   # confine the headless agent to folders
+seho-cli commands format.          # list commands
+seho-cli run --sample --cmd 'slide.new={"layout":"titleOnly","title":"Hello"}' --save hello.seho
+seho-cli mcp                       # MCP server over stdio (headless)
+seho-cli mcp --connect 7990        # drive the running app (seho --control 7990)
+seho-cli mcp --automation-read-root DIR --automation-write-root DIR   # confine the headless agent to folders
 ```
 
 ## Roadmap
 
-DeckCraft is in **alpha**. It covers **84% of PowerPoint's features by breadth** (92% of the core
+Seho is in **alpha**. It covers **84% of PowerPoint's features by breadth** (92% of the core
 ones, measured) and is about **55% of the way to replacing PowerPoint for real work** (estimated).
 See [ROADMAP.md](ROADMAP.md) for the stage, numbers by dimension and what's next,
 [docs/target-app-parity.md](docs/target-app-parity.md) for the full assessment,
@@ -167,15 +167,15 @@ See [ROADMAP.md](ROADMAP.md) for the stage, numbers by dimension and what's next
 
 ## Downloads
 
-**Download DeckCraft** from GitHub: the [latest release](https://github.com/storytold/deckcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/deckcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
+**Download Seho** from GitHub: the [latest release](https://github.com/raantss18/mahay/releases/latest) has every build listed below, and [all releases](https://github.com/raantss18/mahay/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
 ### Windows
 
 | Build | Installer | Portable |
 |---|---|---|
-| x64 (64-bit Intel/AMD) | `deckcraft-<ver>-windows-x64.msi` | `deckcraft-<ver>-windows-x64-portable.zip` |
-| arm64 (Snapdragon and other ARM PCs) | `deckcraft-<ver>-windows-arm64.msi` | `deckcraft-<ver>-windows-arm64-portable.zip` |
-| x86 (32-bit) | `deckcraft-<ver>-windows-x86.msi` | `deckcraft-<ver>-windows-x86-portable.zip` |
+| x64 (64-bit Intel/AMD) | `seho-<ver>-windows-x64.msi` | `seho-<ver>-windows-x64-portable.zip` |
+| arm64 (Snapdragon and other ARM PCs) | `seho-<ver>-windows-arm64.msi` | `seho-<ver>-windows-arm64-portable.zip` |
+| x86 (32-bit) | `seho-<ver>-windows-x86.msi` | `seho-<ver>-windows-x86-portable.zip` |
 
 Installers and executables are code-signed.
 
@@ -187,7 +187,7 @@ PowerShell, from the folder containing the executable:
 
 ```powershell
 $env:WGPU_BACKEND = "vulkan"
-& .\deckcraft.exe
+& .\seho.exe
 Remove-Item Env:WGPU_BACKEND                     # restore the default for later launches
 ```
 
@@ -202,56 +202,56 @@ DirectX 12 shaders are compiled with FXC, which is part of Windows, so no `dxcom
 
 | Build | File | Notes |
 |---|---|---|
-| App, universal (Apple silicon + Intel) | `deckcraft-<ver>-macos-universal.dmg` | Signed and notarized |
-| Command-line tool, universal | `deckcraft-cli-<ver>-macos-universal.zip` | Signed and notarized |
+| App, universal (Apple silicon + Intel) | `seho-<ver>-macos-universal.dmg` | Signed and notarized |
+| Command-line tool, universal | `seho-cli-<ver>-macos-universal.zip` | Signed and notarized |
 
 ### Linux
 
 | Format | x86_64 | aarch64 (ARM64) | Notes |
 |---|---|---|---|
-| AppImage | `deckcraft-<ver>-linux-x86_64.AppImage` | `deckcraft-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
-| Flatpak | `deckcraft-<ver>-linux-x86_64.flatpak` | `deckcraft-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
-| Debian/Ubuntu | `deckcraft-<ver>-linux-x86_64.deb` | `deckcraft-<ver>-linux-aarch64.deb` | |
-| Fedora/RHEL/openSUSE | `deckcraft-<ver>-linux-x86_64.rpm` | `deckcraft-<ver>-linux-aarch64.rpm` | |
-| Tarball | `deckcraft-<ver>-linux-x86_64.tar.gz` | `deckcraft-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
+| AppImage | `seho-<ver>-linux-x86_64.AppImage` | `seho-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
+| Flatpak | `seho-<ver>-linux-x86_64.flatpak` | `seho-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
+| Debian/Ubuntu | `seho-<ver>-linux-x86_64.deb` | `seho-<ver>-linux-aarch64.deb` | |
+| Fedora/RHEL/openSUSE | `seho-<ver>-linux-x86_64.rpm` | `seho-<ver>-linux-aarch64.rpm` | |
+| Tarball | `seho-<ver>-linux-x86_64.tar.gz` | `seho-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
 
-RISC-V 64 (riscv64): `deckcraft-<ver>-linux-riscv64.tar.gz`, a tarball only (cross-compiled; needs glibc 2.39+, e.g. Ubuntu 24.04+).
+RISC-V 64 (riscv64): `seho-<ver>-linux-riscv64.tar.gz`, a tarball only (cross-compiled; needs glibc 2.39+, e.g. Ubuntu 24.04+).
 
 ### FreeBSD
 
 | Build | File |
 |---|---|
-| x86_64 | `deckcraft-<ver>-freebsd-x86_64.tar.gz` |
+| x86_64 | `seho-<ver>-freebsd-x86_64.tar.gz` |
 
 ### Web (WebAssembly)
 
 | Build | File | Notes |
 |---|---|---|
-| Static site | `deckcraft-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
+| Static site | `seho-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
 
-## The Crafting Apps
+## The Mahay apps
 
-DeckCraft is one of the **Crafting Apps**: free, open-source creative tools from the
-[ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
+Seho is one of the **Mahay apps**: free, open-source creative tools from the
+[Mahay](https://github.com/raantss18/mahay) team, each written from scratch in Rust and each able to
 stand on its own.
 
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.photocraft.png" alt="" width="32" height="32"> | **PhotoCraft** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/storytold/photocraft) | [Website](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.vectorcraft.png" alt="" width="32" height="32"> | **VectorCraft** | Vector illustration | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://getartcraft.com/apps/vectorcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.filmcraft.png" alt="" width="32" height="32"> | **FilmCraft** | Video editing, color and sound | [GitHub](https://github.com/storytold/filmcraft) | [Website](https://getartcraft.com/apps/filmcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.lightcraft.png" alt="" width="32" height="32"> | **LightCraft** | Photo library and raw development | [GitHub](https://github.com/storytold/lightcraft) | [Website](https://getartcraft.com/apps/lightcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | Page layout and publishing | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/deckcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.deckcraft.png" alt="" width="32" height="32"> | **DeckCraft** | **Presentations and slide shows · you are here** | [GitHub](https://github.com/storytold/deckcraft) | [Website](https://getartcraft.com/apps/deckcraft) |
+| <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tselatra/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tselatra.png" alt="" width="32" height="32"> | **Tselatra** | Motion graphics and visual effects | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/pejy/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pejy.png" alt="" width="32" height="32"> | **Pejy** | Page layout and publishing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/seho/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.seho.png" alt="" width="32" height="32"> | **Seho** | **Presentations and slide shows · you are here** | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 
-And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
+And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and video studio for artists who want real control.
 
 <br>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://discord.gg/mahay"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <h3 align="center">Come make things with us</h3>
@@ -264,31 +264,31 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
-  <a href="https://getartcraft.com/">getartcraft.com</a> ·
-  <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/deckcraft">DeckCraft</a>
+  <a href="https://discord.gg/mahay"><b>discord.gg/mahay</b></a> ·
+  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
+  <a href="https://github.com/raantss18/mahay">Seho</a>
 </p>
 
 ## License and credits
 
-DeckCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the DeckCraft contributors. Required notices are in [NOTICE](NOTICE).
+Seho is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+Copyright (c) 2026 Mahay Team and the Seho contributors. Required notices are in [NOTICE](NOTICE).
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
 with its author, source and license in [ATTRIBUTION.md](ATTRIBUTION.md).
 
-DeckCraft's themes, layouts, shape geometry, icons and sample decks are original work, drawn or
+Seho's themes, layouts, shape geometry, icons and sample decks are original work, drawn or
 generated in code; no Microsoft artwork, fonts, themes or templates are used.
 
-The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
-ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and DeckCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+The Mahay name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
+Mahay Team and are not covered by this license. They may be used only unmodified, and only as
+part of this repository and Seho, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 Forks and modified versions must remove them.
 
-<sub>Microsoft and PowerPoint are trademarks of the Microsoft group of companies. Adobe, Photoshop, Illustrator, Premiere Pro, Lightroom, Acrobat, After Effects and InDesign are trademarks or registered trademarks of Adobe Inc. in the United States and/or other countries. DeckCraft is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Microsoft Corporation or Adobe Inc.; these names are used only to describe the workflows it is compatible with.</sub>
+<sub>Microsoft and PowerPoint are trademarks of the Microsoft group of companies. Adobe, Photoshop, Illustrator, Premiere Pro, Lightroom, Acrobat, After Effects and InDesign are trademarks or registered trademarks of Adobe Inc. in the United States and/or other countries. Seho is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Microsoft Corporation or Adobe Inc.; these names are used only to describe the workflows it is compatible with.</sub>
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
-  <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
+  <a href="https://github.com/raantss18/mahay"><img alt="Mahay" src="docs/brand/mahay-mark.svg" width="28"></a><br>
+  <sub>Made by the <a href="https://github.com/raantss18/mahay">Mahay</a> team and community.</sub>
 </p>

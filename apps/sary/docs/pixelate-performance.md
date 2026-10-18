@@ -35,12 +35,12 @@ Every pair was compared with `cmp` over the complete output, serialized as littl
 Build the same example against the base and the changed tree. Keep their Cargo target directories separate:
 
 ```sh
-git worktree add --detach ../photocraft-pixelate-base 7722172585a01cbdb93c06f0f5ff2634fcb17999
-cp crates/algo/examples/bench_pixelate.rs ../photocraft-pixelate-base/crates/algo/examples/
-(cd ../photocraft-pixelate-base && CARGO_TARGET_DIR=target cargo build --release -p photocraft-algo --example bench_pixelate)
-CARGO_TARGET_DIR=target cargo build --release -p photocraft-algo --example bench_pixelate
+git worktree add --detach ../sary-pixelate-base 7722172585a01cbdb93c06f0f5ff2634fcb17999
+cp crates/algo/examples/bench_pixelate.rs ../sary-pixelate-base/crates/algo/examples/
+(cd ../sary-pixelate-base && CARGO_TARGET_DIR=target cargo build --release -p sary-algo --example bench_pixelate)
+CARGO_TARGET_DIR=target cargo build --release -p sary-algo --example bench_pixelate
 
-RAYON_NUM_THREADS=16 ../photocraft-pixelate-base/target/release/examples/bench_pixelate facet 6000 4000 u8 1 before.bin rgb
+RAYON_NUM_THREADS=16 ../sary-pixelate-base/target/release/examples/bench_pixelate facet 6000 4000 u8 1 before.bin rgb
 RAYON_NUM_THREADS=16 target/release/examples/bench_pixelate facet 6000 4000 u8 1 after.bin rgb
 cmp before.bin after.bin
 sha256sum before.bin after.bin

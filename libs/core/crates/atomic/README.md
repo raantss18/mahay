@@ -1,12 +1,12 @@
-# Craft Atomic
+# Mahay Atomic
 
-`craft-atomic` provides crash-safe atomic file writing and replacement for the Craft suite.
+`mahay-atomic` provides crash-safe atomic file writing and replacement for the Mahay suite.
 
-Extracted from the storage engine in **PhotoCraft** (refs #2, #14), it guarantees that a failed save or abnormal termination never leaves user documents truncated, corrupted, or missing.
+Extracted from the storage engine in **Sary** (refs #2, #14), it guarantees that a failed save or abnormal termination never leaves user documents truncated, corrupted, or missing.
 
 ## Core Guarantees: Atomicity vs. Durability
  
-1. **Atomicity (All-or-Nothing Replacement)**: `atomic_write` never truncates or overwrites the destination in place. It stages content in a hidden temporary file beside the destination (`.{stem}.{pid}-{n}.craft_tmp`), guaranteeing same-volume rename semantics (`EXDEV`-free). An external reader never sees a partial write. If an error occurs during staging or rename, the destination retains its prior bytes and the staging file is unlinked in user space. An abnormal process exit (e.g. `SIGKILL`, crash, or power loss) bypasses user-space cleanup and leaves the staging file on disk; sweeping orphaned staging files is delegated to consuming application recovery routines. The destination file itself is never corrupted.
+1. **Atomicity (All-or-Nothing Replacement)**: `atomic_write` never truncates or overwrites the destination in place. It stages content in a hidden temporary file beside the destination (`.{stem}.{pid}-{n}.mahay_tmp`), guaranteeing same-volume rename semantics (`EXDEV`-free). An external reader never sees a partial write. If an error occurs during staging or rename, the destination retains its prior bytes and the staging file is unlinked in user space. An abnormal process exit (e.g. `SIGKILL`, crash, or power loss) bypasses user-space cleanup and leaves the staging file on disk; sweeping orphaned staging files is delegated to consuming application recovery routines. The destination file itself is never corrupted.
 2. **Durability & Ordering Boundaries**:
    - **Content Flush**: Before rename, staging file bytes are flushed to physical storage media (`sync_file`, issuing `F_FULLFSYNC` on macOS/APFS with SMB `fsync` fallback).
    - **Directory Flush (Unix)**: After rename, syncing the parent directory table (`sync_dir`) is attempted on a best-effort basis. If directory sync fails, the error is ignored because the rename has already committed and the destination has already been replaced.
@@ -16,7 +16,7 @@ Extracted from the storage engine in **PhotoCraft** (refs #2, #14), it guarantee
 5. **Safe Exclusive Creation (`write_new`)**: Uses hard links where supported, or exclusive create (`O_EXCL`), guaranteeing that an existing file is never replaced under race conditions.
 6. **Fault-Injection Testability**: The `AtomicFs` trait enables unit and integration test suites to simulate disk-full, locked files, and permission failures without physical disk I/O.
 
-A replaced file is a new file (a new inode), so its owner and group, extended attributes and ACLs, Finder tags, alternate data streams and hard links are not kept; a crash between the write and the rename can leave a `.<name>.<pid>-<n>.craft_tmp` file beside the destination.
+A replaced file is a new file (a new inode), so its owner and group, extended attributes and ACLs, Finder tags, alternate data streams and hard links are not kept; a crash between the write and the rename can leave a `.<name>.<pid>-<n>.mahay_tmp` file beside the destination.
 
 ## Usage
 
@@ -24,7 +24,7 @@ A replaced file is a new file (a new inode), so its owner and group, extended at
 
 ```rust
 use std::path::Path;
-use craft_atomic::atomic_write;
+use mahay_atomic::atomic_write;
 
 let path = Path::new("project.craft");
 let data = b"precious document state";
@@ -39,7 +39,7 @@ atomic_write(path, data).expect("safe atomic write");
 ```rust
 use std::io::Write;
 use std::path::Path;
-use craft_atomic::atomic_write_with;
+use mahay_atomic::atomic_write_with;
 
 let path = Path::new("large_project.craft");
 
@@ -54,7 +54,7 @@ atomic_write_with(path, |file| {
 
 ```rust
 use std::path::Path;
-use craft_atomic::write_new;
+use mahay_atomic::write_new;
 
 let path = Path::new("export.png");
 
@@ -77,7 +77,7 @@ credentials and recovery data must opt into private creation **before writing an
 
 ```rust
 use std::path::Path;
-use craft_atomic::{NewFilePermissions, WriteOptions};
+use mahay_atomic::{NewFilePermissions, WriteOptions};
 
 fn save_private_data() -> std::io::Result<()> {
     let private = WriteOptions::default().with_new_file_permissions(NewFilePermissions::Private);
@@ -89,7 +89,7 @@ fn save_private_data() -> std::io::Result<()> {
 `WriteOptions` and `NewFilePermissions` are non-exhaustive: start with `default()` and select
 the policy with the builder, so future options do not break callers. Downstream matches on the
 enum must include a fallback arm. Byte and streaming methods support both policies.
-`craft-settings` explicitly chooses `Private` for its config and backup writes.
+`mahay-settings` explicitly chooses `Private` for its config and backup writes.
 
 Normal stages can be readable (or writable) by others allowed by the directory, umask and ACL
 while the callback is running, and can remain after a crash. Choose `Private` up front for
@@ -119,7 +119,7 @@ The options API supports the same injection for byte and streaming writes:
 
 ```rust
 use std::path::Path;
-use craft_atomic::{AtomicFs, NewFilePermissions, RenameRetry, WriteOptions};
+use mahay_atomic::{AtomicFs, NewFilePermissions, RenameRetry, WriteOptions};
 
 fn save_with_faults(fs: &dyn AtomicFs, path: &Path) -> std::io::Result<()> {
     let options = WriteOptions::default().with_new_file_permissions(NewFilePermissions::Private);

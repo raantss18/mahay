@@ -2,8 +2,8 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use super::*;
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_raster::Surface;
 use rayon::prelude::*;
 use serde_json::json;
 use std::time::Instant;
@@ -109,11 +109,11 @@ fn env_number(name: &str, default: u32) -> u32 {
 
 #[allow(clippy::panic)] // Invalid benchmark configuration should fail visibly.
 fn cases() -> Vec<(f32, f32)> {
-    let spec = std::env::var("PHOTOCRAFT_MOTION_CASES")
+    let spec = std::env::var("SARY_MOTION_CASES")
         .unwrap_or_else(|_| "30:10,30:50,30:64,30:128,30:256,30:500,30:1000,30:2000,0:256,0:1000,0:2000,90:256,90:1000,90:2000,45:256,45:1000,45:2000".into());
     spec.split(',')
         .map(|case| {
-            let Some((angle, distance)) = case.trim().split_once(':') else { panic!("expected angle:distance in PHOTOCRAFT_MOTION_CASES") };
+            let Some((angle, distance)) = case.trim().split_once(':') else { panic!("expected angle:distance in SARY_MOTION_CASES") };
             let (Ok(angle), Ok(distance)) = (angle.parse::<f32>(), distance.parse::<f32>()) else { panic!("invalid Motion Blur benchmark case {case}") };
             assert!(angle.is_finite() && (0.5..=2000.0).contains(&distance), "out-of-range benchmark case {case}");
             (angle, distance)
@@ -191,28 +191,28 @@ fn compare(surface: &Surface, area: Rect, angle: f32, distance: f32, runs: usize
     );
 }
 
-/// Reproduce in release with --ignored --nocapture. PHOTOCRAFT_MOTION_WIDTH/HEIGHT default to
-/// 1500/1000; PHOTOCRAFT_MOTION_RUNS defaults to 3; PHOTOCRAFT_MOTION_CASES is comma-separated
-/// angle:distance pairs. PHOTOCRAFT_MOTION_MODE=public measures final dispatch, otherwise forced
-/// FFT is attempted (normal eligibility/memory guards remain). PHOTOCRAFT_MOTION_CHANNELS=1..5
-/// selects Gray, Gray-alpha, RGB, RGBA (default), or CMYK-alpha. PHOTOCRAFT_MOTION_VARIABLE_ALPHA=1
+/// Reproduce in release with --ignored --nocapture. SARY_MOTION_WIDTH/HEIGHT default to
+/// 1500/1000; SARY_MOTION_RUNS defaults to 3; SARY_MOTION_CASES is comma-separated
+/// angle:distance pairs. SARY_MOTION_MODE=public measures final dispatch, otherwise forced
+/// FFT is attempted (normal eligibility/memory guards remain). SARY_MOTION_CHANNELS=1..5
+/// selects Gray, Gray-alpha, RGB, RGBA (default), or CMYK-alpha. SARY_MOTION_VARIABLE_ALPHA=1
 /// enables varying alpha in formats that have alpha. Timings include reads, writes and pruning, excluding
 /// source construction, output comparison, proxy construction, compositing and GPU upload.
 #[test]
 #[ignore = "upstream row kernel versus FFT/full-dispatch release calibration"]
 fn motion_upstream_performance() {
-    let width = env_number("PHOTOCRAFT_MOTION_WIDTH", 1500);
-    let height = env_number("PHOTOCRAFT_MOTION_HEIGHT", 1000);
-    let runs = env_number("PHOTOCRAFT_MOTION_RUNS", 3) as usize;
-    let channels = env_number("PHOTOCRAFT_MOTION_CHANNELS", 4) as usize;
+    let width = env_number("SARY_MOTION_WIDTH", 1500);
+    let height = env_number("SARY_MOTION_HEIGHT", 1000);
+    let runs = env_number("SARY_MOTION_RUNS", 3) as usize;
+    let channels = env_number("SARY_MOTION_CHANNELS", 4) as usize;
     assert!((1..=16384).contains(&width) && (1..=16384).contains(&height));
     assert!((1..=31).contains(&runs));
     assert!((1..=5).contains(&channels));
     let area = Rect::new(0, 0, width as i32, height as i32);
-    let mode = std::env::var("PHOTOCRAFT_MOTION_MODE").unwrap_or_else(|_| "forced_fft".into());
-    assert!(matches!(mode.as_str(), "public" | "forced_fft"), "PHOTOCRAFT_MOTION_MODE must be public or forced_fft");
+    let mode = std::env::var("SARY_MOTION_MODE").unwrap_or_else(|_| "forced_fft".into());
+    assert!(matches!(mode.as_str(), "public" | "forced_fft"), "SARY_MOTION_MODE must be public or forced_fft");
     let forced = mode == "forced_fft";
-    let variable_alpha = matches!(channels, 2 | 4 | 5) && std::env::var("PHOTOCRAFT_MOTION_VARIABLE_ALPHA").is_ok_and(|value| value != "0" && value != "false");
+    let variable_alpha = matches!(channels, 2 | 4 | 5) && std::env::var("SARY_MOTION_VARIABLE_ALPHA").is_ok_and(|value| value != "0" && value != "false");
     println!(
         "{}",
         json!({"event":"motion_upstream_config", "width":width, "height":height, "channels":channels, "runs":runs, "mode":if forced {"forced_fft"} else {"public"}, "variable_alpha":variable_alpha, "rayon_workers":rayon::current_num_threads(), "os":std::env::consts::OS, "arch":std::env::consts::ARCH, "baseline":"merged upstream PR902 motion_rows plus current upstream tiled pipeline", "timing_scope":"source decode/halo reads, filtering, writes, pruning; excludes construction/comparison/UI"})

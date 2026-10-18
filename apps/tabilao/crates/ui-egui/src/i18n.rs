@@ -108,8 +108,8 @@ impl Language {
         }
     }
 
-    pub fn formula_locale(self) -> gridcraft_engine::formula::FormulaLocale {
-        if self == Self::Es { gridcraft_engine::formula::FormulaLocale::Es } else { gridcraft_engine::formula::FormulaLocale::En }
+    pub fn formula_locale(self) -> tabilao_engine::formula::FormulaLocale {
+        if self == Self::Es { tabilao_engine::formula::FormulaLocale::Es } else { tabilao_engine::formula::FormulaLocale::En }
     }
 
     /// Translates an interface label; untranslated labels fall back to English.
@@ -160,7 +160,7 @@ pub fn saved_language(ui_json: &serde_json::Value) -> Option<Language> {
 /// egui context-data key holding the language of the frame being drawn. Widgets that only get a
 /// `Ui` (not the app) read it to translate their labels; [`set_current`] writes it once per frame.
 fn lang_key() -> egui::Id {
-    egui::Id::new("gridcraft.language")
+    egui::Id::new("tabilao.language")
 }
 
 /// The language the current frame is drawing in. `En` when unset.
@@ -411,7 +411,7 @@ const JAPANESE: &[(&str, &str)] = &[
     ("Command\nPalette", "コマンド パレット"),
     ("Agent\nControl", "エージェント制御"),
     ("Action\nJournal", "操作ジャーナル"),
-    ("About\nGridCraft", "GridCraft について"),
+    ("About\nTabilao", "Tabilao について"),
     ("Share", "共有"),
     ("Add Chart\nElement", "グラフ要素を追加"),
     ("Change\nChart Type", "グラフの種類の変更"),
@@ -698,7 +698,7 @@ mod tests {
 
     #[test]
     fn language_commands_switch_and_persist() {
-        let mut app = crate::SheetApp::new(gridcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SheetApp::new(tabilao_engine::Session::default(), Default::default());
         for language in Language::ALL {
             app.run("app.language.set", serde_json::json!({"language": language.code()})).unwrap();
             assert_eq!(app.ui.language, language);

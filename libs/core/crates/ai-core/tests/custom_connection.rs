@@ -1,8 +1,8 @@
 //! u1: the rules for a custom (unlisted, OpenAI-shaped) connection: a named key header, and what
 //! a stored file may carry. The form is `ConnectionDraft`; these tests go through its public API.
 
-use craft_ai_core::connection::ConnectionError;
-use craft_ai_core::{Billing, Connection, ConnectionDraft, Field, KeyChange, Locality};
+use mahay_ai_core::connection::ConnectionError;
+use mahay_ai_core::{Billing, Connection, ConnectionDraft, Field, KeyChange, Locality};
 
 fn custom(endpoint: &str, header: &str) -> ConnectionDraft {
     let mut d = ConnectionDraft::custom();
@@ -97,7 +97,7 @@ fn a_stored_file_with_a_bad_header_name_is_refused_on_validate() {
     c.key_header = Some("host".to_owned());
     assert!(matches!(c.validate(), Err(ConnectionError::KeyHeader(_))));
     c.key_header = Some("x-api-key".to_owned());
-    c.auth = craft_ai_core::Auth::None;
+    c.auth = mahay_ai_core::Auth::None;
     assert!(matches!(c.validate(), Err(ConnectionError::KeyHeader(_))));
 }
 

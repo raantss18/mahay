@@ -26,7 +26,7 @@ jobs:
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
       - run: cargo fmt --check
-      - run: cargo clippy -p craft-ai-core --all-targets --locked -- -D warnings
-      - run: cargo test -p craft-ai-core --locked
+      - run: cargo clippy -p mahay-ai-core --all-targets --locked -- -D warnings
+      - run: cargo test -p mahay-ai-core --locked
       # The model promises to compile for the web.
-      - run: cargo check -p craft-ai-core --target wasm32-unknown-unknown --locked
+      - run: cargo check -p mahay-ai-core --target wasm32-unknown-unknown --locked

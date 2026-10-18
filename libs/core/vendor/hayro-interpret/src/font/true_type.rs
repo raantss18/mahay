@@ -277,7 +277,7 @@ impl EmbeddedKind {
             .or_else(|| standard::get(code))
     }
 
-    /// PdfCraft patch: the glyph name text extraction reads a code as. Without a base encoding
+    /// Taratasy patch: the glyph name text extraction reads a code as. Without a base encoding
     /// a TrueType font's codes are read as WinAnsi, matching pdftotext's output, not as
     /// Standard: OCR engines write the text layer of a scan with WinAnsi codes and no
     /// `/Encoding`, and Standard has no name for ü, ö or ß and gives é (0xE9) as Ø. Glyph
@@ -412,7 +412,7 @@ pub(crate) fn read_widths(dict: &Dict<'_>, descriptor: &Dict<'_>) -> Option<(Vec
     let missing_width = descriptor.get::<f32>(MISSING_WIDTH).unwrap_or(0.0);
 
     if let (Some(fc), Some(lc), Some(w)) = (first_char, last_char, widths_arr) {
-        // PdfCraft patch: simple-font codes are single bytes, so only codes up to 255 get an
+        // Taratasy patch: simple-font codes are single bytes, so only codes up to 255 get an
         // entry (one per code below /FirstChar was pushed: 4294967295 asked for 34 GB). An
         // entry that isn't a number leaves its code missing instead of ending the array, and a
         // /LastChar below /FirstChar means no widths rather than no font.

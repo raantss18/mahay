@@ -2,7 +2,7 @@
 <defs><clipPath id="panel"><rect width="232" height="400"/></clipPath></defs>
 
 <rect width="660" height="400" fill="#efe9dc"/>
-<g clip-path="url(#panel)"><rect width="232" height="400" fill="#4e7bfb"/><image href="../../../docs/brand/artcraft-mark-black.svg" x="31" y="115" width="170" height="170"/></g>
+<g clip-path="url(#panel)"><rect width="232" height="400" fill="#4e7bfb"/><image href="../../../docs/brand/mahay-mark-black.svg" x="31" y="115" width="170" height="170"/></g>
 <line x1="232.5" y1="0" x2="232.5" y2="400" stroke="#0b0b0c" stroke-width="1.2"/>
 <line x1="236.5" y1="0" x2="236.5" y2="400" stroke="#0b0b0c" stroke-width="0.5"/>
 

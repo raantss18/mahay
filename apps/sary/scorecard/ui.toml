@@ -17,7 +17,7 @@ id = "UI-217-2"
 target = "Window size and dock width remembered across restarts"
 status = "done"
 issue = 217
-note = "eframe persistence (ui.ron): persist_window for the window, egui memory for the dock panel width; window_and_panel_geometry_survive_a_restart asserts the round trip (apps/photocraft/src/main.rs; b07a2e5b, #587)"
+note = "eframe persistence (ui.ron): persist_window for the window, egui memory for the dock panel width; window_and_panel_geometry_survive_a_restart asserts the round trip (apps/sary/src/main.rs; b07a2e5b, #587)"
 
 [[item]]
 id = "UI-217-3"
@@ -143,7 +143,7 @@ id = "UI-217-20"
 target = "'Show rulers in new documents' preference; guides stored as f64"
 status = "done"
 issue = 217
-note = "View › Rulers is remembered in unitsAndRulers.showRulers and applied at launch and on change (#2918; rulers_open_as_last_set_after_a_restart); doc Guides are Vec<f64> through New Guide, .pcraft and PSD 1032 (guides_keep_sub_pixel_positions_through_pcraft_and_psd)"
+note = "View › Rulers is remembered in unitsAndRulers.showRulers and applied at launch and on change (#2918; rulers_open_as_last_set_after_a_restart); doc Guides are Vec<f64> through New Guide, .sary and PSD 1032 (guides_keep_sub_pixel_positions_through_sary_and_psd)"
 
 [[item]]
 id = "UI-217-21"

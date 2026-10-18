@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_doc::vector::Subpath;
+use sary_doc::vector::Subpath;
 
 fn session(depth: u32) -> Session {
     let mut s = Session::new();
@@ -117,12 +117,12 @@ fn content_aware_fill_huge_area_neither_panics_nor_wraps() {
 }
 
 /// `blob_session` with the canvas declared as `size` and a sparse selection of `rects`, as a
-/// loaded `.pcraft` can hold (#963). Nothing here allocates more than a few tiles.
+/// loaded `.sary` can hold (#963). Nothing here allocates more than a few tiles.
 fn huge_selection(size: (u32, u32), rects: &[Rect]) -> Session {
     let mut s = blob_session(8);
     let st = s.active_mut().unwrap();
     let doc = std::sync::Arc::make_mut(&mut st.doc);
-    doc.size = photocraft_geom::Size::new(size.0, size.1);
+    doc.size = sary_geom::Size::new(size.0, size.1);
     let mut sel = Surface::new(PixelFormat::GRAY8);
     for r in rects {
         sel.fill_rect(*r, &[1.0]);

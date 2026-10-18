@@ -5,12 +5,12 @@
 //! once answered: with the layers (Photoshop layer data in the file), or flattened ("Discard
 //! Layers and Save a Copy"). "Don't show again" clears the preference. Cancel drops the save.
 
-use crate::{ExportSettings, PhotocraftApp};
+use crate::{ExportSettings, SaryApp};
 
 /// A save waiting on the TIFF Options answer.
 pub struct Prompt {
     /// The document that requested the save, even if tabs change while this is open.
-    doc: photocraft_doc::DocId,
+    doc: sary_doc::DocId,
     /// Where the document goes.
     pub path: String,
     /// "Discard Layers and Save a Copy".
@@ -27,21 +27,21 @@ pub fn is_tiff_path(path: &str) -> bool {
 
 /// Whether saving the active document to `path` should go through the prompt: a TIFF that
 /// would carry layer data, with the preference on.
-pub fn wants_prompt(app: &PhotocraftApp, path: &str) -> bool {
+pub fn wants_prompt(app: &SaryApp, path: &str) -> bool {
     if !is_tiff_path(path) || !app.session.prefs().file_handling.ask_before_saving_layered_tiff {
         return false;
     }
-    app.session.active().is_some_and(|st| photocraft_engine::file_cmds::tiff_would_write_layers(&st.doc))
+    app.session.active().is_some_and(|st| sary_engine::file_cmds::tiff_would_write_layers(&st.doc))
 }
 
 /// Parks the save behind the prompt.
-pub fn park(app: &mut PhotocraftApp, path: String) -> Result<(), String> {
+pub fn park(app: &mut SaryApp, path: String) -> Result<(), String> {
     let doc = app.active_doc_id()?;
     app.tiff_options = Some(Prompt { doc, path, discard_layers: false, dont_ask_again: false });
     Ok(())
 }
 
-pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(p) = &mut app.tiff_options else { return };
     let (mut ok, mut cancel) = (false, false);
     let (mut discard, mut dont_ask) = (p.discard_layers, p.dont_ask_again);

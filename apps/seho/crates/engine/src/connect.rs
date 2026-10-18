@@ -1,8 +1,8 @@
 //! Connectors glued to shapes: connection sites, snapping line ends to them, and rerouting attached
 //! connectors whenever the shapes they connect move, resize or rotate.
 
-use deckcraft_geom::{Point, Xfrm};
-use deckcraft_model::{Presentation, Shape, ShapeId, ShapeKind};
+use seho_geom::{Point, Xfrm};
+use seho_model::{Presentation, Shape, ShapeId, ShapeKind};
 
 use crate::Selection;
 use crate::cmd::xfrm_of;
@@ -13,7 +13,7 @@ pub fn sites(doc: &Presentation, sel: &Selection, s: &Shape) -> Vec<Point> {
         return vec![];
     }
     let x = xfrm_of(doc, sel, s);
-    let mut local = deckcraft_render::shape_geometry(s, x.w, x.h).sites;
+    let mut local = seho_render::shape_geometry(s, x.w, x.h).sites;
     if local.is_empty() {
         local = vec![Point::new(x.w / 2.0, 0.0), Point::new(0.0, x.h / 2.0), Point::new(x.w / 2.0, x.h), Point::new(x.w, x.h / 2.0)];
     }

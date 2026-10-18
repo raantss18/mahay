@@ -108,7 +108,7 @@ impl EventProcessor {
             }
         }
 
-        // PdfCraft patch: replacing the focused window's input context (egui allows IME whenever a
+        // Taratasy patch: replacing the focused window's input context (egui allows IME whenever a
         // text field gains focus and disallows it when it loses focus) generates no focus event, so
         // the new context stayed unfocused until the window lost and regained focus. Focus the last
         // context replaced in this batch, once (rust-windowing/winit#4727).

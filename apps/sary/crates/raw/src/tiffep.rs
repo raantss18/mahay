@@ -171,7 +171,7 @@ pub(crate) fn decode(t: &Tiff, format: RawFormat, limits: &Limits) -> Result<Sen
         // Nikon's BlackLevel is in 14-bit units whatever the sample depth:
         // 12-bit D750 / D850 / Z 50 files store 600 / 400 / 1008 while their
         // darkest samples are about a quarter of that (measured on CC0
-        // raw.pixls.us samples, documented in LightCraft's NEF decoder).
+        // raw.pixls.us samples, documented in Hazavana's NEF decoder).
         Some((n, m)) => n.tag_floats(m, NIKON_BLACK_LEVEL).into_iter().map(|v| if plane.bits == 12 { v / 4.0 } else { v }).collect(),
         None => t.tag_floats(&raw, SONY_BLACK_LEVEL),
     };

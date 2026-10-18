@@ -6,7 +6,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use photocraft_ui_egui::PhotocraftApp;
+use sary_ui_egui::SaryApp;
 use serde_json::json;
 
 /// Renders the UI with one 512² document of `rgb` tagged with `profile`; returns the median
@@ -18,11 +18,11 @@ fn render(profile: &str, rgb: [f32; 3], reopen: bool) -> Option<([u8; 3], [u8; 3
     let observer_out = observer.clone();
     let built = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
         egui_kittest::Harness::builder().with_size(egui::vec2(1000.0, 700.0)).with_pixels_per_point(1.0).with_max_steps(64).wgpu().build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
             if let Some(rs) = cc.wgpu_render_state.as_ref() {
-                ft.store(photocraft_gpu::Compositor::preferred_acc_format(&rs.adapter) == eframe::wgpu::TextureFormat::Rgba32Float, Ordering::SeqCst);
-                *observer_out.lock().expect("GPU observer lock") = Some(photocraft_ui_egui::gpu_canvas::GpuCanvas::new(rs));
+                ft.store(sary_gpu::Compositor::preferred_acc_format(&rs.adapter) == eframe::wgpu::TextureFormat::Rgba32Float, Ordering::SeqCst);
+                *observer_out.lock().expect("GPU observer lock") = Some(sary_ui_egui::gpu_canvas::GpuCanvas::new(rs));
                 app.set_wgpu(rs.clone());
             }
             app
@@ -47,7 +47,7 @@ fn render(profile: &str, rgb: [f32; 3], reopen: bool) -> Option<([u8; 3], [u8; 3
     if reopen {
         app.session.active_mut().expect("active document").revision = 1;
     }
-    let sample = |harness: &mut egui_kittest::Harness<'_, PhotocraftApp>| {
+    let sample = |harness: &mut egui_kittest::Harness<'_, SaryApp>| {
         harness.run_steps(6);
         let img = harness.render().expect("render");
         // The document is fitted into the canvas area: its centre lies on the document.
@@ -66,20 +66,20 @@ fn render(profile: &str, rgb: [f32; 3], reopen: bool) -> Option<([u8; 3], [u8; 3
     if reopen {
         let doc = harness.state().session.active().expect("active document").doc.clone();
         let id = doc.id;
-        let bytes = photocraft_format::save_to_bytes(&doc, &photocraft_format::SaveOptions::default()).expect("save native document");
+        let bytes = sary_format::save_to_bytes(&doc, &sary_format::SaveOptions::default()).expect("save native document");
         drop(doc);
         let observer = observer.lock().expect("GPU observer lock").clone().expect("GPU observer");
-        let (request, _) = photocraft_ui_egui::control::ControlRequest::new("ui.menu.invoke", json!({"id":"filter.blur.gaussianBlur"}));
+        let (request, _) = sary_ui_egui::control::ControlRequest::new("ui.menu.invoke", json!({"id":"filter.blur.gaussianBlur"}));
         let ctx = harness.ctx.clone();
-        let response = photocraft_ui_egui::control::handle(harness.state_mut(), &ctx, &request);
-        assert!(matches!(response, photocraft_ui_egui::control::Outcome::Done(_)));
+        let response = sary_ui_egui::control::handle(harness.state_mut(), &ctx, &request);
+        assert!(matches!(response, sary_ui_egui::control::Outcome::Done(_)));
         harness.run_steps(6);
         let preview = id.0 ^ (1u64 << 61);
         assert!(observer.has(preview, [512, 512]), "filter preview uploaded");
         harness.state_mut().run("file.close", json!({})).expect("close");
         assert!(!observer.has(preview, [512, 512]), "close releases preview resources");
         // No repaint between close and reopen: sync_views must release the old resource/signature.
-        let reopened = photocraft_format::load_from_bytes(&bytes).expect("load native document");
+        let reopened = sary_format::load_from_bytes(&bytes).expect("load native document");
         assert_eq!(reopened.id, id, "native loading preserves document ID");
         harness.state_mut().session.add_document(reopened, None);
         harness.state_mut().sync_views();
@@ -88,14 +88,14 @@ fn render(profile: &str, rgb: [f32; 3], reopen: bool) -> Option<([u8; 3], [u8; 3
         harness.state_mut().ui.dialogs.clear();
         let after_reopen = sample(&mut harness);
         assert!((0..3).all(|i| gpu[i].abs_diff(after_reopen[i]) <= 1), "GPU native reopen changed display color: {gpu:?} -> {after_reopen:?}");
-        let (request, _) = photocraft_ui_egui::control::ControlRequest::new("ui.menu.invoke", json!({"id":"image.adjustments.brightnessContrast"}));
-        photocraft_ui_egui::control::handle(harness.state_mut(), &ctx, &request);
-        photocraft_ui_egui::adjust_preview::display_doc(harness.state_mut(), 0).expect("adjustment preview");
+        let (request, _) = sary_ui_egui::control::ControlRequest::new("ui.menu.invoke", json!({"id":"image.adjustments.brightnessContrast"}));
+        sary_ui_egui::control::handle(harness.state_mut(), &ctx, &request);
+        sary_ui_egui::adjust_preview::display_doc(harness.state_mut(), 0).expect("adjustment preview");
         harness.state_mut().run("file.close", json!({})).expect("close adjustment owner");
-        assert!(photocraft_ui_egui::adjust_preview::shown_key(harness.state()).is_none(), "close drops adjustment preview state before same-ID reopen");
-        harness.state_mut().session.add_document(photocraft_format::load_from_bytes(&bytes).expect("reopen adjustment owner"), None);
+        assert!(sary_ui_egui::adjust_preview::shown_key(harness.state()).is_none(), "close drops adjustment preview state before same-ID reopen");
+        harness.state_mut().session.add_document(sary_format::load_from_bytes(&bytes).expect("reopen adjustment owner"), None);
         harness.state_mut().sync_views();
-        photocraft_ui_egui::adjust_preview::display_doc(harness.state_mut(), 0).expect("rebuilt adjustment preview");
+        sary_ui_egui::adjust_preview::display_doc(harness.state_mut(), 0).expect("rebuilt adjustment preview");
         harness.state_mut().ui.dialogs.clear();
     }
     harness.state_mut().ui.view.flip_horizontal = true;
@@ -110,7 +110,7 @@ fn close(a: [u8; 3], b: [f32; 3], tol: f32) -> bool {
 
 #[test]
 fn display_p3_is_converted_on_gpu_and_cpu_canvases() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     // P3 (0.8, 0.5, 0.3) → sRGB (216.7, 122.9, 64.3) (see engine display_color_tests); raw would be (204, 128, 77).
     let Some((gpu, cpu)) = render("display-p3", [0.8, 0.5, 0.3], true) else { return };
     assert!(close(cpu, [216.7, 122.9, 64.3], 2.0), "CPU canvas {cpu:?}");
@@ -119,7 +119,7 @@ fn display_p3_is_converted_on_gpu_and_cpu_canvases() {
 
 #[test]
 fn srgb_documents_are_unchanged() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some((gpu, cpu)) = render("srgb", [0.8, 0.5, 0.3], false) else { return };
     assert!(close(cpu, [204.0, 128.0, 77.0], 1.0), "CPU canvas {cpu:?}");
     assert!(close(gpu, [204.0, 128.0, 77.0], 1.0), "GPU canvas {gpu:?}");

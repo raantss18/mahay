@@ -1,5 +1,5 @@
 //! Frozen scalar convolution from main 5dac5c6, used as an exact-output oracle.
-use photocraft_algo::retouch::local_blur;
+use sary_algo::retouch::local_blur;
 
 #[test]
 fn matches_scalar_blur_bit_for_bit_across_layouts_edges_and_hdr() {

@@ -2,9 +2,9 @@
 
 use egui::vec2;
 use egui_kittest::kittest::Queryable;
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::SheetApp;
-use gridcraft_ui_egui::control::{Outcome, handle};
+use tabilao_engine::Session;
+use tabilao_ui_egui::SheetApp;
+use tabilao_ui_egui::control::{Outcome, handle};
 use serde_json::{Value as Json, json};
 
 fn harness() -> egui_kittest::Harness<'static, SheetApp> {

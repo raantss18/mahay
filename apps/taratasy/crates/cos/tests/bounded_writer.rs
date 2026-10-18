@@ -4,7 +4,7 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
-use pdfcraft_cos::{Algorithm, Dict, Document, NewEncryption, ObjRef, Object, PdfString, SaveOptions, XrefEntry, write_full};
+use taratasy_cos::{Algorithm, Dict, Document, NewEncryption, ObjRef, Object, PdfString, SaveOptions, XrefEntry, write_full};
 
 const NODES: usize = 260;
 const EDITED: usize = 129;

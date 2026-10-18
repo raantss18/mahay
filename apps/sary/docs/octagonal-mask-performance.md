@@ -126,9 +126,9 @@ short input and multiplication overflow. Radii larger than the canvas saturate t
 reachable extents on the decomposition path, including very thin canvases.
 
 ```sh
-cargo test --release -p photocraft-algo octagonal_morphology_release_comparison -- --ignored --nocapture --test-threads=1
-cargo test --release -p photocraft-algo tiled_refinement_release_comparison -- --ignored --nocapture --test-threads=1
-cargo test --release -p photocraft-algo dense_matte_release_comparison -- --ignored --nocapture --test-threads=1
+cargo test --release -p sary-algo octagonal_morphology_release_comparison -- --ignored --nocapture --test-threads=1
+cargo test --release -p sary-algo tiled_refinement_release_comparison -- --ignored --nocapture --test-threads=1
+cargo test --release -p sary-algo dense_matte_release_comparison -- --ignored --nocapture --test-threads=1
 ```
 
 The benchmark's old path is also the production fallback for exceptional values and

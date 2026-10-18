@@ -2,9 +2,9 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (XDP data row corrected; BigTIFF in Create PDF) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
-Every format Acrobat Pro reads or writes, and PdfCraft's support for it. Acrobat's list comes from
+Every format Acrobat Pro reads or writes, and Taratasy's support for it. Acrobat's list comes from
 its bundle's `Info.plist` `CFBundleDocumentTypes` (what it opens) and its public documentation
-(Create PDF and Export PDF). PdfCraft's support comes from the code and
+(Create PDF and Export PDF). Taratasy's support comes from the code and
 `parity/acrobat-features.toml`. Summary in [target-app-parity.md](target-app-parity.md); gaps
 in [gaps.md](gaps.md).
 
@@ -18,7 +18,7 @@ features total).
 
 ## PDF
 
-| Format | Acrobat | PdfCraft | Fidelity | Tests and evidence |
+| Format | Acrobat | Taratasy | Fidelity | Tests and evidence |
 |---|---|---|---|---|
 | PDF 1.0–1.7, ISO 32000-1 | R W | R W | high for reading and unencrypted writing | 958-file pdf.js corpus open/edit/save; `qpdf --check` on saved outputs; `xtask check` baselines |
 | PDF 2.0 (ISO 32000-2) | R W | R W (2.0-only features ignored but preserved) | good | No UTF-8 strings, `/AF`, DPart, namespaces ([pdf-spec-parity.md](pdf-spec-parity.md)) |
@@ -33,7 +33,7 @@ features total).
 
 ## Data and interchange formats
 
-| Format | Acrobat | PdfCraft | Fidelity | Tests and evidence |
+| Format | Acrobat | Taratasy | Fidelity | Tests and evidence |
 |---|---|---|---|---|
 | FDF (`.fdf`) comments and form data | R W | R W | good | `crates/xfdf`; comment-exchange fixes for popups, polygon vertices and callouts (#807, #809, #819) |
 | XFDF (`.xfdf`, ISO 19444-1) | R W | R W | good | as above |
@@ -53,7 +53,7 @@ features total).
 
 ## Certificates and keys
 
-| Format | Acrobat | PdfCraft | Fidelity | Tests and evidence |
+| Format | Acrobat | Taratasy | Fidelity | Tests and evidence |
 |---|---|---|---|---|
 | PKCS #12 digital IDs (`.p12`, `.pfx`) | R W | R W (self-signed IDs) | high | OpenSSL-made fixtures (`crates/sign/tests/data/README.md`) |
 | Certificates (`.cer`, `.der`, `.pem`, `.p7c`, `.p7b`) | R W | R (`.cer/.pem/.der/.p12` trust import); W public certificate | good; `.p7c/.p7b` bundles not read | `sign.trust-import` partial, `sign.export-certificate` |
@@ -61,7 +61,7 @@ features total).
 
 ## Create PDF from
 
-| Source | Acrobat | PdfCraft | Fidelity | Tests and evidence |
+| Source | Acrobat | Taratasy | Fidelity | Tests and evidence |
 |---|---|---|---|---|
 | JPEG, PNG, TIFF (multipage, and BigTIFF), GIF, BMP, JPEG 2000 | yes | yes (ICC profiles kept; DPI choices) | good | `create.from-images`, `create.from-multipage-tiff`, `bigtiff_images_become_pages` |
 | PCX | yes | no | none | in Acrobat's document types |
@@ -78,7 +78,7 @@ features total).
 
 ## Export PDF to
 
-| Target | Acrobat | PdfCraft | Fidelity | Tests and evidence |
+| Target | Acrobat | Taratasy | Fidelity | Tests and evidence |
 |---|---|---|---|---|
 | Word (`.docx`) | yes, layout-preserving | flowing paragraphs and borderless inferred tables; positioned text/artwork only for pages with rotated text or text overlapping an image/watermark, with per-page sizes | **basic** (#773 synthetic invoice regression covered; exact fonts, vector rules and general layout fidelity remain incomplete) | `create.export-docx` partial |
 | Word 97–2003 (`.doc`) | yes | no | none | |
@@ -97,7 +97,7 @@ features total).
 
 ## OCR (scans to searchable PDF)
 
-| Capability | Acrobat | PdfCraft | Fidelity |
+| Capability | Acrobat | Taratasy | Fidelity |
 |---|---|---|---|
 | Searchable image (invisible text layer) | yes | yes (Tr 3 text fitted to word boxes) | good for English |
 | Editable text and images output | yes | no | none |
@@ -113,4 +113,4 @@ features total).
 | 2026-10-12 | minor | XDP split into data (read and write for XFA forms, already shipped under `form.xfa-data`) and opening `.xdp` as a document (none). Create PDF reads BigTIFF; malformed GIF headers are no longer detected as images. |
 | 2026-10-11 | minor | #773: inferred tables have no invented borders; rotated or overlapping invoice pages use floating shapes and page sections. Full Office layout fidelity remains partial. |
 | 2026-10-11 | minor | Encrypted PDF row: written files open in Acrobat DC (#774, fixed by #836). FDF row: #807, #809 and #819 fixed |
-| 2026-10-10 | major | Created from Acrobat 26.002.21931's `CFBundleDocumentTypes`, Acrobat's public Create/Export documentation, and PdfCraft's code and checklist |
+| 2026-10-10 | major | Created from Acrobat 26.002.21931's `CFBundleDocumentTypes`, Acrobat's public Create/Export documentation, and Taratasy's code and checklist |

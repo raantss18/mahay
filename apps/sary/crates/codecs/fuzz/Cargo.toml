@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-codecs-fuzz"
+name = "sary-codecs-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2024"
@@ -14,7 +14,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-photocraft-codecs = { path = "..", features = ["heif"] }
+sary-codecs = { path = "..", features = ["heif"] }
 # Called directly too: the codec turns its panics into errors (see decode_heif.rs).
 heic-rs = "=0.1.4"
 

@@ -6,7 +6,7 @@
 //! can go below it (Layer › Arrange, Reverse, dragging in the Layers panel); Layer from Background
 //! (`layer.new.layerFromBackground`) turns it back into a normal layer that moves freely.
 
-use photocraft_doc::{Document, Layer, LayerContent, LayerId};
+use sary_doc::{Document, Layer, LayerContent, LayerId};
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -70,7 +70,7 @@ fn background_from_layer(s: &mut Session, p: &Value) -> Result<Value> {
         let visible = l.visible;
         let fmt = doc.pixel_format();
         let rest = std::mem::replace(&mut doc.layers, vec![only]);
-        let pixels = photocraft_compose::flatten_to_surface(doc, fmt, Some([bg[0], bg[1], bg[2]]));
+        let pixels = sary_compose::flatten_to_surface(doc, fmt, Some([bg[0], bg[1], bg[2]]));
         doc.layers = rest;
         let mut out = Layer::raster("Background", fmt);
         out.id = id;
@@ -104,7 +104,7 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
 
     /// Bottom to top: Layer 0 (the old Background, now a normal layer), A, B. A has a 4×4 red
     /// square at (2, 2); the rest of it is transparent.
@@ -152,7 +152,7 @@ mod tests {
             s.execute("layer.setProps", json!({"layer": bg.0, key: value})).unwrap();
             let l = doc(&s).layer(bg).unwrap();
             assert!(!doc(&s).is_background(bg) && l.name == "Layer 0", "{key}");
-            assert!(l.opacity < 1.0 || l.fill_opacity < 1.0 || l.blend == photocraft_color::BlendMode::Multiply, "{key}: applied");
+            assert!(l.opacity < 1.0 || l.fill_opacity < 1.0 || l.blend == sary_color::BlendMode::Multiply, "{key}: applied");
         }
         // Values that leave its look alone keep it the Background.
         let (mut s, [bg, ..]) = with_background();

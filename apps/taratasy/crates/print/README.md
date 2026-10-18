@@ -1,4 +1,4 @@
-# pdfcraft-print
+# taratasy-print
 
 Layer L4: printing (execution plan M10.5).
 
@@ -33,8 +33,8 @@ annotations); sheets place them with a clip. The result is a fresh, unencrypted,
 garbage-collected file (callers check the print permission).
 
 `spool` delegates discovery, driver options, preferences and submission to
-[`craft-print`](https://github.com/storytold/craft-libs/tree/main/crates/print).
-PdfCraft retains page selection, imposition, annotations and print-permission checks.
+[`mahay-print`](https://github.com/raantss18/mahay/tree/main/crates/print).
+Taratasy retains page selection, imposition, annotations and print-permission checks.
 CUPS jobs stream through stdin with `fit-to-page=false`. Windows renders sheets through
 `Windows.Data.Pdf` and spools them at their physical PDF size with per-page paper and
 orientation, zero added margins and hardware-edge clipping. Long-edge and short-edge duplex
@@ -42,13 +42,13 @@ use the corresponding Windows binding edges. Random, exclusively created Windows
 are removed on success and failure. Other targets offer the print-ready PDF instead.
 
 The shared dependency requires Rust 1.95. Transport and native Windows regression tests
-live in craft-libs; local tests retain composition, facade, engine, automation and UI coverage.
+live in mahay-libs; local tests retain composition, facade, engine, automation and UI coverage.
 The desktop UI discovers printers and submits jobs on workers, so neither operation blocks
 the dialog; the Windows backend starts without a console window. Physical printer output
 still needs hardware validation.
 
-In a browser there is no spooler: the app (`pdfcraft-ui-egui`'s `web_print`) draws the print-ready
-PDF's sheets with PdfCraft's renderer and prints them through the browser's print dialog, which
+In a browser there is no spooler: the app (`taratasy-ui-egui`'s `web_print`) draws the print-ready
+PDF's sheets with Taratasy's renderer and prints them through the browser's print dialog, which
 sets copies, two-sided printing and colour. This crate stays free of web APIs.
 
 Not yet: print as image, poster labels, PostScript output, colour conversion for
@@ -71,7 +71,7 @@ this is not per-page paper-source selection.
 
 **PDF scale** describes the source-to-sheet transform in the previewed print-ready
 PDF, not measured physical output. Fit reserves an 18 pt margin and can reduce even
-a matching page. On Windows craft-print sends the sheets as vectors with a PrintTicket
+a matching page. On Windows mahay-print sends the sheets as vectors with a PrintTicket
 for the sheet's exact paper and no scaling (#599's approach), validated by the driver:
 a job is refused, not shrunk, when the driver lacks the paper or would change it. Verify
 the driver's paper settings and physical calibration before relying on drawing scale.

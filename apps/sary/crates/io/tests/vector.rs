@@ -7,15 +7,15 @@ use std::path::{Path as FsPath, PathBuf};
 #[cfg(feature = "corpus")]
 use std::sync::Arc;
 
-use photocraft_color::{Color, ColorMode, SampleType};
-use photocraft_doc::{
+use sary_color::{Color, ColorMode, SampleType};
+use sary_doc::{
     Document, Fill, Knot, Layer, LayerContent, LineCap, LineJoin, LiveShape, NamedPath, Path, PathOp, ShapeLayer, ShapeStroke, Size, StrokeAlign, Subpath,
     VectorMask,
 };
-use photocraft_geom::{Point, Rect};
-use photocraft_io::*;
+use sary_geom::{Point, Rect};
+use sary_io::*;
 #[cfg(feature = "corpus")]
-use photocraft_psd::PsdFile;
+use sary_psd::PsdFile;
 
 fn roundtrip(d: &Document) -> Document {
     let r = export(d, "x.psd", &ExportOptions::default()).unwrap();
@@ -45,7 +45,7 @@ fn doc() -> Document {
 
 fn shape_layer(sh: ShapeLayer) -> Layer {
     let mut sh = sh;
-    sh.cache = Some(photocraft_vector::render_shape(&sh, photocraft_color::PixelFormat::RGBA8, Rect::new(0, 0, 256, 256)));
+    sh.cache = Some(sary_vector::render_shape(&sh, sary_color::PixelFormat::RGBA8, Rect::new(0, 0, 256, 256)));
     Layer::new("Shape", LayerContent::Shape(sh))
 }
 
@@ -57,7 +57,7 @@ fn saved_paths_work_path_and_clipping_roundtrip() {
     inv.inverted = true;
     d.paths.push(NamedPath { name: "Inverted".into(), path: inv, psd_raw: None });
     d.work_path = Some(Path::new(vec![Subpath::polygon(&[(0.0, 0.0), (128.0, 0.0), (128.0, 128.0)])]));
-    d.clipping_path = Some(photocraft_doc::ClippingPath { name: "Outline".into(), flatness: 0.0 });
+    d.clipping_path = Some(sary_doc::ClippingPath { name: "Outline".into(), flatness: 0.0 });
     let b = roundtrip(&d);
     assert_eq!(b.paths.len(), 2);
     assert_eq!(b.paths[0].name, "Outline");
@@ -100,7 +100,7 @@ fn shape_layer_typed_roundtrip() {
     };
     d.layers.push(shape_layer(sh.clone()));
     let mut ell = ShapeLayer {
-        path: photocraft_vector::shapes::ellipse(64.0, 64.0, 128.0, 64.0),
+        path: sary_vector::shapes::ellipse(64.0, 64.0, 128.0, 64.0),
         fill: None,
         stroke: Some(ShapeStroke::default()),
         live: Some(LiveShape::Ellipse { rect: [64.0, 64.0, 128.0, 64.0] }),
@@ -163,8 +163,8 @@ fn custom_stroke_styles_roundtrip_through_psd_vstk() {
                 let LayerContent::Shape(result) = &back.layers[1].content else { panic!("not a shape") };
                 assert_eq!(result.stroke.as_ref().unwrap(), &want);
                 let clip = d.bounds();
-                let before = photocraft_vector::CompiledShape::new(&sh, 0.01, clip).render_rgba(clip);
-                let after = photocraft_vector::CompiledShape::new(result, 0.01, clip).render_rgba(clip);
+                let before = sary_vector::CompiledShape::new(&sh, 0.01, clip).render_rgba(clip);
+                let after = sary_vector::CompiledShape::new(result, 0.01, clip).render_rgba(clip);
                 assert_eq!(before, after);
             }
         }
@@ -184,7 +184,7 @@ fn vector_mask_roundtrip_and_removal() {
     assert_eq!(b.layers[1].vector_mask.as_ref(), Some(&vm));
     assert!(b.layers[1].psd_blocks.iter().any(|(k, _)| k == b"vmsk"));
     // The composite honours it (left half black, right half white).
-    let f = photocraft_compose::flatten(&b);
+    let f = sary_compose::flatten(&b);
     assert!(f.get(10, 10)[0] < 0.01 && f.get(200, 10)[0] > 0.99);
     // Removing the vector mask removes the block.
     let mut c = b.clone();
@@ -236,11 +236,11 @@ fn corpus_shape_coverage_matches_photoshop() {
                 continue;
             }
             let r =
-                cache.content_bounds().union(&photocraft_vector::fill_rasterizer(&sh.path, 0.01).pixel_bounds().unwrap_or(Rect::EMPTY)).intersect(&d.bounds());
+                cache.content_bounds().union(&sary_vector::fill_rasterizer(&sh.path, 0.01).pixel_bounds().unwrap_or(Rect::EMPTY)).intersect(&d.bounds());
             if r.is_empty() {
                 continue;
             }
-            let ours = photocraft_vector::path_coverage(&sh.path, r);
+            let ours = sary_vector::path_coverage(&sh.path, r);
             let mut theirs = vec![[0.0f32; 4]; ours.len()];
             cache.read_rgba_into(r, &mut theirs);
             let (mut inter, mut uni, mut max) = (0.0f64, 0.0f64, 0.0f32);

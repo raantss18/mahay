@@ -1,18 +1,18 @@
 [package]
-name = "deckcraft-text"
+name = "seho-text"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DeckCraft text layout: runs to shaped glyph lines with bullets, indents, spacing, alignment, anchoring, autofit and caret hit testing"
+description = "Seho text layout: runs to shaped glyph lines with bullets, indents, spacing, alignment, anchoring, autofit and caret hit testing"
 
 [lints]
 workspace = true
 
 [dependencies]
-deckcraft-model = { workspace = true }
-deckcraft-geom = { workspace = true }
-deckcraft-color = { workspace = true }
-deckcraft-fonts = { workspace = true }
+seho-model = { workspace = true }
+seho-geom = { workspace = true }
+seho-color = { workspace = true }
+seho-fonts = { workspace = true }
 unicode-linebreak = { workspace = true }
 unicode-segmentation = { workspace = true }
 unicode-bidi = { workspace = true }

@@ -2,8 +2,8 @@ use super::*;
 use egui::{Event, Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 
-fn app() -> PhotocraftApp {
-    PhotocraftApp::new(photocraft_engine::Session::new(), Default::default())
+fn app() -> SaryApp {
+    SaryApp::new(sary_engine::Session::new(), Default::default())
 }
 
 #[test]
@@ -78,12 +78,12 @@ fn invalid_panel_requests_are_atomic_and_do_not_enter_a_custom_workspace() {
     }
 }
 
-fn harness(app: PhotocraftApp, size: egui::Vec2) -> Harness<'static, PhotocraftApp> {
+fn harness(app: SaryApp, size: egui::Vec2) -> Harness<'static, SaryApp> {
     let mut ready = false;
     let mut harness = Harness::builder().with_size(size).with_step_dt(1.0 / 60.0).build_ui_state(
-        move |ui, app: &mut PhotocraftApp| {
+        move |ui, app: &mut SaryApp| {
             if !ready {
-                PhotocraftApp::setup_context(ui.ctx(), crate::theme::ThemeKind::ProMedium);
+                SaryApp::setup_context(ui.ctx(), crate::theme::ThemeKind::ProMedium);
                 ready = true;
                 return;
             }
@@ -96,7 +96,7 @@ fn harness(app: PhotocraftApp, size: egui::Vec2) -> Harness<'static, PhotocraftA
     harness
 }
 
-fn drag(h: &mut Harness<'static, PhotocraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'static, SaryApp>, from: Pos2, to: Pos2) {
     h.event(Event::PointerMoved(from));
     h.run_steps(1);
     h.event(Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -116,8 +116,8 @@ fn ordinary_panel_tab_drag_enters_shared_docking_and_can_redock_into_another_tab
     drag(&mut h, source, egui::pos2(160.0, 140.0));
     let layout = h.state().ui.docking.as_ref().expect("ordinary tab drag starts shared docking");
     assert!(layout.floating.iter().any(|g| g.panels.contains(&"layers".into())), "{layout:?}");
-    let source = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
-    let destination = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
+    let source = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
+    let destination = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
     drag(&mut h, source, destination);
     let layout = h.state().ui.docking.as_ref().unwrap();
     assert!(!layout.floating.iter().any(|g| g.panels.contains(&"layers".into())));
@@ -134,8 +134,8 @@ fn brushes_tab_drag_floats_and_can_redock_into_another_tab_group() {
     let layout = h.state().ui.docking.as_ref().expect("brushes drag starts shared docking");
     assert!(layout.floating.iter().any(|group| group.panels.contains(&"brushes".into())), "{layout:?}");
 
-    let source = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"brushes".to_string()))).unwrap().rect.center();
-    let destination = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
+    let source = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"brushes".to_string()))).unwrap().rect.center();
+    let destination = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
     drag(&mut h, source, destination);
     let layout = h.state().ui.docking.as_ref().unwrap();
     assert!(!layout.floating.iter().any(|group| group.panels.contains(&"brushes".into())));
@@ -175,8 +175,8 @@ fn shared_layout_keeps_panel_identity_across_themes_and_respects_workspace_lock(
 /// Explicit offscreen evidence; this creates no native windows.
 #[test]
 fn capture_custom_panel_docking_visual_fixtures() {
-    let _gpu = photocraft_testkit::gpu_lock();
-    let Some(directory) = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
+    let _gpu = sary_testkit::gpu_lock();
+    let Some(directory) = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from) else { return };
     std::fs::create_dir_all(&directory).unwrap();
     for theme in crate::theme::ThemeKind::ALL {
         for width in [800.0, 1280.0] {
@@ -187,9 +187,9 @@ fn capture_custom_panel_docking_visual_fixtures() {
                 app.run("window.panel.float", json!({"panel":"properties","x":30,"y":90,"width":300,"height":440})).unwrap();
                 let mut ready = false;
                 let mut harness = Harness::builder().with_size(vec2(width, 800.0)).with_pixels_per_point(scale).wgpu().build_ui_state(
-                    move |ui, app: &mut PhotocraftApp| {
+                    move |ui, app: &mut SaryApp| {
                         if !ready {
-                            PhotocraftApp::setup_context(ui.ctx(), theme);
+                            SaryApp::setup_context(ui.ctx(), theme);
                             app.ui.theme = theme;
                             ready = true;
                             return;
@@ -204,7 +204,7 @@ fn capture_custom_panel_docking_visual_fixtures() {
                 harness.input_mut().max_texture_side = Some(8192);
                 harness.run_steps(5);
                 assert!(valid(harness.state().ui.docking.as_ref().unwrap()));
-                harness.render().unwrap().save(directory.join(format!("photocraft-shared-docking-{}-{width}-{scale}x.png", theme.id()))).unwrap();
+                harness.render().unwrap().save(directory.join(format!("sary-shared-docking-{}-{width}-{scale}x.png", theme.id()))).unwrap();
             }
         }
     }
@@ -212,15 +212,15 @@ fn capture_custom_panel_docking_visual_fixtures() {
 
 #[test]
 fn floating_group_titles_are_opaque_in_studio_themes() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     // Studio's tab strip is transparent over the dock's card; a floating group must not show the canvas (#4509).
     let mut app = app();
     app.run("window.panel.float", json!({"panel":"swatches","x":40,"y":60,"width":300,"height":300})).unwrap();
     let mut ready = false;
     let mut h = Harness::builder().with_size(vec2(1280.0, 800.0)).wgpu().build_ui_state(
-        move |ui, app: &mut PhotocraftApp| {
+        move |ui, app: &mut SaryApp| {
             if !ready {
-                PhotocraftApp::setup_context(ui.ctx(), crate::theme::ThemeKind::Studio);
+                SaryApp::setup_context(ui.ctx(), crate::theme::ThemeKind::Studio);
                 app.ui.theme = crate::theme::ThemeKind::Studio;
                 ready = true;
                 return;
@@ -231,7 +231,7 @@ fn floating_group_titles_are_opaque_in_studio_themes() {
         app,
     );
     h.run_steps(5);
-    let area = h.ctx.memory(|m| m.area_rect(egui::Id::new("photocraft-panel-docking").with(("floating", &"swatches".to_string())))).unwrap();
+    let area = h.ctx.memory(|m| m.area_rect(egui::Id::new("sary-panel-docking").with(("floating", &"swatches".to_string())))).unwrap();
     let image = h.render().unwrap();
     let ppp = image.width() as f32 / 1280.0;
     let strip = egui::Rect::from_min_size(area.min, vec2(area.width(), 40.0)).shrink(2.0);
@@ -267,7 +267,7 @@ fn serialized_layout_actions_cover_geometry_reorder_accordion_and_atomic_rejecti
     app.run("window.panel.move", json!({"panel":"swatches","anchor":"layers","zone":"top"})).unwrap();
     app.run("window.panel.layout", json!({"action":{"ResizeSplit":{"path":[],"size":{"Ratio":0.35}}}})).unwrap();
     assert!(
-        matches!(app.ui.docking.as_ref().unwrap().root, Some(Node::Split { size: craft_ui::layout::SplitSize::Ratio(value), .. }) if (value - 0.35).abs() < 0.001)
+        matches!(app.ui.docking.as_ref().unwrap().root, Some(Node::Split { size: mahay_ui::layout::SplitSize::Ratio(value), .. }) if (value - 0.35).abs() < 0.001)
     );
     app.run("window.panel.float", json!({"panel":"properties"})).unwrap();
     app.run("window.panel.layout", json!({"action":{"MoveFloating":{"panel":"properties","rect":[44,66,360,450]}}})).unwrap();
@@ -290,7 +290,7 @@ fn serialized_layout_actions_cover_geometry_reorder_accordion_and_atomic_rejecti
         assert_eq!(app.ui.docking_hidden, hidden);
     }
     app.ui.docking = Some(Layout {
-        root: Some(Node::Stack { entries: vec![craft_ui::docking::StackEntry { panel: "layers".into(), open: true, height: Some(100.0) }] }),
+        root: Some(Node::Stack { entries: vec![mahay_ui::docking::StackEntry { panel: "layers".into(), open: true, height: Some(100.0) }] }),
         floating: Vec::new(),
     });
     app.run("window.panel.layout", json!({"action":{"SetStackOpen":{"panel":"layers","open":false}}})).unwrap();
@@ -348,7 +348,7 @@ fn splitting_a_short_column_keeps_the_layers_footer_visible_and_usable() {
 
 #[test]
 fn populated_canvas_keeps_a_real_opacity_edit_after_floating_and_redocking() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let mut app = app();
     app.ui.theme = crate::theme::ThemeKind::Studio;
     app.run("file.new", json!({"width":480,"height":360})).unwrap();
@@ -358,14 +358,14 @@ fn populated_canvas_keeps_a_real_opacity_edit_after_floating_and_redocking() {
     app.run("select.deselect", json!({})).unwrap();
     let layer = app.session.active().unwrap().active_layer.unwrap();
     app.run("window.panel.float", json!({"panel":"properties","x":40,"y":140,"width":310,"height":490})).unwrap();
-    let directory = std::env::var_os("CRAFT_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from);
+    let directory = std::env::var_os("MAHAY_UI_DOCKING_FIXTURES").map(std::path::PathBuf::from);
     let builder = Harness::builder().with_size(vec2(1280.0, 800.0));
     let builder = if directory.is_some() { builder.wgpu() } else { builder };
     let mut ready = false;
     let mut h = builder.build_ui_state(
-        move |ui, app: &mut PhotocraftApp| {
+        move |ui, app: &mut SaryApp| {
             if !ready {
-                PhotocraftApp::setup_context(ui.ctx(), crate::theme::ThemeKind::Studio);
+                SaryApp::setup_context(ui.ctx(), crate::theme::ThemeKind::Studio);
                 ready = true;
                 return;
             }
@@ -379,7 +379,7 @@ fn populated_canvas_keeps_a_real_opacity_edit_after_floating_and_redocking() {
     );
     h.input_mut().max_texture_side = Some(8192);
     h.run_steps(5);
-    let floating = h.ctx.memory(|m| m.area_rect(egui::Id::new("photocraft-panel-docking").with(("floating", &"properties".to_string())))).unwrap();
+    let floating = h.ctx.memory(|m| m.area_rect(egui::Id::new("sary-panel-docking").with(("floating", &"properties".to_string())))).unwrap();
     let mut sliders: Vec<_> = h.ctx.viewport(|vp| {
         vp.prev_pass
             .widgets
@@ -402,15 +402,15 @@ fn populated_canvas_keeps_a_real_opacity_edit_after_floating_and_redocking() {
     assert!((opacity - 0.5).abs() < 0.03, "actual opacity {opacity}");
     if let Some(directory) = &directory {
         std::fs::create_dir_all(directory).unwrap();
-        h.render().unwrap().save(directory.join("photocraft-populated-opacity-floating.png")).unwrap();
+        h.render().unwrap().save(directory.join("sary-populated-opacity-floating.png")).unwrap();
     }
-    let from = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
-    let to = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
+    let from = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"properties".to_string()))).unwrap().rect.center();
+    let to = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
     drag(&mut h, from, to);
     assert!(h.state().ui.docking.as_ref().unwrap().floating.iter().all(|group| !group.panels.iter().any(|panel| panel == "properties")));
     assert_eq!(h.state().session.active().unwrap().doc.layer(layer).unwrap().opacity, opacity);
     if let Some(directory) = &directory {
-        h.render().unwrap().save(directory.join("photocraft-populated-opacity-redocked.png")).unwrap();
+        h.render().unwrap().save(directory.join("sary-populated-opacity-redocked.png")).unwrap();
     }
 }
 
@@ -442,7 +442,7 @@ fn changing_workspace_during_a_drag_cancels_the_stale_gesture() {
 
 #[test]
 fn first_legacy_drag_workspace_switch_preserves_custom_and_legacy_destinations() {
-    let layout_state = |app: &PhotocraftApp| json!({"panels":app.ui.panels,"dock":app.ui.dock,"tabs":app.ui.dock_tabs,"layout":app.ui.docking,"hidden":app.ui.docking_hidden,"collapsed":app.ui.docking_collapsed,"timeline":app.ui.timeline.open});
+    let layout_state = |app: &SaryApp| json!({"panels":app.ui.panels,"dock":app.ui.dock,"tabs":app.ui.dock_tabs,"layout":app.ui.docking,"hidden":app.ui.docking_hidden,"collapsed":app.ui.docking_collapsed,"timeline":app.ui.timeline.open});
     for customized_destination in [true, false] {
         for cancellation in ["release", "escape", "focus-loss"] {
             let mut app = app();
@@ -462,7 +462,7 @@ fn first_legacy_drag_workspace_switch_preserves_custom_and_legacy_destinations()
             // One frame installs the first legacy drag; no shared dock has rendered yet.
             h.run_steps(1);
             assert!(h.state().ui.docking.is_some());
-            let origin = egui::Id::new("photocraft-panel-docking").with("legacy-origin");
+            let origin = egui::Id::new("sary-panel-docking").with("legacy-origin");
             assert!(h.ctx.data_mut(|data| data.get_temp::<LegacyDrag>(origin)).unwrap().layout.is_none());
             let ctx = h.ctx.clone();
             let command = if customized_destination { "window.workspace.select" } else { "window.workspace.painting" };
@@ -497,7 +497,7 @@ fn first_legacy_drag_workspace_switch_preserves_custom_and_legacy_destinations()
     }
 }
 
-fn control_set(app: &mut PhotocraftApp, ctx: &egui::Context, params: Value) -> Value {
+fn control_set(app: &mut SaryApp, ctx: &egui::Context, params: Value) -> Value {
     let (request, _) = crate::control::ControlRequest::new("ui.set", params);
     match crate::control::handle(app, ctx, &request) {
         crate::control::Outcome::Done(value) => value,
@@ -630,7 +630,7 @@ fn customized_panel_menus_and_rail_remain_reachable_after_float_and_restore() {
     let mut h = harness(app, vec2(1280.0, 800.0));
     assert!(h.query_all_by_label("Panel menu").count() > 0);
     assert!(h.query_all_by_label("Color & Swatches").count() > 0);
-    let floating = h.ctx.memory(|memory| memory.area_rect(egui::Id::new("photocraft-panel-docking").with(("floating", &"swatches".to_string())))).unwrap();
+    let floating = h.ctx.memory(|memory| memory.area_rect(egui::Id::new("sary-panel-docking").with(("floating", &"swatches".to_string())))).unwrap();
     let first = h.query_all_by_label("Panel menu").find(|node| floating.contains_rect(node.rect())).unwrap().rect().center();
     h.hover_at(first);
     for pressed in [true, false] {
@@ -643,9 +643,9 @@ fn customized_panel_menus_and_rail_remain_reachable_after_float_and_restore() {
     // Panel-specific menu body is shared by both its context and group menu seams.
     let mut ready = false;
     let mut menu = Harness::builder().build_ui_state(
-        move |ui, app: &mut PhotocraftApp| {
+        move |ui, app: &mut SaryApp| {
             if !ready {
-                PhotocraftApp::setup_context(ui.ctx(), crate::theme::ThemeKind::ProMedium);
+                SaryApp::setup_context(ui.ctx(), crate::theme::ThemeKind::ProMedium);
                 ready = true;
             }
             panel_menu(app, ui, "swatches");
@@ -699,8 +699,8 @@ fn floating_group_grip_redocks_all_tabs_as_one_atomic_move() {
     app.run("window.panel.float", json!({"panel":"swatches","x":30,"y":60})).unwrap();
     app.run("window.panel.move", json!({"panel":"patterns","anchor":"swatches"})).unwrap();
     let mut h = harness(app, vec2(1280.0, 800.0));
-    let from = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("move-group", Some(&"swatches".to_string())))).unwrap().rect.center();
-    let to = h.ctx.read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
+    let from = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("move-group", Some(&"swatches".to_string())))).unwrap().rect.center();
+    let to = h.ctx.read_response(egui::Id::new("sary-panel-docking").with(("tab", &"layers".to_string()))).unwrap().rect.center();
     drag(&mut h, from, to);
     let layout = h.state().ui.docking.as_ref().unwrap();
     assert!(layout.floating.iter().all(|group| !group.panels.iter().any(|id| id == "swatches" || id == "patterns")));

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mahay Trano MSI (WiX Toolset v5: `dotnet tool install -g wix`, plus the UI and Util
+  extensions: `wix extension add -g WixToolset.UI.wixext/5.0.2 WixToolset.Util.wixext/5.0.2`).
+  Built by package.ps1:
+
+    wix build trano.wxs -arch x64 -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext
+      -culture en-US -loc trano.en-us.wxl -d Version=1.2.3 -d DisplayVersion=1.2.3-rc.1
+      -d BinDir=... -d IconPath=... -d BannerBmp=... -d DialogBmp=... -o out.msi
+
+  Per-user install (no UAC prompt), by default into %LOCALAPPDATA%\Programs\Mahay Trano, so
+  the launcher can update itself without elevation, plus a Start Menu shortcut. The shortcut
+  carries the AppUserModelID ai.storyteller.trano, which Windows needs to show toast
+  notifications from an unpackaged app and to group the taskbar button. No file associations.
+
+  Double-clicked, it opens a setup wizard that names the version: Welcome; a folder page to pick
+  where it goes, with a "Create a desktop shortcut" box; Ready; a progress page; and a Finish page
+  with a ticked "Launch Mahay Trano" box. There is no licence page (the code is MIT OR
+  Apache-2.0; nothing to accept). The install folder and the desktop-shortcut choice are recorded
+  under HKCU and reused by later versions, so an update (the launcher's own self-update runs this
+  with /passive, which skips the wizard) lands in the same folder and keeps the user's choice; the
+  launcher reads the recorded folder to know it was installed by this MSI.
+
+  Per-user packages can't use a file as a component's KeyPath (ICE38), so each component is
+  keyed on an HKCU value, and the folders we create are removed on uninstall (ICE64).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package
+      Name="Mahay Trano"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="1AC08DBF-D4CF-4BA4-A81E-CAA5C1004974"
+      Scope="perUser"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Mahay Trano: install and update the Mahay App Suite" Manufacturer="Learning Machines LLC" />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Mahay Trano is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- MSI caches this icon using its Id as the filename; keep the .exe extension (ICE50). -->
+    <Icon Id="MahayLauncherIcon.exe" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="MahayLauncherIcon.exe" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay/releases" />
+    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="LocalProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="Mahay Trano" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+
+    <!-- An update installs where the user put the previous version (recorded by
+         MahayLauncherApp below; every version since 0.1.0 records it). -->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="PreviousInstallFolder" Root="HKCU" Key="Software\Learning Machines LLC\Mahay Trano" Name="InstallDir" Type="raw" />
+    </Property>
+
+    <!-- The desktop shortcut: the folder page's box sets INSTALLDESKTOPSHORTCUT to 1. It starts
+         ticked on a first install; an update keeps what the user chose last time, and an update
+         from a version that never asked (0.1.0, 0.1.1) adds none. A value given on the command
+         line (msiexec ... INSTALLDESKTOPSHORTCUT=0 or 1) wins. -->
+    <Property Id="PREVIOUSDESKTOPSHORTCUT">
+      <RegistrySearch Id="PreviousDesktopShortcut" Root="HKCU" Key="Software\Learning Machines LLC\Mahay Trano" Name="DesktopShortcutChoice" Type="raw" />
+    </Property>
+    <SetProperty Id="INSTALLDESKTOPSHORTCUT" Value="1" After="AppSearch" Sequence="first"
+        Condition="NOT INSTALLDESKTOPSHORTCUT AND ((NOT Installed AND NOT WIX_UPGRADE_DETECTED AND NOT PREVIOUSDESKTOPSHORTCUT) OR PREVIOUSDESKTOPSHORTCUT = &quot;1&quot;)" />
+    <!-- Recorded as 1 or 0 (an unticked box leaves the property empty), for the next update. -->
+    <SetProperty Id="DESKTOPSHORTCUTCHOICE" Action="RememberNoDesktopShortcut" Value="0" Before="InstallInitialize" Sequence="execute"
+        Condition="NOT (INSTALLDESKTOPSHORTCUT = &quot;1&quot;)" />
+    <SetProperty Id="DESKTOPSHORTCUTCHOICE" Action="RememberDesktopShortcut" Value="1" Before="InstallInitialize" Sequence="execute"
+        Condition="INSTALLDESKTOPSHORTCUT = &quot;1&quot;" />
+
+    <Feature Id="Main" Title="Mahay Trano" Level="1">
+      <ComponentGroupRef Id="MahayLauncherFiles" />
+    </Feature>
+
+    <!-- The setup wizard: WixUI_InstallDir without its licence page, and with our folder page
+         (MahayInstallDirDlg: the stock one plus the desktop-shortcut box) in place of the stock
+         one. A later NewDialog on the same button wins. -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <UI>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="MahayInstallDirDlg" Order="2" Condition="NOT Installed" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MahayInstallDirDlg" Order="2" Condition="NOT Installed" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchMahayLauncher"
+          Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+
+      <Dialog Id="MahayInstallDirDlg" Width="370" Height="270" Title="!(loc.InstallDirDlg_Title)">
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
+          <!-- As WixUI_InstallDir does for its own folder page: take the folder, check it, go on. -->
+          <Publish Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1" />
+          <Publish Event="DoAction" Value="WixUIValidatePath_$(sys.BUILDARCHSHORT)" Order="2" Condition="NOT WIXUI_DONTVALIDATEPATH" />
+          <Publish Event="SpawnDialog" Value="InvalidDirDlg" Order="3" Condition="NOT WIXUI_DONTVALIDATEPATH AND WIXUI_INSTALLDIR_VALID&lt;&gt;&quot;1&quot;" />
+          <Publish Event="NewDialog" Value="VerifyReadyDlg" Order="4" Condition="WIXUI_DONTVALIDATEPATH OR WIXUI_INSTALLDIR_VALID=&quot;1&quot;" />
+        </Control>
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)">
+          <Publish Event="NewDialog" Value="WelcomeDlg" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.InstallDirDlgDescription)" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.InstallDirDlgTitle)" />
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.InstallDirDlgBannerBitmap)" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+
+        <Control Id="FolderLabel" Type="Text" X="20" Y="60" Width="290" Height="30" NoPrefix="yes" Text="!(loc.InstallDirDlgFolderLabel)" />
+        <Control Id="Folder" Type="PathEdit" X="20" Y="100" Width="320" Height="18" Property="WIXUI_INSTALLDIR" Indirect="yes" />
+        <Control Id="ChangeFolder" Type="PushButton" X="20" Y="120" Width="56" Height="17" Text="!(loc.InstallDirDlgChange)">
+          <Publish Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1" />
+          <Publish Event="SpawnDialog" Value="BrowseDlg" Order="2" />
+        </Control>
+        <Control Id="PerUserNote" Type="Text" X="20" Y="146" Width="330" Height="24" NoPrefix="yes" Text="!(loc.MahayInstallDirNote)" />
+
+        <Control Id="DesktopShortcut" Type="CheckBox" X="20" Y="186" Width="330" Height="17" Property="INSTALLDESKTOPSHORTCUT" CheckBoxValue="1" Text="!(loc.MahayDesktopShortcut)" />
+      </Dialog>
+    </UI>
+    <!-- Our own art, drawn by package.ps1 from the Mahay mark and the Mahay apps' icons. -->
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.BannerBmp)" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.DialogBmp)" />
+
+    <!-- The full version (Version is numeric, so it drops a pre-release tag), shown on the wizard's
+         pages through trano.en-us.wxl. -->
+    <Property Id="MahayLauncherVersion" Value="$(var.DisplayVersion)" />
+
+    <!-- Finish page: say where to find the launcher, and offer to start it (ticked by default). -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Mahay Trano $(var.DisplayVersion) is installed. Start it any time from the Start menu to install and update the Mahay App Suite." />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Mahay Trano" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#MahayLauncherExe]" />
+    <!-- Runs in the wizard's own process, so the launcher starts as the user. -->
+    <CustomAction Id="LaunchMahayLauncher" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="MahayLauncherFiles">
+      <Component Id="MahayLauncherApp" Directory="INSTALLFOLDER" Guid="55DCC431-EBEF-4C11-BABB-6D78CE0ECF4E">
+        <File Id="MahayLauncherExe" Source="$(var.BinDir)\trano.exe" KeyPath="no" />
+        <!-- Read back by the next version's installer and by the launcher (self_update.rs). -->
+        <RegistryValue Root="HKCU" Key="Software\Learning Machines LLC\Mahay Trano" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKCU" Key="Software\Learning Machines LLC\Mahay Trano" Name="DesktopShortcutChoice" Value="[DESKTOPSHORTCUTCHOICE]" Type="string" />
+        <!-- Win+R "trano". -->
+        <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\trano.exe" Value="[#MahayLauncherExe]" Type="string" />
+        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveLocalProgramsFolder" Directory="LocalProgramsFolder" On="uninstall" />
+      </Component>
+
+      <Component Id="MahayLauncherShortcut" Directory="ProgramMenuFolder" Guid="870F3DFA-BC0F-497F-85D5-A361B04826AF">
+        <Shortcut Id="StartMenuShortcut" Name="Mahay Trano"
+            Description="Install and update the Mahay App Suite"
+            Target="[#MahayLauncherExe]" WorkingDirectory="INSTALLFOLDER"
+            Icon="MahayLauncherIcon.exe" IconIndex="0">
+          <ShortcutProperty Key="System.AppUserModel.ID" Value="ai.storyteller.trano" />
+        </Shortcut>
+        <RegistryValue Root="HKCU" Key="Software\Learning Machines LLC\Mahay Trano" Name="StartMenuShortcut" Value="1" Type="integer" KeyPath="yes" />
+      </Component>
+
+      <!-- Only when the folder page's box is ticked; removed on uninstall like everything else. -->
+      <Component Id="MahayLauncherDesktopShortcut" Directory="DesktopFolder" Guid="CF06DCF3-BE5A-4A2B-B3BF-F553CC6E5D60"
+          Condition="INSTALLDESKTOPSHORTCUT = &quot;1&quot;">
+        <Shortcut Id="DesktopShortcut" Name="Mahay Trano"
+            Description="Install and update the Mahay App Suite"
+            Target="[#MahayLauncherExe]" WorkingDirectory="INSTALLFOLDER"
+            Icon="MahayLauncherIcon.exe" IconIndex="0">
+          <ShortcutProperty Key="System.AppUserModel.ID" Value="ai.storyteller.trano" />
+        </Shortcut>
+        <RegistryValue Root="HKCU" Key="Software\Learning Machines LLC\Mahay Trano" Name="DesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

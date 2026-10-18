@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 fn session() -> Session {
     let mut s = Session::new();
@@ -334,7 +334,7 @@ fn relight_records_a_smart_filter_and_can_be_hidden() {
     let (is_relight, lit) = {
         let d = s.active().unwrap();
         let layer = d.doc.layer(d.active_layer.unwrap()).unwrap();
-        let photocraft_doc::LayerContent::Smart(sm) = &layer.content else { panic!("expected a smart object") };
+        let sary_doc::LayerContent::Smart(sm) = &layer.content else { panic!("expected a smart object") };
         let ok = sm.smart_filters.iter().any(|f| f.command == "filter.render.relight");
         (ok, layer.surface().unwrap().read_region(Rect::new(0, 0, 32, 32)))
     };

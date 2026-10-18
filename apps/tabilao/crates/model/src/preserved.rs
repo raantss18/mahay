@@ -1,4 +1,4 @@
-//! File content GridCraft does not model, carried through unchanged so that saving a workbook
+//! File content Tabilao does not model, carried through unchanged so that saving a workbook
 //! never silently drops it (XLSX pass-through: custom XML, external links, connections, query
 //! tables, form controls, OLE objects…).
 //!
@@ -13,7 +13,7 @@ use crate::sheet::Visibility;
 /// to a kept part or to an external target.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PreservedRel {
-    /// The id in the source file (`rId7`). Ids of an owner GridCraft writes are reassigned on save.
+    /// The id in the source file (`rId7`). Ids of an owner Tabilao writes are reassigned on save.
     pub id: String,
     /// The full relationship type URI.
     pub rel_type: String,

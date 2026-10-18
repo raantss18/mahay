@@ -10,11 +10,11 @@
 use std::sync::mpsc::{Receiver, TryRecvError};
 
 use egui::ColorImage;
-use photocraft_engine::edit_menu_cmds::ContentAwareScalePreview;
-use photocraft_engine::jobs::JobCtx;
+use sary_engine::edit_menu_cmds::ContentAwareScalePreview;
+use sary_engine::jobs::JobCtx;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::{ContentAwareOptions, TransformSession};
 use crate::transform_tex::PreviewTextures;
 
@@ -73,11 +73,11 @@ impl Live {
 }
 
 /// Edit › Content-Aware Scale from the menu: open the box (`Err` says why it can't).
-pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<Value, String> {
+pub fn begin(app: &mut SaryApp, ctx: &egui::Context) -> Result<Value, String> {
     if app.ui.transform.is_some() {
         return Err("Commit or cancel the transform first".into());
     }
-    if let Some(Err(why)) = photocraft_engine::commands::find(COMMAND).map(|c| (c.enabled)(&app.session)) {
+    if let Some(Err(why)) = sary_engine::commands::find(COMMAND).map(|c| (c.enabled)(&app.session)) {
         return Err(why);
     }
     // The command's own checks and area (the selection's bounds, else the layer's content).
@@ -122,7 +122,7 @@ pub(crate) fn params(t: &TransformSession, o: &ContentAwareOptions, place: bool)
 }
 
 /// ↩: run the command for the box. An untouched box changes nothing and adds no step.
-pub(crate) fn commit(app: &mut PhotocraftApp, t: &TransformSession, o: &ContentAwareOptions) {
+pub(crate) fn commit(app: &mut SaryApp, t: &TransformSession, o: &ContentAwareOptions) {
     if t.quad == [[t.rect[0], t.rect[1]], [t.rect[2], t.rect[1]], [t.rect[2], t.rect[3]], [t.rect[0], t.rect[3]]] {
         return;
     }
@@ -134,7 +134,7 @@ pub(crate) fn commit(app: &mut PhotocraftApp, t: &TransformSession, o: &ContentA
 
 /// Once per frame while the box is open: take a finished preview, cancel one gone stale and start
 /// one for the box as it is now.
-pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(t) = app.ui.transform.as_ref() else { return };
     let Some(o) = t.content_aware.as_ref() else { return };
     let unscaled = box_size(t) == source_size(t);
@@ -181,7 +181,7 @@ pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             let surf = preview.run(&work).map_err(|e| e.to_string())?;
             let [w, h] = preview.size();
-            Ok(crate::transform_tex::read_surface(&surf, None, photocraft_geom::Rect::from_xywh(0, 0, w, h), usize::MAX).0)
+            Ok(crate::transform_tex::read_surface(&surf, None, sary_geom::Rect::from_xywh(0, 0, w, h), usize::MAX).0)
         }))
         .unwrap_or_else(|_| Err("Content-Aware Scale preview failed".into()));
         let _ = tx.send(result);
@@ -202,7 +202,7 @@ pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// The options bar while the box is open: X/Y, W/H, Amount, Protect and Protect Skin Tones.
-pub fn fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, t: &TransformSession) {
+pub fn fields(app: &mut SaryApp, ui: &mut egui::Ui, t: &TransformSession) {
     let Some(o) = t.content_aware.clone() else { return };
     let tk = crate::theme::Tokens::get(ui.ctx());
     let lbl = |ui: &mut egui::Ui, s: &str| {
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn menu_opens_a_scale_box_and_enter_commits_one_step() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let ctx = egui::Context::default();
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();

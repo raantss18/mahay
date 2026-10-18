@@ -78,7 +78,7 @@ pub fn command(app: &mut SlideApp, p: &Value) -> Result<Value, String> {
         if !app.ui.qat.iter().any(|q| q.same(id, &params)) {
             let base = common().into_iter().find(|q| q.id == id);
             let label = p.get("label").and_then(Value::as_str).map(String::from).or_else(|| base.as_ref().map(|b| b.label.clone()));
-            let label = label.or_else(|| deckcraft_engine::find_command(id).map(|c| c.label.to_string())).unwrap_or_else(|| id.to_string());
+            let label = label.or_else(|| seho_engine::find_command(id).map(|c| c.label.to_string())).unwrap_or_else(|| id.to_string());
             let icon = p.get("icon").and_then(Value::as_str).and_then(Icon::from_name).or_else(|| base.map(|b| b.icon())).unwrap_or(Icon::More);
             app.ui.qat.push(QatItem { id: id.into(), params: params.clone(), label, icon: icon.name().into() });
         }
@@ -103,7 +103,7 @@ fn run(app: &mut SlideApp, q: &QatItem) {
 
 fn tip(q: &QatItem) -> String {
     let sc =
-        deckcraft_engine::find_command(&q.id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == q.id).and_then(|c| c.2));
+        seho_engine::find_command(&q.id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == q.id).and_then(|c| c.2));
     match sc {
         Some(s) => format!("{} ({})", q.label, crate::ribbon::pretty_shortcut(s)),
         None => q.label.clone(),

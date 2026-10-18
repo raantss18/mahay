@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef};
-use gridcraft_formula::adjust::{Axis, Edit};
-use gridcraft_model::{Anchor, AnchorMode, Sheet, Visibility};
+use tabilao_core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef};
+use tabilao_formula::adjust::{Axis, Edit};
+use tabilao_model::{Anchor, AnchorMode, Sheet, Visibility};
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -214,14 +214,14 @@ fn shift_sheet_features(sh: &mut Sheet, axis: Axis, at: u32, count: u32, insert:
 }
 
 /// Rewrites every formula reference (and chart series) for a structural edit on `target`.
-fn rewrite(wb: &mut gridcraft_model::Workbook, target: &str, e: &Edit) {
+fn rewrite(wb: &mut tabilao_model::Workbook, target: &str, e: &Edit) {
     super::edit::rewrite_all_formulas(wb, target, e);
     for si in 0..wb.sheets.len() {
         let host = wb.sheets.get(si).map(|s| s.name.clone()).unwrap_or_default();
         let Some(sh) = wb.sheet_mut(si) else { continue };
         let fix = |text: &str| -> String {
-            match gridcraft_formula::parse(text) {
-                Ok(expr) => gridcraft_formula::print(&gridcraft_formula::adjust::adjust(expr, &host, target, e)),
+            match tabilao_formula::parse(text) {
+                Ok(expr) => tabilao_formula::print(&tabilao_formula::adjust::adjust(expr, &host, target, e)),
                 Err(_) => text.to_string(),
             }
         };
@@ -279,7 +279,7 @@ fn insert_lines(s: &mut Session, p: &Json, axis: Axis) -> Result<Json> {
                 if let Some(info) = prev {
                     for i in at..at + count {
                         let map = if axis == Axis::Rows { &mut sh.rows } else { &mut sh.cols };
-                        map.insert(i, gridcraft_model::LineInfo { hidden: false, outline: 0, collapsed: false, ..info });
+                        map.insert(i, tabilao_model::LineInfo { hidden: false, outline: 0, collapsed: false, ..info });
                     }
                 }
             }
@@ -691,7 +691,7 @@ fn check_lines_protection(s: &Session, p: &Json, axis: Axis, at: u32, count: u32
         (Axis::Cols, true) => pr.insert_columns,
         (Axis::Cols, false) => pr.delete_columns,
     };
-    let locked = |st: gridcraft_model::StyleId| wb.styles.get(st).protection.locked;
+    let locked = |st: tabilao_model::StyleId| wb.styles.get(st).protection.locked;
     let refuse = || EngineError::Other(PROTECTED.into());
     if !allowed {
         return Err(refuse());
@@ -726,14 +726,14 @@ fn delete_sheet(s: &mut Session, p: &Json) -> Result<Json> {
     edit_doc(d, |cx| {
         cx.wb.sheets.remove(i);
         for si in 0..cx.wb.sheets.len() {
-            let keys: Vec<(CellRef, Arc<gridcraft_model::Formula>)> =
+            let keys: Vec<(CellRef, Arc<tabilao_model::Formula>)> =
                 cx.wb.sheets.get(si).map(|s| s.cells.iter().filter_map(|(c, x)| x.formula.clone().map(|f| (c, f))).collect()).unwrap_or_default();
             let Some(sh) = cx.wb.sheet_mut(si) else { continue };
             for (c, f) in keys {
                 if let Some(e) = f.expr() {
-                    let ne = gridcraft_formula::adjust::delete_sheet(e, &name, &order);
+                    let ne = tabilao_formula::adjust::delete_sheet(e, &name, &order);
                     if let Some(cell) = sh.cells.get_mut(c) {
-                        cell.formula = Some(Arc::new(gridcraft_model::Formula::from_expr(ne)));
+                        cell.formula = Some(Arc::new(tabilao_model::Formula::from_expr(ne)));
                     }
                 }
             }
@@ -746,10 +746,10 @@ fn delete_sheet(s: &mut Session, p: &Json) -> Result<Json> {
                 *sc -= 1;
             }
             // Names referring to the sheet become #REF!.
-            if let Ok(e) = gridcraft_formula::parse(&n.formula) {
-                let ne = gridcraft_formula::adjust::delete_sheet(e.clone(), &name, &order);
+            if let Ok(e) = tabilao_formula::parse(&n.formula) {
+                let ne = tabilao_formula::adjust::delete_sheet(e.clone(), &name, &order);
                 if ne != e {
-                    n.formula = gridcraft_formula::print(&ne);
+                    n.formula = tabilao_formula::print(&ne);
                 }
             }
         }
@@ -774,23 +774,23 @@ fn rename_sheet(s: &mut Session, p: &Json) -> Result<Json> {
         let old = cx.wb.sheet(i).map(|s| s.name.clone()).unwrap_or_default();
         cx.sheet_mut(i)?.name = name.clone();
         for si in 0..cx.wb.sheets.len() {
-            let keys: Vec<(CellRef, Arc<gridcraft_model::Formula>)> =
+            let keys: Vec<(CellRef, Arc<tabilao_model::Formula>)> =
                 cx.wb.sheets.get(si).map(|s| s.cells.iter().filter_map(|(c, x)| x.formula.clone().map(|f| (c, f))).collect()).unwrap_or_default();
             let Some(sh) = cx.wb.sheet_mut(si) else { continue };
             for (c, f) in keys {
                 if let Some(e) = f.expr() {
-                    let ne = gridcraft_formula::adjust::rename_sheet(e, &old, &name);
-                    let text = gridcraft_formula::print(&ne);
+                    let ne = tabilao_formula::adjust::rename_sheet(e, &old, &name);
+                    let text = tabilao_formula::print(&ne);
                     if text != f.text
                         && let Some(cell) = sh.cells.get_mut(c)
                     {
-                        cell.formula = Some(Arc::new(gridcraft_model::Formula::from_expr(ne)));
+                        cell.formula = Some(Arc::new(tabilao_model::Formula::from_expr(ne)));
                     }
                 }
             }
             let fix = |t: &str| {
-                gridcraft_formula::parse(t)
-                    .map(|e| gridcraft_formula::print(&gridcraft_formula::adjust::rename_sheet(e, &old, &name)))
+                tabilao_formula::parse(t)
+                    .map(|e| tabilao_formula::print(&tabilao_formula::adjust::rename_sheet(e, &old, &name)))
                     .unwrap_or_else(|_| t.to_string())
             };
             for ch in sh.charts.iter_mut() {
@@ -808,8 +808,8 @@ fn rename_sheet(s: &mut Session, p: &Json) -> Result<Json> {
             }
         }
         for n in cx.wb.names.iter_mut() {
-            if let Ok(e) = gridcraft_formula::parse(&n.formula) {
-                n.formula = gridcraft_formula::print(&gridcraft_formula::adjust::rename_sheet(e, &old, &name));
+            if let Ok(e) = tabilao_formula::parse(&n.formula) {
+                n.formula = tabilao_formula::print(&tabilao_formula::adjust::rename_sheet(e, &old, &name));
             }
         }
         cx.structural = true;
@@ -841,16 +841,16 @@ fn move_sheet(s: &mut Session, p: &Json) -> Result<Json> {
             sh.preserved = None; // kept file content (form controls, OLE objects…) stays with the original
             let at = to.min(n);
             // The copy gets its own copies of the sheet's names, referring to the copy.
-            let copies: Vec<gridcraft_model::DefinedName> = cx
+            let copies: Vec<tabilao_model::DefinedName> = cx
                 .wb
                 .names
                 .iter()
                 .filter(|nm| nm.scope == Some(i))
                 .map(|nm| {
-                    let formula = gridcraft_formula::parse(&nm.formula)
-                        .map(|e| gridcraft_formula::print(&gridcraft_formula::adjust::rename_sheet(e, &base, &sh.name)))
+                    let formula = tabilao_formula::parse(&nm.formula)
+                        .map(|e| tabilao_formula::print(&tabilao_formula::adjust::rename_sheet(e, &base, &sh.name)))
                         .unwrap_or_else(|_| nm.formula.clone());
-                    gridcraft_model::DefinedName { scope: Some(at), formula, ..nm.clone() }
+                    tabilao_model::DefinedName { scope: Some(at), formula, ..nm.clone() }
                 })
                 .collect();
             for nm in cx.wb.names.iter_mut() {
@@ -889,7 +889,7 @@ fn tab_color(s: &mut Session, p: &Json) -> Result<Json> {
     let i = target_sheet(s, p)?;
     let c = super::format::color_param(p.get("color"));
     edit(s, |cx| {
-        cx.sheet_mut(i)?.tab_color = c.filter(|c| *c != gridcraft_model::Color::Auto);
+        cx.sheet_mut(i)?.tab_color = c.filter(|c| *c != tabilao_model::Color::Auto);
         Ok(Json::Null)
     })
 }
@@ -948,15 +948,15 @@ fn step_sheet(s: &mut Session, dir: i64) -> Result<Json> {
 
 /// Where a range of the edited sheet goes after a structural edit (`None` = deleted).
 pub(crate) fn map_range(r: RangeRef, e: &Edit) -> Option<RangeRef> {
-    let expr = gridcraft_formula::Expr::Ref(gridcraft_formula::Reference {
-        sheet: gridcraft_formula::SheetSel::Current,
-        kind: gridcraft_formula::RefKind::Range(
-            gridcraft_formula::Anchor { row: r.start.row, col: r.start.col, row_abs: false, col_abs: false },
-            gridcraft_formula::Anchor { row: r.end.row, col: r.end.col, row_abs: false, col_abs: false },
+    let expr = tabilao_formula::Expr::Ref(tabilao_formula::Reference {
+        sheet: tabilao_formula::SheetSel::Current,
+        kind: tabilao_formula::RefKind::Range(
+            tabilao_formula::Anchor { row: r.start.row, col: r.start.col, row_abs: false, col_abs: false },
+            tabilao_formula::Anchor { row: r.end.row, col: r.end.col, row_abs: false, col_abs: false },
         ),
     });
-    match gridcraft_formula::adjust::adjust(expr, "S", "S", e) {
-        gridcraft_formula::Expr::Ref(r) => Some(r.range()),
+    match tabilao_formula::adjust::adjust(expr, "S", "S", e) {
+        tabilao_formula::Expr::Ref(r) => Some(r.range()),
         _ => None,
     }
 }
@@ -1011,7 +1011,7 @@ fn shift_cell_features(sh: &mut Sheet, e: &Edit) {
 
 /// Columns inserted inside a table become new table columns (with names no other column has);
 /// deleted ones leave it.
-fn shift_table_columns(t: &mut gridcraft_model::Table, at: u32, count: u32, insert: bool) {
+fn shift_table_columns(t: &mut tabilao_model::Table, at: u32, count: u32, insert: bool) {
     if insert {
         if at > t.range.start.col && at <= t.range.end.col {
             let idx = (at - t.range.start.col) as usize;
@@ -1024,7 +1024,7 @@ fn shift_table_columns(t: &mut gridcraft_model::Table, at: u32, count: u32, inse
                         break name;
                     }
                 };
-                let col = gridcraft_model::TableColumn {
+                let col = tabilao_model::TableColumn {
                     name,
                     totals: Default::default(),
                     totals_label: None,

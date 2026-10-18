@@ -4,16 +4,16 @@
 use egui::{Key, Modifiers};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 20, "height": 10})).unwrap();
     app.run("layer.new.layer", json!({})).unwrap();
     app
 }
 
-fn press(app: &mut PhotocraftApp, key: Key, modifiers: Modifiers) {
+fn press(app: &mut SaryApp, key: Key, modifiers: Modifiers) {
     let ctx = egui::Context::default();
     let raw = egui::RawInput {
         events: vec![egui::Event::ModifiersChanged(modifiers), egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }],
@@ -24,7 +24,7 @@ fn press(app: &mut PhotocraftApp, key: Key, modifiers: Modifiers) {
     ctx.end_pass().textures_delta.clear();
 }
 
-fn active(app: &PhotocraftApp) -> &photocraft_doc::Layer {
+fn active(app: &SaryApp) -> &sary_doc::Layer {
     let st = app.session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap()
 }
@@ -53,11 +53,11 @@ fn command_backslash_targets_the_layer_mask() {
     app.run("layer.layerMask.revealAll", json!({})).unwrap();
     app.run("channel.target.composite", json!({})).unwrap();
     press(&mut app, Key::Backslash, Modifiers::COMMAND);
-    assert_eq!(app.session.active().unwrap().channel_view.target, photocraft_engine::channel_cmds::ChannelTarget::LayerMask);
+    assert_eq!(app.session.active().unwrap().channel_view.target, sary_engine::channel_cmds::ChannelTarget::LayerMask);
     assert!(app.ui.mask_target && app.layer_mask_targeted(), "the Layers panel targets the mask too");
     // Ctrl+2 goes back to the layer's pixels, in the Layers panel and for the tools.
     press(&mut app, Key::Num2, Modifiers::COMMAND);
-    assert_eq!(app.session.active().unwrap().channel_view.target, photocraft_engine::channel_cmds::ChannelTarget::Composite);
+    assert_eq!(app.session.active().unwrap().channel_view.target, sary_engine::channel_cmds::ChannelTarget::Composite);
     assert!(!app.ui.mask_target && !app.layer_mask_targeted());
     // The same after targeting the mask by its thumbnail (the panel's own flag).
     app.ui.mask_target = true;
@@ -76,7 +76,7 @@ fn command_alt_2_loads_luminosity() {
 #[test]
 fn command_alt_backspace_fills_from_history() {
     // The Background exists in the oldest state, so its pixels come back from there.
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 20, "height": 10})).unwrap();
     app.run("tools.setColors", json!({"foreground": "#ff0000"})).unwrap();
     app.run("edit.fillForeground", json!({})).unwrap();
@@ -89,7 +89,7 @@ fn command_alt_backspace_fills_from_history() {
 #[test]
 fn alt_click_on_a_layer_thumbnail_fits_the_layer() {
     use egui::{Event, PointerButton, pos2, vec2};
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 400, "height": 300})).unwrap();
     let small = s.execute("layer.new.layer", json!({"name": "Small"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("select.rect", json!({"x": 300, "y": 200, "width": 20, "height": 10})).unwrap();
@@ -97,8 +97,8 @@ fn alt_click_on_a_layer_thumbnail_fits_the_layer() {
     s.execute("select.deselect", json!({})).unwrap();
     s.execute("layer.new.layer", json!({"name": "Top"})).unwrap();
     let mut h = egui_kittest::Harness::builder().with_size(vec2(1440.0, 900.0)).with_step_dt(1.0 / 60.0).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(s, crate::Services::default())
     });
     let ctx = h.ctx.clone();
     let (r, _) = crate::control::ControlRequest::new("ui.set", json!({"dock": {"collapsed": ["color", "properties", "history", "navigator"]}}));
@@ -117,7 +117,7 @@ fn alt_click_on_a_layer_thumbnail_fits_the_layer() {
     h.event(Event::ModifiersChanged(Modifiers::NONE));
     h.run_steps(3);
     let app = h.state();
-    assert_eq!(app.session.active().unwrap().active_layer, Some(photocraft_doc::LayerId(small)));
+    assert_eq!(app.session.active().unwrap().active_layer, Some(sary_doc::LayerId(small)));
     let v = &app.ui.views[0];
     assert_eq!(v.center, [310.0, 205.0], "centred on the layer's content");
     assert!(v.zoom > before.zoom * 4.0, "zoomed in on 20 × 10 px: {} -> {}", before.zoom, v.zoom);

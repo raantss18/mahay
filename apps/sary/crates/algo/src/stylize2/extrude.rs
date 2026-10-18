@@ -5,7 +5,7 @@ use crate::fxutil::{MAXC, luma, ncol, subtractive, unpremul_px};
 use crate::image::Image;
 use crate::noise::hash01;
 use crate::{Ctx, ExtrudeType};
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 const MAX_PIXELS: usize = 4_194_304;
 const MAX_CELLS: i64 = 262_144;

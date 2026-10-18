@@ -42,7 +42,7 @@ impl VideoFeed {
             let (tx, cmd_rx) = std::sync::mpsc::channel::<Cmd>();
             let (frame_tx, rx) = std::sync::mpsc::sync_channel::<(u64, Option<Frame>)>(AHEAD);
             let worker = move || worker(dec, cmd_rx, frame_tx);
-            if let Err(e) = std::thread::Builder::new().name("deckcraft-video-decode".into()).spawn(worker) {
+            if let Err(e) = std::thread::Builder::new().name("seho-video-decode".into()).spawn(worker) {
                 return Err(crate::MediaError::Corrupt(format!("couldn't start the decoder: {e}")));
             }
             Ok(VideoFeed { size, current: None, next: None, generation: 0, ended: false, tx, rx })

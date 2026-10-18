@@ -1,11 +1,11 @@
 //! Insert tab: shapes, text boxes, pictures, tables, charts, audio, video, WordArt, fields.
 
-use deckcraft_color::SchemeSlot;
-use deckcraft_geom::Xfrm;
-use deckcraft_model::chart::ChartType;
-use deckcraft_model::style::PictureFill;
-use deckcraft_model::text::{AutoFit, RunKind, TextBody};
-use deckcraft_model::{Chart, ColorRef, Fill, Geom, Line, MediaClip, Shape, ShapeId, ShapeKind, ShapeStyle, Table};
+use seho_color::SchemeSlot;
+use seho_geom::Xfrm;
+use seho_model::chart::ChartType;
+use seho_model::style::PictureFill;
+use seho_model::text::{AutoFit, RunKind, TextBody};
+use seho_model::{Chart, ColorRef, Fill, Geom, Line, MediaClip, Shape, ShapeId, ShapeKind, ShapeStyle, Table};
 use serde_json::{Value, json};
 
 use super::*;
@@ -145,7 +145,7 @@ pub fn specs() -> Vec<CommandSpec> {
 
 /// Default size for a click-inserted shape (1 inch square, PowerPoint style).
 fn default_rect(s: &Session, w: f64, h: f64) -> Xfrm {
-    let size = s.active().map(|d| d.doc.slide_size).unwrap_or(deckcraft_model::defaults::WIDE);
+    let size = s.active().map(|d| d.doc.slide_size).unwrap_or(seho_model::defaults::WIDE);
     Xfrm::new((size.width - w) / 2.0, (size.height - h) / 2.0, w, h)
 }
 
@@ -164,7 +164,7 @@ pub(crate) fn add_shape(s: &mut Session, cmd: &str, mut shape: Shape, select: bo
                 _ => shape
                     .geom
                     .preset_name()
-                    .and_then(deckcraft_geom::preset::info)
+                    .and_then(seho_geom::preset::info)
                     .map(|i| i.label.split(':').next().unwrap_or(i.label).trim().to_string())
                     .unwrap_or_else(|| "Shape".into()),
             };
@@ -184,8 +184,8 @@ pub(crate) fn add_shape(s: &mut Session, cmd: &str, mut shape: Shape, select: bo
 
 fn insert_shape(s: &mut Session, p: &Value) -> Result<Value> {
     let preset = str_param(p, "preset").unwrap_or("rect");
-    let info = deckcraft_geom::preset::info(preset).ok_or_else(|| bad("shape.insert", format!("unknown preset `{preset}`")))?;
-    let line_like = deckcraft_geom::preset::is_line_like(preset);
+    let info = seho_geom::preset::info(preset).ok_or_else(|| bad("shape.insert", format!("unknown preset `{preset}`")))?;
+    let line_like = seho_geom::preset::is_line_like(preset);
     let rect = rect_param(p, "rect").unwrap_or_else(|| default_rect(s, 72.0, if line_like { 0.0 } else { 72.0 }));
     let adj: Vec<f64> = p.get("adj").and_then(Value::as_array).map(|a| a.iter().filter_map(Value::as_f64).collect()).unwrap_or_default();
     let mut shape = Shape {
@@ -207,14 +207,14 @@ fn insert_shape(s: &mut Session, p: &Value) -> Result<Value> {
         }
         if let Some(tb) = shape.text.as_mut() {
             for para in &mut tb.paragraphs {
-                para.props.align = Some(deckcraft_model::text::Align::Center);
+                para.props.align = Some(seho_model::text::Align::Center);
             }
         }
     } else {
         shape.kind = if preset.contains("Connector") { ShapeKind::Connector { start: None, end: None } } else { ShapeKind::Shape };
         if preset == "straightConnector1" {
-            shape.line = Some(deckcraft_model::Line {
-                tail: Some(deckcraft_model::style::LineEnd { kind: "triangle".into(), w: "med".into(), len: "med".into() }),
+            shape.line = Some(seho_model::Line {
+                tail: Some(seho_model::style::LineEnd { kind: "triangle".into(), w: "med".into(), len: "med".into() }),
                 ..Default::default()
             });
         }
@@ -228,7 +228,7 @@ fn insert_shape(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn presets(_s: &mut Session, _p: &Value) -> Result<Value> {
     Ok(Value::Array(
-        deckcraft_geom::preset::CATALOG.iter().map(|i| json!({"name": i.name, "label": i.label, "category": i.category.label()})).collect(),
+        seho_geom::preset::CATALOG.iter().map(|i| json!({"name": i.name, "label": i.label, "category": i.category.label()})).collect(),
     ))
 }
 
@@ -249,11 +249,11 @@ fn insert_icon(s: &mut Session, p: &Value) -> Result<Value> {
         name: icon.label.to_string(),
         xfrm: Some(rect),
         geom: Geom::Custom {
-            paths: vec![deckcraft_model::CustomPath {
+            paths: vec![seho_model::CustomPath {
                 w: crate::icons::VIEW,
                 h: crate::icons::VIEW,
                 d,
-                fill: deckcraft_geom::preset::FillMode::None,
+                fill: seho_geom::preset::FillMode::None,
                 stroke: true,
             }],
         },
@@ -261,8 +261,8 @@ fn insert_icon(s: &mut Session, p: &Value) -> Result<Value> {
         line: Some(Line {
             fill: Some(Fill::solid(ColorRef::scheme(SchemeSlot::Tx1))),
             width: Some(crate::icons::stroke_width(icon, rect.w, rect.h)),
-            cap: Some(deckcraft_model::style::LineCap::Round),
-            join: Some(deckcraft_model::style::LineJoin::Round),
+            cap: Some(seho_model::style::LineCap::Round),
+            join: Some(seho_model::style::LineJoin::Round),
             ..Default::default()
         }),
         style: Some(ShapeStyle::line(SchemeSlot::Tx1)),
@@ -380,7 +380,7 @@ fn fitted(s: &Session, bytes: &[u8]) -> (f64, f64) {
         .and_then(|r| r.into_dimensions().ok())
         .map(|(w, h)| (w as f64 * 0.75, h as f64 * 0.75))
         .unwrap_or((288.0, 216.0));
-    let size = s.active().map(|d| d.doc.slide_size).unwrap_or(deckcraft_model::defaults::WIDE);
+    let size = s.active().map(|d| d.doc.slide_size).unwrap_or(seho_model::defaults::WIDE);
     let k = (size.width * 0.9 / w.max(1.0)).min(size.height * 0.9 / h.max(1.0)).min(1.0);
     (w * k, h * k)
 }
@@ -391,7 +391,7 @@ fn picture(s: &mut Session, p: &Value) -> Result<Value> {
     if !ct.starts_with("image/") {
         return Err(bad("insert.picture", format!("{name} is not a picture")));
     }
-    if ct != "image/svg+xml" && deckcraft_render::decode_image(&bytes).is_none() {
+    if ct != "image/svg+xml" && seho_render::decode_image(&bytes).is_none() {
         return Err(EngineError::Other(format!("{name}: the picture can't be read")));
     }
     let (w, h) = fitted(s, &bytes);
@@ -401,7 +401,7 @@ fn picture(s: &mut Session, p: &Value) -> Result<Value> {
             .into_iter()
             .find(|x| {
                 x.ph_type()
-                    .is_some_and(|k| matches!(k, deckcraft_model::PhType::Picture | deckcraft_model::PhType::Obj | deckcraft_model::PhType::Body))
+                    .is_some_and(|k| matches!(k, seho_model::PhType::Picture | seho_model::PhType::Obj | seho_model::PhType::Body))
                     && x.text.as_ref().is_none_or(|t| t.is_empty())
             })
             .map(|x| (x.id, xfrm_of(&d.doc, &d.selection, x)))
@@ -442,7 +442,7 @@ fn picture(s: &mut Session, p: &Value) -> Result<Value> {
                 sh.kind = shape.kind.clone();
                 sh.xfrm = Some(rect);
                 sh.ph = phv.map(|mut p| {
-                    p.kind = deckcraft_model::PhType::Picture;
+                    p.kind = seho_model::PhType::Picture;
                     p
                 });
                 sh.text = None;
@@ -551,7 +551,7 @@ fn commit_album(s: &mut Session, items: Vec<AlbumItem>, opts: AlbumOpts, replace
         };
         let at = if let Some((_, ids)) = &replace {
             let st = s.doc()?;
-            let indices: Vec<usize> = ids.iter().filter_map(|id| st.doc.slide_index(deckcraft_model::SlideId(*id as u32))).collect();
+            let indices: Vec<usize> = ids.iter().filter_map(|id| st.doc.slide_index(seho_model::SlideId(*id as u32))).collect();
             let Some(at) = indices.iter().copied().min() else {
                 return Err(bad("insert.photoAlbumEdit", "that photo album is no longer in this presentation"));
             };
@@ -658,7 +658,7 @@ fn album_opts(p: &Value) -> Result<AlbumOpts> {
         Some(Value::String(s)) if s.trim().is_empty() => None,
         Some(Value::String(s)) => {
             let name = s.trim();
-            let found = deckcraft_model::theme::builtin_themes().into_iter().find(|t| t.name.eq_ignore_ascii_case(name));
+            let found = seho_model::theme::builtin_themes().into_iter().find(|t| t.name.eq_ignore_ascii_case(name));
             let Some(t) = found else {
                 return Err(bad("insert.photoAlbum", format!("unknown theme `{name}`")));
             };
@@ -742,7 +742,7 @@ fn album_items(p: &Value) -> Result<Vec<AlbumItem>> {
         if !ct.starts_with("image/") {
             return Err(bad("insert.photoAlbum", format!("{name} is not a picture")));
         }
-        if ct != "image/svg+xml" && deckcraft_render::decode_image(&bytes).is_none() {
+        if ct != "image/svg+xml" && seho_render::decode_image(&bytes).is_none() {
             return Err(bad("insert.photoAlbum", format!("{name}: the picture can't be read")));
         }
         let (px_w, px_h) = image_px(&bytes);
@@ -886,7 +886,7 @@ struct AlbumMark {
 }
 
 fn parse_album_mark(raw: &str) -> Option<AlbumMark> {
-    let rest = raw.strip_prefix("deckcraft-album:")?;
+    let rest = raw.strip_prefix("seho-album:")?;
     let (id_str, rest) = rest.split_once(';').unwrap_or((rest, ""));
     let id = id_str.parse::<u32>().ok().filter(|id| *id != 0)?;
     let mut mark = AlbumMark { id, layout: String::new(), frame: String::new(), captions: false, grayscale: false, theme: String::new() };
@@ -909,7 +909,7 @@ fn parse_album_mark(raw: &str) -> Option<AlbumMark> {
 fn album_marker(id: u32, opts: &AlbumOpts) -> String {
     let theme = opts.theme.as_deref().unwrap_or("");
     format!(
-        "deckcraft-album:{id};layout={};frame={};captions={};gray={};theme={theme}",
+        "seho-album:{id};layout={};frame={};captions={};gray={};theme={theme}",
         opts.layout_key,
         opts.frame_key,
         if opts.captions { 1 } else { 0 },
@@ -924,7 +924,7 @@ fn stamp_album_slide(s: &mut Session, album_id: u32, opts: &AlbumOpts) -> Result
             return Err(bad("insert.photoAlbum", "no slide to mark"));
         };
         let slide = std::sync::Arc::make_mut(slide);
-        if slide.raw_ext.as_deref().is_none_or(|ext| ext.starts_with("deckcraft-album:")) {
+        if slide.raw_ext.as_deref().is_none_or(|ext| ext.starts_with("seho-album:")) {
             slide.raw_ext = Some(marker);
         }
         slide.name = "Photo Album".into();
@@ -950,11 +950,11 @@ fn album_id_param(p: &Value) -> Option<u32> {
     }
 }
 
-fn slides_with_album(doc: &deckcraft_model::Presentation, id: u32) -> Vec<u64> {
+fn slides_with_album(doc: &seho_model::Presentation, id: u32) -> Vec<u64> {
     doc.slides.iter().filter(|s| s.raw_ext.as_deref().and_then(parse_album_mark).is_some_and(|m| m.id == id)).map(|s| u64::from(s.id.0)).collect()
 }
 
-fn album_name_run(doc: &deckcraft_model::Presentation, index: usize) -> Vec<u64> {
+fn album_name_run(doc: &seho_model::Presentation, index: usize) -> Vec<u64> {
     if doc.slides.get(index).is_none_or(|s| s.name != "Photo Album") {
         return Vec::new();
     }
@@ -998,11 +998,11 @@ fn album_target(s: &Session, p: &Value) -> Result<(u32, Vec<u64>)> {
     Err(bad("insert.photoAlbumEdit", "this slide is not part of a photo album"))
 }
 
-fn pic_count(slide: &deckcraft_model::Slide) -> usize {
+fn pic_count(slide: &seho_model::Slide) -> usize {
     slide.shapes.iter().filter(|sh| matches!(sh.kind, ShapeKind::Picture { .. })).count()
 }
 
-fn infer_album(slides: &[&deckcraft_model::Slide], theme_now: &str) -> (String, String, bool, bool, String) {
+fn infer_album(slides: &[&seho_model::Slide], theme_now: &str) -> (String, String, bool, bool, String) {
     let max_pics = slides.iter().map(|s| pic_count(s)).max().unwrap_or(1);
     let per = if max_pics >= 3 {
         "4"
@@ -1045,10 +1045,10 @@ fn infer_album(slides: &[&deckcraft_model::Slide], theme_now: &str) -> (String, 
     (layout, frame.into(), captions, any && gray, theme_now.to_string())
 }
 
-fn items_from_slides(doc: &deckcraft_model::Presentation, slides: &[&deckcraft_model::Slide]) -> Vec<Value> {
+fn items_from_slides(doc: &seho_model::Presentation, slides: &[&seho_model::Slide]) -> Vec<Value> {
     let mut items = Vec::new();
     for slide in slides {
-        let pics: Vec<&deckcraft_model::Shape> = slide.shapes.iter().filter(|sh| matches!(sh.kind, ShapeKind::Picture { .. })).collect();
+        let pics: Vec<&seho_model::Shape> = slide.shapes.iter().filter(|sh| matches!(sh.kind, ShapeKind::Picture { .. })).collect();
         if pics.is_empty() {
             let text = slide
                 .shapes
@@ -1085,9 +1085,9 @@ fn items_from_slides(doc: &deckcraft_model::Presentation, slides: &[&deckcraft_m
 fn album_seed(s: &Session) -> Result<Value> {
     let (id, ids) = album_target(s, &Value::Null)?;
     let st = s.doc()?;
-    let slides: Vec<&deckcraft_model::Slide> =
-        ids.iter().filter_map(|sid| u32::try_from(*sid).ok()).filter_map(|n| st.doc.slide(deckcraft_model::SlideId(n))).collect();
-    let theme_now = st.doc.masters.first().map(|m| m.theme.name.clone()).filter(|n| !n.is_empty()).unwrap_or_else(|| "DeckCraft".into());
+    let slides: Vec<&seho_model::Slide> =
+        ids.iter().filter_map(|sid| u32::try_from(*sid).ok()).filter_map(|n| st.doc.slide(seho_model::SlideId(n))).collect();
+    let theme_now = st.doc.masters.first().map(|m| m.theme.name.clone()).filter(|n| !n.is_empty()).unwrap_or_else(|| "Seho".into());
     let inferred = infer_album(&slides, &theme_now);
     let mark = slides.first().and_then(|sl| sl.raw_ext.as_deref().and_then(parse_album_mark));
     let (layout, frame, captions, grayscale, theme) = if let Some(mark) = mark {
@@ -1238,7 +1238,7 @@ fn chart(s: &mut Session, p: &Value) -> Result<Value> {
     if let Some(series) = p.get("series").and_then(Value::as_array) {
         c.series = series
             .iter()
-            .map(|sv| deckcraft_model::chart::Series {
+            .map(|sv| seho_model::chart::Series {
                 name: sv.get("name").and_then(Value::as_str).unwrap_or("Series").to_string(),
                 values: sv.get("values").and_then(Value::as_array).map(|a| a.iter().map(Value::as_f64).collect()).unwrap_or_default(),
                 ..Default::default()
@@ -1259,7 +1259,7 @@ fn media(s: &mut Session, p: &Value, video: bool) -> Result<Value> {
     let (name, bytes) = media_bytes(p, cmd)?;
     let ct = content_type(&name, &bytes);
     let bytes = std::sync::Arc::new(bytes);
-    let info = deckcraft_media::probe(&bytes);
+    let info = seho_media::probe(&bytes);
     let has_video = info.as_ref().is_ok_and(|i| i.video.is_some());
     let has_audio = info.as_ref().is_ok_and(|i| i.audio.is_some());
     match &info {
@@ -1336,7 +1336,7 @@ fn word_art(s: &mut Session, p: &Value) -> Result<Value> {
     let mut shape = new_text_box(Xfrm::new(size.width * 0.2, size.height * 0.4, size.width * 0.6, 80.0), text);
     if let Some(t) = shape.text.as_mut() {
         for para in &mut t.paragraphs {
-            para.props.align = Some(deckcraft_model::text::Align::Center);
+            para.props.align = Some(seho_model::text::Align::Center);
             for r in &mut para.runs {
                 r.props.size = Some(54.0);
                 r.props.bold = Some(style % 2 == 1);
@@ -1347,7 +1347,7 @@ fn word_art(s: &mut Session, p: &Value) -> Result<Value> {
                     _ => SchemeSlot::Accent4,
                 })));
                 if style % 3 == 2 {
-                    r.props.outline = Some(deckcraft_model::Line::solid(ColorRef::scheme(SchemeSlot::Bg1), 1.0));
+                    r.props.outline = Some(seho_model::Line::solid(ColorRef::scheme(SchemeSlot::Bg1), 1.0));
                 }
             }
         }
@@ -1438,7 +1438,7 @@ fn date_opts(p: &Value) -> Result<DateOpts> {
 /// The text `format` shows now in `lang`. Errors when that language has no names for the format
 /// (month names and AM/PM are English only). An empty string where there is no clock (wasm).
 fn date_sample(format: &str, lang: Option<&str>) -> Result<String> {
-    use deckcraft_text::datetime::{DateTime, field_text};
+    use seho_text::datetime::{DateTime, field_text};
     let probe = DateTime::new(2026, 10, 9, 20, 5, 7);
     if field_text(format, lang, probe).is_none() {
         return Err(bad("insert.dateTime", "this format isn't available in that language"));
@@ -1496,7 +1496,7 @@ fn write_date_placeholder(s: &mut Session, o: &DateOpts) -> Result<bool> {
     s.edit(|doc, sel| {
         let Some(sl) = doc.slides.get_mut(sel.slide) else { return Ok(false) };
         let sl = std::sync::Arc::make_mut(sl);
-        let Some(sh) = sl.shapes.iter_mut().find(|x| x.ph_type() == Some(deckcraft_model::PhType::Date)) else {
+        let Some(sh) = sl.shapes.iter_mut().find(|x| x.ph_type() == Some(seho_model::PhType::Date)) else {
             return Ok(false);
         };
         let mut props = sh.text.as_ref().and_then(|t| t.paragraphs.first()).and_then(|p| p.runs.first()).map(|r| r.props.clone()).unwrap_or_default();
@@ -1504,7 +1504,7 @@ fn write_date_placeholder(s: &mut Session, o: &DateOpts) -> Result<bool> {
             props.lang = Some(lang);
         }
         let kind = if update { RunKind::Field { field: format } } else { RunKind::Text };
-        let para = deckcraft_model::Paragraph { runs: vec![deckcraft_model::Run { text: sample, props, kind }], ..Default::default() };
+        let para = seho_model::Paragraph { runs: vec![seho_model::Run { text: sample, props, kind }], ..Default::default() };
         let body = sh.text.clone().unwrap_or_default();
         sh.text = Some(TextBody { paragraphs: vec![para], ..body });
         Ok(true)
@@ -1533,12 +1533,12 @@ fn insert_plain(s: &mut Session, text: &str, lang: Option<&str>) -> Result<()> {
     let lang = lang.map(str::to_string);
     super::text::edit_text(s, move |body, t| {
         let (a, b) = t.ordered();
-        let at = deckcraft_model::edit::delete(body, a, b);
-        let mut props = deckcraft_model::edit::props_at(body, at);
+        let at = seho_model::edit::delete(body, a, b);
+        let mut props = seho_model::edit::props_at(body, at);
         if let Some(lang) = lang.clone() {
             props.lang = Some(lang);
         }
-        let c = deckcraft_model::edit::insert(body, at, &text, Some(props));
+        let c = seho_model::edit::insert(body, at, &text, Some(props));
         t.anchor = c;
         t.caret = c;
     })?;
@@ -1572,7 +1572,7 @@ fn symbol(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn hyperlink(s: &mut Session, p: &Value) -> Result<Value> {
-    use deckcraft_model::text::{Action, Hyperlink};
+    use seho_model::text::{Action, Hyperlink};
     // `display`: what a caret with nothing to link inserts, the address or the slide's title.
     let (action, display) = if let Some(u) = str_param(p, "url") {
         (Action::Url { url: u.to_string() }, u.strip_prefix("mailto:").unwrap_or(u).to_string())
@@ -1604,7 +1604,7 @@ fn hyperlink(s: &mut Session, p: &Value) -> Result<Value> {
 /// Insert ▸ Action (Action Settings): what clicking the selected shapes, or pointing at them, does
 /// in a show.
 fn shape_action(s: &mut Session, p: &Value) -> Result<Value> {
-    use deckcraft_model::text::{Action, Hyperlink};
+    use seho_model::text::{Action, Hyperlink};
     const CMD: &str = "shape.action";
     let hover = match str_param(p, "on").unwrap_or("click") {
         "click" => false,
@@ -1651,7 +1651,7 @@ fn shape_action(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 fn action_button(s: &mut Session, p: &Value) -> Result<Value> {
-    use deckcraft_model::text::{Action, Hyperlink};
+    use seho_model::text::{Action, Hyperlink};
     let kind = str_param(p, "kind").unwrap_or("custom");
     let (preset, action) = match kind {
         "back" | "previous" => ("actionButtonBackPrevious", Some(Action::PreviousSlide)),
@@ -1718,9 +1718,9 @@ fn chart_data(s: &mut Session, p: &Value) -> Result<Value> {
         .get("categories")
         .and_then(Value::as_array)
         .map(|a| a.iter().map(|v| v.as_str().map(String::from).unwrap_or_else(|| v.to_string())).collect());
-    let series: Option<Vec<deckcraft_model::chart::Series>> = p.get("series").and_then(Value::as_array).map(|a| {
+    let series: Option<Vec<seho_model::chart::Series>> = p.get("series").and_then(Value::as_array).map(|a| {
         a.iter()
-            .map(|sv| deckcraft_model::chart::Series {
+            .map(|sv| seho_model::chart::Series {
                 name: sv.get("name").and_then(Value::as_str).unwrap_or("Series").to_string(),
                 values: sv.get("values").and_then(Value::as_array).map(|v| v.iter().map(Value::as_f64).collect()).unwrap_or_default(),
                 ..Default::default()
@@ -1729,7 +1729,7 @@ fn chart_data(s: &mut Session, p: &Value) -> Result<Value> {
     });
     let levels: Option<Vec<Vec<String>>> = p.get("levels").and_then(Value::as_array).map(|a| {
         a.iter()
-            .take(deckcraft_model::chart::MAX_LEVELS)
+            .take(seho_model::chart::MAX_LEVELS)
             .map(|l| {
                 l.as_array().map(|v| v.iter().map(|x| x.as_str().map(String::from).unwrap_or_else(|| x.to_string())).collect()).unwrap_or_default()
             })
@@ -1763,7 +1763,7 @@ fn chart_data(s: &mut Session, p: &Value) -> Result<Value> {
 
 fn chart_options(s: &mut Session, p: &Value) -> Result<Value> {
     // Histogram bins: a count or a width (setting one clears the other; null for automatic).
-    let bin_count = p.get("binCount").map(|v| v.as_u64().map(|n| n.clamp(1, deckcraft_model::chart::MAX_BINS as u64) as u32));
+    let bin_count = p.get("binCount").map(|v| v.as_u64().map(|n| n.clamp(1, seho_model::chart::MAX_BINS as u64) as u32));
     let bin_size = p.get("binSize").map(|v| v.as_f64().filter(|w| w.is_finite() && *w > 0.0));
     if p.get("binSize").is_some_and(|v| !v.is_null()) && bin_size.flatten().is_none() {
         return Err(bad("chart.options", "binSize must be a positive number"));
@@ -1835,7 +1835,7 @@ fn smart_art(s: &mut Session, p: &Value) -> Result<Value> {
 
 #[cfg(test)]
 mod tests {
-    use deckcraft_model::text::RunKind;
+    use seho_model::text::RunKind;
     use serde_json::json;
 
     use crate::Session;
@@ -1848,21 +1848,21 @@ mod tests {
         s.doc().unwrap().history.undo.len()
     }
 
-    fn date_run(s: &Session) -> Option<deckcraft_model::Run> {
+    fn date_run(s: &Session) -> Option<seho_model::Run> {
         s.doc()
             .unwrap()
             .current_slide()
             .unwrap()
             .shapes
             .iter()
-            .find(|x| x.ph_type() == Some(deckcraft_model::PhType::Date))
+            .find(|x| x.ph_type() == Some(seho_model::PhType::Date))
             .and_then(|x| x.text.as_ref())
             .and_then(|t| t.paragraphs.first())
             .and_then(|p| p.runs.first())
             .cloned()
     }
 
-    fn title_field(s: &Session) -> deckcraft_model::Run {
+    fn title_field(s: &Session) -> seho_model::Run {
         let title = s.doc().unwrap().current_slide().unwrap().shapes[0].text.clone().unwrap();
         title.paragraphs[0].runs.iter().find(|r| r.text.contains(':') || matches!(r.kind, RunKind::Field { .. })).cloned().unwrap()
     }
@@ -1909,8 +1909,8 @@ mod tests {
         let mut s = session();
         edit_title(&mut s);
         let before = undo(&s);
-        let now = deckcraft_text::datetime::DateTime::now_local().unwrap();
-        let expect = deckcraft_text::datetime::field_text("datetime1", Some("en-GB"), now).unwrap();
+        let now = seho_text::datetime::DateTime::now_local().unwrap();
+        let expect = seho_text::datetime::field_text("datetime1", Some("en-GB"), now).unwrap();
         s.execute("insert.dateTime", &json!({"format": "datetime1", "update": false, "language": "en-GB"})).unwrap();
         let title = s.doc().unwrap().current_slide().unwrap().shapes[0].text.clone().unwrap();
         let run = title.paragraphs[0].runs.iter().find(|r| r.text == expect).cloned().unwrap();
@@ -1948,8 +1948,8 @@ mod tests {
         let mut s = session();
         s.execute("slide.new", &json!({"layout": "blank"})).unwrap();
         s.execute("slide.go", &json!({"index": 0})).unwrap();
-        let now = deckcraft_text::datetime::DateTime::now_local().unwrap();
-        let clock = deckcraft_text::datetime::field_text("datetime10", Some("en-US"), now).unwrap();
+        let now = seho_text::datetime::DateTime::now_local().unwrap();
+        let clock = seho_text::datetime::field_text("datetime10", Some("en-US"), now).unwrap();
         let v = s.execute("insert.dateTime", &json!({"format": "datetime10", "language": "en_US"})).unwrap();
         assert_eq!(v["where"], "footer");
         let run = date_run(&s).unwrap();
@@ -1959,7 +1959,7 @@ mod tests {
         s.execute("slide.go", &json!({"index": 1})).unwrap();
         assert!(date_run(&s).is_none(), "the other slide keeps its own footer");
         s.execute("slide.go", &json!({"index": 0})).unwrap();
-        let fixed = deckcraft_text::datetime::field_text("datetime12", None, now).unwrap();
+        let fixed = seho_text::datetime::field_text("datetime12", None, now).unwrap();
         s.execute("insert.dateTime", &json!({"format": "datetime12", "update": false})).unwrap();
         let run = date_run(&s).unwrap();
         assert_eq!((run.kind, run.text), (RunKind::Text, fixed));
@@ -1971,8 +1971,8 @@ mod tests {
 
 #[cfg(test)]
 mod icon_and_picture_tests {
-    use deckcraft_model::ShapeKind;
-    use deckcraft_model::style::LineJoin;
+    use seho_model::ShapeKind;
+    use seho_model::style::LineJoin;
 
     use super::*;
 
@@ -1993,7 +1993,7 @@ mod icon_and_picture_tests {
         s.active().map(|d| d.doc.slides.len()).unwrap_or(0)
     }
 
-    fn pictures(s: &Session, index: usize) -> Vec<deckcraft_model::Shape> {
+    fn pictures(s: &Session, index: usize) -> Vec<seho_model::Shape> {
         s.active()
             .and_then(|d| d.doc.slides.get(index))
             .map(|sl| sl.shapes.iter().filter(|sh| matches!(sh.kind, ShapeKind::Picture { .. })).cloned().collect())
@@ -2126,7 +2126,7 @@ mod icon_and_picture_tests {
         assert_eq!(pictures(&s, 1).len(), 4);
     }
 
-    fn adjust(s: &Session, index: usize) -> deckcraft_model::style::PictureAdjust {
+    fn adjust(s: &Session, index: usize) -> seho_model::style::PictureAdjust {
         match &pictures(s, index)[0].kind {
             ShapeKind::Picture { fill } => fill.adjust.clone(),
             _ => panic!("picture"),
@@ -2197,7 +2197,7 @@ mod icon_and_picture_tests {
         assert!(mark.contains("theme=Harbor"), "{mark}");
         assert_eq!(s.active().unwrap().doc.slides[1].name, "Photo Album");
         s.execute("edit.undo", &json!({})).unwrap();
-        assert_eq!(theme_name(&s), "DeckCraft");
+        assert_eq!(theme_name(&s), "Seho");
         assert_eq!(n_slides(&s), 1);
     }
 
@@ -2216,7 +2216,7 @@ mod icon_and_picture_tests {
         assert!(s.execute("insert.photoAlbumEdit", &json!({"pictures": [pic("b.png")], "layout": "2"})).is_err());
         assert_eq!(n_slides(&s), before + 1);
         assert_eq!(pictures(&s, 1).len(), 1);
-        assert_eq!(theme_name(&s), "DeckCraft");
+        assert_eq!(theme_name(&s), "Seho");
     }
 
     #[test]
@@ -2234,8 +2234,8 @@ mod icon_and_picture_tests {
         assert_eq!(pictures(&s, 3).len(), 2);
         let first = s.active().unwrap().doc.slides[1].raw_ext.clone().unwrap_or_default();
         let second = s.active().unwrap().doc.slides[3].raw_ext.clone().unwrap_or_default();
-        assert!(first.starts_with("deckcraft-album:"));
-        assert!(second.starts_with("deckcraft-album:"));
+        assert!(first.starts_with("seho-album:"));
+        assert!(second.starts_with("seho-album:"));
         assert_ne!(first.split(';').next(), second.split(';').next());
     }
 
@@ -2253,6 +2253,6 @@ mod icon_and_picture_tests {
         assert_eq!(n_slides(&s), 2);
         assert_eq!(pictures(&s, 1).len(), 2);
         let mark = s.active().unwrap().doc.slides[1].raw_ext.clone().unwrap_or_default();
-        assert!(mark.starts_with("deckcraft-album:"), "{mark}");
+        assert!(mark.starts_with("seho-album:"), "{mark}");
     }
 }

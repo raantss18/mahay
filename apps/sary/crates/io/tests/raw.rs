@@ -1,10 +1,10 @@
 //! Camera raw import: synthetic DNG / CR2 develop into a 16-bit ProPhoto
 //! document; unsupported raw variants fall back to the embedded preview.
 
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image};
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_io::{IoError, import};
-use photocraft_raw::testgen::{Cr2Spec, DngSpec, TiffBuilder, Val, mosaic, scene};
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image};
+use sary_color::{ColorMode, SampleType};
+use sary_io::{IoError, import};
+use sary_raw::testgen::{Cr2Spec, DngSpec, TiffBuilder, Val, mosaic, scene};
 
 #[test]
 fn dng_opens_as_16_bit_prophoto() {
@@ -18,7 +18,7 @@ fn dng_opens_as_16_bit_prophoto() {
     assert_eq!(d.depth, SampleType::U16);
     assert_eq!(d.layers.len(), 1);
     let icc = d.icc_profile.as_ref().expect("profile");
-    assert_eq!(icc.as_slice(), &photocraft_cms::Builtin::ProPhotoCompat.profile().to_bytes()[..]);
+    assert_eq!(icc.as_slice(), &sary_cms::Builtin::ProPhotoCompat.profile().to_bytes()[..]);
     assert!(r.warnings.iter().any(|w| w.contains("DNG") && w.contains("ProPhoto")), "{:?}", r.warnings);
 }
 
@@ -50,7 +50,7 @@ fn cr2_opens() {
 /// baseline JPEG preview in IFD0.
 fn nef_with_preview() -> Vec<u8> {
     let img = Image::from_u8(32, 20, ChannelLayout::Rgb, vec![180; 32 * 20 * 3]).unwrap();
-    let jpeg = photocraft_codecs::encode(&img, Format::Jpeg, &EncodeOptions::default()).unwrap();
+    let jpeg = sary_codecs::encode(&img, Format::Jpeg, &EncodeOptions::default()).unwrap();
     let mut t = TiffBuilder::default();
     let strip = t.blob(vec![0; 64]);
     let preview = t.blob(jpeg.clone());
@@ -97,8 +97,8 @@ fn unsupported_raw_without_preview_is_a_clear_error() {
 #[test]
 fn cr3_opens_its_upright_camera_jpeg_with_explicit_preview_warning() {
     let img = Image::from_u8(32, 20, ChannelLayout::Rgb, vec![180; 32 * 20 * 3]).unwrap();
-    let jpeg = photocraft_codecs::encode(&img, Format::Jpeg, &EncodeOptions::default()).unwrap();
-    let raw = photocraft_raw::testgen::cr3_preview(&jpeg, 6);
+    let jpeg = sary_codecs::encode(&img, Format::Jpeg, &EncodeOptions::default()).unwrap();
+    let raw = sary_raw::testgen::cr3_preview(&jpeg, 6);
     let r = import("shot.cr3", &raw).unwrap();
     assert_eq!((r.document.size.width, r.document.size.height), (20, 32));
     assert_eq!(r.document.depth, SampleType::U8);
@@ -149,7 +149,7 @@ fn camera_rendering(cam: &[[f32; 3]], w: usize, h: usize) -> Vec<u8> {
 }
 
 fn jpeg(img: Image) -> Vec<u8> {
-    photocraft_codecs::encode(&img, Format::Jpeg, &EncodeOptions { jpeg_quality: 95, ..Default::default() }).unwrap()
+    sary_codecs::encode(&img, Format::Jpeg, &EncodeOptions { jpeg_quality: 95, ..Default::default() }).unwrap()
 }
 
 /// An uncompressed NEF-like raw of `cam` with an optional JPEG preview in IFD0.
@@ -215,8 +215,8 @@ fn uncalibrated_raw_takes_its_colour_from_the_camera_jpeg() {
 
 #[test]
 fn camera_raw_tuning_keeps_the_default_look_and_applies_user_gains_after_fitting() {
-    use photocraft_io::raw::{RawTuning, fit_preview_look, import_raw_tuned};
-    use photocraft_raw::{DevelopOptions, WhiteBalance, decode, develop_sensor};
+    use sary_io::raw::{RawTuning, fit_preview_look, import_raw_tuned};
+    use sary_raw::{DevelopOptions, WhiteBalance, decode, develop_sensor};
 
     let (w, h) = (480, 320);
     let cam: Vec<_> = patches(w, h).into_iter().map(|c| c.map(|v| v * 0.6)).collect();
@@ -235,7 +235,7 @@ fn camera_raw_tuning_keeps_the_default_look_and_applies_user_gains_after_fitting
         assert!(applied && fitted(&got.warnings) && !fallback(&got.warnings), "{:?}", got.warnings);
         assert_eq!(got.document.depth, SampleType::U16);
         assert_eq!((got.document.size.width, got.document.size.height), (w as u32, h as u32));
-        let gains = photocraft_algo::camera_raw::white_balance_gains(tuning.temperature, tuning.tint).map(f64::from);
+        let gains = sary_algo::camera_raw::white_balance_gains(tuning.temperature, tuning.tint).map(f64::from);
         let expected = develop_sensor(
             &sensor,
             &DevelopOptions {
@@ -247,10 +247,10 @@ fn camera_raw_tuning_keeps_the_default_look_and_applies_user_gains_after_fitting
         )
         .unwrap();
         let expected_bytes: Vec<_> = expected.rgb.iter().flat_map(|v| v.to_ne_bytes()).collect();
-        let actual = photocraft_io::document_to_image(&got.document, &mut Vec::new()).unwrap();
+        let actual = sary_io::document_to_image(&got.document, &mut Vec::new()).unwrap();
         assert_eq!(actual.data(), expected_bytes, "tuning {tuning:?} must not refit away the user controls");
         if tuning == RawTuning::default() {
-            let original = photocraft_io::document_to_image(&normal.document, &mut Vec::new()).unwrap();
+            let original = sary_io::document_to_image(&normal.document, &mut Vec::new()).unwrap();
             assert_eq!(actual.data(), original.data());
         }
     }
@@ -283,7 +283,7 @@ fn unusable_previews_keep_the_neutral_fallback() {
         let r = import("DSC_0003.NEF", &bytes).unwrap();
         assert!(fallback(&r.warnings) && !fitted(&r.warnings), "preview {i}: {:?}", r.warnings);
         let (tuned, wb) =
-            photocraft_io::raw::import_raw_tuned("DSC_0003.NEF", &bytes, &photocraft_io::raw::RawTuning { exposure: 0.5, ..Default::default() }).unwrap();
+            sary_io::raw::import_raw_tuned("DSC_0003.NEF", &bytes, &sary_io::raw::RawTuning { exposure: 0.5, ..Default::default() }).unwrap();
         assert!(!wb && fallback(&tuned.warnings) && !fitted(&tuned.warnings), "preview {i}: {:?}", tuned.warnings);
         assert_eq!(tuned.document.depth, SampleType::U16);
     }
@@ -296,7 +296,7 @@ fn truncated_raws_with_a_fittable_preview_do_not_panic() {
     let b = nef_uncompressed(&cam, w, h, Some(camera_rendering(&cam, w, h)));
     for n in (0..b.len()).step_by(211) {
         let _ = import("x.nef", &b[..n]);
-        let _ = photocraft_io::raw::import_raw_tuned("x.nef", &b[..n], &Default::default());
+        let _ = sary_io::raw::import_raw_tuned("x.nef", &b[..n], &Default::default());
     }
 }
 
@@ -309,16 +309,16 @@ fn a_re_develop_keeps_the_fitted_look() {
     let cam = patches(w, h);
     let nef = nef_uncompressed(&cam, w, h, Some(camera_rendering(&cam, w, h)));
     let opened = import("DSC_0003.NEF", &nef).unwrap();
-    let (again, _) = photocraft_io::raw::import_raw_tuned("DSC_0003.NEF", &nef, &Default::default()).unwrap();
+    let (again, _) = sary_io::raw::import_raw_tuned("DSC_0003.NEF", &nef, &Default::default()).unwrap();
     assert!(fitted(&again.warnings), "{:?}", again.warnings);
-    let pixels = |d: &photocraft_doc::Document| {
+    let pixels = |d: &sary_doc::Document| {
         let s = d.layers[0].surface().unwrap();
         let mut px = vec![[0.0f32; 4]; w * h];
-        s.read_rgba_into(photocraft_geom::Rect::new(0, 0, w as i32, h as i32), &mut px);
+        s.read_rgba_into(sary_geom::Rect::new(0, 0, w as i32, h as i32), &mut px);
         px
     };
     assert_eq!(pixels(&opened.document), pixels(&again.document));
-    let curve = photocraft_io::raw::tone_curve(&nef);
+    let curve = sary_io::raw::tone_curve(&nef);
     assert!(curve.len() > 2 && curve.windows(2).all(|k| k[1][0] > k[0][0] && k[1][1] >= k[0][1]), "{curve:?}");
     // The camera's brightening curve: mid-grey comes out lighter.
     let mid = curve.iter().find(|k| k[0] >= 0.18).unwrap();

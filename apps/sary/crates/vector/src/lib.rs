@@ -1,6 +1,6 @@
-//! # photocraft-vector
+//! # sary-vector
 //!
-//! Rasterization of vector data from `photocraft-doc`: paths (with Photoshop path operations),
+//! Rasterization of vector data from `sary-doc`: paths (with Photoshop path operations),
 //! shape layers (fill + stroke), vector masks, and the inverse direction (tracing a coverage
 //! mask back into a path for "Make Work Path").
 //!
@@ -27,10 +27,10 @@ pub mod shapes;
 pub mod stroke;
 pub mod trace;
 
-use photocraft_color::{ColorMode, PixelFormat};
-use photocraft_doc::{Fill, FillRule, GradientStyle, Path, PathOp, ShapeLayer, ShapeStroke, StrokeAlign, VectorMask};
-use photocraft_geom::{Rect, TILE_SIZE};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat};
+use sary_doc::{Fill, FillRule, GradientStyle, Path, PathOp, ShapeLayer, ShapeStroke, StrokeAlign, VectorMask};
+use sary_geom::{Rect, TILE_SIZE};
+use sary_raster::Surface;
 
 pub use flatten::{Polyline, flatten_path, flatten_subpath};
 pub use raster::Rasterizer;
@@ -256,11 +256,11 @@ impl Paint {
     /// layer's frame — or over `canvas` when the fill is not aligned with the layer. Every
     /// gradient field is honoured (midpoints, opacity stops, centre offset, dither, unsorted
     /// stops), rendering the same pixels as the compositor's fill layers; the parity tests in
-    /// `photocraft-compose` (which this crate cannot depend on) keep the two in step. Pattern
+    /// `sary-compose` (which this crate cannot depend on) keep the two in step. Pattern
     /// fills are not rendered (transparent): they need the document's pattern table, which
     /// lives above this crate.
     pub fn from_fill(f: &Fill, bounds: (f64, f64, f64, f64), canvas: (f64, f64, f64, f64)) -> Paint {
-        let rgba = |c: &photocraft_color::Color| {
+        let rgba = |c: &sary_color::Color| {
             let v = c.to_rgb();
             [v[0], v[1], v[2], c.alpha]
         };
@@ -452,7 +452,7 @@ fn sample_stops(stops: &[(f32, [f32; 4])], mids: &[f32], opacity: &[(f32, f32)],
 /// Adds one level of the shared dither noise to a colour's channels (as the Gradient tool and
 /// the compositor's fill layers do).
 fn dither(c: &mut [f32; 4], x: i32, y: i32) {
-    let n = (photocraft_color::dither_noise(x, y) - 0.5) / 255.0;
+    let n = (sary_color::dither_noise(x, y) - 0.5) / 255.0;
     for ch in c.iter_mut().take(3) {
         *ch = (*ch + n).clamp(0.0, 1.0);
     }
@@ -563,7 +563,7 @@ impl CompiledShape {
             let mut vals = vec![0.0f32; rgba.len() * ch];
             for (p, o) in rgba.iter().zip(vals.chunks_exact_mut(ch)) {
                 if p[3] > 0.0 {
-                    photocraft_raster::from_rgba_into(&format, *p, o);
+                    sary_raster::from_rgba_into(&format, *p, o);
                 }
             }
             let alpha = format.alpha;

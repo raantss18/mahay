@@ -10,9 +10,9 @@
 
 use egui::{Align2, Color32, Key, Painter, Pos2, Rect, Stroke, Ui, pos2, vec2};
 use serde_json::json;
-use wordcraft_doc::freeform::{InkTool, MAX_POINTS};
-use wordcraft_engine::cmd::draw::DrawMode;
-use wordcraft_layout::DocLayout;
+use soratra_doc::freeform::{InkTool, MAX_POINTS};
+use soratra_engine::cmd::draw::DrawMode;
+use soratra_layout::DocLayout;
 
 use crate::WordApp;
 use crate::canvas::page_at;
@@ -106,7 +106,7 @@ pub fn pointer(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect]
             if (starts || down)
                 && let Some(erased) = app.canvas.erasing
                 && let Some((page, x, y)) = at.and_then(|p| page_at(rects, layout, scale, p))
-                && wordcraft_engine::cmd::draw::ink_at(&mut app.session, page, x, y).is_some()
+                && soratra_engine::cmd::draw::ink_at(&mut app.session, page, x, y).is_some()
             {
                 // The first stroke a drag erases starts an undo step; the rest join it.
                 if erased {
@@ -129,7 +129,7 @@ pub fn pointer(app: &mut WordApp, ui: &Ui, resp: &egui::Response, rects: &[Rect]
 fn lasso_pointer(app: &mut WordApp, (starts, down, released, at): (bool, bool, bool, Option<Pos2>), rects: &[Rect], layout: &DocLayout, scale: f32) {
     if starts && let Some((page, x, y)) = at.and_then(|p| page_at(rects, layout, scale, p)) {
         // A press on the selection drags it; anywhere else starts a new loop.
-        let grab = wordcraft_engine::cmd::draw::lasso_bounds(&app.session, layout).is_some_and(|(bp, r)| {
+        let grab = soratra_engine::cmd::draw::lasso_bounds(&app.session, layout).is_some_and(|(bp, r)| {
             bp == page && x >= r.x - GRAB_SLOP && x <= r.right() + GRAB_SLOP && y >= r.y - GRAB_SLOP && y <= r.bottom() + GRAB_SLOP
         });
         app.canvas.ink_ui.lasso =
@@ -180,7 +180,7 @@ pub fn key(app: &mut WordApp, key: Key) -> bool {
         stop_replay(app);
         return true;
     }
-    let selected = wordcraft_engine::cmd::draw::lasso_selection(&app.session).is_some();
+    let selected = soratra_engine::cmd::draw::lasso_selection(&app.session).is_some();
     match key {
         Key::Delete | Key::Backspace if selected => {
             let _ = app.run("draw.lassoDelete", json!({}));
@@ -217,9 +217,9 @@ fn to_screen(rects: &[Rect], layout: &DocLayout, scale: f32, page: usize) -> Opt
 
 /// The on-screen colour of ink: on a dark page (View > Switch Modes) it is mapped like every other
 /// document colour, so a stroke looks the same while it is drawn as after it is saved.
-fn screen_ink(dark: bool, c: wordcraft_doc::Rgb, alpha: u8) -> Color32 {
-    let opts = wordcraft_render::RenderOptions { dark, ..Default::default() };
-    let wordcraft_doc::Rgb(r, g, b) = opts.ink(c);
+fn screen_ink(dark: bool, c: soratra_doc::Rgb, alpha: u8) -> Color32 {
+    let opts = soratra_render::RenderOptions { dark, ..Default::default() };
+    let soratra_doc::Rgb(r, g, b) = opts.ink(c);
     Color32::from_rgba_unmultiplied(r, g, b, alpha)
 }
 
@@ -254,7 +254,7 @@ fn paint_lasso(app: &WordApp, painter: &Painter, rects: &[Rect], layout: &DocLay
         }
         painter.extend(dash(&loop_pts));
     }
-    let Some((page, r)) = wordcraft_engine::cmd::draw::lasso_bounds(&app.session, layout) else { return };
+    let Some((page, r)) = soratra_engine::cmd::draw::lasso_bounds(&app.session, layout) else { return };
     let (dx, dy) = match &app.canvas.ink_ui.lasso {
         Some(LassoDrag::Move { from, to, .. }) => (to[0] - from[0], to[1] - from[1]),
         _ => (0.0, 0.0),
@@ -285,7 +285,7 @@ pub fn replay_tick(app: &mut WordApp, ctx: &egui::Context) {
     }
     if app.canvas.ink_ui.replay.is_none() {
         let mut start = 0.0;
-        let strokes: Vec<ReplayStroke> = wordcraft_engine::cmd::draw::strokes_in_drawing_order(&mut app.session)
+        let strokes: Vec<ReplayStroke> = soratra_engine::cmd::draw::strokes_in_drawing_order(&mut app.session)
             .into_iter()
             .map(|(page, k)| {
                 let paths = k.paths();
@@ -340,7 +340,7 @@ fn paint_replay(app: &WordApp, painter: &Painter, rects: &[Rect], layout: &DocLa
         let frac = if k.dur > 0.0 { ((r.t - k.start) / k.dur).clamp(0.0, 1.0) } else { 1.0 };
         let total: f32 = k.paths.iter().map(|p| path_len(p)).sum();
         let [cr, cg, cb, ca] = k.color.to_srgba_unmultiplied();
-        let color = screen_ink(app.session.view.dark_mode, wordcraft_doc::Rgb(cr, cg, cb), ca);
+        let color = screen_ink(app.session.view.dark_mode, soratra_doc::Rgb(cr, cg, cb), ca);
         let mut left = total * frac;
         let width = (k.width * s).max(1.0);
         for path in &k.paths {
@@ -445,7 +445,7 @@ mod tests {
 
     #[test]
     fn live_ink_follows_the_dark_page() {
-        let black = wordcraft_doc::Rgb(0, 0, 0);
+        let black = soratra_doc::Rgb(0, 0, 0);
         assert_eq!(screen_ink(false, black, 255), Color32::from_rgba_unmultiplied(0, 0, 0, 255));
         // Black pen on a dark page turns light, like the saved stroke.
         let dark = screen_ink(true, black, 128);

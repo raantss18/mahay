@@ -2,8 +2,8 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_model::anim::Transition;
-use deckcraft_model::defaults;
+use seho_model::anim::Transition;
+use seho_model::defaults;
 
 const P159: &str = "http://schemas.microsoft.com/office/powerpoint/2015/09/main";
 const P14: &str = "http://schemas.microsoft.com/office/powerpoint/2010/main";
@@ -13,7 +13,7 @@ const P14: &str = "http://schemas.microsoft.com/office/powerpoint/2010/main";
 fn import_with(xml: &str) -> Transition {
     let mut p = defaults::new_presentation(None);
     std::sync::Arc::make_mut(&mut p.slides[0]).transition = Some(Transition { kind: "fade".into(), duration_ms: 3000, ..Default::default() });
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut z = zip::ZipArchive::new(Cursor::new(&bytes)).expect("zip");
     let mut out = zip::ZipWriter::new(Cursor::new(Vec::new()));
     let o = zip::write::SimpleFileOptions::default();
@@ -33,7 +33,7 @@ fn import_with(xml: &str) -> Transition {
         out.write_all(&d).expect("write");
     }
     let bytes = out.finish().expect("finish").into_inner();
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let q = seho_pptx::import(&bytes).expect("import");
     q.slides[0].transition.clone().expect("transition")
 }
 

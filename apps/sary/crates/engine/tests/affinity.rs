@@ -4,15 +4,15 @@
 
 use std::sync::Arc;
 
-use photocraft_engine::Session;
-use photocraft_engine::file_cmds::open_bytes_as;
-use photocraft_engine::jobs::{OpenSource, Started};
+use sary_engine::Session;
+use sary_engine::file_cmds::open_bytes_as;
+use sary_engine::jobs::{OpenSource, Started};
 use serde_json::json;
 
 fn fixture() -> Vec<u8> {
     let mut src = Session::new();
     src.execute("file.new", json!({"width": 2, "height": 1, "background": "#dc283c"})).unwrap();
-    let png = photocraft_io::export(&src.active().unwrap().doc, "preview.png", &Default::default()).unwrap().bytes;
+    let png = sary_io::export(&src.active().unwrap().doc, "preview.png", &Default::default()).unwrap().bytes;
     // Observed v12 preview envelope, without a native object graph.
     let mut bytes = vec![0; 72];
     bytes[..4].copy_from_slice(b"\x00\xffKA");
@@ -34,7 +34,7 @@ fn fixture() -> Vec<u8> {
 
 #[test]
 fn preview_never_saves_back_to_its_native_or_renamed_source() {
-    let dir = std::env::temp_dir().join(format!("photocraft-affinity-source-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-affinity-source-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let bytes = fixture();
     for name in ["source.af", "renamed.psd"] {
@@ -51,9 +51,9 @@ fn preview_never_saves_back_to_its_native_or_renamed_source() {
         let native = dir.join("refused.af");
         assert!(s.execute("file.saveACopy", json!({"path": native})).is_err());
         assert!(!native.exists());
-        let copy = dir.join(format!("{name}.pcraft"));
+        let copy = dir.join(format!("{name}.sary"));
         s.execute("file.saveACopy", json!({"path": copy})).unwrap();
-        assert!(photocraft_io::import("copy.pcraft", &std::fs::read(copy).unwrap()).is_ok());
+        assert!(sary_io::import("copy.sary", &std::fs::read(copy).unwrap()).is_ok());
         assert_eq!(std::fs::read(path).unwrap(), bytes);
     }
     std::fs::remove_dir_all(dir).unwrap();
@@ -78,15 +78,15 @@ fn warningless_auxiliary_paths_cannot_silently_use_a_thumbnail() {
     let mut s = Session::new();
     s.execute("file.new", json!({"width": 8, "height": 8})).unwrap();
     let layers = s.active().unwrap().doc.layers.len();
-    let error = photocraft_engine::file_cmds::place_bytes(&mut s, "source.af", bytes.clone(), None, &json!({})).unwrap_err().to_string();
+    let error = sary_engine::file_cmds::place_bytes(&mut s, "source.af", bytes.clone(), None, &json!({})).unwrap_err().to_string();
     assert!(error.contains("embedded preview could be read"), "{error}");
     assert_eq!(s.active().unwrap().doc.layers.len(), layers);
-    assert!(photocraft_engine::smart_cmds::decode_source("source.af", &bytes).unwrap_err().to_string().contains("export PSD or PNG"));
+    assert!(sary_engine::smart_cmds::decode_source("source.af", &bytes).unwrap_err().to_string().contains("export PSD or PNG"));
 }
 
 /// A minimal native document: one 10×10 px red square at (5, 5) on a 40×20 page.
 fn native() -> Vec<u8> {
-    use photocraft_affinity::synth::{self, F, Method, tag};
+    use sary_affinity::synth::{self, F, Method, tag};
     let node = |x: f64, y: f64| {
         let mut r = x.to_le_bytes().to_vec();
         r.extend(y.to_le_bytes());
@@ -143,6 +143,6 @@ fn native_documents_open_read_only_and_can_be_placed() {
     assert_eq!((st.doc.size.width, st.doc.size.height), (40, 20));
     s.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
     let before = s.active().unwrap().doc.layers.len();
-    photocraft_engine::file_cmds::place_bytes(&mut s, "art.af", bytes, None, &json!({})).unwrap();
+    sary_engine::file_cmds::place_bytes(&mut s, "art.af", bytes, None, &json!({})).unwrap();
     assert_eq!(s.active().unwrap().doc.layers.len(), before + 1);
 }

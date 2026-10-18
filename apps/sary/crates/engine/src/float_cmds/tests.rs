@@ -1,4 +1,4 @@
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 use serde_json::json;
 
 use super::*;
@@ -115,7 +115,7 @@ fn a_copy_leaves_the_original_at_every_depth_in_one_undo_step() {
     }
 }
 
-/// `cargo test --release -p photocraft-engine float_drag_bench -- --ignored --nocapture`
+/// `cargo test --release -p sary-engine float_drag_bench -- --ignored --nocapture`
 #[test]
 #[ignore]
 fn float_drag_bench() {
@@ -154,7 +154,7 @@ fn float_with_the_mask_target_moves_the_mask_not_the_layer() {
     let (mut s, id) = session();
     s.edit("mask", |doc, _| {
         let l = doc.layer_mut(id).unwrap();
-        let mut m = photocraft_doc::LayerMask::reveal_all();
+        let mut m = sary_doc::LayerMask::reveal_all();
         m.surface.fill_rect(Rect::new(10, 10, 30, 30), &[0.0]);
         l.mask = Some(m);
         Ok(())
@@ -174,7 +174,7 @@ fn float_with_the_mask_target_moves_the_mask_not_the_layer() {
 fn cutting_an_untouched_part_of_the_mask_moves_it_and_leaves_the_background_colour() {
     let (mut s, id) = session();
     s.edit("mask", |doc, _| {
-        let mut m = photocraft_doc::LayerMask::hide_all();
+        let mut m = sary_doc::LayerMask::hide_all();
         m.surface.fill_rect(Rect::new(50, 10, 70, 30), &[1.0]);
         doc.layer_mut(id).unwrap().mask = Some(m);
         Ok(())

@@ -1,4 +1,4 @@
-//! WordCraft document model.
+//! Soratra document model.
 //!
 //! A [`Document`] holds the main story (`body`) and secondary stories (`parts`: headers,
 //! footers, notes, comments, text boxes). A story is a list of [`Block`]s: paragraphs and tables;
@@ -601,7 +601,7 @@ pub enum ZoomFit {
 /// Word's compatibility mode for documents that don't state one.
 pub const LEGACY_COMPAT_MODE: u32 = 12;
 
-/// The compatibility mode of documents created by Word 2013 and later, and by WordCraft.
+/// The compatibility mode of documents created by Word 2013 and later, and by Soratra.
 pub const COMPAT_MODE_CURRENT: u32 = 15;
 
 /// Word's hyphenation zone when a document doesn't set one (0.25"), points.
@@ -672,7 +672,7 @@ impl Default for Settings {
             major_font: styles::HEADING_FONT.into(),
             minor_font: styles::BODY_FONT.into(),
             theme_colors: THEME_COLORS.to_vec(),
-            theme_name: "Craft".into(),
+            theme_name: "Mahay".into(),
             footnote_format: section::NumFormat::Decimal,
             endnote_format: section::NumFormat::LowerRoman,
             footnote_pr: section::NoteProps::default(),

@@ -1,7 +1,7 @@
 //! Shared Field Properties for Prepare a form. Each property is opt-in, and appearance
 //! changes are merged per field so a mixed selection keeps everything the user did not edit.
 
-use pdfcraft_engine::{BorderStyle, CheckStyle, DocId, Edit, FieldFont, FieldLookPatch, FieldProps, FormFieldKind, field_flags};
+use taratasy_engine::{BorderStyle, CheckStyle, DocId, Edit, FieldFont, FieldLookPatch, FieldProps, FormFieldKind, field_flags};
 
 use crate::{prepare, theme, widgets};
 
@@ -69,7 +69,7 @@ pub struct Draft {
 
 impl Draft {
     /// The draft for editing `names` together, or why they can't be (a message for `tl!`).
-    pub fn new(doc: &pdfcraft_engine::Document, names: Vec<String>) -> Result<Self, &'static str> {
+    pub fn new(doc: &taratasy_engine::Document, names: Vec<String>) -> Result<Self, &'static str> {
         const MISSING: &str = "The selected fields could not be found. Select them again.";
         let fields = names.iter().map(|name| doc.form.iter().find(|f| &f.name == name)).collect::<Option<Vec<_>>>().ok_or(MISSING)?;
         let looks = names
@@ -84,10 +84,10 @@ impl Draft {
     }
 
     fn build(
-        doc: &pdfcraft_engine::Document,
+        doc: &taratasy_engine::Document,
         names: Vec<String>,
-        fields: &[&pdfcraft_engine::FormField],
-        looks: &[pdfcraft_engine::FieldLook],
+        fields: &[&taratasy_engine::FormField],
+        looks: &[taratasy_engine::FieldLook],
     ) -> Option<Self> {
         let text_fields = fields.iter().all(|f| f.kind == FormFieldKind::Text);
         let choice_fields = fields.iter().all(|f| matches!(f.kind, FormFieldKind::Combo | FormFieldKind::List));
@@ -157,7 +157,7 @@ impl Draft {
 
     /// Resolve only the chosen changes against the current document. This also preserves
     /// unrelated appearance changes made since the dialog opened (e.g. through UI control).
-    pub fn edits(&self, doc: &pdfcraft_engine::Document) -> Result<Vec<Edit>, String> {
+    pub fn edits(&self, doc: &taratasy_engine::Document) -> Result<Vec<Edit>, String> {
         if doc.id != self.doc {
             return Err("The document changed while you were editing field properties.".into());
         }
@@ -211,7 +211,7 @@ fn row<T>(ui: &mut egui::Ui, label: &str, c: &mut Change<T>, edit: impl FnOnce(&
     ui.end_row();
 }
 
-impl crate::PdfCraftApp {
+impl crate::TaratasyApp {
     pub(crate) fn apply_bulk_field_props(&mut self) -> bool {
         let result = self.bulk_field_props.as_ref().ok_or("The field properties dialog is no longer open.".to_string()).and_then(|d| {
             if self.active_ids().map(|(_, id)| id) != Some(d.doc) {

@@ -1,9 +1,9 @@
 [package]
-name = "deckcraft-color"
+name = "seho-color"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DeckCraft colour: RGB/HSL, theme colour slots, DrawingML-style colour transforms"
+description = "Seho colour: RGB/HSL, theme colour slots, DrawingML-style colour transforms"
 
 [lints]
 workspace = true

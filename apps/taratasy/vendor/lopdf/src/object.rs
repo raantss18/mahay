@@ -1234,7 +1234,7 @@ impl Stream {
                 let columns = max(1, params.get(b"Columns").and_then(Object::as_i64).unwrap_or(1)) as usize;
                 let colors = max(1, params.get(b"Colors").and_then(Object::as_i64).unwrap_or(1)) as usize;
                 let bits = max(1, params.get(b"BitsPerComponent").and_then(Object::as_i64).unwrap_or(8)) as usize;
-                // PdfCraft patch: saturating, so absurd parameters cannot overflow.
+                // Taratasy patch: saturating, so absurd parameters cannot overflow.
                 let bytes_per_row = columns.saturating_mul(colors).saturating_mul(bits).div_ceil(8);
                 let bpp = colors.saturating_mul(bits).div_ceil(8);
                 data = png::decode_frame(data.as_slice(), bpp, bytes_per_row)?;
@@ -1254,7 +1254,7 @@ impl Stream {
     fn reverse_tiff_predictor2(mut data: Vec<u8>, columns: usize, colors: usize, bits: usize) -> Result<Vec<u8>> {
         match bits {
             8 => {
-                let stride = columns.saturating_mul(colors); // PdfCraft patch: saturating
+                let stride = columns.saturating_mul(colors); // Taratasy patch: saturating
                 if stride > 0 {
                     for row in data.chunks_mut(stride) {
                         for i in colors..row.len() {
@@ -1264,7 +1264,7 @@ impl Stream {
                 }
             }
             16 => {
-                let stride = columns.saturating_mul(colors).saturating_mul(2); // PdfCraft patch: saturating
+                let stride = columns.saturating_mul(colors).saturating_mul(2); // Taratasy patch: saturating
                 if stride > 0 {
                     for row in data.chunks_mut(stride) {
                         let samples = row.len() / 2;
@@ -1277,7 +1277,7 @@ impl Stream {
                 }
             }
             1 | 2 | 4 => {
-                // PdfCraft patch: reject overflowing packed row widths (lopdf#589).
+                // Taratasy patch: reject overflowing packed row widths (lopdf#589).
                 let stride = columns
                     .checked_mul(colors)
                     .and_then(|samples| samples.checked_mul(bits))
@@ -1304,7 +1304,7 @@ impl Stream {
     /// `2^bits`, then repacked MSB-first; the row's trailing padding bits are kept.
     fn reverse_tiff_predictor2_subbyte(row: &mut [u8], columns: usize, colors: usize, bits: usize) {
         let mask = (1u16 << bits) - 1;
-        // PdfCraft patch: bound scratch to the samples present in the input (lopdf#589).
+        // Taratasy patch: bound scratch to the samples present in the input (lopdf#589).
         let samples = columns.saturating_mul(colors).min(row.len().saturating_mul(8 / bits));
         let mut acc = vec![0u16; colors.min(samples)];
         let mut out = vec![0u8; row.len()];

@@ -1,5 +1,5 @@
 [package]
-name = "deckcraft-bitstream"
+name = "seho-bitstream"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

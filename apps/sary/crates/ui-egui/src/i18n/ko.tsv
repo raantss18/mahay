@@ -2,7 +2,7 @@
 # Empty context: plain UI text; @id: command ID; @plural: one|other source
 # with one Korean form. Other contexts disambiguate English meanings.
 # Preserve {name} placeholders, trailing ellipses and column escapes.
-# Original translations from the meaning of PhotoCraft's English labels.
+# Original translations from the meaning of Sary's English labels.
 # No proprietary translation resources were consulted or extracted.
 # Licensed MIT OR Apache-2.0. See LICENSE-translations.txt and ATTRIBUTION.md.
 # Product names and technology names retain their spelling.
@@ -767,11 +767,11 @@
 	Timeline	타임라인
 	Tool Presets	도구 사전 설정
 	Tools	도구
-	About PhotoCraft	PhotoCraft 정보
-	PhotoCraft Website	PhotoCraft 웹사이트
-	PhotoCraft on GitHub	GitHub의 PhotoCraft
-	ArtCraft Website	ArtCraft 웹사이트
-	Join the ArtCraft Discord…	ArtCraft Discord 참여…
+	About Sary	Sary 정보
+	Sary Website	Sary 웹사이트
+	Sary on GitHub	GitHub의 Sary
+	Mahay Website	Mahay 웹사이트
+	Join the Mahay Discord…	Mahay Discord 참여…
 	Report an Issue…	문제 신고…
 	WIA Support…	WIA 지원…
 	Apply	적용
@@ -822,7 +822,7 @@
 	All Caps	모두 대문자
 	All Slices	모든 분할 영역
 	All User Slices	모든 사용자 분할 영역
-	All shortcuts reset to PhotoCraft defaults.	모든 단축키를 PhotoCraft 기본값으로 초기화했습니다.
+	All shortcuts reset to Sary defaults.	모든 단축키를 Sary 기본값으로 초기화했습니다.
 	Alt	Alt
 	Alt-click to define a source point to clone from	Alt 키를 누른 채 클릭하여 복제 원본 지점 지정
 	Always use pressure for opacity	불투명도에 항상 필압 사용
@@ -1320,9 +1320,9 @@
 	Perspective Warp is not active	원근 뒤틀기가 활성화되어 있지 않습니다
 	Perspective Warp: draw planes along the image's perspective, then switch to Warp	원근 뒤틀기: 이미지의 원근에 따라 평면을 그린 다음 뒤틀기로 전환하세요
 	Photo Filter	포토 필터
-	PhotoCraft	PhotoCraft
-	PhotoCraft Manages Colors	PhotoCraft에서 색상 관리
-	PhotoCraft — an open-source, native image editor written in Rust.	PhotoCraft — Rust로 작성된 오픈 소스 네이티브 이미지 편집기.
+	Sary	Sary
+	Sary Manages Colors	Sary에서 색상 관리
+	Sary — an open-source, native image editor written in Rust.	Sary — Rust로 작성된 오픈 소스 네이티브 이미지 편집기.
 	Pin Depth:	핀 깊이:
 	Pixel Length:	픽셀 길이:
 	Pixels/Centimeter	픽셀/센티미터
@@ -1397,11 +1397,11 @@
 	Import Shortcuts…	단축키 가져오기…
 	Load a keyboard shortcut set saved as .kys	.kys로 저장된 키보드 단축키 세트 불러오기
 	Imported {n} shortcuts from {file}. Click OK to keep them.	{file}에서 단축키 {n}개를 가져왔습니다. 유지하려면 확인을 클릭하세요.
-	{n} commands are not in PhotoCraft.	명령 {n}개는 PhotoCraft에 없습니다.
+	{n} commands are not in Sary.	명령 {n}개는 Sary에 없습니다.
 	Keyboard shortcuts imported	키보드 단축키를 가져왔습니다
 	Your keyboard shortcut set {set} is in use here: {n} shortcuts differ from the defaults. Edit › Keyboard Shortcuts shows them; Reset All to Defaults undoes this.	키보드 단축키 세트 {set}을(를) 여기서 사용합니다. 단축키 {n}개가 기본값과 다릅니다. 편집 › 키보드 단축키에서 확인할 수 있고, 모두 기본값으로 초기화로 되돌릴 수 있습니다.
 	Import keyboard shortcuts?	키보드 단축키를 가져오시겠습니까?
-	PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?	PhotoCraft가 이 컴퓨터에서 다른 이미지 편집기의 키보드 단축키 세트 {set}을(를) 찾았습니다. 단축키 {n}개가 PhotoCraft와 다릅니다. 가져오시겠습니까?
+	Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?	Sary가 이 컴퓨터에서 다른 이미지 편집기의 키보드 단축키 세트 {set}을(를) 찾았습니다. 단축키 {n}개가 Sary와 다릅니다. 가져오시겠습니까?
 	Edit › Keyboard Shortcuts › Reset All to Defaults undoes an import.	편집 › 키보드 단축키 › 모두 기본값으로 초기화를 누르면 가져오기를 되돌릴 수 있습니다.
 	Don't Import	가져오지 않음
 	The keyboard shortcut set was not imported: {error}	키보드 단축키 세트를 가져오지 못했습니다: {error}
@@ -1590,7 +1590,7 @@
 	Apple Watch 45mm	Apple Watch 45mm
 	Aqua	청록
 	Art & Illustration	아트 및 일러스트레이션
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Background Eraser Tool	배경 지우개 도구
 	Bevel & Emboss	경사와 엠보스
 	Blend Mode	혼합 모드
@@ -1627,7 +1627,7 @@
 	Current Tool	현재 도구
 	Custom Shape Tool	사용자 정의 모양 도구
 	Cyans	사이안 계열
-	Default PhotoCraft Size	PhotoCraft 기본 크기
+	Default Sary Size	Sary 기본 크기
 	Delete Workspace	작업 영역 삭제
 	Diamond	다이아몬드
 	Dimensions:	치수:
@@ -1738,7 +1738,7 @@
 	Pen Tool	펜 도구
 	Convert Point Tool	기준점 변환 도구
 	Photo	사진
-	PhotoCraft website	PhotoCraft 웹사이트
+	Sary website	Sary 웹사이트
 	Picas	파이카
 	Pillow Emboss	쿠션 엠보스
 	Pixel Replacement	픽셀 대체
@@ -2065,7 +2065,7 @@
 	System Info	시스템 정보
 	More panels	추가 패널
 	More documents	추가 문서
-	These settings aren't available in PhotoCraft yet.	이 설정은 아직 PhotoCraft에서 사용할 수 없습니다.
+	These settings aren't available in Sary yet.	이 설정은 아직 Sary에서 사용할 수 없습니다.
 	Graphics	그래픽
 	Reset GPU Backend	GPU 백엔드 초기화
 	Applies at next launch.	다음 실행 시 적용됩니다.
@@ -2185,8 +2185,8 @@
 	Use Global Light	전체 조명 사용
 	Native file drag-and-drop is unavailable	파일 드래그 앤 드롭을 사용할 수 없습니다
 	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or copy the image in your file manager and paste it with {paste}.	Wayland에서는 아직 파일 드래그 앤 드롭을 지원하지 않습니다. 파일 › 열기를 사용하거나, 파일 관리자에서 이미지를 복사한 뒤 {paste}(으)로 붙여넣으세요.
-	To drop files, start PhotoCraft under XWayland: `{command}`	파일을 끌어다 놓으려면 XWayland에서 PhotoCraft를 실행하세요: `{command}`
-	Or set Preferences › Performance › Linux display server to X11: PhotoCraft then always starts under XWayland.	또는 환경 설정 › 성능 › Linux 디스플레이 서버를 X11로 설정하면 PhotoCraft가 항상 XWayland에서 시작됩니다.
+	To drop files, start Sary under XWayland: `{command}`	파일을 끌어다 놓으려면 XWayland에서 Sary를 실행하세요: `{command}`
+	Or set Preferences › Performance › Linux display server to X11: Sary then always starts under XWayland.	또는 환경 설정 › 성능 › Linux 디스플레이 서버를 X11로 설정하면 Sary가 항상 XWayland에서 시작됩니다.
 	Edit › Paste	편집 › 붙여넣기
 	Use File › Open, or paste a copied image with {paste}.	파일 › 열기를 사용하거나, 복사한 이미지를 {paste}(으)로 붙여넣으세요.
 	Invalid {mode} profile	유효하지 않은 {mode} 프로파일
@@ -2202,7 +2202,7 @@
 	Automatic uses GPU acceleration when available and falls back to CPU rendering on errors.	자동 모드는 가능한 경우 GPU 가속을 사용하고 오류가 발생하면 CPU 렌더링으로 전환합니다.
 	Switched to CPU rendering	CPU 렌더링으로 전환했습니다
 	GPU acceleration could not continue. Your documents are unchanged.	GPU 가속을 계속할 수 없습니다. 문서는 변경되지 않았습니다.
-	PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter.	PhotoCraft가 CPU로 이미지를 합성하고 있습니다. 창 표시에는 그래픽 어댑터를 계속 사용할 수 있습니다.
+	Sary is using the CPU image compositor. The window may still use your graphics adapter.	Sary가 CPU로 이미지를 합성하고 있습니다. 창 표시에는 그래픽 어댑터를 계속 사용할 수 있습니다.
 	Retry GPU requires a restart. Save your work first.	GPU를 다시 사용하려면 다시 시작해야 합니다. 먼저 작업을 저장하세요.
 	Keep Using CPU	CPU 계속 사용
 	Retry GPU	GPU 다시 사용
@@ -2678,7 +2678,7 @@ cameraRaw	Color	색상
 	Custom Pixel Aspect Ratio	사용자 정의 픽셀 종횡비
 	32-bit Preview Options	32비트 미리 보기 옵션
 	New Guide	새 안내선
-	Join the ArtCraft Discord	ArtCraft Discord 참여
+	Join the Mahay Discord	Mahay Discord 참여
 	Report an Issue	문제 신고
 	WIA Support	WIA 지원
 	Load Files into Stack	파일을 스택으로 불러오기
@@ -2909,7 +2909,7 @@ cameraRaw	Color	색상
 	Use tablet pressure to change pen width	태블릿 압력을 사용하여 펜 폭 변경
 
 
-# About ▸ Contributors / Models (credits, craftrules standards/contributors.md)
+# About ▸ Contributors / Models (credits, mahay-rules standards/contributors.md)
 	About	정보
 	Contributors	기여자
 	Models	모델
@@ -3067,7 +3067,7 @@ fontWeight	Italic	기울임
 	Color to Alpha…	색상을 알파로…
 	Transparency Threshold	투명도 한계값
 	Opacity Threshold	불투명도 한계값
-	PhotoCraft — Screen Color Picker	PhotoCraft — 화면 색상 선택기
+	Sary — Screen Color Picker	Sary — 화면 색상 선택기
 
 	Rasterize svg groups deeper than	이 깊이보다 깊은 SVG 그룹 래스터화
 	0 turns this threshold off; SVG groups nested deeper than 100 levels are always rasterized.	0이면 이 한계값을 끕니다. 100단계보다 깊이 중첩된 SVG 그룹은 항상 래스터화됩니다.
@@ -3317,7 +3317,7 @@ curves	Smooth	매끄럽게
 	{name} (Photoshop)	{name} (Photoshop)
 	{message} ({note})	{message} ({note})
 @plural	Loaded {n} action from {file}|Loaded {n} actions from {file}	{file}에서 액션 {n}개를 불러왔습니다
-@plural	{n} step has no PhotoCraft equivalent yet|{n} steps have no PhotoCraft equivalent yet	{n}개 단계에는 아직 PhotoCraft에 해당하는 기능이 없습니다
+@plural	{n} step has no Sary equivalent yet|{n} steps have no Sary equivalent yet	{n}개 단계에는 아직 Sary에 해당하는 기능이 없습니다
 @plural	Saved {n} action to {file}|Saved {n} actions to {file}	{file}에 액션 {n}개를 저장했습니다
 @plural	{n} step with no Photoshop equivalent left out|{n} steps with no Photoshop equivalent left out	Photoshop에 해당하는 기능이 없는 {n}개 단계를 제외했습니다
 
@@ -3370,7 +3370,7 @@ curves	Smooth	매끄럽게
 	Clear Selected Guides	선택한 안내선 지우기
 	Delete this set	이 세트 삭제
 	New Set…	새 세트…
-	PhotoCraft Defaults	PhotoCraft 기본값
+	Sary Defaults	Sary 기본값
 	Save a list of these shortcuts as a web page	이 단축키 목록을 웹 페이지로 저장
 	Save the changes to this set	이 세트에 변경 사항 저장
 	Save these shortcuts as a .kys file	이 단축키를 .kys 파일로 저장

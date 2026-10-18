@@ -1,9 +1,9 @@
 [package]
-name = "deckcraft-metafile"
+name = "seho-metafile"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DeckCraft metafiles (ported from WordCraft): parses Windows WMF and EMF records into a neutral vector model (paths and bitmaps)"
+description = "Seho metafiles (ported from Soratra): parses Windows WMF and EMF records into a neutral vector model (paths and bitmaps)"
 
 [lints]
 workspace = true

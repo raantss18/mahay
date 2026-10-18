@@ -41,7 +41,7 @@ fn bounded_tags(tags: impl IntoIterator<Item = String>) -> Vec<String> {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn detect_system_tags() -> Vec<String> {
-    if let Ok(tag) = std::env::var("PHOTOCRAFT_LOCALE")
+    if let Ok(tag) = std::env::var("SARY_LOCALE")
         && !tag.trim().is_empty()
     {
         return bounded_tags([tag]);

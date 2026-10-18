@@ -1,13 +1,13 @@
 //! #3833: hyphens inside an installed family must survive PSD save/reopen and editing.
 //! The fixtures rename the OFL bundled fonts in memory; no proprietary fonts are needed.
 
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::{
+use sary_color::{ColorMode, SampleType};
+use sary_doc::{
     Document, Layer, LayerContent, TextLayer,
     text::{CharStyle, TextRun},
 };
-use photocraft_geom::Size;
-use photocraft_text::fonts::{INTER_REGULAR, JETBRAINS_MONO_REGULAR};
+use sary_geom::Size;
+use sary_text::fonts::{INTER_REGULAR, JETBRAINS_MONO_REGULAR};
 
 fn renamed_font(source: &[u8], family: &str, ps: &str) -> Vec<u8> {
     font_with_names(source, &[(1, family), (2, "Regular"), (6, ps), (16, family), (17, "Regular")])
@@ -40,7 +40,7 @@ fn font_with_names(source: &[u8], names: &[(u16, &str)]) -> Vec<u8> {
 fn roundtrip(family: &str, ps: Option<&str>, install_prefix: bool) {
     let actual_ps = ps.map(str::to_string).unwrap_or_else(|| format!("{family}-Book").replace(' ', ""));
     {
-        let mut engine = photocraft_text::shared().lock().unwrap();
+        let mut engine = sary_text::shared().lock().unwrap();
         engine.fonts.register_font_data(renamed_font(&JETBRAINS_MONO_REGULAR, family, &actual_ps));
         if install_prefix {
             let prefix = family.split_once('-').unwrap().0;
@@ -61,10 +61,10 @@ fn roundtrip_registered_fonts(family: &str, ps: Option<&str>) {
         ..Default::default()
     };
     original.sync_summary();
-    photocraft_text::shared().lock().unwrap().render_layer(&mut original, doc.resolution_dpi, doc.pixel_format());
+    sary_text::shared().lock().unwrap().render_layer(&mut original, doc.resolution_dpi, doc.pixel_format());
     doc.layers.push(Layer::new("type", LayerContent::Text(original.clone())));
-    let bytes = photocraft_io::export(&doc, "fonts.psd", &Default::default()).unwrap().bytes;
-    let mut reopened = photocraft_io::import("fonts.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "fonts.psd", &Default::default()).unwrap().bytes;
+    let mut reopened = sary_io::import("fonts.psd", &bytes).unwrap().document;
     let LayerContent::Text(text) = &mut reopened.layers[0].content else { panic!("expected editable text") };
     assert!(text.cache.is_some(), "opening retains the original appearance");
     let before = original.cache.as_ref().unwrap();
@@ -84,7 +84,7 @@ fn roundtrip_registered_fonts(family: &str, ps: Option<&str>) {
     text.psd_raw = None;
     original.text.push('!');
     original.runs[0].len += 1;
-    let mut engine = photocraft_text::shared().lock().unwrap();
+    let mut engine = sary_text::shared().lock().unwrap();
     let expected = engine.layout(&original, doc.resolution_dpi);
     let actual = engine.layout(text, doc.resolution_dpi);
     assert!((expected.lines[0].x1 - actual.lines[0].x1).abs() < 0.01, "editing must keep the same font outlines");
@@ -111,7 +111,7 @@ fn installed_family_survives_a_face_indexed_under_its_typographic_family() {
     const FAMILY: &str = "Indexed Alias";
     const PS: &str = "IndexedAlias-Regular";
     {
-        let mut engine = photocraft_text::shared().lock().unwrap();
+        let mut engine = sary_text::shared().lock().unwrap();
         // The requested family exists, but its exact PostScript face is listed under the
         // typographic family, as with system fonts that separate legacy and typographic names.
         engine.fonts.register_font_data(renamed_font(&INTER_REGULAR, FAMILY, "IndexedAlias-Other"));

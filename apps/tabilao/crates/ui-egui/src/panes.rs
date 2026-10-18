@@ -53,7 +53,7 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
 fn comments(app: &mut SheetApp, ui: &mut Ui) {
     let Some(d) = app.session.active() else { return };
     let Some(sh) = d.wb.active() else { return };
-    let list: Vec<(String, gridcraft_engine::model::Comment)> = sh.comments.iter().map(|(c, m)| (c.a1(), m.clone())).collect();
+    let list: Vec<(String, tabilao_engine::model::Comment)> = sh.comments.iter().map(|(c, m)| (c.a1(), m.clone())).collect();
     if list.is_empty() {
         ui.label(egui::RichText::new("No comments on this sheet yet. Select a cell and choose New Comment.").italics());
     }
@@ -110,7 +110,7 @@ fn watch(app: &mut SheetApp, ui: &mut Ui) {
         && let Some(d) = app.session.active()
         && let Some(sh) = d.wb.active()
     {
-        let r = format!("{}!{}", gridcraft_engine::formula::quote_sheet(&sh.name), d.selection.active.a1());
+        let r = format!("{}!{}", tabilao_engine::formula::quote_sheet(&sh.name), d.selection.active.a1());
         let _ = app.session.run("formulas.watchWindow", json!({"add": r}));
     }
     let list = app.session.run("formulas.watchWindow", json!({})).unwrap_or(Json::Null);
@@ -171,7 +171,7 @@ fn format_chart(app: &mut SheetApp, ui: &mut Ui) {
     };
     let theme = app.session.active().map(|d| d.wb.theme.clone()).unwrap_or_default();
     ui.collapsing("Chart Title", |ui| {
-        let field = egui::Id::new(("gridcraft.chart_title", id));
+        let field = egui::Id::new(("tabilao.chart_title", id));
         if let Some(title) = crate::widgets::committed_text(ui, field, chart.title.as_deref().unwrap_or(""), None) {
             app.run_or_alert("chart.set", json!({"chart": id, "title": title}));
         }
@@ -216,21 +216,21 @@ fn format_chart(app: &mut SheetApp, ui: &mut Ui) {
         }
         ui.horizontal(|ui| {
             ui.label("Horizontal axis title:");
-            let field = egui::Id::new(("gridcraft.chart_x_title", id));
+            let field = egui::Id::new(("tabilao.chart_x_title", id));
             if let Some(xt) = crate::widgets::committed_text(ui, field, chart.x_title.as_deref().unwrap_or(""), None) {
                 app.run_or_alert("chart.set", json!({"chart": id, "xTitle": if xt.is_empty() { Json::Null } else { json!(xt) }}));
             }
         });
         ui.horizontal(|ui| {
             ui.label("Vertical axis title:");
-            let field = egui::Id::new(("gridcraft.chart_y_title", id));
+            let field = egui::Id::new(("tabilao.chart_y_title", id));
             if let Some(yt) = crate::widgets::committed_text(ui, field, chart.y_title.as_deref().unwrap_or(""), None) {
                 app.run_or_alert("chart.set", json!({"chart": id, "yTitle": if yt.is_empty() { Json::Null } else { json!(yt) }}));
             }
         });
     });
     ui.collapsing("Series", |ui| {
-        let data = app.session.active().map(|d| gridcraft_chart::resolve(&d.wb, d.wb.active_sheet, &chart));
+        let data = app.session.active().map(|d| tabilao_chart::resolve(&d.wb, d.wb.active_sheet, &chart));
         for (i, s) in chart.series.iter().enumerate() {
             let name = data.as_ref().and_then(|d| d.series.get(i)).map(|x| x.name.clone()).unwrap_or_else(|| format!("Series {}", i + 1));
             let col =
@@ -270,7 +270,7 @@ fn format_chart(app: &mut SheetApp, ui: &mut Ui) {
     });
     ui.collapsing("Size", |ui| {
         // Keep the value being typed or dragged between frames; reloading it from the chart every frame threw the edit away.
-        let draft = egui::Id::new(("gridcraft.chart_size_draft", id));
+        let draft = egui::Id::new(("tabilao.chart_size_draft", id));
         let (mut w, mut h) = ui.data_mut(|d| d.get_temp::<(f32, f32)>(draft)).unwrap_or((chart.anchor.width, chart.anchor.height));
         let a = ui.add(egui::DragValue::new(&mut w).prefix("Width ").range(40.0..=4000.0));
         let b = ui.add(egui::DragValue::new(&mut h).prefix("Height ").range(40.0..=4000.0));

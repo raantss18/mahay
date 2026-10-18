@@ -1,5 +1,5 @@
-use gridcraft_core::{CellRef, DateSystem, Value};
-use gridcraft_model::{Sheet, Workbook};
+use tabilao_core::{CellRef, DateSystem, Value};
+use tabilao_model::{Sheet, Workbook};
 
 use crate::csv::{decode_text, sniff_delimiter};
 use crate::{CsvOptions, Format, IoError, read_csv, sniff, write_csv, write_csv_limited};
@@ -97,13 +97,13 @@ fn writing() {
     s.set_value(CellRef::new(2, 1), Value::Number(0.1));
     s.set_value(CellRef::new(2, 2), Value::Bool(false));
     s.set_value(CellRef::new(3, 3), Value::text("x\ny"));
-    s.set_value(CellRef::new(3, 1), Value::Error(gridcraft_core::CellError::Div0));
+    s.set_value(CellRef::new(3, 1), Value::Error(tabilao_core::CellError::Div0));
     wb.sheets = vec![std::sync::Arc::new(s)];
     // The caller supplies each field's text; quoting and line ends are the writer's.
     let sh = wb.sheet(0).unwrap();
     let raw = |c: CellRef| match sh.value(c) {
         Value::Empty => String::new(),
-        Value::Number(n) => gridcraft_core::number_to_text(n),
+        Value::Number(n) => tabilao_core::number_to_text(n),
         Value::Text(t) => t.to_string(),
         Value::Bool(b) => if b { "TRUE" } else { "FALSE" }.into(),
         Value::Error(e) => e.as_str().into(),
@@ -161,13 +161,13 @@ fn text_of(sh: &Sheet) -> impl FnMut(CellRef) -> String + '_ {
 #[test]
 fn two_far_apart_cells_are_refused_before_anything_is_allocated() {
     // A1 and XFD1048576 span the whole grid: 16 GiB of commas. Refused at once, with the numbers.
-    let s = two_cells((gridcraft_core::MAX_ROWS - 1, gridcraft_core::MAX_COLS - 1));
+    let s = two_cells((tabilao_core::MAX_ROWS - 1, tabilao_core::MAX_COLS - 1));
     let err = write_csv(&s, b',', text_of(&s)).unwrap_err();
     assert!(matches!(err, IoError::TooLarge(_)), "{err}");
     let msg = err.to_string();
     assert!(msg.contains("1048576 rows by 16384 columns") && msg.contains("512 MiB"), "{msg}");
     // A single row or column across the grid is refused too when it is over the cap.
-    let wide = two_cells((gridcraft_core::MAX_ROWS - 1, 0));
+    let wide = two_cells((tabilao_core::MAX_ROWS - 1, 0));
     assert!(write_csv_limited(&wide, b',', 1 << 20, text_of(&wide)).is_err());
 }
 

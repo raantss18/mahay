@@ -1,6 +1,6 @@
 # Serbian, Latin script (sr-latn) interface catalog. Columns, separated by a TAB:
 #   context <TAB> English source <TAB> translation
-#   context    empty (WordCraft uses no contexts yet)
+#   context    empty (Soratra uses no contexts yet)
 #   source     the English text exactly as in the code (tl!(...), ribbon labels, command labels)
 #   escapes    \n  \t  \\  inside a column. `{name}` placeholders must appear in both columns, and a
 #              trailing "…" in one needs one in the other.
@@ -9,16 +9,16 @@
 # Clean room: every entry was written from the plain meaning of the English label in ordinary
 # computing vocabulary. No Microsoft Word (or other product) localisation, string table or
 # translated UI was consulted or copied; add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
+# Product, format and technology names (Soratra, PDF, Markdown, MCP …) stay in Latin letters.
 
 	(no style)	(bez stila)
 	(no suggestions)	(nema predloga)
 	(picture or object)	(slika ili objekat)
 	1.5 Line Spacing	Proređenost 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Besplatan, otvoreni obrađivač teksta napisan od nule u Rust-u.\nDeo Crafting Apps paketa tima ArtCraft.
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Besplatan, otvoreni obrađivač teksta napisan od nule u Rust-u.\nDeo Mahay apps paketa tima Mahay.
 	A password is required to open this document.	Za otvaranje ovog dokumenta potrebna je lozinka.
 	About	O programu
-	About WordCraft	O WordCraft-u
+	About Soratra	O Soratra-u
 	Accept	Prihvati
 	Accept All Changes	Prihvati sve izmene
 	Accept This Change	Prihvati ovu izmenu
@@ -80,7 +80,7 @@
 	Automatic Table 1 (3 levels)	Automatska tabela 1 (3 nivoa)
 	Automatic Table 2 (2 levels)	Automatska tabela 2 (2 nivoa)
 	AutoSave	Automatsko čuvanje
-	AutoSave documents you have saved in WordCraft	Automatski čuvaj dokumente koje ste već sačuvali u WordCraft-u
+	AutoSave documents you have saved in Soratra	Automatski čuvaj dokumente koje ste već sačuvali u Soratra-u
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Automatsko čuvanje neuspelo: {error}. Sačuvajte dokument da biste ga ponovo uključili.
 	Balloons	Oblačići
 	Bottom Margin	Donja margina
@@ -104,7 +104,7 @@
 	Color: {color}	Boja: {color}
 	Compress punctuation at the start of a line	Sažmi interpunkciju na početku reda
 	Confirm password:	Potvrdite lozinku:
-	Couldn't make WordCraft the default: {error}	WordCraft nije mogao da postane podrazumevana aplikacija: {error}
+	Couldn't make Soratra the default: {error}	Soratra nije mogao da postane podrazumevana aplikacija: {error}
 	Custom dictionary	Prilagođeni rečnik
 	Dark page (white text on black)	Tamna stranica (beo tekst na crnom)
 	Drag a rectangle to draw a table, or a line across cells to split them. Esc stops.	Prevucite pravougaonik da nacrtate tabelu ili liniju preko ćelija da ih podelite. Esc završava.
@@ -152,10 +152,10 @@
 	Number style for this level:	Stil broja za ovaj nivo:
 	Only for the selected text	Samo za izabrani tekst
 	Outside border	Spoljna ivica
-	In Default apps, choose WordCraft for the document types you want it to open.	U podrazumevanim aplikacijama izaberite WordCraft za vrste dokumenata koje želite da otvara.
-	Make WordCraft the default for Word documents…	Postavi WordCraft kao podrazumevanu aplikaciju za Word dokumente…
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	Od sada će se .docx, .doc, .rtf i .odt datoteke i Word šabloni otvarati u WordCraft-u.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Otvara Podešavanja › Podrazumevane aplikacije, gde birate WordCraft za .docx i druge vrste dokumenata.
+	In Default apps, choose Soratra for the document types you want it to open.	U podrazumevanim aplikacijama izaberite Soratra za vrste dokumenata koje želite da otvara.
+	Make Soratra the default for Word documents…	Postavi Soratra kao podrazumevanu aplikaciju za Word dokumente…
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	Od sada će se .docx, .doc, .rtf i .odt datoteke i Word šabloni otvarati u Soratra-u.
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	Otvara Podešavanja › Podrazumevane aplikacije, gde birate Soratra za .docx i druge vrste dokumenata.
 	Overtype	Prepisivanje
 	Overtype (typing replaces the characters after the caret)	Prepisivanje (otkucano zamenjuje znakove posle kursora)
 	Show alignment guides when moving pictures and shapes	Prikazuj vodilje za poravnanje pri pomeranju slika i oblika
@@ -183,7 +183,7 @@
 	Glow Colors	Boje sjaja
 	Hide from style lists	Sakrij sa lista stilova
 	Indents and Spacing	Uvlačenja i razmaci
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Čuvajte lozinku na sigurnom mestu: bez nje niko, pa ni WordCraft, ne može da otvori dokument. Ostavite oba polja prazna da biste uklonili lozinku.
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	Čuvajte lozinku na sigurnom mestu: bez nje niko, pa ni Soratra, ne može da otvori dokument. Ostavite oba polja prazna da biste uklonili lozinku.
 	Line breaking	Prelom redova
 	Linked style (paragraph and character)	Povezani stil (pasus i znakovi)
 	Manage Styles	Upravljanje stilovima
@@ -383,8 +383,8 @@
 	Delete Style	Obriši stil
 	Delete Table	Obriši tabelu
 	Design	Dizajn
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Da bi se Word dokumenti podrazumevano otvarali u WordCraft-u: izaberite jedan u Finder-u, izaberite Datoteka › Prikaži informacije, pod „Otvori pomoću” izaberite WordCraft, pa kliknite „Promeni sve”.
-	WordCraft is now the default app for Word documents.	WordCraft je sada podrazumevana aplikacija za Word dokumente.
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	Da bi se Word dokumenti podrazumevano otvarali u Soratra-u: izaberite jedan u Finder-u, izaberite Datoteka › Prikaži informacije, pod „Otvori pomoću” izaberite Soratra, pa kliknite „Promeni sve”.
+	Soratra is now the default app for Word documents.	Soratra je sada podrazumevana aplikacija za Word dokumente.
 	development build	razvojna verzija
 	Diagonal	Dijagonalno
 	Diamond	Dijamant
@@ -439,7 +439,7 @@
 	Equation	Jednačina
 	Eraser	Gumica
 	Even Page	Parna strana
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Svaka naredba je dostupna skriptama i AI agentima: pokrenite `wordcraft-cli mcp` za MCP server, ili pokrenite aplikaciju sa `--control <port>` za JSON kontrolni kanal.
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Svaka naredba je dostupna skriptama i AI agentima: pokrenite `soratra-cli mcp` za MCP server, ili pokrenite aplikaciju sa `--control <port>` za JSON kontrolni kanal.
 	Export	Izvoz
 	Export a copy to share (PDF, Word document)	Izvezi kopiju za deljenje (PDF, Word dokument)
 	Export Page as PNG	Izvezi stranu kao PNG
@@ -551,8 +551,8 @@
 	Inspect Document	Pregledaj dokument
 	Interface language:	Jezik interfejsa:
 	Italic	Kurziv
-	Join the ArtCraft community on Discord	Pridružite se ArtCraft zajednici na Discord-u
-	Join us on Discord: discord.gg/artcraft	Pridružite nam se na Discord-u: discord.gg/artcraft
+	Join the Mahay community on Discord	Pridružite se Mahay zajednici na Discord-u
+	Join us on Discord: discord.gg/mahay	Pridružite nam se na Discord-u: discord.gg/mahay
 	Justify	Obostrano poravnanje
 	Keep Lines Together	Zadrži redove zajedno
 	Keep lines together	Zadrži redove zajedno
@@ -563,7 +563,7 @@
 	Landscape	Položeno
 	Language	Jezik
 	{language} (no dictionary)	{language} (nema rečnika)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Pravopisni rečnik za {language} nije instaliran, pa se tekst ne proverava. WordCraft traži Hunspell rečnik {name} u fascikli WORDCRAFT_DICTIONARIES i na uobičajenim sistemskim lokacijama.
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	Pravopisni rečnik za {language} nije instaliran, pa se tekst ne proverava. Soratra traži Hunspell rečnik {name} u fascikli SORATRA_DICTIONARIES i na uobičajenim sistemskim lokacijama.
 	Lasso	Laso
 	Last Column	Zadnja kolona
 	Last commit	Zadnji commit
@@ -610,7 +610,7 @@
 	Merge Formatting	Spoji formatiranje
 	Merged PRs	Spojeni PR-ovi
 	Mirrored	Zrcaljeno
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Autorska prava (c) 2026 ArtCraft Team i saradnici na WordCraft-u.
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0. Autorska prava (c) 2026 Mahay Team i saradnici na Soratra-u.
 	Moderate	Umereno
 	Modify Style	Izmeni stil
 	Modify…	Izmeni…
@@ -882,7 +882,7 @@
 	Soft Edges	Meke ivice
 	Sort	Sortiraj
 	Sort order:	Redosled sortiranja:
-	Source code: github.com/storytold/wordcraft	Izvorni kod: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	Izvorni kod: github.com/raantss18/soratra
 	Space	Razmak
 	Space after: {pt} pt	Razmak posle: {pt} pt
 	Space before/after:	Razmak pre/posle:
@@ -1029,7 +1029,7 @@
 	Word Left	Reč levo
 	Word Right	Reč desno
 	WordArt	WordArt
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	Reči
 	Words only	Samo reči
 	Wrap Text	Prelomi tekst
@@ -1283,7 +1283,7 @@
 	Reset Crop	Poništi isecanje
 	Insert a new equation (Alt+=)	Umetni novu jednačinu (Alt+=)
 	Leave the equation (Esc)	Napusti jednačinu (Esc)
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	Crtaj mastilom
 	Erase Ink	Obriši mastilo
 	Hide Ink	Sakrij mastilo
@@ -1318,7 +1318,7 @@
 	Version	Verzija
 	% of all commits	% svih commit-ova
 	Lines +/−	Redovi +/−
-	Craft	Zanat
+	Mahay	Zanat
 	Studio	Studio
 	Atelier	Atelje
 	Darkroom	Mračna komora
@@ -1764,7 +1764,7 @@
 	Word document	Word dokument
 	All files	Sve datoteke
 	Recipient lists	Liste primalaca
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Sistemski dijalog za datoteke nije dostupan, pa WordCraft prikazuje svoj. Da biste dobili sistemski dijalog, instalirajte portal za izbor datoteka (na primer xdg-desktop-portal-gtk) ili zenity.
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Sistemski dijalog za datoteke nije dostupan, pa Soratra prikazuje svoj. Da biste dobili sistemski dijalog, instalirajte portal za izbor datoteka (na primer xdg-desktop-portal-gtk) ili zenity.
 	Up one level	Jedan nivo gore
 	Home folder	Lična fascikla
 	{name} wasn't found.	{name} nije pronađen.
@@ -1772,8 +1772,8 @@
 	This folder can't be read: {error}	Ova fascikla ne može da se pročita: {error}
 	Showing the first {count} items.	Prikazane su samo prve stavke: {count}.
 	File name:	Ime datoteke:
-	Browse in WordCraft…	Potraži u WordCraft-u…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Otvorite datoteku pomoću WordCraft-ovog pregledača kada se sistemski dijalog za datoteke ne pojavi.
+	Browse in Soratra…	Potraži u Soratra-u…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	Otvorite datoteku pomoću Soratra-ovog pregledača kada se sistemski dijalog za datoteke ne pojavi.
 	Hide White Space	Sakrij prazan prostor
 	All pages	Sve stranice
 	Current page	Trenutna stranica
@@ -2153,8 +2153,8 @@
 	Number only, without the label's words	Samo broj, bez reči iz oznake
 	Add whether it is above or below	Dodaj da li je iznad ili ispod
 	Start-up	Pokretanje
-	Show the Start screen when WordCraft starts	Prikaži početni ekran pri pokretanju programa WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Uključeno: WordCraft se otvara na Fajl › Početak, sa praznim dokumentom, šablonima i nedavnim dokumentima. Isključeno: otvara prazan dokument.
+	Show the Start screen when Soratra starts	Prikaži početni ekran pri pokretanju programa Soratra
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Uključeno: Soratra se otvara na Fajl › Početak, sa praznim dokumentom, šablonima i nedavnim dokumentima. Isključeno: otvara prazan dokument.
 	Copy to	Kopiraj u
 
 # Document naming and account controls.
@@ -2185,7 +2185,7 @@
 	{name}   {height} × {width} mm	{name}   {height} × {width} mm
 	{width} × {height} mm	{width} × {height} mm
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	Istraživaču je potrebna usluga na mreži, a WordCraft vaše dokumente čuva van mreže.
+	Researcher needs an online service; Soratra keeps your documents offline.	Istraživaču je potrebna usluga na mreži, a Soratra vaše dokumente čuva van mreže.
 	These settings will be used for new documents.	Ova podešavanja će se koristiti za nove dokumente.
 	can't split at the first row	tabela ne može da se podeli kod prvog reda
 	select two or more cells to merge	izaberite dve ili više ćelija za spajanje

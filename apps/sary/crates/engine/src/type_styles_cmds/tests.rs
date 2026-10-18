@@ -103,7 +103,7 @@ fn paragraph_styles_and_basic_paragraph() {
     let t = layer(&s, id);
     let p = t.paragraph_runs();
     assert_eq!(p[0].style.style_sheet, Some(ps));
-    assert_eq!(p[0].style.align, photocraft_doc::text::TextAlign::Center);
+    assert_eq!(p[0].style.align, sary_doc::text::TextAlign::Center);
     assert_eq!(p.last().unwrap().style.style_sheet, None);
     // The first paragraph's characters are on the style's basis.
     assert_eq!((run_at(&t, 0).size_pt, run_at(&t, 0).weight), (24.0, 700));
@@ -123,7 +123,7 @@ fn paragraph_styles_and_basic_paragraph() {
     // Delete keeps the look.
     s.execute("type.paragraphStyle.delete", json!({"id": ps})).unwrap();
     let t = layer(&s, id);
-    assert_eq!(t.paragraph_runs()[0].style.align, photocraft_doc::text::TextAlign::Center);
+    assert_eq!(t.paragraph_runs()[0].style.align, sary_doc::text::TextAlign::Center);
     assert_eq!(t.paragraph_runs()[0].style.style_sheet, None);
 }
 
@@ -137,10 +137,10 @@ fn styles_survive_typing_and_save() {
     s.execute("type.edit", json!({"layer": id, "replace": {"start": 2, "end": 2, "text": "cd"}})).unwrap();
     let t = layer(&s, id);
     assert_eq!(run_at(&t, 3).style_sheet, Some(cs));
-    // .pcraft round trip keeps the styles and references.
+    // .sary round trip keeps the styles and references.
     let doc = s.active().unwrap().doc.clone();
-    let bytes = photocraft_format::save_to_bytes(&doc, &photocraft_format::SaveOptions::default()).unwrap();
-    let back = photocraft_format::load_from_bytes(&bytes).unwrap();
+    let bytes = sary_format::save_to_bytes(&doc, &sary_format::SaveOptions::default()).unwrap();
+    let back = sary_format::load_from_bytes(&bytes).unwrap();
     assert_eq!(back.text_styles, doc.text_styles);
     let LayerContent::Text(t2) = &back.walk().into_iter().find(|(_, _, l)| matches!(l.content, LayerContent::Text(_))).unwrap().2.content else { panic!() };
     assert_eq!(run_at(t2, 0).style_sheet, Some(cs));
@@ -163,11 +163,11 @@ fn shared_attribute_names_accept_both_spellings() {
     let id = r["id"].as_u64().unwrap() as u32;
     let st = s.active().unwrap().doc.text_styles.resolve_char(None, Some(id), FAMILY);
     assert_eq!(st.color.to_rgb(), [1.0, 0.0, 0.0]);
-    assert_eq!(st.caps, photocraft_doc::text::Caps::AllCaps);
-    assert_eq!(st.kerning, photocraft_doc::text::Kerning::Off);
+    assert_eq!(st.caps, sary_doc::text::Caps::AllCaps);
+    assert_eq!(st.kerning, sary_doc::text::Kerning::Off);
     let r = s.execute("type.paragraphStyle.new", json!({"fromSelection": false, "attrs": {"align": "Center", "direction": "rtl"}})).unwrap();
     let p = s.active().unwrap().doc.text_styles.resolve_para(Some(r["id"].as_u64().unwrap() as u32));
-    assert_eq!((p.align, p.direction), (photocraft_doc::text::TextAlign::Center, photocraft_doc::text::TextDirection::Rtl));
+    assert_eq!((p.align, p.direction), (sary_doc::text::TextAlign::Center, sary_doc::text::TextDirection::Rtl));
 }
 
 #[test]
@@ -222,7 +222,7 @@ fn isolated_options_preview_matches_commit_with_multiple_layers_and_local_overri
                 assert_eq!(expected.paragraphs, actual.paragraphs);
                 assert_eq!(expected.psd_raw, actual.psd_raw);
             }
-            assert_eq!(photocraft_compose::flatten(&shown).get(20, 40), photocraft_compose::flatten(committed).get(20, 40));
+            assert_eq!(sary_compose::flatten(&shown).get(20, 40), sary_compose::flatten(committed).get(20, 40));
         }
     }
 }

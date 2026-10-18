@@ -1,7 +1,7 @@
 //! Indexed Color and Duotone documents in flat exports.
 
-use photocraft_color::{Color, ColorMode, SampleType};
-use photocraft_doc::{ColorTable, Document, Duotone, DuotoneInk, Size};
+use sary_color::{Color, ColorMode, SampleType};
+use sary_doc::{ColorTable, Document, Duotone, DuotoneInk, Size};
 
 fn doc(mode: ColorMode) -> Document {
     let mut d = Document::with_background("m", Size::new(4, 2), ColorMode::Rgb, SampleType::U8, Color::rgba(1.0, 0.0, 0.0, 1.0));
@@ -13,15 +13,15 @@ fn doc(mode: ColorMode) -> Document {
 fn indexed_png_is_palette_png() {
     let mut d = doc(ColorMode::Indexed);
     d.color_table = Some(ColorTable { colors: vec![[0, 0, 0], [255, 0, 0]], transparent: None });
-    let r = photocraft_io::export(&d, "x.png", &Default::default()).unwrap();
+    let r = sary_io::export(&d, "x.png", &Default::default()).unwrap();
     // IHDR colour type 3 = indexed; a PLTE chunk follows.
     assert_eq!(r.bytes[25], 3);
     assert!(r.bytes.windows(4).any(|w| w == b"PLTE"));
-    let back = photocraft_io::import("x.png", &r.bytes).unwrap().document;
+    let back = sary_io::import("x.png", &r.bytes).unwrap().document;
     let px = back.layers[0].surface().unwrap().rgba(1, 1);
     assert_eq!(&px[..3], &[1.0, 0.0, 0.0]);
     // Other formats keep the expanded pixels.
-    let j = photocraft_io::export(&d, "x.tif", &Default::default()).unwrap();
+    let j = sary_io::export(&d, "x.tif", &Default::default()).unwrap();
     assert!(!j.bytes.is_empty());
 }
 
@@ -31,16 +31,16 @@ fn indexed_png_keeps_duplicate_palette_colors_opaque() {
     // choose the first red entry for both pixels, making the opaque one disappear on save.
     let palette = [[255, 0, 0], [0, 255, 0], [255, 0, 0], [0, 0, 255]];
     for transparent in [0, 2] {
-        let png = photocraft_codecs::encode_png_indexed(4, 1, &[0, 1, 2, 3], &palette, Some(transparent), None).unwrap();
-        let d = photocraft_io::import("in.png", &png).unwrap().document;
+        let png = sary_codecs::encode_png_indexed(4, 1, &[0, 1, 2, 3], &palette, Some(transparent), None).unwrap();
+        let d = sary_io::import("in.png", &png).unwrap().document;
         assert_eq!(d.mode, ColorMode::Indexed);
         let before = d.color_table.clone();
-        let r = photocraft_io::export(&d, "out.png", &Default::default()).unwrap();
-        let table = photocraft_codecs::png_palette(&r.bytes).unwrap().unwrap();
+        let r = sary_io::export(&d, "out.png", &Default::default()).unwrap();
+        let table = sary_codecs::png_palette(&r.bytes).unwrap().unwrap();
         assert_eq!(table.colors, palette, "palette order must not change");
         assert_eq!(table.transparent, Some(transparent));
-        assert_eq!(photocraft_codecs::decode(&r.bytes).unwrap().data(), photocraft_codecs::decode(&png).unwrap().data());
-        let back = photocraft_io::import("out.png", &r.bytes).unwrap().document;
+        assert_eq!(sary_codecs::decode(&r.bytes).unwrap().data(), sary_codecs::decode(&png).unwrap().data());
+        let back = sary_io::import("out.png", &r.bytes).unwrap().document;
         assert_eq!(back.color_table, before);
         assert_eq!(d.color_table, before, "export must not edit the document's table");
         for x in 0..4 {
@@ -58,10 +58,10 @@ fn indexed_png_uses_the_nearest_opaque_color() {
             let mut d = Document::with_background("m", Size::new(1, 1), ColorMode::Rgb, depth, Color::rgba(1.0, 0.0, 0.0, 1.0));
             d.mode = ColorMode::Indexed;
             d.color_table = Some(ColorTable { colors: palette.clone(), transparent: Some(transparent) });
-            let r = photocraft_io::export(&d, "out.png", &Default::default()).unwrap();
-            let image = photocraft_codecs::decode(&r.bytes).unwrap();
+            let r = sary_io::export(&d, "out.png", &Default::default()).unwrap();
+            let image = sary_codecs::decode(&r.bytes).unwrap();
             assert_eq!(image.data(), &[255, 128, 0, 255], "{depth:?}, transparent = {transparent}");
-            let table = photocraft_codecs::png_palette(&r.bytes).unwrap().unwrap();
+            let table = sary_codecs::png_palette(&r.bytes).unwrap().unwrap();
             assert_eq!(table.colors, palette);
             assert_eq!(table.transparent, Some(transparent));
         }
@@ -76,8 +76,8 @@ fn indexed_png_breaks_opaque_color_ties_in_palette_order() {
         let mut d = Document::with_background("m", Size::new(1, 1), ColorMode::Rgb, SampleType::U8, Color::rgba(1.0, 0.0, 1.0, 1.0));
         d.mode = ColorMode::Indexed;
         d.color_table = Some(ColorTable { colors: vec![[255, 0, 255], opaque[0], opaque[1]], transparent: Some(0) });
-        let r = photocraft_io::export(&d, "out.png", &Default::default()).unwrap();
-        let image = photocraft_codecs::decode(&r.bytes).unwrap();
+        let r = sary_io::export(&d, "out.png", &Default::default()).unwrap();
+        let image = sary_codecs::decode(&r.bytes).unwrap();
         assert_eq!(image.data(), &[opaque[0][0], opaque[0][1], opaque[0][2], 255]);
     }
 }
@@ -91,8 +91,8 @@ fn indexed_png_keeps_the_alpha_threshold() {
         let surface = d.layers[0].surface_mut().unwrap();
         surface.write_pixel(0, 0, &[1.0, 0.0, 0.0, 0.49]);
         surface.write_pixel(1, 0, &[1.0, 0.0, 0.0, 0.5]);
-        let r = photocraft_io::export(&d, "out.png", &Default::default()).unwrap();
-        assert_eq!(photocraft_codecs::decode(&r.bytes).unwrap().data(), &[255, 0, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255], "{depth:?}");
+        let r = sary_io::export(&d, "out.png", &Default::default()).unwrap();
+        assert_eq!(sary_codecs::decode(&r.bytes).unwrap().data(), &[255, 0, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255], "{depth:?}");
     }
 }
 
@@ -102,29 +102,29 @@ fn indexed_png_keeps_the_last_palette_index() {
     palette[0] = [255, 0, 0];
     palette[255] = [255, 0, 0];
     for transparent in [0, 255] {
-        let png = photocraft_codecs::encode_png_indexed(2, 1, &[0, 255], &palette, Some(transparent), None).unwrap();
-        let d = photocraft_io::import("in.png", &png).unwrap().document;
-        let r = photocraft_io::export(&d, "out.png", &Default::default()).unwrap();
-        assert_eq!(photocraft_codecs::png_palette(&r.bytes).unwrap(), photocraft_codecs::png_palette(&png).unwrap());
-        assert_eq!(photocraft_codecs::decode(&r.bytes).unwrap().data(), photocraft_codecs::decode(&png).unwrap().data());
+        let png = sary_codecs::encode_png_indexed(2, 1, &[0, 255], &palette, Some(transparent), None).unwrap();
+        let d = sary_io::import("in.png", &png).unwrap().document;
+        let r = sary_io::export(&d, "out.png", &Default::default()).unwrap();
+        assert_eq!(sary_codecs::png_palette(&r.bytes).unwrap(), sary_codecs::png_palette(&png).unwrap());
+        assert_eq!(sary_codecs::decode(&r.bytes).unwrap().data(), sary_codecs::decode(&png).unwrap().data());
     }
 }
 
 #[test]
 fn indexed_png_keeps_a_single_transparent_entry() {
-    let png = photocraft_codecs::encode_png_indexed(2, 1, &[0, 0], &[[255, 0, 0]], Some(0), None).unwrap();
-    let d = photocraft_io::import("in.png", &png).unwrap().document;
-    let r = photocraft_io::export(&d, "out.png", &Default::default()).unwrap();
-    assert_eq!(photocraft_codecs::png_palette(&r.bytes).unwrap(), photocraft_codecs::png_palette(&png).unwrap());
-    assert_eq!(photocraft_codecs::decode(&r.bytes).unwrap().data(), photocraft_codecs::decode(&png).unwrap().data());
+    let png = sary_codecs::encode_png_indexed(2, 1, &[0, 0], &[[255, 0, 0]], Some(0), None).unwrap();
+    let d = sary_io::import("in.png", &png).unwrap().document;
+    let r = sary_io::export(&d, "out.png", &Default::default()).unwrap();
+    assert_eq!(sary_codecs::png_palette(&r.bytes).unwrap(), sary_codecs::png_palette(&png).unwrap());
+    assert_eq!(sary_codecs::decode(&r.bytes).unwrap().data(), sary_codecs::decode(&png).unwrap().data());
 }
 
 #[test]
 fn indexed_png_rejects_opaque_pixels_without_an_opaque_entry() {
     let mut d = doc(ColorMode::Indexed);
     d.color_table = Some(ColorTable { colors: vec![[255, 0, 0]], transparent: Some(0) });
-    let err = photocraft_io::export(&d, "out.png", &Default::default()).unwrap_err();
-    assert!(matches!(err, photocraft_io::IoError::Unsupported(_)), "{err}");
+    let err = sary_io::export(&d, "out.png", &Default::default()).unwrap_err();
+    assert!(matches!(err, sary_io::IoError::Unsupported(_)), "{err}");
     assert!(err.to_string().contains("no opaque entry"), "{err}");
 }
 
@@ -134,9 +134,9 @@ fn duotone_exports_the_inks_as_rgb() {
     let mut d = Document::with_background("m", Size::new(4, 2), ColorMode::Grayscale, SampleType::U8, Color::rgba(0.5, 0.5, 0.5, 1.0));
     d.mode = ColorMode::Duotone;
     d.duotone = Some(Duotone { inks: vec![DuotoneInk::new("Black", [0.0; 3]), DuotoneInk::new("Orange", [1.0, 0.5, 0.0])], psd_raw: None });
-    let r = photocraft_io::export(&d, "x.png", &Default::default()).unwrap();
+    let r = sary_io::export(&d, "x.png", &Default::default()).unwrap();
     assert!(r.warnings.iter().any(|w| w.contains("Duotone")), "{:?}", r.warnings);
-    let back = photocraft_io::import("x.png", &r.bytes).unwrap().document;
+    let back = sary_io::import("x.png", &r.bytes).unwrap().document;
     let px = back.layers[0].surface().unwrap().rgba(0, 0);
     assert!(px[0] > px[2] + 0.05, "warm: {px:?}");
 }
@@ -147,8 +147,8 @@ fn indexed_png_keeps_the_document_resolution() {
     let mut d = doc(ColorMode::Indexed);
     d.resolution_dpi = 300.0;
     d.color_table = Some(ColorTable { colors: vec![[0, 0, 0], [255, 0, 0]], transparent: None });
-    let r = photocraft_io::export(&d, "x.png", &Default::default()).unwrap();
+    let r = sary_io::export(&d, "x.png", &Default::default()).unwrap();
     assert_eq!(r.bytes[25], 3, "still a palette PNG");
-    let back = photocraft_io::import("x.png", &r.bytes).unwrap().document;
+    let back = sary_io::import("x.png", &r.bytes).unwrap().document;
     assert!((back.resolution_dpi - 300.0).abs() < 0.01, "{}", back.resolution_dpi);
 }

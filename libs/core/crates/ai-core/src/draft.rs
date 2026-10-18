@@ -97,13 +97,13 @@ pub const PRESETS: &[Preset] = &[
         note: "Gemini image generation. API key only; full Vertex uses different credentials. Key cannot be tested without a paid request.",
     },
     Preset {
-        key: "artcraft-omni",
-        name: "ArtCraft Omni API key",
-        provider: "artcraft-omni",
+        key: "mahay-omni",
+        name: "Mahay Omni API key",
+        provider: "mahay-omni",
         endpoint: "https://api.storyteller.ai",
         billing: Billing::Unknown,
         needs_key: true,
-        note: "Staff-enabled API key for ArtCraft image and video generation. Subscription allowance is unverified; no free key test is documented.",
+        note: "Staff-enabled API key for Mahay image and video generation. Subscription allowance is unverified; no free key test is documented.",
     },
     Preset {
         key: "ollama",
@@ -153,7 +153,7 @@ pub const PRESETS: &[Preset] = &[
 ];
 
 fn preset_models(preset: &Preset) -> Vec<ModelInfo> {
-    if preset.key == "artcraft-omni" {
+    if preset.key == "mahay-omni" {
         return [("nano_banana", "Nano Banana (unverified)", "image.generate"), ("seedance_2p0", "Seedance 2.0 (unverified)", "video.generate")]
             .into_iter()
             .filter_map(|(id, label, capability)| {

@@ -1,4 +1,4 @@
-//! Effect maps on the GPU (`photocraft_compose::effects::build_maps`).
+//! Effect maps on the GPU (`sary_compose::effects::build_maps`).
 //!
 //! Every enabled effect of a layer becomes a small *map program*: a chain of single-channel
 //! fragment passes over the layer's effect region (shift, dilate, separable Gaussian blur, glow
@@ -25,11 +25,11 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use photocraft_compose::effects::BevelPaint;
-use photocraft_compose::effects::FieldKind;
-use photocraft_doc::{BevelTechnique, Contour, Effect, GlobalLight, GlowSource, GlowTechnique, Layer, LayerContent, Pattern};
-use photocraft_geom::{Rect, TileCoord};
-use photocraft_raster::{Surface, Tile};
+use sary_compose::effects::BevelPaint;
+use sary_compose::effects::FieldKind;
+use sary_doc::{BevelTechnique, Contour, Effect, GlobalLight, GlowSource, GlowTechnique, Layer, LayerContent, Pattern};
+use sary_geom::{Rect, TileCoord};
+use sary_raster::{Surface, Tile};
 
 use crate::plan::{Kernel, stroke_widths};
 
@@ -264,7 +264,7 @@ impl B {
 /// Distance up to which a field must be exact for a band / dilation of width `w`
 /// (`clamp(w + 0.5 - d)`, with `d` up to 1.5 px beyond the pixel distance).
 fn reach_for(w: f32) -> i32 {
-    w.clamp(0.0, photocraft_compose::effects::MAX_REACH).ceil() as i32 + 2
+    w.clamp(0.0, sary_compose::effects::MAX_REACH).ceil() as i32 + 2
 }
 
 /// `compose::effects::blur`'s kernel (a tent of the effect size): (radius, normalised weights),
@@ -273,14 +273,14 @@ pub(crate) fn blur_kernel(size: f32) -> Option<(i32, Vec<f32>)> {
     if !size.is_finite() {
         return None;
     }
-    let k = photocraft_compose::effects::tent_kernel(size);
+    let k = sary_compose::effects::tent_kernel(size);
     (k.0 > 0).then_some(k)
 }
 
 fn contour_lut(c: &Contour) -> Option<Vec<f32>> {
     match c {
         Contour::Linear => None,
-        Contour::Custom { points, corners, .. } => Some(photocraft_compose::adjust::contour_curve_lut(points, corners)),
+        Contour::Custom { points, corners, .. } => Some(sary_compose::adjust::contour_curve_lut(points, corners)),
     }
 }
 
@@ -307,7 +307,7 @@ pub(crate) fn program_with(e: &Effect, light: &GlobalLight, vector_shape: bool, 
             let angle = if s.use_global_light { light.angle } else { s.angle };
             let (dx, dy) = offset(angle, s.distance);
             let src = b.shift(In::Shape, dx, dy, if inner { 1.0 } else { 0.0 }, inner);
-            let (r, bw) = photocraft_compose::effects::spread_split(s.size, s.spread);
+            let (r, bw) = sary_compose::effects::spread_split(s.size, s.spread);
             let mut m = src;
             if r > 0.0 {
                 // dist_outside of the shifted map is the shifted field (integer offsets; shifted-in
@@ -334,37 +334,37 @@ pub(crate) fn program_with(e: &Effect, light: &GlobalLight, vector_shape: bool, 
                     let solid = g.size * g.spread;
                     let soft = (g.size + 1.0 - solid).max(1e-3);
                     let m = b.push(stage(Kernel::MGlow, Some(d), None, [solid, soft, 0.0, 0.0], 0));
-                    b.finish_glow(m, photocraft_compose::effects::glow_lut(g), inner, center);
+                    b.finish_glow(m, sary_compose::effects::glow_lut(g), inner, center);
                 }
                 GlowTechnique::Softer => {
                     // Inner glows (edge, and centre as 1 - the edge result) spread 1 - alpha.
                     let src = if inner { b.shift(In::Shape, 0.0, 0.0, 0.0, true) } else { In::Shape };
-                    let (r, bw) = photocraft_compose::effects::spread_split(g.size, g.spread);
+                    let (r, bw) = sary_compose::effects::spread_split(g.size, g.spread);
                     let mut m = src;
                     if r > 0.0 {
                         let d = b.field(if inner { FieldKind::ChokeInside } else { FieldKind::StrokeOutside }, r);
                         m = b.dilate(src, d, r);
                     }
                     let m = b.blur(m, bw);
-                    b.finish_glow(m, photocraft_compose::effects::glow_lut(g), inner, center);
+                    b.finish_glow(m, sary_compose::effects::glow_lut(g), inner, center);
                 }
             }
             1
         }
         Effect::Satin(s) => {
             // satin_map
-            let (dx, dy) = offset(s.angle, photocraft_compose::effects::satin_distance(s));
+            let (dx, dy) = offset(s.angle, sary_compose::effects::satin_distance(s));
             let a = b.shift(In::Shape, dx, dy, 0.0, false);
-            let a = b.conv(a, photocraft_compose::effects::tent_kernel(s.size));
+            let a = b.conv(a, sary_compose::effects::tent_kernel(s.size));
             let c = b.shift(In::Shape, -dx, -dy, 0.0, false);
-            let c = b.conv(c, photocraft_compose::effects::tent_kernel(s.size));
-            b.finish_lut(a, Some(c), s.invert, photocraft_compose::effects::satin_lut(&s.contour), true, 0);
+            let c = b.conv(c, sary_compose::effects::tent_kernel(s.size));
+            b.finish_lut(a, Some(c), s.invert, sary_compose::effects::satin_lut(&s.contour), true, 0);
             1
         }
         Effect::BevelEmboss(bv) => {
             // bevel_maps: height map (tent blur of the shape, or chiselled distance ramps), then
             // highlight / shadow shading inside and / or outside the shape.
-            let g = photocraft_compose::effects::bevel_geom(bv);
+            let g = sary_compose::effects::bevel_geom(bv);
             let size = bv.size.max(1.0);
             let paint = |p: BevelPaint| match p {
                 BevelPaint::Outer => 0.0,
@@ -372,28 +372,28 @@ pub(crate) fn program_with(e: &Effect, light: &GlobalLight, vector_shape: bool, 
                 BevelPaint::Inner => 2.0,
             };
             let mut h = if bv.technique == BevelTechnique::Smooth {
-                b.conv(In::Shape, photocraft_compose::effects::tent_kernel(g.width))
+                b.conv(In::Shape, sary_compose::effects::tent_kernel(g.width))
             } else {
                 let din = b.field(FieldKind::BevelInside, size);
                 let dout = b.field(FieldKind::BevelOutside, size);
                 let soft = g.chisel_soft > 0.0;
                 let h = b.push(stage(Kernel::MBevelH, Some(din), Some(dout), [paint(g.paint), size, f32::from(u8::from(soft)), 0.0], 0));
                 // As `effects::bevel_height`: only emboss styles blur a Chisel Soft ramp.
-                if soft && g.paint == BevelPaint::Both { b.conv(h, photocraft_compose::effects::tent_kernel(g.chisel_soft)) } else { h }
+                if soft && g.paint == BevelPaint::Both { b.conv(h, sary_compose::effects::tent_kernel(g.chisel_soft)) } else { h }
             };
             if let Some(c) = &bv.contour {
                 // Contour element: the height through the contour (`bevel_contour_lut`).
-                let lut = photocraft_compose::effects::bevel_contour_lut(c);
+                let lut = sary_compose::effects::bevel_contour_lut(c);
                 let mut st = stage(Kernel::MFinish, Some(h), None, [0.0, 0.0, 1.0, 0.0], 0);
                 st.lut = Some(Arc::new(lut));
                 h = b.push(st);
             }
             if let Some(t) = &bv.texture
-                && let Some(pat) = photocraft_doc::pattern::find(patterns, &t.id, &t.name).filter(|p| p.is_paintable())
+                && let Some(pat) = sary_doc::pattern::find(patterns, &t.id, &t.name).filter(|p| p.is_paintable())
             {
                 // Texture element (`effects::bevel_height`): luminance × depth / unit added.
                 let unit = if bv.depth.abs() > 1e-6 { (g.depth / bv.depth).abs().max(1e-3) } else { g.width.max(1.0) };
-                let pl = photocraft_compose::pattern::Placement::anchored(anchor, t.link, t.phase, t.scale, 0.0);
+                let pl = sary_compose::pattern::Placement::anchored(anchor, t.link, t.phase, t.scale, 0.0);
                 let (origin, cs, inv) = pl.parts();
                 let mut st = stage(Kernel::MBevelTex, Some(h), None, [t.depth / unit, f32::from(u8::from(t.invert)), 0.0, 0.0], 0);
                 st.p3 = [origin.0 as f32, origin.1 as f32, cs.0 as f32, cs.1 as f32];
@@ -402,7 +402,7 @@ pub(crate) fn program_with(e: &Effect, light: &GlobalLight, vector_shape: bool, 
                 h = b.push(st);
             }
             if bv.soften >= 1.0 {
-                h = b.conv(h, photocraft_compose::effects::tent_kernel(bv.soften));
+                h = b.conv(h, sary_compose::effects::tent_kernel(bv.soften));
             }
             let (angle, altitude) = if bv.use_global_light { (light.angle, light.altitude) } else { (bv.angle, bv.altitude) };
             let (sa, ca) = angle.to_radians().sin_cos();
@@ -436,7 +436,7 @@ pub(crate) fn program_with(e: &Effect, light: &GlobalLight, vector_shape: bool, 
             if out_w > 0.0 {
                 // Narrow strokes keep the fitted chamfer, wide ones the exact transform (#3646);
                 // the CPU picks the same field by the same width (`stroke_outside_exact`).
-                let kind = match (vector_shape, photocraft_compose::effects::stroke_outside_exact(out_w)) {
+                let kind = match (vector_shape, sary_compose::effects::stroke_outside_exact(out_w)) {
                     (true, true) => FieldKind::StrokeOutsideVector,
                     (true, false) => FieldKind::StrokeOutsideVectorChamfer,
                     (false, true) => FieldKind::StrokeOutsideExact,
@@ -547,23 +547,23 @@ fn field_banded(kind: FieldKind, reach: i32, shape: &[f32], region: Rect, out: R
         if win.is_empty() {
             return Vec::new();
         }
-        let f = photocraft_compose::effects::distance_field(kind, crop(shape, region, win), win.width() as usize, win.height() as usize, reach as f32);
+        let f = sary_compose::effects::distance_field(kind, crop(shape, region, win), win.width() as usize, win.height() as usize, reach as f32);
         return if win == out { f } else { crop(&f, win, out) };
     }
     let parts = par_map(bands(out, BAND.max(halo)), |band| {
         let win = band.inflate(halo).intersect(&region);
-        let f = photocraft_compose::effects::distance_field(kind, crop(shape, region, win), win.width() as usize, win.height() as usize, reach as f32);
+        let f = sary_compose::effects::distance_field(kind, crop(shape, region, win), win.width() as usize, win.height() as usize, reach as f32);
         crop(&f, win, band)
     });
     parts.concat()
 }
 
 /// The layer's shape (`compose::layer_shape`) over `r`, in parallel bands.
-pub(crate) fn shape(doc: &photocraft_doc::Document, layer: &Layer, r: Rect) -> Vec<f32> {
+pub(crate) fn shape(doc: &sary_doc::Document, layer: &Layer, r: Rect) -> Vec<f32> {
     if r.is_empty() {
         return Vec::new();
     }
-    par_map(bands(r, BAND), |band| photocraft_compose::layer_shape(doc, layer, band)).concat()
+    par_map(bands(r, BAND), |band| sary_compose::layer_shape(doc, layer, band)).concat()
 }
 
 /// Write `v` (row-major over `r`) into the region-sized `shape`.
@@ -622,13 +622,13 @@ pub(crate) fn shape_key(layer: &Layer, canvas: Rect) -> u64 {
     match &layer.content {
         LayerContent::Fill(f) => {
             format!("{f:?}").hash(&mut h);
-            let fr = photocraft_compose::fill_frame(layer, canvas);
+            let fr = sary_compose::fill_frame(layer, canvas);
             (fr.x0, fr.y0, fr.x1, fr.y1, content.is_some()).hash(&mut h);
         }
         // A filled shape's effect shape follows its outline too.
         LayerContent::Shape(sh) => {
             std::mem::discriminant(&layer.content).hash(&mut h);
-            if photocraft_compose::effect_outline(layer).is_some() {
+            if sary_compose::effect_outline(layer).is_some() {
                 format!("{:?}", sh.path).hash(&mut h);
             }
         }
@@ -708,15 +708,15 @@ pub(crate) fn group_key(layer: &Layer, light: &GlobalLight, pin: &mut dyn FnMut(
 #[allow(clippy::unreachable)] // clippy.toml exempts unwrap/expect/panic in tests, not unreachable!
 mod tests {
     use super::*;
-    use photocraft_color::BlendMode;
-    use photocraft_doc::FxCommon;
+    use sary_color::BlendMode;
+    use sary_doc::FxCommon;
 
     #[test]
     fn programs_key_on_geometry_not_colour() {
         let light = GlobalLight::default();
         let Effect::DropShadow(mut s) = Effect::default_drop_shadow() else { unreachable!() };
         let a = program(&Effect::DropShadow(s.clone()), &light, false);
-        s.color = photocraft_color::Color::rgb(1.0, 0.0, 0.0);
+        s.color = sary_color::Color::rgb(1.0, 0.0, 0.0);
         s.common = FxCommon::new(BlendMode::Screen, 0.3);
         let b = program(&Effect::DropShadow(s.clone()), &light, false);
         assert_eq!(a.key, b.key);
@@ -728,7 +728,7 @@ mod tests {
     /// Advanced Blending, so the cached shape must be rebuilt when any of them changes.
     #[test]
     fn group_key_follows_vector_mask_blend_if_and_advanced() {
-        use photocraft_doc::{BlendRange, Knockout, Path, PixelFormat, Subpath, VectorMask};
+        use sary_doc::{BlendRange, Knockout, Path, PixelFormat, Subpath, VectorMask};
         let light = GlobalLight::default();
         let group = Layer::group("g", vec![Layer::raster("child", PixelFormat::RGBA8)]);
         let base = group_key(&group, &light, &mut |_| {});
@@ -800,7 +800,7 @@ mod tests {
             FieldKind::StrokeOutsideVectorChamfer,
         ] {
             let reach = 9;
-            let whole = photocraft_compose::effects::distance_field(kind, shape.clone(), w, h, reach as f32);
+            let whole = sary_compose::effects::distance_field(kind, shape.clone(), w, h, reach as f32);
             let banded = field(kind, reach, &shape, region, region);
             let part = Rect::new(40, 30, 170, 120);
             let partial = field(kind, reach, &shape, region, part);
@@ -844,7 +844,7 @@ mod tests {
             }
             for reach in [9, 24] {
                 for kind in [FieldKind::BevelInside, FieldKind::BevelOutside] {
-                    let whole = photocraft_compose::effects::distance_field(kind, shape.clone(), w, h, reach as f32);
+                    let whole = sary_compose::effects::distance_field(kind, shape.clone(), w, h, reach as f32);
                     let differs = |part_field: &[f32], out: Rect| {
                         let ow = out.width() as usize;
                         part_field
@@ -882,8 +882,8 @@ mod tests {
     /// routing a wide stroke through the chamfer, or a shadow through the exact field, fails here.
     #[test]
     fn a_stroke_uses_the_chamfer_narrow_and_the_exact_field_wide() {
-        use photocraft_color::{BlendMode, Color};
-        use photocraft_doc::{FxCommon, FxPaint, StrokeFx, StrokePosition};
+        use sary_color::{BlendMode, Color};
+        use sary_doc::{FxCommon, FxPaint, StrokeFx, StrokePosition};
         let light = GlobalLight::default();
         let stroke =
             |size, position| Effect::Stroke(StrokeFx { common: FxCommon::new(BlendMode::Normal, 1.0), size, position, paint: FxPaint::Color(Color::BLACK) });
@@ -918,7 +918,7 @@ mod tests {
     /// are freed although the entry remembers it.
     #[test]
     fn shape_tiles_and_group_pins_hold_addresses_not_pixels() {
-        use photocraft_color::{ColorMode, PixelFormat, SampleType};
+        use sary_color::{ColorMode, PixelFormat, SampleType};
         let fmt = PixelFormat::new(ColorMode::Rgb, SampleType::U8, true);
         let mut s = Surface::new(fmt);
         // A ramp, so no two tiles share their pixels.

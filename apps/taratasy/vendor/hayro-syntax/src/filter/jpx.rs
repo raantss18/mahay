@@ -103,7 +103,7 @@ fn scale(
         return None;
     }
 
-    // PdfCraft patch: normalize all supported bit widths without an overflowing
+    // Taratasy patch: normalize all supported bit widths without an overflowing
     // shift or floating-point endpoint rounding, including no_std builds.
     let max_sample = u64::from(bit_mask(bit_per_component));
 

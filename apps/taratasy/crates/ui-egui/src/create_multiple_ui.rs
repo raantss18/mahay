@@ -5,9 +5,9 @@ use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use pdfcraft_engine::{EditError, SourceKind};
+use taratasy_engine::{EditError, SourceKind};
 
-use crate::PdfCraftApp;
+use crate::TaratasyApp;
 
 fn stem(name: &str) -> &str {
     name.rsplit_once('.').map_or(name, |(s, _)| s)
@@ -25,7 +25,7 @@ impl From<EditError> for Stop {
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// Convert each selected non-PDF file into its own PDF. Existing outputs and duplicate input
     /// names receive numbered names, so a batch never silently replaces an earlier file.
     pub(crate) fn stage_create_separate<I>(&mut self, files: I, dir: Option<PathBuf>)

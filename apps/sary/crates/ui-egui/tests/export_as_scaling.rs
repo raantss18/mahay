@@ -6,10 +6,10 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use egui_kittest::kittest::Queryable;
-use photocraft_ui_egui::{FileDialogAnswer, FileDialogRequest, PhotocraftApp, Services, menus};
+use sary_ui_egui::{FileDialogAnswer, FileDialogRequest, SaryApp, Services, menus};
 use serde_json::json;
 
-type Harness = egui_kittest::Harness<'static, PhotocraftApp>;
+type Harness = egui_kittest::Harness<'static, SaryApp>;
 type Writes = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
 fn harness() -> Option<(Harness, Writes)> {
@@ -18,7 +18,7 @@ fn harness() -> Option<(Harness, Writes)> {
         let captured = writes.clone();
         let h = egui_kittest::Harness::builder().with_size(egui::vec2(1100.0, 760.0)).with_pixels_per_point(1.0).with_max_steps(64).wgpu().build_eframe(
             move |cc| {
-                PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+                SaryApp::setup_context(&cc.egui_ctx, Default::default());
                 let services = Services {
                     // Save dialogs answer with the suggested name.
                     file_dialog: Some(Box::new(|request, _parent, reply| {
@@ -29,11 +29,11 @@ fn harness() -> Option<(Harness, Writes)> {
                         })
                     })),
                     export: Some(Box::new(|doc, path, settings| {
-                        let opts = photocraft_io::ExportOptions {
-                            xmp: if settings.xmp_all { photocraft_io::XmpEmbed::All } else { photocraft_io::XmpEmbed::None },
+                        let opts = sary_io::ExportOptions {
+                            xmp: if settings.xmp_all { sary_io::XmpEmbed::All } else { sary_io::XmpEmbed::None },
                             ..Default::default()
                         };
-                        photocraft_io::export(doc, path, &opts).map(|r| (r.bytes, r.warnings)).map_err(|e| e.to_string())
+                        sary_io::export(doc, path, &opts).map(|r| (r.bytes, r.warnings)).map_err(|e| e.to_string())
                     })),
                     write: Some(Box::new(move |path, bytes| {
                         captured.borrow_mut().push((path.to_string(), bytes.to_vec()));
@@ -41,7 +41,7 @@ fn harness() -> Option<(Harness, Writes)> {
                     })),
                     ..Default::default()
                 };
-                let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+                let mut app = SaryApp::new(sary_engine::Session::new(), services);
                 app.session.prefs.edit(|p| p.interface.language = "en".into());
                 if let Some(rs) = cc.wgpu_render_state.as_ref() {
                     app.set_wgpu(rs.clone());
@@ -61,7 +61,7 @@ fn harness() -> Option<(Harness, Writes)> {
 }
 
 fn evidence(h: &mut Harness, depth: u8, stage: &str) {
-    if let Some(dir) = std::env::var_os("PHOTOCRAFT_EXPORT_EVIDENCE_DIR") {
+    if let Some(dir) = std::env::var_os("SARY_EXPORT_EVIDENCE_DIR") {
         std::fs::create_dir_all(&dir).expect("evidence directory");
         h.render().expect("render UI").save(std::path::Path::new(&dir).join(format!("{stage}-{depth}bit.png"))).expect("save UI evidence");
     }
@@ -69,7 +69,7 @@ fn evidence(h: &mut Harness, depth: u8, stage: &str) {
 
 #[test]
 fn export_as_scales_a_narrow_image_without_editing_the_source() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some((mut h, writes)) = harness() else { return };
     h.run_steps(4);
     for depth in [8, 16, 32] {
@@ -116,10 +116,10 @@ fn export_as_scales_a_narrow_image_without_editing_the_source() {
         assert_eq!(written.len(), 1, "{depth}-bit: Export writes one file");
         let (path, bytes) = &written[0];
         assert!(path.ends_with(".png"), "PNG export path: {path}");
-        if let Some(dir) = std::env::var_os("PHOTOCRAFT_EXPORT_EVIDENCE_DIR") {
+        if let Some(dir) = std::env::var_os("SARY_EXPORT_EVIDENCE_DIR") {
             std::fs::write(std::path::Path::new(&dir).join(format!("exported-{depth}bit.png")), bytes).expect("save exported PNG evidence");
         }
-        let png = photocraft_codecs::decode_as(photocraft_codecs::Format::Png, bytes).expect("decode the written PNG");
+        let png = sary_codecs::decode_as(sary_codecs::Format::Png, bytes).expect("decode the written PNG");
         assert_eq!(png.dimensions(), (1, 50), "{depth}-bit: written dimensions match the dialog");
 
         let st = h.state().session.active().expect("source remains open");

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata (software centres, Flathub). Template: package.sh and the Flatpak
+     manifest substitute @VERSION@ and @DATE@ from Cargo.toml and the build date. -->
+<component type="desktop-application">
+  <id>ai.storyteller.trano</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>Mahay Trano</name>
+  <summary>Install, update and launch the Mahay App Suite</summary>
+  <developer id="ai.storyteller">
+    <name>Learning Machines LLC</name>
+  </developer>
+  <description>
+    <p>
+      Mahay Trano lists every app in the Mahay App Suite (Sary, Hazavana, Hetsika,
+      Pejy, Tsipika, Taratasy, Tselatra, Soratra, Seho, Tabilao, Drafitra,
+      Feo and Endrika), installs the right build for your computer, and keeps them up to date.
+    </p>
+    <ul>
+      <li>One place to find, install and open every Mahay app</li>
+      <li>Checks GitHub releases for updates and installs them for you</li>
+      <li>Lives in the system tray and tells you when updates are ready</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">ai.storyteller.trano.desktop</launchable>
+  <icon type="stock">ai.storyteller.trano</icon>
+  <!-- Only url types known to appstream 0.15 (Ubuntu 22.04, where CI validates): no vcs-browser. -->
+  <url type="homepage">https://github.com/raantss18/mahay>
+  <url type="bugtracker">https://github.com/raantss18/mahay/issues</url>
+  <url type="help">https://github.com/raantss18/mahay</url>
+  <url type="contact">https://discord.gg/mahay</url>
+  <categories>
+    <category>Utility</category>
+    <category>PackageManager</category>
+  </categories>
+  <keywords>
+    <keyword>launcher</keyword>
+    <keyword>installer</keyword>
+    <keyword>updater</keyword>
+    <keyword>mahay</keyword>
+  </keywords>
+  <branding>
+    <color type="primary" scheme_preference="light">#d9dce3</color>
+    <color type="primary" scheme_preference="dark">#26282e</color>
+  </branding>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <provides>
+    <binary>trano</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

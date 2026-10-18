@@ -1,10 +1,10 @@
 //! Text-box editing through real pointer and keyboard input, including document boundaries.
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2, Rect, pos2, vec2};
-use gridcraft_engine::Session;
-use gridcraft_engine::core::{CellRef, Value};
-use gridcraft_engine::model::{Shape, Workbook};
-use gridcraft_ui_egui::{SheetApp, grid::Geo};
+use tabilao_engine::Session;
+use tabilao_engine::core::{CellRef, Value};
+use tabilao_engine::model::{Shape, Workbook};
+use tabilao_ui_egui::{SheetApp, grid::Geo};
 use serde_json::json;
 
 type Harness = egui_kittest::Harness<'static, SheetApp>;
@@ -186,8 +186,8 @@ fn saving_and_switching_context_commit_to_the_original_text_box() {
     assert_eq!(shape(&h, id).text, ORIGINAL, "inspecting the sheet must not commit a draft");
     assert!(h.state().text_box_editor.is_some());
     let saved = h.state_mut().run("file.saveBytes", json!({"format": "xlsx"})).unwrap();
-    let bytes = gridcraft_engine::io::base64_decode(saved["base64"].as_str().unwrap()).unwrap();
-    let (reopened, _) = gridcraft_engine::io::open_bytes("edited.xlsx", &bytes).unwrap();
+    let bytes = tabilao_engine::io::base64_decode(saved["base64"].as_str().unwrap()).unwrap();
+    let (reopened, _) = tabilao_engine::io::open_bytes("edited.xlsx", &bytes).unwrap();
     assert_eq!(shape_text(&reopened, 0, id), "Saved draft\nSecond paragraph");
     assert_eq!(reopened.sheet(0).unwrap().value(at("B2")), Value::text("cell stays"));
 
@@ -199,7 +199,7 @@ fn saving_and_switching_context_commit_to_the_original_text_box() {
         edit_box(&mut h, id);
         replace(&mut h, "Saved from the text editor");
         key(&mut h, Key::S, modifiers);
-        let (saved, _) = gridcraft_engine::io::open_bytes("shortcut.xlsx", &downloaded.lock().unwrap()).unwrap();
+        let (saved, _) = tabilao_engine::io::open_bytes("shortcut.xlsx", &downloaded.lock().unwrap()).unwrap();
         assert_eq!(shape_text(&saved, 0, id), "Saved from the text editor");
         downloaded.lock().unwrap().clear();
     }

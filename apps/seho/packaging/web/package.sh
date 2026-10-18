@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build the browser version and zip it:  $DIST/deckcraft-web-<version>.zip
+# Build the browser version and zip it:  $DIST/seho-web-<version>.zip
 #
 # Usage: packaging/web/package.sh [--skip-build]
 #
 # Needs: trunk (brew install trunk / cargo install trunk --locked) and the wasm32-unknown-unknown
-# target. The zip holds a self-contained static site in deckcraft-web-<version>/ that works
+# target. The zip holds a self-contained static site in seho-web-<version>/ that works
 # from any URL path and inside an <iframe>. Hosting notes: packaging/web/README.md.
 set -euo pipefail
 # shellcheck source=../common.sh
@@ -13,7 +13,7 @@ HERE="$ROOT/packaging/web"
 
 if [ "${1:-}" != "--skip-build" ]; then
   command -v trunk >/dev/null || { echo "error: trunk not found (cargo install trunk --locked)" >&2; exit 1; }
-  (cd "$ROOT/apps/deckcraft-web" && trunk build --release)
+  (cd "$ROOT/apps/seho-web" && trunk build --release)
 fi
 
 SITE="$ROOT/dist/web"
@@ -24,7 +24,7 @@ if grep -Eq '(src|href)="/[^/]' "$SITE/index.html"; then
   exit 1
 fi
 
-NAME="deckcraft-web-$VERSION"
+NAME="seho-web-$VERSION"
 WORK="$CARGO_TARGET_DIR/web-package"
 rm -rf "$WORK"
 mkdir -p "$WORK/$NAME"

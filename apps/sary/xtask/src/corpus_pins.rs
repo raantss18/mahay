@@ -3,7 +3,7 @@
 //! below and verifies each file against the `xtask/*.sha256` manifests. The CI corpus job's cache
 //! key hashes this file and the manifests, so changing a pin is the only thing that refetches.
 //!
-//! - Our own oracles: https://github.com/storytold/photocraft-corpus (README, AGENTS.md).
+//! - Our own oracles: https://github.com/raantss18/mahay-corpus (README, AGENTS.md).
 //! - Third-party sets come from their upstreams (licences in ATTRIBUTION.md).
 //!
 //! Moving a pin: change the commit, run `cargo xtask corpus --<name> --update-manifest`, review the
@@ -11,15 +11,15 @@
 
 use crate::pinned::{PinnedCorpus, Upstream};
 
-/// https://github.com/storytold/photocraft-corpus: our Photoshop-authored oracle PSDs
+/// https://github.com/raantss18/mahay-corpus: our Photoshop-authored oracle PSDs
 /// (`photoshop/`). Bump through a PR after committing there.
-pub const PHOTOCRAFT_CORPUS_COMMIT: &str = "f5b1178cab15309e05b7b504545df3c701f6d8fd";
+pub const SARY_CORPUS_COMMIT: &str = "f5b1178cab15309e05b7b504545df3c701f6d8fd";
 /// https://github.com/psd-tools/psd-tools (MIT): `tests/psd_files` (main, 2026-10-05).
 pub const PSD_TOOLS_COMMIT: &str = "96eb134c17b2c65edf4c4151c0f00b802ada86c2";
 /// https://github.com/Agamnentzar/ag-psd (MIT): `test/` (master, 2026-07-02).
 pub const AG_PSD_COMMIT: &str = "387049670cb89b88fb8fe1b7c01aeacf98dd2e3b";
 /// https://github.com/tbraun96/heic-rs (MIT OR Apache-2.0): `tests/fixtures` at the v0.1.1 tag, the
-/// version photocraft-heif pins (2026-09-12).
+/// version sary-heif pins (2026-09-12).
 pub const HEIC_RS_COMMIT: &str = "4f0d4df474c773dfc3b14fa80e7219be6898866e";
 /// https://github.com/bigcat88/pillow_heif (BSD-3-Clause): `tests/images` (master, 2026-09-25).
 pub const PILLOW_HEIF_COMMIT: &str = "b16be1196dfa465a342d68894696e685ca3655cb";
@@ -45,14 +45,14 @@ pub const PNGSUITE_URL: &str = "http://www.schaik.com/pngsuite/PngSuite-2017jul1
 /// download against this committed digest before extraction.
 pub const PNGSUITE_SHA256: &str = "0294b244c95a8342c01b00010cf34abdcabc7c6a34fd0fe1bd963917537bfdc8";
 
-/// `corpus/photoshop`: 258 PSDs authored with Photoshop by the photocraft-corpus generator.
+/// `corpus/photoshop`: 258 PSDs authored with Photoshop by the sary-corpus generator.
 pub const PHOTOSHOP: PinnedCorpus = PinnedCorpus {
     name: "photoshop",
     dest: "photoshop",
     upstreams: &[Upstream {
         prefix: "",
-        repo: "storytold/photocraft-corpus",
-        commit: PHOTOCRAFT_CORPUS_COMMIT,
+        repo: "raantss18/sary-corpus",
+        commit: SARY_CORPUS_COMMIT,
         subdir: "photoshop",
         extras: &[("README.md", "README.md"), ("LICENSE-MIT", "LICENSE-MIT"), ("LICENSE-APACHE", "LICENSE-APACHE")],
     }],
@@ -61,8 +61,8 @@ pub const PHOTOSHOP: PinnedCorpus = PinnedCorpus {
     subset: false,
     sources_md: |c| {
         format!(
-            "# Photoshop oracle corpus\n\n`photoshop/` of https://github.com/storytold/photocraft-corpus at commit {PHOTOCRAFT_CORPUS_COMMIT} \
-             (see `README.md`). MIT OR Apache-2.0, authored by the PhotoCraft contributors. Fetched and sha256-verified by \
+            "# Photoshop oracle corpus\n\n`photoshop/` of https://github.com/raantss18/mahay-corpus at commit {SARY_CORPUS_COMMIT} \
+             (see `README.md`). MIT OR Apache-2.0, authored by the Sary contributors. Fetched and sha256-verified by \
              `cargo xtask corpus --photoshop` against `{}`. Gitignored; never commit these files.\n",
             c.manifest
         )
@@ -181,7 +181,7 @@ The `*.deep.exr` files of https://github.com/AcademySoftwareFoundation/openexr/t
 
 /// `corpus/affinity`: public Affinity documents saved by Affinity 1.x to 3.x, chosen for having no
 /// personal paths in their metadata. Each embeds Affinity's own render of itself (its thumbnail),
-/// the oracle `photocraft-io`'s corpus test compares the imported document against. The manifest
+/// the oracle `sary-io`'s corpus test compares the imported document against. The manifest
 /// selects the files.
 pub const AFFINITY: PinnedCorpus = PinnedCorpus {
     name: "affinity",
@@ -244,7 +244,7 @@ pub const ALL: &[&PinnedCorpus] = &[&PSD_MIXED, &PSD_TOOLS, &PHOTOSHOP, &HEIF, &
 
 /// `corpus/pixls`: real camera raws from <https://raw.pixls.us> (released into the public
 /// domain / CC0 by their photographers; see ATTRIBUTION.md). One file per decode path
-/// `photocraft-raw` supports, plus the packed-ORF known-unsupported oracle. Fetched as single
+/// `sary-raw` supports, plus the packed-ORF known-unsupported oracle. Fetched as single
 /// files (the server 301-redirects `/data/` to `/download/`), verified against
 /// `xtask/pixls.sha256`.
 pub const PIXLS_BASE: &str = "https://raw.pixls.us/data/";

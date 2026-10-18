@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{CellError, CellRef};
-use gridcraft_formula::{Anchor, BinOp, Expr, RefKind, Reference, SheetSel, UnOp};
+use tabilao_core::{CellError, CellRef};
+use tabilao_formula::{Anchor, BinOp, Expr, RefKind, Reference, SheetSel, UnOp};
 
 use super::ftab::FTAB;
 
@@ -337,7 +337,7 @@ pub(super) fn decode(rgce: &[u8], rgcb: &[u8], base: CellRef, mode: Mode, links:
                 // A cell using a name the import drops would calculate to #NAME?: keep its
                 // saved result instead, as for references to other workbooks.
                 if mode != Mode::Name && i.and_then(|i| links.skipped.get(i)) == Some(&true) {
-                    return Err(Unsupported("defined names GridCraft skipped"));
+                    return Err(Unsupported("defined names Tabilao skipped"));
                 }
                 push(&mut stack, kids, Expr::Name(name.clone()))?;
             }
@@ -497,7 +497,7 @@ mod tests {
     }
 
     fn text(rgce: &[u8], rgcb: &[u8]) -> Result<String, Unsupported> {
-        decode(rgce, rgcb, CellRef::new(0, 0), Mode::Cell, &links()).map(|e| gridcraft_formula::print(&e))
+        decode(rgce, rgcb, CellRef::new(0, 0), Mode::Cell, &links()).map(|e| tabilao_formula::print(&e))
     }
 
     #[test]

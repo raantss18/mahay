@@ -183,7 +183,7 @@ validated_string!(
     validate_id
 );
 validated_string!(
-    /// One Craft app, such as `photocraft`.
+    /// One Mahay app, such as `sary`.
     AppId,
     validate_id
 );
@@ -233,6 +233,6 @@ mod tests {
 
     #[test]
     fn debug_shows_type_and_value() {
-        assert_eq!(format!("{:?}", AppId::new("photocraft").unwrap()), "AppId(\"photocraft\")");
+        assert_eq!(format!("{:?}", AppId::new("sary").unwrap()), "AppId(\"sary\")");
     }
 }

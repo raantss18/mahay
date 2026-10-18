@@ -1,5 +1,5 @@
-use photocraft_raw::testgen::{Val, nef_compressed};
-use photocraft_raw::{Limits, RawError};
+use sary_raw::testgen::{Val, nef_compressed};
+use sary_raw::{Limits, RawError};
 
 fn packed(values: &[u16], w: usize, bits: u32, padded: bool) -> Vec<u8> {
     let mut out = Vec::new();
@@ -42,7 +42,7 @@ fn packed_nef_uses_maker_mode_not_the_shared_tiff_compression() {
                         (0x93, Val::Short(vec![mode]))
                     };
                     let bytes = nef_compressed(w, h, bits as u16, strip.clone(), [0, 1, 1, 2], big_note, vec![tag]);
-                    let s = photocraft_raw::decode(&bytes, &Limits::default()).unwrap();
+                    let s = sary_raw::decode(&bytes, &Limits::default()).unwrap();
                     assert_eq!(s.data, values);
                 }
             }
@@ -57,14 +57,14 @@ fn packed_nef_rejects_truncation_wrong_depth_and_unknown_modes() {
         let bytes = nef_compressed(18, 5, 14, strip[..size].to_vec(), [0, 1, 1, 2], false, vec![(0x93, Val::Short(vec![10]))]);
         // The unpadded size is another valid layout; all other truncations fail.
         if size != (18 * 14usize).div_ceil(8) * 5 {
-            assert!(photocraft_raw::decode(&bytes, &Limits::default()).is_err());
+            assert!(sary_raw::decode(&bytes, &Limits::default()).is_err());
         }
     }
     let bytes = nef_compressed(18, 5, 12, strip.clone(), [0, 1, 1, 2], false, vec![(0x93, Val::Short(vec![10]))]);
-    assert!(matches!(photocraft_raw::decode(&bytes, &Limits::default()), Err(RawError::Unsupported(_))));
+    assert!(matches!(sary_raw::decode(&bytes, &Limits::default()), Err(RawError::Unsupported(_))));
     for mode in [3, 4, 9, 13, 14, 65535] {
         let bytes = nef_compressed(18, 5, 14, strip.clone(), [0, 1, 1, 2], false, vec![(0x93, Val::Short(vec![mode]))]);
-        assert!(matches!(photocraft_raw::decode(&bytes, &Limits::default()), Err(RawError::Unsupported(_))));
+        assert!(matches!(sary_raw::decode(&bytes, &Limits::default()), Err(RawError::Unsupported(_))));
     }
 }
 
@@ -72,15 +72,15 @@ fn packed_nef_rejects_truncation_wrong_depth_and_unknown_modes() {
 fn nikon_crop_area_uses_sensor_coordinates_and_ignores_invalid_rectangles() {
     let strip = packed(&[1000; 22 * 10], 22, 14, true);
     for (rect, expected) in [
-        ([2, 2, 18, 6], photocraft_raw::Rect::new(2, 2, 18, 6)),
-        ([2, 2, 22, 10], photocraft_raw::Rect::new(0, 0, 22, 10)),
-        ([2, 2, 0, 6], photocraft_raw::Rect::new(0, 0, 22, 10)),
-        ([u32::MAX, 2, 18, 6], photocraft_raw::Rect::new(0, 0, 22, 10)),
+        ([2, 2, 18, 6], sary_raw::Rect::new(2, 2, 18, 6)),
+        ([2, 2, 22, 10], sary_raw::Rect::new(0, 0, 22, 10)),
+        ([2, 2, 0, 6], sary_raw::Rect::new(0, 0, 22, 10)),
+        ([u32::MAX, 2, 18, 6], sary_raw::Rect::new(0, 0, 22, 10)),
     ] {
         let bytes = nef_compressed(22, 10, 14, strip.clone(), [0, 1, 1, 2], false, vec![(0x93, Val::Short(vec![10])), (0x45, Val::Long(rect.to_vec()))]);
-        let sensor = photocraft_raw::decode(&bytes, &Limits::default()).unwrap();
+        let sensor = sary_raw::decode(&bytes, &Limits::default()).unwrap();
         assert_eq!(sensor.crop, expected);
-        let developed = photocraft_raw::develop_sensor(&sensor, &Default::default()).unwrap();
+        let developed = sary_raw::develop_sensor(&sensor, &Default::default()).unwrap();
         assert_eq!((developed.width as usize, developed.height as usize), (expected.width, expected.height));
     }
 }

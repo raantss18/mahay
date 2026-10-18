@@ -49,7 +49,7 @@ impl Cache {
     }
 }
 
-/// PdfCraft patch: a byte-budgeted cache of decoded images, keyed by everything a decode reads
+/// Taratasy patch: a byte-budgeted cache of decoded images, keyed by everything a decode reads
 /// ([`DecodedImageKey`]). Image-heavy pages decode thousands of images; without this every tile
 /// and every scale decodes them all again. Entries hold owned pixels, so a hit never changes
 /// them; when an insert would pass the budget the whole map is dropped (a fresh epoch), which
@@ -63,7 +63,7 @@ pub(crate) struct DecodedImageCache {
     pub(crate) preview: bool,
 }
 
-/// PdfCraft patch: what a decoded image depends on. Two images share an entry only when all of
+/// Taratasy patch: what a decoded image depends on. Two images share an entry only when all of
 /// it is equal:
 /// - where the stream's dictionary lies in the document's data (`dict_at`, `dict_len`): a
 ///   stream's data follows its dictionary, so this tells apart streams whose dictionaries are

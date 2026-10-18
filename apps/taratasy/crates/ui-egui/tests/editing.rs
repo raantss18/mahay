@@ -7,8 +7,8 @@ use egui::accesskit::Role;
 use egui::{Key, Modifiers};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
-use pdfcraft_render::{PageRenderer, RenderRequest, RequestKind};
-use pdfcraft_ui_egui::{CloseRequest, Dialog, PdfCraftApp};
+use taratasy_render::{PageRenderer, RenderRequest, RequestKind};
+use taratasy_ui_egui::{CloseRequest, Dialog, TaratasyApp};
 
 /// An `n`-page document with a proper xref table; page `i` shows "Page i+1".
 fn fixture(n: usize) -> Vec<u8> {
@@ -36,13 +36,13 @@ fn fixture(n: usize) -> Vec<u8> {
     out
 }
 
-fn harness(pages: usize, setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, PdfCraftApp> {
+fn harness(pages: usize, setup: impl FnOnce(&mut TaratasyApp) + 'static) -> Harness<'static, TaratasyApp> {
     let mut builder = Harness::builder().with_size(egui::vec2(1400.0, 900.0));
-    if std::env::var_os("PDFCRAFT_ORGANIZE_SNAPSHOT").is_some() {
+    if std::env::var_os("TARATASY_ORGANIZE_SNAPSHOT").is_some() {
         builder = builder.wgpu();
     }
     let mut h = builder.build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("doc.pdf", None, fixture(pages)).expect("fixture opens");
         setup(&mut app);
@@ -52,18 +52,18 @@ fn harness(pages: usize, setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harn
     h
 }
 
-fn organize(pages: usize) -> Harness<'static, PdfCraftApp> {
+fn organize(pages: usize) -> Harness<'static, TaratasyApp> {
     harness(pages, |app| app.set_option("organize", "on").unwrap())
 }
 
 /// Organize pages ▸ Insert ▸ `item`.
-fn insert_menu(h: &mut Harness<'static, PdfCraftApp>, item: &str) {
+fn insert_menu(h: &mut Harness<'static, TaratasyApp>, item: &str) {
     h.get_by_label("Insert").click();
     h.run_steps(2);
     h.get_by_label(item).click();
 }
 
-fn type_selection(h: &mut Harness<'static, PdfCraftApp>, text: &str) {
+fn type_selection(h: &mut Harness<'static, TaratasyApp>, text: &str) {
     use egui::accesskit::Role;
     h.get_by_role_and_label(Role::TextInput, "Selected pages").click();
     h.run_steps(1);
@@ -89,7 +89,7 @@ fn organize_page_range_tracks_thumbnails_and_applies_typed_selection() {
     h.run_steps(2);
     assert_eq!(h.state().views[0].target_pages(), [0, 11, 15, 16, 17, 88, 91, 92, 96, 98]);
     assert_eq!(h.get_by_role_and_label(Role::TextInput, "Selected pages").value().as_deref(), Some("1, 12, 16-18, 89, 92-93, 97, 99"));
-    if let Some(path) = std::env::var_os("PDFCRAFT_ORGANIZE_SNAPSHOT") {
+    if let Some(path) = std::env::var_os("TARATASY_ORGANIZE_SNAPSHOT") {
         h.render().unwrap().save(std::path::Path::new(&path)).unwrap();
     }
     h.get_by_label("Rotate clockwise").click();
@@ -162,7 +162,7 @@ fn organize_tool_opens_the_overview_directly_and_can_be_reentered() {
 #[test]
 fn organize_opens_on_the_current_page() {
     let mut h = harness(60, |_| {});
-    let in_view = |h: &Harness<'static, PdfCraftApp>, page: usize| {
+    let in_view = |h: &Harness<'static, TaratasyApp>, page: usize| {
         let viewport = h.state().views[0].viewport_rect();
         let label = format!("Page {}", page + 1);
         h.query_by_label(&label).is_some_and(|n| viewport.contains_rect(n.rect()))
@@ -205,7 +205,7 @@ fn organize_opens_on_the_current_page() {
 
 #[test]
 fn organize_tool_chosen_before_opening_a_document_shows_its_pages() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("tool", "organize").unwrap();
     app.open_bytes("doc.pdf", None, fixture(3)).unwrap();
     assert!(app.views[0].organize);
@@ -236,7 +236,7 @@ fn organize_page_actions_rotate_only_the_named_page_and_undo() {
     h.run_steps(2);
     h.get_by_label("Rotate page 1 clockwise").click();
     h.run_steps(3);
-    let rotations = |h: &Harness<'static, PdfCraftApp>| {
+    let rotations = |h: &Harness<'static, TaratasyApp>| {
         h.state().session.get(h.state().views[0].id).unwrap().info.pages.iter().map(|p| p.rotation).collect::<Vec<_>>()
     };
     assert_eq!(rotations(&h), [90, 0, 0]);
@@ -270,9 +270,9 @@ fn organize_hover_actions_delete_only_the_named_page_and_undo() {
 #[test]
 fn organize_local_actions_respect_document_permissions() {
     let mut h = harness(3, |app| {
-        app.apply_edit(pdfcraft_engine::Edit::Protect(pdfcraft_engine::Protection {
+        app.apply_edit(taratasy_engine::Edit::Protect(taratasy_engine::Protection {
             permissions_password: Some("owner".into()),
-            changes: pdfcraft_engine::Changes::None,
+            changes: taratasy_engine::Changes::None,
             ..Default::default()
         }));
         let bytes = app.session.save_bytes(app.views[0].id).unwrap();
@@ -291,7 +291,7 @@ fn organize_local_actions_respect_document_permissions() {
 }
 
 /// Page labels of the active document, read back from its current bytes.
-fn page_texts(app: &PdfCraftApp) -> Vec<String> {
+fn page_texts(app: &TaratasyApp) -> Vec<String> {
     let doc = app.session.get(app.views[0].id).unwrap();
     let mut r = PageRenderer::new(doc.bytes.clone(), Default::default());
     (0..r.page_count())
@@ -302,13 +302,13 @@ fn page_texts(app: &PdfCraftApp) -> Vec<String> {
         .collect()
 }
 
-fn dirty(h: &Harness<'static, PdfCraftApp>) -> bool {
+fn dirty(h: &Harness<'static, TaratasyApp>) -> bool {
     let app = h.state();
     app.session.get(app.views[0].id).is_some_and(|d| d.dirty)
 }
 
 fn temp_path(name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-ui-tests-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-ui-tests-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     dir.join(name)
 }
@@ -430,9 +430,9 @@ fn organize_select_all_applies_operations_to_every_page() {
 #[test]
 fn organize_select_all_works_without_page_editing_permission() {
     let mut h = harness(3, |app| {
-        app.apply_edit(pdfcraft_engine::Edit::Protect(pdfcraft_engine::Protection {
+        app.apply_edit(taratasy_engine::Edit::Protect(taratasy_engine::Protection {
             permissions_password: Some("owner".into()),
-            changes: pdfcraft_engine::Changes::None,
+            changes: taratasy_engine::Changes::None,
             ..Default::default()
         }));
         let bytes = app.session.save_bytes(app.views[0].id).unwrap();
@@ -453,7 +453,7 @@ fn organize_select_all_works_without_page_editing_permission() {
     assert_eq!(h.state().views[0].selected.len(), 1);
 
     // The opener refuses zero-page PDFs, but the view method also handles empty geometry.
-    let mut empty = pdfcraft_ui_egui::canvas::DocView::new(pdfcraft_engine::DocId(0), &Default::default(), Default::default());
+    let mut empty = taratasy_ui_egui::canvas::DocView::new(taratasy_engine::DocId(0), &Default::default(), Default::default());
     empty.organize = true;
     assert!(!empty.select_all());
     assert!(empty.selected.is_empty());
@@ -530,7 +530,7 @@ fn save_writes_an_incremental_update_and_clears_dirty() {
     h.get_by_label("saved.pdf"); // the tab takes the new name, no edited marker
     // What was written is what the app now shows.
     assert_eq!(h.state().session.get(h.state().views[0].id).unwrap().bytes.as_slice(), saved.as_slice());
-    let reopened = pdfcraft_render::inspect(std::sync::Arc::new(saved), None).unwrap();
+    let reopened = taratasy_render::inspect(std::sync::Arc::new(saved), None).unwrap();
     assert_eq!(reopened.pages[2].rotation, 270);
     let _ = std::fs::remove_file(out);
 }
@@ -545,7 +545,7 @@ fn save_as_to_a_new_file_drops_earlier_revisions() {
     h.get_by_label("Delete page 2").click();
     h.run_steps(3);
     h.state_mut().save_override = Some(out.to_string_lossy().into_owned());
-    assert!(h.state_mut().save_active(pdfcraft_ui_egui::SaveTarget::As));
+    assert!(h.state_mut().save_active(taratasy_ui_egui::SaveTarget::As));
     let saved = std::fs::read(&out).expect("file written");
     let count = |needle: &[u8]| saved.windows(needle.len()).filter(|w| *w == needle).count();
     assert_eq!(count(b"%%EOF"), 1, "one revision only");
@@ -589,7 +589,7 @@ fn closing_a_dirty_tab_can_save_first() {
     h.get_by_label("Save").click();
     h.run_steps(3);
     assert!(h.state().views.is_empty());
-    let saved = pdfcraft_render::inspect(std::sync::Arc::new(std::fs::read(&out).unwrap()), None).unwrap();
+    let saved = taratasy_render::inspect(std::sync::Arc::new(std::fs::read(&out).unwrap()), None).unwrap();
     assert_eq!(saved.pages[0].rotation, 90);
     let _ = std::fs::remove_file(out);
 }
@@ -627,7 +627,7 @@ fn the_save_prompt_answers_to_the_keyboard() {
     h.key_press(Key::Enter);
     h.run_steps(3);
     assert!(h.state().views.is_empty(), "Enter saves and closes");
-    let saved = pdfcraft_render::inspect(std::sync::Arc::new(std::fs::read(&out).unwrap()), None).unwrap();
+    let saved = taratasy_render::inspect(std::sync::Arc::new(std::fs::read(&out).unwrap()), None).unwrap();
     assert_eq!(saved.pages[0].rotation, 90);
     let _ = std::fs::remove_file(out);
 }
@@ -690,7 +690,7 @@ fn quitting_with_unsaved_changes_asks_for_each_document() {
     for tab in 0..2 {
         h.state_mut().active = Some(tab);
         h.state_mut().views[tab].select_pages(&[0]);
-        h.state_mut().apply_edit(pdfcraft_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
+        h.state_mut().apply_edit(taratasy_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
     }
     h.state_mut().close_request = Some(CloseRequest::Quit);
     h.run_steps(3);
@@ -709,7 +709,7 @@ struct TempPdfs(std::path::PathBuf);
 
 impl TempPdfs {
     fn new(test: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("pdfcraft-session-{test}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-session-{test}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -728,10 +728,10 @@ impl Drop for TempPdfs {
     }
 }
 
-/// The app with Preferences ▸ Reopen the files that were open when PdfCraft last closed on.
-fn session_harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, PdfCraftApp> {
+/// The app with Preferences ▸ Reopen the files that were open when Taratasy last closed on.
+fn session_harness(setup: impl FnOnce(&mut TaratasyApp) + 'static) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.reopen_last_session = true;
         setup(&mut app);
@@ -741,7 +741,7 @@ fn session_harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'s
     h
 }
 
-fn open_paths(app: &PdfCraftApp) -> Vec<String> {
+fn open_paths(app: &TaratasyApp) -> Vec<String> {
     app.views.iter().map(|v| app.session.get(v.id).and_then(|d| d.path.clone()).unwrap_or_default()).collect()
 }
 
@@ -776,18 +776,18 @@ fn quitting_with_unsaved_changes_still_remembers_every_file() {
     for tab in 0..2 {
         h.state_mut().active = Some(tab);
         h.state_mut().views[tab].select_pages(&[0]);
-        h.state_mut().apply_edit(pdfcraft_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
+        h.state_mut().apply_edit(taratasy_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
     }
     h.state_mut().active = Some(1);
     h.state_mut().close_request = Some(CloseRequest::Quit);
     h.run_steps(3);
-    // Each unsaved tab closes as it is answered, before PdfCraft quits.
+    // Each unsaved tab closes as it is answered, before Taratasy quits.
     for _ in 0..2 {
         h.get_by_label("Don't save").click();
         h.run_steps(3);
     }
     assert!(h.state().views.is_empty());
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.restore(&h.state().persist());
     app.reopen_last_files(&[]);
     assert_eq!(open_paths(&app), files, "both files come back");
@@ -798,21 +798,21 @@ fn quitting_with_unsaved_changes_still_remembers_every_file() {
 fn the_last_session_is_off_by_default_and_skips_missing_and_duplicate_files() {
     let dir = TempPdfs::new("skip");
     let (a, b) = (dir.file("a.pdf", 1), dir.file("b.pdf", 1));
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.open_path(&a);
     app.open_path(&b);
     let off: serde_json::Value = serde_json::from_str(&app.persist()).unwrap();
     assert!(off["last_session"].is_null(), "nothing is kept while the preference is off");
     app.reopen_last_session = true;
     let settings = app.persist();
-    let mut later = PdfCraftApp::new();
+    let mut later = TaratasyApp::new();
     later.restore(&settings);
     later.reopen_last_session = false;
     later.reopen_last_files(&[]);
     assert!(later.views.is_empty(), "turned off again: nothing reopens");
     // b.pdf is gone, and a.pdf is about to open from the command line.
     std::fs::remove_file(&b).unwrap();
-    let mut later = PdfCraftApp::new();
+    let mut later = TaratasyApp::new();
     later.restore(&settings);
     later.reopen_last_files(&[a]);
     assert!(later.views.is_empty(), "neither opens from the session");
@@ -825,7 +825,7 @@ fn save_prompt_stays_inside_the_screen_for_a_long_filename() {
     let name = "Psychology_ The Science of Mind and Behaviour, -- Nigel Holt, Andy Bremner, Michael \
                 Vliek, Ed Sutherland, -- 5, 2024 -- McGraw-Hill Education (UK) Ltd -- isbn13 97815268.pdf";
     let mut h = Harness::builder().with_size(egui::vec2(1365.0, 719.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes(name, None, fixture(1)).expect("fixture opens");
         app.close_request = Some(CloseRequest::Tab(app.views[0].id));
@@ -855,12 +855,12 @@ fn save_prompt_fits_the_smallest_window_whatever_the_name() {
         format!("{}.pdf", "年".repeat(251)),
         format!("{}.pdf", "W".repeat(2000)),
     ];
-    // The desktop window's minimum inner size (apps/pdfcraft/src/main.rs).
+    // The desktop window's minimum inner size (apps/taratasy/src/main.rs).
     let size = egui::vec2(820.0, 520.0);
     for name in names {
         let start: String = name.chars().take(10).collect();
         let mut h = Harness::builder().with_size(size).build_eframe(move |_cc| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.open_bytes(&name, None, fixture(1)).expect("fixture opens");
             app.close_request = Some(CloseRequest::Tab(app.views[0].id));
@@ -928,7 +928,7 @@ fn cancelling_properties_discards_the_draft() {
 #[test]
 fn edit_menu_names_the_step_to_undo() {
     let mut h = harness(2, |app| {
-        app.apply_edit(pdfcraft_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
+        app.apply_edit(taratasy_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
     });
     h.get_by_label("Menu").click();
     h.run_steps(2);
@@ -982,7 +982,7 @@ fn form_pdf_pages(name: &str, pages: usize) -> Vec<u8> {
 fn combine_list_warns_that_colliding_field_names_will_be_renamed() {
     let mut h = harness(1, |app| {
         app.set_option("combine-view", "list").unwrap();
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), form_pdf("Text1")), ("two.pdf".into(), form_pdf("Text1"))]);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), form_pdf("Text1")), ("two.pdf".into(), form_pdf("Text1"))]);
     });
     h.run_steps(3);
     h.get_by_label_contains("will be renamed");
@@ -995,7 +995,7 @@ fn combine_list_warns_that_colliding_field_names_will_be_renamed() {
 fn combine_list_does_not_warn_that_a_split_file_collides_with_itself() {
     let mut h = harness(1, |app| {
         app.set_option("combine-view", "list").unwrap();
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), form_pdf_pages("Text1", 2))]);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), form_pdf_pages("Text1", 2))]);
     });
     h.run_steps(3);
     // one.pdf in two parts — pages 1 and 2, sharing a group, as moving its pages apart leaves it.
@@ -1012,7 +1012,7 @@ fn combine_list_does_not_warn_that_a_split_file_collides_with_itself() {
 /// copy keeps the field's name rather than becoming Text1-1.
 #[test]
 fn pasting_pages_into_their_own_document_keeps_field_names() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.open_bytes("form.pdf", None, form_pdf("Text1")).unwrap();
     app.views[0].select_pages(&[0]);
@@ -1023,7 +1023,7 @@ fn pasting_pages_into_their_own_document_keeps_field_names() {
     assert!(doc.form.iter().all(|f| f.name == "Text1"), "{:?}", doc.form.iter().map(|f| &f.name).collect::<Vec<_>>());
 }
 
-fn texts_of(app: &PdfCraftApp, tab: usize) -> Vec<String> {
+fn texts_of(app: &TaratasyApp, tab: usize) -> Vec<String> {
     let doc = app.session.get(app.views[tab].id).unwrap();
     let mut r = PageRenderer::new(doc.bytes.clone(), Default::default());
     (0..r.page_count())
@@ -1037,7 +1037,7 @@ fn texts_of(app: &PdfCraftApp, tab: usize) -> Vec<String> {
 #[test]
 fn combining_files_opens_a_new_unsaved_tab() {
     let mut h = harness(1, |app| {
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(2)), ("two.pdf".into(), fixture(1))]);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(2)), ("two.pdf".into(), fixture(1))]);
     });
     h.run_steps(3);
     h.get_by_label("Combine").click();
@@ -1057,7 +1057,7 @@ fn combining_files_opens_a_new_unsaved_tab() {
 fn combine_files_takes_chosen_pages_in_the_order_listed() {
     let mut h = harness(1, |app| {
         app.set_option("combine-view", "list").unwrap();
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(3)), ("two.pdf".into(), fixture(2))]);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(3)), ("two.pdf".into(), fixture(2))]);
     });
     h.run_steps(3);
     h.get_by_label_contains("Files are combined from top to bottom");
@@ -1109,7 +1109,7 @@ fn combine_files_opens_in_its_own_tab() {
 #[test]
 fn closing_the_combine_tab_forgets_its_list() {
     let mut h = harness(1, |app| {
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(1))]);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(1))]);
     });
     h.run_steps(3);
     assert!(h.state().combine_showing());
@@ -1125,7 +1125,7 @@ fn combine_lists_size_and_warns_before_combining() {
     let mut h = harness(1, |app| {
         app.set_option("combine-view", "list").unwrap();
         app.use_files(
-            pdfcraft_ui_egui::FilePurpose::Combine,
+            taratasy_ui_egui::FilePurpose::Combine,
             vec![
                 ("one.pdf".into(), fixture(3)),
                 ("locked.pdf".into(), protected("", "owner", -1 ^ 1024 ^ 8)),
@@ -1153,7 +1153,7 @@ fn combine_lists_size_and_warns_before_combining() {
 #[test]
 fn a_bad_range_stops_combine_until_fixed() {
     let mut h = harness(1, |app| {
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(3)), ("two.pdf".into(), fixture(2))]);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("one.pdf".into(), fixture(3)), ("two.pdf".into(), fixture(2))]);
     });
     h.run_steps(3);
     h.get_by_label_contains("2 files · 5 pages");
@@ -1171,7 +1171,7 @@ fn a_bad_range_stops_combine_until_fixed() {
 fn alt_arrows_move_the_selected_file() {
     let mut h = harness(1, |app| {
         app.use_files(
-            pdfcraft_ui_egui::FilePurpose::Combine,
+            taratasy_ui_egui::FilePurpose::Combine,
             vec![("a.pdf".into(), fixture(1)), ("b.pdf".into(), fixture(1)), ("c.pdf".into(), fixture(1))],
         );
     });
@@ -1185,16 +1185,16 @@ fn alt_arrows_move_the_selected_file() {
     assert_eq!(h.state().combine_selection(), [1]);
 }
 
-fn combine_names(h: &Harness<'static, PdfCraftApp>) -> Vec<String> {
+fn combine_names(h: &Harness<'static, TaratasyApp>) -> Vec<String> {
     h.state().combine_draft.iter().map(|f| f.name.clone()).collect()
 }
 
 /// Files in the Combine tab's list view (the table: headings, page ranges, row links).
-fn combine_of(names: &[(&str, usize)]) -> Harness<'static, PdfCraftApp> {
+fn combine_of(names: &[(&str, usize)]) -> Harness<'static, TaratasyApp> {
     let files: Vec<(String, Vec<u8>)> = names.iter().map(|(n, p)| (n.to_string(), fixture(*p))).collect();
     let mut h = harness(1, move |app| {
         app.set_option("combine-view", "list").unwrap();
-        app.use_files(pdfcraft_ui_egui::FilePurpose::Combine, files);
+        app.use_files(taratasy_ui_egui::FilePurpose::Combine, files);
     });
     h.run_steps(3);
     h
@@ -1290,7 +1290,7 @@ fn protected_files_that_can_be_combined_are_flagged() {
     let mut h = harness(1, |app| {
         app.set_option("combine-view", "list").unwrap();
         app.use_files(
-            pdfcraft_ui_egui::FilePurpose::Combine,
+            taratasy_ui_egui::FilePurpose::Combine,
             vec![("one.pdf".into(), fixture(1)), ("no-copy.pdf".into(), protected("", "owner", -1 ^ 16))],
         );
     });
@@ -1318,7 +1318,7 @@ fn the_whole_heading_sorts_and_dragging_it_moves_the_column() {
     let size = h.get_by_label("Size").rect().center();
     let name = h.get_by_label("File name, sorted ascending").rect();
     drag(&mut h, size, egui::pos2(name.left() + 10.0, name.center().y));
-    use pdfcraft_ui_egui::SortKey::*;
+    use taratasy_ui_egui::SortKey::*;
     assert_eq!(h.state().combine_columns.order, [Size, Name, Pages, Modified, Warnings]);
     assert_eq!(combine_names(&h), ["a.pdf", "b.pdf"], "moving a column doesn't sort");
     let (size, name) = (h.get_by_label("Size").rect(), h.get_by_label("File name, sorted ascending").rect());
@@ -1333,10 +1333,10 @@ fn columns_resize_and_the_layout_is_kept_in_the_settings() {
     let edge = egui::pos2(size.right() + 2.0, size.center().y);
     drag(&mut h, edge, edge + egui::vec2(60.0, 0.0));
     let widths = h.state().combine_columns.widths.expect("a resized column keeps its width");
-    let size_index = pdfcraft_ui_egui::SortKey::Size as usize;
+    let size_index = taratasy_ui_egui::SortKey::Size as usize;
     assert!(widths[size_index] > 120.0, "{widths:?}");
     let saved = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.set_option("language", "en").unwrap();
     fresh.restore(&saved);
     assert_eq!(fresh.combine_columns, h.state().combine_columns);
@@ -1347,7 +1347,7 @@ fn columns_resize_and_the_layout_is_kept_in_the_settings() {
 
 #[test]
 fn a_folder_adds_its_pdfs_images_and_text_in_order_and_optionally_its_subfolders() {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-combine-folder-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-combine-folder-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("sub")).unwrap();
     for (name, pages) in [("page10.pdf", 1), ("page2.PDF", 2), ("sub/inner.pdf", 3)] {
@@ -1383,7 +1383,7 @@ fn images_and_text_files_join_the_combine_list_as_pdfs() {
     image::RgbImage::from_pixel(40, 20, image::Rgb([90, 120, 200])).write_to(&mut png, image::ImageFormat::Png).unwrap();
     let mut h = combine_of(&[("one.pdf", 2)]);
     h.state_mut()
-        .use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("scan.png".into(), png.into_inner()), ("notes.txt".into(), b"Some notes".to_vec())]);
+        .use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("scan.png".into(), png.into_inner()), ("notes.txt".into(), b"Some notes".to_vec())]);
     h.run_steps(3);
     assert_eq!(combine_names(&h), ["one.pdf", "scan.png", "notes.txt"]);
     let draft = &h.state().combine_draft;
@@ -1400,7 +1400,7 @@ fn images_and_text_files_join_the_combine_list_as_pdfs() {
 fn files_that_cannot_be_read_are_listed_and_left_out_once_the_user_agrees() {
     let mut h = combine_of(&[("one.pdf", 2)]);
     let bad = vec![("broken.jpg".to_string(), b"\xff\xd8\xff\xe0 not a JPEG".to_vec()), ("report.docx".to_string(), b"PK\x03\x04".to_vec())];
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::Combine, bad);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::Combine, bad);
     h.run_steps(3);
     assert_eq!(combine_names(&h), ["one.pdf", "broken.jpg", "report.docx"]);
     for f in &h.state().combine_draft[1..] {
@@ -1411,7 +1411,7 @@ fn files_that_cannot_be_read_are_listed_and_left_out_once_the_user_agrees() {
     h.get_by_label_contains("this file type can't be converted");
     // One readable file is not enough to combine.
     assert!(h.get_by_label("Combine").accesskit_node().is_disabled());
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("two.pdf".into(), fixture(1))]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("two.pdf".into(), fixture(1))]);
     h.run_steps(3);
     assert!(!h.get_by_label("Combine").accesskit_node().is_disabled());
     // Combine asks first, naming the files left out; Cancel leaves everything as it was.
@@ -1433,7 +1433,7 @@ fn files_that_cannot_be_read_are_listed_and_left_out_once_the_user_agrees() {
     assert_eq!(texts_of(h.state(), 1), ["Page 1", "Page 2", "Page 1"]);
 }
 
-fn type_password(h: &mut Harness<'static, PdfCraftApp>, password: &str) {
+fn type_password(h: &mut Harness<'static, TaratasyApp>, password: &str) {
     let field = h.get_by_role(Role::PasswordInput);
     field.focus();
     field.type_text(password);
@@ -1445,7 +1445,7 @@ fn type_password(h: &mut Harness<'static, PdfCraftApp>, password: &str) {
 #[test]
 fn a_password_protected_file_is_unlocked_with_its_password_and_combined() {
     let mut h = combine_of(&[("one.pdf", 1)]);
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("secret.pdf".into(), protected("pw", "owner", -1))]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("secret.pdf".into(), protected("pw", "owner", -1))]);
     h.run_steps(3);
     h.get_by_label("Password-protected");
     assert!(h.get_by_label("Combine").accesskit_node().is_disabled());
@@ -1477,7 +1477,7 @@ fn a_password_protected_file_is_unlocked_with_its_password_and_combined() {
 fn one_password_unlocks_several_selected_files_and_undo_locks_them_again() {
     let mut h = combine_of(&[("one.pdf", 1)]);
     h.state_mut().use_files(
-        pdfcraft_ui_egui::FilePurpose::Combine,
+        taratasy_ui_egui::FilePurpose::Combine,
         vec![
             ("a.pdf".into(), protected("same", "o1", -1)),
             ("b.pdf".into(), protected("same", "o2", -1)),
@@ -1503,11 +1503,11 @@ fn one_password_unlocks_several_selected_files_and_undo_locks_them_again() {
 fn a_file_that_opens_but_forbids_combining_takes_the_permissions_password() {
     let mut h = combine_of(&[("one.pdf", 1)]);
     // Opens with "pw"; only the owner may assemble pages.
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::Combine, vec![("both.pdf".into(), protected("pw", "owner", -1 ^ 1024 ^ 8))]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::Combine, vec![("both.pdf".into(), protected("pw", "owner", -1 ^ 1024 ^ 8))]);
     h.run_steps(3);
     assert!(h.state_mut().combine_unlock_rows(&[1], "pw"));
     h.run_steps(2);
-    assert_eq!(h.state().combine_draft[1].lock, Some(pdfcraft_ui_egui::CombineLock::Permissions));
+    assert_eq!(h.state().combine_draft[1].lock, Some(taratasy_ui_egui::CombineLock::Permissions));
     h.get_by_label_contains("Enter the permissions password");
     h.get_all_by_label("Unlock…").last().unwrap().click();
     h.run_steps(3);
@@ -1523,8 +1523,8 @@ fn an_rc4_file_unlocks_with_its_owner_password_too() {
     // engine's answer is the one that counts.
     let mut h = combine_of(&[("one.pdf", 1)]);
     h.state_mut().use_files(
-        pdfcraft_ui_egui::FilePurpose::Combine,
-        vec![("rc4.pdf".into(), protected_with(pdfcraft_cos::Algorithm::Rc4_128, "user", "boss", -1))],
+        taratasy_ui_egui::FilePurpose::Combine,
+        vec![("rc4.pdf".into(), protected_with(taratasy_cos::Algorithm::Rc4_128, "user", "boss", -1))],
     );
     h.run_steps(3);
     assert!(h.state_mut().combine_unlock_rows(&[1], "boss"));
@@ -1627,7 +1627,7 @@ fn replace_pages_from_pages_panel_context_menu() {
     let other = dir.join("other.pdf");
     std::fs::write(&other, fixture(5)).unwrap();
 
-    let mut h = harness(4, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    let mut h = harness(4, |app| app.right = Some(taratasy_ui_egui::RightPanel::Pages));
     h.state_mut().pick_override = Some(vec![other.to_string_lossy().into_owned()]);
     let thumb = h.get_all_by_label("Page 2").max_by(|a, b| a.rect().left().total_cmp(&b.rect().left())).unwrap();
     thumb.click_button(egui::PointerButton::Secondary);
@@ -1651,7 +1651,7 @@ fn inserting_a_file_goes_after_the_selection_and_undoes() {
     let mut h = organize(2);
     h.get_by_label("Page 1").click();
     h.run_steps(2);
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::InsertPages, vec![("extra.pdf".into(), fixture(2))]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::InsertPages, vec![("extra.pdf".into(), fixture(2))]);
     h.run_steps(3);
     assert_eq!(texts_of(h.state(), 0), ["Page 1", "Page 1", "Page 2", "Page 2"]);
     h.key_press_modifiers(Modifiers::COMMAND, Key::Z);
@@ -1696,7 +1696,7 @@ fn plus_between_pages_inserts_picked_files_there_in_order() {
     assert_eq!(texts_of(h.state(), 0), ["a note", "Page 1", "a note", "Page 2", "Page 3", "a note"]);
     // A file that can't be converted changes nothing.
     let before = texts_of(h.state(), 0);
-    h.state_mut().use_files(pdfcraft_ui_egui::FilePurpose::InsertPages, vec![("report.docx".into(), b"PK\x03\x04".to_vec())]);
+    h.state_mut().use_files(taratasy_ui_egui::FilePurpose::InsertPages, vec![("report.docx".into(), b"PK\x03\x04".to_vec())]);
     h.run_steps(2);
     assert_eq!(texts_of(h.state(), 0), before);
 }
@@ -1714,7 +1714,7 @@ impl egui::DroppedFile for Dropped {
     }
 }
 
-fn drop_files(h: &mut Harness<'static, PdfCraftApp>, files: Vec<Dropped>) {
+fn drop_files(h: &mut Harness<'static, TaratasyApp>, files: Vec<Dropped>) {
     for f in files {
         h.input_mut().dropped_files.push(std::sync::Arc::new(f));
     }
@@ -1777,13 +1777,13 @@ fn files_dropped_outside_the_page_grid_still_open_as_documents() {
 }
 
 /// The Pages panel's thumbnail of page `label` (the panel is right of the page view).
-fn panel_thumb_rect(h: &Harness<'static, PdfCraftApp>, label: &str) -> egui::Rect {
+fn panel_thumb_rect(h: &Harness<'static, TaratasyApp>, label: &str) -> egui::Rect {
     h.get_all_by_label(label).map(|n| n.rect()).max_by(|a, b| a.left().total_cmp(&b.left())).unwrap()
 }
 
 #[test]
 fn files_dropped_on_the_pages_panel_are_inserted_there() {
-    let mut h = harness(3, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    let mut h = harness(3, |app| app.right = Some(taratasy_ui_egui::RightPanel::Pages));
     // The top half of page 2's thumbnail: between pages 1 and 2.
     let thumb = panel_thumb_rect(&h, "Page 2");
     h.hover_at(thumb.center() - egui::vec2(0.0, thumb.height() * 0.25));
@@ -1795,7 +1795,7 @@ fn files_dropped_on_the_pages_panel_are_inserted_there() {
     assert_eq!(texts_of(h.state(), 0), ["Page 1", "Page 1", "Page 2", "a note", "Page 2", "Page 3"]);
     assert_eq!(picked(&h), [1, 2, 3], "the inserted pages are selected");
     // The bottom half of the last thumbnail: the end.
-    let mut h = harness(2, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    let mut h = harness(2, |app| app.right = Some(taratasy_ui_egui::RightPanel::Pages));
     let last = panel_thumb_rect(&h, "Page 2");
     h.hover_at(last.center() + egui::vec2(0.0, last.height() * 0.25));
     h.run_steps(2);
@@ -1807,7 +1807,7 @@ fn files_dropped_on_the_pages_panel_are_inserted_there() {
 
 #[test]
 fn files_dropped_beside_the_pages_panel_still_open_as_documents() {
-    let mut h = harness(2, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    let mut h = harness(2, |app| app.right = Some(taratasy_ui_egui::RightPanel::Pages));
     // Over the page view, not the panel.
     let thumb = panel_thumb_rect(&h, "Page 1");
     h.hover_at(egui::pos2(thumb.left() - 300.0, thumb.center().y));
@@ -1821,14 +1821,14 @@ fn files_dropped_beside_the_pages_panel_still_open_as_documents() {
     assert_eq!(texts_of(h.state(), 1), ["Page 1"], "the dropped PDF opens as its own document");
 }
 
-fn grid_zoom(h: &Harness<'static, PdfCraftApp>) -> f32 {
+fn grid_zoom(h: &Harness<'static, TaratasyApp>) -> f32 {
     h.state().views[0].grid_zoom()
 }
 
 #[test]
 fn page_grid_zooms_with_its_buttons_keys_and_pinch() {
     let mut h = organize(12);
-    let width = |h: &Harness<'static, PdfCraftApp>| h.get_by_label("Page 2").rect().left() - h.get_by_label("Page 1").rect().left();
+    let width = |h: &Harness<'static, TaratasyApp>| h.get_by_label("Page 2").rect().left() - h.get_by_label("Page 1").rect().left();
     let usual = width(&h);
     h.get_by_label("Larger pages").click();
     h.run_steps(3);
@@ -1890,7 +1890,7 @@ fn zoomed_pages_in_view_are_rendered_at_the_size_drawn() {
     // The 200 × 300 fixture fits by height; keep its aspect ratio instead of stretching
     // it to the full cell width. Request enough pixels for that actual preview width.
     let drawn = 194.0 * 3.0 * (200.0 / 300.0) * h.ctx.pixels_per_point();
-    let sharp = |h: &Harness<'static, PdfCraftApp>, page| h.state().views[0].grid_page_pixels(page);
+    let sharp = |h: &Harness<'static, TaratasyApp>, page| h.state().views[0].grid_page_pixels(page);
     for _ in 0..200 {
         if sharp(&h, 0).is_some_and(|w| w as f32 >= drawn * 0.9) {
             break;
@@ -1946,7 +1946,7 @@ fn save_pages_writes_what_the_grid_shows() {
     h.get_by_label("Save pages").click();
     h.run_steps(4);
     assert!(!dirty(&h));
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.open_bytes("saved.pdf", None, std::fs::read(&path).unwrap()).unwrap();
     assert_eq!(texts_of(&app, 0), ["Page 1", "Page 3"]);
@@ -1969,7 +1969,7 @@ fn split_dialog_writes_one_file_per_part() {
     names.sort();
     assert_eq!(names, ["doc (page 1).pdf", "doc (page 2).pdf", "doc (page 3).pdf"]);
     for name in names {
-        let info = pdfcraft_render::inspect(std::sync::Arc::new(std::fs::read(dir.join(name)).unwrap()), None).unwrap();
+        let info = taratasy_render::inspect(std::sync::Arc::new(std::fs::read(dir.join(name)).unwrap()), None).unwrap();
         assert_eq!(info.pages.len(), 1);
     }
     let _ = std::fs::remove_dir_all(dir);
@@ -1983,9 +1983,9 @@ fn split_at_bookmarks_with_equal_titles_keeps_every_part() {
     let mut h = organize(3);
     h.state_mut().export_dir_override = Some(dir.to_string_lossy().into_owned());
     for (index, title) in [(0, "Same"), (1, "Same"), (2, "same")] {
-        h.state_mut().apply_edit(pdfcraft_engine::Edit::AddBookmark { parent: vec![], index, title: title.into(), page: index });
+        h.state_mut().apply_edit(taratasy_engine::Edit::AddBookmark { parent: vec![], index, title: title.into(), page: index });
     }
-    h.state_mut().split_draft.mode = pdfcraft_ui_egui::SplitMode::Bookmarks;
+    h.state_mut().split_draft.mode = taratasy_ui_egui::SplitMode::Bookmarks;
     h.state_mut().run_command("page.split");
     h.run_steps(3);
     h.get_by_label_contains("Creates 3 files from 3 pages");
@@ -2005,7 +2005,7 @@ fn split_before_selected_pages() {
     let mut h = organize(4);
     h.state_mut().export_dir_override = Some(dir.to_string_lossy().into_owned());
     h.state_mut().views[0].select_pages(&[2]);
-    h.state_mut().split_draft.mode = pdfcraft_ui_egui::SplitMode::Selection;
+    h.state_mut().split_draft.mode = taratasy_ui_egui::SplitMode::Selection;
     h.state_mut().run_command("page.split");
     h.run_steps(3);
     h.get_by_label_contains("Creates 2 files from 4 pages");
@@ -2020,12 +2020,12 @@ fn split_before_selected_pages() {
 // ── Encrypted documents ───────────────────────────────────────────────────────────────────────
 
 fn protected(user: &str, owner: &str, permissions: i32) -> Vec<u8> {
-    protected_with(pdfcraft_cos::Algorithm::Aes256, user, owner, permissions)
+    protected_with(taratasy_cos::Algorithm::Aes256, user, owner, permissions)
 }
 
-fn protected_with(algorithm: pdfcraft_cos::Algorithm, user: &str, owner: &str, permissions: i32) -> Vec<u8> {
-    let mut doc = pdfcraft_cos::Document::open(std::sync::Arc::new(fixture(2))).unwrap();
-    doc.set_encryption(&pdfcraft_cos::NewEncryption {
+fn protected_with(algorithm: taratasy_cos::Algorithm, user: &str, owner: &str, permissions: i32) -> Vec<u8> {
+    let mut doc = taratasy_cos::Document::open(std::sync::Arc::new(fixture(2))).unwrap();
+    doc.set_encryption(&taratasy_cos::NewEncryption {
         algorithm,
         user_password: user,
         owner_password: owner,
@@ -2034,13 +2034,13 @@ fn protected_with(algorithm: pdfcraft_cos::Algorithm, user: &str, owner: &str, p
         seed: [4; 32],
     })
     .unwrap();
-    pdfcraft_cos::write_full(&doc, &Default::default()).unwrap()
+    taratasy_cos::write_full(&doc, &Default::default()).unwrap()
 }
 
 #[test]
 fn password_prompt_opens_and_security_tab_reports_the_details() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("secret.pdf", None, protected("pw", "owner", -1)).unwrap();
         app
@@ -2070,7 +2070,7 @@ fn the_security_notice_wraps_beside_its_buttons_and_lines_up_with_them() {
     // Wide: one line. Narrower: wrapped. Narrowest: cut short (the full text is on hover).
     for (width, wraps) in [(1700.0, false), (1250.0, true), (900.0, false)] {
         let mut h = Harness::builder().with_size(egui::vec2(width, 800.0)).build_eframe(|_cc| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.open_bytes("locked.pdf", None, protected("", "owner", 0b0100)).unwrap();
             app.set_option("panel", "bookmarks").unwrap();
@@ -2096,7 +2096,7 @@ fn the_security_notice_wraps_beside_its_buttons_and_lines_up_with_them() {
 #[test]
 fn the_security_notice_unlocks_with_the_permissions_password() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("locked.pdf", None, protected("", "owner", 0b0100)).unwrap();
         app
@@ -2124,7 +2124,7 @@ fn the_security_notice_unlocks_with_the_permissions_password() {
 #[test]
 fn remove_security_asks_for_the_permissions_password_first() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("locked.pdf", None, protected("", "owner", 0b0100)).unwrap();
         app
@@ -2149,7 +2149,7 @@ fn remove_security_asks_for_the_permissions_password_first() {
 #[test]
 fn restricted_documents_show_a_notice_and_block_page_changes() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("locked.pdf", None, protected("", "owner", 0b0100)).unwrap(); // opens without a password
         app.set_option("organize", "on").unwrap();
@@ -2178,9 +2178,9 @@ fn restricted_documents_show_a_notice_and_block_page_changes() {
 /// in. ⌘C, snapshots and exports are refused with a notice; the owner password lifts that.
 #[test]
 fn copying_out_of_a_document_honours_its_security() {
-    fn open(password: &'static str) -> Harness<'static, PdfCraftApp> {
+    fn open(password: &'static str) -> Harness<'static, TaratasyApp> {
         let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.system_clipboard = false;
             app.open_bytes("no-copy.pdf", None, protected("pw", "owner", -1 ^ 0b1_0000)).unwrap();
@@ -2199,7 +2199,7 @@ fn copying_out_of_a_document_honours_its_security() {
         assert_eq!(h.state().views[0].selected_text().as_deref(), Some("Page 1"));
         h
     }
-    fn copy(h: &mut Harness<'static, PdfCraftApp>) -> bool {
+    fn copy(h: &mut Harness<'static, TaratasyApp>) -> bool {
         h.state_mut().toast = None;
         h.event(egui::Event::Copy);
         let mut copied = false;
@@ -2209,7 +2209,7 @@ fn copying_out_of_a_document_honours_its_security() {
         }
         copied
     }
-    fn snapshot(h: &mut Harness<'static, PdfCraftApp>) {
+    fn snapshot(h: &mut Harness<'static, TaratasyApp>) {
         // Around "Page 1", at (20, 150) on the 200 × 300 pt page.
         let r = h.state().views[0].page_screen_rect(0).expect("on screen");
         let at = |x: f32, y: f32| egui::pos2(r.left() + x / 200.0 * r.width(), r.top() + (300.0 - y) / 300.0 * r.height());
@@ -2249,7 +2249,7 @@ fn copying_out_of_a_document_honours_its_security() {
 
 #[test]
 fn replace_pages_dialog_swaps_page_content() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.open_bytes("doc.pdf", None, fixture(3)).unwrap();
     app.views[0].select_pages(&[1]);
@@ -2295,7 +2295,7 @@ fn replace_split_selection_keeps_the_unchecked_page() {
         out
     }
     let open = |selected: &[usize], edited: bool| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("original.pdf", None, sized(3, 200, 300, "Original")).unwrap();
         app.views[0].select_pages(selected);
@@ -2307,7 +2307,7 @@ fn replace_split_selection_keeps_the_unchecked_page() {
         h.run_steps(2);
         h
     };
-    let sizes = |app: &PdfCraftApp| {
+    let sizes = |app: &TaratasyApp| {
         let doc = app.session.get(app.views[0].id).unwrap();
         doc.info.pages.iter().map(|p| (p.width.round() as i32, p.height.round() as i32)).collect::<Vec<_>>()
     };
@@ -2346,7 +2346,7 @@ fn extract_options_and_rotate_pages_dialog() {
     h.state_mut().views[0].select_pages(&[1, 2]);
     h.state_mut().run_command("page.extract");
     h.run_steps(2);
-    h.state_mut().extract_draft = pdfcraft_ui_egui::ExtractDraft { separate: true, delete: true, ..Default::default() };
+    h.state_mut().extract_draft = taratasy_ui_egui::ExtractDraft { separate: true, delete: true, ..Default::default() };
     h.get_all_by_label("Extract").last().unwrap().click();
     h.run_steps(3);
     let mut names: Vec<String> = std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
@@ -2358,7 +2358,7 @@ fn extract_options_and_rotate_pages_dialog() {
     h.state_mut().run_command("page.rotate_dialog");
     h.run_steps(2);
     h.state_mut().rotate_draft.which = 0;
-    h.state_mut().rotate_draft.parity = pdfcraft_engine::PageParity::Odd;
+    h.state_mut().rotate_draft.parity = taratasy_engine::PageParity::Odd;
     h.get_by_label("OK").click();
     h.run_steps(3);
     let s = h.state();
@@ -2370,7 +2370,7 @@ fn extract_options_and_rotate_pages_dialog() {
 fn dragging_thumbnails_reorders_pages() {
     let mut h = organize(4);
     let before = page_texts(h.state());
-    let grab = |h: &Harness<'static, PdfCraftApp>, label: &str| h.get_by_label(label).rect();
+    let grab = |h: &Harness<'static, TaratasyApp>, label: &str| h.get_by_label(label).rect();
     let (from, to) = (grab(&h, "Page 1").center(), grab(&h, "Page 3").right_center() - egui::vec2(10.0, 0.0));
     h.hover_at(from);
     h.run_steps(1);
@@ -2427,7 +2427,7 @@ fn source_font_fixture_with_text(body: &str) -> Vec<u8> {
         "<< /Type /Font /Subtype /Type1 /BaseFont /Times-BoldItalic >>".into(),
         "<< /Type /Page /Parent 2 0 R /Contents 7 0 R /Resources << /Font << /F1 3 0 R /F2 5 0 R >> >> >>".into(),
         "<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Oblique >>".into(),
-        "<< /Producer (PdfCraft) >>".into(),
+        "<< /Producer (Taratasy) >>".into(),
         format!("<< /Length {} >>\nstream\n{body}\nendstream", body.len()),
     ];
     let mut out = b"%PDF-1.7\n".to_vec();
@@ -2445,9 +2445,9 @@ fn source_font_fixture_with_text(body: &str) -> Vec<u8> {
     out
 }
 
-fn open_source_font_fixture() -> Harness<'static, PdfCraftApp> {
+fn open_source_font_fixture() -> Harness<'static, TaratasyApp> {
     Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("fonts.pdf", None, source_font_fixture()).expect("font fixture opens");
         app
@@ -2471,7 +2471,7 @@ fn clicking_existing_text_selects_its_source_font_style() {
     h.drop_at(serif);
     h.run_steps(3);
     let ed = h.state().views[0].line_editor.clone().expect("serif editor opens");
-    assert_eq!(ed.look.family, pdfcraft_engine::FontFamily::Times);
+    assert_eq!(ed.look.family, taratasy_engine::FontFamily::Times);
     assert!(ed.look.bold && ed.look.italic, "source style: {:?}", ed.look);
 
     h.key_press(egui::Key::Escape);
@@ -2484,7 +2484,7 @@ fn clicking_existing_text_selects_its_source_font_style() {
     h.drop_at(mono);
     h.run_steps(3);
     let ed = h.state().views[0].line_editor.clone().expect("mono editor opens");
-    assert_eq!(ed.look.family, pdfcraft_engine::FontFamily::Courier);
+    assert_eq!(ed.look.family, taratasy_engine::FontFamily::Courier);
     assert!(!ed.look.bold && ed.look.italic, "source style: {:?}", ed.look);
 }
 
@@ -2510,7 +2510,7 @@ fn deleting_a_draft_does_not_show_the_original_text_underneath() {
         std::thread::sleep(std::time::Duration::from_millis(5));
     }
     let shot = h.render().unwrap();
-    if let Ok(path) = std::env::var("PDFCRAFT_TEXT_PREVIEW_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_TEXT_PREVIEW_SHOT") {
         shot.save(path).unwrap();
     }
     // The right half of the original glyphs, away from the caret and editor border.
@@ -2540,7 +2540,7 @@ fn switching_from_a_narrow_editor_keeps_one_frame_and_a_wide_heading_on_one_line
         "BT /F1 18 Tf 20 220 Td (Editable PDF heading) Tj ET BT /F2 18 Tf 20 120 Td (Mono) Tj ET BT /F2 18 Tf 20 98 Td (Text) Tj ET",
     );
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("editor.pdf", None, bytes).unwrap();
         app
@@ -2585,7 +2585,7 @@ fn switching_from_a_narrow_editor_keeps_one_frame_and_a_wide_heading_on_one_line
         })
         .count();
     assert_eq!(frames, 1, "the active block has only the editor frame");
-    if let Ok(path) = std::env::var("PDFCRAFT_TEXT_FRAME_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_TEXT_FRAME_SHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     assert!(!dirty(&h));
@@ -2597,7 +2597,7 @@ fn switching_from_a_narrow_editor_keeps_one_frame_and_a_wide_heading_on_one_line
 fn switching_straight_to_another_box_applies_the_open_paragraph() {
     let bytes = source_font_fixture_with_text("BT /F1 24 Tf 20 220 Td (Top) Tj ET BT /F2 24 Tf 20 120 Td (Bottom) Tj ET");
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("boxes.pdf", None, bytes).expect("opens");
         app
@@ -2613,7 +2613,7 @@ fn switching_straight_to_another_box_applies_the_open_paragraph() {
     };
     blocks.sort_by(|a, b| b.rect[1].partial_cmp(&a.rect[1]).unwrap_or(std::cmp::Ordering::Equal));
     assert_eq!(blocks.iter().map(|b| b.text.as_str()).collect::<Vec<_>>(), ["Top", "Bottom"], "two editable boxes");
-    let center = |b: &pdfcraft_engine::TextBlock| {
+    let center = |b: &taratasy_engine::TextBlock| {
         egui::pos2(r.left() + ((b.rect[0] + b.rect[2]) / 2.0) as f32 * k, r.top() + (300.0 - (b.rect[1] + b.rect[3]) / 2.0) as f32 * k)
     };
     // Open the top box and type into it.
@@ -2703,7 +2703,7 @@ fn text_tool_clicking_source_text_edits_instead_of_adding_a_copy() {
 fn text_tool_mixed_style_row_grows_in_the_editor_and_saved_pdf() {
     let bytes = source_font_fixture_with_text("BT /F1 12 Tf 20 220 Td (Small ) Tj /F2 12 Tf (row) Tj ET");
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("mixed-row.pdf", None, bytes).unwrap();
         app
@@ -2733,7 +2733,7 @@ fn text_tool_mixed_style_row_grows_in_the_editor_and_saved_pdf() {
         })
         .expect("the draft is painted");
     assert_eq!(galley.rows.len(), 1, "mixed source runs grow as one visual row");
-    if let Ok(path) = std::env::var("PDFCRAFT_MIXED_ROW_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_MIXED_ROW_SHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     h.key_press_modifiers(Modifiers::COMMAND, Key::Enter);
@@ -2743,7 +2743,7 @@ fn text_tool_mixed_style_row_grows_in_the_editor_and_saved_pdf() {
     assert_eq!(doc.text_blocks(0)[0].editor_text, replacement);
     assert_eq!(doc.text_blocks(0)[0].rows.len(), 1);
     let bytes = state.session.save_bytes(state.views[0].id).unwrap();
-    let mut reopened = pdfcraft_engine::Session::new();
+    let mut reopened = taratasy_engine::Session::new();
     let id = reopened.open("again.pdf", None, bytes, None).unwrap();
     assert_eq!(reopened.get(id).unwrap().text_blocks(0)[0].rows.len(), 1);
 }
@@ -2779,7 +2779,7 @@ fn double_drawn() -> Vec<u8> {
 #[test]
 fn editing_a_double_drawn_line_replaces_every_copy() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("bold.pdf", None, double_drawn()).expect("opens");
         app
@@ -2816,9 +2816,9 @@ fn editing_existing_images_on_the_page() {
 
 #[test]
 fn editing_existing_form_artwork_on_the_page() {
-    use pdfcraft_cos::{Dict, Document, Object, SaveOptions, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, SaveOptions, Stream, write_incremental};
     let mut doc = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
-    let page = pdfcraft_model::pages(&doc)[0].clone();
+    let page = taratasy_model::pages(&doc)[0].clone();
     let mut form = Dict::new();
     form.set(b"Subtype".to_vec(), Object::name("Form"));
     form.set(b"BBox".to_vec(), Object::Array([0, 0, 200, 300].map(Object::Int).to_vec()));
@@ -2838,7 +2838,7 @@ fn editing_existing_form_artwork_on_the_page() {
 
 fn check_existing_artwork(name: &'static str, bytes: Vec<u8>) {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes(name, None, bytes.clone()).expect("opens");
         app
@@ -2938,13 +2938,13 @@ fn selected_text_formatting_keeps_the_rest_of_the_paragraph_and_reopens() {
     assert!(lines.iter().any(|l| l.text == "1" && l.base_font == "Helvetica-Bold"), "{lines:?}");
     assert!(lines.iter().any(|l| l.text.trim_end() == "Page" && l.base_font == "Helvetica"));
     let saved = h.state_mut().session.save_bytes(id).unwrap();
-    let mut reopen = pdfcraft_engine::Session::new();
+    let mut reopen = taratasy_engine::Session::new();
     let rid = reopen.open("saved.pdf", None, saved, None).unwrap();
     assert_eq!(reopen.get(rid).unwrap().text_lines(0), lines);
 }
 
 /// Drag with the pointer from `from` to `to` in a few steps.
-fn drag(h: &mut Harness<'static, PdfCraftApp>, from: egui::Pos2, to: egui::Pos2) {
+fn drag(h: &mut Harness<'static, TaratasyApp>, from: egui::Pos2, to: egui::Pos2) {
     h.hover_at(from);
     h.run_steps(1);
     h.drag_at(from);
@@ -2962,7 +2962,7 @@ fn dragging_a_paragraph_moves_it_and_its_edge_rewraps_it() {
     let mut h = harness(1, |_| {});
     assert!(h.state_mut().execute("edit.edit_text"));
     h.run_steps(2);
-    let block = |h: &Harness<'static, PdfCraftApp>| {
+    let block = |h: &Harness<'static, TaratasyApp>| {
         let s = h.state();
         s.session.get(s.views[0].id).unwrap().text_blocks(0)[0].clone()
     };
@@ -2994,7 +2994,7 @@ fn dragging_a_paragraph_moves_it_and_its_edge_rewraps_it() {
 }
 
 /// Press and release at `at` without moving.
-fn click_at(h: &mut Harness<'static, PdfCraftApp>, at: egui::Pos2) {
+fn click_at(h: &mut Harness<'static, TaratasyApp>, at: egui::Pos2) {
     h.hover_at(at);
     h.run_steps(1);
     h.drag_at(at);
@@ -3003,16 +3003,16 @@ fn click_at(h: &mut Harness<'static, PdfCraftApp>, at: egui::Pos2) {
     h.run_steps(4);
 }
 
-fn press(h: &mut Harness<'static, PdfCraftApp>, modifiers: Modifiers, key: Key) {
+fn press(h: &mut Harness<'static, TaratasyApp>, modifiers: Modifiers, key: Key) {
     h.key_press_modifiers(modifiers, key);
     h.run_steps(4);
 }
 
 #[test]
 fn arrow_keys_nudge_a_selected_image_instead_of_turning_the_page() {
-    use pdfcraft_cos::{Dict, Document, Object, SaveOptions, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, SaveOptions, Stream, write_incremental};
     let mut doc = Document::open(std::sync::Arc::new(fixture(2))).unwrap();
-    let page = pdfcraft_model::pages(&doc)[0].clone();
+    let page = taratasy_model::pages(&doc)[0].clone();
     let mut form = Dict::new();
     form.set(b"Subtype".to_vec(), Object::name("Form"));
     form.set(b"BBox".to_vec(), Object::Array([0, 0, 200, 300].map(Object::Int).to_vec()));
@@ -3029,7 +3029,7 @@ fn arrow_keys_nudge_a_selected_image_instead_of_turning_the_page() {
     .unwrap();
     let bytes = write_incremental(&doc, &SaveOptions::default()).unwrap();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figure.pdf", None, bytes.clone()).expect("opens");
         app
@@ -3038,7 +3038,7 @@ fn arrow_keys_nudge_a_selected_image_instead_of_turning_the_page() {
     assert!(h.state_mut().execute("edit.edit_text"));
     h.run_steps(2);
     let id = h.state().views[0].id;
-    let rect = |h: &Harness<'static, PdfCraftApp>| h.state().session.get(id).unwrap().page_images(0)[0].rect;
+    let rect = |h: &Harness<'static, TaratasyApp>| h.state().session.get(id).unwrap().page_images(0)[0].rect;
     let before = rect(&h);
     let r = h.state().views[0].page_screen_rect(0).expect("on screen");
     click_at(&mut h, egui::pos2(r.left() + 100.0 / 200.0 * r.width(), r.top() + (300.0 - 240.0) / 300.0 * r.height()));
@@ -3061,12 +3061,12 @@ fn an_open_paragraph_moves_by_its_frame_and_by_the_arrow_keys() {
     assert!(h.state_mut().execute("edit.edit_text"));
     h.run_steps(2);
     let id = h.state().views[0].id;
-    let block = |h: &Harness<'static, PdfCraftApp>| h.state().session.get(id).unwrap().text_blocks(0)[0].clone();
+    let block = |h: &Harness<'static, TaratasyApp>| h.state().session.get(id).unwrap().text_blocks(0)[0].clone();
     let r = h.state().views[0].page_screen_rect(0).expect("on screen");
     let k = r.width() / 200.0;
     let screen = |x: f64, y: f64| egui::pos2(r.left() + x as f32 * k, r.top() + (300.0 - y as f32) * k);
     // Just above the paragraph's frame: on the frame, off its text.
-    let frame = |b: &pdfcraft_engine::TextBlock| screen((b.rect[0] + b.rect[2]) / 2.0, b.rect[3]) - egui::vec2(0.0, 4.0);
+    let frame = |b: &taratasy_engine::TextBlock| screen((b.rect[0] + b.rect[2]) / 2.0, b.rect[3]) - egui::vec2(0.0, 4.0);
     let near = |a: f64, b: f64| (a - b).abs() < 0.01;
 
     let before = block(&h);
@@ -3103,9 +3103,9 @@ fn an_open_paragraph_moves_by_its_frame_and_by_the_arrow_keys() {
 /// Contributor-original text, with an off-origin CropBox. Keep the moving paragraph last in
 /// source order so an ordinary hit picks it again when two independent boxes fully overlap.
 fn paragraph_drag_fixture(content: &str, rotation: i64, unit: i64) -> Vec<u8> {
-    use pdfcraft_cos::{Dict, Document, Object, Stream};
+    use taratasy_cos::{Dict, Document, Object, Stream};
     let mut doc = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
-    let page = pdfcraft_model::pages(&doc)[0].obj;
+    let page = taratasy_model::pages(&doc)[0].obj;
     let contents = doc.add(Object::Stream(Stream::flate(Dict::new(), content.as_bytes())));
     doc.update_dict(page, |d| {
         d.set(b"Contents".to_vec(), Object::Ref(contents));
@@ -3115,13 +3115,13 @@ fn paragraph_drag_fixture(content: &str, rotation: i64, unit: i64) -> Vec<u8> {
         d.set(b"UserUnit".to_vec(), Object::Int(unit));
     })
     .unwrap();
-    pdfcraft_cos::write_incremental(&doc, &Default::default()).unwrap()
+    taratasy_cos::write_incremental(&doc, &Default::default()).unwrap()
 }
 
-fn paragraph_drag_harness(bytes: Vec<u8>, view_rotation: u16) -> Harness<'static, PdfCraftApp> {
+fn paragraph_drag_harness(bytes: Vec<u8>, view_rotation: u16) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
-        app.session = pdfcraft_engine::Session::new().with_clock(|| 1_700_000_000);
+        let mut app = TaratasyApp::new();
+        app.session = taratasy_engine::Session::new().with_clock(|| 1_700_000_000);
         app.set_option("language", "en").unwrap();
         app.open_bytes("paragraphs.pdf", None, bytes).unwrap();
         app.set_option("zoom", "75").unwrap();
@@ -3133,19 +3133,19 @@ fn paragraph_drag_harness(bytes: Vec<u8>, view_rotation: u16) -> Harness<'static
     h
 }
 
-fn dragged_paragraphs(h: &Harness<'static, PdfCraftApp>) -> Vec<pdfcraft_engine::TextBlock> {
+fn dragged_paragraphs(h: &Harness<'static, TaratasyApp>) -> Vec<taratasy_engine::TextBlock> {
     let app = h.state();
     app.session.get(app.views[0].id).unwrap().text_blocks(0)
 }
 
 /// Resolve the current inventory and transform for every gesture, never an old block index
 /// or cached screen position. With identical labels, choose the last (topmost) source box.
-fn paragraph_drag_points(h: &Harness<'static, PdfCraftApp>, text: &str, offset: [f64; 2]) -> (egui::Pos2, egui::Pos2) {
+fn paragraph_drag_points(h: &Harness<'static, TaratasyApp>, text: &str, offset: [f64; 2]) -> (egui::Pos2, egui::Pos2) {
     let app = h.state();
     let view = &app.views[0];
     let doc = app.session.get(view.id).unwrap();
     let b = doc.text_blocks(0).into_iter().rfind(|b| b.text == text).unwrap();
-    let xf = pdfcraft_ui_egui::canvas::PageXform {
+    let xf = taratasy_ui_egui::canvas::PageXform {
         rect: view.page_screen_rect(0).unwrap(),
         rot: view.rotation,
         pw: doc.info.pages[0].width,
@@ -3155,7 +3155,7 @@ fn paragraph_drag_points(h: &Harness<'static, PdfCraftApp>, text: &str, offset: 
     (xf.user_rect(&doc.info, 0, b.rect.map(|v| v as f32)).center(), xf.user_rect(&doc.info, 0, moved).center())
 }
 
-fn drag_paragraph(h: &mut Harness<'static, PdfCraftApp>, text: &str, offset: [f64; 2]) {
+fn drag_paragraph(h: &mut Harness<'static, TaratasyApp>, text: &str, offset: [f64; 2]) {
     let (from, to) = paragraph_drag_points(h, text, offset);
     h.get_by_label("Shift-click to select several objects. Drag empty space to select an area.");
     assert!(h.state().views[0].line_editor.is_none());
@@ -3164,7 +3164,7 @@ fn drag_paragraph(h: &mut Harness<'static, PdfCraftApp>, text: &str, offset: [f6
     h.get_by_label("Shift-click to select several objects. Drag empty space to select an area.");
 }
 
-fn assert_dragged_paragraphs(actual: &[pdfcraft_engine::TextBlock], expected: &[pdfcraft_engine::TextBlock]) {
+fn assert_dragged_paragraphs(actual: &[taratasy_engine::TextBlock], expected: &[taratasy_engine::TextBlock]) {
     assert_eq!(actual.len(), expected.len(), "independent paragraphs must survive");
     // Source order is itself an invariant, including when text and geometry are identical.
     for (a, e) in actual.iter().zip(expected) {
@@ -3176,10 +3176,10 @@ fn assert_dragged_paragraphs(actual: &[pdfcraft_engine::TextBlock], expected: &[
 
 /// Read only the current page contents, not stale revisions or the renderer's deduplicated
 /// text layer. These synthetic fixtures contain each literal exactly once per source draw.
-fn paragraph_drag_content(h: &Harness<'static, PdfCraftApp>) -> String {
+fn paragraph_drag_content(h: &Harness<'static, TaratasyApp>) -> String {
     let app = h.state();
-    let doc = pdfcraft_cos::Document::open(app.session.get(app.views[0].id).unwrap().bytes.clone()).unwrap();
-    let page = pdfcraft_model::pages(&doc)[0].clone();
+    let doc = taratasy_cos::Document::open(app.session.get(app.views[0].id).unwrap().bytes.clone()).unwrap();
+    let page = taratasy_model::pages(&doc)[0].clone();
     let contents = doc.resolve(page.dict.get(b"Contents").unwrap());
     let pieces = match contents.as_array() {
         Some(a) => a.clone(),
@@ -3188,13 +3188,13 @@ fn paragraph_drag_content(h: &Harness<'static, PdfCraftApp>) -> String {
     let mut bytes = Vec::new();
     for piece in pieces {
         let object = doc.resolve(&piece);
-        let pdfcraft_cos::Object::Stream(stream) = object.as_ref() else { panic!("fixture content must be a stream") };
+        let taratasy_cos::Object::Stream(stream) = object.as_ref() else { panic!("fixture content must be a stream") };
         bytes.extend(stream.decoded().unwrap());
     }
     String::from_utf8(bytes).unwrap()
 }
 
-fn save_paragraph_drag(h: &mut Harness<'static, PdfCraftApp>, name: &str, original: &[u8]) -> Vec<u8> {
+fn save_paragraph_drag(h: &mut Harness<'static, TaratasyApp>, name: &str, original: &[u8]) -> Vec<u8> {
     let out = temp_path(name);
     let id = h.state().views[0].id;
     h.state_mut().save_override = Some(out.to_string_lossy().into_owned());
@@ -3208,8 +3208,8 @@ fn save_paragraph_drag(h: &mut Harness<'static, PdfCraftApp>, name: &str, origin
     saved
 }
 
-fn paragraph_drag_shot(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
-    if let Ok(directory) = std::env::var("PDFCRAFT_PARAGRAPH_DRAG_SHOTS") {
+fn paragraph_drag_shot(h: &mut Harness<'static, TaratasyApp>, name: &str) {
+    if let Ok(directory) = std::env::var("TARATASY_PARAGRAPH_DRAG_SHOTS") {
         for _ in 0..60 {
             h.run_steps(2);
             if !h.state().render_pending() {
@@ -3383,9 +3383,9 @@ fn check_added_text_drag(panel_open: bool) {
         .session
         .apply(
             id,
-            pdfcraft_engine::Edit::AddText {
+            taratasy_engine::Edit::AddText {
                 page: 0,
-                text: pdfcraft_engine::AddedText { text: "Added note".into(), rect: [100.0, 330.0, 230.0, 354.0], ..Default::default() },
+                text: taratasy_engine::AddedText { text: "Added note".into(), rect: [100.0, 330.0, 230.0, 354.0], ..Default::default() },
             },
         )
         .unwrap();
@@ -3393,7 +3393,7 @@ fn check_added_text_drag(panel_open: bool) {
     h = paragraph_drag_harness(original.as_ref().clone(), 0);
     h.state_mut().left_open = panel_open;
     h.run_steps(4);
-    let added = |h: &Harness<'static, PdfCraftApp>| {
+    let added = |h: &Harness<'static, TaratasyApp>| {
         let app = h.state();
         app.session.get(app.views[0].id).unwrap().added().to_vec()
     };
@@ -3469,7 +3469,7 @@ fn an_ordinary_paragraph_drag_cannot_reuse_an_index_after_an_edit() {
     let id = h.state().views[0].id;
     h.state_mut()
         .session
-        .apply(id, pdfcraft_engine::Edit::EditTextBlock { page: 0, block: 0, text: String::new(), style: Default::default() })
+        .apply(id, taratasy_engine::Edit::EditTextBlock { page: 0, block: 0, text: String::new(), style: Default::default() })
         .unwrap();
     let after_edit = dragged_paragraphs(&h);
     assert_eq!(after_edit.len(), 2, "the surviving paragraphs get different indexes");
@@ -3484,7 +3484,7 @@ fn an_ordinary_paragraph_drag_cannot_reuse_an_index_after_an_edit() {
 }
 
 /// A quick flick: press at `from`, and the next frame already finds the pointer at `to`.
-fn flick(h: &mut Harness<'static, PdfCraftApp>, from: egui::Pos2, to: egui::Pos2) {
+fn flick(h: &mut Harness<'static, TaratasyApp>, from: egui::Pos2, to: egui::Pos2) {
     h.hover_at(from);
     h.run_steps(1);
     h.drag_at(from);
@@ -3500,11 +3500,11 @@ fn a_quick_flick_on_either_edge_rewraps_the_paragraph() {
     let mut h = harness(1, |_| {});
     assert!(h.state_mut().execute("edit.edit_text"));
     h.run_steps(2);
-    let lines = |h: &Harness<'static, PdfCraftApp>| {
+    let lines = |h: &Harness<'static, TaratasyApp>| {
         let s = h.state();
         s.session.get(s.views[0].id).unwrap().text_lines(0)
     };
-    let block = |h: &Harness<'static, PdfCraftApp>| {
+    let block = |h: &Harness<'static, TaratasyApp>| {
         let s = h.state();
         s.session.get(s.views[0].id).unwrap().text_blocks(0)[0].clone()
     };
@@ -3514,7 +3514,7 @@ fn a_quick_flick_on_either_edge_rewraps_the_paragraph() {
     let near = |a: f64, b: f64| (a - b).abs() < 1.5;
     // Grab edges near the box's top: a rewrapped box reaches the window's bottom, where the
     // tool's toast sits over the page and takes the press.
-    let grip_y = |b: &pdfcraft_engine::TextBlock| b.rect[3] - 6.0;
+    let grip_y = |b: &taratasy_engine::TextBlock| b.rect[3] - 6.0;
     // Narrow "Page 1" from its right edge to about 45 pt: it rewraps onto two lines.
     let b = block(&h);
     let edge = screen(b.rect[2], grip_y(&b)) + egui::vec2(2.0, 0.0);
@@ -3540,9 +3540,9 @@ fn a_quick_flick_on_either_edge_rewraps_the_paragraph() {
 }
 
 /// The Pages panel, in a window tall enough to show every thumbnail of a short fixture.
-fn pages_panel(pages: usize) -> Harness<'static, PdfCraftApp> {
+fn pages_panel(pages: usize) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("doc.pdf", None, fixture(pages)).expect("fixture opens");
         app.set_option("panel", "pages").unwrap();
@@ -3552,7 +3552,7 @@ fn pages_panel(pages: usize) -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn picked(h: &Harness<'static, PdfCraftApp>) -> Vec<usize> {
+fn picked(h: &Harness<'static, TaratasyApp>) -> Vec<usize> {
     h.state().views[0].selected.iter().copied().collect()
 }
 
@@ -3633,8 +3633,8 @@ fn print_shortcut_offers_the_pages_picked_in_the_pages_panel() {
     assert_eq!(picked(&h), [1, 3]);
     h.key_press_modifiers(Modifiers::COMMAND, Key::P);
     h.run_steps(3);
-    assert_eq!(h.state().dialog, Some(pdfcraft_ui_egui::Dialog::Print));
-    assert_eq!(h.state().print_draft.which, pdfcraft_ui_egui::PrintWhich::Selected);
+    assert_eq!(h.state().dialog, Some(taratasy_ui_egui::Dialog::Print));
+    assert_eq!(h.state().print_draft.which, taratasy_ui_egui::PrintWhich::Selected);
     assert_eq!(h.state().print_draft.selected, [1, 3]);
     h.get_by_label("Selected pages (2)");
     h.get_by_label("Sheet 1 of 2");
@@ -3642,10 +3642,10 @@ fn print_shortcut_offers_the_pages_picked_in_the_pages_panel() {
 
 #[test]
 fn dragging_pages_panel_thumbnails_reorders_pages() {
-    let mut h = harness(4, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    let mut h = harness(4, |app| app.right = Some(taratasy_ui_egui::RightPanel::Pages));
     let before = page_texts(h.state());
     // The Pages panel is on the right; the document view may label its pages too.
-    let thumb = |h: &Harness<'static, PdfCraftApp>, label: &str| {
+    let thumb = |h: &Harness<'static, TaratasyApp>, label: &str| {
         h.get_all_by_label(label).map(|n| n.rect()).max_by(|a, b| a.left().total_cmp(&b.left())).expect("the thumbnail")
     };
     // Grab page 3 (page 4 is below the window) and drop it above page 1.
@@ -3662,7 +3662,7 @@ fn dragging_pages_panel_thumbnails_reorders_pages() {
 
 #[test]
 fn a_thumbnail_drag_that_ends_off_the_panel_or_outlives_the_pages_is_dropped() {
-    let mut h = harness(4, |app| app.right = Some(pdfcraft_ui_egui::RightPanel::Pages));
+    let mut h = harness(4, |app| app.right = Some(taratasy_ui_egui::RightPanel::Pages));
     let before = page_texts(h.state());
     // A drag left over (the panel closed mid-drag, the button released elsewhere) moves nothing.
     h.state_mut().views[0].panel_drag = Some(vec![2]);
@@ -3678,11 +3678,11 @@ fn a_thumbnail_drag_that_ends_off_the_panel_or_outlives_the_pages_is_dropped() {
 }
 
 /// A Pages panel thumbnail (the rightmost node with that label).
-fn panel_thumb(h: &Harness<'static, PdfCraftApp>, label: &str) -> egui::Pos2 {
+fn panel_thumb(h: &Harness<'static, TaratasyApp>, label: &str) -> egui::Pos2 {
     h.get_all_by_label(label).map(|n| n.rect()).max_by(|a, b| a.left().total_cmp(&b.left())).expect("the thumbnail").center()
 }
 
-fn right_click_at(h: &mut Harness<'static, PdfCraftApp>, at: egui::Pos2) {
+fn right_click_at(h: &mut Harness<'static, TaratasyApp>, at: egui::Pos2) {
     h.hover_at(at);
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos: at, button: egui::PointerButton::Secondary, pressed: true, modifiers: Default::default() });
@@ -3764,7 +3764,7 @@ fn one_editor_contains_mixed_styles_and_visual_rows() {
          BT /F2 10 Tf 20 195 Td (Last row) Tj ET",
     );
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("mixed.pdf", None, bytes).unwrap();
         app
@@ -3818,7 +3818,7 @@ fn one_editor_contains_mixed_styles_and_visual_rows() {
     assert!(frame.contains_rect(visible), "fallback font rows remain inside the growing frame");
     h.state_mut().views[0].line_editor.as_mut().unwrap().text = original_text;
     h.run_steps(3);
-    if let Ok(path) = std::env::var("PDFCRAFT_RICH_FRAME_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_RICH_FRAME_SHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     h.state_mut().views[0].line_editor.as_mut().unwrap().text.clear();
@@ -3833,15 +3833,15 @@ fn one_editor_contains_mixed_styles_and_visual_rows() {
 }
 
 /// Opt-in private-document regression. This never captures images or saves the source file.
-/// Run with PDFCRAFT_TEXT_REGRESSION_PDF=/path/to/document.pdf and --ignored.
+/// Run with TARATASY_TEXT_REGRESSION_PDF=/path/to/document.pdf and --ignored.
 #[test]
 #[ignore = "requires an explicitly supplied local PDF"]
 fn private_document_regions_open_as_one_editor() {
-    let path = std::env::var("PDFCRAFT_TEXT_REGRESSION_PDF").expect("supply a local PDF path");
+    let path = std::env::var("TARATASY_TEXT_REGRESSION_PDF").expect("supply a local PDF path");
     let bytes = std::fs::read(&path).unwrap();
     let original = bytes.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("private.pdf", None, bytes).unwrap();
         app
@@ -3849,7 +3849,7 @@ fn private_document_regions_open_as_one_editor() {
     h.run_steps(4);
     assert!(h.state_mut().execute("edit.edit_text"));
     h.run_steps(2);
-    h.state_mut().views[0].fit = pdfcraft_ui_egui::canvas::Fit::Page;
+    h.state_mut().views[0].fit = taratasy_ui_egui::canvas::Fit::Page;
     assert!(h.state_mut().execute("view.layout.single"));
     h.run_steps(3);
     let page_count = h.state().session.get(h.state().views[0].id).unwrap().info.pages.len();
@@ -3934,7 +3934,7 @@ fn private_document_regions_open_as_one_editor() {
 
 #[test]
 fn inline_editor_preserves_source_font_and_previews_live_bounds() {
-    use pdfcraft_cos::{Dict, Document, Object, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, Stream, write_incremental};
     use skrifa::MetadataProvider as _;
     let mut cos = Document::open(std::sync::Arc::new(source_font_fixture_with_text(
         "BT /F1 18 Tf 20 220 Td (Stable source text) Tj ET BT /F1 12 Tf 20 194 Td (The second row stays here) Tj ET",
@@ -3969,10 +3969,10 @@ fn inline_editor_preserves_source_font_and_previews_live_bounds() {
         ),
     );
     font.set(b"FontDescriptor".to_vec(), Object::Dict(descriptor));
-    cos.update_dict(pdfcraft_cos::ObjRef::new(3, 0), |d| *d = font).unwrap();
+    cos.update_dict(taratasy_cos::ObjRef::new(3, 0), |d| *d = font).unwrap();
     let bytes = write_incremental(&cos, &Default::default()).unwrap();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("stable.pdf", None, bytes).unwrap();
         app
@@ -4010,7 +4010,7 @@ fn inline_editor_preserves_source_font_and_previews_live_bounds() {
     for section in &shape.galley.job.sections {
         assert!(matches!(&section.format.font_id.family,egui::FontFamily::Name(name) if name.starts_with("pdf-source-")));
     }
-    let frame = |h: &Harness<'_, PdfCraftApp>| {
+    let frame = |h: &Harness<'_, TaratasyApp>| {
         h.output()
             .shapes
             .iter()
@@ -4034,7 +4034,7 @@ fn inline_editor_preserves_source_font_and_previews_live_bounds() {
     assert!(reduced.bottom() < original_frame.bottom() - 20.0, "deleting a row visibly shrinks the block");
     h.state_mut().views[0].line_editor.as_mut().unwrap().text.push_str("\nExtra row that does not fit\nAnother row");
     h.run_steps(3);
-    if let Ok(path) = std::env::var("PDFCRAFT_OVERFLOW_FRAME_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_OVERFLOW_FRAME_SHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     let id = h.state().views[0].id;
@@ -4057,7 +4057,7 @@ fn inline_editor_preserves_source_font_and_previews_live_bounds() {
     assert!(dirty(&h));
     assert_eq!(h.state().session.get(id).unwrap().text_blocks(0)[0].rect, measured);
     let bytes = h.state().session.save_bytes(id).unwrap();
-    let mut reopened = pdfcraft_engine::Session::new();
+    let mut reopened = taratasy_engine::Session::new();
     let reopened_id = reopened.open("again.pdf", None, bytes, None).unwrap();
     assert_eq!(reopened.get(reopened_id).unwrap().text_blocks(0)[0].rect, measured);
     h.key_press_modifiers(Modifiers::COMMAND, Key::Z);
@@ -4071,7 +4071,7 @@ fn clipped_artwork_with_labels() -> Vec<u8> {
 
 /// `own_clip` draws the image alone in its clip (`q re W n cm Do Q`), which moves with it (#1049).
 fn clipped_artwork_with_labels_drawn(own_clip: bool) -> Vec<u8> {
-    use pdfcraft_cos::{Dict, Document, Object, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, Stream, write_incremental};
     let mut doc = Document::open(std::sync::Arc::new(fixture(2))).unwrap();
     let mut image = Dict::new();
     image.set(b"Type".to_vec(), Object::name("XObject"));
@@ -4081,7 +4081,7 @@ fn clipped_artwork_with_labels_drawn(own_clip: bool) -> Vec<u8> {
     image.set(b"BitsPerComponent".to_vec(), Object::Int(8));
     image.set(b"ColorSpace".to_vec(), Object::name("DeviceRGB"));
     let image = doc.add(Object::Stream(Stream::flate(image, &[220, 235, 245])));
-    for page in pdfcraft_model::pages(&doc) {
+    for page in taratasy_model::pages(&doc) {
         let contents = doc.add(Object::Stream(Stream::flate(Dict::new(),
             if own_clip {
                 &b"q 30 170 130 80 re W* n 800 0 0 900 -300 -400 cm /Im0 Do Q BT /F1 12 Tf 30 130 Td (Editable caption) Tj ET BT /F1 12 Tf 40 220 Td (Overlay) Tj ET BT /F1 9 Tf 154 249 Td (Corner label) Tj ET"[..]
@@ -4104,14 +4104,14 @@ fn clipped_artwork_with_labels_drawn(own_clip: bool) -> Vec<u8> {
 #[test]
 fn cropped_images_do_not_intercept_text_and_stay_inside_each_page() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("clipped.pdf", None, clipped_artwork_with_labels()).unwrap();
         app
     });
     h.run_steps(4);
     assert!(h.state_mut().execute("edit.edit_text"));
-    h.state_mut().views[0].fit = pdfcraft_ui_egui::canvas::Fit::Page;
+    h.state_mut().views[0].fit = taratasy_ui_egui::canvas::Fit::Page;
     assert!(h.state_mut().execute("view.layout.single"));
     h.run_steps(3);
     for page in 0..2 {
@@ -4155,14 +4155,14 @@ fn cropped_images_do_not_intercept_text_and_stay_inside_each_page() {
 #[test]
 fn cropped_image_corner_resize_keeps_opposite_corner_and_scales_crop() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("clipped.pdf", None, clipped_artwork_with_labels_drawn(true)).unwrap();
         app
     });
     h.run_steps(4);
     assert!(h.state_mut().execute("edit.edit_text"));
-    h.state_mut().views[0].fit = pdfcraft_ui_egui::canvas::Fit::Page;
+    h.state_mut().views[0].fit = taratasy_ui_egui::canvas::Fit::Page;
     assert!(h.state_mut().execute("view.layout.single"));
     h.run_steps(3);
     let page = h.state().views[0].page_screen_rect(0).unwrap();
@@ -4176,7 +4176,7 @@ fn cropped_image_corner_resize_keeps_opposite_corner_and_scales_crop() {
     h.run_steps(3);
     let id = h.state().views[0].id;
     assert!(h.state().views[0].image_selection.is_some());
-    let text = |doc: &pdfcraft_engine::Document| {
+    let text = |doc: &taratasy_engine::Document| {
         doc.text_lines(0).into_iter().map(|l| (l.text.clone(), l.rect, l.font.clone(), l.size, l.color, l.baseline())).collect::<Vec<_>>()
     };
     let original_text = text(h.state().session.get(id).unwrap());
@@ -4214,7 +4214,7 @@ fn cropped_image_corner_resize_keeps_opposite_corner_and_scales_crop() {
         assert_eq!(text(h.state().session.get(id).unwrap()), original_text, "image resizing leaves captions in place");
     }
     let saved = h.state().session.save_bytes(id).unwrap();
-    let mut reopened = pdfcraft_engine::Session::new();
+    let mut reopened = taratasy_engine::Session::new();
     let re = reopened.open("again.pdf", None, saved, None).unwrap();
     assert_eq!(reopened.get(re).unwrap().page_images(0), h.state().session.get(id).unwrap().page_images(0));
 }
@@ -4224,7 +4224,7 @@ fn cropped_image_corner_resize_keeps_opposite_corner_and_scales_crop() {
 #[test]
 fn image_pixels_follow_the_frame_while_a_corner_is_dragged() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("clipped.pdf", None, clipped_artwork_with_labels_drawn(true)).unwrap();
         app
@@ -4243,14 +4243,14 @@ fn image_pixels_follow_the_frame_while_a_corner_is_dragged() {
     h.drop_at(p);
     h.run_steps(3);
     assert!(h.state().views[0].image_selection.is_some());
-    let frame = |h: &Harness<'static, PdfCraftApp>| {
+    let frame = |h: &Harness<'static, TaratasyApp>| {
         h.output().shapes.iter().find_map(|s| match &s.shape {
             egui::Shape::Rect(r) if r.stroke.color == egui::Color32::from_rgb(0x14, 0x73, 0xE6) && r.rect.width() > 20.0 => Some(r.rect),
             _ => None,
         })
     };
     // Textured meshes smaller than the page: the page raster itself always covers the page.
-    let pictures = |h: &Harness<'static, PdfCraftApp>| -> Vec<egui::Rect> {
+    let pictures = |h: &Harness<'static, TaratasyApp>| -> Vec<egui::Rect> {
         h.output()
             .shapes
             .iter()
@@ -4263,12 +4263,12 @@ fn image_pixels_follow_the_frame_while_a_corner_is_dragged() {
     };
     // The dragged picture is cut from the page raster, which a render thread delivers after
     // however many frames it takes (more on a slow runner): wait for it on screen, by state.
-    let raster_shown = |h: &Harness<'static, PdfCraftApp>| {
+    let raster_shown = |h: &Harness<'static, TaratasyApp>| {
         h.output().shapes.iter().any(|s| {
             matches!(&s.shape, egui::Shape::Mesh(m) if m.texture_id != egui::TextureId::default() && m.calc_bounds().width() >= page.width() - 1.0)
         })
     };
-    let wait_for_raster = |h: &mut Harness<'static, PdfCraftApp>| {
+    let wait_for_raster = |h: &mut Harness<'static, TaratasyApp>| {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         while h.state().render_pending() || !raster_shown(h) {
             assert!(std::time::Instant::now() < deadline, "timed out waiting for the page raster");
@@ -4307,18 +4307,18 @@ fn image_pixels_follow_the_frame_while_a_corner_is_dragged() {
 #[test]
 #[ignore = "requires an explicitly supplied local PDF with cropped artwork"]
 fn private_cropped_image_grips_resize_without_moving_the_opposite_corner() {
-    let path = std::env::var("PDFCRAFT_CLIPPED_ARTWORK_PDF").expect("supply a local PDF path");
+    let path = std::env::var("TARATASY_CLIPPED_ARTWORK_PDF").expect("supply a local PDF path");
     let original = std::fs::read(&path).unwrap();
     let bytes = original.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("private.pdf", None, bytes).unwrap();
         app
     });
     h.run_steps(4);
     assert!(h.state_mut().execute("edit.edit_text"));
-    h.state_mut().views[0].fit = pdfcraft_ui_egui::canvas::Fit::Page;
+    h.state_mut().views[0].fit = taratasy_ui_egui::canvas::Fit::Page;
     assert!(h.state_mut().execute("view.layout.single"));
     let id = h.state().views[0].id;
     let pages = h.state().session.get(id).unwrap().info.pages.len();
@@ -4399,18 +4399,18 @@ fn private_cropped_image_grips_resize_without_moving_the_opposite_corner() {
 #[test]
 #[ignore = "requires an explicitly supplied local PDF with cropped artwork"]
 fn private_document_cropped_artwork_does_not_block_text() {
-    let path = std::env::var("PDFCRAFT_CLIPPED_ARTWORK_PDF").expect("supply a local PDF path");
+    let path = std::env::var("TARATASY_CLIPPED_ARTWORK_PDF").expect("supply a local PDF path");
     let original = std::fs::read(&path).unwrap();
     let bytes = original.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("private.pdf", None, bytes).unwrap();
         app
     });
     h.run_steps(4);
     assert!(h.state_mut().execute("edit.edit_text"));
-    h.state_mut().views[0].fit = pdfcraft_ui_egui::canvas::Fit::Page;
+    h.state_mut().views[0].fit = taratasy_ui_egui::canvas::Fit::Page;
     assert!(h.state_mut().execute("view.layout.single"));
     h.run_steps(3);
     let pages = h.state().session.get(h.state().views[0].id).unwrap().info.pages.len();
@@ -4460,22 +4460,22 @@ fn private_document_cropped_artwork_does_not_block_text() {
 #[test]
 #[ignore = "requires a private Chinese PDF and an approved full source font file"]
 fn private_new_chinese_keyboard_input_preserves_font_layout_and_saved_pixels() {
-    use pdfcraft_engine::{Edit, Session};
+    use taratasy_engine::{Edit, Session};
     use std::sync::Arc;
-    let path = std::env::var("PDFCRAFT_CHINESE_TEXT_PDF").expect("supply a local PDF path");
-    let font_path = std::env::var("PDFCRAFT_CHINESE_FULL_FONT").expect("supply the full source face");
+    let path = std::env::var("TARATASY_CHINESE_TEXT_PDF").expect("supply a local PDF path");
+    let font_path = std::env::var("TARATASY_CHINESE_FULL_FONT").expect("supply the full source face");
     let original = std::fs::read(&path).unwrap();
     let bytes = original.clone();
     let font = Arc::new(std::fs::read(font_path).unwrap());
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1100.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("private.pdf", None, bytes).unwrap();
         app
     });
     h.run_steps(4);
     assert!(h.state_mut().execute("edit.edit_text"));
-    h.state_mut().views[0].fit = pdfcraft_ui_egui::canvas::Fit::Page;
+    h.state_mut().views[0].fit = taratasy_ui_egui::canvas::Fit::Page;
     assert!(h.state_mut().execute("view.layout.single"));
     let id = h.state().views[0].id;
     let pages = h.state().session.get(id).unwrap().info.pages.len();
@@ -4591,7 +4591,7 @@ fn moving_text_offers_the_four_way_arrow() {
     let k = r.width() / 200.0;
     let screen = |x: f64, y: f64| egui::pos2(r.left() + x as f32 * k, r.top() + (300.0 - y as f32) * k);
     let centre = screen((block.rect[0] + block.rect[2]) / 2.0, (block.rect[1] + block.rect[3]) / 2.0);
-    let cursor_at = |h: &mut Harness<'static, PdfCraftApp>, at: egui::Pos2| {
+    let cursor_at = |h: &mut Harness<'static, TaratasyApp>, at: egui::Pos2| {
         h.hover_at(at);
         h.run_steps(2);
         h.output().platform_output.cursor_icon
@@ -4628,7 +4628,7 @@ fn cropping_a_picture_with_its_handles() {
     let mut png = Vec::new();
     image::RgbImage::from_pixel(80, 40, image::Rgb([200, 40, 40])).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("picture.png", None, png.clone()).expect("opens");
         app
@@ -4649,7 +4649,7 @@ fn cropping_a_picture_with_its_handles() {
     assert!(h.state().views[0].image_selection.is_some(), "selected");
     // Crop mode (as the context menu's Crop Image starts it): drag the right-bottom handle a
     // quarter of the picture inward, then Enter.
-    h.state_mut().views[0].image_selection.as_mut().unwrap().crop = Some(pdfcraft_ui_egui::CropMode::new(before));
+    h.state_mut().views[0].image_selection.as_mut().unwrap().crop = Some(taratasy_ui_egui::CropMode::new(before));
     h.run_steps(2);
     let corner = r.right_bottom();
     let to = corner - egui::vec2(r.width() / 4.0, r.height() / 4.0);
@@ -4675,7 +4675,7 @@ fn cropping_a_picture_with_its_handles() {
     assert!((v[2] - 60.0).abs() < 1.5 && (v[1] - 10.0).abs() < 1.5, "kept {v:?}");
     assert!(h.state().views[0].image_selection.as_ref().is_some_and(|s| s.crop.is_none()), "crop mode ends");
     // Esc leaves it.
-    h.state_mut().views[0].image_selection.as_mut().unwrap().crop = Some(pdfcraft_ui_egui::CropMode::new([10.0, 10.0, 20.0, 20.0]));
+    h.state_mut().views[0].image_selection.as_mut().unwrap().crop = Some(taratasy_ui_egui::CropMode::new([10.0, 10.0, 20.0, 20.0]));
     h.run_steps(2);
     h.key_press(egui::Key::Escape);
     h.run_steps(3);
@@ -4695,7 +4695,7 @@ fn organize_panel_comes_with_the_grid_and_closes_it() {
     h.get_by_label("Close panel").click();
     h.run_steps(3);
     assert!(!h.state().views[0].organize, "Close ends Organize");
-    assert_eq!(h.state().left, pdfcraft_ui_egui::LeftPanel::AllTools);
+    assert_eq!(h.state().left, taratasy_ui_egui::LeftPanel::AllTools);
     assert!(h.query_by_label("Page properties").is_none(), "the panel is gone");
 }
 
@@ -4703,7 +4703,7 @@ fn organize_panel_comes_with_the_grid_and_closes_it() {
 /// workspace's panel: under the Edit tab, the Edit panel, not All tools.
 #[test]
 fn leaving_organize_goes_back_to_the_workspace_panel() {
-    use pdfcraft_ui_egui::{LeftPanel, Mode};
+    use taratasy_ui_egui::{LeftPanel, Mode};
     let mut h = harness(3, |_| {});
     h.state_mut().mode = Mode::Edit;
     h.state_mut().left = LeftPanel::Tool("edit");

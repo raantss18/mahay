@@ -1,6 +1,6 @@
 //! Design ▸ Effects: the menu applies a theme effect scheme.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 
@@ -27,7 +27,7 @@ fn format_name(h: &Harness<'_, SlideApp>) -> String {
 #[test]
 fn effects_menu_applies_a_scheme_once() {
     let mut h = harness();
-    assert_eq!(format_name(&h), "DeckCraft");
+    assert_eq!(format_name(&h), "Seho");
     let n = h.state().session.active().unwrap().history.undo.len();
     h.get_by_label("Effects").click();
     h.run_steps(2);
@@ -35,7 +35,7 @@ fn effects_menu_applies_a_scheme_once() {
     h.run_steps(2);
     assert_eq!(format_name(&h), "Soft");
     assert_eq!(h.state().session.active().unwrap().history.undo.len(), n + 1);
-    assert_eq!(h.state().session.active().unwrap().doc.masters[0].theme.name, "DeckCraft");
+    assert_eq!(h.state().session.active().unwrap().doc.masters[0].theme.name, "Seho");
 
     h.get_by_label("Effects").click();
     h.run_steps(2);

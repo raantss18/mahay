@@ -1,5 +1,5 @@
 //! Printing from the browser (docs/gaps.md gap 4). A web page can't reach a spooler, so the
-//! print-ready PDF is drawn sheet by sheet with PdfCraft's own renderer, one sheet a frame (the
+//! print-ready PDF is drawn sheet by sheet with Taratasy's own renderer, one sheet a frame (the
 //! web build has no threads), and the pictures go to the browser's print dialog in a hidden
 //! iframe, one sheet per printed page. That prints the same in every browser, with or without a
 //! PDF viewer of its own, and matches the preview. Copies, two-sided printing and colour are
@@ -11,7 +11,7 @@
 // Outside the browser only the tests drive the job; the app itself prints through the spooler.
 #![cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 
-use pdfcraft_engine::export::{ExportSource, Exporter};
+use taratasy_engine::export::{ExportSource, Exporter};
 
 /// The printer the web build lists: the browser's print dialog, which reaches the printers the
 /// operating system knows. An id, never shown; the dialog shows [`browser_printer_label`].
@@ -128,7 +128,7 @@ pub(crate) fn print_document_html(sheets: &[(f64, f64)], urls: &[String]) -> Str
             html_sheets.push_str(&format!("<div class=\"s{k}\"><img alt=\"\" style=\"width:{w};height:{h}\" src=\"{src}\"></div>"));
         }
     }
-    format!("<!doctype html><html><head><meta charset=\"utf-8\"><title>PdfCraft</title><style>{css}</style></head><body>{html_sheets}</body></html>")
+    format!("<!doctype html><html><head><meta charset=\"utf-8\"><title>Taratasy</title><style>{css}</style></head><body>{html_sheets}</body></html>")
 }
 
 /// A browser print being prepared: the print-ready PDF's sheets drawn one [`WebPrintJob::step`]

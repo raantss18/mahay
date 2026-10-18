@@ -1,16 +1,16 @@
 //! Owned corpus: themes, several masters and layouts, shape effects (shadow, glow, soft edge,
 //! reflection) and hyperlinks and actions on text and shapes.
 //!
-//! The decks are built as PowerPoint writes them: a DeckCraft package whose theme, slides and
+//! The decks are built as PowerPoint writes them: a Seho package whose theme, slides and
 //! relationships are replaced with PowerPoint-shaped XML, and a two-master deck built in the model.
 //! The check is open → save → reopen with nothing lost.
 
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_model::style::Effects;
-use deckcraft_model::text::{Action, Hyperlink};
-use deckcraft_model::{LayoutType, Presentation, Shape, defaults};
+use seho_model::style::Effects;
+use seho_model::text::{Action, Hyperlink};
+use seho_model::{LayoutType, Presentation, Shape, defaults};
 
 /// Replace (or add) parts of a package.
 fn repack(bytes: &[u8], parts: &[(&str, String)]) -> Vec<u8> {
@@ -43,7 +43,7 @@ fn part(bytes: &[u8], name: &str) -> String {
 }
 
 fn round_trip(p: &Presentation) -> Presentation {
-    deckcraft_pptx::import(&deckcraft_pptx::export(p).expect("export")).expect("reimport")
+    seho_pptx::import(&seho_pptx::export(p).expect("export")).expect("reimport")
 }
 
 fn shapes_named<'a>(p: &'a Presentation, slide: usize) -> impl Fn(&str) -> &'a Shape {
@@ -68,7 +68,7 @@ fn effects_and_links() -> Vec<u8> {
         p.slides.push(Arc::new(s));
     }
     p.slides.truncate(2);
-    let base = deckcraft_pptx::export(&p).expect("export");
+    let base = seho_pptx::export(&p).expect("export");
     let rels = part(&base, "ppt/slides/_rels/slide1.xml.rels");
     let rels = rels.replace(
         "</Relationships>",
@@ -123,7 +123,7 @@ fn run_links(s: &Shape) -> Vec<(String, Option<Hyperlink>)> {
 #[test]
 fn effects_and_links_survive_a_round_trip() {
     let bytes = effects_and_links();
-    let a = deckcraft_pptx::import(&bytes).expect("import");
+    let a = seho_pptx::import(&bytes).expect("import");
     let get = shapes_named(&a, 0);
     // Read as PowerPoint wrote them.
     let sh = fx(get("Shadowed")).outer_shadow.expect("shadow");
@@ -169,7 +169,7 @@ fn effects_and_links_survive_a_round_trip() {
         let hb: Vec<_> = gb(n).text.iter().flat_map(|t| &t.paragraphs).flat_map(|p| &p.runs).map(|r| r.props.hover.clone()).collect();
         assert_eq!(ha, hb, "text hover of {n}");
     }
-    let out = deckcraft_pptx::export(&b).expect("export");
+    let out = seho_pptx::export(&b).expect("export");
     assert!(part(&out, "ppt/slides/slide1.xml").contains("hlinkMouseOver"));
 }
 
@@ -177,20 +177,20 @@ fn effects_and_links_survive_a_round_trip() {
 fn two_masters() -> Presentation {
     let mut p = defaults::new_presentation(None);
     let mut second = (*p.masters[0]).clone();
-    second.id = deckcraft_model::MasterId(p.alloc_id().expect("id"));
+    second.id = seho_model::MasterId(p.alloc_id().expect("id"));
     second.name = "Brand Dark".into();
     second.theme.name = "Brand Dark Theme".into();
     second.theme.colors.name = "Brand Colours".into();
-    second.theme.colors.colors[4] = deckcraft_model::Rgba::rgb(0x12, 0x34, 0x56);
-    second.theme.colors.colors[2] = deckcraft_model::Rgba::rgb(0x20, 0x20, 0x30);
+    second.theme.colors.colors[4] = seho_model::Rgba::rgb(0x12, 0x34, 0x56);
+    second.theme.colors.colors[2] = seho_model::Rgba::rgb(0x20, 0x20, 0x30);
     second.theme.fonts.name = "Brand Fonts".into();
     second.theme.fonts.major.latin = "Georgia".into();
     second.theme.fonts.minor.latin = "Verdana".into();
-    second.background = Some(deckcraft_model::Background::Fill {
-        fill: deckcraft_model::Fill::solid(deckcraft_model::ColorRef::rgb(deckcraft_model::Rgba::rgb(0x10, 0x10, 0x18))),
+    second.background = Some(seho_model::Background::Fill {
+        fill: seho_model::Fill::solid(seho_model::ColorRef::rgb(seho_model::Rgba::rgb(0x10, 0x10, 0x18))),
     });
     for l in &mut second.layouts {
-        l.id = deckcraft_model::LayoutId(p.alloc_id().expect("id"));
+        l.id = seho_model::LayoutId(p.alloc_id().expect("id"));
         l.name = format!("Dark {}", l.name);
     }
     second.layouts.truncate(4);
@@ -212,14 +212,14 @@ fn themes_masters_and_layouts_survive_a_round_trip() {
         assert_eq!(ma.name, mb.name);
         assert_eq!(ma.theme.name, mb.theme.name);
         // The writer adds PowerPoint's empty objectDefaults/extraClrSchemeLst, kept as raw XML.
-        let bare = |t: &deckcraft_model::theme::Theme| deckcraft_model::theme::Theme { raw_extra: None, ..t.clone() };
+        let bare = |t: &seho_model::theme::Theme| seho_model::theme::Theme { raw_extra: None, ..t.clone() };
         assert_eq!(bare(&ma.theme), bare(&mb.theme), "whole theme of {}", ma.name);
         assert_eq!(ma.theme.colors, mb.theme.colors, "colour scheme of {}", ma.name);
         assert_eq!(ma.theme.fonts.name, mb.theme.fonts.name);
         assert_eq!(ma.theme.fonts.major.latin, mb.theme.fonts.major.latin);
         assert_eq!(ma.theme.fonts.minor.latin, mb.theme.fonts.minor.latin);
         assert_eq!(ma.background, mb.background, "background of {}", ma.name);
-        let names = |m: &deckcraft_model::Master| m.layouts.iter().map(|l| l.name.clone()).collect::<Vec<_>>();
+        let names = |m: &seho_model::Master| m.layouts.iter().map(|l| l.name.clone()).collect::<Vec<_>>();
         assert_eq!(names(ma), names(mb));
     }
     // Each slide stays on its master's layout.
@@ -242,7 +242,7 @@ fn themes_masters_and_layouts_survive_a_round_trip() {
         // An empty map is the default one, which the writer spells out.
         assert_eq!(mb.color_map, mc.color_map);
     }
-    let once = deckcraft_pptx::export(&b).expect("export");
-    let twice = deckcraft_pptx::export(&deckcraft_pptx::import(&once).expect("import")).expect("export");
+    let once = seho_pptx::export(&b).expect("export");
+    let twice = seho_pptx::export(&seho_pptx::import(&once).expect("import")).expect("export");
     assert_eq!(names(&once), names(&twice));
 }

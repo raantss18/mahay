@@ -1,7 +1,7 @@
 //! GPU compositor (architecture §7.2, milestone M5).
 //!
 //! Renders a [`Document`] with wgpu, producing the same straight-alpha composite as the CPU
-//! reference (`photocraft-compose`) within ~1/255:
+//! reference (`sary-compose`) within ~1/255:
 //!
 //! - **Residency.** Layer and mask surfaces live on the GPU in square *pages* (up to [`PAGE`]²,
 //!   never above the device's texture limit) covering their allocated tiles. A page is uploaded
@@ -47,11 +47,11 @@ use std::collections::HashMap;
 use std::num::NonZeroU64;
 use std::sync::Arc;
 
-use photocraft_color::{PixelFormat, SampleType};
-use photocraft_compose::effects::FieldKind;
-use photocraft_doc::{DocId, Document, LayerContent, LayerId, Pattern};
-use photocraft_geom::{Rect, TILE_SIZE, TileCoord};
-use photocraft_raster::{Surface, Tile};
+use sary_color::{PixelFormat, SampleType};
+use sary_compose::effects::FieldKind;
+use sary_doc::{DocId, Document, LayerContent, LayerId, Pattern};
+use sary_geom::{Rect, TILE_SIZE, TileCoord};
+use sary_raster::{Surface, Tile};
 
 pub use health::{DeviceHealth, Fault};
 pub use plan::{Kernel, Plan, Role, Unsupported, plan};
@@ -439,8 +439,8 @@ pub struct Compositor {
     temps: Vec<(Tex, u64)>,
     patterns: HashMap<String, CachedPattern>,
     /// The colour mode of the document being encoded: patterns paint in it
-    /// (`photocraft_compose::pattern::pattern_rgba`).
-    pattern_mode: photocraft_color::ColorMode,
+    /// (`sary_compose::pattern::pattern_rgba`).
+    pattern_mode: sary_color::ColorMode,
     /// The document being encoded, which owns the patterns it paints with.
     pattern_doc: DocId,
     /// GPU memory pattern textures may hold ([`PATTERN_BUDGET`] by default).
@@ -691,7 +691,7 @@ impl Compositor {
             prefix: prefix::Prefix::default(),
             temps: Vec::new(),
             patterns: HashMap::new(),
-            pattern_mode: photocraft_color::ColorMode::Rgb,
+            pattern_mode: sary_color::ColorMode::Rgb,
             pattern_doc: DocId(0),
             pattern_budget: PATTERN_BUDGET,
             max_dim: 0,
@@ -846,7 +846,7 @@ impl Compositor {
 
     /// How far beyond a page cell the effect maps of `f` must be computed to be exact in it.
     fn fx_apron(doc: &Document, f: &plan::FxLayer<'_>) -> i32 {
-        let vector_shape = matches!(f.layer.content, LayerContent::Shape(_)) && photocraft_compose::effect_outline(f.layer).is_none();
+        let vector_shape = matches!(f.layer.content, LayerContent::Shape(_)) && sary_compose::effect_outline(f.layer).is_none();
         let progs: Vec<fx::MapProgram> = f
             .layer
             .effects
@@ -877,8 +877,8 @@ impl Compositor {
                 // Effect noise is speckled in the CPU maps; keep CPU and GPU identical by
                 // rendering noise-carrying effects on the CPU path.
                 let noisy = match e {
-                    photocraft_doc::Effect::DropShadow(s) | photocraft_doc::Effect::InnerShadow(s) => s.noise > 0.0,
-                    photocraft_doc::Effect::OuterGlow(g) | photocraft_doc::Effect::InnerGlow(g) => g.noise > 0.0,
+                    sary_doc::Effect::DropShadow(s) | sary_doc::Effect::InnerShadow(s) => s.noise > 0.0,
+                    sary_doc::Effect::OuterGlow(g) | sary_doc::Effect::InnerGlow(g) => g.noise > 0.0,
                     _ => false,
                 };
                 if noisy {
@@ -1029,9 +1029,9 @@ impl Compositor {
             return Err(Unsupported(f.to_string()));
         }
         // CMYK layers convert through the document's own CMYK profile (uploads and plan colours).
-        let space = photocraft_compose::cmyk_space(doc);
+        let space = sary_compose::cmyk_space(doc);
         self.cmyk = space.as_ref().map_or(0, |s| s.id);
-        photocraft_color::convert::with_cmyk_space(space.as_ref(), || self.encode_scoped(device, queue, encoder, doc, region, sink, flush))
+        sary_color::convert::with_cmyk_space(space.as_ref(), || self.encode_scoped(device, queue, encoder, doc, region, sink, flush))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1513,7 +1513,7 @@ impl Compositor {
         }
         let format = surface.format();
         let kind = TexKind::for_surface(key.1, format);
-        let cmyk = if format.mode == photocraft_color::ColorMode::Cmyk { self.cmyk } else { 0 };
+        let cmyk = if format.mode == sary_color::ColorMode::Cmyk { self.cmyk } else { 0 };
         let default_pixel = surface.default_pixel();
         let default_bits: Vec<u32> = default_pixel.iter().map(|v| v.to_bits()).collect();
         let stale = self
@@ -1673,7 +1673,7 @@ impl Compositor {
             return cached.texture.view.clone();
         }
         let (w, h) = (pat.width, pat.height);
-        let px = photocraft_compose::pattern::pattern_rgba(pat, mode);
+        let px = sary_compose::pattern::pattern_rgba(pat, mode);
         let bytes: Vec<u8> = px.iter().flat_map(|q| [q[0] * q[3], q[1] * q[3], q[2] * q[3], q[3]]).flat_map(f32::to_le_bytes).collect();
         let t = Tex::new(device, "pc_pattern", w, h, wgpu::TextureFormat::Rgba32Float, wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST);
         queue.write_texture(
@@ -1818,7 +1818,7 @@ impl Compositor {
 
         // Programs, and the distance fields they read (max reach per field).
         // Filled shapes stroke their outline (the effect shape); others estimate it.
-        let vector_shape = matches!(layer.content, LayerContent::Shape(_)) && photocraft_compose::effect_outline(layer).is_none();
+        let vector_shape = matches!(layer.content, LayerContent::Shape(_)) && sary_compose::effect_outline(layer).is_none();
         let anchor = layer.effects.reference.unwrap_or((f64::from(f.bounds.x0), f64::from(f.bounds.y0)));
         let progs: Vec<fx::MapProgram> =
             layer.effects.items.iter().filter(|e| e.enabled()).map(|e| fx::program_with(e, &doc.global_light, vector_shape, &doc.patterns, anchor)).collect();
@@ -1946,13 +1946,13 @@ impl Compositor {
     }
 }
 
-/// A start time when `PHOTOCRAFT_FX_TRACE=1` (it prints the CPU time of effect shapes and
+/// A start time when `SARY_FX_TRACE=1` (it prints the CPU time of effect shapes and
 /// distance fields); never on wasm.
 fn web_time_now() -> Option<std::time::Instant> {
     #[cfg(not(target_arch = "wasm32"))]
     {
         static T: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-        T.get_or_init(|| std::env::var_os("PHOTOCRAFT_FX_TRACE").is_some()).then(std::time::Instant::now)
+        T.get_or_init(|| std::env::var_os("SARY_FX_TRACE").is_some()).then(std::time::Instant::now)
     }
     #[cfg(target_arch = "wasm32")]
     None
@@ -2198,11 +2198,11 @@ fn convert_tile(surface: &Surface, tile: Option<&Arc<Tile>>, kind: TexKind, c: T
     for px in raw.chunks_exact(ch) {
         match kind {
             TexKind::Rgba8Direct | TexKind::Rgba8 => {
-                let v = photocraft_raster::to_rgba(&fmt, px);
+                let v = sary_raster::to_rgba(&fmt, px);
                 out.extend(v.map(|x| (x.clamp(0.0, 1.0) * 255.0 + 0.5) as u8));
             }
             TexKind::Rgba16F => {
-                let v = photocraft_raster::to_rgba(&fmt, px);
+                let v = sary_raster::to_rgba(&fmt, px);
                 for x in v {
                     out.extend(f32_to_f16(x).to_le_bytes());
                 }
@@ -2219,7 +2219,7 @@ fn convert_tile(surface: &Surface, tile: Option<&Arc<Tile>>, kind: TexKind, c: T
 /// half: the same bytes as the general path at a fraction of its cost (a 50 MP 16-bit refresh
 /// converts dozens of tiles). `None` for other formats.
 fn rgb_gray16_to_f16(fmt: &PixelFormat, bytes: &[u8]) -> Option<Vec<u8>> {
-    use photocraft_color::ColorMode;
+    use sary_color::ColorMode;
     static HALF: std::sync::OnceLock<Box<[u16]>> = std::sync::OnceLock::new();
     if fmt.sample != SampleType::U16 {
         return None;
@@ -2253,7 +2253,7 @@ fn rgb_gray16_to_f16(fmt: &PixelFormat, bytes: &[u8]) -> Option<Vec<u8>> {
 /// pixel by pixel (a brush dab on a 32-bit layer re-uploads the tiles it touched). `None` for
 /// other formats.
 fn rgb_gray32_to_f16(fmt: &PixelFormat, bytes: &[u8]) -> Option<Vec<u8>> {
-    use photocraft_color::ColorMode;
+    use sary_color::ColorMode;
     if fmt.sample != SampleType::F32 {
         return None;
     }
@@ -2639,7 +2639,7 @@ mod tests {
             let fast = rgb_gray16_to_f16(&fmt, t.bytes()).or_else(|| rgb_gray32_to_f16(&fmt, t.bytes())).expect("fast path");
             let raw = s.read_region(r);
             let general: Vec<u8> =
-                raw.chunks_exact(fmt.channels()).flat_map(|px| photocraft_raster::to_rgba(&fmt, px).map(|x| f32_to_f16(x).to_le_bytes())).flatten().collect();
+                raw.chunks_exact(fmt.channels()).flat_map(|px| sary_raster::to_rgba(&fmt, px).map(|x| f32_to_f16(x).to_le_bytes())).flatten().collect();
             assert_eq!(fast, general, "{fmt:?}");
             assert_eq!(convert_tile(&s, Some(&t), TexKind::Rgba16F, TileCoord::new(0, 0)), general, "{fmt:?}");
         }

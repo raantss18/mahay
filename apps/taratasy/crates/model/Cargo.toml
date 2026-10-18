@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-model"
+name = "taratasy-model"
 description = "Typed views over the PDF object graph (page tree with inherited attributes, page geometry)"
 version.workspace = true
 edition.workspace = true
@@ -9,4 +9,4 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
+taratasy-cos = { workspace = true }

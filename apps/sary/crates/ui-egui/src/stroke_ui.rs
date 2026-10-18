@@ -4,7 +4,7 @@
 use egui::{Align2, Sense, pos2, vec2};
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 
 pub const COMMAND: &str = "edit.stroke";
@@ -31,7 +31,7 @@ fn valid(key: &str, v: &Value) -> bool {
 }
 
 /// Construct a dialog from defaults and only valid, persisted preferences.
-pub fn fields(app: &PhotocraftApp) -> Map<String, Value> {
+pub fn fields(app: &SaryApp) -> Map<String, Value> {
     let mut f = Map::new();
     f.insert(MARK.into(), json!(true));
     f.insert("__command".into(), json!(COMMAND));
@@ -52,7 +52,7 @@ pub fn fields(app: &PhotocraftApp) -> Map<String, Value> {
     f
 }
 
-pub fn open(app: &mut PhotocraftApp) -> u64 {
+pub fn open(app: &mut SaryApp) -> u64 {
     let f = fields(app);
     app.ui.open_dialog(crate::state::DialogKind::Command, f)
 }
@@ -62,7 +62,7 @@ pub fn params(f: &Map<String, Value>) -> Value {
     Value::Object(KEYS.iter().filter_map(|k| f.get(*k).map(|v| (k.to_string(), v.clone()))).collect())
 }
 
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     let remembered = params(f);
     let result = app.run(COMMAND, remembered.clone());
     if result.is_ok() {

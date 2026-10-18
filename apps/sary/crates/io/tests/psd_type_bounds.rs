@@ -12,14 +12,14 @@
 
 mod common;
 
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::text::TextShape;
-use photocraft_doc::{Document, Layer, LayerContent, Size, TextLayer};
-use photocraft_geom::{Affine, Rect};
-use photocraft_psd::descriptor::{Descriptor, Id, UnicodeString, Value as D};
-use photocraft_raster::Surface;
-use photocraft_text::engine_data::Value as E;
-use photocraft_text::psd::{TySh, write_tysh};
+use sary_color::{ColorMode, SampleType};
+use sary_doc::text::TextShape;
+use sary_doc::{Document, Layer, LayerContent, Size, TextLayer};
+use sary_geom::{Affine, Rect};
+use sary_psd::descriptor::{Descriptor, Id, UnicodeString, Value as D};
+use sary_raster::Surface;
+use sary_text::engine_data::Value as E;
+use sary_text::psd::{TySh, write_tysh};
 
 /// One character run: (UTF-16 length, font size in text-space units, explicit leading).
 struct Run {
@@ -111,7 +111,7 @@ fn tysh_with_font(text: &str, runs: &[Run], box_bounds: Option<[f64; 4]>, transf
         .with("bounds", rect("bounds"))
         .with("boundingBox", rect("boundingBox"))
         .with("TextIndex", D::Integer(0))
-        .with("EngineData", D::RawData(photocraft_text::engine_data::write(&engine_data(text, runs, box_bounds, font))));
+        .with("EngineData", D::RawData(sary_text::engine_data::write(&engine_data(text, runs, box_bounds, font))));
     // Unwarped type: Photoshop writes four zero f32s after the warp descriptor.
     write_tysh(&TySh { transform, text: desc, warp: None, bounds: [0.0; 4] })
 }
@@ -236,19 +236,19 @@ fn import_case(c: &Case) -> (Rect, TextLayer, Document, Vec<[f32; 4]>) {
     let mut doc = Document::new("t", Size::new(w, h), ColorMode::Rgb, SampleType::U8);
     doc.resolution_dpi = c.dpi;
     // Photoshop's text `bounds` are the logical bounds in text space; measure them like it does.
-    let probe = photocraft_text::psd::text_layer_from_tysh(&tysh(c.text, &c.runs, c.box_bounds, c.transform, [0.0; 4]), c.dpi).unwrap();
-    let mut engine = photocraft_text::TextEngine::new();
+    let probe = sary_text::psd::text_layer_from_tysh(&tysh(c.text, &c.runs, c.box_bounds, c.transform, [0.0; 4]), c.dpi).unwrap();
+    let mut engine = sary_text::TextEngine::new();
     let ink = engine.layout(&probe, c.dpi).bounds().unwrap_or([0.0; 4]).map(f64::from);
     let data = tysh(c.text, &c.runs, c.box_bounds, c.transform, ink);
-    let mut t = photocraft_text::psd::text_layer_from_tysh(&data, c.dpi).unwrap();
+    let mut t = sary_text::psd::text_layer_from_tysh(&data, c.dpi).unwrap();
     engine.render_layer(&mut t, c.dpi, doc.pixel_format());
     let drawn = t.cache.as_ref().unwrap().content_bounds();
     t.psd_raw = Some(std::sync::Arc::new(data));
     doc.layers.push(Layer::new(c.name, LayerContent::Text(t)));
-    let bytes = photocraft_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
-    let file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
-    let merged = photocraft_io::merged_composite(&file).unwrap();
-    let back = photocraft_io::import("t.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
+    let file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
+    let merged = sary_io::merged_composite(&file).unwrap();
+    let back = sary_io::import("t.psd", &bytes).unwrap().document;
     let LayerContent::Text(bt) = &back.layers[0].content else { panic!("{}: not a type layer", c.name) };
     (drawn, bt.clone(), back, merged)
 }
@@ -272,18 +272,18 @@ fn imported_type_layers_keep_their_full_bounds() {
         // whole of Photoshop's rendering.
         let cache = t.cache.as_ref().unwrap();
         assert_eq!(cache.content_bounds(), drawn, "{}: imported pixels clipped", c.name);
-        let layer_bounds = photocraft_compose::layer_bounds(&doc.layers[0], doc.bounds());
+        let layer_bounds = sary_compose::layer_bounds(&doc.layers[0], doc.bounds());
         assert_eq!(layer_bounds, drawn, "{}: layer bounds", c.name);
         // Re-rendering the imported model (what the type tool does on click) draws the same
         // text in the same place: nothing clipped, no scale or dpi drift.
-        let mut engine = photocraft_text::TextEngine::new();
+        let mut engine = sary_text::TextEngine::new();
         let (_, ours) = engine.render(&t, doc.resolution_dpi, doc.pixel_format());
         let ours_rect = ours.surface.content_bounds();
         assert!(close(ours_rect, drawn, 1), "{}: re-render {ours_rect:?} vs file {drawn:?}", c.name);
         let o = iou(&ours.surface, cache);
         assert!(o > 0.97, "{}: re-render overlap {o}", c.name);
         // And the document composite is the file's merged composite.
-        let px = photocraft_compose::flatten(&doc).px;
+        let px = sary_compose::flatten(&doc).px;
         let worst = common::max_diff(&px, &merged);
         assert!(worst <= 2.0 / 255.0, "{}: composite differs from the merged image by {worst}", c.name);
     }
@@ -315,18 +315,18 @@ fn type_layers_without_pixels_are_rendered_on_import() {
     let mut doc = Document::new("t", Size::new(900, 700), ColorMode::Rgb, SampleType::U8);
     doc.resolution_dpi = c.dpi;
     let data = tysh(c.text, &c.runs, c.box_bounds, c.transform, [40.0, 50.0, 400.0, 110.0]);
-    let mut t = photocraft_text::psd::text_layer_from_tysh(&data, c.dpi).unwrap();
+    let mut t = sary_text::psd::text_layer_from_tysh(&data, c.dpi).unwrap();
     t.cache = None;
     t.psd_raw = Some(std::sync::Arc::new(data));
     doc.layers.push(Layer::new(c.name, LayerContent::Text(t)));
-    let bytes = photocraft_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
-    let back = photocraft_io::import("t.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
+    let back = sary_io::import("t.psd", &bytes).unwrap().document;
     let LayerContent::Text(bt) = &back.layers[0].content else { panic!("not a type layer") };
     assert_eq!(bt.text, c.text);
     let drawn = bt.cache.as_ref().expect("rendered on import").content_bounds();
     assert!(!drawn.is_empty(), "nothing rendered");
     // The same text rendered by the engine lands on the same pixels.
-    let mut engine = photocraft_text::TextEngine::new();
+    let mut engine = sary_text::TextEngine::new();
     let (_, ours) = engine.render(bt, back.resolution_dpi, back.pixel_format());
     assert!(close(ours.surface.content_bounds(), drawn, 1), "{:?} vs {drawn:?}", ours.surface.content_bounds());
     // With pixels in the file, they stay the cache (Photoshop's rendering is authoritative).
@@ -343,14 +343,14 @@ fn postscript_font_names_resolve_to_the_installed_family_on_import() {
     let mut doc = Document::new("t", Size::new(900, 700), ColorMode::Rgb, SampleType::U8);
     doc.resolution_dpi = c.dpi;
     let data = tysh_with_font(c.text, &c.runs, c.box_bounds, c.transform, [40.0, 50.0, 400.0, 110.0], "JetBrainsMono-Regular");
-    let probe = photocraft_text::psd::text_layer_from_tysh(&data, c.dpi).unwrap();
+    let probe = sary_text::psd::text_layer_from_tysh(&data, c.dpi).unwrap();
     assert_eq!(probe.runs[0].style.font_family, "Jet Brains Mono", "the guess the import must correct");
     let mut t = probe;
     t.cache = None;
     t.psd_raw = Some(std::sync::Arc::new(data));
     doc.layers.push(Layer::new(c.name, LayerContent::Text(t)));
-    let bytes = photocraft_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
-    let back = photocraft_io::import("t.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
+    let back = sary_io::import("t.psd", &bytes).unwrap().document;
     let LayerContent::Text(bt) = &back.layers[0].content else { panic!("not a type layer") };
     assert_eq!(bt.runs[0].style.font_family, "JetBrains Mono");
     assert_eq!(bt.runs[0].style.postscript_name.as_deref(), Some("JetBrainsMono-Regular"));
@@ -367,12 +367,12 @@ fn hostile_type_sizes_without_pixels_import_without_a_huge_render() {
     {
         let runs = vec![Run { len: 1, size, leading: None }];
         let data = tysh("M", &runs, None, transform, [10.0, 10.0, 20.0, 20.0]);
-        let mut t = photocraft_text::psd::text_layer_from_tysh(&data, 72.0).unwrap();
+        let mut t = sary_text::psd::text_layer_from_tysh(&data, 72.0).unwrap();
         if big {
             // Precondition: the renderer's own guard (256 Mpx) would have drawn this one.
-            let mut engine = photocraft_text::TextEngine::new();
+            let mut engine = sary_text::TextEngine::new();
             let layout = engine.layout(&t, 72.0);
-            let ink = photocraft_text::render::ink_rect(&layout, &t.transform);
+            let ink = sary_text::render::ink_rect(&layout, &t.transform);
             let px = u64::from(ink.width()) * u64::from(ink.height());
             assert!(px > 64 * 1024 * 1024 && px <= 256 * 1024 * 1024, "{ink:?}");
         }
@@ -380,8 +380,8 @@ fn hostile_type_sizes_without_pixels_import_without_a_huge_render() {
         t.psd_raw = Some(std::sync::Arc::new(data));
         let mut doc = Document::new("t", Size::new(64, 64), ColorMode::Rgb, SampleType::U8);
         doc.layers.push(Layer::new("hostile", LayerContent::Text(t)));
-        let bytes = photocraft_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
-        let back = photocraft_io::import("t.psd", &bytes).unwrap().document;
+        let bytes = sary_io::export(&doc, "t.psd", &Default::default()).unwrap().bytes;
+        let back = sary_io::import("t.psd", &bytes).unwrap().document;
         let LayerContent::Text(bt) = &back.layers[0].content else { panic!("not a type layer") };
         let cache = bt.cache.as_ref().expect("a cache, even if empty");
         assert!(cache.content_bounds().is_empty(), "size {size}: drew {:?}", cache.content_bounds());
@@ -392,7 +392,7 @@ fn hostile_type_sizes_without_pixels_import_without_a_huge_render() {
 fn blank_engine_text_is_not_rendered_on_import() {
     // Photoshop draws nothing when the engine text is blank, whatever the descriptor says.
     let data = tysh("", &[Run { len: 0, size: 24.0, leading: None }], None, Affine::translate(10.0, 40.0), [10.0, 10.0, 20.0, 20.0]);
-    assert!(photocraft_text::psd::engine_text_is_blank(&data));
-    assert!(!photocraft_text::psd::engine_text_is_blank(&tysh("M", &[Run { len: 1, size: 24.0, leading: None }], None, Affine::IDENTITY, [0.0; 4])));
-    assert!(!photocraft_text::psd::engine_text_is_blank(b"not a TySh"));
+    assert!(sary_text::psd::engine_text_is_blank(&data));
+    assert!(!sary_text::psd::engine_text_is_blank(&tysh("M", &[Run { len: 1, size: 24.0, leading: None }], None, Affine::IDENTITY, [0.0; 4])));
+    assert!(!sary_text::psd::engine_text_is_blank(b"not a TySh"));
 }

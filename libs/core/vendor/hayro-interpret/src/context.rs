@@ -20,12 +20,12 @@ use std::rc::Rc;
 
 /// Maximum nesting depth for interpreting `XObject`'s/patterns/streams.
 pub(crate) const MAX_NESTED_INTERPRETATION_DEPTH: u32 = 50;
-/// PdfCraft patch: maximum nesting for content that is painted recursively by the device
+/// Taratasy patch: maximum nesting for content that is painted recursively by the device
 /// (tiling patterns, Type 3 glyphs). Either can refer back to itself through resources it
 /// inherits, which recursed until the stack overflowed (found by fuzzing).
 pub(crate) const MAX_PAINT_NESTING: u32 = 16;
 
-/// PdfCraft patch: how many nested paints (a form inside a form, a Type 3 glyph or tiling
+/// Taratasy patch: how many nested paints (a form inside a form, a Type 3 glyph or tiling
 /// pattern painted from inside another one) one page may do. Nesting depth alone doesn't bound
 /// the work: a glyph that shows ten glyphs of its own font, nested sixteen deep, is 10^16
 /// paints (a fuzzed file hung). Ordinary pages stay far below this.
@@ -34,12 +34,12 @@ pub(crate) const MAX_NESTED_PAINTS: u32 = 50_000;
 std::thread_local! {
     static NESTED_PAINTS: core::cell::Cell<u32> = const { core::cell::Cell::new(0) };
     static CONTENT_LEFT: core::cell::Cell<usize> = const { core::cell::Cell::new(MAX_PAGE_CONTENT) };
-    // PdfCraft patch (18): whether this page's content budget ran out, reported as
+    // Taratasy patch (18): whether this page's content budget ran out, reported as
     // `InterpreterWarning::ContentTruncated`.
     static CONTENT_TRUNCATED: core::cell::Cell<bool> = const { core::cell::Cell::new(false) };
 }
 
-/// PdfCraft patch: decoded content-stream bytes one page may hold at once: its contents, and
+/// Taratasy patch: decoded content-stream bytes one page may hold at once: its contents, and
 /// the forms, tiling patterns and Type 3 glyph procedures being painted. Each stream already
 /// stops at `MAX_DECODED_STREAM`, but forms nest fifty deep and every level keeps its content
 /// while the next one runs: a form painting itself around a stream that inflates to 256 MiB
@@ -47,7 +47,7 @@ std::thread_local! {
 /// painted again and again doesn't use the budget up. Ordinary pages hold a few megabytes.
 pub(crate) const MAX_PAGE_CONTENT: usize = 512 << 20;
 
-/// PdfCraft patch: a content stream decoded within the page's [`MAX_PAGE_CONTENT`]. The bytes
+/// Taratasy patch: a content stream decoded within the page's [`MAX_PAGE_CONTENT`]. The bytes
 /// it decoded count against the budget until it is dropped; a stream without filters is
 /// borrowed from the file and costs nothing.
 pub(crate) struct DecodedContent<'a> {
@@ -68,7 +68,7 @@ impl Drop for DecodedContent<'_> {
     }
 }
 
-/// PdfCraft patch: decode a content stream within what is left of this page's
+/// Taratasy patch: decode a content stream within what is left of this page's
 /// [`MAX_PAGE_CONTENT`]. `None` once the budget is spent (the content is skipped).
 pub(crate) fn decode_content<'a>(stream: &Stream<'a>) -> Option<DecodedContent<'a>> {
     let left = CONTENT_LEFT.with(core::cell::Cell::get);
@@ -96,17 +96,17 @@ pub(crate) fn decode_content<'a>(stream: &Stream<'a>) -> Option<DecodedContent<'
     Some(DecodedContent { data, held })
 }
 
-/// PdfCraft patch: count `len` bytes held for the rest of the page (its own contents).
+/// Taratasy patch: count `len` bytes held for the rest of the page (its own contents).
 pub(crate) fn charge_content(len: usize) {
     CONTENT_LEFT.with(|c| c.set(c.get().saturating_sub(len)));
 }
 
-/// PdfCraft patch (18): whether content was skipped because the page's budget ran out.
+/// Taratasy patch (18): whether content was skipped because the page's budget ran out.
 pub(crate) fn content_was_truncated() -> bool {
     CONTENT_TRUNCATED.with(core::cell::Cell::get)
 }
 
-/// PdfCraft patch: count a paint at `depth` (top-level ones are free); `false` once this
+/// Taratasy patch: count a paint at `depth` (top-level ones are free); `false` once this
 /// page's budget is spent, and the paint is skipped.
 pub(crate) fn take_nested_paint(depth: u32) -> bool {
     if depth < 2 {
@@ -130,7 +130,7 @@ pub(crate) fn take_nested_paint(depth: u32) -> bool {
 pub struct InterpreterCache<'a> {
     pub(crate) font_cache: Rc<RefCell<HashMap<u128, Option<Font<'a>>>>>,
     pub(crate) object_cache: Cache,
-    /// PdfCraft patch: decoded images, shared by every render through this cache so a tile
+    /// Taratasy patch: decoded images, shared by every render through this cache so a tile
     /// no longer decodes its page's images again.
     pub(crate) decoded_cache: DecodedImageCache,
 }
@@ -178,7 +178,7 @@ impl<'a> Context<'a> {
         settings: InterpreterSettings,
     ) -> Self {
         let state = State::new(initial_transform);
-        // PdfCraft patch: a page (or other top-level content) starts with fresh budgets.
+        // Taratasy patch: a page (or other top-level content) starts with fresh budgets.
         NESTED_PAINTS.with(|n| n.set(0));
         CONTENT_LEFT.with(|c| c.set(MAX_PAGE_CONTENT));
         CONTENT_TRUNCATED.with(|truncated| truncated.set(false));
@@ -202,7 +202,7 @@ impl<'a> Context<'a> {
                 .map(|catalog| OcgState::from_catalog(&catalog))
                 .unwrap_or_default()
         };
-        // PdfCraft patch: apply viewer layer toggles.
+        // Taratasy patch: apply viewer layer toggles.
         for (num, generation, visible) in settings.ocg_overrides.iter() {
             ocg_state.set_active(hayro_syntax::object::ObjectIdentifier::new(*num, *generation), *visible);
         }

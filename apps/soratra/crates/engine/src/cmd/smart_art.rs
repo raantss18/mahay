@@ -2,17 +2,17 @@
 //! Text Pane, Add Shape, Promote, Demote), change its layout and colours, reset it.
 //!
 //! A SmartArt graphic is an inline [`InlineObject::Graphic`] whose graphic keeps its model
-//! ([`SmartArtSpec`]); WordCraft lays it out and draws it (see `wordcraft_docx::smart_art_items`)
+//! ([`SmartArtSpec`]); Soratra lays it out and draws it (see `soratra_docx::smart_art_items`)
 //! and saves it as diagram parts. SmartArt made by other programs is shown as it is; these
 //! commands only edit graphics with a model. Each command is one undo step.
 
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use wordcraft_doc::graphic::{Graphic, GraphicKind};
-use wordcraft_doc::para::{Float, InlineObject};
-use wordcraft_doc::props::Rgb;
-use wordcraft_doc::smart_art::{MAX_ITEMS, MAX_LEVEL, SmartArtColors, SmartArtItem, SmartArtLayout, SmartArtSpec, clean_text};
+use soratra_doc::graphic::{Graphic, GraphicKind};
+use soratra_doc::para::{Float, InlineObject};
+use soratra_doc::props::Rgb;
+use soratra_doc::smart_art::{MAX_ITEMS, MAX_LEVEL, SmartArtColors, SmartArtItem, SmartArtLayout, SmartArtSpec, clean_text};
 
 use super::delete_selection;
 use super::objects::selected;
@@ -152,7 +152,7 @@ fn has_smart_art(s: &Session) -> Option<&'static str> {
     match selected(s) {
         Some((_, InlineObject::Graphic { graphic, .. })) if graphic.smart_art.is_some() => None,
         Some((_, InlineObject::Graphic { graphic, .. })) if graphic.kind == GraphicKind::Diagram => {
-            Some("this SmartArt was made in another program: WordCraft shows it but can't edit it")
+            Some("this SmartArt was made in another program: Soratra shows it but can't edit it")
         }
         _ => Some("select a SmartArt graphic first"),
     }
@@ -161,7 +161,7 @@ fn has_smart_art(s: &Session) -> Option<&'static str> {
 /// The graphic for `spec` laid out `w` × `h` points in the theme's colours.
 pub fn smart_art_graphic(spec: SmartArtSpec, theme: &[Rgb], w: f32, h: f32) -> Graphic {
     let spec = spec.sanitized();
-    let items = wordcraft_docx::smart_art_items(&spec, theme, w, h);
+    let items = soratra_docx::smart_art_items(&spec, theme, w, h);
     Graphic { kind: GraphicKind::Diagram, items, w, h, source: None, chart: None, smart_art: Some(Arc::new(spec)) }
 }
 

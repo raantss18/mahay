@@ -4,14 +4,14 @@
 //! scale, colour handling with printer profile / intent / black-point compensation, corner and
 //! centre crop marks, registration marks, description and label) with a small PDF writer
 //! (ISO 32000: one page, a Flate-compressed image XObject, vector marks, Helvetica text), then
-//! hands its bytes to `craft-print` (CUPS on macOS/Linux, Windows PDF printing on Windows).
+//! hands its bytes to `mahay-print` (CUPS on macOS/Linux, Windows PDF printing on Windows).
 //! `"dryRun": true` reports the backend command without spooling; a PDF is kept only at an
 //! explicit output path. Shared spooler transport files are private and automatically removed.
 //!
 //! Where `lp` is not on the path (a Flatpak has none), the job goes to CUPS over IPP in-process
-//! (`photocraft-ipp`, through the sandbox's `--socket=cups`), and when no print server or no
+//! (`sary-ipp`, through the sandbox's `--socket=cups`), and when no print server or no
 //! printer is reachable, to the app's spooler, the XDG Print portal (`Session::print_spooler`;
-//! `PHOTOCRAFT_PRINT_PORTAL=1` prefers it, `=0` removes it). `"printServer"` names a server for
+//! `SARY_PRINT_PORTAL=1` prefers it, `=0` removes it). `"printServer"` names a server for
 //! one job and always takes the IPP route; `file.printers` lists the queues (#2728).
 //!
 //! Paths to Illustrator writes the document's paths as an Adobe Illustrator 3 compatible
@@ -22,8 +22,8 @@ use std::io::Write as _;
 
 mod windows_marks;
 
-use photocraft_color::ColorMode;
-use photocraft_doc::{Document, LayerContent, SmartSource};
+use sary_color::ColorMode;
+use sary_doc::{Document, LayerContent, SmartSource};
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -79,18 +79,18 @@ enum SpoolError {
 }
 
 /// Sends the job and says where it went and through what. A named print server takes the IPP
-/// route. Otherwise: the app's spooler when it is preferred; else `craft-print` (`lp`, or the
+/// route. Otherwise: the app's spooler when it is preferred; else `mahay-print` (`lp`, or the
 /// Windows spooler) when it is there; else CUPS over IPP; and the app's spooler when that had
 /// no route either. A route that exists but fails (an unknown printer, a refused job) is an
 /// error, never a fall-through.
-fn spool_job(spooler: Option<&Spooler>, job: &PrintJob, lp: &craft_print::Job) -> Result<(String, String)> {
+fn spool_job(spooler: Option<&Spooler>, job: &PrintJob, lp: &mahay_print::Job) -> Result<(String, String)> {
     let app = |sp: &Spooler| (sp.run)(job).map(|m| (m, sp.name.to_string())).map_err(other);
     if job.server.is_none() {
         if let Some(sp) = spooler.filter(|sp| sp.preferred) {
             return app(sp);
         }
         if let Some(name) = system_spooler() {
-            return craft_print::submit(&job.pdf, lp).map(|m| (m, name.to_string())).map_err(other);
+            return mahay_print::submit(&job.pdf, lp).map(|m| (m, name.to_string())).map_err(other);
         }
     }
     match cups_spool(job) {
@@ -103,13 +103,13 @@ fn spool_job(spooler: Option<&Spooler>, job: &PrintJob, lp: &craft_print::Job) -
     }
 }
 
-/// The spooler `craft-print` can talk to, as the job's `backend` name: `lp` when CUPS' command
+/// The spooler `mahay-print` can talk to, as the job's `backend` name: `lp` when CUPS' command
 /// is on the path, the Windows spooler on Windows. `None` in a sandbox without `lp` and in the
 /// browser.
 fn system_spooler() -> Option<&'static str> {
-    match craft_print::backend()? {
-        craft_print::Backend::WindowsPdf => Some("windows"),
-        craft_print::Backend::Cups => {
+    match mahay_print::backend()? {
+        mahay_print::Backend::WindowsPdf => Some("windows"),
+        mahay_print::Backend::Cups => {
             let path = std::env::var_os("PATH")?;
             std::env::split_paths(&path).any(|dir| dir.join("lp").is_file()).then_some("lp")
         }
@@ -119,7 +119,7 @@ fn system_spooler() -> Option<&'static str> {
 /// The printer a job goes to: the one asked for when the server knows it, else the default,
 /// else the only one; otherwise an error that names what there is.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "windows")))]
-fn resolve_printer(requested: Option<&str>, default: Option<&str>, printers: &[photocraft_ipp::Printer]) -> std::result::Result<String, SpoolError> {
+fn resolve_printer(requested: Option<&str>, default: Option<&str>, printers: &[sary_ipp::Printer]) -> std::result::Result<String, SpoolError> {
     let names: Vec<&str> = printers.iter().map(|p| p.name.as_str()).collect();
     let known = |n: &str| names.iter().find(|k| k.eq_ignore_ascii_case(n)).map(|k| (*k).to_string());
     if let Some(r) = requested {
@@ -139,16 +139,16 @@ fn resolve_printer(requested: Option<&str>, default: Option<&str>, printers: &[p
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "windows")))]
-fn cups_server(named: Option<&str>) -> std::result::Result<photocraft_ipp::Endpoint, SpoolError> {
+fn cups_server(named: Option<&str>) -> std::result::Result<sary_ipp::Endpoint, SpoolError> {
     match named {
         Some(server) => {
-            let ep = photocraft_ipp::Endpoint::parse(server);
+            let ep = sary_ipp::Endpoint::parse(server);
             if !ep.reachable() {
                 return Err(SpoolError::Failed(format!("no print server at {ep}")));
             }
             Ok(ep)
         }
-        None => photocraft_ipp::Endpoint::detect()
+        None => sary_ipp::Endpoint::detect()
             .ok_or_else(|| SpoolError::NoRoute("no print server: CUPS is not running, or not reachable from this sandbox; print to PDF instead".into())),
     }
 }
@@ -156,16 +156,16 @@ fn cups_server(named: Option<&str>) -> std::result::Result<photocraft_ipp::Endpo
 /// The IPP route: the job to the system's (or the named) CUPS server.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "windows")))]
 fn cups_spool(job: &PrintJob) -> std::result::Result<String, SpoolError> {
-    let failed = |e: photocraft_ipp::Error| SpoolError::Failed(e.to_string());
+    let failed = |e: sary_ipp::Error| SpoolError::Failed(e.to_string());
     let ep = cups_server(job.server.as_deref())?;
-    let printers = photocraft_ipp::printers(&ep).map_err(failed)?;
+    let printers = sary_ipp::printers(&ep).map_err(failed)?;
     let default = printers.iter().find(|p| p.is_default).map(|p| p.name.clone());
     let printer = resolve_printer(job.printer.as_deref(), default.as_deref(), &printers)?;
     let is_class = printers.iter().any(|p| p.name == printer && p.is_class);
-    let user = std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_else(|_| "photocraft".into());
-    let id = photocraft_ipp::print_job(
+    let user = std::env::var("USER").or_else(|_| std::env::var("USERNAME")).unwrap_or_else(|_| "sary".into());
+    let id = sary_ipp::print_job(
         &ep,
-        &photocraft_ipp::Job { printer: &printer, is_class, title: &job.title, user: &user, copies: job.copies, document: &job.pdf, format: "application/pdf" },
+        &sary_ipp::Job { printer: &printer, is_class, title: &job.title, user: &user, copies: job.copies, document: &job.pdf, format: "application/pdf" },
     )
     .map_err(failed)?;
     Ok(format!("job {id} on {printer}"))
@@ -187,12 +187,12 @@ fn cups_spool(job: &PrintJob) -> std::result::Result<String, SpoolError> {
 }
 
 /// `file.printers`: the printers the system's (or `printServer`'s) print server knows, with the default. From
-/// `craft-print` (`lpstat`, the Windows spooler) where that is the route; over IPP for a named
+/// `mahay-print` (`lpstat`, the Windows spooler) where that is the route; over IPP for a named
 /// server and where there is no `lp` (a sandbox).
 fn system_printers(_s: &mut Session, p: &Value) -> Result<Value> {
     let named = p.get("printServer").and_then(Value::as_str).filter(|v| !v.is_empty());
     if named.is_none() && system_spooler().is_some() {
-        let list = craft_print::printers();
+        let list = mahay_print::printers();
         let default = list.iter().find(|p| p.default).map(|p| p.name.clone());
         let printers: Vec<Value> = list.into_iter().map(|p| json!({"name": p.name, "default": p.default})).collect();
         return Ok(json!({"server": Value::Null, "default": default, "printers": printers}));
@@ -205,7 +205,7 @@ fn system_printers(_s: &mut Session, p: &Value) -> Result<Value> {
                 return Ok(json!({"server": Value::Null, "default": Value::Null, "printers": [], "note": why}));
             }
         };
-        let list = photocraft_ipp::printers(&ep).map_err(other)?;
+        let list = sary_ipp::printers(&ep).map_err(other)?;
         let default = list.iter().find(|p| p.is_default).map(|p| p.name.clone());
         let printers: Vec<Value> = list
             .iter()
@@ -418,8 +418,8 @@ fn print_image(doc: &Document, p: &Value, cmd: &str) -> Result<(PrintImage, Valu
         t.execute("image.mode.rgb", json!({}))?;
     }
     match handling {
-        "photocraftManages" | "photoshopManages" => {
-            let profile = p.get("printerProfile").and_then(Value::as_str).ok_or_else(|| bad(cmd, "\"photocraftManages\" needs a \"printerProfile\""))?;
+        "saryManages" | "photoshopManages" => {
+            let profile = p.get("printerProfile").and_then(Value::as_str).ok_or_else(|| bad(cmd, "\"saryManages\" needs a \"printerProfile\""))?;
             let intent = p.get("intent").and_then(Value::as_str).unwrap_or("relative");
             let bpc = p.get("bpc").and_then(Value::as_bool).unwrap_or(true);
             t.execute("edit.convertToProfile", json!({"profile": profile, "intent": intent, "bpc": bpc}))?;
@@ -428,15 +428,15 @@ fn print_image(doc: &Document, p: &Value, cmd: &str) -> Result<(PrintImage, Valu
             info["bpc"] = json!(bpc);
         }
         "printerManages" | "noColorManagement" => {}
-        "separations" => return Err(bad(cmd, "Separations printing is not supported; use photocraftManages with a CMYK printer profile")),
-        h => return Err(bad(cmd, format!("unknown colorHandling `{h}` (printerManages|photocraftManages|noColorManagement)"))),
+        "separations" => return Err(bad(cmd, "Separations printing is not supported; use saryManages with a CMYK printer profile")),
+        h => return Err(bad(cmd, format!("unknown colorHandling `{h}` (printerManages|saryManages|noColorManagement)"))),
     }
     let d = &t.active().ok_or(EngineError::NoDocument)?.doc;
     let icc = if handling == "noColorManagement" { None } else { d.icc_profile.as_ref().map(|v| v.to_vec()) };
     // RGB and Grayscale: the composite over white is the print image (no layer flatten).
     if matches!(d.mode, ColorMode::Rgb | ColorMode::Grayscale) {
         let gray = d.mode == ColorMode::Grayscale;
-        let buf = photocraft_compose::flatten(d).over_background([1.0, 1.0, 1.0]);
+        let buf = sary_compose::flatten(d).over_background([1.0, 1.0, 1.0]);
         let to8 = |v: f32| (v.clamp(0.0, 1.0) * 255.0).round() as u8;
         let data: Vec<u8> =
             if gray { buf.px.iter().map(|p| to8(p[0])).collect() } else { buf.px.iter().flat_map(|p| [to8(p[0]), to8(p[1]), to8(p[2])]).collect() };
@@ -604,16 +604,16 @@ fn render_and_spool(doc: &Document, p: &Value, cmd: &str, spooler: Option<&Spool
     }
     let pdf = print_pdf(&page);
     let pdf_len = pdf.len();
-    let job = craft_print::Job {
+    let job = mahay_print::Job {
         printer: p.get("printer").and_then(Value::as_str).filter(|v| !v.is_empty()).map(str::to_string),
         copies,
         title: doc.name.clone(),
-        // PhotoCraft already placed and scaled the image on its physical sheet. Scaling again
+        // Sary already placed and scaled the image on its physical sheet. Scaling again
         // in the driver would change the preview, print resolution and crop-mark positions.
-        scaling: craft_print::Scaling::Exact,
+        scaling: mahay_print::Scaling::Exact,
         ..Default::default()
     };
-    let command = if send { json!(craft_print::command_preview(&job).map_err(other)?) } else { Value::Null };
+    let command = if send { json!(mahay_print::command_preview(&job).map_err(other)?) } else { Value::Null };
     let pdf_path = match output {
         Some(path) => {
             write_file(&path, &pdf)?;
@@ -649,7 +649,7 @@ fn render_and_spool(doc: &Document, p: &Value, cmd: &str, spooler: Option<&Spool
 /// draws RGB/gray and vector marks only; it must never silently omit requested page content.
 fn native_rgb_compatible(page: &PrintPage, handling: &str) -> bool {
     matches!(page.image.channels, 1 | 3)
-        && (page.image.icc.is_none() || matches!(handling, "photocraftManages" | "photoshopManages" | "noColorManagement"))
+        && (page.image.icc.is_none() || matches!(handling, "saryManages" | "photoshopManages" | "noColorManagement"))
         && page.description.as_deref().is_none_or(str::is_empty)
         && page.label.as_deref().is_none_or(str::is_empty)
 }
@@ -671,13 +671,13 @@ fn printer_name(p: &Value) -> Result<String> {
     if let Some(name) = p.get("printer").and_then(Value::as_str).filter(|v| !v.trim().is_empty()) {
         return Ok(name.to_string());
     }
-    craft_print::rgb::default_printer().map_err(other)?.ok_or_else(|| other("no printer chosen and no default printer is set"))
+    mahay_print::rgb::default_printer().map_err(other)?.ok_or_else(|| other("no printer chosen and no default printer is set"))
 }
 
 /// The driver settings chosen with Print Settings… (`printerSettings`, hex), when any.
-fn printer_settings(p: &Value) -> Result<Option<craft_print::rgb::DevMode>> {
+fn printer_settings(p: &Value) -> Result<Option<mahay_print::rgb::DevMode>> {
     match p.get("printerSettings").and_then(Value::as_str).filter(|v| !v.is_empty()) {
-        Some(hex) => craft_print::rgb::DevMode::from_hex(hex).map(Some).map_err(|e| bad("file.print", e.to_string())),
+        Some(hex) => mahay_print::rgb::DevMode::from_hex(hex).map(Some).map_err(|e| bad("file.print", e.to_string())),
         None => Ok(None),
     }
 }
@@ -717,20 +717,20 @@ pub fn page_rect_top_left(page: &PrintPage) -> (f64, f64, f64, f64) {
 fn print_windows(page: &PrintPage, p: &Value, title: &str, copies: u32) -> Result<Value> {
     let printer = printer_name(p)?;
     let settings = printer_settings(p)?;
-    let device_page = craft_print::rgb::page(&printer, settings.as_ref()).map_err(other)?;
+    let device_page = mahay_print::rgb::page(&printer, settings.as_ref()).map_err(other)?;
     if (device_page.paper.0 - page.paper.0).abs() > 2.0 || (device_page.paper.1 - page.paper.1).abs() > 2.0 {
         return Err(other("the driver paper or orientation differs from the print layout; choose the matching paper in Print Settings before printing"));
     }
     let rgb = page_rgb(page)?;
-    let image = craft_print::rgb::RgbImage { width: page.image.width, height: page.image.height, data: &rgb };
+    let image = mahay_print::rgb::RgbImage { width: page.image.width, height: page.image.height, data: &rgb };
     let rect = page_rect_top_left(page);
     let primitives = windows_marks::primitives(page.marks, rect);
     let color_policy = match p.get("colorHandling").and_then(Value::as_str) {
-        Some("photocraftManages" | "photoshopManages") => craft_print::rgb::ColorPolicy::ApplicationManaged,
-        Some("noColorManagement") => craft_print::rgb::ColorPolicy::Unmanaged,
-        _ => craft_print::rgb::ColorPolicy::DriverManaged,
+        Some("saryManages" | "photoshopManages") => mahay_print::rgb::ColorPolicy::ApplicationManaged,
+        Some("noColorManagement") => mahay_print::rgb::ColorPolicy::Unmanaged,
+        _ => mahay_print::rgb::ColorPolicy::DriverManaged,
     };
-    let job = craft_print::rgb::Job {
+    let job = mahay_print::rgb::Job {
         printer: &printer,
         settings: settings.as_ref(),
         title,
@@ -739,23 +739,23 @@ fn print_windows(page: &PrintPage, p: &Value, title: &str, copies: u32) -> Resul
         color_policy,
         primitives: &primitives,
     };
-    let done = craft_print::rgb::print(&job, &image, rect).map_err(other)?;
+    let done = mahay_print::rgb::print(&job, &image, rect).map_err(other)?;
     Ok(
         json!({"printer": printer, "dpi": [done.dpi.0, done.dpi.1], "deviceRect": [done.device_rect.0, done.device_rect.1, done.device_rect.2, done.device_rect.3]}),
     )
 }
 
 fn printers(_: &mut Session, _: &Value) -> Result<Value> {
-    match craft_print::rgb::printers() {
+    match mahay_print::rgb::printers() {
         Ok(list) => Ok(json!({"supported": true, "printers": list.iter().map(|p| json!({"name": p.name, "default": p.default})).collect::<Vec<_>>()})),
-        Err(craft_print::rgb::PrintError::Unsupported) => Ok(json!({"supported": false, "printers": []})),
+        Err(mahay_print::rgb::PrintError::Unsupported) => Ok(json!({"supported": false, "printers": []})),
         Err(e) => Err(other(e)),
     }
 }
 
 fn printer_page(_: &mut Session, p: &Value) -> Result<Value> {
     let printer = printer_name(p)?;
-    let pg = craft_print::rgb::page(&printer, printer_settings(p)?.as_ref()).map_err(other)?;
+    let pg = mahay_print::rgb::page(&printer, printer_settings(p)?.as_ref()).map_err(other)?;
     Ok(
         json!({"printer": printer, "paper": [pg.paper.0, pg.paper.1], "printable": [pg.printable.0, pg.printable.1, pg.printable.2, pg.printable.3], "dpi": [pg.dpi.0, pg.dpi.1]}),
     )
@@ -765,19 +765,19 @@ fn printer_page(_: &mut Session, p: &Value) -> Result<Value> {
 static PRINTING_DISABLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Refuse to spool anything from this process from now on (tests, fuzzing). The
-/// `PHOTOCRAFT_NO_PRINT` environment variable does the same for a whole shell (CI).
+/// `SARY_NO_PRINT` environment variable does the same for a whole shell (CI).
 pub fn disable_printing() {
     PRINTING_DISABLED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
-/// Whether spooling is blocked by [`disable_printing`] or `PHOTOCRAFT_NO_PRINT`.
+/// Whether spooling is blocked by [`disable_printing`] or `SARY_NO_PRINT`.
 pub fn printing_disabled() -> bool {
-    PRINTING_DISABLED.load(std::sync::atomic::Ordering::Relaxed) || std::env::var_os("PHOTOCRAFT_NO_PRINT").is_some_and(|v| !v.is_empty() && v != "0")
+    PRINTING_DISABLED.load(std::sync::atomic::Ordering::Relaxed) || std::env::var_os("SARY_NO_PRINT").is_some_and(|v| !v.is_empty() && v != "0")
 }
 
 fn require_printing_enabled() -> Result<()> {
     if printing_disabled() {
-        Err(other("printing is disabled in this process (photocraft_engine::print_cmds::disable_printing or PHOTOCRAFT_NO_PRINT); use dryRun: true"))
+        Err(other("printing is disabled in this process (sary_engine::print_cmds::disable_printing or SARY_NO_PRINT); use dryRun: true"))
     } else {
         Ok(())
     }
@@ -816,15 +816,15 @@ fn package(s: &mut Session, p: &Value) -> Result<Value> {
     // The native format keeps external links; our PSD writer has no `lnkE` (external linked
     // file) support yet, so a PSD package would embed or flatten them.
     let ext = match p.get("format").and_then(Value::as_str) {
-        Some(f @ ("psd" | "psb" | "pcraft")) => f.to_string(),
-        Some(f) => return Err(bad(cmd, format!("unknown package format `{f}` (pcraft|psd|psb)"))),
-        None => "pcraft".into(),
+        Some(f @ ("psd" | "psb" | "sary")) => f.to_string(),
+        Some(f) => return Err(bad(cmd, format!("unknown package format `{f}` (sary|psd|psb)"))),
+        None => "sary".into(),
     };
     let folder = join(&dir, &crate::file_cmds::sanitize(&name));
     let links_dir = join(&folder, "Links");
     // Copy every linked file once; relink the copy of the document to the copies.
     let mut copied: Vec<(String, String)> = Vec::new();
-    let mut relinks: Vec<(photocraft_doc::LayerId, String)> = Vec::new();
+    let mut relinks: Vec<(sary_doc::LayerId, String)> = Vec::new();
     let mut missing = Vec::new();
     for (_, _, l) in doc.walk() {
         let LayerContent::Smart(so) = &l.content else { continue };
@@ -876,7 +876,7 @@ pub fn paths_to_ai(doc: &Document, which: &str) -> Result<(String, usize)> {
     let dpi = f64::from(doc.resolution_dpi.max(1.0));
     let k = 72.0 / dpi;
     let (w, h) = (f64::from(doc.size.width) * k, f64::from(doc.size.height) * k);
-    let mut chosen: Vec<(String, &photocraft_doc::Path)> = Vec::new();
+    let mut chosen: Vec<(String, &sary_doc::Path)> = Vec::new();
     match which {
         "all" => {
             chosen.extend(doc.paths.iter().map(|p| (p.name.clone(), &p.path)));
@@ -888,7 +888,7 @@ pub fn paths_to_ai(doc: &Document, which: &str) -> Result<(String, usize)> {
         name => chosen.extend(doc.paths.iter().filter(|p| p.name == name).map(|p| (p.name.clone(), &p.path))),
     }
     let mut s = String::new();
-    s.push_str("%!PS-Adobe-2.0 EPSF-1.2\n%%Creator: PhotoCraft\n");
+    s.push_str("%!PS-Adobe-2.0 EPSF-1.2\n%%Creator: Sary\n");
     s.push_str(&format!("%%Title: ({})\n", doc.name.replace([')', '('], "_")));
     s.push_str(&format!(
         "%%BoundingBox: 0 0 {} {}\n%%HiResBoundingBox: 0 0 {w:.4} {h:.4}\n%AI3_Cropmarks: 0 0 {w:.4} {h:.4}\n",
@@ -963,7 +963,7 @@ pub fn specs() -> Vec<CommandSpec> {
             CommandSpec { id: $id, label: $label, menu: $menu, shortcut: $sc, params: $params, enabled: $enabled, journal: true, run: $run }
         };
     }
-    const PRINT_PARAMS: &str = r##"{"printerSettings":hex? (Windows driver settings),"printer":name? (default printer),"copies":1..999=1,"paper":"letter|legal|tabloid|a3|a4|a5|4x6|5x7"|[w,h] pt="letter","orientation":"portrait|landscape"="portrait","center":bool=true,"top":in?,"left":in?,"scale":%=100,"scaleToFit":bool=false,"colorHandling":"printerManages|photocraftManages|noColorManagement"="printerManages","printerProfile":profile? (photocraftManages),"intent":"perceptual|relative|saturation|absolute"="relative","bpc":bool=true,"cornerCropMarks":bool,"centerCropMarks":bool,"registrationMarks":bool,"description":bool,"labels":bool,"emulsionDown":bool=false (mirror the page left to right, for sublimation and other transfer printing),"output":pdf path? (print to PDF; then "send" defaults to false),"send":bool?,"printServer":"host[:port]|socket path"? (default: the system's CUPS; a named server is always printed to over IPP),"dryRun":bool=false (render the PDF, report the backend command, don't spool; write a PDF only at an explicit output path)} → {pdf:path|null (null without explicit output), imageRect, command:diagnostic array|null, sent, spooler:where the job went|null, backend:"lp|windows|ipp|portal"|null}"##;
+    const PRINT_PARAMS: &str = r##"{"printerSettings":hex? (Windows driver settings),"printer":name? (default printer),"copies":1..999=1,"paper":"letter|legal|tabloid|a3|a4|a5|4x6|5x7"|[w,h] pt="letter","orientation":"portrait|landscape"="portrait","center":bool=true,"top":in?,"left":in?,"scale":%=100,"scaleToFit":bool=false,"colorHandling":"printerManages|saryManages|noColorManagement"="printerManages","printerProfile":profile? (saryManages),"intent":"perceptual|relative|saturation|absolute"="relative","bpc":bool=true,"cornerCropMarks":bool,"centerCropMarks":bool,"registrationMarks":bool,"description":bool,"labels":bool,"emulsionDown":bool=false (mirror the page left to right, for sublimation and other transfer printing),"output":pdf path? (print to PDF; then "send" defaults to false),"send":bool?,"printServer":"host[:port]|socket path"? (default: the system's CUPS; a named server is always printed to over IPP),"dryRun":bool=false (render the PDF, report the backend command, don't spool; write a PDF only at an explicit output path)} → {pdf:path|null (null without explicit output), imageRect, command:diagnostic array|null, sent, spooler:where the job went|null, backend:"lp|windows|ipp|portal"|null}"##;
 
     vec![
         spec!("file.print", "Print…", &["File"], Some("Cmd+P"), PRINT_PARAMS, native_doc, print),
@@ -1011,7 +1011,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Package…",
             &["File"],
             None,
-            r##"{"dir":folder,"format":"pcraft|psd|psb"="pcraft"} → {folder, document, links, missing} (copies the document and its linked files into <dir>/<name>/, relinked to Links/)"##,
+            r##"{"dir":folder,"format":"sary|psd|psb"="sary"} → {folder, document, links, missing} (copies the document and its linked files into <dir>/<name>/, relinked to Links/)"##,
             native_doc,
             package
         ),

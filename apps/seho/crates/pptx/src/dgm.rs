@@ -1,5 +1,5 @@
 //! SmartArt (DrawingML diagrams): the outline ⇄ the data model, and the layout, quick style and
-//! colour definitions DeckCraft writes for its own layouts.
+//! colour definitions Seho writes for its own layouts.
 //!
 //! A diagram's data part holds its points (`dgm:pt`: the document, one per node, and the
 //! transitions PowerPoint pairs with each link) and its links (`dgm:cxn` of type `parOf`, parent →
@@ -7,7 +7,7 @@
 
 use std::collections::HashMap;
 
-use deckcraft_model::{Diagram, DiagramNode};
+use seho_model::{Diagram, DiagramNode};
 
 use crate::xml::{A, El, W};
 
@@ -92,7 +92,7 @@ pub fn colors_for(cs: &str) -> String {
 /// Most nodes read from one diagram.
 const MAX_NODES: usize = 2000;
 
-/// PowerPoint's built-in layout DeckCraft's layout `kind` is written as.
+/// PowerPoint's built-in layout Seho's layout `kind` is written as.
 pub fn layout_id(kind: &str) -> &'static str {
     match kind {
         "blockList" => "urn:microsoft.com/office/officeart/2005/8/layout/default",
@@ -143,15 +143,15 @@ pub fn layout_id(kind: &str) -> &'static str {
     }
 }
 
-/// The DeckCraft layout closest to a PowerPoint layout (by its id and category).
+/// The Seho layout closest to a PowerPoint layout (by its id and category).
 pub fn kind_for(layout_id: &str, category: &str) -> &'static str {
     let last = layout_id.rsplit('/').next().unwrap_or("").to_ascii_lowercase();
-    // DeckCraft before Picture Accent Process got its own id wrote it as pList2 (Horizontal
+    // Seho before Picture Accent Process got its own id wrote it as pList2 (Horizontal
     // Picture List) with its own layout part in the process category; PowerPoint's pList2 is a list.
     if last == "plist2" && category.eq_ignore_ascii_case("process") {
         return "pictureProcess";
     }
-    // Exact ids first: the layouts DeckCraft writes, and their closest siblings.
+    // Exact ids first: the layouts Seho writes, and their closest siblings.
     for k in [
         "blockList",
         "hBulletList",
@@ -513,7 +513,7 @@ fn paragraphs(t: &El) -> String {
         .join(" ")
 }
 
-/// The layout algorithm and node shape of a DeckCraft layout.
+/// The layout algorithm and node shape of a Seho layout.
 fn alg(kind: &str) -> (&'static str, Vec<(&'static str, &'static str)>, &'static str) {
     match kind {
         "process" | "stepUp" | "pictureProcess" | "pictureCaption" | "pictureHList" | "timeline" => {
@@ -581,7 +581,7 @@ fn space(w: &mut W) {
     w.close("dgm:forEach");
 }
 
-/// `ppt/diagrams/layoutN.xml`: a layout definition for DeckCraft's layout `kind`, under the id of
+/// `ppt/diagrams/layoutN.xml`: a layout definition for Seho's layout `kind`, under the id of
 /// the closest built-in PowerPoint layout.
 pub fn layout_xml(kind: &str) -> Vec<u8> {
     let mut w = W::new();
@@ -826,7 +826,7 @@ mod tests {
         assert!(String::from_utf8(style_xml("cartoon")).unwrap().contains("bevelT"));
         assert!(layout_id("pictureProcess").ends_with("/hProcess10"), "Picture Accent Process");
         assert!(layout_id("pictureHList").ends_with("/pList2"), "Horizontal Picture List");
-        // Picture Accent Process as an earlier DeckCraft wrote it (pList2, process category).
+        // Picture Accent Process as an earlier Seho wrote it (pList2, process category).
         assert_eq!(kind_for("urn:microsoft.com/office/officeart/2005/8/layout/pList2", "process"), "pictureProcess");
         assert_eq!(kind_for("urn:microsoft.com/office/officeart/2005/8/layout/pList2", "list"), "pictureHList");
         for k in [

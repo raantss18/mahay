@@ -2,7 +2,7 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::{Dialog, PdfCraftApp};
+use taratasy_ui_egui::{Dialog, TaratasyApp};
 
 /// Two pages; page 1 has a text field "name" (filled), a Reset button, a Next page button and a
 /// Print button (a JavaScript one-liner).
@@ -33,12 +33,12 @@ fn fixture() -> Vec<u8> {
     out
 }
 
-fn click_field(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
+fn click_field(h: &mut Harness<'static, TaratasyApp>, name: &str) {
     let p = {
         let s = h.state();
         let doc = s.session.get(s.views[0].id).unwrap();
         let f = doc.form.iter().find(|f| f.name == name).unwrap();
-        pdfcraft_ui_egui::forms_ui::field_screen_rect(&s.views[0], &doc.info, f, 0).expect("on screen").center()
+        taratasy_ui_egui::forms_ui::field_screen_rect(&s.views[0], &doc.info, f, 0).expect("on screen").center()
     };
     h.hover_at(p);
     h.run_steps(1);
@@ -50,13 +50,13 @@ fn click_field(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
 
 #[test]
 fn buttons_reset_navigate_and_print() {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-buttons-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-buttons-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("buttons.pdf");
     std::fs::write(&path, fixture()).unwrap();
     let path_str = path.to_string_lossy().into_owned();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("buttons.pdf", Some(path_str), fixture()).unwrap();
         app.set_option("zoom", "150").unwrap();
@@ -73,7 +73,7 @@ fn buttons_reset_navigate_and_print() {
     assert_eq!(h.state().dialog, Some(Dialog::Print), "this.print() opens the Print dialog");
     h.state_mut().dialog = None;
     h.run_steps(2);
-    // A document's Save named action never writes the file unasked (PdfCraft's XFA buttons
+    // A document's Save named action never writes the file unasked (Taratasy's XFA buttons
     // use SaveAs, which opens the Save As dialog, as a script's `execMenuItem` does): the
     // reset above made the document dirty, and the click leaves it so.
     let before = std::fs::read(&path).unwrap();
@@ -113,18 +113,18 @@ fn show_hide_fixture() -> Vec<u8> {
 }
 
 /// Whether the "name" widget (object 4) has the Hidden annotation flag in the saved document.
-fn name_hidden(h: &Harness<'static, PdfCraftApp>) -> bool {
+fn name_hidden(h: &Harness<'static, TaratasyApp>) -> bool {
     let s = h.state();
     let bytes = s.session.save_bytes(s.views[0].id).unwrap();
-    let doc = pdfcraft_cos::Document::open(bytes).unwrap();
-    let f = doc.get(pdfcraft_cos::ObjRef::new(4, 0)).as_dict().and_then(|d| d.int(b"F")).unwrap_or(0);
+    let doc = taratasy_cos::Document::open(bytes).unwrap();
+    let f = doc.get(taratasy_cos::ObjRef::new(4, 0)).as_dict().and_then(|d| d.int(b"F")).unwrap_or(0);
     f & 2 != 0
 }
 
 #[test]
 fn hide_actions_hide_and_show_fields() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("show-hide.pdf", None, show_hide_fixture()).unwrap();
         app.set_option("zoom", "150").unwrap();
@@ -137,7 +137,7 @@ fn hide_actions_hide_and_show_fields() {
         let s = h.state();
         let doc = s.session.get(s.views[0].id).unwrap();
         let f = doc.form.iter().find(|f| f.name == "hide").unwrap();
-        pdfcraft_ui_egui::forms_ui::field_screen_rect(&s.views[0], &doc.info, f, 0).expect("on screen").center()
+        taratasy_ui_egui::forms_ui::field_screen_rect(&s.views[0], &doc.info, f, 0).expect("on screen").center()
     };
     h.hover_at(hide_at);
     h.run_steps(2);

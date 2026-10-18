@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, Value};
-use gridcraft_model::{Anchor, Chart, ChartKind, Color, LegendPos, Series, SparklineKind, Style, Workbook};
+use tabilao_core::{CellRef, Value};
+use tabilao_model::{Anchor, Chart, ChartKind, Color, LegendPos, Series, SparklineKind, Style, Workbook};
 
 use crate::*;
 
@@ -204,7 +204,7 @@ fn axis_labels_use_number_format() {
 #[test]
 fn resolve_from_workbook() {
     let mut wb = Workbook::new();
-    let cur = wb.styles.intern(Style { num_fmt: gridcraft_model::NumFmt(Arc::from("$#,##0")), ..Style::default() });
+    let cur = wb.styles.intern(Style { num_fmt: tabilao_model::NumFmt(Arc::from("$#,##0")), ..Style::default() });
     {
         let s = wb.sheet_mut(0).unwrap();
         s.name = "Sales".into();
@@ -341,7 +341,7 @@ fn resolve_from_workbook() {
 
 #[test]
 fn palette_beyond_six_series() {
-    let theme = gridcraft_model::Theme::default();
+    let theme = tabilao_model::Theme::default();
     let p = default_palette(&theme, 14);
     assert_eq!(p.len(), 14);
     assert_ne!(p[0], p[6]);
@@ -1029,7 +1029,7 @@ fn pie_points_follow_workbook_theme() {
     let legend: Vec<Rgba> = legend_entries(&c, &d).iter().map(|e| e.1).collect();
     assert_eq!(legend.len(), 40);
     assert_eq!(legend.get(37), Some(&series_color(&wb.theme, 37)));
-    assert_ne!(series_color(&wb.theme, 37), series_color(&gridcraft_model::Theme::default(), 37));
+    assert_ne!(series_color(&wb.theme, 37), series_color(&tabilao_model::Theme::default(), 37));
 }
 
 #[test]

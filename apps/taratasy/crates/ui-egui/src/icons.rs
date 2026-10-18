@@ -1,10 +1,10 @@
 //! Vector icons: embedded Lucide SVGs, recoloured to white, rasterized by egui_extras at the exact
-//! on-screen pixel size, and tinted per use (PhotoCraft lesson: never use Unicode glyphs as icons).
+//! on-screen pixel size, and tinted per use (Sary lesson: never use Unicode glyphs as icons).
 
 use std::sync::OnceLock;
 
-use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
-use craft_ui::icons::{SvgIconSet, SvgStyle};
+use mahay_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
+use mahay_ui::icons::{SvgIconSet, SvgStyle};
 
 use egui::{Color32, Rect, Response, Stroke, Vec2};
 
@@ -21,7 +21,7 @@ pub fn exists(name: &str) -> bool {
 }
 
 fn source(name: &str) -> egui::ImageSource<'static> {
-    // PdfCraft caches an unknown name under the resolved fallback name.
+    // Taratasy caches an unknown name under the resolved fallback name.
     white_icons().source(white_icons().canonical_name(name).unwrap_or("square"))
 }
 
@@ -80,7 +80,7 @@ mod tests {
     use super::*;
     #[test]
     fn every_catalog_icon_exists() {
-        for g in pdfcraft_engine::catalog::TOOL_GROUPS {
+        for g in taratasy_engine::catalog::TOOL_GROUPS {
             assert!(super::exists(g.icon), "missing icon {}", g.icon);
             for s in g.sections {
                 for i in s.items {
@@ -92,7 +92,7 @@ mod tests {
 
     #[test]
     fn every_command_icon_exists() {
-        for c in pdfcraft_engine::commands::COMMANDS {
+        for c in taratasy_engine::commands::COMMANDS {
             assert!(super::exists(c.icon), "missing icon {} ({})", c.icon, c.id);
         }
     }
@@ -119,7 +119,7 @@ mod tests {
     fn shared_button_preserves_pointer_responses() {
         // The shared button must respond like the original allocate-and-paint path in both
         // themes. Its painting differs on purpose (the eased press wash, the selected outline
-        // and the sinking glyph); the keyboard-focus outline is covered in craft-ui.
+        // and the sinking glyph); the keyboard-focus outline is covered in mahay-ui.
         fn frame(
             ctx: &egui::Context,
             events: Vec<egui::Event>,

@@ -25,7 +25,7 @@ fn paint(s: &mut Session, f: impl Fn(i32, i32) -> [f32; 4]) {
         let mut data = Vec::new();
         for y in b.y0..b.y1 {
             for x in b.x0..b.x1 {
-                data.extend(photocraft_raster::from_rgba(&fmt, f(x, y)));
+                data.extend(sary_raster::from_rgba(&fmt, f(x, y)));
             }
         }
         surf.write_region(b, &data);
@@ -45,7 +45,7 @@ fn disc(x: i32, y: i32) -> [f32; 4] {
 
 fn select_left_half(s: &mut Session) {
     s.edit("sel", |doc, _| {
-        let mut sel = Surface::new(photocraft_color::PixelFormat::GRAY8);
+        let mut sel = Surface::new(sary_color::PixelFormat::GRAY8);
         sel.write_region(Rect::new(0, 0, 20, 30), &vec![1.0; 600]);
         doc.selection = Some(sel);
         Ok(())
@@ -76,7 +76,7 @@ fn mask_apply_from_transparency_hide_selection() {
         assert_eq!(l.mask.as_ref().unwrap().value(30, 5), 1.0);
         assert_eq!(l.surface().unwrap().rgba(30, 5)[3], 1.0);
         // The composite looks the same.
-        let px = photocraft_compose::render(doc(&s), Rect::from_xywh(5, 5, 1, 1)).px[0];
+        let px = sary_compose::render(doc(&s), Rect::from_xywh(5, 5, 1, 1)).px[0];
         assert_eq!(px[3], 0.0);
         s.execute("edit.undo", json!({})).unwrap();
         assert!(active(&s).mask.is_none());
@@ -164,7 +164,7 @@ fn blending_options_blend_if() {
         let mut s = session(depth, "rgb");
         // Black on the left, white on the right.
         paint(&mut s, |x, _| if x < 20 { [0.0, 0.0, 0.0, 1.0] } else { [1.0; 4] });
-        let at = |s: &Session, x: i32| photocraft_compose::flatten(doc(s)).get(x, 5);
+        let at = |s: &Session, x: i32| sary_compose::flatten(doc(s)).get(x, 5);
         // Gray › This Layer: black point 50 hides the black half.
         s.execute("layer.layerStyle.blendingOptions", json!({"blendIf": {"channel": "gray", "thisLayer": [50, 255]}})).unwrap();
         assert_eq!(at(&s, 5)[3], 0.0, "depth {depth}");
@@ -222,7 +222,7 @@ fn blend_if_rejects_bad_params() {
 
 #[test]
 fn blending_options_advanced_blending() {
-    use photocraft_doc::{AdvancedBlending, Knockout};
+    use sary_doc::{AdvancedBlending, Knockout};
     for depth in DEPTHS {
         let mut s = session(depth, "rgb");
         paint(&mut s, |x, _| if x < 20 { [0.0, 0.0, 1.0, 1.0] } else { [0.0; 4] });
@@ -256,7 +256,7 @@ fn blending_options_advanced_blending() {
         assert_eq!(l.excluded_channels, 0b010);
         // A deep knockout at fill 0 with no Background reveals transparency where the layer has
         // pixels.
-        let p = photocraft_compose::flatten(doc(&s)).get(5, 5);
+        let p = sary_compose::flatten(doc(&s)).get(5, 5);
         assert!(p[3] < 2.0 / 255.0, "{depth}: {p:?}");
         // Inspect reports the switches; omitted keys keep their values; one undo step each.
         let info = crate::inspect::layer(active(&s));
@@ -336,7 +336,7 @@ fn create_layer_splits_effects_and_keeps_the_look() {
     s.execute("layer.layerStyle.dropShadow", json!({"blend": "normal", "distance": 4, "size": 2, "opacity": 60})).unwrap();
     s.execute("layer.layerStyle.colorOverlay", json!({"color": "#ff8000", "opacity": 50, "add": true})).unwrap();
     let id = active(&s).id;
-    let before = photocraft_compose::flatten(doc(&s));
+    let before = sary_compose::flatten(doc(&s));
     let n0 = doc(&s).layers.len();
     let r = s.execute("layer.layerStyle.createLayer", json!({})).unwrap();
     assert_eq!(r["layers"], json!(2));
@@ -346,7 +346,7 @@ fn create_layer_splits_effects_and_keeps_the_look() {
     assert!(d.layers[i - 1].name.ends_with("Drop Shadow") && !d.layers[i - 1].clipped);
     assert!(d.layers[i + 1].name.ends_with("Color Overlay") && d.layers[i + 1].clipped);
     assert!(d.layers[i].effects.items.is_empty());
-    let after = photocraft_compose::flatten(d);
+    let after = sary_compose::flatten(d);
     let worst = before.px.iter().zip(&after.px).map(|(a, b)| (0..4).map(|c| (a[c] - b[c]).abs()).fold(0.0, f32::max)).fold(0.0, f32::max);
     assert!(worst < 3.0 / 255.0, "composite changed by {}", worst * 255.0);
     assert!(!s.is_enabled("layer.layerStyle.createLayer"));
@@ -396,11 +396,11 @@ fn stack_modes_render_from_the_nested_layers() {
             let mut l = Layer::raster(format!("f{k}"), fmt);
             let v = if k == 2 { 1.0 } else { 0.4 };
             let surf = l.surface_mut().unwrap();
-            surf.write_region(Rect::new(0, 0, 40, 30), &photocraft_raster::from_rgba(&fmt, [0.4, 0.4, 0.4, 1.0]).repeat(1200));
-            surf.write_region(Rect::new(3, 3, 4, 4), &photocraft_raster::from_rgba(&fmt, [v, v, v, 1.0]));
+            surf.write_region(Rect::new(0, 0, 40, 30), &sary_raster::from_rgba(&fmt, [0.4, 0.4, 0.4, 1.0]).repeat(1200));
+            surf.write_region(Rect::new(3, 3, 4, 4), &sary_raster::from_rgba(&fmt, [v, v, v, 1.0]));
             kids.push(l);
         }
-        let g = Layer::new("stack", LayerContent::Group(photocraft_doc::Group { children: kids, expanded: true, artboard: None }));
+        let g = Layer::new("stack", LayerContent::Group(sary_doc::Group { children: kids, expanded: true, artboard: None }));
         let smart = crate::smart_cmds::layer_to_smart(doc, &g)?;
         let id = smart.id;
         doc.layers = vec![smart];
@@ -429,10 +429,10 @@ fn stack_modes_render_from_the_nested_layers() {
     }
     s.execute("layer.smartObjects.stackMode.none", json!({})).unwrap();
     assert!(at(&s, 3, 3)[0] > 0.9);
-    // The stack mode survives .pcraft.
+    // The stack mode survives .sary.
     s.execute("layer.smartObjects.stackMode.mean", json!({})).unwrap();
-    let bytes = photocraft_format::save_to_bytes(doc(&s), &Default::default()).unwrap();
-    let back = photocraft_format::load_from_bytes(&bytes).unwrap();
+    let bytes = sary_format::save_to_bytes(doc(&s), &Default::default()).unwrap();
+    let back = sary_format::load_from_bytes(&bytes).unwrap();
     match &back.layers[0].content {
         LayerContent::Smart(sm) => assert_eq!(sm.stack_mode, Some(StackMode::Mean)),
         _ => panic!(),
@@ -471,7 +471,7 @@ fn reveal_in_finder_dry_run_and_enabled() {
     s.edit("linked", |doc, active| {
         let mut l = Layer::new(
             "linked",
-            LayerContent::Smart(photocraft_doc::SmartObject::new(SmartSource::Linked { path: link.clone() }, photocraft_geom::Affine::IDENTITY, None)),
+            LayerContent::Smart(sary_doc::SmartObject::new(SmartSource::Linked { path: link.clone() }, sary_geom::Affine::IDENTITY, None)),
         );
         l.visible = true;
         *active = Some(doc.insert_above(*active, l));
@@ -489,10 +489,10 @@ fn reveal_in_finder_dry_run_and_enabled() {
 fn reveal_follows_linked_paths_like_the_link_and_passes_paths_as_paths() {
     let mut s = session(8, "rgb");
     let folder = std::env::temp_dir().join("pics");
-    s.active_mut().unwrap().path = Some(folder.join("doc.pcraft").to_string_lossy().into_owned());
+    s.active_mut().unwrap().path = Some(folder.join("doc.sary").to_string_lossy().into_owned());
     let mut link = |path: &str| {
         s.edit("linked", |doc, active| {
-            let so = photocraft_doc::SmartObject::new(SmartSource::Linked { path: path.into() }, photocraft_geom::Affine::IDENTITY, None);
+            let so = sary_doc::SmartObject::new(SmartSource::Linked { path: path.into() }, sary_geom::Affine::IDENTITY, None);
             *active = Some(doc.insert_above(*active, Layer::new("linked", LayerContent::Smart(so))));
             Ok(())
         })
@@ -519,7 +519,7 @@ fn reveal_follows_linked_paths_like_the_link_and_passes_paths_as_paths() {
 /// folder: a link stored as `tool.jar/a.png` names a file, not a folder, as its parent.
 #[test]
 fn reveal_on_linux_never_hands_xdg_open_a_file() {
-    let dir = std::env::temp_dir().join(format!("photocraft-reveal-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-reveal-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("tool.jar");
     std::fs::write(&file, b"not a folder").unwrap();
@@ -573,13 +573,13 @@ fn load_files_into_stack_as_smart_object_then_median() {
     for (k, v) in [0.2f32, 0.2, 0.9].iter().enumerate() {
         let d = Document::with_background(
             "f",
-            photocraft_doc::Size::new(6, 4),
-            photocraft_color::ColorMode::Rgb,
-            photocraft_color::SampleType::U8,
-            photocraft_doc::Color::rgba(*v, *v, *v, 1.0),
+            sary_doc::Size::new(6, 4),
+            sary_color::ColorMode::Rgb,
+            sary_color::SampleType::U8,
+            sary_doc::Color::rgba(*v, *v, *v, 1.0),
         );
         let p = dir.join(format!("f{k}.png"));
-        std::fs::write(&p, photocraft_io::export(&d, "f.png", &Default::default()).unwrap().bytes).unwrap();
+        std::fs::write(&p, sary_io::export(&d, "f.png", &Default::default()).unwrap().bytes).unwrap();
         paths.push(p.to_string_lossy().into_owned());
     }
     let mut s = Session::new();
@@ -587,7 +587,7 @@ fn load_files_into_stack_as_smart_object_then_median() {
     assert_eq!(doc(&s).layers.len(), 1);
     assert!(matches!(doc(&s).layers[0].content, LayerContent::Smart(_)));
     s.execute("layer.smartObjects.stackMode.median", json!({})).unwrap();
-    let px = photocraft_compose::render(doc(&s), Rect::from_xywh(2, 2, 1, 1)).px[0];
+    let px = sary_compose::render(doc(&s), Rect::from_xywh(2, 2, 1, 1)).px[0];
     assert!((px[0] - 0.2).abs() < 2.0 / 255.0, "{px:?}");
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -658,11 +658,11 @@ fn applying_a_feathered_mask_preserves_its_soft_composite() {
             Ok(())
         })
         .unwrap();
-        let before = photocraft_compose::flatten(doc(&s)).px;
+        let before = sary_compose::flatten(doc(&s)).px;
         assert!(before[15 * 40 + 19][3] > 0.0 && before[15 * 40 + 19][3] < 1.0, "mask must start with a soft edge");
         s.execute("layer.layerMask.apply", json!({})).unwrap();
         assert!(active(&s).mask.is_none(), "Apply removes the pixel mask");
-        let after = photocraft_compose::flatten(doc(&s)).px;
+        let after = sary_compose::flatten(doc(&s)).px;
         for (a, b) in before.iter().zip(&after) {
             assert!((a[3] - b[3]).abs() <= 1.0 / 255.0 + 1e-5, "depth {depth}: alpha {a:?} became {b:?}");
         }
@@ -692,13 +692,13 @@ fn from_transparency_preserves_mask_coverage_outside_the_canvas() {
     for depth in DEPTHS {
         let mut s = session(depth, "rgb");
         paint(&mut s, |_, _| [1.0, 0.0, 0.0, 0.5]);
-        let before = photocraft_compose::flatten(doc(&s)).px;
+        let before = sary_compose::flatten(doc(&s)).px;
         s.execute("layer.translate", json!({"dx": 20})).unwrap();
         s.execute("layer.layerMask.fromTransparency", json!({})).unwrap();
         let mask = active(&s).mask.as_ref().unwrap();
         assert!((mask.value(50, 10) - 0.5).abs() < 1.0 / 255.0 + 1e-6, "off-canvas mask at depth {depth}");
         s.execute("layer.translate", json!({"dx": -20})).unwrap();
-        let after = photocraft_compose::flatten(doc(&s)).px;
+        let after = sary_compose::flatten(doc(&s)).px;
         for (a, b) in before.iter().zip(&after) {
             assert!((a[3] - b[3]).abs() <= 1.0 / 255.0 + 1e-6, "alpha changed at depth {depth}: {a:?} -> {b:?}");
         }

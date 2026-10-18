@@ -1,6 +1,6 @@
 [package]
-name = "photocraft-plugins"
-description = "Sandboxed WebAssembly filter plug-ins: a resource-limited wasmi host for the PhotoCraft plug-in ABI"
+name = "sary-plugins"
+description = "Sandboxed WebAssembly filter plug-ins: a resource-limited wasmi host for the Sary plug-in ABI"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,9 +10,9 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-photocraft-geom = { workspace = true }
-photocraft-color = { workspace = true }
-photocraft-raster = { workspace = true }
+sary-geom = { workspace = true }
+sary-color = { workspace = true }
+sary-raster = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

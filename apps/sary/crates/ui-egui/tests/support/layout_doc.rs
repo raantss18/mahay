@@ -9,10 +9,10 @@
 
 #![allow(dead_code)]
 
-use photocraft_color::{BlendMode, Color, ColorMode, SampleType};
-use photocraft_doc::{Document, Effect, FxCommon, FxPaint, Gradient, Layer, LayerContent, LayerId, LayerMask, PixelFormat, StrokeFx, StrokePosition};
-use photocraft_engine::Session;
-use photocraft_geom::{Rect, Size};
+use sary_color::{BlendMode, Color, ColorMode, SampleType};
+use sary_doc::{Document, Effect, FxCommon, FxPaint, Gradient, Layer, LayerContent, LayerId, LayerMask, PixelFormat, StrokeFx, StrokePosition};
+use sary_engine::Session;
+use sary_geom::{Rect, Size};
 use serde_json::{Value, json};
 
 /// Size and content knobs.
@@ -285,7 +285,7 @@ pub fn build(spec: Spec) -> (Document, Handles) {
         bg.effects.items = vec![drop_shadow(px(8.0) as f32, px(18.0) as f32)];
         let mut img = t(c[1]);
         // Image masked to the card's top (layer mask).
-        let b = photocraft_compose::layer_bounds(&img, Rect::new(0, 0, w, h));
+        let b = sary_compose::layer_bounds(&img, Rect::new(0, 0, w, h));
         let mut m = LayerMask::reveal_all();
         m.surface.fill_rect(Rect::new(b.x0, b.y1 - (b.height() as i32 / 6), b.x1, b.y1), &[0.0]);
         img.mask = Some(m);
@@ -316,7 +316,7 @@ pub fn build(spec: Spec) -> (Document, Handles) {
 
     let mut tile_layers = Vec::new();
     for (i, mut l) in tiles.into_iter().enumerate() {
-        let b = photocraft_compose::layer_bounds(&l, Rect::new(0, 0, w, h));
+        let b = sary_compose::layer_bounds(&l, Rect::new(0, 0, w, h));
         let mut m = LayerMask::reveal_all();
         m.surface.fill_rect(Rect::new(b.x0, b.y0, b.x0 + b.width() as i32 / 8, b.y1), &[0.0]);
         l.mask = Some(m);

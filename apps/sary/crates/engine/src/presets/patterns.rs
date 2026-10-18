@@ -4,7 +4,7 @@
 //! Groups hold pattern **ids**. Library patterns that are in no group (newly defined or imported)
 //! are shown in a trailing "Patterns" group; ids whose pattern was deleted are dropped.
 
-use photocraft_doc::{Fill, LayerContent};
+use sary_doc::{Fill, LayerContent};
 use serde_json::{Value, json};
 
 use super::{Group, always, bad, edit_groups, group_index, req_str, str_param};
@@ -35,7 +35,7 @@ pub fn sync(s: &mut Session) {
 }
 
 /// The selected pattern, if it is still in the library.
-pub fn current(s: &Session) -> Option<&photocraft_doc::Pattern> {
+pub fn current(s: &Session) -> Option<&sary_doc::Pattern> {
     let id = s.presets.pattern.as_deref()?;
     s.patterns.items.iter().find(|p| p.id == id)
 }
@@ -59,12 +59,12 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
     Ok(json!({"groups": groups, "current": current(s).map(|p| p.id.clone())}))
 }
 
-fn pattern_key(s: &Session, p: &Value, cmd: &str) -> Result<photocraft_doc::Pattern> {
+fn pattern_key(s: &Session, p: &Value, cmd: &str) -> Result<sary_doc::Pattern> {
     let key = str_param(p, "pattern").unwrap_or("");
     crate::pattern_cmds::resolve(s, key).ok_or_else(|| bad(cmd, format!("no pattern \"{key}\" (see pattern.presets.list)")))
 }
 
-fn active_pattern_fill(s: &Session) -> Option<photocraft_doc::LayerId> {
+fn active_pattern_fill(s: &Session) -> Option<sary_doc::LayerId> {
     let d = s.active()?;
     let id = d.active_layer?;
     matches!(d.doc.layer(id)?.content, LayerContent::Fill(Fill::Pattern { .. })).then_some(id)
@@ -140,7 +140,7 @@ fn edit(s: &mut Session, p: &Value) -> Result<Value> {
             for k in &keys {
                 // Only library patterns can be deleted here; a document-only pattern must
                 // fail the whole batch up front rather than midway through it.
-                let id = photocraft_doc::pattern::find(&s.patterns.items, k, k)
+                let id = sary_doc::pattern::find(&s.patterns.items, k, k)
                     .map(|q| q.id.clone())
                     .ok_or_else(|| bad(CMD, format!("no library pattern \"{k}\"")))?;
                 if !ids.contains(&id) {

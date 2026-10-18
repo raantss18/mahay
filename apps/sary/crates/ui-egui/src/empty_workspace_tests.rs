@@ -10,18 +10,18 @@ use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 
 use crate::file_dialog::{FileDialogReply, FileDialogRequest};
-use crate::{PhotocraftApp, Services};
+use crate::{SaryApp, Services};
 
 type Requests = Rc<RefCell<Vec<(FileDialogRequest, FileDialogReply)>>>;
 
-fn harness(home: bool) -> (Harness<'static, PhotocraftApp>, Requests) {
+fn harness(home: bool) -> (Harness<'static, SaryApp>, Requests) {
     let requests: Requests = Default::default();
     let held = requests.clone();
     let services = Services { file_dialog: Some(Box::new(move |request, _parent, reply| held.borrow_mut().push((request, reply)))), ..Default::default() };
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+    let mut app = SaryApp::new(sary_engine::Session::new(), services);
     app.session.edit_prefs(|p| p.general.auto_show_home_screen = home);
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             // Fonts set up after the first frame only apply from the next one.
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
@@ -32,17 +32,17 @@ fn harness(home: bool) -> (Harness<'static, PhotocraftApp>, Requests) {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     (h, requests)
 }
 
-fn button(h: &mut Harness<'static, PhotocraftApp>, at: Pos2, pressed: bool) {
+fn button(h: &mut Harness<'static, SaryApp>, at: Pos2, pressed: bool) {
     h.event(Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Modifiers::NONE });
 }
 
 /// `count` clicks two frames apart at `at`, after letting the clock move past earlier clicks.
-fn clicks(h: &mut Harness<'static, PhotocraftApp>, at: Pos2, count: usize) {
+fn clicks(h: &mut Harness<'static, SaryApp>, at: Pos2, count: usize) {
     h.hover_at(at);
     for _ in 0..40 {
         h.step();

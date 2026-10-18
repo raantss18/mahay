@@ -1,8 +1,8 @@
 //! Property-based round-trip tests.
 
-use photocraft_psd::compression::{PlaneLayout, decode_planes, encode_planes, packbits};
-use photocraft_psd::testgen;
-use photocraft_psd::*;
+use sary_psd::compression::{PlaneLayout, decode_planes, encode_planes, packbits};
+use sary_psd::testgen;
+use sary_psd::*;
 use proptest::prelude::*;
 
 fn version() -> impl Strategy<Value = Version> {
@@ -168,7 +168,7 @@ proptest! {
         stops in proptest::collection::vec((unit(), unit(), any::<u8>()), 0..12),
         opacity in proptest::collection::vec((unit(), unit(), unit()), 0..12),
     ) {
-        use photocraft_psd::grd::{self, GrdColor, GrdGradient, GrdStop};
+        use sary_psd::grd::{self, GrdColor, GrdGradient, GrdStop};
         let g = GrdGradient {
             name: "p".into(),
             noise: false,
@@ -214,7 +214,7 @@ proptest! {
     fn ase_roundtrip_is_byte_stable_after_one_write(
         swatches in proptest::collection::vec(("[ -~]{0,20}", any::<u8>()), 0..10),
     ) {
-        use photocraft_psd::ase::{self, AseColor, AseEntry, AseFile, AseKind, AseSwatch};
+        use sary_psd::ase::{self, AseColor, AseEntry, AseFile, AseKind, AseSwatch};
         let mk = |(name, tone): &(String, u8)| AseSwatch {
             name: name.clone(),
             color: AseColor::Rgb([*tone as f32 / 255.0, 0.0, 0.0]),
@@ -236,7 +236,7 @@ proptest! {
     fn aco_roundtrip_is_byte_stable(
         swatches in proptest::collection::vec(("[ -~]{0,20}", any::<u8>(), any::<u16>()), 0..10),
     ) {
-        use photocraft_psd::aco::{self, AcoColor, AcoSwatch};
+        use sary_psd::aco::{self, AcoColor, AcoSwatch};
         let s: Vec<AcoSwatch> = swatches.iter().map(|(name, space, v)| AcoSwatch {
             name: name.clone(),
             color: match space % 3 {
@@ -255,7 +255,7 @@ proptest! {
     /// bytes settle after one round trip.
     #[test]
     fn aco_long_names_settle_after_one_truncation(len in 1024usize..4000) {
-        use photocraft_psd::aco::{self, AcoColor, AcoSwatch};
+        use sary_psd::aco::{self, AcoColor, AcoSwatch};
         let s = vec![AcoSwatch { name: "x".repeat(len), color: AcoColor::Gray(5000) }];
         let once = aco::write(&s).unwrap();
         let back = aco::parse(&once).unwrap();
@@ -272,9 +272,9 @@ proptest! {
         bit in 0u32..8,
         mask in 0u8..=255,
     ) {
-        use photocraft_psd::{aco, ase, grd};
+        use sary_psd::{aco, ase, grd};
         let grd_bytes = {
-            use photocraft_psd::grd::{GrdColor, GrdGradient, GrdStop, write};
+            use sary_psd::grd::{GrdColor, GrdGradient, GrdStop, write};
             write(&[GrdGradient {
                 name: "d".into(),
                 noise: false,
@@ -283,7 +283,7 @@ proptest! {
             }])
         };
         let ase_bytes = {
-            use photocraft_psd::ase::{write, AseColor, AseEntry, AseFile, AseKind, AseSwatch};
+            use sary_psd::ase::{write, AseColor, AseEntry, AseFile, AseKind, AseSwatch};
             let sw = || AseSwatch { name: "d".into(), color: AseColor::Rgb([1.0, 0.0, 0.0]), kind: AseKind::Process };
             write(&AseFile {
                 entries: vec![AseEntry::Group { name: "g".into(), swatches: vec![sw()] }, AseEntry::Swatch(sw())],
@@ -309,7 +309,7 @@ proptest! {
     /// surrogate pair. The cap counts UTF-16 code units, so that split is the boundary case.
     #[test]
     fn aco_non_ascii_names_are_capped_and_still_round_trip(len in 600usize..2600) {
-        use photocraft_psd::aco::{self, AcoColor, AcoSwatch};
+        use sary_psd::aco::{self, AcoColor, AcoSwatch};
         // One leading ASCII character, then two-unit pairs. Without it the cap would always
         // fall on a pair boundary and the half-written case this property exists for would
         // never happen.
@@ -328,9 +328,9 @@ proptest! {
     /// Arbitrary bytes must never panic in any of the three parsers, whatever the length.
     #[test]
     fn swatch_parsers_never_panic_on_arbitrary_bytes(data in proptest::collection::vec(any::<u8>(), 0..400)) {
-        let _ = photocraft_psd::grd::parse(&data);
-        let _ = photocraft_psd::ase::parse(&data);
-        let _ = photocraft_psd::aco::parse(&data);
+        let _ = sary_psd::grd::parse(&data);
+        let _ = sary_psd::ase::parse(&data);
+        let _ = sary_psd::aco::parse(&data);
     }
 }
 
@@ -372,7 +372,7 @@ proptest! {
     fn metadata_shmd_round_trip_is_exact(
         items in proptest::collection::vec((any::<[u8; 4]>(), proptest::collection::vec(any::<u8>(), 0..40)), 0..8),
     ) {
-        use photocraft_psd::metadata::{MetadataItem, parse_shmd, write_shmd};
+        use sary_psd::metadata::{MetadataItem, parse_shmd, write_shmd};
         let items: Vec<MetadataItem> = items.into_iter().map(|(k, d)| MetadataItem::new(k, d)).collect();
         let bytes = write_shmd(&items);
         let back = parse_shmd(&bytes).unwrap();
@@ -382,14 +382,14 @@ proptest! {
 
     #[test]
     fn metadata_shmd_never_panics(data in proptest::collection::vec(any::<u8>(), 0..400)) {
-        let _ = photocraft_psd::metadata::parse_shmd(&data);
+        let _ = sary_psd::metadata::parse_shmd(&data);
     }
 
     /// A built pattern round-trips through both the `Patt`/`Pat2`/`Pat3` block and the `.pat` file,
     /// and re-serialising a parsed block is byte-stable.
     #[test]
     fn pattern_blocks_round_trip(ps in proptest::collection::vec(pattern_strategy(), 0..4)) {
-        use photocraft_psd::patterns::{parse_pat_file, parse_pattern_block, write_pat_file, write_pattern_block};
+        use sary_psd::patterns::{parse_pat_file, parse_pattern_block, write_pat_file, write_pattern_block};
         let blk = write_pattern_block(&ps).unwrap();
         prop_assert_eq!(parse_pattern_block(&blk).unwrap(), ps.clone());
         prop_assert_eq!(write_pattern_block(&parse_pattern_block(&blk).unwrap()).unwrap(), blk);
@@ -399,17 +399,17 @@ proptest! {
 
     #[test]
     fn pattern_parsers_never_panic(data in proptest::collection::vec(any::<u8>(), 0..400)) {
-        let _ = photocraft_psd::patterns::parse_pattern_block(&data);
-        let _ = photocraft_psd::patterns::parse_pat_file(&data);
+        let _ = sary_psd::patterns::parse_pattern_block(&data);
+        let _ = sary_psd::patterns::parse_pat_file(&data);
     }
 
     /// A filter-effects cache with one or more items (each with cached slots and an optional mask)
     /// re-serialises and re-parses byte for byte, and the cached planes decode.
     #[test]
     fn filter_effects_round_trip(items in proptest::collection::vec(("[ -~]{0,8}", any::<bool>()), 0..4)) {
-        use photocraft_psd::compression::Compression;
-        use photocraft_psd::filter_effects::{EffectsPlane, FilterEffects, FilterEffectsItem};
-        use photocraft_psd::layer::Rect;
+        use sary_psd::compression::Compression;
+        use sary_psd::filter_effects::{EffectsPlane, FilterEffects, FilterEffectsItem};
+        use sary_psd::layer::Rect;
         let rect = Rect { top: 1, left: 2, bottom: 5, right: 6 };
         let plane = |v: u8| EffectsPlane::encode(Compression::Rle, &[v; 16], 4, 4, 8).unwrap();
         let items: Vec<FilterEffectsItem> = items
@@ -435,7 +435,7 @@ proptest! {
 
     #[test]
     fn filter_effects_never_panics(data in proptest::collection::vec(any::<u8>(), 0..400)) {
-        if let Ok(fx) = photocraft_psd::filter_effects::FilterEffects::parse(&data) {
+        if let Ok(fx) = sary_psd::filter_effects::FilterEffects::parse(&data) {
             for it in &fx.items {
                 let _ = it.decoded_mask();
             }
@@ -446,7 +446,7 @@ proptest! {
     /// Resolution info is 16 fixed-point bytes; a built value survives a byte round trip.
     #[test]
     fn resolution_info_round_trips(dpi in 1.0f64..=10_000.0) {
-        use photocraft_psd::resources::ResolutionInfo;
+        use sary_psd::resources::ResolutionInfo;
         let ri = ResolutionInfo::from_dpi(dpi);
         prop_assert_eq!(ResolutionInfo::from_bytes(&ri.to_bytes()).unwrap(), ri);
     }
@@ -454,11 +454,11 @@ proptest! {
     /// The typed view of an arbitrary resource id over arbitrary data never panics.
     #[test]
     fn resource_parsed_never_panics(id in any::<u16>(), data in proptest::collection::vec(any::<u8>(), 0..64)) {
-        use photocraft_psd::resources::ImageResource;
+        use sary_psd::resources::ImageResource;
         let r = ImageResource::new(id, data);
         let _ = r.parsed();
         let _ = r.xmp_str();
-        let _ = photocraft_psd::resources::VersionInfo::from_bytes(&r.data);
+        let _ = sary_psd::resources::VersionInfo::from_bytes(&r.data);
     }
 
     /// `parsed` (typed) and `check_structure` (strict inner re-parse) over an arbitrary key and
@@ -488,11 +488,11 @@ proptest! {
     /// across the metadata, pattern and filter-effects parsers. None may panic.
     #[test]
     fn aux_parsers_never_panic_on_damaged_valid_blocks(idx in 0usize..4000, bit in 0u32..8, add in 0u8..=255) {
-        use photocraft_psd::compression::Compression;
-        use photocraft_psd::filter_effects::{EffectsPlane, FilterEffects, FilterEffectsItem};
-        use photocraft_psd::layer::Rect;
-        use photocraft_psd::metadata::{self, MetadataItem};
-        use photocraft_psd::patterns::{self, PsdPattern};
+        use sary_psd::compression::Compression;
+        use sary_psd::filter_effects::{EffectsPlane, FilterEffects, FilterEffectsItem};
+        use sary_psd::layer::Rect;
+        use sary_psd::metadata::{self, MetadataItem};
+        use sary_psd::patterns::{self, PsdPattern};
 
         let shmd = metadata::write_shmd(&[MetadataItem::new(*b"cmls", vec![1, 2, 3, 4]), MetadataItem::new(*b"cust", vec![9; 6])]);
         let pattern = PsdPattern {

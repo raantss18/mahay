@@ -1,4 +1,4 @@
-//! DeckCraft geometry: units, shape transforms and preset shape generators.
+//! Seho geometry: units, shape transforms and preset shape generators.
 //!
 //! The document model keeps positions in points (1/72 inch) as `f64`. Office Open XML stores EMU
 //! (English Metric Units, 12 700 per point); [`emu_to_pt`] and [`pt_to_emu`] convert losslessly for

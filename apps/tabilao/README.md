@@ -1,13 +1,13 @@
 <p align="center">
-  <a href="https://getartcraft.com/">
+  <a href="https://github.com/raantss18/mahay">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/artcraft-logo-white.svg">
-      <img alt="ArtCraft" src="docs/brand/artcraft-logo.svg" width="200">
+      <source media="(prefers-color-scheme: dark)" srcset="docs/brand/mahay-logo-white.svg">
+      <img alt="Mahay" src="docs/brand/mahay-logo.svg" width="200">
     </picture>
   </a>
 </p>
 
-<h1 align="center">GridCraft</h1>
+<h1 align="center">Tabilao</h1>
 
 <p align="center">
   <b>Spreadsheets and data; an open-source, clean-room reimplementation of Microsoft Excel, rebuilt in pure Rust.</b>
@@ -16,7 +16,7 @@
 <p align="center">
   A fast, open-source, clean-room take on the Excel workflow. It runs natively on macOS,
   Windows, Linux and BSD, and in the browser via WebAssembly.<br>
-  <i>By the ArtCraft team.</i>
+  <i>By the Mahay team.</i>
 </p>
 
 <p align="center">
@@ -27,35 +27,35 @@
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://discord.gg/mahay"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/gridcraft"><b>GridCraft on getartcraft.com</b></a> ·
-  <a href="https://getartcraft.com/">ArtCraft</a> ·
-  <a href="https://getartcraft.com/apps">All Crafting Apps</a>
+  <a href="https://github.com/raantss18/mahay"><b>Tabilao on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay</a> ·
+  <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
 
 <br>
 
 <p align="center">
-  <img src="docs/images/hero-sales.png" alt="GridCraft showing a quarterly sales dashboard: a styled table with banded rows, filter buttons, a totals row, data bars, arrow icons and sparklines, next to a clustered column chart and a pie chart" width="100%">
-  <br><sub><b>Quarterly Sales Dashboard</b>: a table with a totals row, conditional formatting, sparklines and two live charts — built entirely from GridCraft commands (<code>File → New → Sample</code>).</sub>
+  <img src="docs/images/hero-sales.png" alt="Tabilao showing a quarterly sales dashboard: a styled table with banded rows, filter buttons, a totals row, data bars, arrow icons and sparklines, next to a clustered column chart and a pie chart" width="100%">
+  <br><sub><b>Quarterly Sales Dashboard</b>: a table with a totals row, conditional formatting, sparklines and two live charts — built entirely from Tabilao commands (<code>File → New → Sample</code>).</sub>
 </p>
 
 > [!NOTE]
-> **ArtCraft is a community of artists from all walks of life.** Painters, photographers,
+> **Mahay is a community of artists from all walks of life.** Painters, photographers,
 > filmmakers, illustrators, designers, animators, hobbyists, and people who picked up a pencil
-> last week. If you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/artcraft).**
+> last week. If you make things, you're one of us. **[Come say hi on Discord](https://discord.gg/mahay).**
 
 <p align="center">
   <a href="#a-look-around">A look around</a> ·
-  <a href="#why-gridcraft">Why GridCraft</a> ·
+  <a href="#why-tabilao">Why Tabilao</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#for-agents-mcp-cli-and-the-control-channel">For agents</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#roadmap">Roadmap</a> ·
-  <a href="#the-crafting-apps">The Crafting Apps</a> ·
+  <a href="#the-crafting-apps">The Mahay apps</a> ·
   <a href="#license-and-credits">License and credits</a>
 </p>
 
@@ -76,11 +76,11 @@
 </tr>
 </table>
 
-## Why GridCraft
+## Why Tabilao
 
 - **Familiar.** Excel's ribbon, formula bar, Name Box, sheet tabs, keyboard shortcuts, fill
   handle, point-mode formula entry with coloured references, Format Cells, Paste Special,
-  conditional formatting, tables, charts and more. If you know Excel, you already know GridCraft.
+  conditional formatting, tables, charts and more. If you know Excel, you already know Tabilao.
 - **Compatible.** XLSX is the native format: styles, themes, formulas (including dynamic arrays),
   tables, conditional formats, validation, comments, hyperlinks, charts, pictures, sparklines,
   PivotTables and print settings round-trip. CSV and TSV too.
@@ -102,10 +102,10 @@
 ## Quick start
 
 ```sh
-cargo run --release -p gridcraft                              # desktop app
-cargo run --release -p gridcraft -- --sample sales            # open a sample (sales, budget, grades)
-cargo run --release -p gridcraft -- book.xlsx                 # open a workbook
-cargo run --release -p gridcraft -- --sample sales --control 7979   # + JSON control channel
+cargo run --release -p tabilao                              # desktop app
+cargo run --release -p tabilao -- --sample sales            # open a sample (sales, budget, grades)
+cargo run --release -p tabilao -- book.xlsx                 # open a workbook
+cargo run --release -p tabilao -- --sample sales --control 7979   # + JSON control channel
 cargo xtask ci                                                 # fmt, clippy, tests, assets, layering, wasm
 ```
 
@@ -115,8 +115,8 @@ Workbooks, clipboard exchange, and programmatic APIs retain canonical English sy
 ### Web
 
 ```sh
-cd apps/gridcraft-web && trunk build --release     # → dist/web (serve it with any static server)
-cd apps/gridcraft-web && trunk serve --release     # http://127.0.0.1:8771  (?sample=sales opens a sample)
+cd apps/tabilao-web && trunk build --release     # → dist/web (serve it with any static server)
+cd apps/tabilao-web && trunk serve --release     # http://127.0.0.1:8771  (?sample=sales opens a sample)
 ```
 
 You need [trunk](https://trunkrs.dev) and the `wasm32-unknown-unknown` target. Open uses the
@@ -147,37 +147,37 @@ Browsers or desktop environments may reserve Alt/F10 for their own menus.
 
 ### Logs
 
-The desktop app writes its log to standard error and to `gridcraft.log` in the `logs` folder
-next to its settings: `~/.config/gridcraft/logs` on Linux and BSD (`$XDG_CONFIG_HOME/gridcraft/logs`
-when set), `~/Library/Application Support/GridCraft/logs` on macOS and
-`%APPDATA%\GridCraft\logs` on Windows. Each start moves the previous log to `gridcraft.1.log` and
-that one to `gridcraft.2.log`, so the log of a run that crashed survives the next start; attach
-them to a bug report. A log file stops growing at 16 MiB. By default GridCraft's own crates log
+The desktop app writes its log to standard error and to `tabilao.log` in the `logs` folder
+next to its settings: `~/.config/tabilao/logs` on Linux and BSD (`$XDG_CONFIG_HOME/tabilao/logs`
+when set), `~/Library/Application Support/Tabilao/logs` on macOS and
+`%APPDATA%\Tabilao\logs` on Windows. Each start moves the previous log to `tabilao.1.log` and
+that one to `tabilao.2.log`, so the log of a run that crashed survives the next start; attach
+them to a bug report. A log file stops growing at 16 MiB. By default Tabilao's own crates log
 at `info` and everything else at `warn`; `RUST_LOG` replaces that with env_logger-style
-directives, e.g. `RUST_LOG=debug` or `RUST_LOG=warn,gridcraft_engine=debug` (a trailing `*`
-matches a prefix: `gridcraft*=debug`). Runs with `GRIDCRAFT_NO_PREFS` set (no saved settings)
+directives, e.g. `RUST_LOG=debug` or `RUST_LOG=warn,tabilao_engine=debug` (a trailing `*`
+matches a prefix: `tabilao*=debug`). Runs with `TABILAO_NO_PREFS` set (no saved settings)
 log to standard error only.
 
 ## For agents: MCP, CLI and the control channel
 
 ```sh
-claude mcp add gridcraft -- gridcraft-cli mcp                 # headless MCP server
-gridcraft-cli mcp --connect 7979                               # MCP bridged to a running window
-gridcraft-cli eval '=XLOOKUP("b",{"a","b"},{1,2})'             # → 2
-gridcraft-cli run --sample budget --cmd 'home.bold={"range":"B4:F4"}' --out budget.xlsx
-gridcraft-cli cat budget.xlsx --range B4:F15                   # aligned text table
-gridcraft-cli commands --search chart                          # every command and its params
+claude mcp add tabilao -- tabilao-cli mcp                 # headless MCP server
+tabilao-cli mcp --connect 7979                               # MCP bridged to a running window
+tabilao-cli eval '=XLOOKUP("b",{"a","b"},{1,2})'             # → 2
+tabilao-cli run --sample budget --cmd 'home.bold={"range":"B4:F4"}' --out budget.xlsx
+tabilao-cli cat budget.xlsx --range B4:F15                   # aligned text table
+tabilao-cli commands --search chart                          # every command and its params
 ```
 
 The MCP server offers tools such as `read_range`, `write_range`, `set_cell`, `evaluate_formula`,
 `format_range`, `insert_chart`, `create_table`, `sort_range`, `filter` and `execute_command`
-(which reaches every one of GridCraft's commands). The desktop app's control channel adds real
+(which reaches every one of Tabilao's commands). The desktop app's control channel adds real
 pointer and keyboard input, dialogs and screenshots. See [`docs/mcp.md`](docs/mcp.md),
 [`docs/cli.md`](docs/cli.md) and [`docs/control-protocol.md`](docs/control-protocol.md).
 
 ## Architecture
 
-GridCraft is an engine-first Cargo workspace with enforced layering (`cargo xtask layers`). The
+Tabilao is an engine-first Cargo workspace with enforced layering (`cargo xtask layers`). The
 egui frontend is a separate crate, so the UI can be swapped without touching the engine.
 
 | Layer | Crates |
@@ -188,7 +188,7 @@ egui frontend is a separate crate, so the UI can be swapped without touching the
 | L3 | `chart` (toolkit-free chart layout and rendering) |
 | L5 | `engine` (session, commands, history, clipboard, fill, sort, filter, file I/O) |
 | L6 | `ui-egui` (Excel-style UI, control channel) · `mcp` (MCP server) |
-| L7 | `apps/gridcraft`, `apps/gridcraft-cli`, `apps/gridcraft-web` |
+| L7 | `apps/tabilao`, `apps/tabilao-cli`, `apps/tabilao-web` |
 
 - **Contributor and agent rules** (clean-room, asset policy, never-crash, quality gates): [`AGENTS.md`](AGENTS.md)
 - **Bundled assets:** each one is listed with its licence in [`ATTRIBUTION.md`](ATTRIBUTION.md)
@@ -196,7 +196,7 @@ egui frontend is a separate crate, so the UI can be swapped without touching the
 
 ## Roadmap
 
-GridCraft is in **alpha**: the core workflow works end to end, but depth, fidelity and file
+Tabilao is in **alpha**: the core workflow works end to end, but depth, fidelity and file
 compatibility are still rough. It covers 89% of the Excel ribbon commands in our catalog
 ([`docs/parity-checklist.md`](docs/parity-checklist.md)) and 513 of Excel's 523 worksheet functions
 ([`docs/function-parity.md`](docs/function-parity.md)); weighted by what Excel users rely on, we
@@ -206,15 +206,15 @@ numbers and estimates are in [ROADMAP.md](ROADMAP.md); the ranked work list is [
 
 ## Downloads
 
-**Download GridCraft** from GitHub: the [latest release](https://github.com/storytold/gridcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/gridcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
+**Download Tabilao** from GitHub: the [latest release](https://github.com/raantss18/mahay/releases/latest) has every build listed below, and [all releases](https://github.com/raantss18/mahay/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
 ### Windows
 
 | Build | Installer | Portable |
 |---|---|---|
-| x64 (64-bit Intel/AMD) | `gridcraft-<ver>-windows-x64.msi` | `gridcraft-<ver>-windows-x64-portable.zip` |
-| arm64 (Snapdragon and other ARM PCs) | `gridcraft-<ver>-windows-arm64.msi` | `gridcraft-<ver>-windows-arm64-portable.zip` |
-| x86 (32-bit) | `gridcraft-<ver>-windows-x86.msi` | `gridcraft-<ver>-windows-x86-portable.zip` |
+| x64 (64-bit Intel/AMD) | `tabilao-<ver>-windows-x64.msi` | `tabilao-<ver>-windows-x64-portable.zip` |
+| arm64 (Snapdragon and other ARM PCs) | `tabilao-<ver>-windows-arm64.msi` | `tabilao-<ver>-windows-arm64-portable.zip` |
+| x86 (32-bit) | `tabilao-<ver>-windows-x86.msi` | `tabilao-<ver>-windows-x86-portable.zip` |
 
 Installers and executables are code-signed. The MSI installer offers an optional desktop shortcut
 (unchecked on a new installation).
@@ -227,7 +227,7 @@ PowerShell, from the folder containing the executable:
 
 ```powershell
 $env:WGPU_BACKEND = "vulkan"
-& .\gridcraft.exe
+& .\tabilao.exe
 Remove-Item Env:WGPU_BACKEND                     # restore the default for later launches
 ```
 
@@ -237,7 +237,7 @@ web backend defaults are unchanged.
 
 **If the app is slow on an older Windows PC, or DirectX 12 can't start:** when DirectX 12 finds no
 graphics card with a driver for it, it only offers Microsoft's software renderer, which draws every
-frame on the processor. In that case GridCraft uses OpenGL instead, without setting anything; if
+frame on the processor. In that case Tabilao uses OpenGL instead, without setting anything; if
 the first renderer fails to start, it tries the other one once. The log file records the choice
 (lines starting with `graphics:`). `WGPU_BACKEND` still overrides it (and then nothing else is
 tried), e.g. `$env:WGPU_BACKEND = "gl"` or `"dx12"`.
@@ -251,54 +251,54 @@ handling again for troubleshooting.
 
 | Build | File | Notes |
 |---|---|---|
-| App, universal (Apple silicon + Intel) | `gridcraft-<ver>-macos-universal.dmg` | Signed and notarized |
-| Command-line tool, universal | `gridcraft-cli-<ver>-macos-universal.zip` | Signed and notarized |
+| App, universal (Apple silicon + Intel) | `tabilao-<ver>-macos-universal.dmg` | Signed and notarized |
+| Command-line tool, universal | `tabilao-cli-<ver>-macos-universal.zip` | Signed and notarized |
 
 ### Linux
 
 | Format | x86_64 | aarch64 (ARM64) | Notes |
 |---|---|---|---|
-| AppImage | `gridcraft-<ver>-linux-x86_64.AppImage` | `gridcraft-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
-| Flatpak | `gridcraft-<ver>-linux-x86_64.flatpak` | `gridcraft-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
-| Debian/Ubuntu | `gridcraft-<ver>-linux-x86_64.deb` | `gridcraft-<ver>-linux-aarch64.deb` | |
-| Fedora/RHEL/openSUSE | `gridcraft-<ver>-linux-x86_64.rpm` | `gridcraft-<ver>-linux-aarch64.rpm` | |
-| Tarball | `gridcraft-<ver>-linux-x86_64.tar.gz` | `gridcraft-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
+| AppImage | `tabilao-<ver>-linux-x86_64.AppImage` | `tabilao-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
+| Flatpak | `tabilao-<ver>-linux-x86_64.flatpak` | `tabilao-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
+| Debian/Ubuntu | `tabilao-<ver>-linux-x86_64.deb` | `tabilao-<ver>-linux-aarch64.deb` | |
+| Fedora/RHEL/openSUSE | `tabilao-<ver>-linux-x86_64.rpm` | `tabilao-<ver>-linux-aarch64.rpm` | |
+| Tarball | `tabilao-<ver>-linux-x86_64.tar.gz` | `tabilao-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
 
 ### FreeBSD
 
 | Build | File |
 |---|---|
-| x86_64 | `gridcraft-<ver>-freebsd-x86_64.tar.gz` |
+| x86_64 | `tabilao-<ver>-freebsd-x86_64.tar.gz` |
 
 ### Web (WebAssembly)
 
 | Build | File | Notes |
 |---|---|---|
-| Static site | `gridcraft-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
+| Static site | `tabilao-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
 
-## The Crafting Apps
+## The Mahay apps
 
-GridCraft is one of the **Crafting Apps**: free, open-source creative tools from the
-[ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
+Tabilao is one of the **Mahay apps**: free, open-source creative tools from the
+[Mahay](https://github.com/raantss18/mahay) team, each written from scratch in Rust and each able to
 stand on its own.
 
 | | App | What it's for | Code | Learn more |
 |:-:|---|---|---|---|
-| <img src="https://raw.githubusercontent.com/storytold/photocraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.photocraft.png" alt="" width="32" height="32"> | **PhotoCraft** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/storytold/photocraft) | [Website](https://getartcraft.com/apps/photocraft) |
-| <img src="https://raw.githubusercontent.com/storytold/vectorcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.vectorcraft.png" alt="" width="32" height="32"> | **VectorCraft** | Vector illustration | [GitHub](https://github.com/storytold/vectorcraft) | [Website](https://getartcraft.com/apps/vectorcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/filmcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.filmcraft.png" alt="" width="32" height="32"> | **FilmCraft** | Video editing, color and sound | [GitHub](https://github.com/storytold/filmcraft) | [Website](https://getartcraft.com/apps/filmcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/lightcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.lightcraft.png" alt="" width="32" height="32"> | **LightCraft** | Photo library and raw development | [GitHub](https://github.com/storytold/lightcraft) | [Website](https://getartcraft.com/apps/lightcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | Page layout and publishing | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/gridcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.gridcraft.png" alt="" width="32" height="32"> | **GridCraft** | **Spreadsheets and data · you are here** | [GitHub](https://github.com/storytold/gridcraft) | [Website](https://getartcraft.com/apps/gridcraft) |
+| <img src="https://raw.githubusercontent.com/raantss18/sary/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.sary.png" alt="" width="32" height="32"> | **Sary** | Image editing: layers, masks, type and real PSD files | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tsipika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tsipika.png" alt="" width="32" height="32"> | **Tsipika** | Vector illustration | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hetsika/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.hetsika.png" alt="" width="32" height="32"> | **Hetsika** | Video editing, color and sound | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/hazavana/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.hazavana.png" alt="" width="32" height="32"> | **Hazavana** | Photo library and raw development | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/taratasy/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.taratasy.png" alt="" width="32" height="32"> | **Taratasy** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tselatra/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tselatra.png" alt="" width="32" height="32"> | **Tselatra** | Motion graphics and visual effects | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/pejy/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pejy.png" alt="" width="32" height="32"> | **Pejy** | Page layout and publishing | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
+| <img src="https://raw.githubusercontent.com/raantss18/tabilao/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.tabilao.png" alt="" width="32" height="32"> | **Tabilao** | **Spreadsheets and data · you are here** | [GitHub](https://github.com/raantss18/mahay) | [Website](https://github.com/raantss18/mahay) |
 
-And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
+And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and video studio for artists who want real control.
 
 <br>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><img alt="Join the ArtCraft community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
+  <a href="https://discord.gg/mahay"><img alt="Join the Mahay community on Discord" src="https://img.shields.io/badge/Join%20us%20on%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="40"></a>
 </p>
 
 <h3 align="center">Come make things with us</h3>
@@ -311,34 +311,34 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
-  <a href="https://getartcraft.com/">getartcraft.com</a> ·
-  <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/gridcraft">GridCraft</a>
+  <a href="https://discord.gg/mahay"><b>discord.gg/mahay</b></a> ·
+  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
+  <a href="https://github.com/raantss18/mahay">Tabilao</a>
 </p>
 
 ## License and credits
 
-GridCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
-Copyright (c) 2026 ArtCraft Team and the GridCraft contributors. Required notices are in [NOTICE](NOTICE).
+Tabilao is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+Copyright (c) 2026 Mahay Team and the Tabilao contributors. Required notices are in [NOTICE](NOTICE).
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
 with its author, source and license in [ATTRIBUTION.md](ATTRIBUTION.md).
 
 All UI icons are drawn in code and are original; the sample workbooks and every screenshot in
-this README were made with GridCraft itself. GridCraft bundles no fonts: it uses the fonts
+this README were made with Tabilao itself. Tabilao bundles no fonts: it uses the fonts
 installed on your system.
 
-The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
-ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and GridCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+The Mahay name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
+Mahay Team and are not covered by this license. They may be used only unmodified, and only as
+part of this repository and Tabilao, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 Forks and modified versions must remove them.
 
-<sub>Microsoft, Excel and Microsoft 365 are trademarks or registered trademarks of Microsoft Corporation in the United States and/or other countries. GridCraft is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Microsoft Corporation; these names are used only to describe the workflows it is compatible with.</sub>
+<sub>Microsoft, Excel and Microsoft 365 are trademarks or registered trademarks of Microsoft Corporation in the United States and/or other countries. Tabilao is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Microsoft Corporation; these names are used only to describe the workflows it is compatible with.</sub>
 
 <br>
 
 <p align="center">
-  <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>
-  <sub>Made by the <a href="https://getartcraft.com/">ArtCraft</a> team and community.</sub>
+  <a href="https://github.com/raantss18/mahay"><img alt="Mahay" src="docs/brand/mahay-mark.svg" width="28"></a><br>
+  <sub>Made by the <a href="https://github.com/raantss18/mahay">Mahay</a> team and community.</sub>
 </p>

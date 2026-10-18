@@ -3,16 +3,16 @@
 //! Geometry follows the automation convention: points from the top-left of the displayed page,
 //! y down. It is converted to PDF user space (crop box, `/Rotate`) here.
 
-use pdfcraft_engine::{
+use taratasy_engine::{
     Edit, LineEnding, Markup, NOTE_SIZE, NewAnnotation, NoteIcon, ReviewState, Rgb, Shape, StampGroup, StampKind, Style, SummarySort,
 };
-use pdfcraft_render::{Annotation, PageInfo};
+use taratasy_render::{Annotation, PageInfo};
 use serde_json::{Value, json};
 
 use crate::{Args, Automation, Content, DEFAULT_DPI, MAX_DPI, Result, ToolError, encode_png, failed};
 
 /// Author used when a tool call names none.
-pub(crate) const DEFAULT_AUTHOR: &str = "PdfCraft";
+pub(crate) const DEFAULT_AUTHOR: &str = "Taratasy";
 
 pub(crate) fn parse_color(s: &str) -> Result<Rgb> {
     let named = match s.to_ascii_lowercase().as_str() {
@@ -378,9 +378,9 @@ impl Automation {
                     let data = std::fs::read(&path).map_err(|e| failed(format!("{}: {e}", path.display())))?;
                     let file = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
                     let icon = match a.opt_str("icon")? {
-                        Some(n) => pdfcraft_engine::AttachIcon::from_name(n)
+                        Some(n) => taratasy_engine::AttachIcon::from_name(n)
                             .ok_or_else(|| ToolError::InvalidArgs(format!("unknown icon {n:?} (PushPin, Paperclip, Graph, Tag)")))?,
-                        None => pdfcraft_engine::AttachIcon::PushPin,
+                        None => taratasy_engine::AttachIcon::PushPin,
                     };
                     Shape::Attachment { at: icon_anchor(&info, x, y), icon, file, data }
                 }
@@ -435,7 +435,7 @@ impl Automation {
     /// Preferences ▸ Date format: set it with `format` and its names' `language` (`auto`
     /// follows the app's interface language, so English here), or read them.
     pub(crate) fn fill_sign_date_format(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::dates;
+        use taratasy_engine::dates;
         let format = a.opt_str("format")?;
         let language = a.opt_str("language")?.map(|l| Some(l).filter(|l| !l.trim().eq_ignore_ascii_case("auto")));
         // Check the format before changing anything, so a bad one leaves both settings alone.
@@ -462,7 +462,7 @@ impl Automation {
     }
 
     pub(crate) fn fill_sign_add(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::FillMark;
+        use taratasy_engine::FillMark;
         let page = self.page(a)?;
         let info = self.doc(a)?.info.pages[page].clone();
         let [x, y] = a.need::<2>("at", "Fill & Sign")?;
@@ -493,25 +493,25 @@ impl Automation {
             let file = std::fs::File::open(&path).map_err(|e| failed(format!("{}: {e}", path.display())))?;
             let image = if scan {
                 let sensitivity = match sensitivity {
-                    None => pdfcraft_engine::signature_scan::DEFAULT_SENSITIVITY,
+                    None => taratasy_engine::signature_scan::DEFAULT_SENSITIVITY,
                     Some(s) => u8::try_from(s)
                         .ok()
                         .filter(|s| *s <= 100)
                         .ok_or_else(|| ToolError::InvalidArgs(format!("sensitivity must be 0–100, got {s}")))?,
                 };
-                let mut photo = pdfcraft_engine::SignaturePhoto::read(file).map_err(|e| ToolError::InvalidArgs(e.to_string()))?;
+                let mut photo = taratasy_engine::SignaturePhoto::read(file).map_err(|e| ToolError::InvalidArgs(e.to_string()))?;
                 let frame = photo.auto_frame();
-                photo.scan(frame, sensitivity, pdfcraft_engine::signature_scan::SCAN_MAX_SIDE).map_err(|e| ToolError::InvalidArgs(e.to_string()))?
+                photo.scan(frame, sensitivity, taratasy_engine::signature_scan::SCAN_MAX_SIDE).map_err(|e| ToolError::InvalidArgs(e.to_string()))?
             } else {
-                pdfcraft_engine::SignatureImage::read(file).map_err(|e| ToolError::InvalidArgs(e.to_string()))?
+                taratasy_engine::SignatureImage::read(file).map_err(|e| ToolError::InvalidArgs(e.to_string()))?
             };
             let edit = image.edit(page, &info, at, kind == "initials", &author).ok_or_else(|| ToolError::InvalidArgs("at must be finite".into()))?;
             return self.apply(a, edit);
         }
         let text_at = |t: &str| {
-            let w = (pdfcraft_engine::annot_text::text_width(t, size) + 8.0).clamp(20.0, 600.0);
+            let w = (taratasy_engine::annot_text::text_width(t, size) + 8.0).clamp(20.0, 600.0);
             let h = size * 1.2 + 6.0;
-            let rect = pdfcraft_engine::text_box_at(i64::from(info.rotation), at, w, h).unwrap_or([at[0], at[1] - h, at[0] + w, at[1]]);
+            let rect = taratasy_engine::text_box_at(i64::from(info.rotation), at, w, h).unwrap_or([at[0], at[1] - h, at[0] + w, at[1]]);
             Shape::Typewriter { rect, font_size: size }
         };
         let (shape, contents) = match kind {
@@ -521,7 +521,7 @@ impl Automation {
             }
             "date" => {
                 let lang = a.opt_str("language")?;
-                if let Some(l) = lang.filter(|l| pdfcraft_engine::dates::date_language(l).is_none()) {
+                if let Some(l) = lang.filter(|l| taratasy_engine::dates::date_language(l).is_none()) {
                     return Err(ToolError::InvalidArgs(format!("unknown date language {l:?} (see fill_sign_date_format)")));
                 }
                 let t = self.session.today_text_for_pdf(a.opt_str("format")?, lang).map_err(ToolError::InvalidArgs)?;
@@ -531,7 +531,7 @@ impl Automation {
             kind @ ("signature" | "initials") => {
                 let t = a.str("text")?;
                 // Nobody sees a preview here: refuse what the script font would leave out.
-                if let Some(c) = pdfcraft_engine::script_missing(t) {
+                if let Some(c) = taratasy_engine::script_missing(t) {
                     return Err(ToolError::InvalidArgs(format!(
                         "the signature script font can't draw \"{}\" (U+{:04X}); type the {kind} in Latin, Cyrillic or Greek letters, or pass `path` to a PNG or JPEG image of it instead of `text`",
                         c.escape_debug(),
@@ -539,7 +539,7 @@ impl Automation {
                     )));
                 }
                 let h = if kind == "initials" { 24.0 } else { 32.0 };
-                let shape = pdfcraft_engine::typed_signature_shape(at, t, h, i64::from(info.rotation))
+                let shape = taratasy_engine::typed_signature_shape(at, t, h, i64::from(info.rotation))
                     .ok_or_else(|| ToolError::InvalidArgs("text has nothing to draw".into()))?;
                 (shape, String::new())
             }
@@ -661,7 +661,7 @@ impl Automation {
             page,
             rect: [ux, uy, ux, uy],
             name,
-            file: pdfcraft_engine::MarkFile {
+            file: taratasy_engine::MarkFile {
                 name: file,
                 bytes: std::sync::Arc::new(bytes),
                 page: a.opt_int("file_page")?.unwrap_or(1).max(1) as usize - 1,

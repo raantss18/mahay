@@ -1,8 +1,8 @@
-# DeckCraft architecture
+# Seho architecture
 
 > **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** minor (community PR wave 2026-10-14: 320 engine commands, 41 dialogs, the `metafile` crate, 1,641 tests; duplicated L2/L5/L6 rows and headers folded; previous: minor, transition frames) · **Target:** Microsoft PowerPoint for Mac 16.113 (Microsoft 365)
 
-How DeckCraft is built today. The binding rules (layering, everything is a command, thin UI, never
+How Seho is built today. The binding rules (layering, everything is a command, thin UI, never
 break wasm, never crash) are in [AGENTS.md](../AGENTS.md) §3–§5; this document describes what
 exists. 202k lines of Rust in 24 crates, 3 apps and `xtask`; 1,641 `#[test]` functions
 (`cargo xtask stats` counts them per crate).
@@ -16,23 +16,23 @@ nothing below L6 uses egui, eframe, winit or rfd.
 | Layer | Crates | What they do |
 |---|---|---|
 | L0 | `geom`, `color`, `metafile`; standalone `bitstream`, `matroska`, `ogg`, `opus` | EMU/pt units, transforms, ~180 preset shape generators re-derived from ECMA-376, adjust handles, hit testing; RGB/HSL and DrawingML colour transforms; MKV/WebM and Ogg demuxers, the Opus decoder; EMF/WMF read into a neutral vector model (`metafile`) |
-| L1 | `model`, `fonts`; `h264`, `hevc`, `vp9`, `av1`, `isobmff` | Presentation, masters, layouts, slides, shapes, text, themes, tables, charts, transitions, animations, placeholder inheritance (`resolve`); font database (craft-fonts + system) with metric-compatible substitutes for Office fonts (Carlito for Calibri, Caladea for Cambria, Liberation for Arial/Times); video decoders and the MP4/MOV demuxer |
-| L2 | `text`, `anim`, `format`, `media` | Shaping (HarfRust), UAX #9 bidi, UAX #14 line breaking, autofit, caret hit testing; per-shape animation state over time, the show state machine, transition frame layouts, Morph matching; `.deckcraft` (zip + JSON + media) and outline text; media probing, decoding, mixer and clock |
+| L1 | `model`, `fonts`; `h264`, `hevc`, `vp9`, `av1`, `isobmff` | Presentation, masters, layouts, slides, shapes, text, themes, tables, charts, transitions, animations, placeholder inheritance (`resolve`); font database (mahay-fonts + system) with metric-compatible substitutes for Office fonts (Carlito for Calibri, Caladea for Cambria, Liberation for Arial/Times); video decoders and the MP4/MOV demuxer |
+| L2 | `text`, `anim`, `format`, `media` | Shaping (HarfRust), UAX #9 bidi, UAX #14 line breaking, autofit, caret hit testing; per-shape animation state over time, the show state machine, transition frame layouts, Morph matching; `.seho` (zip + JSON + media) and outline text; media probing, decoding, mixer and clock |
 | L3 | `render`, `pptx` | `vello_cpu` raster of slides, masters and layouts (fills, outlines, effects, pictures, tables, charts, Morph frames); PPTX import/export from ECMA-376 |
-| L4 | `pdf` | App-owned export layout and rendering through the shared `craft-pdf` writer |
+| L4 | `pdf` | App-owned export layout and rendering through the shared `mahay-pdf` writer |
 | L5 | `engine` | Sessions, documents, selection, undo history on shared slide snapshots, the command registry (320 commands in `cmd/*`), pointer tools, keys, AutoRecover, the panic guard (`guard.rs`) |
 | L6 | `ui-egui`, `mcp` | The PowerPoint-style interface (ribbon with 10 tabs + contextual tabs, canvas, thumbnails, panes, 41 dialogs, show and presenter windows, the JSON control channel); the MCP server (JSON-RPC 2.0 over stdio), headless or connected to a running app |
-| apps | `deckcraft` (desktop: eframe/wgpu, cpal audio, logging), `deckcraft-cli` (run, render, convert, mcp, app), `deckcraft-web` (trunk; WebGPU with WebGL2 fallback), `xtask` | Exempt from layering |
+| apps | `seho` (desktop: eframe/wgpu, cpal audio, logging), `seho-cli` (run, render, convert, mcp, app), `seho-web` (trunk; WebGPU with WebGL2 fallback), `xtask` | Exempt from layering |
 
 The media codecs and containers are clean-room pure Rust, 59k lines, shared in spirit with
-FilmCraft.
+Hetsika.
 
 ## Data model
 
 A `Presentation` holds a theme set, slide masters with their layouts, slides, sections, custom
 shows, comments, media and document properties. Shapes are a tree (`ShapeKind`: preset or custom
 geometry, picture, table, chart, group, connector, ink, media, SmartArt-as-group, and `Opaque` for
-anything read from PPTX that DeckCraft doesn't model: its XML is kept and written back). Text
+anything read from PPTX that Seho doesn't model: its XML is kept and written back). Text
 bodies hold paragraphs of runs with DrawingML properties; formatting resolves slide → layout →
 master → theme at render time. Transitions live on slides; animations are the flat ordered list the
 Animation Pane shows, rebuilt into PowerPoint's timing tree on save.
@@ -40,8 +40,8 @@ Animation Pane shows, rebuilt into PowerPoint's timing tree on save.
 ## Commands and frontends
 
 Every user-visible action is a `CommandSpec` (id, label, ribbon/menu place, shortcut, params doc,
-`enabled`, `run`) in `crates/engine/src/cmd/*`. The UI, `deckcraft-cli run`, the JSON control
-channel (`deckcraft --control PORT`, [control-protocol.md](control-protocol.md)) and MCP
+`enabled`, `run`) in `crates/engine/src/cmd/*`. The UI, `seho-cli run`, the JSON control
+channel (`seho --control PORT`, [control-protocol.md](control-protocol.md)) and MCP
 ([mcp.md](mcp.md)) all dispatch through `Session::execute`, so they behave identically.
 Programmatic calls never open dialogs. Pointer gestures go through `Session::pointer`, keys through
 `Session::key`.
@@ -54,7 +54,7 @@ backgrounds and contents rendered apart (Dynamic Content), from `anim::transitio
 effects project cards through a perspective camera and `anim::layer_mesh` subdivides them so
 textures stay straight; soft edges are per-corner opacities. The show renders the slides once per
 transition and only composites cached textures each frame; `render::composite_transition` is the
-CPU twin used by `deckcraft-cli render-transition` and the tests. The show window and the presenter view are egui viewports; animation state per shape
+CPU twin used by `seho-cli render-transition` and the tests. The show window and the presenter view are egui viewports; animation state per shape
 comes from `anim::timeline` each frame. Animations ▸ Preview plays that same state on the editor
 canvas for the current slide, then draws the slide at rest. PDF export renders each slide at print resolution and
 overlays an invisible real-text layer with embedded font subsets.

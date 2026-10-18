@@ -76,12 +76,12 @@ pub fn n(v: i64) -> String {
 
 /// Points → twips string.
 pub fn twips(pt: f32) -> String {
-    wordcraft_geom::to_twips(pt.clamp(-MAX_LEN_PT, MAX_LEN_PT)).to_string()
+    soratra_geom::to_twips(pt.clamp(-MAX_LEN_PT, MAX_LEN_PT)).to_string()
 }
 
 /// Points → EMU string (never negative for sizes).
 pub fn emu(pt: f32) -> String {
-    wordcraft_geom::to_emu(pt.clamp(-MAX_LEN_PT, MAX_LEN_PT)).to_string()
+    soratra_geom::to_emu(pt.clamp(-MAX_LEN_PT, MAX_LEN_PT)).to_string()
 }
 
 #[cfg(test)]

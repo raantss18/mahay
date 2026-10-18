@@ -6,11 +6,11 @@
 //! height, compressed size, bits per pixel 24, planes 1) followed by the JFIF stream. Photoshop
 //! keeps the long side at 160 px or less.
 
-use photocraft_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType as CSample};
-use photocraft_color::ColorMode;
-use photocraft_doc::Document;
-use photocraft_psd::resources::{ImageResource, ids};
+use sary_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType as CSample};
+use sary_color::ColorMode;
+use sary_doc::Document;
+use sary_psd::resources::{ImageResource, ids};
 
 use crate::IoError;
 
@@ -23,7 +23,7 @@ pub const HEADER_LEN: usize = 28;
 /// The 1036 resource for `doc`: its composite reduced to at most [`MAX_SIDE`], converted to
 /// sRGB through the document's profile, matted over white and JPEG-compressed.
 pub(crate) fn resource(doc: &Document) -> Result<ImageResource, IoError> {
-    let mut buf = photocraft_compose::thumbnail_buffer(doc, MAX_SIDE);
+    let mut buf = sary_compose::thumbnail_buffer(doc, MAX_SIDE);
     let (w, h) = (buf.rect.width(), buf.rect.height());
     if w == 0 || h == 0 || w > MAX_SIDE || h > MAX_SIDE || buf.px.len() != (w as usize) * (h as usize) {
         return Err(IoError::Unsupported("the image preview could not be rendered".into()));
@@ -45,7 +45,7 @@ pub(crate) fn resource(doc: &Document) -> Result<ImageResource, IoError> {
     }
     let img = Image::from_raw(w, h, ChannelLayout::Rgb, CSample::U8, rgb)?;
     let opts = EncodeOptions { jpeg_quality: 80, embed_icc: false, embed_metadata: false, ..EncodeOptions::default() };
-    let jfif = photocraft_codecs::encode(&img, Format::Jpeg, &opts)?;
+    let jfif = sary_codecs::encode(&img, Format::Jpeg, &opts)?;
     Ok(ImageResource::new(ids::THUMBNAIL, thumbnail_bytes(w, h, &jfif)?))
 }
 

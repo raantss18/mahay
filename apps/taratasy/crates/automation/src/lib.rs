@@ -1,14 +1,14 @@
-//! pdfcraft-automation — agent control for PdfCraft (architecture §13).
+//! taratasy-automation — agent control for Taratasy (architecture §13).
 //!
 //! - **Layer:** L7. Headless: depends on the engine, never on a UI toolkit.
 //! - [`Automation`] is a tool set over an engine [`Session`]: open, inspect, render, extract and
 //!   find text, edit pages and metadata, undo/redo, save, combine, extract and split. Every tool
 //!   has a JSON Schema ([`tools`]) and takes and returns JSON, so the same table drives the MCP
-//!   server ([`mcp`]), `pdfcraft-cli run` and (later) the UI control channel.
+//!   server ([`mcp`]), `taratasy-cli run` and (later) the UI control channel.
 //! - Pages are **1-based** in every tool, as people number them. Rectangles are in PDF points
 //!   with the origin at the top-left of the displayed page.
 //! - An optional root directory confines every path a tool reads or writes. Separately,
-//!   [`file_access::AutomationRoots`] (`pdfcraft-cli mcp --automation-read-root` and
+//!   [`file_access::AutomationRoots`] (`taratasy-cli mcp --automation-read-root` and
 //!   `--automation-write-root`) holds a read folder and a write folder, each left out meaning no
 //!   access of its kind.
 
@@ -36,12 +36,12 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use pdfcraft_engine::{CombineSource, DocId, Document, Edit, Session, commands};
-use pdfcraft_platform::staging::{StagingName, staging_suffixes};
-use pdfcraft_render::{PageRenderer, PageText, RenderConfig, RenderRequest, RequestKind};
+use taratasy_engine::{CombineSource, DocId, Document, Edit, Session, commands};
+use taratasy_platform::staging::{StagingName, staging_suffixes};
+use taratasy_render::{PageRenderer, PageText, RenderConfig, RenderRequest, RequestKind};
 use serde_json::{Value, json};
 
-pub use pdfcraft_render::Pixels;
+pub use taratasy_render::Pixels;
 pub use tools::{ToolDef, tools};
 
 /// One piece of a tool's result.
@@ -81,8 +81,8 @@ fn failed(e: impl std::fmt::Display) -> ToolError {
     ToolError::Failed(e.to_string())
 }
 
-impl From<pdfcraft_engine::EditError> for ToolError {
-    fn from(e: pdfcraft_engine::EditError) -> Self {
+impl From<taratasy_engine::EditError> for ToolError {
+    fn from(e: taratasy_engine::EditError) -> Self {
         failed(e)
     }
 }
@@ -108,7 +108,7 @@ type PageTexts = Vec<(usize, std::result::Result<Arc<PageText>, String>)>;
 const FIND_MAX_WARNINGS: usize = 100;
 const FIND_MAX_WARNING_BYTES: usize = 1024;
 
-/// A headless PdfCraft session driven by tool calls.
+/// A headless Taratasy session driven by tool calls.
 pub struct Automation {
     session: Session,
     root: Option<PathBuf>,
@@ -165,7 +165,7 @@ impl Automation {
         &self.session
     }
 
-    /// Save `bytes` that a caller writes on the session's behalf, such as `pdfcraft-cli run`
+    /// Save `bytes` that a caller writes on the session's behalf, such as `taratasy-cli run`
     /// saving a rendered page. With a root, it is confined like a tool's own output (a relative
     /// path resolves inside it). Written atomically either way (#2166), except to something
     /// that is not a regular file, such as `/dev/stdout` or a pipe, which is written as given.
@@ -222,18 +222,18 @@ impl Automation {
                     None => (0..doc.info.pages.len()).collect(),
                 };
                 let parity = match a.opt_str("subset")?.unwrap_or("all") {
-                    "all" => pdfcraft_engine::PageParity::Both,
-                    "even" => pdfcraft_engine::PageParity::Even,
-                    "odd" => pdfcraft_engine::PageParity::Odd,
+                    "all" => taratasy_engine::PageParity::Both,
+                    "even" => taratasy_engine::PageParity::Even,
+                    "odd" => taratasy_engine::PageParity::Odd,
                     s => return Err(ToolError::InvalidArgs(format!("unknown subset {s:?} (all, even, odd)"))),
                 };
                 let orientation = match a.opt_str("orientation")?.unwrap_or("all") {
-                    "all" => pdfcraft_engine::PageOrientation::Both,
-                    "landscape" => pdfcraft_engine::PageOrientation::Landscape,
-                    "portrait" => pdfcraft_engine::PageOrientation::Portrait,
+                    "all" => taratasy_engine::PageOrientation::Both,
+                    "landscape" => taratasy_engine::PageOrientation::Landscape,
+                    "portrait" => taratasy_engine::PageOrientation::Portrait,
                     o => return Err(ToolError::InvalidArgs(format!("unknown orientation {o:?} (all, landscape, portrait)"))),
                 };
-                let pages = pdfcraft_engine::filter_pages(&self.doc(&a)?.info, &base, parity, orientation);
+                let pages = taratasy_engine::filter_pages(&self.doc(&a)?.info, &base, parity, orientation);
                 if pages.is_empty() {
                     return Err(failed("no pages match the filters"));
                 }
@@ -262,8 +262,8 @@ impl Automation {
                     Some(l) => return Err(ToolError::InvalidArgs(format!("level must be between 0 and 100, not {l}"))),
                 };
                 let look = match a.opt_str("mode")? {
-                    None => pdfcraft_engine::camera_clean::Look::Colour,
-                    Some(m) => pdfcraft_engine::camera_clean::Look::from_name(m)
+                    None => taratasy_engine::camera_clean::Look::Colour,
+                    Some(m) => taratasy_engine::camera_clean::Look::from_name(m)
                         .ok_or_else(|| ToolError::InvalidArgs(format!("unknown mode {m:?} (original, colour, greyscale, bw)")))?,
                 };
                 self.session.enhance_camera_page_at(id, page, corners, look, level).map_err(failed)?;
@@ -312,7 +312,7 @@ impl Automation {
             "doc_inspect" => self.doc_inspect(&a)?,
             "render_preview" => return self.render_preview(&a).map(|c| vec![c]),
             "page_number" => {
-                use pdfcraft_organize::LabelStyle as L;
+                use taratasy_organize::LabelStyle as L;
                 let n = self.doc(&a)?.info.pages.len();
                 let (from, to) = (a.int("from")?, a.int("to")?);
                 if from < 1 || to < from || to as usize > n {
@@ -487,7 +487,7 @@ impl Automation {
                     write_atomic(&path, &bytes)?;
                     json!({ "path": path.to_string_lossy(), "format": ext, "bytes": bytes.len() })
                 } else {
-                    use pdfcraft_engine::ImageEdit;
+                    use taratasy_engine::ImageEdit;
                     let change = match a.str("action")? {
                         "move" => {
                             let r: Vec<f64> =
@@ -568,9 +568,9 @@ impl Automation {
                 } else if let Some(root) = &self.root {
                     vec![root.clone()]
                 } else {
-                    pdfcraft_engine::text_fonts::installed_directories()
+                    taratasy_engine::text_fonts::installed_directories()
                 };
-                json!({"fonts": pdfcraft_engine::text_fonts::discover(&roots).into_iter().map(|f| json!({"path":f.path,"family":f.family,"font":f.face})).collect::<Vec<_>>()})
+                json!({"fonts": taratasy_engine::text_fonts::discover(&roots).into_iter().map(|f| json!({"path":f.path,"family":f.family,"font":f.face})).collect::<Vec<_>>()})
             }
             "text_font_import" => {
                 let page = self.page(&a)?;
@@ -609,7 +609,7 @@ impl Automation {
                 }
                 let source = &blocks[k as usize - 1];
                 let text = a.opt_str("text")?.unwrap_or(&source.editor_text);
-                let style = pdfcraft_engine::BlockStyle {
+                let style = taratasy_engine::BlockStyle {
                     size: a.opt_num("size")?,
                     width: a.opt_num("width")?,
                     resource: a.opt_str("font_resource")?.map(str::to_owned),
@@ -636,7 +636,7 @@ impl Automation {
                 }
                 let block = self.doc(&a)?.text_blocks(page)[k as usize - 1].clone();
                 let text = a.opt_str("text")?.map(str::to_owned).unwrap_or(block.text);
-                let mut style = pdfcraft_engine::BlockStyle {
+                let mut style = taratasy_engine::BlockStyle {
                     ranges: parse_style_ranges(a.get("ranges"))?,
                     resource: a.opt_str("font_resource")?.map(str::to_owned),
                     bold: a.opt_bool("bold")?,
@@ -654,9 +654,9 @@ impl Automation {
                 }
                 if let Some(f) = a.opt_str("font")? {
                     let family = match f {
-                        "helvetica" => pdfcraft_engine::FontFamily::Helvetica,
-                        "times" => pdfcraft_engine::FontFamily::Times,
-                        "courier" => pdfcraft_engine::FontFamily::Courier,
+                        "helvetica" => taratasy_engine::FontFamily::Helvetica,
+                        "times" => taratasy_engine::FontFamily::Times,
+                        "courier" => taratasy_engine::FontFamily::Courier,
                         other => return Err(ToolError::InvalidArgs(format!("unknown font {other:?} (helvetica, times, courier)"))),
                     };
                     style.family = Some((family, a.opt_bool("bold")?.unwrap_or(false), a.opt_bool("italic")?.unwrap_or(false)));
@@ -666,10 +666,10 @@ impl Automation {
                 }
                 if let Some(al) = a.opt_str("align")? {
                     style.align = Some(match al {
-                        "left" => pdfcraft_engine::TextAlign::Left,
-                        "center" => pdfcraft_engine::TextAlign::Center,
-                        "right" => pdfcraft_engine::TextAlign::Right,
-                        "justify" => pdfcraft_engine::TextAlign::Justify,
+                        "left" => taratasy_engine::TextAlign::Left,
+                        "center" => taratasy_engine::TextAlign::Center,
+                        "right" => taratasy_engine::TextAlign::Right,
+                        "justify" => taratasy_engine::TextAlign::Justify,
                         other => return Err(ToolError::InvalidArgs(format!("unknown align {other:?}"))),
                     });
                 }
@@ -755,9 +755,9 @@ impl Automation {
             "doc_audit_redactions" => self.doc_audit_redactions(&a)?,
             "fill_sign_add" => self.fill_sign_add(&a)?,
             "fill_sign_date_format" => self.fill_sign_date_format(&a)?,
-            "measure_distance" => self.measurement_add(&a, pdfcraft_engine::measure::Kind::Distance)?,
-            "measure_perimeter" => self.measurement_add(&a, pdfcraft_engine::measure::Kind::Perimeter)?,
-            "measure_area" => self.measurement_add(&a, pdfcraft_engine::measure::Kind::Area)?,
+            "measure_distance" => self.measurement_add(&a, taratasy_engine::measure::Kind::Distance)?,
+            "measure_perimeter" => self.measurement_add(&a, taratasy_engine::measure::Kind::Perimeter)?,
+            "measure_area" => self.measurement_add(&a, taratasy_engine::measure::Kind::Area)?,
             "measure_info" => self.measurement_info(&a)?,
             "measure_list" => self.measurement_list(&a)?,
             "measure_scale" => self.measurement_scale(&a)?,
@@ -812,10 +812,10 @@ impl Automation {
             "sign_document" => self.sign_document(&a)?,
             "sign_keychain_ids" => {
                 #[cfg(target_os = "macos")]
-                let ids: Vec<Value> = pdfcraft_engine::sign::keychain::identities(None)
+                let ids: Vec<Value> = taratasy_engine::sign::keychain::identities(None)
                     .map_err(failed)?
                     .iter()
-                    .map(|id| json!({ "id": pdfcraft_engine::sign::keychain::reference(&id.certificate), "certificate": signing::cert_json(&id.certificate) }))
+                    .map(|id| json!({ "id": taratasy_engine::sign::keychain::reference(&id.certificate), "certificate": signing::cert_json(&id.certificate) }))
                     .collect();
                 #[cfg(not(target_os = "macos"))]
                 let ids: Vec<Value> = Vec::new();
@@ -824,11 +824,11 @@ impl Automation {
             "sign_windows_ids" => {
                 #[cfg(target_os = "windows")]
                 let (ids, unusable): (Vec<Value>, Vec<Value>) = {
-                    let listing = pdfcraft_engine::sign::windows::list().map_err(failed)?;
+                    let listing = taratasy_engine::sign::windows::list().map_err(failed)?;
                     let ids = listing
                         .ids
                         .iter()
-                        .map(|id| json!({ "id": pdfcraft_engine::sign::windows::reference(&id.certificate), "certificate": signing::cert_json(&id.certificate) }))
+                        .map(|id| json!({ "id": taratasy_engine::sign::windows::reference(&id.certificate), "certificate": signing::cert_json(&id.certificate) }))
                         .collect();
                     let unusable = listing
                         .unusable
@@ -978,7 +978,7 @@ impl Automation {
     }
 
     fn doc_initial_view(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::{InitialLayout as L, Magnification as M, Navigation as N};
+        use taratasy_engine::{InitialLayout as L, Magnification as M, Navigation as N};
         let bad = |m: String| ToolError::InvalidArgs(m);
         let mut v = self.doc(a)?.initial_view();
         let before = v.clone();
@@ -1066,7 +1066,7 @@ impl Automation {
     }
 
     fn doc_optimize(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::optimize::{Compression, ImageSettings, Preset};
+        use taratasy_engine::optimize::{Compression, ImageSettings, Preset};
         let id = self.doc(a)?.id;
         let before = self.doc(a)?.bytes.len();
         let path = self.resolve(a.str("path")?, true)?;
@@ -1114,7 +1114,7 @@ impl Automation {
                 *flag = b;
             }
         }
-        let discard: Vec<pdfcraft_engine::Hidden> = match a.get("discard") {
+        let discard: Vec<taratasy_engine::Hidden> = match a.get("discard") {
             None => Vec::new(),
             Some(v) => v
                 .as_array()
@@ -1122,7 +1122,7 @@ impl Automation {
                 .iter()
                 .map(|x| {
                     x.as_str()
-                        .and_then(pdfcraft_engine::Hidden::from_id)
+                        .and_then(taratasy_engine::Hidden::from_id)
                         .ok_or_else(|| ToolError::InvalidArgs(format!("unknown discard category {x}")))
                 })
                 .collect::<Result<_>>()?,
@@ -1155,12 +1155,12 @@ impl Automation {
     }
 
     /// A watermark or background picture: `file` (an image or a PDF) and `file_page` (1-based).
-    fn mark_file(&self, a: &Args) -> Result<Option<pdfcraft_engine::MarkFile>> {
+    fn mark_file(&self, a: &Args) -> Result<Option<taratasy_engine::MarkFile>> {
         let Some(p) = a.opt_str("file")? else { return Ok(None) };
         let path = self.resolve(p, false)?;
         let bytes = std::fs::read(&path).map_err(|e| failed(format!("{}: {e}", path.display())))?;
         let page = a.opt_int("file_page")?.unwrap_or(1).max(1) as usize - 1;
-        Ok(Some(pdfcraft_engine::MarkFile {
+        Ok(Some(taratasy_engine::MarkFile {
             name: path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
             bytes: Arc::new(bytes),
             page,
@@ -1180,7 +1180,7 @@ impl Automation {
     }
 
     fn marks(&mut self, tool: &str, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::{Background, HeaderFooter, MarkKind, Watermark};
+        use taratasy_engine::{Background, HeaderFooter, MarkKind, Watermark};
         let n = self.doc(a)?.info.pages.len();
         let pages = match a.opt_ints("pages")? {
             Some(_) => self.pages(a, "pages")?,
@@ -1262,7 +1262,7 @@ impl Automation {
             None => (0..doc.info.pages.len()).collect(),
         };
         let stem = doc.name.trim_end_matches(".pdf").trim_end_matches(".PDF").to_string();
-        let mut ex = pdfcraft_engine::export::Exporter::new(doc);
+        let mut ex = taratasy_engine::export::Exporter::new(doc);
         if tool == "doc_export_text" {
             let path = self.resolve(a.str("path")?, true)?;
             let text = ex.text_of(&pages).map_err(failed)?;
@@ -1273,10 +1273,10 @@ impl Automation {
         std::fs::create_dir_all(&folder).map_err(|e| failed(format!("{}: {e}", folder.display())))?;
         if tool == "doc_export_all_images" {
             let min = u32::try_from(a.opt_int("min_size")?.unwrap_or(0).max(0)).unwrap_or(u32::MAX);
-            let out = pdfcraft_engine::export::extract_images(&doc.export_source(), &pages, min).map_err(failed)?;
+            let out = taratasy_engine::export::extract_images(&doc.export_source(), &pages, min).map_err(failed)?;
             let mut files = Vec::new();
             for (k, img) in out.images.iter().enumerate() {
-                let path = child(&folder, &pdfcraft_engine::export::image_file_name(&stem, img, k + 1, doc.info.pages.len()));
+                let path = child(&folder, &taratasy_engine::export::image_file_name(&stem, img, k + 1, doc.info.pages.len()));
                 write_atomic(&path, &img.data)?;
                 files.push(json!({ "path": path.to_string_lossy(), "page": img.page + 1, "width": img.width, "height": img.height }));
             }
@@ -1286,9 +1286,9 @@ impl Automation {
         let dpi = a.opt_num("dpi")?.unwrap_or(150.0);
         let quality = a.opt_int("quality")?.unwrap_or(85).clamp(1, 100) as u8;
         let format = match a.opt_str("format")?.unwrap_or("png") {
-            "png" => pdfcraft_engine::export::ImageFormat::Png,
-            "jpeg" | "jpg" => pdfcraft_engine::export::ImageFormat::Jpeg { quality },
-            "tiff" | "tif" => pdfcraft_engine::export::ImageFormat::Tiff,
+            "png" => taratasy_engine::export::ImageFormat::Png,
+            "jpeg" | "jpg" => taratasy_engine::export::ImageFormat::Jpeg { quality },
+            "tiff" | "tif" => taratasy_engine::export::ImageFormat::Tiff,
             f => return Err(ToolError::InvalidArgs(format!("unknown format {f:?} (png, jpeg, tiff)"))),
         };
         let mut files = Vec::new();
@@ -1319,7 +1319,7 @@ impl Automation {
                 ("Untitled.pdf".to_string(), self.session.create_blank(w, h, n).map_err(failed)?)
             }
             "images" => {
-                let resolution = a.opt_num("dpi")?.map_or(pdfcraft_engine::ImageResolution::Embedded, pdfcraft_engine::ImageResolution::Dpi);
+                let resolution = a.opt_num("dpi")?.map_or(taratasy_engine::ImageResolution::Embedded, taratasy_engine::ImageResolution::Dpi);
                 let mut images = Vec::new();
                 for p in a.strs("paths")? {
                     let path = self.resolve(p, false)?;
@@ -1339,14 +1339,14 @@ impl Automation {
                     (None, Some(p)) => {
                         let path = self.resolve(p, false)?;
                         let t = std::fs::read(&path).map_err(|e| failed(format!("{}: {e}", path.display())))?;
-                        (path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default(), pdfcraft_engine::decode_text(&t))
+                        (path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default(), taratasy_engine::decode_text(&t))
                     }
                     (None, None) => return Err(ToolError::InvalidArgs("text needs `text` or `path`".into())),
                 };
                 // The page font is Helvetica/WinAnsi: text it would turn into `?` is refused (with
-                // its line) by `pdfcraft_create::from_text`, as for every other caller.
+                // its line) by `taratasy_create::from_text`, as for every other caller.
                 let bytes = self.session.create_from_text(&title, &text).map_err(|e| match e {
-                    pdfcraft_engine::EditError::Create(pdfcraft_engine::CreateError::Invalid(m)) => ToolError::InvalidArgs(m),
+                    taratasy_engine::EditError::Create(taratasy_engine::CreateError::Invalid(m)) => ToolError::InvalidArgs(m),
                     e => failed(e),
                 })?;
                 (format!("{title}.pdf"), bytes)
@@ -1359,7 +1359,7 @@ impl Automation {
     }
 
     fn page_transition_set(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::{Transition, TransitionSpec};
+        use taratasy_engine::{Transition, TransitionSpec};
         let n = self.doc(a)?.info.pages.len();
         let pages = match a.opt_ints("pages")? {
             Some(_) => self.pages(a, "pages")?,
@@ -1411,7 +1411,7 @@ impl Automation {
     }
 
     fn page_set_box(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::{BoxSpec, PageBox};
+        use taratasy_engine::{BoxSpec, PageBox};
         let doc = self.doc(a)?;
         let n = doc.info.pages.len();
         let pages = match a.opt_ints("pages")? {
@@ -1450,7 +1450,7 @@ impl Automation {
     }
 
     fn doc_protect(&mut self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::{Algorithm, Changes, Printing, Protection};
+        use taratasy_engine::{Algorithm, Changes, Printing, Protection};
         let d = Protection::default();
         // Restrictions only exist behind a permissions password (ISO 32000-2 §7.6.4.4: /P is
         // enforced against the owner password; without one everything stays allowed). Refuse a
@@ -1516,7 +1516,7 @@ impl Automation {
         let bytes = std::fs::read(&path).map_err(|e| failed(format!("{}: {e}", path.display())))?;
         let pages = a.opt_ints("pages")?.map(|p| one_based(&p)).transpose()?;
         let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        self.apply(a, Edit::InsertPagesFrom { name, bytes: Arc::new(bytes), pages, at, field_conflicts: pdfcraft_organize::FieldConflicts::Rename })
+        self.apply(a, Edit::InsertPagesFrom { name, bytes: Arc::new(bytes), pages, at, field_conflicts: taratasy_organize::FieldConflicts::Rename })
     }
 
     /// Write freshly created bytes to `out` and/or open them as a new document.
@@ -1554,7 +1554,7 @@ impl Automation {
             Some(_) => return Err(ToolError::InvalidArgs("pages must list a range (or null) for each path".into())),
         };
         // Each file is read, converted and copied in turn, so a long list holds one file at a time.
-        let sources = paths.into_iter().zip(ranges).map(|(p, range)| -> std::result::Result<pdfcraft_engine::CombineSource, ToolError> {
+        let sources = paths.into_iter().zip(ranges).map(|(p, range)| -> std::result::Result<taratasy_engine::CombineSource, ToolError> {
             let path = self.resolve(p, false)?;
             let bytes = std::fs::read(&path).map_err(|e| failed(format!("{}: {e}", path.display())))?;
             let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
@@ -1580,7 +1580,7 @@ impl Automation {
                 Ok((kind, stem, pdf))
             });
             out.push(match converted {
-                Ok((pdfcraft_engine::SourceKind::Pdf, ..)) => json!({ "path": p, "skipped": "already a PDF" }),
+                Ok((taratasy_engine::SourceKind::Pdf, ..)) => json!({ "path": p, "skipped": "already a PDF" }),
                 Ok((_, stem, pdf)) => {
                     let target = unused(&dir, &stem);
                     write_atomic(&target, &pdf)?;
@@ -1654,8 +1654,8 @@ impl Automation {
             Some(_) => return Err(ToolError::InvalidArgs("groups must list a number (or null) for each path".into())),
         };
         let field_conflicts = match a.opt_str("field_conflicts")? {
-            None | Some("rename") => pdfcraft_organize::FieldConflicts::Rename,
-            Some("merge") => pdfcraft_organize::FieldConflicts::Merge,
+            None | Some("rename") => taratasy_organize::FieldConflicts::Rename,
+            Some("merge") => taratasy_organize::FieldConflicts::Merge,
             Some(other) => {
                 return Err(ToolError::InvalidArgs(format!("field_conflicts must be \"rename\" or \"merge\", not {other:?}")));
             }
@@ -1734,14 +1734,14 @@ impl Automation {
             self.session.split_by_size(id, (mb * 1_048_576.0) as usize).map_err(failed)?
         } else {
             let by = match (a.opt_int("every")?, a.opt_ints("before")?) {
-                (Some(n), None) if n > 0 => pdfcraft_organize::SplitBy::PageCount(n as usize),
-                (None, Some(b)) => pdfcraft_organize::SplitBy::Before(one_based(&b)?),
+                (Some(n), None) if n > 0 => taratasy_organize::SplitBy::PageCount(n as usize),
+                (None, Some(b)) => taratasy_organize::SplitBy::Before(one_based(&b)?),
                 _ if bookmarks => {
                     titles = self.session.bookmark_splits(id);
                     if titles.is_empty() {
                         return Err(failed("the document has no top-level bookmarks"));
                     }
-                    pdfcraft_organize::SplitBy::Before(titles.iter().map(|t| t.0).collect())
+                    taratasy_organize::SplitBy::Before(titles.iter().map(|t| t.0).collect())
                 }
                 _ => return Err(ToolError::InvalidArgs("every must be a positive page count".into())),
             };
@@ -1850,7 +1850,7 @@ impl Automation {
     /// the `page_render` tool only returns PNG, and encoding one to decode it again is wasted
     /// work on every scroll. It uses the same renderer, and the same per-document cache, as
     /// `page_render`.
-    pub fn render_pixels(&mut self, doc: u64, page: usize, scale: f32) -> Result<(u32, u32, pdfcraft_render::Pixels)> {
+    pub fn render_pixels(&mut self, doc: u64, page: usize, scale: f32) -> Result<(u32, u32, taratasy_render::Pixels)> {
         if !(scale.is_finite() && scale > 0.0 && scale <= (MAX_DPI / 72.0) as f32) {
             return Err(ToolError::InvalidArgs(format!("scale must be between 0 and {}", MAX_DPI / 72.0)));
         }
@@ -1921,7 +1921,7 @@ impl Automation {
     }
 
     fn text_word_count(&self, a: &Args) -> Result<Value> {
-        use pdfcraft_engine::word_count::{self, Counts, Options};
+        use taratasy_engine::word_count::{self, Counts, Options};
         let doc = self.doc_to_copy(a)?;
         let pages = match a.opt_ints("pages")? {
             Some(_) => self.pages(a, "pages")?,
@@ -2178,7 +2178,7 @@ fn foreign_share(path: &Path, root: &Path) -> bool {
 
 // ---- JSON helpers ----------------------------------------------------------------------------
 
-fn parse_style_ranges(value: Option<&Value>) -> Result<Vec<pdfcraft_engine::RangeStyle>> {
+fn parse_style_ranges(value: Option<&Value>) -> Result<Vec<taratasy_engine::RangeStyle>> {
     let Some(value) = value else { return Ok(Vec::new()) };
     let values = value.as_array().filter(|v| v.len() <= 1024).ok_or_else(|| Args::wrong("ranges", "an array of at most 1024 style objects"))?;
     values
@@ -2203,15 +2203,15 @@ fn parse_style_ranges(value: Option<&Value>) -> Result<Vec<pdfcraft_engine::Rang
             let family = a
                 .opt_str("font")?
                 .map(|f| match f {
-                    "helvetica" => Ok(pdfcraft_engine::FontFamily::Helvetica),
-                    "times" => Ok(pdfcraft_engine::FontFamily::Times),
-                    "courier" => Ok(pdfcraft_engine::FontFamily::Courier),
+                    "helvetica" => Ok(taratasy_engine::FontFamily::Helvetica),
+                    "times" => Ok(taratasy_engine::FontFamily::Times),
+                    "courier" => Ok(taratasy_engine::FontFamily::Courier),
                     _ => Err(Args::wrong("font", "helvetica, times or courier")),
                 })
                 .transpose()?
                 .map(|f| -> Result<_> { Ok((f, a.opt_bool("bold")?.unwrap_or(false), a.opt_bool("italic")?.unwrap_or(false))) })
                 .transpose()?;
-            Ok(pdfcraft_engine::RangeStyle {
+            Ok(taratasy_engine::RangeStyle {
                 range: start..end,
                 family,
                 resource: a.opt_str("font_resource")?.map(str::to_owned),
@@ -2285,7 +2285,7 @@ impl Args<'_> {
 
 /// Bookmark rows in listing order as JSON: a row holds the rows that follow it on the page at the
 /// next level down in `children`, and paths and pages are 1-based.
-fn nest_rows(rows: &[pdfcraft_engine::BookmarkRow], pages: &[pdfcraft_render::PageInfo]) -> Vec<Value> {
+fn nest_rows(rows: &[taratasy_engine::BookmarkRow], pages: &[taratasy_render::PageInfo]) -> Vec<Value> {
     // The open rows, outermost first, with their depth and the children gathered so far.
     let mut open: Vec<(usize, Value, Vec<Value>)> = Vec::new();
     let mut roots = Vec::new();
@@ -2311,8 +2311,8 @@ fn nest_rows(rows: &[pdfcraft_engine::BookmarkRow], pages: &[pdfcraft_render::Pa
 /// like every `rect`: the destination type (`XYZ`, `Fit`, `FitH`, `FitV`, `FitR`) and its
 /// position, `null` where the destination leaves it unspecified (`/XYZ null null null` keeps the
 /// reader's position and zoom). `None` for a destination without a type.
-pub(crate) fn destination(view: &pdfcraft_render::DestView, page: &pdfcraft_render::PageInfo) -> Option<Value> {
-    use pdfcraft_render::DestView;
+pub(crate) fn destination(view: &taratasy_render::DestView, page: &taratasy_render::PageInfo) -> Option<Value> {
+    use taratasy_render::DestView;
     let points = |left: Option<f32>, top: Option<f32>| {
         let [x, y] = page.dest_fraction(left, top, 0);
         let round = |v: f32| f64::from((v * 100.0).round() / 100.0);
@@ -2405,8 +2405,8 @@ fn info(d: &Document) -> Value {
         "tagged": i.tagged,
         "has_javascript": i.has_javascript,
         // XFA forms: "static" (the PDF's own fields work; the XFA data is ignored) or "dynamic"
-        // (laid out from the template by PdfCraft, see xfa_layout; placeholder pages when that failed).
-        "xfa": i.xfa.map(|x| match x { pdfcraft_render::Xfa::Static => "static", pdfcraft_render::Xfa::Dynamic => "dynamic" }),
+        // (laid out from the template by Taratasy, see xfa_layout; placeholder pages when that failed).
+        "xfa": i.xfa.map(|x| match x { taratasy_render::Xfa::Static => "static", taratasy_render::Xfa::Dynamic => "dynamic" }),
         "xfa_layout": d.xfa.as_ref().map(|x| json!({ "pages": x.pages, "fields": x.fields, "warnings": x.warnings })),
         // A script of the form ran too long and was abandoned: its scripts no longer run in this
         // document (calculations, buttons) until it is opened again.
@@ -2433,36 +2433,36 @@ fn info(d: &Document) -> Value {
         "links": i.links.iter().map(|l| json!({
             "page": page1(l.page), "rect": view_rect(i, l.page, l.rect),
             "target": match &l.target {
-                pdfcraft_render::LinkTarget::Page(p, _) => json!({ "page": page1(*p) }),
-                pdfcraft_render::LinkTarget::Uri(u) => json!({ "uri": u }),
-                pdfcraft_render::LinkTarget::SetLayers { changes, preserve_rb } => json!({
+                taratasy_render::LinkTarget::Page(p, _) => json!({ "page": page1(*p) }),
+                taratasy_render::LinkTarget::Uri(u) => json!({ "uri": u }),
+                taratasy_render::LinkTarget::SetLayers { changes, preserve_rb } => json!({
                     "layers": changes.iter().map(|(op, ocg)| json!({
                         "layer": i.layers.iter().find(|l| l.id == *ocg).map(|l| l.name.as_str()),
                         "state": match op {
-                            pdfcraft_render::LayerOp::On => "on",
-                            pdfcraft_render::LayerOp::Off => "off",
-                            pdfcraft_render::LayerOp::Toggle => "toggle",
+                            taratasy_render::LayerOp::On => "on",
+                            taratasy_render::LayerOp::Off => "off",
+                            taratasy_render::LayerOp::Toggle => "toggle",
                         },
                     })).collect::<Vec<_>>(),
                     "preserve_rb": preserve_rb,
                 }),
-                pdfcraft_render::LinkTarget::RemoteGoTo { file, destination, new_window } => json!({
+                taratasy_render::LinkTarget::RemoteGoTo { file, destination, new_window } => json!({
                     "remote_document": file,
                     "destination": match destination {
-                        pdfcraft_render::RemoteDestination::Default => json!({ "kind": "default" }),
-                        pdfcraft_render::RemoteDestination::Page { page, view } => json!({ "kind": "page", "page": page1(*page), "view": format!("{view:?}") }),
-                        pdfcraft_render::RemoteDestination::Named(name) => json!({ "kind": "named", "name": name }),
+                        taratasy_render::RemoteDestination::Default => json!({ "kind": "default" }),
+                        taratasy_render::RemoteDestination::Page { page, view } => json!({ "kind": "page", "page": page1(*page), "view": format!("{view:?}") }),
+                        taratasy_render::RemoteDestination::Named(name) => json!({ "kind": "named", "name": name }),
                     },
                     "new_window": new_window,
                 }),
-                pdfcraft_render::LinkTarget::Other(o) => json!({ "other": o }),
+                taratasy_render::LinkTarget::Other(o) => json!({ "other": o }),
             },
         })).collect::<Vec<_>>(),
         "layers": i.layers.iter().map(|l| json!({ "name": l.name, "visible": l.visible })).collect::<Vec<_>>(),
         // Full-screen presentation settings a page carries (ISO 32000-2 §12.4.4): only pages with
         // a `/Trans` or `/Dur` appear; `style` is null for a display time alone.
         "transitions": i.transitions.iter().map(|t| json!({
-            "page": page1(t.page), "style": t.style.map(pdfcraft_render::TransitionStyle::name), "duration": t.duration,
+            "page": page1(t.page), "style": t.style.map(taratasy_render::TransitionStyle::name), "duration": t.duration,
             "horizontal": t.horizontal, "inward": t.inward, "direction": t.direction, "scale": t.scale, "opaque": t.opaque,
             "display": t.display,
         })).collect::<Vec<_>>(),
@@ -2483,12 +2483,12 @@ fn info(d: &Document) -> Value {
 /// A user-space rectangle on 0-based `page` in displayed-page coordinates (points from the
 /// top-left of the page as displayed, y down, after `/Rotate`), the way every tool reports
 /// rectangles; unchanged when the page is unknown (a malformed annotation that points at no page).
-/// Public so `pdfcraft-cli` reports the same rectangles as the tools.
-pub fn view_rect(i: &pdfcraft_render::DocInfo, page: usize, rect: [f32; 4]) -> [f32; 4] {
+/// Public so `taratasy-cli` reports the same rectangles as the tools.
+pub fn view_rect(i: &taratasy_render::DocInfo, page: usize, rect: [f32; 4]) -> [f32; 4] {
     i.pages.get(page).map_or(rect, |p| comments::rect_to_view(p, rect))
 }
 
-fn outline(items: &[pdfcraft_render::OutlineItem]) -> Value {
+fn outline(items: &[taratasy_render::OutlineItem]) -> Value {
     Value::Array(items.iter().map(|o| json!({ "title": o.title, "page": o.page.map(|p| p + 1), "children": outline(&o.children) })).collect())
 }
 
@@ -2600,14 +2600,14 @@ fn write_atomic_synced(
     // (#2166): the staging file is written, flushed (delayed writeback failures surface before
     // the destination is replaced or a document marked clean), closed and renamed; a failure at
     // any step removes it and leaves the destination as it was.
-    pdfcraft_platform::staging::write_atomically_with(path, bytes, StagingName::SuffixThenTag, suffixes, sync)
+    taratasy_platform::staging::write_atomically_with(path, bytes, StagingName::SuffixThenTag, suffixes, sync)
         .map_err(|e| failed(format!("{}: {e}", path.display())))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pdfcraft_platform::staging::STAGING_ATTEMPTS;
+    use taratasy_platform::staging::STAGING_ATTEMPTS;
 
     /// `n` pages, page i showing "Page i".
     fn numbered_pages(n: usize) -> Vec<u8> {
@@ -2756,7 +2756,7 @@ mod tests {
 
     #[test]
     fn a_bounded_text_find_reads_only_the_pages_it_needs_and_says_it_stopped() {
-        let dir = std::env::temp_dir().join(format!("pdfcraft-automation-find-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-automation-find-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("long.pdf"), numbered_pages(200)).unwrap();
@@ -2853,14 +2853,14 @@ mod tests {
 
     /// A fresh, empty folder for one staging test.
     fn staging_dir(test: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("pdfcraft-staging-{}-{test}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-staging-{}-{test}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
 
     fn staged(dir: &Path, suffix: u64) -> PathBuf {
-        dir.join(format!(".out.pdf.{suffix:016x}.pdfcraft-tmp"))
+        dir.join(format!(".out.pdf.{suffix:016x}.taratasy-tmp"))
     }
 
     fn read(p: &Path) -> String {

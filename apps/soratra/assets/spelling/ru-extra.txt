@@ -1,5 +1,5 @@
 # Russian spelling supplement: common words older Russian Hunspell dictionaries lack.
-# Written by WordCraft contributors (MIT OR Apache-2.0); see ATTRIBUTION.md.
+# Written by Soratra contributors (MIT OR Apache-2.0); see ATTRIBUTION.md.
 # One word per line: the base form, a TAB, then its declension, from which
 # crates/proof/src/ru/extra.rs makes every form:
 #   m     masculine noun ending in a consonant (маркетплейс, -а, -у, -ом, -е, -ы/-и, -ов/-ей…)

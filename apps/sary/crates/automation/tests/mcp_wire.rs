@@ -1,5 +1,5 @@
 //! Exercise the actual line transport, including recovery and modern result fields.
-use photocraft_automation::PhotocraftMcp;
+use sary_automation::SaryMcp;
 use serde_json::{Value, json};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
@@ -7,7 +7,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 async fn malformed_line_recovers_and_modern_lists_are_complete() {
     let (mut input, server_in) = tokio::io::duplex(1 << 20);
     let (server_out, output) = tokio::io::duplex(1 << 20);
-    let server = tokio::spawn(PhotocraftMcp::headless().serve_io(server_in, server_out));
+    let server = tokio::spawn(SaryMcp::headless().serve_io(server_in, server_out));
     let mut lines = BufReader::new(output).lines();
     let init = json!({"jsonrpc":"2.0", "id":1, "method":"initialize", "params":{"protocolVersion":"2025-06-18", "capabilities":{}, "clientInfo":{"name":"test", "version":"1"}}});
     input.write_all(format!("{init}\n").as_bytes()).await.unwrap();
@@ -17,7 +17,7 @@ async fn malformed_line_recovers_and_modern_lists_are_complete() {
     assert_eq!(error["id"], Value::Null);
     assert_eq!(error["error"]["code"], -32700);
     let meta = json!({"io.modelcontextprotocol/protocolVersion":"2026-07-28", "io.modelcontextprotocol/clientInfo":{"name":"test", "version":"1"}, "io.modelcontextprotocol/clientCapabilities":{}});
-    for (id, method, extra) in [(2, "tools/list", json!({})), (3, "resources/list", json!({})), (4, "resources/read", json!({"uri":"photocraft://document"}))] {
+    for (id, method, extra) in [(2, "tools/list", json!({})), (3, "resources/list", json!({})), (4, "resources/read", json!({"uri":"sary://document"}))] {
         let mut params = extra;
         params["_meta"] = meta.clone();
         input.write_all(format!("{}\n", json!({"jsonrpc":"2.0", "id":id, "method":method, "params":params})).as_bytes()).await.unwrap();
@@ -33,7 +33,7 @@ async fn malformed_line_recovers_and_modern_lists_are_complete() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn video_export_progress_ping_cancel_and_scoped_cleanup() {
-    use photocraft_automation::AuthorizedWorkspace;
+    use sary_automation::AuthorizedWorkspace;
     use std::time::Duration;
     let root = std::env::temp_dir().join(format!("pc-conventions-video-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
@@ -41,7 +41,7 @@ async fn video_export_progress_ping_cancel_and_scoped_cleanup() {
     let workspace = AuthorizedWorkspace::new(None, Some(&root)).unwrap();
     let (mut input, server_in) = tokio::io::duplex(1 << 20);
     let (server_out, output) = tokio::io::duplex(1 << 20);
-    let server = tokio::spawn(PhotocraftMcp::headless_with_workspace(workspace).serve_io(server_in, server_out));
+    let server = tokio::spawn(SaryMcp::headless_with_workspace(workspace).serve_io(server_in, server_out));
     let mut lines = BufReader::new(output).lines();
     macro_rules! send {
         ($value:expr) => {
@@ -91,7 +91,7 @@ async fn video_export_progress_ping_cancel_and_scoped_cleanup() {
         }
     }
     assert_eq!(std::fs::read_dir(root.join("complete")).unwrap().count(), 6);
-    assert!(photocraft_codecs::decode(&std::fs::read(root.join("gif/clip.gif")).unwrap()).is_ok());
+    assert!(sary_codecs::decode(&std::fs::read(root.join("gif/clip.gif")).unwrap()).is_ok());
     // A collision must preserve the earlier file and remove only frames from this failed run.
     std::fs::create_dir(root.join("collision")).unwrap();
     std::fs::write(root.join("collision/clip_0001.png"), b"earlier export").unwrap();

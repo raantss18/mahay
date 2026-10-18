@@ -8,14 +8,14 @@
 #[cfg(feature = "corpus")]
 use std::path::Path;
 
-use photocraft_doc::text::{CharStyle, Kerning, TextRun};
-use photocraft_doc::{Document, Layer, LayerContent, TextLayer};
-use photocraft_text::engine_data::Value as E;
+use sary_doc::text::{CharStyle, Kerning, TextRun};
+use sary_doc::{Document, Layer, LayerContent, TextLayer};
+use sary_text::engine_data::Value as E;
 
 /// `(AutoKerning, Kerning)` of every UTF-16 unit of the engine text of a `TySh` block.
 fn kerning_fields(tysh: &[u8]) -> Vec<(bool, i64)> {
-    let t = photocraft_text::psd::parse_tysh(tysh).unwrap();
-    let e = photocraft_text::psd::engine_data(&t.text).unwrap();
+    let t = sary_text::psd::parse_tysh(tysh).unwrap();
+    let e = sary_text::psd::engine_data(&t.text).unwrap();
     let runs = e.path(&["EngineDict", "StyleRun", "RunArray"]).and_then(E::as_array).unwrap();
     let lens = e.path(&["EngineDict", "StyleRun", "RunLengthArray"]).and_then(E::as_array).unwrap();
     let mut out = Vec::new();
@@ -58,16 +58,16 @@ fn manual_and_off_kerning_round_trip_through_psd() {
     use Kerning::{Metrics as M, Off as O};
     // "AVATAR Wave": +100 after A, -50 after T, characters 6..8 without automatic kerning.
     let t = layer("AVATAR Wave", &[(1, O, 100.0), (2, M, 0.0), (1, O, -50.0), (2, M, 0.0), (3, O, 0.0), (2, M, 0.0)]);
-    let mut doc = Document::new("k", photocraft_geom::Size::new(64, 32), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+    let mut doc = Document::new("k", sary_geom::Size::new(64, 32), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
     let mut t2 = t.clone();
-    photocraft_text::TextEngine::new().render_layer(&mut t2, doc.resolution_dpi, doc.pixel_format());
+    sary_text::TextEngine::new().render_layer(&mut t2, doc.resolution_dpi, doc.pixel_format());
     doc.layers.push(Layer::new("kerned", LayerContent::Text(t2)));
-    let bytes = photocraft_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
-    let back = photocraft_io::import("k.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
+    let back = sary_io::import("k.psd", &bytes).unwrap().document;
     let LayerContent::Text(b) = &back.layers[0].content else { panic!("not text") };
     assert_eq!(chars(b), chars(&t));
 
-    let tysh = photocraft_text::psd::build_tysh(&t, 72.0, None);
+    let tysh = sary_text::psd::build_tysh(&t, 72.0, None);
     let f = kerning_fields(&tysh);
     // 11 characters + the trailing paragraph break.
     assert_eq!(f.len(), 12);
@@ -80,21 +80,21 @@ fn manual_and_off_kerning_round_trip_through_psd() {
 }
 
 /// #1348: the automatic mode (Metrics/Optical) lives in the document `Txt2` block, one model
-/// object per `TextIndex`. A PhotoCraft-authored PSD must carry it or a reopened layer falls
+/// object per `TextIndex`. A Sary-authored PSD must carry it or a reopened layer falls
 /// back to Metrics — Optical used to be silently lost.
 #[test]
 fn optical_kerning_round_trips_through_psd() {
     use Kerning::{Metrics as M, Optical as P};
     let t1 = layer("AVATAR", &[(4, P, 0.0), (2, M, 0.0)]);
     let t2 = layer("Wave", &[(2, M, 0.0), (2, P, 0.0)]);
-    let mut doc = Document::new("k", photocraft_geom::Size::new(64, 32), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+    let mut doc = Document::new("k", sary_geom::Size::new(64, 32), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
     for (name, want) in [("one", &t1), ("two", &t2)] {
         let mut t = want.clone();
-        photocraft_text::TextEngine::new().render_layer(&mut t, doc.resolution_dpi, doc.pixel_format());
+        sary_text::TextEngine::new().render_layer(&mut t, doc.resolution_dpi, doc.pixel_format());
         doc.layers.push(Layer::new(name, LayerContent::Text(t)));
     }
-    let bytes = photocraft_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
-    let back = photocraft_io::import("k.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
+    let back = sary_io::import("k.psd", &bytes).unwrap().document;
     for (want, l) in [(&t1, &back.layers[0]), (&t2, &back.layers[1])] {
         let LayerContent::Text(b) = &l.content else { panic!("not text") };
         assert_eq!(chars(b), chars(want), "{}", l.name);
@@ -106,15 +106,15 @@ fn optical_kerning_round_trips_through_psd() {
 /// Optical layer still does, because its mode lives only in `Txt2`.
 #[test]
 fn fresh_metrics_text_writes_no_txt2_block() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let saves_txt2 = |kerning: Kerning| {
         let t = layer("AV", &[(2, kerning, 0.0)]);
-        let mut doc = Document::new("k", photocraft_geom::Size::new(64, 32), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+        let mut doc = Document::new("k", sary_geom::Size::new(64, 32), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
         let mut r = t.clone();
-        photocraft_text::TextEngine::new().render_layer(&mut r, doc.resolution_dpi, doc.pixel_format());
+        sary_text::TextEngine::new().render_layer(&mut r, doc.resolution_dpi, doc.pixel_format());
         doc.layers.push(Layer::new("t", LayerContent::Text(r)));
-        let bytes = photocraft_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
-        photocraft_psd::PsdFile::from_bytes(&bytes).unwrap().global_blocks.iter().any(|b| &b.key == b"Txt2")
+        let bytes = sary_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
+        sary_psd::PsdFile::from_bytes(&bytes).unwrap().global_blocks.iter().any(|b| &b.key == b"Txt2")
     };
     assert!(!saves_txt2(Kerning::Metrics), "a plain Metrics layer must not write the empty Txt2 stub");
     assert!(saves_txt2(Kerning::Optical), "Optical lives only in Txt2");
@@ -124,20 +124,20 @@ fn fresh_metrics_text_writes_no_txt2_block() {
 /// preserved TySh pointer so each layer restores its own automatic kerning mode.
 #[test]
 fn duplicate_preserved_text_indices_get_distinct_txt2_objects() {
-    let mut doc = Document::new("k", photocraft_geom::Size::new(64, 32), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+    let mut doc = Document::new("k", sary_geom::Size::new(64, 32), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
     let cases = [("optical", "AV", Kerning::Optical), ("metrics", "BC", Kerning::Metrics)];
     for (name, text, mode) in cases {
         let mut t = layer(text, &[(text.len(), mode, 0.0)]);
-        photocraft_text::TextEngine::new().render_layer(&mut t, doc.resolution_dpi, doc.pixel_format());
-        let raw = photocraft_text::psd::build_tysh(&t, doc.resolution_dpi, None);
-        t.psd_raw = Some(std::sync::Arc::new(photocraft_text::psd::set_text_index(&raw, 0).unwrap()));
+        sary_text::TextEngine::new().render_layer(&mut t, doc.resolution_dpi, doc.pixel_format());
+        let raw = sary_text::psd::build_tysh(&t, doc.resolution_dpi, None);
+        t.psd_raw = Some(std::sync::Arc::new(sary_text::psd::set_text_index(&raw, 0).unwrap()));
         doc.layers.push(Layer::new(name, LayerContent::Text(t)));
     }
-    let bytes = photocraft_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
-    let file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
-    let txt2 = file.global_blocks.iter().find(|b| &b.key == b"Txt2").and_then(|b| photocraft_text::psd::parse_txt2(&b.data)).unwrap();
+    let bytes = sary_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
+    let file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
+    let txt2 = file.global_blocks.iter().find(|b| &b.key == b"Txt2").and_then(|b| sary_text::psd::parse_txt2(&b.data)).unwrap();
     assert_eq!(txt2.path(&["1", "1"]).and_then(E::as_array).unwrap().len(), 2);
-    let back = photocraft_io::import("k.psd", &bytes).unwrap().document;
+    let back = sary_io::import("k.psd", &bytes).unwrap().document;
     for (i, expected) in [Kerning::Optical, Kerning::Metrics].into_iter().enumerate() {
         let LayerContent::Text(t) = &back.layers[i].content else { panic!("expected text layer") };
         assert!(chars(t).iter().all(|(mode, _)| *mode == expected), "layer {i} used another layer's Txt2 object");
@@ -150,18 +150,18 @@ fn duplicate_preserved_text_indices_get_distinct_txt2_objects() {
 #[test]
 fn hostile_text_index_never_sizes_the_save() {
     let t = layer("AV", &[(1, Kerning::Metrics, 0.0), (1, Kerning::Optical, 0.0)]);
-    let mut doc = Document::new("k", photocraft_geom::Size::new(64, 32), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+    let mut doc = Document::new("k", sary_geom::Size::new(64, 32), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
     let mut r = t.clone();
-    photocraft_text::TextEngine::new().render_layer(&mut r, doc.resolution_dpi, doc.pixel_format());
+    sary_text::TextEngine::new().render_layer(&mut r, doc.resolution_dpi, doc.pixel_format());
     // An invalid index is remapped into the saved Txt2 rather than preserved.
-    r.psd_raw = Some(std::sync::Arc::new(photocraft_text::psd::set_text_index(&photocraft_text::psd::build_tysh(&r, 72.0, None), i32::MAX).unwrap()));
+    r.psd_raw = Some(std::sync::Arc::new(sary_text::psd::set_text_index(&sary_text::psd::build_tysh(&r, 72.0, None), i32::MAX).unwrap()));
     doc.layers.push(Layer::new("hostile", LayerContent::Text(r)));
-    let bytes = photocraft_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
-    let file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
-    let txt2 = file.global_blocks.iter().find(|b| &b.key == b"Txt2").and_then(|b| photocraft_text::psd::parse_txt2(&b.data)).unwrap();
+    let bytes = sary_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
+    let file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
+    let txt2 = file.global_blocks.iter().find(|b| &b.key == b"Txt2").and_then(|b| sary_text::psd::parse_txt2(&b.data)).unwrap();
     let slots = txt2.path(&["1", "1"]).and_then(E::as_array).unwrap();
     assert!(slots.len() <= 8, "a file-controlled TextIndex sized the save: {} slots", slots.len());
-    let back = photocraft_io::import("k.psd", &bytes).unwrap().document;
+    let back = sary_io::import("k.psd", &bytes).unwrap().document;
     let LayerContent::Text(b) = &back.layers[0].content else { panic!("not text") };
     assert_eq!(b.text, "AV");
     assert_eq!(chars(b), chars(&t), "a remapped TextIndex must still restore Optical kerning");
@@ -176,21 +176,21 @@ fn txt2_extras_survive_a_resave_of_unchanged_text() {
         ("0".into(), E::Dict(vec![("0".into(), E::String("AV\r".into())), ("6".into(), E::Dict(vec![("0".into(), E::Array(vec![]))]))])),
         ("21".into(), E::Dict(vec![("1".into(), E::Array(vec![E::Real(10.0), E::Real(20.0)]))])),
     ]);
-    let prev = photocraft_text::engine_data::write_bare(&[
+    let prev = sary_text::engine_data::write_bare(&[
         ("98".into(), E::Dict(vec![("0".into(), E::Int(14))])),
         ("0".into(), E::dict()),
         ("1".into(), E::Dict(vec![("1".into(), E::Array(vec![obj]))])),
     ]);
     let save = |text: &str| {
         let t = layer(text, &[(text.len(), Kerning::Metrics, 0.0)]);
-        let mut doc = Document::new("k", photocraft_geom::Size::new(64, 32), photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8);
+        let mut doc = Document::new("k", sary_geom::Size::new(64, 32), sary_color::ColorMode::Rgb, sary_color::SampleType::U8);
         let mut r = t.clone();
-        photocraft_text::TextEngine::new().render_layer(&mut r, doc.resolution_dpi, doc.pixel_format());
+        sary_text::TextEngine::new().render_layer(&mut r, doc.resolution_dpi, doc.pixel_format());
         doc.layers.push(Layer::new("kept", LayerContent::Text(r)));
         doc.metadata.psd_global_blocks.push((*b"8BIM", *b"Txt2", std::sync::Arc::new(prev.clone())));
-        let bytes = photocraft_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
-        let file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
-        photocraft_text::psd::parse_txt2(&file.global_blocks.iter().find(|b| &b.key == b"Txt2").unwrap().data).unwrap()
+        let bytes = sary_io::export(&doc, "k.psd", &Default::default()).unwrap().bytes;
+        let file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
+        sary_text::psd::parse_txt2(&file.global_blocks.iter().find(|b| &b.key == b"Txt2").unwrap().data).unwrap()
     };
     let kept = save("AV");
     let object = kept.path(&["1", "1"]).and_then(E::as_array).unwrap()[0].clone();
@@ -204,13 +204,13 @@ fn txt2_extras_survive_a_resave_of_unchanged_text() {
 #[test]
 fn hostile_kerning_values() {
     let t = layer("AV", &[(1, Kerning::Off, f32::NAN), (1, Kerning::Metrics, f32::INFINITY)]);
-    let tysh = photocraft_text::psd::build_tysh(&t, 72.0, None);
+    let tysh = sary_text::psd::build_tysh(&t, 72.0, None);
     assert!(kerning_fields(&tysh).iter().all(|f| f.1 == 0));
-    let back = photocraft_text::psd::text_layer_from_tysh(&tysh, 72.0).unwrap();
+    let back = sary_text::psd::text_layer_from_tysh(&tysh, 72.0).unwrap();
     assert!(chars(&back).iter().all(|c| c.1 == 0.0));
     // Huge values clamp.
     let t = layer("AV", &[(1, Kerning::Off, 1e30), (1, Kerning::Metrics, 0.0)]);
-    let f = kerning_fields(&photocraft_text::psd::build_tysh(&t, 72.0, None));
+    let f = kerning_fields(&sary_text::psd::build_tysh(&t, 72.0, None));
     assert_eq!(f[1].1, 10_000);
 }
 
@@ -236,7 +236,7 @@ fn photoshop_positions(txt2: &E, index: usize) -> Option<Vec<f64>> {
 }
 
 /// Photoshop-authored kerning oracles (`corpus/photoshop/text/kerning-*.psd`, made from scratch
-/// by photocraft-corpus's generator): the automatic mode read from `Txt2` per character, the
+/// by sary-corpus's generator): the automatic mode read from `Txt2` per character, the
 /// EngineData kerning fields after export, and our layout against Photoshop's glyph positions.
 #[cfg(feature = "corpus")]
 #[test]
@@ -244,7 +244,7 @@ fn photoshop_kerning_oracles() {
     use Kerning::{Metrics as M, Off as O, Optical as P};
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus/photoshop/text");
     assert!(dir.is_dir(), "{} is missing: run `cargo xtask corpus --all`", dir.display());
-    let mut engine = photocraft_text::TextEngine::with_system_fonts();
+    let mut engine = sary_text::TextEngine::with_system_fonts();
     let arial = engine.fonts.has_family("Arial");
     // "AVATAR Wavy To. LT" (18 characters).
     let all = |m: Kerning| vec![(m, 0.0f32); 18];
@@ -262,9 +262,9 @@ fn photoshop_kerning_oracles() {
     ];
     for (name, want, same_fields, worst_max, mean_max) in cases {
         let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|e| panic!("{name}: {e}"));
-        let file = photocraft_psd::PsdFile::from_bytes(&bytes).unwrap();
-        let txt2 = file.global_blocks.iter().find(|b| &b.key == b"Txt2").and_then(|b| photocraft_text::psd::parse_txt2(&b.data)).unwrap();
-        let doc = photocraft_io::import(name, &bytes).unwrap().document;
+        let file = sary_psd::PsdFile::from_bytes(&bytes).unwrap();
+        let txt2 = file.global_blocks.iter().find(|b| &b.key == b"Txt2").and_then(|b| sary_text::psd::parse_txt2(&b.data)).unwrap();
+        let doc = sary_io::import(name, &bytes).unwrap().document;
         let t = doc
             .layers
             .iter()
@@ -276,14 +276,14 @@ fn photoshop_kerning_oracles() {
         assert_eq!(chars(t), want, "{name}");
 
         let original = t.psd_raw.as_ref().map(|r| r.to_vec()).unwrap();
-        let tysh = photocraft_text::psd::parse_tysh(&original).unwrap();
-        let rebuilt = photocraft_text::psd::build_tysh(t, doc.resolution_dpi, None);
+        let tysh = sary_text::psd::parse_tysh(&original).unwrap();
+        let rebuilt = sary_text::psd::build_tysh(t, doc.resolution_dpi, None);
         if same_fields {
             assert_eq!(kerning_fields(&rebuilt), kerning_fields(&original), "{name}");
         }
         // Re-import (with the document's Txt2, as an exported file keeps it): same model.
-        let mut back = photocraft_text::psd::text_layer_from_tysh(&rebuilt, doc.resolution_dpi).unwrap();
-        photocraft_text::psd::apply_txt2(&mut back, &rebuilt, &txt2);
+        let mut back = sary_text::psd::text_layer_from_tysh(&rebuilt, doc.resolution_dpi).unwrap();
+        sary_text::psd::apply_txt2(&mut back, &rebuilt, &txt2);
         assert_eq!(chars(&back), want, "{name} after export");
 
         // Layout against Photoshop's glyph positions (needs Arial, as Photoshop used).
@@ -292,7 +292,7 @@ fn photoshop_kerning_oracles() {
             continue;
         }
         let index = match &tysh.text.get("TextIndex") {
-            Some(photocraft_psd::descriptor::Value::Integer(i)) => *i as usize,
+            Some(sary_psd::descriptor::Value::Integer(i)) => *i as usize,
             _ => panic!("{name}: no TextIndex"),
         };
         let ps = photoshop_positions(&txt2, index).unwrap();

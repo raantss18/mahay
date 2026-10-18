@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use photocraft_raster::Surface;
+use sary_raster::Surface;
 
 /// Where a video layer's footage came from.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

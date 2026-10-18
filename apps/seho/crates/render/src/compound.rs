@@ -9,7 +9,7 @@
 //!
 //! On a shape drawn clockwise (all presets) the left side is the outside.
 
-use deckcraft_model::style::Compound;
+use seho_model::style::Compound;
 use kurbo::{BezPath, CubicBez, ParamCurve, PathEl, PathSeg, Point, Vec2};
 
 /// The bands of `c` as (from, to) shares of the width, left side first.

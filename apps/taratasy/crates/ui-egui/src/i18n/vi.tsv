@@ -1,9 +1,9 @@
 # Vietnamese (vi) catalog. Columns, separated by a TAB: context <TAB> source <TAB> translation
 #
-# Clean-room translations from PdfCraft's English UI labels. Reviewed by a native
-# Vietnamese-speaking contributor for the original catalog; later additions are marked below. PhotoCraft/VectorCraft Vietnamese catalogs were used only as
+# Clean-room translations from Taratasy's English UI labels. Reviewed by a native
+# Vietnamese-speaking contributor for the original catalog; later additions are marked below. Sary/Tsipika Vietnamese catalogs were used only as
 # translation memory when the English source and its meaning in context matched. Product and
-# format names (PdfCraft, PDF, PDF/A, OCR, XFA, Word…) remain names where appropriate.
+# format names (Taratasy, PDF, PDF/A, OCR, XFA, Word…) remain names where appropriate.
 # Plural rule: `plural_none` — every @plural row lists exactly one form.
 # Context-sensitive wording and intentional unchanged strings are regression-tested in i18n/mod.rs.
 #
@@ -141,7 +141,7 @@ theme	Appearance	Giao diện
 	Accessibility	Trợ năng
 	Help…	Trợ giúp…
 	Check for updates…	Kiểm tra bản cập nhật…
-	About PdfCraft	Giới thiệu PdfCraft
+	About Taratasy	Giới thiệu Taratasy
 	Automatically	Tự động
 	Never	Không bao giờ
 	Always	Luôn luôn
@@ -557,7 +557,7 @@ theme	Appearance	Giao diện
 	Files are combined from top to bottom. Leave Pages empty to take every page.	Các tệp được kết hợp từ trên xuống dưới. Để trống mục Trang để lấy mọi trang.
 	Files are combined in the order shown. Drag them to change it.	Các tệp được kết hợp theo thứ tự hiển thị. Kéo chúng để thay đổi.
 	Files for {name}	Tệp cho {name}
-	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Các tệp bạn mở trong PdfCraft sẽ xuất hiện ở đây. Thả một PDF vào bất kỳ đâu để mở.
+	Files you open in Taratasy appear here. Drop a PDF anywhere to open it.	Các tệp bạn mở trong Taratasy sẽ xuất hiện ở đây. Thả một PDF vào bất kỳ đâu để mở.
 	Fill & Sign dates	Ngày của Điền & Ký
 	Fill & Sign signature	Chữ ký của Điền & Ký
 	Fill Color:	Màu tô:
@@ -664,7 +664,7 @@ theme	Appearance	Giao diện
 	JavaScript is turned off (Preferences ▸ JavaScript).	JavaScript đã bị tắt (Tùy chọn > JavaScript).
 	JavaScript, e.g. getField("total").value	JavaScript, ví dụ getField("total").value
 	Join our Discord	Tham gia Discord của chúng tôi
-	Join the ArtCraft community	Tham gia cộng đồng ArtCraft
+	Join the Mahay community	Tham gia cộng đồng Mahay
 	Justify	Căn đều
 	Keep source fonts	Giữ phông chữ nguồn
 	Keep tool selected	Giữ công cụ được chọn
@@ -866,10 +866,10 @@ theme	Appearance	Giao diện
 	Pattern	Họa tiết
 	Patterns	Họa tiết
 	Patterns (graphics objects)	Họa tiết (đối tượng đồ họa)
-	PdfCraft didn't shut down normally. These documents had changes that were autosaved:	PdfCraft không đóng bình thường. Các tài liệu này có thay đổi đã được tự động lưu:
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft hoạt động ngoại tuyến. Không thu thập dữ liệu sử dụng, không cần tài khoản, và không xử lý đám mây trừ khi bạn thêm nhà cung cấp.
-	PdfCraft {c} is up to date.	PdfCraft {c} đã là bản mới nhất.
-	PdfCraft {v} is available.	PdfCraft {v} đã có sẵn.
+	Taratasy didn't shut down normally. These documents had changes that were autosaved:	Taratasy không đóng bình thường. Các tài liệu này có thay đổi đã được tự động lưu:
+	Taratasy works offline. No telemetry, no account, and no cloud processing unless you add a provider.	Taratasy hoạt động ngoại tuyến. Không thu thập dữ liệu sử dụng, không cần tài khoản, và không xử lý đám mây trừ khi bạn thêm nhà cung cấp.
+	Taratasy {c} is up to date.	Taratasy {c} đã là bản mới nhất.
+	Taratasy {v} is available.	Taratasy {v} đã có sẵn.
 	Percentage	Phần trăm
 	Permissions password	Mật khẩu quyền hạn
 	Permitted actions after certifying	Các hành động được phép sau khi chứng nhận
@@ -943,7 +943,7 @@ theme	Appearance	Giao diện
 	Remove {n} files	Gỡ {n} tệp
 	Remove {n} pages	Gỡ {n} trang
 	Reopen Closed Tab	Mở lại thẻ đã đóng
-	Reopen the files that were open when PdfCraft last closed	Mở lại các tệp đã mở khi PdfCraft đóng lần trước
+	Reopen the files that were open when Taratasy last closed	Mở lại các tệp đã mở khi Taratasy đóng lần trước
 	Repair log	Nhật ký sửa chữa
 	Repeat overlay text	Lặp lại văn bản phủ
 	Replace Image…	Thay thế hình ảnh…
@@ -1122,7 +1122,7 @@ theme	Appearance	Giao diện
 	Text alignment:	Căn chỉnh văn bản:
 	Text in images isn't found; recognise text (OCR) first.	Văn bản trong hình ảnh không được tìm thấy; hãy nhận dạng văn bản (OCR) trước.
 	Text is compared word by word; the differences are shown on the new file.	Văn bản được so sánh từng từ; các khác biệt được hiển thị trên tệp mới.
-	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Tính năng nhận dạng văn bản chưa được cài đặt: thiếu các tệp mô hình. Hãy cài đặt lại PdfCraft, hoặc đặt PDFCRAFT_MODELS thành thư mục chứa chúng.
+	Text recognition isn't installed: its model files are missing. Reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them.	Tính năng nhận dạng văn bản chưa được cài đặt: thiếu các tệp mô hình. Hãy cài đặt lại Taratasy, hoặc đặt TARATASY_MODELS thành thư mục chứa chúng.
 	Text to find	Văn bản cần tìm
 	Text to insert	Văn bản cần chèn
 	Text used as a clipping path cannot be moved with this selection.	Văn bản dùng làm đường cắt xén không thể di chuyển cùng vùng chọn này.
@@ -1137,9 +1137,9 @@ theme	Appearance	Giao diện
 	The document's security settings don't allow copying text and images	Cài đặt bảo mật của tài liệu không cho phép sao chép văn bản và hình ảnh
 	The document's security settings don't allow this change	Cài đặt bảo mật của tài liệu không cho phép thay đổi này
 	The existing action will be preserved.	Hành động hiện có sẽ được giữ nguyên.
-	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Phông chữ mà PdfCraft dùng để ghi không thể vẽ “{c}” ({code}), nên nó hiển thị là ? trong mọi trình xem PDF. Văn bản vẫn được lưu.
-	The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.	Khóa nằm trong kho chứng chỉ Windows, nơi có thể yêu cầu cho phép PdfCraft sử dụng nó.
-	The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.	Khóa nằm trong macOS Keychain, nơi có thể yêu cầu cho phép PdfCraft sử dụng nó.
+	The fonts Taratasy writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Phông chữ mà Taratasy dùng để ghi không thể vẽ “{c}” ({code}), nên nó hiển thị là ? trong mọi trình xem PDF. Văn bản vẫn được lưu.
+	The key is in the Windows certificate store, which may ask to allow Taratasy to use it.	Khóa nằm trong kho chứng chỉ Windows, nơi có thể yêu cầu cho phép Taratasy sử dụng nó.
+	The key is in the macOS Keychain, which may ask to allow Taratasy to use it.	Khóa nằm trong macOS Keychain, nơi có thể yêu cầu cho phép Taratasy sử dụng nó.
 	The newest {n} of {total} PDFs	{n} PDF mới nhất trong tổng số {total}
 	The password is only used to read the file; it isn't saved.	Mật khẩu chỉ được dùng để đọc tệp; nó không được lưu.
 	The printer driver's own settings for this print: paper tray, paper type, finishing and more.	Cài đặt riêng của trình điều khiển máy in cho lần in này: khay giấy, loại giấy, hoàn thiện và nhiều hơn nữa.
@@ -1180,7 +1180,7 @@ theme	Appearance	Giao diện
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Tệp này bị hỏng và đã được sửa chữa. Việc lưu sẽ giữ phiên bản đã sửa.
 	This folder isn't available right now. It may have moved, or its drive or cloud sync is offline.	Thư mục này hiện không khả dụng. Nó có thể đã bị di chuyển, hoặc ổ đĩa hay đồng bộ đám mây của nó đang ngoại tuyến.
 	This form's scripts are turned off because one ran too long. Reopen the document to run them again.	Các script của biểu mẫu này đã bị tắt vì một script chạy quá lâu. Hãy mở lại tài liệu để chạy chúng lại.
-	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Đây là biểu mẫu XFA động, mà PdfCraft chưa thể hiển thị. Những gì bạn thấy là trang giữ chỗ của tệp.
+	This is a dynamic XFA form, which Taratasy can't display yet. What you see is the file's placeholder page.	Đây là biểu mẫu XFA động, mà Taratasy chưa thể hiển thị. Những gì bạn thấy là trang giữ chỗ của tệp.
 	This measurement needs at least {n} points.	Phép đo này cần ít nhất {n} điểm.
 	This page contains objects that cannot be selected together.	Trang này chứa các đối tượng không thể chọn cùng nhau.
 	This page couldn't be displayed.\n{e}	Không thể hiển thị trang này.\n{e}
@@ -1257,7 +1257,7 @@ theme	Appearance	Giao diện
 	Visible Rectangle	Hình chữ nhật hiển thị
 	Visual	Trực quan
 	Warnings	Cảnh báo
-	Welcome to PdfCraft	Chào mừng đến với PdfCraft
+	Welcome to Taratasy	Chào mừng đến với Taratasy
 	What word or phrase would you like to search for?	Bạn muốn tìm từ hoặc cụm từ nào?
 	Whole words only	Chỉ khớp toàn bộ từ
 	Width:	Chiều rộng:
@@ -1334,7 +1334,7 @@ theme	Appearance	Giao diện
 	Archive documents	Lưu trữ tài liệu
 	Area	Diện tích
 	Arrow	Mũi tên
-	ArtCraft website	Trang web ArtCraft
+	Mahay website	Trang web Mahay
 	Ask about this document	Hỏi về tài liệu này
 	Attach a file	Đính kèm một tệp
 	Attach file	Đính kèm tệp
@@ -1469,7 +1469,7 @@ theme	Appearance	Giao diện
 	Insert text	Chèn văn bản
 	JavaScript	JavaScript
 	JavaScript console…	Bảng điều khiển JavaScript…
-	Join the ArtCraft Discord	Tham gia Discord của ArtCraft
+	Join the Mahay Discord	Tham gia Discord của Mahay
 	Light gray	Xám nhạt
 	Line	Đường thẳng
 	Link	Liên kết
@@ -1500,8 +1500,8 @@ theme	Appearance	Giao diện
 	Page options	Tùy chọn trang
 	Page transitions	Hiệu ứng chuyển trang
 	Paste pages	Dán trang
-	PdfCraft on GitHub	PdfCraft trên GitHub
-	PdfCraft web page	Trang web PdfCraft
+	Taratasy on GitHub	Taratasy trên GitHub
+	Taratasy web page	Trang web Taratasy
 	Perimeter	Chu vi
 	Pin folder to Home…	Ghim thư mục vào Trang chủ…
 	PostScript / EPS	PostScript / EPS
@@ -1659,7 +1659,7 @@ theme	Appearance	Giao diện
 	Page {} has additional actions	Trang {} có các hành động bổ sung
 	Panel layout could not be restored: {error}	Không thể khôi phục bố cục bảng: {error}
 	Panel move was not applied: {error}	Việc di chuyển bảng chưa được áp dụng: {error}
-	PdfCraft can't check this signature yet: {}.	PdfCraft chưa thể kiểm tra chữ ký này: {}.
+	Taratasy can't check this signature yet: {}.	Taratasy chưa thể kiểm tra chữ ký này: {}.
 	Previous (⇧⌘G)	Trước (⇧⌘G)
 	Print (⌘P)	In (⌘P)
 	Producer	Ứng dụng sản xuất
@@ -1723,7 +1723,7 @@ theme	Appearance	Giao diện
 	The signed content is a constructed (segmented) OCTET STRING, as BER allows; it was read anyway.	Nội dung được ký là một OCTET STRING dạng cấu trúc (phân đoạn), như BER cho phép; nó vẫn được đọc.
 	The signer's certificate does not allow digital signatures (its key usage has neither digital signature nor non-repudiation).	Chứng chỉ của người ký không cho phép chữ ký số (mục đích sử dụng khóa của nó không có chữ ký số cũng không có chống chối bỏ).
 	The signer's certificate has been revoked ({}).	Chứng chỉ của người ký đã bị thu hồi ({}).
-	The signer's certificate has critical extensions PdfCraft does not recognize ({}).	Chứng chỉ của người ký có các phần mở rộng quan trọng mà PdfCraft không nhận ra ({}).
+	The signer's certificate has critical extensions Taratasy does not recognize ({}).	Chứng chỉ của người ký có các phần mở rộng quan trọng mà Taratasy không nhận ra ({}).
 	The signer's certificate is not in the signature.	Chứng chỉ của người ký không có trong chữ ký.
 	The signer's certificate is not issued for signing documents (its extended key usage has no document-signing purpose).	Chứng chỉ của người ký không được cấp để ký tài liệu (mục đích sử dụng khóa mở rộng của nó không có mục đích ký tài liệu).
 	The signer's certificate was not valid at the time of signing.	Chứng chỉ của người ký không hợp lệ tại thời điểm ký.
@@ -2168,7 +2168,7 @@ comment menu	Edit	Sửa
 	Passed	Đạt
 	Password protection will be applied when you save	Bảo vệ bằng mật khẩu sẽ được áp dụng khi bạn lưu
 	Path	Đường dẫn
-	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	PdfCraft đang vẽ mà không có bộ xử lý đồ họa, nên có thể chậm. Cập nhật trình điều khiển đồ họa có thể giúp ích.
+	Taratasy is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	Taratasy đang vẽ mà không có bộ xử lý đồ họa, nên có thể chậm. Cập nhật trình điều khiển đồ họa có thể giúp ích.
 	People may need more time to respond. Check that nothing has a time limit.	Mọi người có thể cần thêm thời gian để phản hồi. Hãy kiểm tra rằng không có gì bị giới hạn thời gian.
 	Phone Number	Số điện thoại
 	Phone Numbers	Số điện thoại
@@ -2307,7 +2307,7 @@ comment menu	Edit	Sửa
 	Text language is specified	Đã chỉ định ngôn ngữ văn bản
 	Text must contrast enough with its background for people with low vision. Check the colours by eye or with a contrast tool.	Văn bản phải đủ tương phản với nền để người kém thị lực nhìn được. Hãy kiểm tra màu bằng mắt hoặc bằng công cụ đo độ tương phản.
 	Text recognition is already running	Việc nhận dạng văn bản đang chạy
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Tính năng nhận dạng văn bản chưa được cài đặt: thiếu các mô hình (hãy chạy `cargo xtask models`, hoặc đặt PDFCRAFT_MODELS).
+	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set TARATASY_MODELS).	Tính năng nhận dạng văn bản chưa được cài đặt: thiếu các mô hình (hãy chạy `cargo xtask models`, hoặc đặt TARATASY_MODELS).
 	That didn't work: an internal error stopped it ({m}).	Không thành công: một lỗi nội bộ đã dừng nó ({m}).
 	That didn't work: an internal error stopped it ({m}). Your documents are unchanged.	Không thành công: một lỗi nội bộ đã dừng nó ({m}). Các tài liệu của bạn không thay đổi.
 	The Keychain's digital IDs couldn't be listed: {e}	Không thể liệt kê các Digital ID của Keychain: {e}
@@ -2324,7 +2324,7 @@ comment menu	Edit	Sửa
 	The document's security settings don't allow filling in form fields	Cài đặt bảo mật của tài liệu không cho phép điền các trường biểu mẫu
 	The field properties could not be changed.	Không thể thay đổi thuộc tính của trường.
 	The field properties dialog is no longer open.	Hộp thoại thuộc tính trường không còn được mở.
-	The form asks to be submitted to {u}; PdfCraft doesn't send form data. Save the document to keep your entries.	Biểu mẫu yêu cầu được gửi đến {u}; PdfCraft không gửi dữ liệu biểu mẫu. Hãy lưu tài liệu để giữ các mục bạn đã nhập.
+	The form asks to be submitted to {u}; Taratasy doesn't send form data. Save the document to keep your entries.	Biểu mẫu yêu cầu được gửi đến {u}; Taratasy không gửi dữ liệu biểu mẫu. Hãy lưu tài liệu để giữ các mục bạn đã nhập.
 	The form asks viewers to make appearances (NeedAppearances)	Biểu mẫu yêu cầu trình xem tạo diện mạo (NeedAppearances)
 	The linked PDF opened, but its named destination was not applied.	PDF được liên kết đã mở, nhưng đích đến có tên của nó chưa được áp dụng.
 	The linked PDF opened, but its page destination was out of range.	PDF được liên kết đã mở, nhưng đích đến trang của nó nằm ngoài phạm vi.
@@ -2345,7 +2345,7 @@ comment menu	Edit	Sửa
 	This document has no form fields.	Tài liệu này không có trường biểu mẫu.
 	This document has no layers.	Tài liệu này không có lớp.
 	This file is already as small as it can be made ({size}). No copy was saved.	Tệp này đã nhỏ hết mức có thể ({size}). Không có bản sao nào được lưu.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Biểu mẫu này còn chứa dữ liệu XFA mà PdfCraft chưa đọc được. Bạn có thể điền các trường của nó, nhưng Acrobat có thể hiển thị giá trị XFA thay thế.
+	This form also contains XFA data, which Taratasy doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Biểu mẫu này còn chứa dữ liệu XFA mà Taratasy chưa đọc được. Bạn có thể điền các trường của nó, nhưng Acrobat có thể hiển thị giá trị XFA thay thế.
 	Thumbnails	Hình thu nhỏ
 	Timed responses	Phản hồi có giới hạn thời gian
 	Type Password	Nhập mật khẩu
@@ -2398,7 +2398,7 @@ comment menu	Edit	Sửa
 	the document is protected by a password	tài liệu được bảo vệ bằng mật khẩu
 	the image is empty	hình ảnh trống
 	the password is incorrect	mật khẩu không đúng
-	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	các mô hình nhận dạng văn bản chưa được cài đặt (hãy cài đặt lại PdfCraft, hoặc đặt PDFCRAFT_MODELS thành thư mục chứa chúng)
+	the text recognition models are not installed (reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them)	các mô hình nhận dạng văn bản chưa được cài đặt (hãy cài đặt lại Taratasy, hoặc đặt TARATASY_MODELS thành thư mục chứa chúng)
 	the title must not be empty	tiêu đề không được để trống
 	there are no pages to print	không có trang nào để in
 	there are no redaction marks to apply	không có dấu đánh dấu xóa nào để áp dụng
@@ -2411,19 +2411,19 @@ comment menu	Edit	Sửa
 	{label} failed: {e}	{label} thất bại: {e}
 	{name} has no action	{name} không có hành động
 	{name} is too large for a word list (at most 1 MB).	{name} quá lớn để làm danh sách từ (tối đa 1 MB).
-	{name} submits the form to {url}; PdfCraft doesn't send form data. Save the document to keep your entries.	{name} gửi biểu mẫu đến {url}; PdfCraft không gửi dữ liệu biểu mẫu. Hãy lưu tài liệu để giữ các mục bạn đã nhập.
+	{name} submits the form to {url}; Taratasy doesn't send form data. Save the document to keep your entries.	{name} gửi biểu mẫu đến {url}; Taratasy không gửi dữ liệu biểu mẫu. Hãy lưu tài liệu để giữ các mục bạn đã nhập.
 	{name}: choosing images arrives on the web with file pickers for images	{name}: việc chọn hình ảnh sẽ có trên web cùng với bộ chọn tệp hình ảnh
 	{name}: the {other} action isn't supported yet	{name}: hành động {other} chưa được hỗ trợ
-	{who} in this document tried to open an address PdfCraft won't open: {e}.	{who} trong tài liệu này đã cố mở một địa chỉ mà PdfCraft sẽ không mở: {e}.
-	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	{who} trong tài liệu này đã cố mở một địa chỉ mà PdfCraft sẽ không mở: {e}. Chỉ các liên kết web (http, https) và email (mailto) mới được mở từ tài liệu.
+	{who} in this document tried to open an address Taratasy won't open: {e}.	{who} trong tài liệu này đã cố mở một địa chỉ mà Taratasy sẽ không mở: {e}.
+	{who} in this document tried to open an address Taratasy won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	{who} trong tài liệu này đã cố mở một địa chỉ mà Taratasy sẽ không mở: {e}. Chỉ các liên kết web (http, https) và email (mailto) mới được mở từ tài liệu.
 animation effects	Off	Tắt
 animation effects	On	Bật
 	View more	Xem thêm
 	View less	Xem ít hơn
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Chỉ tiếp tục nếu bạn tin cậy tài liệu này. Một địa chỉ có thể mang thông tin từ tài liệu, chẳng hạn những gì bạn đã nhập vào biểu mẫu của nó.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	In một mặt. Giữ các tờ theo thứ tự, cắt theo các dấu, rồi xếp các chồng từ trái sang phải, từ trên xuống dưới.
-	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: PdfCraft finds the signature and removes the paper.	Hãy ký lên một tờ giấy trắng và chụp ảnh dưới ánh sáng sáng, đều (dùng đèn flash). Chọn ảnh hoặc thả vào đây: PdfCraft sẽ tìm chữ ký và loại bỏ phần giấy.
-	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Phông chữ của trường này không thể vẽ “{c}” ({code}), nên PdfCraft hiển thị ? thay thế. Giá trị vẫn được lưu, và các trình xem PDF khác vẽ lại trường từ giá trị đó.
+	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: Taratasy finds the signature and removes the paper.	Hãy ký lên một tờ giấy trắng và chụp ảnh dưới ánh sáng sáng, đều (dùng đèn flash). Chọn ảnh hoặc thả vào đây: Taratasy sẽ tìm chữ ký và loại bỏ phần giấy.
+	This field's font can't draw “{c}” ({code}), so Taratasy shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Phông chữ của trường này không thể vẽ “{c}” ({code}), nên Taratasy hiển thị ? thay thế. Giá trị vẫn được lưu, và các trình xem PDF khác vẽ lại trường từ giá trị đó.
 	{chars} can't be written into the PDF yet: Fill & Sign text is Western European only. Pick a numeric format such as dd.mm.yyyy.	Chưa thể ghi {chars} vào PDF: văn bản của Điền & Ký chỉ hỗ trợ ký tự Tây Âu. Hãy chọn định dạng số như dd.mm.yyyy.
 	January	Tháng 1
 	February	Tháng 2

@@ -1,6 +1,6 @@
 [package]
-name = "artcraft-launcher-core"
-description = "ArtCraft Launcher core: the Craft App Suite catalog, versions, release parsing and asset choice (pure, wasm-safe)"
+name = "trano-core"
+description = "Mahay Trano core: the Mahay App Suite catalog, versions, release parsing and asset choice (pure, wasm-safe)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

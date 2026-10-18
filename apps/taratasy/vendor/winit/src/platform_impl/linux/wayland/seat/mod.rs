@@ -158,7 +158,7 @@ impl SeatHandler for WinitState {
             },
         };
 
-        // PdfCraft patch: the text input belongs to the seat, not to a capability, so it is
+        // Taratasy patch: the text input belongs to the seat, not to a capability, so it is
         // destroyed in `remove_seat` instead (rust-windowing/winit#4747). Destroying it here
         // whenever any capability went away (a touch screen or tablet unplugged, a remote-desktop
         // session ending) left the window without IME until restart: `new_capability` only

@@ -2,7 +2,7 @@
 //! ECMA-376 standard.
 //!
 //! [`import`] reads a package leniently (unknown parts are skipped, malformed parts are logged and
-//! ignored, every size and depth is bounded) into the DeckCraft model; [`export`] writes a valid
+//! ignored, every size and depth is bounded) into the Seho model; [`export`] writes a valid
 //! package that PowerPoint opens without repair.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
@@ -22,7 +22,7 @@ mod xml;
 /// 3-D settings) instead of scanning strings.
 pub use xml::{Doc as XmlDoc, El as XmlEl, parse as parse_xml};
 
-use deckcraft_model::Presentation;
+use seho_model::Presentation;
 
 /// Extension URI of the PowerPoint 2010 section list in `presentation.xml`.
 pub(crate) const SECTION_EXT_URI: &str = "{521415D9-36F7-43E2-AB2F-B90AF26B5E84}";
@@ -64,7 +64,7 @@ pub fn import(bytes: &[u8]) -> Result<Presentation, PptxError> {
 }
 
 /// Read the theme of a `.thmx` file, or of a `.pptx` / `.potx`'s first master, with its media.
-pub fn import_theme(bytes: &[u8]) -> Result<(deckcraft_model::theme::Theme, Vec<deckcraft_model::MediaItem>), PptxError> {
+pub fn import_theme(bytes: &[u8]) -> Result<(seho_model::theme::Theme, Vec<seho_model::MediaItem>), PptxError> {
     read::import_theme(bytes)
 }
 
@@ -119,7 +119,7 @@ pub(crate) fn mime_for(name: &str) -> &'static str {
 mod import_theme_tests {
     use std::io::{Read, Write};
 
-    use deckcraft_model::Presentation;
+    use seho_model::Presentation;
 
     fn custom() -> Presentation {
         let mut p = Presentation::default();
@@ -127,7 +127,7 @@ mod import_theme_tests {
         m.theme.name = "Harbour".into();
         m.theme.fonts.major.latin = "Lato".into();
         m.theme.fonts.minor.latin = "Source Sans 3".into();
-        m.theme.colors.set(deckcraft_color::SchemeSlot::Accent1, deckcraft_color::Rgba::rgb(0x12, 0x34, 0x56));
+        m.theme.colors.set(seho_color::SchemeSlot::Accent1, seho_color::Rgba::rgb(0x12, 0x34, 0x56));
         p
     }
 
@@ -155,7 +155,7 @@ mod import_theme_tests {
             assert_eq!(t.name, "Harbour");
             assert_eq!(t.fonts.major.latin, "Lato");
             assert_eq!(t.fonts.minor.latin, "Source Sans 3");
-            assert_eq!(t.colors.get(deckcraft_color::SchemeSlot::Accent1), deckcraft_color::Rgba::rgb(0x12, 0x34, 0x56));
+            assert_eq!(t.colors.get(seho_color::SchemeSlot::Accent1), seho_color::Rgba::rgb(0x12, 0x34, 0x56));
         }
     }
 

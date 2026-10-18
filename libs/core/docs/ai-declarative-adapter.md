@@ -5,7 +5,7 @@ Row: `u2` in `ai-framework-handoff/handoff_tasks.py`. Depends on u1 (built), p1 
 
 ## What it is
 
-One generic adapter, `craft-ai-declarative`, that talks to a provider whose API is described by a
+One generic adapter, `mahay-ai-declarative`, that talks to a provider whose API is described by a
 small data file. The file says which calls to make, how to authenticate and where in the replies to
 find the result. The adapter implements the existing `Provider` trait, so apps, consent, history and
 the conformance suite see nothing new.
@@ -98,7 +98,7 @@ live in the wasm-safe model crate so the launcher can check a spec as it is past
   ceiling for inline base64 images), the number of polls and the total job time bounded by
   `limits`, a job id must be a short printable string, at most 8 jobs at once per connection.
 - A result that is a URL is returned as a handle and is never fetched by this adapter. The existing
-  `craft-ai-media` wrapper copies it under its own rules (https, no private addresses, no
+  `mahay-ai-media` wrapper copies it under its own rules (https, no private addresses, no
   credentials, redirects re-checked). The key is never sent to a result host.
 - The poll address is always built from the spec and `base`. A polling URL supplied by the server
   is ignored, as in the BFL adapter.
@@ -110,8 +110,8 @@ live in the wasm-safe model crate so the launcher can check a spec as it is past
 
 - `ai-core`: `spec.rs`, the types and the pure validator (wasm-safe, so the launcher can validate
   live). No I/O.
-- New native crate `craft-ai-declarative`: the runner that implements `Provider`, with the HTTP
-  layer copied in shape from `craft-ai-bfl` (no redirects, redacted errors, capped bodies).
+- New native crate `mahay-ai-declarative`: the runner that implements `Provider`, with the HTTP
+  layer copied in shape from `mahay-ai-bfl` (no redirects, redacted errors, capped bodies).
 - Storage: a spec is a file beside the connections store (`specs/<id>.json`). A connection uses it
   through `provider: "declarative"` and a new optional `spec` field holding the spec id. The u1
   `key_header` field is not used for such a connection: `auth` in the spec replaces it, so there is

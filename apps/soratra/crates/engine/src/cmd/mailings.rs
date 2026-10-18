@@ -2,10 +2,10 @@
 //! filtered and sorted; merge fields, preview, finish), envelopes and labels.
 
 use serde_json::{Value, json};
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{Align, CharProps};
-use wordcraft_doc::section::{SectionProps, SectionStart};
-use wordcraft_doc::{Block, Blocks, Document, Paragraph, Part, PartKind, Pos, StoryRef, Table, para_block};
+use soratra_doc::para::InlineObject;
+use soratra_doc::props::{Align, CharProps};
+use soratra_doc::section::{SectionProps, SectionStart};
+use soratra_doc::{Block, Blocks, Document, Paragraph, Part, PartKind, Pos, StoryRef, Table, para_block};
 
 use super::{delete_selection, sel_result};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -601,9 +601,9 @@ fn recipients(s: &mut Session, v: &Value) -> CmdResult {
             };
             // A spreadsheet by its contents, or by its name unless it is really text (a CSV or tab-
             // separated export named .xls, as some programs write).
-            let named = ext.as_deref().is_some_and(wordcraft_formats::sheet::is_extension);
-            let text = wordcraft_formats::txt::is_text(&bytes);
-            let spreadsheet = wordcraft_formats::sheet::detect(&bytes).is_some() || (named && !text);
+            let named = ext.as_deref().is_some_and(soratra_formats::sheet::is_extension);
+            let text = soratra_formats::txt::is_text(&bytes);
+            let spreadsheet = soratra_formats::sheet::detect(&bytes).is_some() || (named && !text);
             if named && !spreadsheet && decode(&bytes, v)?.trim_start().starts_with('<') {
                 return Err(CmdError::Failed(
                     "this spreadsheet file is a web page (HTML), not a workbook; open it in a spreadsheet program, save it as .xlsx or .csv and select it again"
@@ -611,7 +611,7 @@ fn recipients(s: &mut Session, v: &Value) -> CmdResult {
                 ));
             }
             if spreadsheet {
-                use wordcraft_formats::sheet::{Pick, read_rows, sheet_names};
+                use soratra_formats::sheet::{Pick, read_rows, sheet_names};
                 let pick = match v.get("sheet") {
                     Some(Value::String(n)) => Pick::Name(n.as_str()),
                     Some(x) if x.as_u64().is_some_and(|n| n >= 1) => {
@@ -660,7 +660,7 @@ fn recipients(s: &mut Session, v: &Value) -> CmdResult {
 /// shape, else the legacy encoding the bytes look like: GBK, Big5, Shift_JIS, Windows-1252…).
 fn decode(bytes: &[u8], v: &Value) -> Result<String, CmdError> {
     match p::str(v, "encoding").map(str::trim).filter(|e| !e.is_empty()) {
-        Some(label) => wordcraft_formats::txt::decode_as(bytes, label).ok_or_else(|| CmdError::Params(format!("unknown `encoding` `{label}`"))),
+        Some(label) => soratra_formats::txt::decode_as(bytes, label).ok_or_else(|| CmdError::Params(format!("unknown `encoding` `{label}`"))),
         None => Ok(crate::io::decode_text(bytes)),
     }
 }
@@ -670,7 +670,7 @@ pub const RECIPIENT_EXTENSIONS: &[&str] = &["csv", "tsv", "txt", "xlsx", "xlsm",
 
 /// Whether a file name is a spreadsheet read as a recipient list (.xlsx, .xlsm, .xls, .ods).
 pub fn is_spreadsheet_name(name: &str) -> bool {
-    std::path::Path::new(name).extension().is_some_and(|e| wordcraft_formats::sheet::is_extension(&e.to_string_lossy()))
+    std::path::Path::new(name).extension().is_some_and(|e| soratra_formats::sheet::is_extension(&e.to_string_lossy()))
 }
 
 /// A file's extension, lower case.
@@ -691,7 +691,7 @@ fn header_split(mut all: Vec<Vec<String>>, headers: bool) -> Result<(Vec<String>
     }
     let fields = if headers {
         let first = all.remove(0);
-        wordcraft_formats::sheet::field_names(&first[..first.len().min(MAX_FIELDS)])
+        soratra_formats::sheet::field_names(&first[..first.len().min(MAX_FIELDS)])
     } else {
         let width = all.iter().map(Vec::len).max().unwrap_or(0).min(MAX_FIELDS);
         (1..=width).map(|i| format!("Column {i}")).collect()
@@ -1077,7 +1077,7 @@ fn merge_blocks(s: &Session, blocks: &mut Blocks, cur: &mut usize, end: usize, d
                 }
                 for (off, val) in repl.into_iter().rev() {
                     let props = p.props_of_char(off).clone();
-                    let _ = p.delete(off, off + wordcraft_doc::para::OBJ.len_utf8());
+                    let _ = p.delete(off, off + soratra_doc::para::OBJ.len_utf8());
                     let _ = p.insert_text(off, &val, &props);
                 }
             }
@@ -1366,14 +1366,14 @@ fn labels(s: &mut Session, v: &Value) -> CmdResult {
     let width: f32 = grid_cols.iter().map(|c| if c.is_some() { prod.width } else { h_gap }).sum();
     let mut t = Table::new(grid_rows.len(), grid_cols.len(), width);
     t.props.style = None;
-    t.props.borders = Some(wordcraft_doc::props::Borders::default());
+    t.props.borders = Some(soratra_doc::props::Borders::default());
     t.props.fixed = true;
     t.grid = grid_cols.iter().map(|c| if c.is_some() { prod.width } else { h_gap }).collect();
     let mut k = 0usize;
     let mut made = 0usize;
     for (row, r) in t.rows.iter_mut().zip(&grid_rows) {
         row.props.height = Some(if r.is_some() { prod.height } else { v_gap });
-        row.props.height_rule = wordcraft_doc::props::HeightRule::Exact;
+        row.props.height_rule = soratra_doc::props::HeightRule::Exact;
         for (cell, c) in row.cells.iter_mut().zip(&grid_cols) {
             cell.props.width = Some(if c.is_some() { prod.width } else { h_gap });
             let (Some(r), Some(c)) = (r, c) else { continue };
@@ -1389,7 +1389,7 @@ fn labels(s: &mut Session, v: &Value) -> CmdResult {
             if !content.is_empty() {
                 made += 1;
             }
-            cell.props.valign = Some(wordcraft_doc::props::VAlign::Center);
+            cell.props.valign = Some(soratra_doc::props::VAlign::Center);
             cell.blocks = content
                 .split('\n')
                 .take(20)
@@ -1688,7 +1688,7 @@ mod tests {
     #[test]
     fn recipients_from_an_xls_workbook() {
         let row = |r: &[&str]| r.iter().map(|c| c.to_string()).collect::<Vec<_>>();
-        let book = wordcraft_formats::sheet::xls_fixture(&[(
+        let book = soratra_formats::sheet::xls_fixture(&[(
             "收件人",
             vec![row(&["姓名", "城市", "数量"]), row(&["张三", "北京", "12"]), row(&["李四", "上海", "2"])],
         )])

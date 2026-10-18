@@ -1,7 +1,7 @@
 //! Clipboard copies carry only the linked smart-object records their layers reference.
-use photocraft_doc::{Document, LayerContent, LayerId, SmartSource};
-use photocraft_engine::{Session, smart_cmds::source_bytes};
-use photocraft_geom::Rect;
+use sary_doc::{Document, LayerContent, LayerId, SmartSource};
+use sary_engine::{Session, smart_cmds::source_bytes};
+use sary_geom::Rect;
 use serde_json::json;
 use std::sync::Arc;
 
@@ -15,8 +15,8 @@ fn fixture(depth: u64) -> Document {
     })
     .unwrap();
     s.execute("layer.smartObjects.convertToSmartObject", json!({})).unwrap();
-    let bytes = photocraft_io::export(&s.active().unwrap().doc, "psd", &Default::default()).unwrap().bytes;
-    let doc = photocraft_io::import("synthetic.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&s.active().unwrap().doc, "psd", &Default::default()).unwrap().bytes;
+    let doc = sary_io::import("synthetic.psd", &bytes).unwrap().document;
     assert!(doc.walk().iter().any(|(_, _, l)| matches!(l.content, LayerContent::Smart(_))));
     doc
 }
@@ -38,12 +38,12 @@ fn source_session(doc: Document) -> (Session, LayerId) {
     (s, id)
 }
 fn roundtrip(doc: &Document, format: &str) -> Document {
-    if format == "pcraft" {
-        photocraft_format::load_from_bytes(&photocraft_format::save_to_bytes(doc, &Default::default()).unwrap()).unwrap()
+    if format == "sary" {
+        sary_format::load_from_bytes(&sary_format::save_to_bytes(doc, &Default::default()).unwrap()).unwrap()
     } else {
-        let out = photocraft_io::export(doc, format, &Default::default()).unwrap();
+        let out = sary_io::export(doc, format, &Default::default()).unwrap();
         assert!(out.warnings.is_empty(), "{format}: {:?}", out.warnings);
-        photocraft_io::import(&format!("clipboard.{format}"), &out.bytes).unwrap().document
+        sary_io::import(&format!("clipboard.{format}"), &out.bytes).unwrap().document
     }
 }
 
@@ -70,13 +70,13 @@ fn clipboard_valid_psd_smart_sources_open_reopen_and_undo() {
             assert!(s.redo());
             assert_eq!(s.active().unwrap().doc, after);
             s.execute("layer.smartObjects.editContents", json!({"layer": pasted.0})).unwrap();
-            assert_eq!(photocraft_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
+            assert_eq!(sary_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
             s.set_active(1);
-            for format in ["pcraft", "psd", "psb"] {
+            for format in ["sary", "psd", "psb"] {
                 let back = roundtrip(&s.active().unwrap().doc, format);
                 let (mut reopened, id) = source_session(back);
                 reopened.execute("layer.smartObjects.editContents", json!({"layer": id.0})).unwrap();
-                assert_eq!(photocraft_compose::flatten(&reopened.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0], "depth {depth}, {format}");
+                assert_eq!(sary_compose::flatten(&reopened.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0], "depth {depth}, {format}");
             }
         }
     }
@@ -120,7 +120,7 @@ fn clipboard_batch_and_same_document_duplicates_keep_sources() {
         for id in ids {
             assert_eq!(hash(&bytes(&s.active().unwrap().doc, id)), hash(&expected));
             s.execute("layer.smartObjects.editContents", json!({"layer": id.0})).unwrap();
-            assert_eq!(photocraft_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
+            assert_eq!(sary_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
             s.set_active(1);
         }
     }
@@ -137,17 +137,17 @@ fn clipboard_converts_parent_without_losing_contents_and_disk_reopen() {
             let pasted = LayerId(s.execute("edit.paste", json!({})).unwrap()["layer"].as_u64().unwrap());
             assert_eq!(hash(&bytes(&s.active().unwrap().doc, pasted)), hash(&expected), "{mode}, depth {depth}");
             s.execute("layer.smartObjects.editContents", json!({"layer": pasted.0})).unwrap();
-            assert_eq!(photocraft_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
+            assert_eq!(sary_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
             s.set_active(1);
             let dir = tempfile::tempdir().unwrap();
-            let path = dir.path().join("pasted.pcraft");
+            let path = dir.path().join("pasted.sary");
             s.execute("file.saveACopy", json!({"path": path})).unwrap();
             let mut reopened = Session::new();
             reopened.execute("file.openAs", json!({"path": path})).unwrap();
             let reopened_id = smart_id(&reopened.active().unwrap().doc);
             assert_eq!(hash(&bytes(&reopened.active().unwrap().doc, reopened_id)), hash(&expected));
             reopened.execute("layer.smartObjects.editContents", json!({"layer": reopened_id.0})).unwrap();
-            assert_eq!(photocraft_compose::flatten(&reopened.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
+            assert_eq!(sary_compose::flatten(&reopened.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
         }
     }
 }
@@ -158,7 +158,7 @@ fn clipboard_group_keeps_nested_linked_sources() {
     let id = smart_id(&doc);
     let expected = bytes(&doc, id);
     let child = doc.remove(id).unwrap();
-    let group = photocraft_doc::Layer::group("synthetic group", vec![child]);
+    let group = sary_doc::Layer::group("synthetic group", vec![child]);
     let group_id = group.id;
     doc.layers.push(group);
     let (mut s, _) = source_session(doc);
@@ -169,7 +169,7 @@ fn clipboard_group_keeps_nested_linked_sources() {
     let pasted = smart_id(&s.active().unwrap().doc);
     assert_eq!(hash(&bytes(&s.active().unwrap().doc, pasted)), hash(&expected));
     s.execute("layer.smartObjects.editContents", json!({"layer": pasted.0})).unwrap();
-    assert_eq!(photocraft_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
+    assert_eq!(sary_compose::flatten(&s.active().unwrap().doc).px[0], [1.0, 0.0, 0.0, 1.0]);
 }
 
 #[test]
@@ -183,33 +183,33 @@ fn copy_excludes_unselected_linked_records_from_native_save() {
     let LayerContent::Smart(sm) = &mut unselected.content else { panic!("smart") };
     sm.source = SmartSource::Linked { path: "unselected-private-source".into() };
     doc.layers.push(unselected);
-    let mut private_child = photocraft_engine::smart_cmds::decode_source("source.psb", &expected).unwrap();
+    let mut private_child = sary_engine::smart_cmds::decode_source("source.psb", &expected).unwrap();
     for layer in &mut private_child.layers {
         if let Some(surface) = layer.surface_mut() {
             surface.fill_rect(Rect::new(0, 0, 8, 6), &[0.0, 0.0, 1.0, 1.0]);
         }
     }
-    let private_bytes = photocraft_io::export(&private_child, "psb", &Default::default()).unwrap().bytes;
+    let private_bytes = sary_io::export(&private_child, "psb", &Default::default()).unwrap().bytes;
     assert_ne!(hash(&expected), hash(&private_bytes));
     let private_source =
-        photocraft_io::linked::LinkedFile { uuid: "unselected-private-source".into(), file_name: "private-synthetic.psb".into(), bytes: private_bytes.clone() };
+        sary_io::linked::LinkedFile { uuid: "unselected-private-source".into(), file_name: "private-synthetic.psb".into(), bytes: private_bytes.clone() };
     // Files may put both selected and unselected entries in one global linked-layer block.
     let (_, _, block) = doc.metadata.psd_global_blocks.iter_mut().find(|(_, k, _)| matches!(k, b"lnk2" | b"lnk3" | b"lnkD")).unwrap();
     let selected_record = block.clone();
     let mut combined = block.to_vec();
-    combined.extend(photocraft_io::linked::encode_linked_file(&private_source));
+    combined.extend(sary_io::linked::encode_linked_file(&private_source));
     combined.extend([0, 0, 0, 0, 0, 0, 1, 0, 9]); // unrelated unreadable tail
     *block = Arc::new(combined);
     let (mut s, _) = source_session(doc);
     s.execute("edit.copy", json!({})).unwrap();
     s.execute("file.new", json!({"width": 8, "height": 6})).unwrap();
     s.execute("edit.paste", json!({})).unwrap();
-    let back = roundtrip(&s.active().unwrap().doc, "pcraft");
-    let retained = photocraft_io::linked::find_linked_file(&back.metadata, "unselected-private-source");
+    let back = roundtrip(&s.active().unwrap().doc, "sary");
+    let retained = sary_io::linked::find_linked_file(&back.metadata, "unselected-private-source");
     if let Some(file) = &retained {
         assert_eq!(hash(&file.bytes), hash(&private_bytes));
     }
-    assert!(retained.is_none(), "copying one selected layer must not retain another unselected smart object's embedded file in saved destination .pcraft");
+    assert!(retained.is_none(), "copying one selected layer must not retain another unselected smart object's embedded file in saved destination .sary");
     let linked: Vec<_> = back.metadata.psd_global_blocks.iter().filter(|(_, k, _)| matches!(k, b"lnk2" | b"lnk3" | b"lnkD" | b"lnkE")).collect();
     assert_eq!(linked.len(), 1);
     assert_eq!(hash(&linked[0].2), hash(&selected_record), "unidentified tail bytes must not follow the selected record");
@@ -227,7 +227,7 @@ fn copy_keeps_selected_external_alias_and_unknown_records_without_reading_their_
             let mut selected = raw.to_vec();
             selected[8..12].copy_from_slice(&kind);
             selected[12..16].copy_from_slice(&42u32.to_be_bytes());
-            let mut data = photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile {
+            let mut data = sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile {
                 uuid: "unselected-external".into(),
                 file_name: "unselected.psb".into(),
                 bytes: vec![9; 8],
@@ -241,7 +241,7 @@ fn copy_keeps_selected_external_alias_and_unknown_records_without_reading_their_
             let pasted = LayerId(s.execute("edit.paste", json!({})).unwrap()["layer"].as_u64().unwrap());
             let LayerContent::Smart(sm) = &s.active().unwrap().doc.layer(pasted).unwrap().content else { panic!("smart") };
             assert_eq!(sm.source, source, "source identity is retained; missing external contents aren't read during Copy");
-            let back = roundtrip(&s.active().unwrap().doc, "pcraft");
+            let back = roundtrip(&s.active().unwrap().doc, "sary");
             let linked: Vec<_> = back.metadata.psd_global_blocks.iter().filter(|(_, k, _)| matches!(k, b"lnk2" | b"lnk3" | b"lnkD" | b"lnkE")).collect();
             assert_eq!(linked.len(), 1);
             assert_eq!(linked[0].1, key);
@@ -280,7 +280,7 @@ fn repeated_same_document_subset_pastes_do_not_duplicate_embedded_files() {
     let (_, _, block) = doc.metadata.psd_global_blocks.iter_mut().find(|(_, k, _)| matches!(k, b"lnk2" | b"lnk3" | b"lnkD")).unwrap();
     let selected_record = block.clone();
     let mut combined = block.to_vec();
-    combined.extend(photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile {
+    combined.extend(sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile {
         uuid: "unselected".into(),
         file_name: "another.psb".into(),
         bytes: expected.to_vec(),
@@ -308,8 +308,8 @@ fn repeated_same_document_subset_pastes_do_not_duplicate_embedded_files() {
         assert!(s.redo());
         assert_eq!(s.active().unwrap().doc, after);
     }
-    let back = roundtrip(&s.active().unwrap().doc, "pcraft");
-    let ids: Vec<_> = back.metadata.psd_global_blocks.iter().flat_map(|(_, _, data)| photocraft_io::linked::block_uuids(data)).collect();
+    let back = roundtrip(&s.active().unwrap().doc, "sary");
+    let ids: Vec<_> = back.metadata.psd_global_blocks.iter().flat_map(|(_, _, data)| sary_io::linked::block_uuids(data)).collect();
     assert_eq!(ids.len(), 2, "one record per original file after native save/reopen");
 }
 
@@ -317,7 +317,7 @@ fn repeated_same_document_subset_pastes_do_not_duplicate_embedded_files() {
 fn empty_source_ids_do_not_carry_unidentified_global_files() {
     let mut private = Session::new();
     private.execute("file.new", json!({"width":8,"height":6,"background":"black"})).unwrap();
-    let bytes = photocraft_format::save_to_bytes(&private.active().unwrap().doc, &Default::default()).unwrap();
+    let bytes = sary_format::save_to_bytes(&private.active().unwrap().doc, &Default::default()).unwrap();
     let mut source = Session::new();
     source.execute("file.new", json!({"width":8,"height":6})).unwrap();
     source.execute("layer.new.layer", json!({})).unwrap();
@@ -330,9 +330,9 @@ fn empty_source_ids_do_not_carry_unidentified_global_files() {
             doc.metadata.psd_global_blocks.push((
                 *b"8BIM",
                 *b"lnk2",
-                Arc::new(photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile {
+                Arc::new(sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile {
                     uuid: String::new(),
-                    file_name: "unidentified-private.pcraft".into(),
+                    file_name: "unidentified-private.sary".into(),
                     bytes: bytes.clone(),
                 })),
             ));
@@ -341,12 +341,12 @@ fn empty_source_ids_do_not_carry_unidentified_global_files() {
         .unwrap();
     let state = source.active().unwrap();
     let LayerContent::Smart(sm) = &state.doc.layer(state.active_layer.unwrap()).unwrap().content else { panic!("smart") };
-    assert!(photocraft_engine::smart_cmds::source_bytes(&state.doc.metadata, &sm.source).is_none(), "an empty UUID cannot reference this record");
+    assert!(sary_engine::smart_cmds::source_bytes(&state.doc.metadata, &sm.source).is_none(), "an empty UUID cannot reference this record");
     source.execute("edit.copy", json!({})).unwrap();
     source.execute("file.new", json!({"width":8,"height":6})).unwrap();
     source.execute("edit.paste", json!({})).unwrap();
-    let saved = photocraft_format::save_to_bytes(&source.active().unwrap().doc, &Default::default()).unwrap();
-    let back = photocraft_format::load_from_bytes(&saved).unwrap();
+    let saved = sary_format::save_to_bytes(&source.active().unwrap().doc, &Default::default()).unwrap();
+    let back = sary_format::load_from_bytes(&saved).unwrap();
     assert!(back.metadata.psd_global_blocks.is_empty(), "unidentified empty-ID global bytes must not enter the copied document");
 }
 
@@ -354,7 +354,7 @@ fn empty_source_ids_do_not_carry_unidentified_global_files() {
 fn ambiguous_invalid_utf8_ids_do_not_replace_the_clipboard() {
     let mut private = Session::new();
     private.execute("file.new", json!({"width":8,"height":6,"background":"black"})).unwrap();
-    let private_bytes = photocraft_format::save_to_bytes(&private.active().unwrap().doc, &Default::default()).unwrap();
+    let private_bytes = sary_format::save_to_bytes(&private.active().unwrap().doc, &Default::default()).unwrap();
     let mut s = Session::new();
     s.execute("file.new", json!({"width":8,"height":6})).unwrap();
     s.execute("layer.new.layer", json!({})).unwrap();
@@ -365,14 +365,14 @@ fn ambiguous_invalid_utf8_ids_do_not_replace_the_clipboard() {
     s.edit("ambiguous source IDs", |doc, active| {
         let LayerContent::Smart(sm) = &mut doc.layer_mut(active.unwrap()).unwrap().content else { panic!("smart") };
         let SmartSource::Embedded { bytes, .. } = &sm.source else { panic!("embedded") };
-        let mut first = photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile {
+        let mut first = sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile {
             uuid: "x".into(),
-            file_name: "selected.pcraft".into(),
+            file_name: "selected.sary".into(),
             bytes: bytes.to_vec(),
         });
-        let mut second = photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile {
+        let mut second = sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile {
             uuid: "x".into(),
-            file_name: "unrelated.pcraft".into(),
+            file_name: "unrelated.sary".into(),
             bytes: private_bytes.clone(),
         });
         first[17] = 0xff;
@@ -387,7 +387,7 @@ fn ambiguous_invalid_utf8_ids_do_not_replace_the_clipboard() {
     let copied = s.execute("edit.copy", json!({}));
     if copied.is_ok() {
         let data = &s.clipboard.as_ref().unwrap().layers.as_ref().unwrap().metadata.psd_global_blocks[0].2;
-        let files = photocraft_io::linked::parse_linked_files(data);
+        let files = sary_io::linked::parse_linked_files(data);
         assert_eq!(files.len(), 2);
         assert_eq!(files[0].uuid, files[1].uuid);
         eprintln!("two distinct malformed raw IDs were retained under one lossy source label");

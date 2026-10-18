@@ -3,7 +3,7 @@
 use std::io::Write;
 
 use proptest::prelude::*;
-use wordcraft_docx::{DocxError, read, write};
+use soratra_docx::{DocxError, read, write};
 
 const W_NS: &str = r#"xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships""#;
 const ROOT_RELS: &str = r#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>"#;
@@ -22,9 +22,9 @@ fn doc_zip(document_xml: &[u8]) -> Vec<u8> {
 }
 
 fn sample() -> Vec<u8> {
-    let mut d = wordcraft_doc::Document::from_text("Hello world\nSecond paragraph with more text\nThird");
-    let t = wordcraft_doc::Table::new(2, 2, 200.0);
-    d.body.insert(1, std::sync::Arc::new(wordcraft_doc::Block::Table(t)));
+    let mut d = soratra_doc::Document::from_text("Hello world\nSecond paragraph with more text\nThird");
+    let t = soratra_doc::Table::new(2, 2, 200.0);
+    d.body.insert(1, std::sync::Arc::new(soratra_doc::Block::Table(t)));
     write(&d).unwrap()
 }
 
@@ -65,7 +65,7 @@ fn missing_or_wrong_main_part() {
     // No root rels at all: falls back to word/document.xml.
     let z = zip(&[("word/document.xml", format!("<w:document {W_NS}><w:body><w:p><w:r><w:t>ok</w:t></w:r></w:p></w:body></w:document>").as_bytes())]);
     let d = read(&z).unwrap();
-    assert_eq!(d.plain_text(wordcraft_doc::StoryRef::Body), "ok");
+    assert_eq!(d.plain_text(soratra_doc::StoryRef::Body), "ok");
 }
 
 #[test]
@@ -87,11 +87,11 @@ fn deep_nesting_is_rejected() {
     }
     y.push_str("</w:body></w:document>");
     let d = read(&doc_zip(y.as_bytes())).unwrap();
-    fn all_text(bl: &wordcraft_doc::Blocks, out: &mut String) {
+    fn all_text(bl: &soratra_doc::Blocks, out: &mut String) {
         for b in bl {
             match &**b {
-                wordcraft_doc::Block::Para(p) => out.push_str(&p.plain_text()),
-                wordcraft_doc::Block::Table(t) => t.rows.iter().flat_map(|r| &r.cells).for_each(|c| all_text(&c.blocks, out)),
+                soratra_doc::Block::Para(p) => out.push_str(&p.plain_text()),
+                soratra_doc::Block::Table(t) => t.rows.iter().flat_map(|r| &r.cells).for_each(|c| all_text(&c.blocks, out)),
             }
         }
     }
@@ -114,7 +114,7 @@ fn broken_secondary_parts_are_ignored() {
         ("word/comments.xml", b"<<<"),
     ]);
     let d = read(&z).unwrap();
-    assert_eq!(d.plain_text(wordcraft_doc::StoryRef::Body), "body");
+    assert_eq!(d.plain_text(soratra_doc::StoryRef::Body), "body");
     // The unresolvable list still writes.
     write(&d).unwrap();
 }
@@ -128,7 +128,7 @@ fn many_fields_and_huge_attribute_values() {
     x.push_str(&format!(r#"<w:r><w:rPr><w:rFonts w:ascii="{}"/></w:rPr><w:t>x</w:t></w:r>"#, "F".repeat(100_000)));
     x.push_str("</w:p><w:p><w:r><w:t>later</w:t></w:r></w:p></w:body></w:document>");
     let d = read(&doc_zip(x.as_bytes())).unwrap();
-    assert!(d.plain_text(wordcraft_doc::StoryRef::Body).contains("later"));
+    assert!(d.plain_text(soratra_doc::StoryRef::Body).contains("later"));
 }
 
 /// A small valid document.xml to mutate.

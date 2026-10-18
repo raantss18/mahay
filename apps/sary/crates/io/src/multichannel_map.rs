@@ -6,13 +6,13 @@
 //! solid ink, max = paper. Channel names come from resources 1006 / 1045 and ink colours from
 //! DisplayInfo (1077), exactly as for spot channels in the other modes.
 
-use photocraft_color::{Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{AlphaChannel, Document};
-use photocraft_geom::Rect;
-use photocraft_psd::file::{GlobalLayerMask, LayerInfoPlacement};
-use photocraft_psd::resources::{ImageResource, ResolutionInfo, ids, version_info_resource};
-use photocraft_psd::{ColorMode as PsdMode, Compression, Header, ImageData, PsdFile, TaggedBlock};
-use photocraft_raster::Surface;
+use sary_color::{Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{AlphaChannel, Document};
+use sary_geom::Rect;
+use sary_psd::file::{GlobalLayerMask, LayerInfoPlacement};
+use sary_psd::resources::{ImageResource, ResolutionInfo, ids, version_info_resource};
+use sary_psd::{ColorMode as PsdMode, Compression, Header, ImageData, PsdFile, TaggedBlock};
+use sary_raster::Surface;
 
 use crate::pixels::{encode_be, psd_depth};
 
@@ -123,10 +123,10 @@ pub(crate) fn document_to_psd(doc: &Document, force_psb: bool) -> (PsdFile, Vec<
     // The XMP and EXIF resolution follow the ResolutionInfo resource, so no copy contradicts it.
     let ppi = Some((doc.resolution_dpi, doc.resolution_dpi)).filter(|d| d.0 > 0.0);
     if let Some(x) = &doc.metadata.xmp {
-        resources.push(ImageResource::new(ids::XMP, photocraft_codecs::export_xmp(x, ppi).as_bytes().to_vec()));
+        resources.push(ImageResource::new(ids::XMP, sary_codecs::export_xmp(x, ppi).as_bytes().to_vec()));
     }
     if let Some(e) = &doc.metadata.exif {
-        resources.push(ImageResource::new(ids::EXIF, photocraft_codecs::export_exif(e, ppi).into_owned()));
+        resources.push(ImageResource::new(ids::EXIF, sary_codecs::export_exif(e, ppi).into_owned()));
     }
     // Every other imported resource (print settings, IPTC, the layer-id seed, ...), except the
     // ones that only describe layers and any already written above.
@@ -154,7 +154,7 @@ pub(crate) fn document_to_psd(doc: &Document, force_psb: bool) -> (PsdFile, Vec<
         .filter(|(_, key, _)| !matches!(key, b"Layr" | b"Lr16" | b"Lr32"))
         .map(|(sig, key, data)| crate::psd_export::global_block(sig, key, &data))
         .collect();
-    let color_mode_data = photocraft_psd::hdr::color_mode_data_for_depth(header.depth);
+    let color_mode_data = sary_psd::hdr::color_mode_data_for_depth(header.depth);
     let file = PsdFile {
         header,
         color_mode_data,

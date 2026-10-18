@@ -1,4 +1,4 @@
-//! WordCraft engine: the editing session and its commands.
+//! Soratra engine: the editing session and its commands.
 //!
 //! **Everything is a command.** Each user-visible action is a [`CommandSpec`] with a stable id
 //! (`format.bold`, `insert.table`), a label, the ribbon/menu location, a default shortcut, a
@@ -30,11 +30,11 @@ pub use ribbon::RibbonLayout;
 pub use session::{
     CellRange, ColumnBlock, EditSnapshot, FindState, MathEdit, Prefs, Selection, Session, UNDO_LIST_MAX, ViewState, blank_document, set_system_locale,
 };
-pub use wordcraft_doc as doc;
-pub use wordcraft_geom::Region;
-pub use wordcraft_layout as layout;
-pub use wordcraft_proof as proof;
-pub use wordcraft_render as render;
+pub use soratra_doc as doc;
+pub use soratra_geom::Region;
+pub use soratra_layout as layout;
+pub use soratra_proof as proof;
+pub use soratra_render as render;
 
 #[derive(Debug, thiserror::Error, Clone, PartialEq)]
 pub enum CmdError {
@@ -48,8 +48,8 @@ pub enum CmdError {
     Failed(String),
 }
 
-impl From<wordcraft_doc::DocError> for CmdError {
-    fn from(e: wordcraft_doc::DocError) -> Self {
+impl From<soratra_doc::DocError> for CmdError {
+    fn from(e: soratra_doc::DocError) -> Self {
         CmdError::Failed(e.to_string())
     }
 }

@@ -1,18 +1,18 @@
-# Craft Settings
+# Mahay Settings
 
-`craft-settings` stores an application's settings in `config.toml`: it picks the folder, loads
+`mahay-settings` stores an application's settings in `config.toml`: it picks the folder, loads
 without ever failing, saves atomically while the application runs, keeps a backup, moves damaged
 files aside and runs schema migrations. Each application keeps its own settings type and
 defaults. The suite-wide policy (what belongs where) is in
 [docs/settings-storage.md](../../docs/settings-storage.md).
 
-Atomic writes come from [`craft-atomic`](../atomic/README.md).
+Atomic writes come from [`mahay-atomic`](../atomic/README.md).
 
 ## Boundaries
 
 - Never crashes: every error comes back in a `LoadReport`, `TickResult` or `Result`; the crate
   denies `unwrap`, `expect`, `panic` and friends, and the workspace forbids `unsafe`.
-- No application code: it depends only on `craft-atomic`, `serde`, `toml_edit` and `dirs`, and
+- No application code: it depends only on `mahay-atomic`, `serde`, `toml_edit` and `dirs`, and
   knows nothing about any app's settings, defaults, UI or file formats. Apps supply their type
   and their own parsers for older files.
 - No UI: it reports; the application decides what to show.
@@ -20,7 +20,7 @@ Atomic writes come from [`craft-atomic`](../atomic/README.md).
 ## Defining settings
 
 ```rust
-use craft_settings::{DocumentMut, MigrateError, Settings};
+use mahay_settings::{DocumentMut, MigrateError, Settings};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Clone, PartialEq)]
@@ -39,7 +39,7 @@ struct General { language: String, autosave_minutes: u32 }
 struct Appearance { theme: String, ui_scale: f64 }
 
 impl Settings for Prefs {
-    const APP_ID: &'static str = "photocraft";
+    const APP_ID: &'static str = "sary";
     const SCHEMA_VERSION: u32 = 1;
 
     fn migrate(from: u32, doc: &mut DocumentMut) -> Result<(), MigrateError> {
@@ -59,7 +59,7 @@ Rules for the type:
 ## Using the store
 
 ```rust,ignore
-use craft_settings::{Location, SaveStatus, SettingsStore};
+use mahay_settings::{Location, SaveStatus, SettingsStore};
 
 // Once at startup. Never fails; look at the report for anything to show the user.
 let (mut store, report) = SettingsStore::<Prefs>::open(Location::Auto);
@@ -89,7 +89,7 @@ let _ = store.flush();
 
 `SettingsStore::open_at(dir)` opens a store in a given folder, for settings that travel with a
 library or project. `SettingsStore::open(Location::Memory)` keeps settings in memory only and
-reads and writes nothing, for tests, demos and switches like `DESIGNCRAFT_NO_PREFS`; the app
+reads and writes nothing, for tests, demos and switches like `PEJY_NO_PREFS`; the app
 uses the same `get`/`update`/`tick`/`flush` calls either way. `OpenOptions` adds older files to
 import, a different debounce, and a `Probe` for tests.
 
@@ -98,7 +98,7 @@ import, a different debounce, and a `Probe` for tests.
 `Location::Auto` applies these rules in order; the report says which one won:
 
 1. `Location::Dir(path)`: an application override, such as a `--config-dir` flag.
-2. `<APP>_CONFIG_DIR` (`PHOTOCRAFT_CONFIG_DIR`). Set but **empty** means isolated: the store
+2. `<APP>_CONFIG_DIR` (`SARY_CONFIG_DIR`). Set but **empty** means isolated: the store
    is in memory only and nothing is read or written, so tests and agents never touch the real
    profile.
 3. A portable marker next to the executable (next to the `.app` bundle on macOS): by default a
@@ -106,8 +106,8 @@ import, a different debounce, and a `Probe` for tests.
    layout keeps it by overriding `Settings::PORTABLE_MARKERS` and `Settings::PORTABLE_DIR`:
 
    ```rust,ignore
-   const PORTABLE_MARKERS: &'static [&'static str] = &["portable.txt", "PhotoCraft.portable"];
-   const PORTABLE_DIR: &'static str = "PhotoCraftData";
+   const PORTABLE_MARKERS: &'static [&'static str] = &["portable.txt", "Sary.portable"];
+   const PORTABLE_DIR: &'static str = "SaryData";
    ```
 4. The platform config folder: `$XDG_CONFIG_HOME/<app>/` or `~/.config/<app>/` on Linux,
    `~/Library/Application Support/<app>/` on macOS, `%APPDATA%\<app>\` on Windows.
@@ -144,7 +144,7 @@ things that do not belong in `config.toml`.
 
 Values are merged into the document that was loaded: tables merge key by key, arrays and
 scalars are replaced whole, comments, key order, unknown keys and each replaced line's trailing
-comment stay. Each write goes through `craft-atomic`, so a failed save leaves the old file intact.
+comment stay. Each write goes through `mahay-atomic`, so a failed save leaves the old file intact.
 
 Just before each write the store reads the file and compares its **contents** (not its mtime,
 which can stay the same on FAT, HFS+ or network shares) with what it last read or wrote:
@@ -174,7 +174,7 @@ Before merging (from `AGENTS.md`), plus the wasm check:
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo check --target wasm32-unknown-unknown -p craft-settings
+cargo check --target wasm32-unknown-unknown -p mahay-settings
 ```
 
 The tests in `tests/` write only to temporary folders and never touch the real config folder.

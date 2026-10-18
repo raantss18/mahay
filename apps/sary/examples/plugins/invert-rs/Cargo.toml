@@ -1,12 +1,12 @@
 [package]
-name = "photocraft-plugin-invert"
-description = "Example PhotoCraft WebAssembly filter plug-in: Invert"
+name = "sary-plugin-invert"
+description = "Example Sary WebAssembly filter plug-in: Invert"
 version = "1.0.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 publish = false
 
-# Not a member of the PhotoCraft workspace: it builds for wasm32-unknown-unknown only.
+# Not a member of the Sary workspace: it builds for wasm32-unknown-unknown only.
 [workspace]
 
 [lib]

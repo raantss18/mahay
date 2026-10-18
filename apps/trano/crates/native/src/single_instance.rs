@@ -21,15 +21,15 @@ use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
 use std::sync::mpsc::{Receiver, channel};
 use std::time::{Duration, Instant};
 
-use artcraft_launcher_core::version::{self, Version};
+use trano_core::version::{self, Version};
 
 const PORT: u16 = 47_413;
 /// What launchers before the version handshake send (and still the answer to an unknown peer).
-const SHOW: &[u8] = b"artcraft-launcher:show";
+const SHOW: &[u8] = b"trano:show";
 /// `hello <version>`: a second start introduces itself.
-const HELLO: &str = "artcraft-launcher:hello ";
+const HELLO: &str = "trano:hello ";
 /// `running <version>`: the first instance's answer.
-const RUNNING: &str = "artcraft-launcher:running ";
+const RUNNING: &str = "trano:running ";
 /// How long a newer start waits for the old one to quit and free the port.
 const TAKE_OVER_WITHIN: Duration = Duration::from_secs(10);
 
@@ -90,7 +90,7 @@ pub fn claim(wake: Wake) -> Instance {
             Instance::Secondary
         }
         Ok(Answer::Legacy) => {
-            log::warn!("an older ArtCraft Launcher is running and can't be asked to quit; starting anyway");
+            log::warn!("an older Mahay Trano is running and can't be asked to quit; starting anyway");
             Instance::Primary(channel().1)
         }
         // The port is taken by something else: run anyway rather than refuse to start.
@@ -313,14 +313,14 @@ mod tests {
 
     #[test]
     fn answers_are_read_defensively() {
-        assert_eq!(answer(b"artcraft-launcher:hello 9.9.9", Some(&v("0.1.0"))).map(|a| a.0), Some(Request::Replace));
-        assert_eq!(answer(b"artcraft-launcher:hello nonsense", Some(&v("0.1.0"))).map(|a| a.0), Some(Request::Show));
-        assert_eq!(answer(b"artcraft-launcher:hello 9.9.9", None).map(|a| a.0), Some(Request::Show));
+        assert_eq!(answer(b"trano:hello 9.9.9", Some(&v("0.1.0"))).map(|a| a.0), Some(Request::Replace));
+        assert_eq!(answer(b"trano:hello nonsense", Some(&v("0.1.0"))).map(|a| a.0), Some(Request::Show));
+        assert_eq!(answer(b"trano:hello 9.9.9", None).map(|a| a.0), Some(Request::Show));
         assert_eq!(answer(b"hello", Some(&v("0.1.0"))), None);
         assert_eq!(answer(&[0xff, 0xfe], Some(&v("0.1.0"))), None);
-        assert_eq!(verdict(b"artcraft-launcher:running 0.1.0", &v("0.1.2")), Answer::TakeOver);
-        assert_eq!(verdict(b"artcraft-launcher:running 0.1.2", &v("0.1.2")), Answer::Defer);
-        assert_eq!(verdict(b"artcraft-launcher:running unknown", &v("0.1.2")), Answer::Defer);
+        assert_eq!(verdict(b"trano:running 0.1.0", &v("0.1.2")), Answer::TakeOver);
+        assert_eq!(verdict(b"trano:running 0.1.2", &v("0.1.2")), Answer::Defer);
+        assert_eq!(verdict(b"trano:running unknown", &v("0.1.2")), Answer::Defer);
         assert_eq!(verdict(b"garbage", &v("0.1.2")), Answer::Defer);
         assert_eq!(verdict(b"", &v("0.1.2")), Answer::Legacy);
     }

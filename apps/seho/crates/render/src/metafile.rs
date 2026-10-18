@@ -1,5 +1,5 @@
 //! Windows Metafile and Enhanced Metafile pictures (`image/x-wmf`, `image/x-emf`): parsed by
-//! `deckcraft-metafile` and drawn as vectors into a bitmap of the size the slide needs, so they go
+//! `seho-metafile` and drawn as vectors into a bitmap of the size the slide needs, so they go
 //! through the same crop, tile and recolour path as any other picture.
 //!
 //! Text items name the font the file asks for; they are drawn with the face slide text would use
@@ -10,8 +10,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use deckcraft_fonts::{FontDb, FontFace};
-use deckcraft_metafile::{HAlign, Item, PlacedItem, Text, Tile, VAlign};
+use seho_fonts::{FontDb, FontFace};
+use seho_metafile::{HAlign, Item, PlacedItem, Text, Tile, VAlign};
 use kurbo::{Affine, BezPath, Rect, Shape as _};
 use skrifa::MetadataProvider as _;
 use vello_cpu::{Pixmap, RenderContext, Resources, peniko};
@@ -28,13 +28,13 @@ const DEFAULT_EM: f64 = 12.0;
 
 /// Is `bytes` a WMF or EMF file?
 pub fn is_metafile(bytes: &[u8]) -> bool {
-    deckcraft_metafile::is_metafile(bytes)
+    seho_metafile::is_metafile(bytes)
 }
 
 /// Draw the metafile `bytes` into straight RGBA with its longer side `side` px (transparent where
 /// it draws nothing). `None` when it doesn't parse or has no size.
 pub fn rasterize(bytes: &[u8], side: u32) -> Option<image::RgbaImage> {
-    let mut pic = deckcraft_metafile::parse(bytes).ok()?;
+    let mut pic = seho_metafile::parse(bytes).ok()?;
     if !pic.has_size() {
         return None;
     }
@@ -183,7 +183,7 @@ fn draw_text(ctx: &mut RenderContext, t: &Text, m: Affine) {
     }
     // Characters as drawn: symbol fonts (Wingdings…) map like bullets; each character takes the
     // face that has it.
-    let chars: Vec<char> = t.text.chars().map(|c| deckcraft_text::symbol_char(&face, family, c).unwrap_or(c)).collect();
+    let chars: Vec<char> = t.text.chars().map(|c| seho_text::symbol_char(&face, family, c).unwrap_or(c)).collect();
     let faces: Vec<Arc<FontFace>> = chars
         .iter()
         .map(|c| {
@@ -205,7 +205,7 @@ fn draw_text(ctx: &mut RenderContext, t: &Text, m: Affine) {
         // Byte offset in the run → character index in the string.
         let byte_char: Vec<usize> = run.char_indices().map(|(b, _)| b).collect();
         let ku = f.upem.max(1.0);
-        for g in deckcraft_fonts::shape(&f, &run, &[], |c| c) {
+        for g in seho_fonts::shape(&f, &run, &[], |c| c) {
             let ci = i + byte_char.partition_point(|b| *b < g.cluster).min(j - i - 1);
             let s = em / ku;
             shaped.push((Glyph { face: f.clone(), gid: g.gid, x: pen + f64::from(g.x_offset) * s, y: -f64::from(g.y_offset) * s }, ci));

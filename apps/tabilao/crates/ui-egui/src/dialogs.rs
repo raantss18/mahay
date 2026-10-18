@@ -141,7 +141,7 @@ impl Dialog {
                 "Column Width",
                 "home.columnWidth",
                 vec![Number { key: "chars", label: "Column width (characters):" }],
-                json!({"chars": app.session.active().and_then(|d| d.wb.active().map(|s| gridcraft_engine::cmd::format::points_to_chars(s.col_width(d.selection.active.col) as f64))).unwrap_or(8.43)}),
+                json!({"chars": app.session.active().and_then(|d| d.wb.active().map(|s| tabilao_engine::cmd::format::points_to_chars(s.col_width(d.selection.active.col) as f64))).unwrap_or(8.43)}),
             ),
             "defaultWidth" => Dialog::form(
                 "defaultWidth",
@@ -477,7 +477,7 @@ impl Dialog {
                 // Opened with a known `tool`, it goes straight to that tool's form.
                 let tool = params.get("tool").and_then(Json::as_str).unwrap_or("");
                 let mut d = Dialog::custom("analysisToolPak", "Data Analysis", json!({"tool": "", "pick": tool}));
-                if gridcraft_engine::cmd::analysis::TOOLS.iter().any(|(id, _)| *id == tool) {
+                if tabilao_engine::cmd::analysis::TOOLS.iter().any(|(id, _)| *id == tool) {
                     d.values = toolpak_defaults(&sel, tool);
                 }
                 d.command = Some("data.analysisToolPak");
@@ -485,7 +485,7 @@ impl Dialog {
             }
             "solver" => {
                 // Starts from the sheet's saved model, else the active cell as objective.
-                let saved = app.session.active().and_then(|doc| gridcraft_engine::cmd::solver::saved_model(&doc.wb, doc.wb.active_sheet));
+                let saved = app.session.active().and_then(|doc| tabilao_engine::cmd::solver::saved_model(&doc.wb, doc.wb.active_sheet));
                 let mut values = json!({"objective": active, "goal": "max", "value": "0", "variables": "", "constraints": [], "nonNegative": true, "method": "grg"});
                 if let (Some(m), Some(v)) = (saved.as_ref().and_then(Json::as_object), values.as_object_mut()) {
                     for (k, x) in m {
@@ -541,7 +541,7 @@ impl Dialog {
                 // its current fields; New… and Define Name start from the selection.
                 let editing = params.get("oldName").and_then(Json::as_str).is_some();
                 let selection = app.session.active().and_then(|d| {
-                    d.wb.active().map(|s| format!("={}!{}", gridcraft_engine::formula::quote_sheet(&s.name), abs(&d.selection.current())))
+                    d.wb.active().map(|s| format!("={}!{}", tabilao_engine::formula::quote_sheet(&s.name), abs(&d.selection.current())))
                 });
                 let mut defaults = json!({"scope": "Workbook", "refersTo": selection});
                 for key in ["name", "scope", "comment", "refersTo", "oldName", "oldScope"] {
@@ -674,7 +674,7 @@ impl Dialog {
             "commandSearch" => Dialog::custom("commandSearch", "Search Commands", json!({})),
             "agents" => Dialog::custom("agents", "Agent Control", json!({})),
             "about" => {
-                let mut d = Dialog::custom("about", "About GridCraft", json!({}));
+                let mut d = Dialog::custom("about", "About Tabilao", json!({}));
                 d.tab = match p("tab").as_str() {
                     Some(t @ ("Contributors" | "Models")) => t.to_string(),
                     _ => "About".into(),
@@ -703,7 +703,7 @@ impl Dialog {
                     let si = doc.wb.active_sheet;
                     let sh = doc.wb.sheet(si)?;
                     let ch = sh.charts.iter().find(|c| Some(u64::from(c.id)) == id)?;
-                    let data = gridcraft_chart::resolve(&doc.wb, si, ch);
+                    let data = tabilao_chart::resolve(&doc.wb, si, ch);
                     let names: Vec<String> = data.series.iter().map(|x| x.name.clone()).collect();
                     let cats = ch.series.first().and_then(|x| x.categories.clone()).unwrap_or_default();
                     Some((ch.source.clone().unwrap_or_default(), cats, names))
@@ -776,7 +776,7 @@ impl Dialog {
             "pickList" => Dialog::custom("pickList", "Pick From List", json!({})),
             "saveCopy" => Dialog::custom("saveCopy", "Save a Copy", json!({"format": p("format")})),
             "saveChanges" => Dialog::custom("saveChanges", "Save Changes?", json!({"title": p("title")})),
-            "start" => Dialog::custom("start", "GridCraft", json!({})),
+            "start" => Dialog::custom("start", "Tabilao", json!({})),
             "comments" => {
                 app.grid.pane = None;
                 app.run_or_alert("review.showComments", json!({"on": true}));
@@ -829,8 +829,8 @@ fn validation_defaults(app: &SheetApp) -> Json {
     v
 }
 
-fn abs(r: &gridcraft_engine::core::RangeRef) -> String {
-    let a = |c: gridcraft_engine::core::CellRef| format!("${}${}", gridcraft_engine::core::col_to_letters(c.col), c.row + 1);
+fn abs(r: &tabilao_engine::core::RangeRef) -> String {
+    let a = |c: tabilao_engine::core::CellRef| format!("${}${}", tabilao_engine::core::col_to_letters(c.col), c.row + 1);
     if r.is_single() { a(r.start) } else { format!("{}:{}", a(r.start), a(r.end)) }
 }
 
@@ -1063,11 +1063,11 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
                 "solverResults" => solver_results(app, ui, &mut d, &mut open),
                 "spelling" => spelling(app, ui, &mut d, &mut open),
                 "agents" => {
-                    ui.label("GridCraft is fully drivable by agents. Every menu item, button and gesture is a command:");
+                    ui.label("Tabilao is fully drivable by agents. Every menu item, button and gesture is a command:");
                     ui.add_space(4.0);
-                    ui.monospace("gridcraft --control 7979        # JSON-lines control channel\ngridcraft-cli mcp --connect 7979   # MCP bridged to this window\ngridcraft-cli mcp                   # headless MCP server");
+                    ui.monospace("tabilao --control 7979        # JSON-lines control channel\ntabilao-cli mcp --connect 7979   # MCP bridged to this window\ntabilao-cli mcp                   # headless MCP server");
                     ui.add_space(4.0);
-                    ui.label(format!("{} engine commands are available. See docs/mcp.md and docs/control-protocol.md.", gridcraft_engine::command_specs().len()));
+                    ui.label(format!("{} engine commands are available. See docs/mcp.md and docs/control-protocol.md.", tabilao_engine::command_specs().len()));
                 }
                 "about" => about(ui, &mut d),
                 "journal" => {
@@ -1101,7 +1101,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
                         } else {
                             d.values.remove("path");
                             d.values.insert("alt".into(), json!(name));
-                            d.values.insert("base64".into(), json!(gridcraft_engine::io::base64_encode(&bytes)));
+                            d.values.insert("base64".into(), json!(tabilao_engine::io::base64_encode(&bytes)));
                         }
                     }
                     if app.services.pick_picture_async.is_some() {
@@ -1148,9 +1148,9 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
                             let a = doc.selection.active;
                             let mut seen = std::collections::BTreeSet::new();
                             let mut r = a.row;
-                            while r > 0 && !sh.value(gridcraft_engine::core::CellRef::new(r - 1, a.col)).is_empty() {
+                            while r > 0 && !sh.value(tabilao_engine::core::CellRef::new(r - 1, a.col)).is_empty() {
                                 r -= 1;
-                                seen.insert(sh.value(gridcraft_engine::core::CellRef::new(r, a.col)).display());
+                                seen.insert(sh.value(tabilao_engine::core::CellRef::new(r, a.col)).display());
                             }
                             Some(seen.into_iter().collect())
                         })
@@ -1208,7 +1208,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
                             app.run_or_alert("file.new", json!({}));
                             open = false;
                         }
-                        for (n, t) in gridcraft_engine::sample::SAMPLES {
+                        for (n, t) in tabilao_engine::sample::SAMPLES {
                             if ui.button(*t).clicked() {
                                 app.run_or_alert("file.new", json!({"sample": n}));
                                 open = false;
@@ -1269,7 +1269,7 @@ pub fn show(app: &mut SheetApp, ctx: &egui::Context) {
                 }
             }
             // Data Analysis asks before replacing data in its output range.
-            Err(e) if d.name == "analysisToolPak" && e.contains(gridcraft_engine::cmd::analysis::OVERWRITE_ERROR) => {
+            Err(e) if d.name == "analysisToolPak" && e.contains(tabilao_engine::cmd::analysis::OVERWRITE_ERROR) => {
                 d.values.insert("askOverwrite".into(), json!(true));
             }
             // A wrong password: say so, clear the field and stay open for another try.
@@ -1468,7 +1468,7 @@ fn form_fields(ui: &mut egui::Ui, d: &mut Dialog) {
     });
 }
 
-/// Help ▸ About GridCraft: the app, its contributors and the AI models that helped. The credits
+/// Help ▸ About Tabilao: the app, its contributors and the AI models that helped. The credits
 /// are compiled in (`crate::credits`, docs/contributors.md).
 fn about(ui: &mut egui::Ui, d: &mut Dialog) {
     ui.horizontal(|ui| {
@@ -1483,21 +1483,21 @@ fn about(ui: &mut egui::Ui, d: &mut Dialog) {
         "Contributors" => crate::credits::contributors_ui(ui),
         "Models" => crate::credits::models_ui(ui),
         _ => {
-            ui.heading("GridCraft");
+            ui.heading("Tabilao");
             ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
             ui.add_space(4.0);
-            ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of ArtCraft.");
-            ui.hyperlink_to("getartcraft.com/apps/gridcraft", "https://getartcraft.com/apps/gridcraft");
-            ui.hyperlink_to("Join the ArtCraft Discord", "https://discord.gg/artcraft");
+            ui.label("A clean-room, open-source, Rust-native spreadsheet. Part of Mahay.");
+            ui.hyperlink_to("mahay.com/apps/tabilao", "https://github.com/raantss18/mahay");
+            ui.hyperlink_to("Join the Mahay Discord", "https://discord.gg/mahay");
         }
     }
 }
 
-/// The Macros dialog: lists GridCraft's own recorded scripts and (if the file carries one) the
+/// The Macros dialog: lists Tabilao's own recorded scripts and (if the file carries one) the
 /// preserved VBA project. Mirrors Excel's Developer ▸ Macros list, but is honest that VBA is
 /// preserved and not executed.
 fn macros(ui: &mut egui::Ui, d: &mut Dialog) {
-    ui.label("Automation in this workbook. GridCraft runs its own scripts; a file's VBA project is preserved but not executed.");
+    ui.label("Automation in this workbook. Tabilao runs its own scripts; a file's VBA project is preserved but not executed.");
     ui.add_space(6.0);
     let items: Vec<Json> = d.result.as_ref().and_then(Json::as_array).cloned().unwrap_or_default();
     if items.is_empty() {
@@ -1541,7 +1541,7 @@ fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: 
         }
     });
     ui.separator();
-    let mut st: gridcraft_engine::model::Style = d.values.get("style").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+    let mut st: tabilao_engine::model::Style = d.values.get("style").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
     let sample = app.session.active().and_then(|doc| doc.wb.active().map(|s| s.value(doc.selection.active))).unwrap_or_default();
     match d.tab.as_str() {
         "Number" => {
@@ -1551,13 +1551,13 @@ fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: 
                 for name in
                     ["General", "Number", "Currency", "Accounting", "Short Date", "Long Date", "Time", "Percentage", "Fraction", "Scientific", "Text"]
                 {
-                    let c = gridcraft_engine::cmd::format::format_code_for(name).to_string();
+                    let c = tabilao_engine::cmd::format::format_code_for(name).to_string();
                     if cols[0].selectable_label(code == c, lang.tr(name)).clicked() {
                         code = c;
                     }
                 }
                 cols[1].label(egui::RichText::new(lang.tr("Sample")).strong());
-                let preview = app.session.active().map(|doc| gridcraft_engine::display::format(&sample, &code, &doc.wb).text).unwrap_or_default();
+                let preview = app.session.active().map(|doc| tabilao_engine::display::format(&sample, &code, &doc.wb).text).unwrap_or_default();
                 cols[1].label(egui::RichText::new(preview).font(theme::ui_font(15.0)));
                 cols[1].add_space(8.0);
                 cols[1].label(lang.tr("Type (custom format code):"));
@@ -1585,10 +1585,10 @@ fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: 
                     }
                 }
             });
-            st.num_fmt = gridcraft_engine::model::NumFmt::new(&code);
+            st.num_fmt = tabilao_engine::model::NumFmt::new(&code);
         }
         "Alignment" => {
-            use gridcraft_engine::model::{HAlign, VAlign};
+            use tabilao_engine::model::{HAlign, VAlign};
             ui.label(egui::RichText::new(lang.tr("Horizontal")).strong());
             ui.horizontal_wrapped(|ui| {
                 for (h, n) in [
@@ -1637,7 +1637,7 @@ fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: 
                 ui.checkbox(&mut st.font.italic, lang.tr("Italic"));
                 ui.checkbox(&mut st.font.strike, lang.tr("Strikethrough"));
             });
-            use gridcraft_engine::model::{Underline, VertAlign};
+            use tabilao_engine::model::{Underline, VertAlign};
             ui.horizontal(|ui| {
                 for (u, n) in [
                     (Underline::None, "None"),
@@ -1658,12 +1658,12 @@ fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: 
             let colors = app.session.active().map(|doc| doc.wb.theme.colors).unwrap_or_default();
             if let Some(c) = crate::widgets::color_palette(ui, &colors, lang.tr("Automatic")) {
                 st.font.color =
-                    if c == "none" { gridcraft_engine::model::Color::Auto } else { gridcraft_engine::model::Color::from_hex(&c).unwrap_or_default() };
+                    if c == "none" { tabilao_engine::model::Color::Auto } else { tabilao_engine::model::Color::from_hex(&c).unwrap_or_default() };
             }
         }
         "Border" => {
-            use gridcraft_engine::model::{BorderLine, BorderStyle};
-            let line = BorderLine { style: BorderStyle::Thin, color: gridcraft_engine::model::Color::Auto };
+            use tabilao_engine::model::{BorderLine, BorderStyle};
+            let line = BorderLine { style: BorderStyle::Thin, color: tabilao_engine::model::Color::Auto };
             ui.horizontal(|ui| {
                 if ui.button(lang.tr("None")).clicked() {
                     st.borders = Default::default();
@@ -1715,7 +1715,7 @@ fn format_cells(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: 
                 st.fill = if c == "none" {
                     Default::default()
                 } else {
-                    gridcraft_engine::model::Fill::solid(gridcraft_engine::model::Color::from_hex(&c).unwrap_or_default())
+                    tabilao_engine::model::Fill::solid(tabilao_engine::model::Color::from_hex(&c).unwrap_or_default())
                 };
             }
         }
@@ -1752,7 +1752,7 @@ fn insert_function(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confir
         r.request_focus();
     });
     let locale = app.ui.language.formula_locale();
-    let list = gridcraft_engine::cmd::formulas::function_list();
+    let list = tabilao_engine::cmd::formulas::function_list();
     let q = d.search.to_ascii_lowercase();
     let hits: Vec<&Json> = list
         .iter()
@@ -2126,7 +2126,7 @@ fn recommended_charts(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, con
             ui.painter().rect_stroke(rect, 2.0, Stroke::new(1.0, t.separator), StrokeKind::Inside);
             let params = json!({"type": d.values.get("type").cloned().unwrap_or(Json::Null), "subtype": d.values.get("subtype").cloned().unwrap_or(Json::Null)});
             if let Some(doc) = app.session.active()
-                && let Ok((sheet, chart)) = gridcraft_engine::cmd::insert::build_chart(&app.session, &params)
+                && let Ok((sheet, chart)) = tabilao_engine::cmd::insert::build_chart(&app.session, &params)
             {
                 crate::chartview::paint_chart(ui.painter(), rect, &doc.wb, sheet, &chart);
             }
@@ -2384,7 +2384,7 @@ fn toolpak_defaults(sel: &str, tool: &str) -> Map<String, Json> {
 /// Data › Data Analysis: pick a tool, then fill in its form. OK runs `data.analysisToolPak`
 /// (through the dialog's command); a report that would replace data asks first.
 fn analysis_toolpak(app: &mut SheetApp, ui: &mut egui::Ui, d: &mut Dialog, confirm: &mut bool, open: &mut bool) {
-    use gridcraft_engine::cmd::analysis::TOOLS;
+    use tabilao_engine::cmd::analysis::TOOLS;
     if d.values.get("askOverwrite").and_then(Json::as_bool) == Some(true) {
         ui.label("The output range already holds data. Replace it with the report?");
         ui.horizontal(|ui| {
@@ -2713,7 +2713,7 @@ mod tests {
 
     #[test]
     fn data_validation_opens_on_the_rule_of_the_active_cell() {
-        let mut session = gridcraft_engine::Session::default();
+        let mut session = tabilao_engine::Session::default();
         session.new_workbook();
         let mut app = SheetApp::new(session, Default::default());
         app.run("data.validation", json!({"range": "A1", "type": "whole", "operator": "greater", "formula1": "5"})).unwrap();
@@ -2724,14 +2724,14 @@ mod tests {
         // OK without edits keeps the rule: 6 is accepted, 4 is rejected.
         app.run(d.command.unwrap(), build_params(&d)).unwrap();
         let doc = app.session.active().unwrap();
-        let at = gridcraft_engine::core::CellRef::new(0, 0);
-        assert!(gridcraft_engine::cmd::data::check_validation(&doc.wb, 0, at, "6").is_none());
-        assert!(gridcraft_engine::cmd::data::check_validation(&doc.wb, 0, at, "4").is_some());
+        let at = tabilao_engine::core::CellRef::new(0, 0);
+        assert!(tabilao_engine::cmd::data::check_validation(&doc.wb, 0, at, "6").is_none());
+        assert!(tabilao_engine::cmd::data::check_validation(&doc.wb, 0, at, "4").is_some());
     }
 
     #[test]
     fn data_validation_without_a_rule_opens_on_a_blank_list() {
-        let mut session = gridcraft_engine::Session::default();
+        let mut session = tabilao_engine::Session::default();
         session.new_workbook();
         let mut app = SheetApp::new(session, Default::default());
         let d = Dialog::open(&mut app, "dataValidation", json!({})).unwrap();

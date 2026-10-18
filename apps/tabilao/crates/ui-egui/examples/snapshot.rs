@@ -1,11 +1,11 @@
-//! Renders the whole GridCraft window offscreen (wgpu, no window) to a PNG.
+//! Renders the whole Tabilao window offscreen (wgpu, no window) to a PNG.
 //!
-//! `cargo run --release -p gridcraft-ui-egui --example snapshot -- [--sample sales] [--in file.xlsx]
+//! `cargo run --release -p tabilao-ui-egui --example snapshot -- [--sample sales] [--in file.xlsx]
 //!  [--size 1440x900] [--scale 2] [--cmd 'id={json}']... [--tab Insert] [--dark] [--language en|zh|ja|ko|ru|pt|cs]
 //!  [--dialog 'name={json}'] [--hf-edit header|footer] out.png`
 
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::SheetApp;
+use tabilao_engine::Session;
+use tabilao_ui_egui::SheetApp;
 use serde_json::json;
 
 fn main() {
@@ -104,7 +104,7 @@ fn main() {
                 let mut app = SheetApp::new(session, Default::default());
                 app.ui.dark = dark;
                 if let Some(code) = &language
-                    && let Some(l) = gridcraft_ui_egui::i18n::Language::parse(code)
+                    && let Some(l) = tabilao_ui_egui::i18n::Language::parse(code)
                 {
                     app.ui.language = l;
                 }
@@ -121,8 +121,8 @@ fn main() {
                 // Page Layout view: edit the first page's centre header (or footer) section.
                 let active = app.session.active().and_then(|d| d.wb.active().cloned().map(|s| (d.wb.active_sheet, s)));
                 if let (Some(part), Some((si, sh))) = (&hf_edit, active) {
-                    let zone = gridcraft_engine::paper::HfZone { footer: part == "footer", section: 1 };
-                    gridcraft_ui_egui::paper_view::begin(&mut app, si, &sh, (0, 0), zone);
+                    let zone = tabilao_engine::paper::HfZone { footer: part == "footer", section: 1 };
+                    tabilao_ui_egui::paper_view::begin(&mut app, si, &sh, (0, 0), zone);
                 }
                 app
             },

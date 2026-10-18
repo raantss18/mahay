@@ -1,6 +1,6 @@
 //! Paint helpers: Paint Bucket and Gradient tool.
 
-use photocraft_algo::paint::{GradientShape, bucket_fill_inks, bucket_fill_region_inks, bucket_fill_region_src, bucket_fill_src, paint_gradient};
+use sary_algo::paint::{GradientShape, bucket_fill_inks, bucket_fill_region_inks, bucket_fill_region_src, bucket_fill_src, paint_gradient};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, blend_from_str};
@@ -51,7 +51,7 @@ fn bucket(s: &mut Session, p: &Value) -> Result<Value> {
     // Other visible layers can define the region, but the fill still writes only to the target.
     let region = if all {
         let (area, img) = crate::selection_cmds::sample_rgba8(s, true)?;
-        let region = photocraft_algo::selection::wand_region(&img, area, (x, y), tol, contiguous, aa);
+        let region = sary_algo::selection::wand_region(&img, area, (x, y), tol, contiguous, aa);
         drop(img);
         region
     } else {
@@ -61,7 +61,7 @@ fn bucket(s: &mut Session, p: &Value) -> Result<Value> {
     let source = p.get("contents").or_else(|| p.get("source")).and_then(Value::as_str).unwrap_or("foreground");
     let pattern = if source == "pattern" {
         let pat = crate::pattern_cmds::resolve_param(s, "paint.bucket", p)?;
-        let tile = photocraft_compose::pattern::Tile::new(&pat)
+        let tile = sary_compose::pattern::Tile::new(&pat)
             .ok_or_else(|| EngineError::BadParams { cmd: "paint.bucket".into(), msg: "the pattern is empty or too large to paint".into() })?;
         let (scale, angle, _, phase) = crate::pattern_cmds::placement(p);
         Some((tile, scale, angle, phase))
@@ -78,8 +78,8 @@ fn bucket(s: &mut Session, p: &Value) -> Result<Value> {
             false
         } else if let Some((tile, scale, angle, phase)) = &pattern {
             // Render the pattern over the canvas once, then sample it at each filled pixel.
-            let place = photocraft_compose::pattern::Placement::new(photocraft_geom::Rect::EMPTY, false, *phase, *scale, *angle);
-            let rendered = photocraft_compose::pattern::render(tile, &place, area);
+            let place = sary_compose::pattern::Placement::new(sary_geom::Rect::EMPTY, false, *phase, *scale, *angle);
+            let rendered = sary_compose::pattern::render(tile, &place, area);
             let w = area.width() as usize;
             let src = |px: i32, py: i32| rendered[(py - area.y0) as usize * w + (px - area.x0) as usize];
             if let Some(region) = &region {
@@ -126,11 +126,11 @@ fn gradient(s: &mut Session, p: &Value) -> Result<Value> {
     // Photoshop's interpolation (`method`, with `smoothness` 0..=100, default 100) baked into dense
     // stops, as for Gradient Overlay: Photoshop 27.11's Classic black → white is 0.037 at t = 1/16
     // where straight stops give 0.0625.
-    let stops = match p.get("method").and_then(Value::as_str).and_then(photocraft_io::GradientMethod::from_name) {
+    let stops = match p.get("method").and_then(Value::as_str).and_then(sary_io::GradientMethod::from_name) {
         Some(m) if stops.len() >= 2 => {
-            let colors = stops.iter().map(|(t, c)| (*t, photocraft_color::Color::rgba(c[0], c[1], c[2], c[3]))).collect();
+            let colors = stops.iter().map(|(t, c)| (*t, sary_color::Color::rgba(c[0], c[1], c[2], c[3]))).collect();
             let mids = vec![0.5; stops.len() - 1];
-            photocraft_io::bake_gradient(colors, &mids, (f(p, "smoothness", 100.0) / 100.0).clamp(0.0, 1.0), m)
+            sary_io::bake_gradient(colors, &mids, (f(p, "smoothness", 100.0) / 100.0).clamp(0.0, 1.0), m)
                 .into_iter()
                 .map(|(t, c)| {
                     let rgb = c.to_rgb();
@@ -142,7 +142,7 @@ fn gradient(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let reverse = b(p, "reverse", false);
     let opacity = opacity(p, "paint.gradient")?;
-    let blend = p.get("mode").and_then(Value::as_str).and_then(blend_from_str).unwrap_or(photocraft_color::BlendMode::Normal);
+    let blend = p.get("mode").and_then(Value::as_str).and_then(blend_from_str).unwrap_or(sary_color::BlendMode::Normal);
     let dither = b(p, "dither", true); // Photoshop dithers gradients by default (reduces banding).
     s.edit("Gradient", |doc, active| {
         let sel = doc.selection.clone();
@@ -183,7 +183,7 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
 
     fn session() -> Session {
         let mut s = Session::new();
@@ -197,7 +197,7 @@ mod tests {
     }
 
     /// A visible wall on the Background with an empty, active layer above it.
-    fn bucket_layers(depth: u32) -> (Session, photocraft_doc::LayerId) {
+    fn bucket_layers(depth: u32) -> (Session, sary_doc::LayerId) {
         let mut s = Session::new();
         s.execute("file.new", json!({"width": 20, "height": 10, "depth": depth, "background": "white"})).unwrap();
         let bottom = s.active().unwrap().active_layer.unwrap();
@@ -363,7 +363,7 @@ mod tests {
         let cyan = [1.0f32, 0.0, 0.0, 0.0];
         let mut s = session();
         s.execute("image.mode.cmyk", json!({})).unwrap();
-        let rgb = photocraft_color::convert::cmyk_to_rgb(cyan).map(|c| c.clamp(0.0, 1.0));
+        let rgb = sary_color::convert::cmyk_to_rgb(cyan).map(|c| c.clamp(0.0, 1.0));
         s.execute("tools.setColors", json!({"foreground": rgb, "foregroundCmyk": cyan})).unwrap();
         let inks_at = |s: &Session, x: i32, y: i32| -> Vec<f32> {
             let st = s.active().unwrap();

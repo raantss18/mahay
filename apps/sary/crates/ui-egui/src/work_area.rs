@@ -1,6 +1,6 @@
 //! The part of the window the user can actually see and reach (#315).
 //!
-//! A window can be larger than its display: PhotoCraft opens at 1440 × 900 pt, which runs past
+//! A window can be larger than its display: Sary opens at 1440 × 900 pt, which runs past
 //! the bottom of a 1366 × 768 screen and under the Windows taskbar. egui sizes and places menus
 //! by the window's content rect, so their last items (and their ▼ scroll arrow) were out of
 //! reach. egui doesn't expose the monitor's work area (the screen minus the taskbar or Dock), only
@@ -27,7 +27,7 @@ pub fn visible_part(content: Rect, monitor: Option<Vec2>, inner: Option<Rect>, s
         return content;
     }
     // A maximized window is usually inside the work area already, but not always (#3737): on X11
-    // a window manager that doesn't reserve a panel's space (Cinnamon's Muffin with PhotoCraft's
+    // a window manager that doesn't reserve a panel's space (Cinnamon's Muffin with Sary's
     // own title bar, a panel without a strut) maximizes it to the whole monitor, and the panel then
     // covers its bottom. Where the window is known, it is checked like any other; only a maximized
     // window with no position (Wayland) is taken to fit.

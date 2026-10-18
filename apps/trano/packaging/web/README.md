@@ -1,13 +1,13 @@
-# Hosting ArtCraft Launcher for the web
+# Hosting Mahay Trano for the web
 
-`artcraft-launcher-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`)
-holds a static site in `artcraft-launcher-web-<version>/`:
+`trano-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`)
+holds a static site in `trano-web-<version>/`:
 
 | File | What it is |
 |---|---|
 | `index.html` | The page. It loads everything through relative URLs. |
-| `artcraft-launcher-web-<hash>.js` | wasm-bindgen glue (generated, ES module) |
-| `artcraft-launcher-web-<hash>_bg.wasm` | The app (egui, built with the `wasm-release` Cargo profile) |
+| `trano-web-<hash>.js` | wasm-bindgen glue (generated, ES module) |
+| `trano-web-<hash>_bg.wasm` | The app (egui, built with the `wasm-release` Cargo profile) |
 | `_headers`, `.htaccess` | Sample header rules for Netlify/Cloudflare Pages and Apache |
 
 There is no server-side code and no hand-written JavaScript. Upload the folder's contents anywhere
@@ -15,7 +15,7 @@ that serves static files.
 
 ## What the web version does
 
-In the browser the launcher can't install anything: it shows the Craft App Suite catalog, the
+In the browser the launcher can't install anything: it shows the Mahay App Suite catalog, the
 latest release of each app and the right download for the visitor's platform, and links to the
 files on GitHub. Release data comes straight from the GitHub REST API (`api.github.com` allows
 cross-origin requests), so the page needs no backend. Unauthenticated visitors share GitHub's
@@ -23,7 +23,7 @@ limit of 60 API requests per hour per IP address.
 
 ## Any path works
 
-All URLs in `index.html` are relative (`public_url = "./"` in `apps/artcraft-launcher-web/Trunk.toml`),
+All URLs in `index.html` are relative (`public_url = "./"` in `apps/trano-web/Trunk.toml`),
 so the site works at a domain root (`https://example.com/`), under a prefix
 (`https://example.com/apps/launcher/`) and from a CDN bucket. The asset names carry a content
 hash, so they can be cached forever. Only `index.html` needs revalidation.
@@ -63,7 +63,7 @@ Local test: `python3 -m http.server 8765` inside the folder, then open http://lo
 ```html
 <iframe
   src="https://example.com/launcher/"
-  title="ArtCraft Launcher"
+  title="Mahay Trano"
   style="width: 100%; height: 640px; border: 0;"
   allow="fullscreen"
   allowfullscreen>

@@ -105,7 +105,7 @@ impl std::fmt::Debug for Probe {
     }
 }
 
-/// The `<APP>_CONFIG_DIR` variable name for an app id (`photo-craft` → `PHOTO_CRAFT_CONFIG_DIR`).
+/// The `<APP>_CONFIG_DIR` variable name for an app id (`photo-craft` → `PHOTO_MAHAY_CONFIG_DIR`).
 pub fn env_var_name(app_id: &str) -> String {
     let mut name: String = app_id.chars().map(|c| if c.is_ascii_alphanumeric() { c.to_ascii_uppercase() } else { '_' }).collect();
     name.push_str("_CONFIG_DIR");

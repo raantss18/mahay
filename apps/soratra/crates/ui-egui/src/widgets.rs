@@ -433,13 +433,13 @@ pub fn row(ui: &mut Ui, add: impl FnOnce(&mut Ui)) {
 }
 
 /// Word's standard colour grid (theme colours + tints, standard colours). Returns a picked hex.
-pub fn color_grid(ui: &mut Ui, theme: &[wordcraft_doc::Rgb]) -> Option<String> {
+pub fn color_grid(ui: &mut Ui, theme: &[soratra_doc::Rgb]) -> Option<String> {
     let mut picked = None;
     ui.label(egui::RichText::new(tl!("Theme Colors")).small().weak());
-    let base: Vec<wordcraft_doc::Rgb> = theme.iter().take(10).copied().collect();
-    let tint = |c: wordcraft_doc::Rgb, k: f32| {
+    let base: Vec<soratra_doc::Rgb> = theme.iter().take(10).copied().collect();
+    let tint = |c: soratra_doc::Rgb, k: f32| {
         let f = |v: u8| if k >= 0.0 { (v as f32 + (255.0 - v as f32) * k) as u8 } else { (v as f32 * (1.0 + k)) as u8 };
-        wordcraft_doc::Rgb(f(c.0), f(c.1), f(c.2))
+        soratra_doc::Rgb(f(c.0), f(c.1), f(c.2))
     };
     let order = [1usize, 0, 3, 2, 4, 5, 6, 7, 8, 9];
     for k in [0.0f32, 0.8, 0.6, 0.4, -0.25, -0.5] {
@@ -459,7 +459,7 @@ pub fn color_grid(ui: &mut Ui, theme: &[wordcraft_doc::Rgb]) -> Option<String> {
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing = vec2(3.0, 0.0);
         for hex in ["C00000", "FF0000", "FFC000", "FFFF00", "92D050", "00B050", "00B0F0", "0070C0", "002060", "7030A0"] {
-            if let Some(c) = wordcraft_doc::Rgb::parse(hex)
+            if let Some(c) = soratra_doc::Rgb::parse(hex)
                 && swatch(ui, c)
             {
                 picked = Some(hex.to_string());
@@ -469,7 +469,7 @@ pub fn color_grid(ui: &mut Ui, theme: &[wordcraft_doc::Rgb]) -> Option<String> {
     picked
 }
 
-pub(crate) fn swatch(ui: &mut Ui, c: wordcraft_doc::Rgb) -> bool {
+pub(crate) fn swatch(ui: &mut Ui, c: soratra_doc::Rgb) -> bool {
     let (r, resp) = ui.allocate_exact_size(vec2(15.0, 15.0), Sense::click());
     ui.painter().rect_filled(r, 0.0, Color32::from_rgb(c.0, c.1, c.2));
     let t = Tokens::get(ui.ctx());

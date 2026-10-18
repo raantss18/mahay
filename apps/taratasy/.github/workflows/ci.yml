@@ -32,21 +32,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The optional craft-fonts build input (Japanese fonts), so the Japanese font tests run on
-      # Linux; Windows tests the build without it. See craftrules standards/fonts.md.
-      - name: Check out craft-fonts (Linux)
+      # The optional mahay-fonts build input (Japanese fonts), so the Japanese font tests run on
+      # Linux; Windows tests the build without it. See mahay-rules standards/fonts.md.
+      - name: Check out mahay-fonts (Linux)
         if: runner.os == 'Linux'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: storytold/craft-fonts
+          repository: raantss18/mahay-fonts
           ref: 3d9ab3a132ed0eff457e424226a435a901da30d3
-          path: craft-fonts
+          path: mahay-fonts
 
-      - name: Configure craft-fonts (Linux)
+      - name: Configure mahay-fonts (Linux)
         if: runner.os == 'Linux'
         run: |
-          echo "CRAFT_FONTS_DIR=$GITHUB_WORKSPACE/craft-fonts" >> "$GITHUB_ENV"
-          echo "CRAFT_FONTS_REQUIRED=1" >> "$GITHUB_ENV"
+          echo "MAHAY_FONTS_DIR=$GITHUB_WORKSPACE/mahay-fonts" >> "$GITHUB_ENV"
+          echo "MAHAY_FONTS_REQUIRED=1" >> "$GITHUB_ENV"
 
       - name: Install Linux system dependencies (egui/winit/rfd) and the oracles
         if: runner.os == 'Linux'
@@ -62,7 +62,7 @@ jobs:
       # Only the tools the job actually uses are installed above.
       - name: Require the oracles (Linux)
         if: runner.os == 'Linux'
-        run: echo "PDFCRAFT_ORACLES_REQUIRED=1" >> "$GITHUB_ENV"
+        run: echo "TARATASY_ORACLES_REQUIRED=1" >> "$GITHUB_ENV"
 
       - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
@@ -71,7 +71,7 @@ jobs:
 
       - name: Require Windows executable resources
         if: runner.os == 'Windows'
-        run: Add-Content -Path $env:GITHUB_ENV -Value 'PDFCRAFT_REQUIRE_WINRES=1'
+        run: Add-Content -Path $env:GITHUB_ENV -Value 'TARATASY_REQUIRE_WINRES=1'
         shell: pwsh
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
@@ -87,7 +87,7 @@ jobs:
         if: runner.os != 'Linux'
         run: cargo test --workspace
 
-      - name: Test (with craft-fonts)
+      - name: Test (with mahay-fonts)
         if: runner.os == 'Linux'
         run: cargo test --workspace
 
@@ -101,7 +101,7 @@ jobs:
 
       - name: CLI without the MCP server still builds
         if: runner.os == 'Linux'
-        run: cargo check -p pdfcraft-cli --no-default-features
+        run: cargo check -p taratasy-cli --no-default-features
 
   wasm:
     name: wasm32 check

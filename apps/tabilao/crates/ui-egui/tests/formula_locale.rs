@@ -1,9 +1,9 @@
 //! Language selection must affect UI entry, never the canonical engine/file boundary.
-use gridcraft_engine::{
+use tabilao_engine::{
     Session,
     core::{CellError, CellRef, Value},
 };
-use gridcraft_ui_egui::{SheetApp, UiState, i18n::Language};
+use tabilao_ui_egui::{SheetApp, UiState, i18n::Language};
 use serde_json::json;
 
 fn app() -> SheetApp {
@@ -96,7 +96,7 @@ fn localized_autocomplete_is_rendered_and_inserts_the_selected_name() {
     h.run_steps(4);
     assert!(h.state().editor.as_ref().unwrap().autocomplete.iter().any(|n| n == "SUMA"));
     assert!(!h.state().editor.as_ref().unwrap().autocomplete.iter().any(|n| n == "SUM"));
-    if let Ok(path) = std::env::var("GRIDCRAFT_LOCALE_SCREENSHOT") {
+    if let Ok(path) = std::env::var("TABILAO_LOCALE_SCREENSHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     let ed = h.state_mut().editor.as_mut().unwrap();
@@ -107,7 +107,7 @@ fn localized_autocomplete_is_rendered_and_inserts_the_selected_name() {
     h.input_mut().events.push(egui::Event::Text("1,5;".into()));
     h.run_steps(4);
     assert_eq!(h.state().editor.as_ref().unwrap().current_function(), Some(("SUMA".into(), 1)));
-    if let Ok(path) = std::env::var("GRIDCRAFT_LOCALE_SCREENSHOT") {
+    if let Ok(path) = std::env::var("TABILAO_LOCALE_SCREENSHOT") {
         h.render().unwrap().save(std::path::Path::new(&path).with_file_name("spanish-hints.png")).unwrap();
         h.state_mut().cancel_edit();
         h.state_mut().ui.ribbon_tab = "View".into();
@@ -155,7 +155,7 @@ fn canonical_engine_templates_enter_the_selected_formula_language() {
     app.begin_edit(Some("=SUMA(1,5;2)".into()), false);
     assert_eq!(app.editor.as_ref().unwrap().text, "=SUMA(1,5;2)");
     assert!(app.commit_edit(0, 0, false, false));
-    if let Ok(path) = std::env::var("GRIDCRAFT_LOCALE_SCREENSHOT") {
+    if let Ok(path) = std::env::var("TABILAO_LOCALE_SCREENSHOT") {
         app.ui.ribbon_tab = "Formulas".into();
         app.run("formulas.insertFunction", json!({"name":"SUM"})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_ui_state(

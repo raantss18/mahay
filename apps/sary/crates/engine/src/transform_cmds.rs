@@ -1,10 +1,10 @@
 //! Edit › Free Transform / Transform: projective transforms of layers (and the selection).
 
-use photocraft_algo::transform::{Homography, Interp, warp_output_size, warp_surface, warp_surface_with};
-use photocraft_color::PixelFormat;
-use photocraft_doc::{Document, Layer, LayerContent, LayerId, Locks};
-use photocraft_geom::{Affine, Rect};
-use photocraft_raster::{Interrupt, Surface};
+use sary_algo::transform::{Homography, Interp, warp_output_size, warp_surface, warp_surface_with};
+use sary_color::PixelFormat;
+use sary_doc::{Document, Layer, LayerContent, LayerId, Locks};
+use sary_geom::{Affine, Rect};
+use sary_raster::{Interrupt, Surface};
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -57,9 +57,9 @@ fn framed_by_selection(doc: &Document, bounds: Rect) -> Rect {
 pub(crate) fn whole_layer_bounds(layer: &Layer) -> Rect {
     let content = match &layer.content {
         LayerContent::Group(g) => g.children.iter().map(whole_layer_bounds).fold(Rect::EMPTY, |a, b| a.union(&b)),
-        _ => layer.surface().map_or(Rect::EMPTY, photocraft_compose::bounds::content_bounds),
+        _ => layer.surface().map_or(Rect::EMPTY, sary_compose::bounds::content_bounds),
     };
-    if content.is_empty() { layer.mask.as_ref().map_or(Rect::EMPTY, |m| photocraft_compose::bounds::content_bounds(&m.surface)) } else { content }
+    if content.is_empty() { layer.mask.as_ref().map_or(Rect::EMPTY, |m| sary_compose::bounds::content_bounds(&m.surface)) } else { content }
 }
 
 /// Warp a surface whose pixels outside the content read as `default` (masks, selections):
@@ -258,7 +258,7 @@ pub fn locked_for_transform(doc: &Document, id: LayerId) -> bool {
 }
 
 /// The largest result (px) a single Free Transform warp may build: 2³⁰, the bound Puppet Warp uses
-/// too ([`photocraft_algo::puppet::MAX_WARP_PIXELS`]). Only the size of the result counts, not
+/// too ([`sary_algo::puppet::MAX_WARP_PIXELS`]). Only the size of the result counts, not
 /// where it lands, so moving a layer far off the canvas stays allowed. A scale past it is refused
 /// rather than clipped (#3773): the warp would otherwise fill every tile of a result up to 2²¹ px
 /// on a side before anything could fail.

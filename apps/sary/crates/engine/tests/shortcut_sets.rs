@@ -1,7 +1,7 @@
 //! Edit › Keyboard Shortcuts › Set through `edit.keyboardShortcuts`: save, switch, delete,
 //! export to `.kys` and back, Summarize, and bad params as errors.
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 fn ks(s: &mut Session, p: Value) -> Value {
@@ -12,7 +12,7 @@ fn ks(s: &mut Session, p: Value) -> Value {
 fn a_set_saves_switches_exports_and_imports_back() {
     let mut s = Session::new();
     let r = ks(&mut s, json!({}));
-    assert_eq!((r["activeSet"].as_str(), r["modified"].as_bool(), r["defaultsName"].as_str()), (Some(""), Some(false), Some("PhotoCraft Defaults")));
+    assert_eq!((r["activeSet"].as_str(), r["modified"].as_bool(), r["defaultsName"].as_str()), (Some(""), Some(false), Some("Sary Defaults")));
     // Edit, then save the bindings as they end up after this call's edits.
     let r = ks(&mut s, json!({"set": {"edit.copy": "F9"}, "alternates": {"edit.copy": []}, "saveSet": "Mine"}));
     assert_eq!((r["activeSet"].as_str(), r["modified"].as_bool(), r["sets"].clone()), (Some("Mine"), Some(false), json!(["Mine"])));
@@ -46,7 +46,7 @@ fn bad_set_params_change_nothing() {
         json!({"useSet": "Missing"}),
         json!({"useSet": 7}),
         json!({"saveSet": ""}),
-        json!({"saveSet": "PhotoCraft Defaults"}),
+        json!({"saveSet": "Sary Defaults"}),
         json!({"deleteSet": "Missing"}),
         json!({"activeSet": "Missing"}),
         json!({"sets": "nope"}),

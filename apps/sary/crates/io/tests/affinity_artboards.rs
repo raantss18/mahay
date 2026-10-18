@@ -5,10 +5,10 @@
 mod fixture;
 
 use fixture::{Marker, document};
-use photocraft_affinity::synth::Method;
-use photocraft_doc::Document;
-use photocraft_geom::Rect;
-use photocraft_io::{ExportOptions, export, import};
+use sary_affinity::synth::Method;
+use sary_doc::Document;
+use sary_geom::Rect;
+use sary_io::{ExportOptions, export, import};
 
 fn boards(doc: &Document) -> Vec<(String, Rect)> {
     doc.artboards().into_iter().map(|(_, name, a)| (name.to_string(), a.rect)).collect()
@@ -16,7 +16,7 @@ fn boards(doc: &Document) -> Vec<(String, Rect)> {
 
 fn pixels(doc: &Document) -> Vec<u8> {
     let bytes = export(doc, "boards.png", &ExportOptions::default()).unwrap().bytes;
-    photocraft_codecs::decode(&bytes).unwrap().data().to_vec()
+    sary_codecs::decode(&bytes).unwrap().data().to_vec()
 }
 
 #[test]
@@ -33,7 +33,7 @@ fn current_property_artboards_keep_bounds_clipping_and_roundtrips() {
                 let x = i % 40;
                 assert_eq!(px, if (16..24).contains(&x) { &[0, 0, 0, 0] } else { &[255, 0, 0, 255] }, "overflow must be clipped at the board edges");
             }
-            for name in ["copy.pcraft", "copy.psd"] {
+            for name in ["copy.sary", "copy.psd"] {
                 let bytes = export(d, name, &ExportOptions::default()).unwrap().bytes;
                 let reopened = import(name, &bytes).unwrap().document;
                 assert_eq!(boards(&reopened), boards(d), "{name}");

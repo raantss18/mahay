@@ -50,22 +50,22 @@ pub fn write_backup(path: &Path, text: &str) -> io::Result<()> {
         if backup.exists() {
             std::fs::set_permissions(&backup, std::fs::Permissions::from_mode(mode))?;
         }
-        craft_atomic::WriteOptions::default()
-            .with_new_file_permissions(craft_atomic::NewFilePermissions::Private)
+        mahay_atomic::WriteOptions::default()
+            .with_new_file_permissions(mahay_atomic::NewFilePermissions::Private)
             .atomic_write(&backup, text.as_bytes())?;
         std::fs::set_permissions(&backup, std::fs::Permissions::from_mode(mode))
     }
     #[cfg(not(unix))]
     {
-        craft_atomic::WriteOptions::default()
-            .with_new_file_permissions(craft_atomic::NewFilePermissions::Private)
+        mahay_atomic::WriteOptions::default()
+            .with_new_file_permissions(mahay_atomic::NewFilePermissions::Private)
             .atomic_write(&backup, text.as_bytes())
     }
 }
 
 /// Checks that `dir` accepts a new file by creating and removing a probe.
 pub fn check_writable(dir: &Path) -> io::Result<()> {
-    let probe = dir.join(format!(".craft-settings-probe-{}", std::process::id()));
+    let probe = dir.join(format!(".mahay-settings-probe-{}", std::process::id()));
     std::fs::OpenOptions::new().write(true).create_new(true).open(&probe)?;
     std::fs::remove_file(&probe)
 }

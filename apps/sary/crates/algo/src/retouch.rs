@@ -1,5 +1,5 @@
 //! Per-pixel and per-dab kernels for the toning and focus retouching tools: Dodge, Burn, Sponge,
-//! Blur, Sharpen. The brush engine (`photocraft-paint`) decides *where* and *how strongly* each dab
+//! Blur, Sharpen. The brush engine (`sary-paint`) decides *where* and *how strongly* each dab
 //! applies; these functions decide *what* happens to the pixels.
 //!
 //! Tone curves are our own design, chosen to match the observed behaviour of Photoshop's tools:

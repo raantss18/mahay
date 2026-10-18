@@ -1,7 +1,7 @@
 //! Liang hyphenation patterns (TeX notation, e.g. `.ab1c`, `4t1ion`): parsing and application.
 //!
 //! The bundled English set is *ours*: trained from the public-domain Moby Hyphenator word list by
-//! DesignCraft's patgen (see `examples/hyphgen.rs`). The Polish set is the TeX one by Hanna
+//! Pejy's patgen (see `examples/hyphgen.rs`). The Polish set is the TeX one by Hanna
 //! Kołodziejska, Bogusław Jackowski and Marek Ryćko (hyph-utf8 `hyph-pl.tex`, used under its MIT
 //! licence option), bundled unmodified: [`Patterns::parse`] reads TeX's `\patterns{…}` and
 //! `\hyphenation{…}` blocks directly. Patterns are stored in a hash map keyed by the packed letter

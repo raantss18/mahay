@@ -4,7 +4,7 @@
 use crate::error::{Result, ensure, unsupported};
 use crate::spec_tables::{DEFAULT_SCALING_INTER, DEFAULT_SCALING_INTRA};
 use crate::tables::scan_diag;
-use deckcraft_bitstream::BitReader;
+use seho_bitstream::BitReader;
 
 /// General profile / tier / level information.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -944,7 +944,7 @@ impl Layout {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deckcraft_bitstream::BitWriter;
+    use seho_bitstream::BitWriter;
 
     /// A 64x64 Main-profile SPS (CTB 64, no VUI) with a chosen conformance window and CTB-size delta.
     fn sps_bits(conf_win: Option<[u32; 4]>, log2_diff_cb: u32) -> Vec<u8> {

@@ -14,13 +14,13 @@
 
 use std::sync::Arc;
 
-use photocraft_color::{Color, PixelFormat};
-use photocraft_doc::{Document, Fill, Layer, LayerContent, LayerId, LayerMask};
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_color::{Color, PixelFormat};
+use sary_doc::{Document, Fill, Layer, LayerContent, LayerId, LayerMask};
+use sary_geom::Rect;
+use sary_raster::Surface;
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 
 /// The engine command behind Select › Select and Mask….
@@ -260,12 +260,12 @@ pub fn paint(fields: &mut Map<String, Value>, at: [f64; 2], start: bool, subtrac
     let size = f64::from(brush_size(fields));
     let mut strokes = fields.get("refineStrokes").and_then(Value::as_array).cloned().unwrap_or_default();
     let points = |s: &Value| s.get("points").and_then(Value::as_array).map_or(0, Vec::len);
-    if strokes.iter().map(points).sum::<usize>() >= photocraft_engine::smartselect_cmds::MAX_STROKE_POINTS {
+    if strokes.iter().map(points).sum::<usize>() >= sary_engine::smartselect_cmds::MAX_STROKE_POINTS {
         return;
     }
     let round = |v: f64| (v * 10.0).round() / 10.0;
     let pt = json!([round(at[0]), round(at[1])]);
-    let room = strokes.len() < photocraft_engine::smartselect_cmds::MAX_STROKES;
+    let room = strokes.len() < sary_engine::smartselect_cmds::MAX_STROKES;
     let last = strokes.last_mut().and_then(|s| s.get_mut("points")).and_then(Value::as_array_mut);
     match last {
         Some(pts) if !start => {
@@ -285,7 +285,7 @@ pub fn paint(fields: &mut Map<String, Value>, at: [f64; 2], start: bool, subtrac
 /// The canvas under a Select and Mask dialog with the Refine Edge Brush on: shows the brush at
 /// `over` (zoom = screen points per document pixel) and paints at document point `press`. False
 /// when the brush isn't the top dialog's tool.
-pub fn canvas_brush(app: &mut PhotocraftApp, painter: &egui::Painter, over: egui::Pos2, press: Option<[f64; 2]>, zoom: f32) -> bool {
+pub fn canvas_brush(app: &mut SaryApp, painter: &egui::Painter, over: egui::Pos2, press: Option<[f64; 2]>, zoom: f32) -> bool {
     let ctx = painter.ctx().clone();
     let Some(d) = app.ui.dialogs.last_mut().filter(|d| owns(&d.fields) && brush_on(&d.fields)) else { return false };
     let (alt, start) = ctx.input(|i| (i.modifiers.alt, i.pointer.primary_pressed()));
@@ -332,7 +332,7 @@ pub fn request_params(fields: &Map<String, Value>, mut params: Value) -> Value {
 /// selection (no Select and Mask preview); `Some(None)` = nothing (every view but Marching Ants
 /// hides the ants, as in Photoshop); `Some(Some((proxy, k)))` = the refined selection of the
 /// preview proxy, reduced by `k`.
-pub(crate) fn ants(app: &PhotocraftApp, idx: usize) -> Option<Option<(Arc<Document>, u32)>> {
+pub(crate) fn ants(app: &SaryApp, idx: usize) -> Option<Option<(Arc<Document>, u32)>> {
     if app.session.active_index() != Some(idx) {
         return None;
     }
@@ -364,7 +364,7 @@ impl Coverage {
         let Some(s) = s else { return Coverage::empty() };
         let outside = s.default_pixel().first().copied().unwrap_or(0.0).clamp(0.0, 1.0);
         let area = if outside == 0.0 { s.content_bounds().intersect(&canvas) } else { canvas };
-        Coverage { area, values: photocraft_algo::selection::mask_from_surface(Some(s), area), outside }
+        Coverage { area, values: sary_algo::selection::mask_from_surface(Some(s), area), outside }
     }
 
     /// The band `r` px either side of the edge of `s`: where grown and shrunk coverage differ.
@@ -374,9 +374,9 @@ impl Coverage {
         let outside = s.default_pixel().first().copied().unwrap_or(0.0);
         let area = if outside == 0.0 { s.content_bounds().inflate(reach).intersect(&canvas) } else { canvas };
         let (w, h) = (area.width() as usize, area.height() as usize);
-        let values = photocraft_algo::selection::mask_from_surface(Some(s), area);
-        let grown = photocraft_algo::matting::morph(&values, w, h, r, true);
-        let shrunk = photocraft_algo::matting::morph(&values, w, h, r, false);
+        let values = sary_algo::selection::mask_from_surface(Some(s), area);
+        let grown = sary_algo::matting::morph(&values, w, h, r, true);
+        let shrunk = sary_algo::matting::morph(&values, w, h, r, false);
         if grown.len() != values.len() || shrunk.len() != values.len() {
             return Coverage::empty();
         }
@@ -394,7 +394,7 @@ impl Coverage {
 
     /// The edge band as the Refine Edge Brush changes it: painted areas join it, restored ones
     /// leave it.
-    fn with_brush(self, brush: Option<&photocraft_algo::matting::EdgeBrush>, canvas: Rect) -> Coverage {
+    fn with_brush(self, brush: Option<&sary_algo::matting::EdgeBrush>, canvas: Rect) -> Coverage {
         let Some(brush) = brush else { return self };
         let area = self.area.union(&brush.bounds()).intersect(&canvas);
         let values = (area.y0..area.y1)
@@ -447,7 +447,7 @@ fn length(params: &Value, key: &str, k: u32) -> f64 {
 
 /// The preview of the Select and Mask dialog for `doc`: the proxy reduced by `k`, shown in the
 /// requested view. `None` when the refinement fails or is cancelled.
-pub fn preview_document(doc: &Document, active: Option<LayerId>, params: &Value, k: u32, cancel: Option<&photocraft_engine::jobs::JobCtx>) -> Option<Document> {
+pub fn preview_document(doc: &Document, active: Option<LayerId>, params: &Value, k: u32, cancel: Option<&sary_engine::jobs::JobCtx>) -> Option<Document> {
     let view = View::of(params);
     let k = k.max(1);
     let mut proxy = crate::proxy::proxy_document(doc, k);
@@ -457,7 +457,7 @@ pub fn preview_document(doc: &Document, active: Option<LayerId>, params: &Value,
     let canvas = Rect::new(0, 0, i32::try_from(proxy.size.width).unwrap_or(i32::MAX), i32::try_from(proxy.size.height).unwrap_or(i32::MAX));
     let coverage = if view.show_edge {
         let band = Coverage::edge_band(original.as_ref(), canvas, length(params, "radius", k).round().clamp(1.0, 250.0) as usize);
-        band.with_brush(scaled_strokes(params, k).as_ref().and_then(|s| photocraft_algo::matting::EdgeBrush::new(s, canvas)).as_ref(), canvas)
+        band.with_brush(scaled_strokes(params, k).as_ref().and_then(|s| sary_algo::matting::EdgeBrush::new(s, canvas)).as_ref(), canvas)
     } else if view.show_original {
         Coverage::read(original.as_ref(), canvas)
     } else {
@@ -468,8 +468,8 @@ pub fn preview_document(doc: &Document, active: Option<LayerId>, params: &Value,
 }
 
 /// `select.refineEdge` on the proxy, its output forced to the selection: the refined coverage.
-fn refine(proxy: &Document, active: Option<LayerId>, params: &Value, k: u32, cancel: Option<&photocraft_engine::jobs::JobCtx>) -> Option<Option<Surface>> {
-    let mut s = photocraft_engine::Session::new();
+fn refine(proxy: &Document, active: Option<LayerId>, params: &Value, k: u32, cancel: Option<&sary_engine::jobs::JobCtx>) -> Option<Option<Surface>> {
+    let mut s = sary_engine::Session::new();
     s.set_inline_job_ctx(cancel.cloned());
     s.add_document(proxy.clone(), None);
     if let Some(id) = active {
@@ -513,7 +513,7 @@ fn refine(proxy: &Document, active: Option<LayerId>, params: &Value, k: u32, can
 
 /// The Refine Edge Brush strokes of `params`, reduced by `k`, for Show Edge; `None` when there
 /// are none (or they are malformed: the refinement itself reports those).
-fn scaled_strokes(params: &Value, k: u32) -> Option<Vec<photocraft_algo::matting::EdgeStroke>> {
+fn scaled_strokes(params: &Value, k: u32) -> Option<Vec<sary_algo::matting::EdgeStroke>> {
     let k = k.max(1) as f32;
     params
         .get("refineStrokes")?
@@ -527,7 +527,7 @@ fn scaled_strokes(params: &Value, k: u32) -> Option<Vec<photocraft_algo::matting
                 .map(|p| Some((p.get(0)?.as_f64()? as f32 / k, p.get(1)?.as_f64()? as f32 / k)))
                 .collect::<Option<Vec<_>>>()?;
             let size = (s.get("size").and_then(Value::as_f64).unwrap_or(30.0) as f32 / k).max(1.0);
-            Some(photocraft_algo::matting::EdgeStroke { points, size, add: s.get("mode").and_then(Value::as_str) != Some("subtract") })
+            Some(sary_algo::matting::EdgeStroke { points, size, add: s.get("mode").and_then(Value::as_str) != Some("subtract") })
         })
         .collect()
 }
@@ -579,8 +579,8 @@ fn show(doc: &mut Document, active: Option<LayerId>, view: &View, coverage: &Cov
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::{ColorMode, SampleType};
-    use photocraft_doc::Size;
+    use sary_color::{ColorMode, SampleType};
+    use sary_doc::Size;
 
     /// A white 40×20 document with its left half selected.
     fn half_selected() -> Document {
@@ -596,7 +596,7 @@ mod tests {
     }
 
     fn pixel(doc: &Document, x: i32, y: i32) -> Vec<f32> {
-        let s = photocraft_compose::flatten_to_surface(doc, PixelFormat::RGBA8, None);
+        let s = sary_compose::flatten_to_surface(doc, PixelFormat::RGBA8, None);
         s.pixel(x, y)
     }
 

@@ -4,13 +4,13 @@ use egui::{Align, Align2, Color32, CornerRadius, Layout, Rect, Sense, Stroke, ve
 
 use crate::canvas::{DocView, Fit, PageLayout};
 use crate::theme::{self, ThemePreference, Tokens};
-use crate::{Dialog, Mode, PdfCraftApp, PropsTab, RightPanel, icons, widgets, window_controls};
+use crate::{Dialog, Mode, TaratasyApp, PropsTab, RightPanel, icons, widgets, window_controls};
 
 /// Height of the tab strip when it doubles as the macOS title bar (#789). AppKit draws the traffic
 /// lights itself, centred in the standard 28 pt title-bar band at the top of the window, and moving
 /// them takes AppKit calls the workspace forbids (`unsafe`). So on macOS the strip is that band:
 /// the lights sit vertically centred in it, and the controls beside them shrink to fit, as in
-/// WordCraft (storytold/wordcraft#255).
+/// Soratra (raantss18/soratra#255).
 pub const MAC_TITLE_BAR: f32 = 28.0;
 /// The traffic lights as AppKit lays them out: button diameter, centre-to-centre pitch and the
 /// first button's left edge (8–10 pt depending on the macOS version; the larger value keeps the
@@ -26,7 +26,7 @@ const TAB_STRIP: f32 = 38.0;
 const TAB_HEIGHT: f32 = 30.0;
 const STRIP_BUTTON: f32 = 28.0;
 
-pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     // macOS: the strip is the 28 pt title bar, so the traffic lights are centred in it; tabs and
     // buttons shrink to keep a margin above and below.
@@ -103,7 +103,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                 let state = (app.active_ids().map(|(_, id)| id), app.views.len(), app.combine_showing());
                 let changed = ui.data_mut(|data| {
                     let id = ui.id().with("active_tab");
-                    let changed = data.get_temp::<(Option<pdfcraft_engine::DocId>, usize, bool)>(id) != Some(state);
+                    let changed = data.get_temp::<(Option<taratasy_engine::DocId>, usize, bool)>(id) != Some(state);
                     data.insert_temp(id, state);
                     changed
                 });
@@ -300,7 +300,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                         app.dialog = Some(Dialog::Shortcuts);
                     }
                     // One click to the community, from anywhere in the app.
-                    if widgets::ghost_button_sized(ui, "messages-square", "Discord", tab_h).on_hover_text(pdfcraft_engine::links::DISCORD).clicked() {
+                    if widgets::ghost_button_sized(ui, "messages-square", "Discord", tab_h).on_hover_text(taratasy_engine::links::DISCORD).clicked() {
                         app.execute("help.discord");
                     }
                 });
@@ -309,7 +309,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
 }
 
 /// Both theme entry points use the same choices and command path.
-fn theme_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+fn theme_menu(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     for (preference, command, label) in [
         (ThemePreference::System, "view.theme.system", "Use system setting"),
         (ThemePreference::Light, "view.theme.light", "Light gray"),
@@ -328,7 +328,7 @@ fn theme_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
 }
 
 /// The right-click menu on the title bar's theme button.
-fn appearance_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+fn appearance_menu(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     if ui.button(tl!("Appearance settings…")).clicked() {
         app.dialog = Some(Dialog::Preferences);
         ui.close();
@@ -445,7 +445,7 @@ fn tab(
     let (rect, _) = ui.allocate_exact_size(vec2(width, height), Sense::hover());
     let a11y = if dirty { format!("{name} (edited)") } else { name.to_string() };
     let sense = if draggable { Sense::click_and_drag() } else { Sense::click() };
-    let resp = craft_ui::tabs::Tab::new(id, &a11y, active).sense(sense).focus_stroke(Stroke::new(1.0, t.accent)).show_at(ui, rect, |ui, resp| {
+    let resp = mahay_ui::tabs::Tab::new(id, &a11y, active).sense(sense).focus_stroke(Stroke::new(1.0, t.accent)).show_at(ui, rect, |ui, resp| {
         let press = theme::Press::track(ui, resp);
         let bg = if active {
             press.fill(t.chrome, t.chrome.lerp_to_gamma(t.hover, 0.65), t.hover)
@@ -488,7 +488,7 @@ fn tab(
     })
 }
 
-pub fn mode_bar(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+pub fn mode_bar(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     egui::Panel::top("mode_bar")
         .exact_size(48.0)
@@ -533,7 +533,7 @@ pub fn mode_bar(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
         });
 }
 
-fn main_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+fn main_menu(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let resp = widgets::ghost_button(ui, "panel-left", tl!("Menu"));
     egui::Popup::menu(&resp).show(|ui| {
@@ -618,7 +618,7 @@ fn main_menu(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
     });
 }
 
-pub fn right_rail(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
+pub fn right_rail(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let Some((index, id)) = app.active_ids() else { return };
     let Some(doc) = app.session.get(id) else { return };

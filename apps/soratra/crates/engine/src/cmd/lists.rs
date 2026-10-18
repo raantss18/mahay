@@ -4,10 +4,10 @@
 //! the number and the number's font.
 
 use serde_json::{Value, json};
-use wordcraft_doc::StoryRef;
-use wordcraft_doc::numbering::{Level, LevelSuffix, ListKind, levels_for};
-use wordcraft_doc::props::{Align, NumRef, Rgb, TextColor};
-use wordcraft_doc::section::NumFormat;
+use soratra_doc::StoryRef;
+use soratra_doc::numbering::{Level, LevelSuffix, ListKind, levels_for};
+use soratra_doc::props::{Align, NumRef, Rgb, TextColor};
+use soratra_doc::section::NumFormat;
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};
@@ -330,7 +330,7 @@ fn touch_styles(s: &mut Session, styles: &[String]) -> Result<(), CmdError> {
 }
 
 /// Lay out again every paragraph, in every story, that `f` picks.
-fn touch_where(s: &mut Session, f: &dyn Fn(&wordcraft_doc::Paragraph) -> bool) -> Result<(), CmdError> {
+fn touch_where(s: &mut Session, f: &dyn Fn(&soratra_doc::Paragraph) -> bool) -> Result<(), CmdError> {
     let stories: Vec<StoryRef> = std::iter::once(StoryRef::Body).chain(s.doc.parts.keys().map(|k| StoryRef::Part(*k))).collect();
     for story in stories {
         for path in s.doc.para_paths(story) {
@@ -345,8 +345,8 @@ fn touch_where(s: &mut Session, f: &dyn Fn(&wordcraft_doc::Paragraph) -> bool) -
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::Document;
-    use wordcraft_layout::Placed;
+    use soratra_doc::Document;
+    use soratra_layout::Placed;
 
     use crate::Session;
 
@@ -379,16 +379,16 @@ mod tests {
         let r = s.run("list.define", &json!({"levels": levels, "name": "Spec"})).unwrap();
         let num = r["num"].as_u64().unwrap() as u32;
         // Second and third paragraphs one and two levels down.
-        let paths = s.doc.para_paths(wordcraft_doc::StoryRef::Body);
+        let paths = s.doc.para_paths(soratra_doc::StoryRef::Body);
         for (k, lvl) in [(1usize, 1u8), (2, 2)] {
-            let p = s.doc.para_mut(wordcraft_doc::StoryRef::Body, &paths[k]).unwrap();
-            p.props.numbering = Some(wordcraft_doc::props::NumRef { num, level: lvl });
+            let p = s.doc.para_mut(soratra_doc::StoryRef::Body, &paths[k]).unwrap();
+            p.props.numbering = Some(soratra_doc::props::NumRef { num, level: lvl });
             p.touch();
         }
         s.relayout();
         assert_eq!(labels(&mut s), ["1.", "1.1.", "a)"]);
 
-        let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let back = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
         let mut b = Session::new(back);
         assert_eq!(labels(&mut b), ["1.", "1.1.", "a)"]);
         let got = b.run("list.get", &json!({"num": num})).unwrap();
@@ -430,7 +430,7 @@ mod tests {
             s.run("text.insert", &json!({"text": t})).unwrap();
             s.run("para.style", &json!({"style": st})).unwrap();
         }
-        s.sel = crate::Selection::caret(wordcraft_doc::Pos::body(0, 0));
+        s.sel = crate::Selection::caret(soratra_doc::Pos::body(0, 0));
         s
     }
 
@@ -445,7 +445,7 @@ mod tests {
         // The number comes from the style, so a heading added later is numbered too.
         let h2 = s.doc.styles.get("Heading2").and_then(|st| st.para.numbering).unwrap();
         assert_eq!(h2.level, 1);
-        let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let back = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
         assert_eq!(back.styles.get("Heading2").and_then(|st| st.para.numbering).map(|x| x.level), Some(1), "numPr on the style");
         let mut b = Session::new(back);
         assert_eq!(numbered(&mut b), want);
@@ -481,7 +481,7 @@ mod tests {
             s.run("para.style", &json!({"style": st})).unwrap();
         }
         let end = paras.get(to).map_or(0, |p| p.0.len());
-        s.sel = crate::Selection { anchor: wordcraft_doc::Pos::body(from, 0), focus: wordcraft_doc::Pos::body(to, end) };
+        s.sel = crate::Selection { anchor: soratra_doc::Pos::body(from, 0), focus: soratra_doc::Pos::body(to, end) };
         s
     }
 
@@ -518,7 +518,7 @@ mod tests {
     #[test]
     fn a_heading_preset_on_a_lone_normal_paragraph_makes_it_heading_1() {
         let mut s = doc(&[("Body", "Normal")], 0, 0);
-        s.sel = crate::Selection::caret(wordcraft_doc::Pos::body(0, 2));
+        s.sel = crate::Selection::caret(soratra_doc::Pos::body(0, 2));
         s.run("list.multilevelPreset", &json!({"preset": "headings"})).unwrap();
         assert_eq!(numbered(&mut s), [n(Some("1"), "Heading1")]);
     }

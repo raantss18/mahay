@@ -1,6 +1,6 @@
 //! The Font dialog: Home › Font › Font… and Cmd+T open it, OK applies one undo step, Cancel does not.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;

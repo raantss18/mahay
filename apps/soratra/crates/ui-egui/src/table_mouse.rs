@@ -8,8 +8,8 @@
 
 use egui::{Color32, Pos2, Rect, Shape, Stroke, Ui, vec2};
 use serde_json::json;
-use wordcraft_engine::cmd::table_mouse::{self, Spot, Target};
-use wordcraft_layout::DocLayout;
+use soratra_engine::cmd::table_mouse::{self, Spot, Target};
+use soratra_layout::DocLayout;
 
 use crate::WordApp;
 use crate::table_resize::{REACH_PX, page_scale, to_screen};
@@ -232,7 +232,7 @@ fn arrow(painter: &egui::Painter, tip: Pos2, spot: Spot, dark: bool) {
 /// grey in dark mode, where black would vanish), white on black beside a row.
 fn arrow_colors(spot: Spot, dark: bool) -> (Color32, Color32) {
     match spot {
-        Spot::Column(_) | Spot::Cell(..) if dark => (Color32::WHITE, Color32::from_gray(wordcraft_render::DARK_PAPER)),
+        Spot::Column(_) | Spot::Cell(..) if dark => (Color32::WHITE, Color32::from_gray(soratra_render::DARK_PAPER)),
         Spot::Column(_) | Spot::Cell(..) => (Color32::BLACK, Color32::WHITE),
         _ => (Color32::WHITE, Color32::BLACK),
     }
@@ -247,7 +247,7 @@ mod tests {
     /// white paper they stay black, and the hollow row arrow is the same on both.
     #[test]
     fn the_selection_arrow_is_light_on_dark_paper() {
-        let dark_paper = Color32::from_gray(wordcraft_render::DARK_PAPER);
+        let dark_paper = Color32::from_gray(soratra_render::DARK_PAPER);
         assert_eq!(arrow_colors(Spot::Column(0), false), (Color32::BLACK, Color32::WHITE));
         assert_eq!(arrow_colors(Spot::Cell(0, 0), false), (Color32::BLACK, Color32::WHITE));
         assert_eq!(arrow_colors(Spot::Column(0), true), (Color32::WHITE, dark_paper));

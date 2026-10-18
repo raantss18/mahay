@@ -3,8 +3,8 @@
 //! brainpoolP512r1. Every vector signs the message "hello" with a throw-away key (see
 //! tests/data/README.md for the commands). The CMS files are detached, `openssl cms -sign -binary`.
 
-use pdfcraft_sign::cms::SignedData;
-use pdfcraft_sign::keys::{DigestAlg, PssParams, Scheme};
+use taratasy_sign::cms::SignedData;
+use taratasy_sign::keys::{DigestAlg, PssParams, Scheme};
 
 fn unhex(s: &str) -> Vec<u8> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap()).collect()
@@ -69,7 +69,7 @@ fn rsa_pss_with_its_declared_parameters() {
         s == Scheme::RsaPss(PssParams { mgf: DigestAlg::Sha256, salt_len: Some(0) })
     });
     // PSS over SHA-3 and SHA-512/256 digests, MGF1 with the same hash.
-    let id = pdfcraft_sign::pkcs12::open(&std::fs::read(format!("{}/tests/data/rsa-aes.p12", env!("CARGO_MANIFEST_DIR"))).unwrap(), "test").unwrap();
+    let id = taratasy_sign::pkcs12::open(&std::fs::read(format!("{}/tests/data/rsa-aes.p12", env!("CARGO_MANIFEST_DIR"))).unwrap(), "test").unwrap();
     let key = &id.certificate.public_key;
     for (name, alg, salt, sig) in [("sha3-256", DigestAlg::Sha3_256, 32, PSS_SHA3_256), ("sha512/256", DigestAlg::Sha512_256, 0, PSS_SHA512_256)] {
         let digest = alg.digest(&[b"hello"]);
@@ -90,7 +90,7 @@ fn ed25519_signs_the_signed_attributes_themselves() {
     assert!(cert.is_self_signed(), "the certificate's own Ed25519 signature checks");
     // A digest can't be verified with Ed25519: it signs the message.
     let r = cert.public_key.verify(Scheme::Ed25519, DigestAlg::Sha512, &[0; 64], &sd.signer.signature);
-    assert!(matches!(r, Err(pdfcraft_sign::SignError::Unsupported(_))));
+    assert!(matches!(r, Err(taratasy_sign::SignError::Unsupported(_))));
 }
 
 #[test]
@@ -102,7 +102,7 @@ fn ecdsa_on_brainpool_p512r1() {
     assert_eq!(cert.public_key.describe(), "ECDSA brainpoolP512r1");
     assert!(cert.is_self_signed(), "certificate signed with ecdsa-with-SHA512 on brainpoolP512r1");
     let spki = cert.public_key.spki();
-    let back = pdfcraft_sign::PublicKey::from_spki(&pdfcraft_sign::der::Tlv::parse_all(&spki).unwrap()).unwrap();
+    let back = taratasy_sign::PublicKey::from_spki(&taratasy_sign::der::Tlv::parse_all(&spki).unwrap()).unwrap();
     assert_eq!(back, cert.public_key, "re-encodes the SubjectPublicKeyInfo");
 }
 
@@ -120,7 +120,7 @@ fn add_be(a: &[u8], b: &[u8]) -> Option<Vec<u8>> {
 
 #[test]
 fn brainpool_p512r1_keys_must_have_coordinates_reduced_modulo_p() {
-    use pdfcraft_sign::PublicKey;
+    use taratasy_sign::PublicKey;
     const P: &str =
         "aadd9db8dbe9c48b3fd4e6ae33c9fc07cb308db3b3c9d20ed6639cca703308717d4d9b009bc66842aecda12ae6a380e62881ff2f2d82c68528aa6056583a48f3";
     let sd = SignedData::parse(&unhex(C_BP512_SHA512)).unwrap();
@@ -135,6 +135,6 @@ fn brainpool_p512r1_keys_must_have_coordinates_reduced_modulo_p() {
         let mut forged = cert.clone();
         forged.public_key = PublicKey::BrainpoolP512([&[4u8][..], &x, &y].concat());
         let r = sd.verify_signature(&forged, &content);
-        assert!(matches!(r, Err(pdfcraft_sign::SignError::Malformed(_))), "{what}: {r:?}");
+        assert!(matches!(r, Err(taratasy_sign::SignError::Malformed(_))), "{what}: {r:?}");
     }
 }

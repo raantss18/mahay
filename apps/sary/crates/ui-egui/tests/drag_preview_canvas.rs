@@ -13,14 +13,14 @@
 //! while the pointer is held still. Skips when no GPU adapter exists (like `live_stroke_canvas.rs`).
 
 use egui::{Modifiers, PointerButton, Pos2};
-use photocraft_ui_egui::PhotocraftApp;
-use photocraft_ui_egui::canvas::ViewXform;
-use photocraft_ui_egui::control::{ControlRequest, handle};
+use sary_ui_egui::SaryApp;
+use sary_ui_egui::canvas::ViewXform;
+use sary_ui_egui::control::{ControlRequest, handle};
 use serde_json::{Value, json};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-type Harness = egui_kittest::Harness<'static, PhotocraftApp>;
+type Harness = egui_kittest::Harness<'static, SaryApp>;
 
 /// A rendered frame: RGBA8, physical pixels.
 struct Image {
@@ -44,8 +44,8 @@ impl Image {
 fn harness(ppp: f32) -> Option<Harness> {
     let built = std::panic::catch_unwind(|| {
         egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 640.0)).with_pixels_per_point(ppp).with_max_steps(64).wgpu().build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
             if let Some(rs) = cc.wgpu_render_state.as_ref() {
                 app.set_wgpu(rs.clone());
             }
@@ -185,7 +185,7 @@ fn edges(h: &Harness, a: [f32; 2], b: [f32; 2]) -> [(Pos2, Pos2); 4] {
 
 #[test]
 fn marquee_previews_show_while_dragging_on_white_and_black_at_1x_and_2x() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     for ppp in [1.0, 2.0] {
         let Some(mut h) = harness(ppp) else { return };
         h.run_steps(4);
@@ -241,7 +241,7 @@ fn marquee_previews_show_while_dragging_on_white_and_black_at_1x_and_2x() {
 
 #[test]
 fn lasso_and_crop_previews_show_while_dragging() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     for ppp in [1.0, 2.0] {
         let Some(mut h) = harness(ppp) else { return };
         h.run_steps(4);
@@ -274,7 +274,7 @@ fn lasso_and_crop_previews_show_while_dragging() {
 
 #[test]
 fn a_held_marquee_drag_keeps_requesting_frames() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = harness(1.0) else { return };
     h.run_steps(4);
     setup(&mut h, "white", "rectMarquee");

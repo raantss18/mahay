@@ -3,17 +3,17 @@
 //! is a tool of its own, in the Pen's flyout.
 
 use egui::Modifiers;
-use photocraft_doc::vector::Path;
-use photocraft_geom::Point;
+use sary_doc::vector::Path;
+use sary_geom::Point;
 use serde_json::json;
 
 use super::{Drag, PathRef};
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, tool_event};
 use crate::state::Tool;
 
-fn app(tool: Tool) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(tool: Tool) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.session.execute("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.sync_views();
     app.ui.tool = tool;
@@ -21,7 +21,7 @@ fn app(tool: Tool) -> PhotocraftApp {
 }
 
 /// A square work path; knot 1 at (120, 40) is smooth with horizontal handles.
-fn with_path(app: &mut PhotocraftApp) {
+fn with_path(app: &mut SaryApp) {
     let path = json!({"subpaths": [{"closed": true, "knots": [
         [40, 40],
         {"anchor": [120, 40], "in": [100, 40], "out": [140, 40], "smooth": true},
@@ -31,19 +31,19 @@ fn with_path(app: &mut PhotocraftApp) {
     app.run("path.set", json!({"name": "work", "path": path})).unwrap();
 }
 
-fn work(app: &PhotocraftApp) -> Path {
+fn work(app: &SaryApp) -> Path {
     app.session.active().unwrap().doc.work_path.clone().unwrap()
 }
 
-fn anchor(app: &PhotocraftApp, k: usize) -> Point {
+fn anchor(app: &SaryApp, k: usize) -> Point {
     work(app).subpaths[0].knots[k].anchor
 }
 
-fn steps(app: &PhotocraftApp) -> usize {
+fn steps(app: &SaryApp) -> usize {
     app.session.active().unwrap().history.entries().len()
 }
 
-fn drag(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2], mods: Modifiers) {
+fn drag(app: &mut SaryApp, from: [f64; 2], to: [f64; 2], mods: Modifiers) {
     tool_event(app, ToolEvent::Down { x: from[0], y: from[1], pressure: 1.0 }, mods);
     let mid = [(from[0] + to[0]) / 2.0, (from[1] + to[1]) / 2.0];
     tool_event(app, ToolEvent::Move { x: mid[0], y: mid[1], pressure: 1.0 }, mods);
@@ -51,7 +51,7 @@ fn drag(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2], mods: Modifiers) 
     tool_event(app, ToolEvent::Up { x: to[0], y: to[1] }, mods);
 }
 
-fn click(app: &mut PhotocraftApp, at: [f64; 2], mods: Modifiers) {
+fn click(app: &mut SaryApp, at: [f64; 2], mods: Modifiers) {
     drag(app, at, at, mods);
 }
 
@@ -204,7 +204,7 @@ fn pen_with_alt_converts_points() {
     let mut app = app(Tool::Pen);
     with_path(&mut app);
     click(&mut app, [120.0, 40.0], Modifiers::ALT);
-    assert_eq!(work(&app).subpaths[0].knots[1], photocraft_doc::Knot::corner(120.0, 40.0), "⌥-click makes a corner");
+    assert_eq!(work(&app).subpaths[0].knots[1], sary_doc::Knot::corner(120.0, 40.0), "⌥-click makes a corner");
     drag(&mut app, [40.0, 120.0], [40.0, 140.0], Modifiers::ALT);
     let k = work(&app).subpaths[0].knots[3];
     assert_eq!((k.in_ctrl, k.out_ctrl, k.smooth), (Point::new(40.0, 100.0), Point::new(40.0, 140.0), true), "⌥-drag pulls out smooth handles");
@@ -232,7 +232,7 @@ fn the_convert_point_tool_converts_points_without_a_modifier() {
     with_path(&mut app);
     let n = steps(&app);
     click(&mut app, [120.0, 40.0], Modifiers::NONE);
-    assert_eq!(work(&app).subpaths[0].knots[1], photocraft_doc::Knot::corner(120.0, 40.0), "a click makes a corner");
+    assert_eq!(work(&app).subpaths[0].knots[1], sary_doc::Knot::corner(120.0, 40.0), "a click makes a corner");
     assert_eq!(steps(&app), n + 1);
     assert_eq!(app.ui.direct_selection.anchors, vec![[0, 1]], "the converted anchor is selected");
     drag(&mut app, [40.0, 120.0], [40.0, 140.0], Modifiers::NONE);
@@ -291,7 +291,7 @@ fn the_convert_point_tool_shows_the_path_overlay() {
 }
 
 /// One key press through the canvas arrow keys, as egui delivers it.
-fn press(app: &mut PhotocraftApp, key: egui::Key, mods: Modifiers) -> bool {
+fn press(app: &mut SaryApp, key: egui::Key, mods: Modifiers) -> bool {
     let ctx = egui::Context::default();
     ctx.input_mut(|i| {
         i.modifiers = mods;
@@ -399,14 +399,14 @@ fn a_closed_curvature_pen_path_stays_editable_with_the_curvature_pen() {
     assert_eq!((work(&app).subpaths.len(), steps(&app)), (1, n + 1));
     // The whole loop reflows through the moved anchor, as the Curvature Pen drew it.
     let pts = [[40.0, 40.0], [160.0, 40.0], [100.0, 180.0]];
-    let want = photocraft_vector::edit::curvature_knots(&pts, &[false; 3], true);
+    let want = sary_vector::edit::curvature_knots(&pts, &[false; 3], true);
     for (k, w) in work(&app).subpaths[0].knots.iter().zip(want) {
         assert_eq!([[k.anchor.x, k.anchor.y], [k.in_ctrl.x, k.in_ctrl.y], [k.out_ctrl.x, k.out_ctrl.y]], w);
     }
 }
 
 /// A Pen-drawn work path: a closed square of corners (40, 40)–(160, 160).
-fn with_corner_square(app: &mut PhotocraftApp) {
+fn with_corner_square(app: &mut SaryApp) {
     let path = json!({"subpaths": [{"closed": true, "knots": [[40, 40], [160, 40], [160, 160], [40, 160]]}]});
     app.run("path.set", json!({"name": "work", "path": path})).unwrap();
 }
@@ -475,7 +475,7 @@ fn a_curvature_pen_double_click_through_the_canvas_rounds_a_corner() {
     with_corner_square(&mut app);
     app.ui.extras.rulers = false;
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -484,7 +484,7 @@ fn a_curvature_pen_double_click_through_the_canvas_rounds_a_corner() {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let v = &mut h.state_mut().ui.views[0];
     v.zoom = 1.0;

@@ -108,12 +108,12 @@ pub fn open_on(ctx: &Context) -> Option<Id> {
 
 /// Opens and closes the menu. It draws nothing: a plugin's hooks run with every plugin locked,
 /// and a widget under the pointer calls them. The app draws the menu with [`show`].
-/// Installed by `PhotocraftApp::setup_context`.
+/// Installed by `SaryApp::setup_context`.
 pub struct TextFieldMenu;
 
 impl egui::plugin::Plugin for TextFieldMenu {
     fn debug_name(&self) -> &'static str {
-        "PhotoCraft text field menu"
+        "Sary text field menu"
     }
 
     /// Esc closes only the menu: the field (a layer rename cancels on Esc) and egui (which drops
@@ -279,18 +279,18 @@ mod tests {
     use serde_json::json;
 
     use super::open_on;
-    use crate::PhotocraftApp;
+    use crate::SaryApp;
     use crate::layer_row_ui::{rename, start_rename};
 
     /// The app with a layer "Alpha" being renamed (its name selected, as a rename starts) and the
     /// Rectangular Marquee, whose canvas has a context menu of its own.
-    fn renaming() -> (Harness<'static, PhotocraftApp>, Id) {
-        let mut s = photocraft_engine::Session::new();
+    fn renaming() -> (Harness<'static, SaryApp>, Id) {
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width": 64, "height": 48})).unwrap();
         let layer = s.execute("layer.new.layer", json!({"name": "Alpha"})).unwrap()["layer"].as_u64().unwrap();
         let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_step_dt(1.0 / 60.0).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            PhotocraftApp::new(s, crate::Services::default())
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::new(s, crate::Services::default())
         });
         h.state_mut().ui.tool = crate::state::Tool::RectMarquee;
         h.run_steps(8);
@@ -300,7 +300,7 @@ mod tests {
         (h, Id::new(("layer-rename-field", layer)))
     }
 
-    fn button(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, button: PointerButton) {
+    fn button(h: &mut Harness<'_, SaryApp>, at: Pos2, button: PointerButton) {
         h.hover_at(at);
         h.step();
         for pressed in [true, false] {
@@ -310,7 +310,7 @@ mod tests {
     }
 
     /// Right-click in the middle of `field`; the menu opens on it.
-    fn right_click(h: &mut Harness<'_, PhotocraftApp>, field: Id) {
+    fn right_click(h: &mut Harness<'_, SaryApp>, field: Id) {
         let at = h.ctx.read_response(field).expect("field drawn").rect.center();
         button(h, at, PointerButton::Secondary);
         assert_eq!(open_on(&h.ctx), Some(field), "a right-click in a text field opens its edit menu");
@@ -319,13 +319,13 @@ mod tests {
     }
 
     /// Where the open menu's `label` item is.
-    fn item(h: &Harness<'_, PhotocraftApp>, label: &str) -> Option<Pos2> {
+    fn item(h: &Harness<'_, SaryApp>, label: &str) -> Option<Pos2> {
         let menu = h.ctx.memory(|m| m.area_rect(super::menu_id()))?;
         h.query_all_by_label_contains(label).map(|n| n.rect().center()).find(|p| menu.contains(*p))
     }
 
     /// Choose `label` in the open menu; returns the text the pass that ran it copied, if any.
-    fn choose(h: &mut Harness<'_, PhotocraftApp>, label: &str) -> Option<String> {
+    fn choose(h: &mut Harness<'_, SaryApp>, label: &str) -> Option<String> {
         let at = item(h, label).expect("item in the menu");
         h.hover_at(at);
         h.step();
@@ -341,7 +341,7 @@ mod tests {
         copied
     }
 
-    fn text(h: &Harness<'_, PhotocraftApp>) -> String {
+    fn text(h: &Harness<'_, SaryApp>) -> String {
         rename(&h.ctx).expect("still renaming").text
     }
 

@@ -1,6 +1,6 @@
 //! Character style numbers that overflow `f32` are refused, so the document stays saveable.
 
-use photocraft_engine::{EngineError, Session};
+use sary_engine::{EngineError, Session};
 use serde_json::json;
 
 fn fixture() -> (Session, u64) {
@@ -24,7 +24,7 @@ fn out_of_range_style_numbers_are_refused() {
         assert!(matches!(r, Err(EngineError::BadParams { .. })), "create {key}: {r:?}");
         let dir = std::env::temp_dir().join(format!("pc_nonfinite_style_{key}_{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("t.pcraft");
+        let path = dir.join("t.sary");
         let saved = s.execute("file.saveACopy", json!({"path": path.to_string_lossy()}));
         std::fs::remove_dir_all(&dir).ok();
         saved.unwrap_or_else(|e| panic!("{key}: save failed: {e:?}"));
@@ -38,7 +38,7 @@ fn in_range_style_numbers_still_apply_and_save() {
     s.execute("type.setStyle", json!({"layer": id, "leading": "auto"})).unwrap();
     let dir = std::env::temp_dir().join(format!("pc_nonfinite_style_ok_{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("t.pcraft");
+    let path = dir.join("t.sary");
     let saved = s.execute("file.saveACopy", json!({"path": path.to_string_lossy()}));
     std::fs::remove_dir_all(&dir).ok();
     saved.unwrap_or_else(|e| panic!("save failed: {e:?}"));

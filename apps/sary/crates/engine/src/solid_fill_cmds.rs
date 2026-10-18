@@ -1,7 +1,7 @@
 //! Editing a Solid Color Fill is an undoable content edit, independent of its masks.
 
-use photocraft_color::{Color, ColorMode};
-use photocraft_doc::{Fill, LayerContent};
+use sary_color::{Color, ColorMode};
+use sary_doc::{Fill, LayerContent};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, check_pixels_unlocked, layer_param};
@@ -102,18 +102,18 @@ mod tests {
             let color = Color { mode: ColorMode::Lab, c: [0.512345, 0.48, 0.6, 0.0], alpha: 0.345678 };
             s.execute(SET, json!({"layer": id, "color": color})).unwrap();
             let mut expected = (*before).clone();
-            expected.layer_mut(photocraft_doc::LayerId(id)).unwrap().content = LayerContent::Fill(Fill::Solid(color));
+            expected.layer_mut(sary_doc::LayerId(id)).unwrap().content = LayerContent::Fill(Fill::Solid(color));
             assert_eq!(*s.active().unwrap().doc, expected);
             assert_eq!(s.active().unwrap().history.entries().len(), count + 1);
             s.execute("edit.undo", json!({})).unwrap();
             assert_eq!(*s.active().unwrap().doc, *before);
             s.execute("edit.redo", json!({})).unwrap();
-            assert_eq!(s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content, LayerContent::Fill(Fill::Solid(color)));
+            assert_eq!(s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content, LayerContent::Fill(Fill::Solid(color)));
             let count = s.active().unwrap().history.entries().len();
             s.execute(SET, json!({"color": color})).unwrap();
             assert_eq!(s.active().unwrap().history.entries().len(), count, "unchanged colour is not a history step");
             s.execute(SET, json!({"color": "#abcdef"})).unwrap();
-            let LayerContent::Fill(Fill::Solid(changed)) = s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content else { panic!() };
+            let LayerContent::Fill(Fill::Solid(changed)) = s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content else { panic!() };
             assert_eq!(changed.alpha, color.alpha);
         }
     }
@@ -168,7 +168,7 @@ mod tests {
                 s.execute(cmd, json!({})).unwrap();
             }
             let id = s.execute("layer.newFillLayer.solidColor", json!({"color": "#12345680"})).unwrap()["layer"].as_u64().unwrap();
-            let original = match s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content {
+            let original = match s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content {
                 LayerContent::Fill(Fill::Solid(c)) => c,
                 _ => panic!(),
             };
@@ -181,7 +181,7 @@ mod tests {
                 let expected = rgb.in_mode(mode);
                 let result = s.execute(SET, json!({"layer": id, "color": value})).unwrap();
                 assert_eq!(serde_json::from_value::<Color>(result["color"].clone()).unwrap(), expected);
-                let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content else { panic!() };
+                let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content else { panic!() };
                 assert_eq!(stored, expected);
                 assert_eq!(stored.alpha, original.alpha);
             }
@@ -193,13 +193,13 @@ mod tests {
             assert_eq!(s.active().unwrap().history.entries().len(), count + 2);
             let expected = Color::rgba(0.25, 0.5, 0.75, 0.25).in_mode(mode);
             s.execute(SET, json!({"layer": id, "color": [0.25, 0.5, 0.75, 0.25]})).unwrap();
-            let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content else { panic!() };
+            let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content else { panic!() };
             assert_eq!(stored, expected);
             s.execute("edit.undo", json!({})).unwrap();
-            let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content else { panic!() };
+            let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content else { panic!() };
             assert_eq!(stored, Color::rgba(0.25, 0.5, 0.75, original.alpha).in_mode(mode));
             s.execute("edit.redo", json!({})).unwrap();
-            let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content else { panic!() };
+            let LayerContent::Fill(Fill::Solid(stored)) = s.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content else { panic!() };
             assert_eq!(stored, expected);
         }
     }

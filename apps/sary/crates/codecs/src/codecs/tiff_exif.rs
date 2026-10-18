@@ -5,7 +5,7 @@
 //! An EXIF block (`Metadata::exif`) is itself a small TIFF stream, so both directions go through
 //! the same reader ([`super::tiff_ifd::File`]): reading a TIFF builds a block from the file's own
 //! directories, writing one copies the block's directories into the file. Values are copied as
-//! bytes (re-ordered when the byte orders differ), so tags PhotoCraft doesn't know survive.
+//! bytes (re-ordered when the byte orders differ), so tags Sary doesn't know survive.
 //! Classic TIFF only on the reading side: an EXIF block has 4-byte offsets.
 
 use tiff::encoder::{DirectoryEncoder, TiffEncoder, TiffKind};

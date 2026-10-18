@@ -1,8 +1,8 @@
 //! Format Background pane: picture transparency, tiling, and Apply to All.
 
-use deckcraft_engine::Session;
-use deckcraft_model::style::PictureMode;
-use deckcraft_model::{Background, Fill};
+use seho_engine::Session;
+use seho_model::style::PictureMode;
+use seho_model::{Background, Fill};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;

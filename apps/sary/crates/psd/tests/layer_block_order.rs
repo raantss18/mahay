@@ -1,5 +1,5 @@
 //! The global layer block retains its insertion position and neighboring opaque blocks.
-use photocraft_psd::*;
+use sary_psd::*;
 
 #[test]
 fn global_layer_block_roundtrips_with_opaque_neighbors() {

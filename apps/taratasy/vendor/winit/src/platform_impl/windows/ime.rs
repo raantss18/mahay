@@ -62,7 +62,7 @@ impl ImeContext {
         } else if first.is_none() {
             // IME haven't split words and select any clause yet, so trying to retrieve normal
             // cursor.
-            // PdfCraft patch: read `GCS_CURSORPOS` only when `WM_IME_COMPOSITION` says it is set,
+            // Taratasy patch: read `GCS_CURSORPOS` only when `WM_IME_COMPOSITION` says it is set,
             // else put the cursor at the end (rust-windowing/winit#4746). The Microsoft Korean IME
             // never sets it, so the cursor read as 0 and was drawn before the syllable being
             // composed, with the candidate window there too.

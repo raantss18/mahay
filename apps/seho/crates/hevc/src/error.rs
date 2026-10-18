@@ -1,4 +1,4 @@
-use deckcraft_bitstream::BitError;
+use seho_bitstream::BitError;
 
 /// Errors produced by the decoder.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]

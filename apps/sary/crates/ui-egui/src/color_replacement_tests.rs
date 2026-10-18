@@ -7,14 +7,14 @@ use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, tool_event};
 use crate::state::Tool;
 
 /// An 80×40 document at `depth` bits, red on the left half and blue on the right, foreground
 /// green and background blue, with the Color Replacement tool picked (12 px, hard, no smoothing).
-fn app(depth: u32) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+fn app(depth: u32) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
     app.run("file.new", json!({"width": 80, "height": 40, "background": "#ff0000", "depth": depth})).unwrap();
     fill(&mut app, [40, 0, 40, 40], "#0000ff");
     app.run("tools.setColors", json!({"foreground": "#00ff00", "background": "#0000ff"})).unwrap();
@@ -26,18 +26,18 @@ fn app(depth: u32) -> PhotocraftApp {
     app
 }
 
-fn fill(app: &mut PhotocraftApp, [x, y, width, height]: [i32; 4], color: &str) {
+fn fill(app: &mut SaryApp, [x, y, width, height]: [i32; 4], color: &str) {
     app.run("select.rect", json!({"x": x, "y": y, "width": width, "height": height})).unwrap();
     app.run("edit.fill", json!({"color": color})).unwrap();
     app.run("select.deselect", json!({})).unwrap();
 }
 
-fn rgba(app: &PhotocraftApp, x: i32, y: i32) -> [f32; 4] {
+fn rgba(app: &SaryApp, x: i32, y: i32) -> [f32; 4] {
     let st = app.session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().rgba(x, y)
 }
 
-fn drag(app: &mut PhotocraftApp, pts: &[(f64, f64)]) {
+fn drag(app: &mut SaryApp, pts: &[(f64, f64)]) {
     let m = Modifiers::NONE;
     let (x, y) = pts[0];
     tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, m);
@@ -176,7 +176,7 @@ fn a_mask_target_is_refused_without_painting() {
 #[test]
 fn the_options_bar_sets_every_command_parameter() {
     let mut h = Harness::builder().with_size(vec2(1600.0, 400.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
             }
@@ -184,12 +184,12 @@ fn the_options_bar_sets_every_command_parameter() {
         },
         app(8),
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
     h.run_steps(4);
     for label in ["Mode:", "Limits:", "Tolerance:", "Anti-alias", "Sampling: Continuous", "Sampling: Once", "Sampling: Background Swatch"] {
         assert!(h.get_by_label(label).rect().is_positive(), "missing Color Replacement option {label}");
     }
-    let combo = |h: &Harness<'static, PhotocraftApp>, current: &str| {
+    let combo = |h: &Harness<'static, SaryApp>, current: &str| {
         h.get_all_by_role(egui::accesskit::Role::ComboBox)
             .find(|n| n.accesskit_node().value().as_deref() == Some(current) || n.accesskit_node().label().as_deref() == Some(current))
             .unwrap()

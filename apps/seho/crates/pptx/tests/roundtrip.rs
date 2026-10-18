@@ -2,19 +2,19 @@
 
 use std::sync::Arc;
 
-use deckcraft_color::{ColorTransform, Rgba, SchemeSlot};
-use deckcraft_geom::Xfrm;
-use deckcraft_model::anim::{AnimClass, AnimStart, Animation, TextBuild, Transition};
-use deckcraft_model::chart::{Chart, ChartType};
-use deckcraft_model::style::{
+use seho_color::{ColorTransform, Rgba, SchemeSlot};
+use seho_geom::Xfrm;
+use seho_model::anim::{AnimClass, AnimStart, Animation, TextBuild, Transition};
+use seho_model::chart::{Chart, ChartType};
+use seho_model::style::{
     ColorRef, Dash, Effects, Fill, Glow, Gradient, GradientShape, GradientStop, Line, LineEnd, PatternFill, PictureAdjust, PictureFill, PictureMode,
     Shadow,
 };
-use deckcraft_model::table::Table;
-use deckcraft_model::text::{
+use seho_model::table::Table;
+use seho_model::text::{
     Action, Align, Anchor, AutoFit, BodyProps, Bullet, Caps, Hyperlink, Paragraph, Run, RunKind, RunProps, Spacing, Strike, TextBody,
 };
-use deckcraft_model::{
+use seho_model::{
     Background, Comment, CustomPath, CustomShow, Geom, InkStroke, MediaClip, Presentation, Section, Shape, ShapeId, ShapeKind, Slide, SlideId,
     defaults,
 };
@@ -31,7 +31,7 @@ fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> Sh
 }
 
 fn new_slide(p: &mut Presentation, title: &str) -> Slide {
-    let layout = defaults::layout_of_kind(p, deckcraft_model::LayoutType::TitleOnly).unwrap_or_default();
+    let layout = defaults::layout_of_kind(p, seho_model::LayoutType::TitleOnly).unwrap_or_default();
     let mut s = defaults::new_slide(p, layout).expect("slide");
     if let Some(t) = s.shapes.first_mut() {
         t.text = Some(TextBody::from_text(title));
@@ -43,7 +43,7 @@ fn new_slide(p: &mut Presentation, title: &str) -> Slide {
 pub fn rich_deck() -> Presentation {
     let mut p = defaults::new_presentation(None);
     p.props.title = "Rich deck".into();
-    p.props.author = "DeckCraft tests".into();
+    p.props.author = "Seho tests".into();
     p.props.created = "2025-01-02T03:04:05Z".into();
     let img = p.add_media("image1.png", "image/png", png(40, 30, [200, 40, 40])).expect("media");
     let img2 = p.add_media("image2.png", "image/png", png(8, 8, [20, 140, 220])).expect("media");
@@ -143,7 +143,7 @@ pub fn rich_deck() -> Presentation {
     b.text = Some(TextBody {
         body: BodyProps { anchor: Some(Anchor::Bottom), inset_l: Some(10.0), wrap: Some(false), autofit: Some(AutoFit::Shape), ..Default::default() },
         paragraphs: vec![Paragraph {
-            props: deckcraft_model::text::ParaProps {
+            props: seho_model::text::ParaProps {
                 align: Some(Align::Right),
                 line_spacing: Some(Spacing::Pct(1.5)),
                 space_before: Some(Spacing::Pts(6.0)),
@@ -170,7 +170,7 @@ pub fn rich_deck() -> Presentation {
             w: 100000.0,
             h: 100000.0,
             d: "M 0 0 L 100000 0 L 50000 100000 Z".into(),
-            fill: deckcraft_geom::preset::FillMode::Norm,
+            fill: seho_geom::preset::FillMode::Norm,
             stroke: true,
         }],
     };
@@ -338,7 +338,7 @@ pub fn rich_deck() -> Presentation {
     p.slides.push(Arc::new(s));
 
     // Slide 6: bulleted content with a by-paragraph build, a slide link and an equation.
-    let layout = defaults::layout_of_kind(&p, deckcraft_model::LayoutType::TitleAndContent).unwrap_or_default();
+    let layout = defaults::layout_of_kind(&p, seho_model::LayoutType::TitleAndContent).unwrap_or_default();
     let mut s = defaults::new_slide(&mut p, layout).expect("slide");
     s.shapes[0].text = Some(TextBody::from_text("Build"));
     s.shapes[1].text = Some(TextBody::from_text("One\nTwo\nThree"));
@@ -381,13 +381,13 @@ pub fn rich_deck() -> Presentation {
 }
 
 fn round(p: &Presentation) -> Presentation {
-    let bytes = deckcraft_pptx::export(p).expect("export");
-    deckcraft_pptx::import(&bytes).expect("import")
+    let bytes = seho_pptx::export(p).expect("export");
+    seho_pptx::import(&bytes).expect("import")
 }
 
 fn by_name<'a>(s: &'a Slide, name: &str) -> &'a Shape {
     let mut found = None;
-    deckcraft_model::walk(&s.shapes, &mut |x, _| {
+    seho_model::walk(&s.shapes, &mut |x, _| {
         if found.is_none() && x.name == name {
             found = Some(x);
         }
@@ -398,8 +398,8 @@ fn by_name<'a>(s: &'a Slide, name: &str) -> &'a Shape {
 #[test]
 fn rich_deck_writes_to_dir() {
     let p = rich_deck();
-    let bytes = deckcraft_pptx::export(&p).expect("export");
-    if let Ok(dir) = std::env::var("DECKCRAFT_PPTX_OUT") {
+    let bytes = seho_pptx::export(&p).expect("export");
+    if let Ok(dir) = std::env::var("SEHO_PPTX_OUT") {
         std::fs::write(format!("{dir}/rich.pptx"), &bytes).expect("write");
     }
     assert!(bytes.len() > 1000);
@@ -414,7 +414,7 @@ fn deck_level_round_trip() {
     assert_eq!(q.slide_size, p.slide_size);
     assert_eq!(q.first_slide_number, 0);
     assert_eq!(q.props.title, "Rich deck");
-    assert_eq!(q.props.author, "DeckCraft tests");
+    assert_eq!(q.props.author, "Seho tests");
     assert_eq!(q.props.created, "2025-01-02T03:04:05Z");
     assert_eq!(
         q.sections.iter().map(|s| (s.name.clone(), s.slides.len())).collect::<Vec<_>>(),
@@ -636,7 +636,7 @@ fn every_transition_kind_survives() {
     let mut p = defaults::new_presentation(None);
     let base = p.slides[0].as_ref().clone();
     p.slides.clear();
-    for (kind, ..) in deckcraft_model::anim::TRANSITIONS {
+    for (kind, ..) in seho_model::anim::TRANSITIONS {
         let mut s = base.clone();
         s.id = SlideId(p.alloc_id().expect("ids"));
         s.transition = Some(Transition { kind: kind.to_string(), duration_ms: 1200, ..Default::default() });
@@ -661,7 +661,7 @@ fn every_animation_effect_survives() {
     sh.text = Some(TextBody::from_text("hi"));
     let id = sh.id;
     s.shapes.push(sh);
-    for (effect, _, class, _, dur, opts) in deckcraft_model::anim::ANIMATIONS {
+    for (effect, _, class, _, dur, opts) in seho_model::anim::ANIMATIONS {
         s.animations.push(Animation {
             shape: id,
             class: *class,
@@ -677,8 +677,8 @@ fn every_animation_effect_survives() {
     assert_eq!(a.len(), b.len());
     for (x, y) in a.iter().zip(b.iter()) {
         // Effects sharing a preset number come back as the first effect with that number.
-        let same_preset = deckcraft_model::anim::animation_info(&x.effect, x.class).map(|i| i.3)
-            == deckcraft_model::anim::animation_info(&y.effect, y.class).map(|i| i.3);
+        let same_preset = seho_model::anim::animation_info(&x.effect, x.class).map(|i| i.3)
+            == seho_model::anim::animation_info(&y.effect, y.class).map(|i| i.3);
         assert!(x.effect == y.effect || same_preset, "{} vs {}", x.effect, y.effect);
         assert_eq!(x.class, y.class);
     }
@@ -701,10 +701,10 @@ fn animation_rewind_survives() {
     assert!(!b[1].rewind);
 }
 
-/// Writes bisection variants of the rich deck to `DECKCRAFT_PPTX_BISECT` (manual checks).
+/// Writes bisection variants of the rich deck to `SEHO_PPTX_BISECT` (manual checks).
 #[test]
 fn bisect_variants() {
-    let Ok(dir) = std::env::var("DECKCRAFT_PPTX_BISECT") else { return };
+    let Ok(dir) = std::env::var("SEHO_PPTX_BISECT") else { return };
     let p = rich_deck();
     let n = p.slides.len();
     for i in 0..n {
@@ -712,7 +712,7 @@ fn bisect_variants() {
         q.slides = vec![p.slides[i].clone()];
         q.sections.clear();
         q.custom_shows.clear();
-        std::fs::write(format!("{dir}/bis-slide{i}.pptx"), deckcraft_pptx::export(&q).expect("export")).expect("write");
+        std::fs::write(format!("{dir}/bis-slide{i}.pptx"), seho_pptx::export(&q).expect("export")).expect("write");
     }
     let mut q = p.clone();
     q.sections.clear();
@@ -721,14 +721,14 @@ fn bisect_variants() {
     for s in q.slides.iter_mut() {
         Arc::make_mut(s).comments.clear();
     }
-    std::fs::write(format!("{dir}/bis-nodeck.pptx"), deckcraft_pptx::export(&q).expect("export")).expect("write");
+    std::fs::write(format!("{dir}/bis-nodeck.pptx"), seho_pptx::export(&q).expect("export")).expect("write");
 }
 
-/// Finer bisection of one slide (`DECKCRAFT_PPTX_BISECT_SLIDE=<index>`): one variant per removed shape,
+/// Finer bisection of one slide (`SEHO_PPTX_BISECT_SLIDE=<index>`): one variant per removed shape,
 /// plus no animations / no transition.
 #[test]
 fn bisect_slide_variants() {
-    let (Ok(dir), Ok(idx)) = (std::env::var("DECKCRAFT_PPTX_BISECT"), std::env::var("DECKCRAFT_PPTX_BISECT_SLIDE")) else { return };
+    let (Ok(dir), Ok(idx)) = (std::env::var("SEHO_PPTX_BISECT"), std::env::var("SEHO_PPTX_BISECT_SLIDE")) else { return };
     let p = rich_deck();
     let i: usize = idx.parse().expect("index");
     let base = p.slides[i].as_ref().clone();
@@ -737,7 +737,7 @@ fn bisect_slide_variants() {
         q.slides = vec![Arc::new(s)];
         q.sections.clear();
         q.custom_shows.clear();
-        deckcraft_pptx::export(&q).expect("export")
+        seho_pptx::export(&q).expect("export")
     };
     let mut s = base.clone();
     s.animations.clear();
@@ -761,8 +761,8 @@ fn rtl_paragraphs_script_fonts_and_just_low_round_trip() {
     let fonts = &mut Arc::make_mut(&mut p.masters[0]).theme.fonts;
     fonts.minor.cs = "Noto Naskh Arabic".into();
     fonts.minor.scripts = vec![
-        deckcraft_model::theme::ScriptFont { script: "Arab".into(), typeface: "Noto Naskh Arabic".into() },
-        deckcraft_model::theme::ScriptFont { script: "Hebr".into(), typeface: "Noto Sans Hebrew".into() },
+        seho_model::theme::ScriptFont { script: "Arab".into(), typeface: "Noto Naskh Arabic".into() },
+        seho_model::theme::ScriptFont { script: "Hebr".into(), typeface: "Noto Sans Hebrew".into() },
     ];
     let slide = Arc::make_mut(&mut p.slides[0]);
     let sh = slide.shapes.iter_mut().find(|s| s.text.is_some()).expect("a text shape");
@@ -824,15 +824,15 @@ fn a_picture_duotone_round_trips() {
     let mut pic = shape(&mut p, "Duotone", 10.0, 10.0, 100.0, 100.0);
     let mut pf = PictureFill { media: img, ..Default::default() };
     pf.adjust.duotone = Some((ColorRef::scheme(SchemeSlot::Accent1).with(ColorTransform::Shade(30000)), ColorRef::rgb(Rgba::rgb(250, 240, 200))));
-    pic.kind = deckcraft_model::ShapeKind::Picture { fill: pf };
+    pic.kind = seho_model::ShapeKind::Picture { fill: pf };
     let first = p.slides[0].id;
     p.slide_mut(first).expect("slide").shapes.push(pic);
     let q = round(&p);
     let sh = by_name(&q.slides[0], "Duotone");
-    let deckcraft_model::ShapeKind::Picture { fill } = &sh.kind else { panic!("picture") };
+    let seho_model::ShapeKind::Picture { fill } = &sh.kind else { panic!("picture") };
     let (d, l) = fill.adjust.duotone.as_ref().expect("duotone kept");
-    assert!(matches!(d.base, deckcraft_model::ColorBase::Scheme { slot: SchemeSlot::Accent1 }));
-    assert!(matches!(l.base, deckcraft_model::ColorBase::Rgb { rgb } if rgb == Rgba::rgb(250, 240, 200)));
+    assert!(matches!(d.base, seho_model::ColorBase::Scheme { slot: SchemeSlot::Accent1 }));
+    assert!(matches!(l.base, seho_model::ColorBase::Rgb { rgb } if rgb == Rgba::rgb(250, 240, 200)));
 }
 
 #[test]
@@ -855,13 +855,13 @@ fn a_table_fill_round_trips() {
     let mut t = Table::new(2, 2, 200.0, 40.0);
     t.background = Some(Fill::solid(ColorRef::rgb(Rgba::rgb(0, 112, 192))));
     let mut sh = shape(&mut p, "Filled table", 10.0, 10.0, 200.0, 80.0);
-    sh.kind = deckcraft_model::ShapeKind::Table(t);
+    sh.kind = seho_model::ShapeKind::Table(t);
     let first = p.slides[0].id;
     p.slide_mut(first).expect("slide").shapes.push(sh);
     let q = round(&p);
-    let deckcraft_model::ShapeKind::Table(t) = &by_name(&q.slides[0], "Filled table").kind else { panic!("table") };
+    let seho_model::ShapeKind::Table(t) = &by_name(&q.slides[0], "Filled table").kind else { panic!("table") };
     assert!(
-        matches!(&t.background, Some(Fill::Solid { color }) if matches!(color.base, deckcraft_model::ColorBase::Rgb { rgb } if rgb == Rgba::rgb(0, 112, 192)))
+        matches!(&t.background, Some(Fill::Solid { color }) if matches!(color.base, seho_model::ColorBase::Rgb { rgb } if rgb == Rgba::rgb(0, 112, 192)))
     );
 }
 
@@ -893,7 +893,7 @@ fn wordart_warps_and_their_adjusts_round_trip() {
     }
     // The single-adjust preset is written with the guide name `adj`, two-adjust ones with
     // `adj1`/`adj2`, and a preset with no adjusts given gets an empty list.
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("zip");
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("ppt/slides/slide1.xml").expect("slide"), &mut xml).expect("read");
@@ -918,7 +918,7 @@ fn wordart_warps_and_their_adjusts_round_trip() {
         std::io::Write::write_all(&mut out, &data).expect("write");
     }
     let bytes = out.finish().expect("finish").into_inner();
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let q = seho_pptx::import(&bytes).expect("import");
     let pour = &by_name(&q.slides[0], "Arch pour").text.as_ref().expect("text").body;
     assert_eq!(pour.warp_adj, vec![10_800_000.0, 30_000.0]);
     let inflate = &by_name(&q.slides[0], "Inflate").text.as_ref().expect("text").body;
@@ -944,7 +944,7 @@ fn transition_deck(list: &[(&str, &str, u32, Option<u32>)]) -> (Presentation, Ve
         });
         p.slides.push(Arc::new(s));
     }
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("zip");
     let xml = (1..=list.len())
         .map(|i| {
@@ -988,8 +988,8 @@ fn transition_xml_matches_powerpoints_elements() {
         assert!(x.contains("<mc:Fallback>"), "{kind}/{option}");
     }
     // Back in, everything is as it was.
-    let bytes = deckcraft_pptx::export(&p).expect("export");
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let bytes = seho_pptx::export(&p).expect("export");
+    let q = seho_pptx::import(&bytes).expect("import");
     for ((kind, option, ..), s) in cases.iter().zip(&q.slides) {
         let t = s.transition.as_ref().expect("transition");
         assert_eq!(
@@ -1037,7 +1037,7 @@ fn transition_defaults_read_like_powerpoint() {
         let mut p = defaults::new_presentation(None);
         let base = p.slides[0].as_ref().clone();
         p.slides = vec![Arc::new(base)];
-        let bytes = deckcraft_pptx::export(&p).expect("export");
+        let bytes = seho_pptx::export(&p).expect("export");
         let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("zip");
         let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
         for i in 0..zip.len() {
@@ -1052,7 +1052,7 @@ fn transition_defaults_read_like_powerpoint() {
             std::io::Write::write_all(&mut out, &data).expect("write");
         }
         let bytes = out.finish().expect("finish").into_inner();
-        let q = deckcraft_pptx::import(&bytes).expect("import");
+        let q = seho_pptx::import(&bytes).expect("import");
         let t = q.slides[0].transition.as_ref().expect("transition");
         assert_eq!((t.kind.as_str(), t.option.as_str(), t.duration_ms), (*kind, *option, 2000), "{el}");
     }
@@ -1063,8 +1063,8 @@ fn linked_pictures_are_written_with_r_link() {
     // A picture whose bytes live outside the package must be referenced with `r:link`; `r:embed`
     // may only name a part inside the package (PowerPoint won't load the linked image otherwise).
     let mut p = defaults::new_presentation(None);
-    let media = deckcraft_model::MediaId(5000);
-    p.media.push(deckcraft_model::MediaItem {
+    let media = seho_model::MediaId(5000);
+    p.media.push(seho_model::MediaItem {
         id: media,
         name: "linked.png".into(),
         content_type: "image/png".into(),
@@ -1075,7 +1075,7 @@ fn linked_pictures_are_written_with_r_link() {
     pic.kind = ShapeKind::Picture { fill: PictureFill { media, ..Default::default() } };
     Arc::make_mut(&mut p.slides[0]).shapes.push(pic);
 
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("zip");
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("ppt/slides/slide1.xml").expect("slide"), &mut xml).expect("read");
@@ -1091,11 +1091,11 @@ fn linked_pictures_are_written_with_r_link() {
 fn templates_and_slide_shows_declare_their_own_main_content_type() {
     let p = rich_deck();
     for (ext, kind) in [("pptx", "presentation"), ("potx", "template"), ("ppsx", "slideshow")] {
-        let bytes = deckcraft_pptx::export_as(&p, ext).expect("export");
+        let bytes = seho_pptx::export_as(&p, ext).expect("export");
         let mut z = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).expect("zip");
         let ct = std::io::read_to_string(z.by_name("[Content_Types].xml").expect("content types")).expect("read");
         assert!(ct.contains(&format!("presentationml.{kind}.main+xml")), "{ext}: {ct}");
-        assert_eq!(deckcraft_pptx::import(&bytes).expect("import").slides.len(), p.slides.len(), "{ext} reads back");
+        assert_eq!(seho_pptx::import(&bytes).expect("import").slides.len(), p.slides.len(), "{ext} reads back");
     }
 }
 
@@ -1121,7 +1121,7 @@ fn single_guide_names_follow_the_preset() {
         s.shapes.push(sh);
     }
     p.slides.push(Arc::new(s));
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).expect("zip");
     let xml = std::io::read_to_string(z.by_name("ppt/slides/slide2.xml").expect("slide")).expect("read");
     for (prst, gd) in cases {
@@ -1143,13 +1143,13 @@ fn float_down_is_preset_47_both_ways() {
         Animation { shape: id, class: AnimClass::Exit, effect: "floatOut".into(), option: "u".into(), ..Default::default() },
     ];
     p.slides.push(Arc::new(s));
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).expect("zip");
     let xml = std::io::read_to_string(z.by_name("ppt/slides/slide2.xml").expect("slide")).expect("read");
     assert!(xml.contains(r#"presetID="47" presetClass="entr" presetSubtype="0""#), "{xml}");
     assert!(xml.contains(r#"presetID="47" presetClass="exit" presetSubtype="0""#), "{xml}");
     assert!(xml.contains(r#"presetID="42" presetClass="exit" presetSubtype="0""#), "{xml}");
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let q = seho_pptx::import(&bytes).expect("import");
     let got: Vec<(&str, &str)> = q.slides[1].animations.iter().map(|a| (a.effect.as_str(), a.option.as_str())).collect();
     assert_eq!(got, [("float", "d"), ("floatOut", "d"), ("floatOut", "u")]);
 }
@@ -1159,7 +1159,7 @@ fn embedded_fonts_round_trip() {
     let mut p = Presentation::default();
     let regular = p.add_media("font1.fntdata", "application/x-fontdata", b"REGULAR-FONT-BYTES-0123456789".to_vec()).expect("media");
     let bold = p.add_media("font2.fntdata", "application/x-fontdata", b"BOLD-FONT-BYTES-0123456789abcd".to_vec()).expect("media");
-    p.embedded_fonts.push(deckcraft_model::EmbeddedFont {
+    p.embedded_fonts.push(seho_model::EmbeddedFont {
         typeface: "Deck Test Face".into(),
         panose: Some("020B0604020202020204".into()),
         pitch_family: Some(34),
@@ -1170,8 +1170,8 @@ fn embedded_fonts_round_trip() {
         bold_italic: None,
     });
     // The same typeface again is one entry: PowerPoint requires each typeface once.
-    p.embedded_fonts.push(deckcraft_model::EmbeddedFont { typeface: "Deck Test Face".into(), regular: Some(bold), ..Default::default() });
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    p.embedded_fonts.push(seho_model::EmbeddedFont { typeface: "Deck Test Face".into(), regular: Some(bold), ..Default::default() });
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes.clone())).expect("zip");
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("ppt/presentation.xml").expect("pres"), &mut xml).expect("read");
@@ -1185,7 +1185,7 @@ fn embedded_fonts_round_trip() {
     let mut rels = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("ppt/_rels/presentation.xml.rels").expect("rels"), &mut rels).expect("read");
     assert_eq!(rels.matches("relationships/font").count(), 2, "regular and italic share one part");
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    let q = seho_pptx::import(&bytes).expect("import");
     assert_eq!(q.embedded_fonts.len(), 1);
     let f = &q.embedded_fonts[0];
     assert_eq!(f.typeface, "Deck Test Face");
@@ -1201,7 +1201,7 @@ fn embedded_fonts_round_trip() {
 /// A package whose font list this writer did not produce: bold only, relationship id not `rIdN`.
 #[test]
 fn an_embedded_font_list_already_in_the_package_is_read() {
-    let bytes = deckcraft_pptx::export(&Presentation::default()).expect("export");
+    let bytes = seho_pptx::export(&Presentation::default()).expect("export");
     let font = b"FACE-BYTES-FROM-THE-PACKAGE";
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("zip");
     let mut out = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
@@ -1240,7 +1240,7 @@ fn an_embedded_font_list_already_in_the_package_is_read() {
     out.start_file("ppt/fonts/font1.fntdata", zip::write::SimpleFileOptions::default()).expect("font");
     std::io::Write::write_all(&mut out, font).expect("font bytes");
     let patched = out.finish().expect("finish").into_inner();
-    let p = deckcraft_pptx::import(&patched).expect("import");
+    let p = seho_pptx::import(&patched).expect("import");
     let f = p.embedded_fonts.first().expect("font");
     assert_eq!(f.typeface, "Package Face");
     assert_eq!(f.pitch_family, Some(2));
@@ -1251,16 +1251,16 @@ fn an_embedded_font_list_already_in_the_package_is_read() {
 /// Text transparency (#32) is `a:alpha` on the run's colour, and survives a save.
 #[test]
 fn text_transparency_round_trips() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     let mut s = Session::with_new();
     s.execute("shape.insert", &serde_json::json!({"preset": "rect", "rect": [100, 100, 200, 100], "text": "Hi"})).unwrap();
     s.execute("format.color", &serde_json::json!({"color": "#336699"})).unwrap();
     s.execute("format.textTransparency", &serde_json::json!({"value": 0.4})).unwrap();
     let doc = s.doc().unwrap().doc.clone();
-    let bytes = deckcraft_pptx::export(&doc).unwrap();
-    let back = deckcraft_pptx::import(&bytes).unwrap();
+    let bytes = seho_pptx::export(&doc).unwrap();
+    let back = seho_pptx::import(&bytes).unwrap();
     let sh = back.slides[0].shapes.iter().find(|sh| sh.text.as_ref().is_some_and(|t| t.text().contains("Hi"))).unwrap();
-    let Some(deckcraft_model::Fill::Solid { color }) = &sh.text.as_ref().unwrap().paragraphs[0].runs[0].props.fill else { panic!() };
+    let Some(seho_model::Fill::Solid { color }) = &sh.text.as_ref().unwrap().paragraphs[0].runs[0].props.fill else { panic!() };
     assert!((color.alpha() - 0.6).abs() < 1e-9, "{color:?}");
 }
 
@@ -1287,9 +1287,9 @@ fn wav(n: u32) -> Vec<u8> {
 /// removes it; a file that isn't audio is refused.
 #[test]
 fn transition_sound_is_set_saved_and_removed() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     use serde_json::json;
-    let b64 = deckcraft_engine::cmd::base64_encode(&wav(800));
+    let b64 = seho_engine::cmd::base64_encode(&wav(800));
     let mut s = Session::with_new();
     s.execute("transition.set", &json!({"kind": "fade"})).unwrap();
     let r = s.execute("transition.sound", &json!({"data": b64, "name": "chime.wav"})).unwrap();
@@ -1297,15 +1297,15 @@ fn transition_sound_is_set_saved_and_removed() {
     let doc = s.doc().unwrap().doc.clone();
     let m = doc.slides[0].transition.as_ref().and_then(|t| t.sound).expect("sound set");
     assert_eq!(doc.media(m).map(|i| i.name.as_str()), Some("chime.wav"));
-    let bytes = deckcraft_pptx::export(&doc).unwrap();
-    let back = deckcraft_pptx::import(&bytes).unwrap();
+    let bytes = seho_pptx::export(&doc).unwrap();
+    let back = seho_pptx::import(&bytes).unwrap();
     let t = back.slides[0].transition.as_ref().expect("transition");
     assert_eq!(t.kind, "fade");
     let m = t.sound.expect("sound survives the save");
     assert_eq!(back.media(m).map(|i| i.data.len()), Some(wav(800).len()));
     s.execute("transition.sound", &json!({"none": true})).unwrap();
     assert!(s.doc().unwrap().doc.slides[0].transition.as_ref().is_some_and(|t| t.sound.is_none()));
-    let not_audio = deckcraft_engine::cmd::base64_encode(b"hello, not a sound");
+    let not_audio = seho_engine::cmd::base64_encode(b"hello, not a sound");
     assert!(s.execute("transition.sound", &json!({"data": not_audio, "name": "notes.txt"})).is_err());
 }
 
@@ -1313,7 +1313,7 @@ fn transition_sound_is_set_saved_and_removed() {
 /// PowerPoint writes them (`p:stSnd loop="1"`, `p:endSnd`) and read back.
 #[test]
 fn transition_sound_options_round_trip() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     use serde_json::json;
     let mut s = Session::with_new();
     s.execute("slide.new", &json!({})).unwrap();
@@ -1324,7 +1324,7 @@ fn transition_sound_options_round_trip() {
     let doc = s.doc().unwrap().doc.clone();
     assert_eq!(doc.media.len(), 1, "the same built-in sound is embedded once");
     assert_eq!(doc.media[0].name, "Chime.wav");
-    let bytes = deckcraft_pptx::export(&doc).unwrap();
+    let bytes = seho_pptx::export(&doc).unwrap();
     let slide1 = {
         let mut z = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
         let mut x = String::new();
@@ -1332,7 +1332,7 @@ fn transition_sound_options_round_trip() {
         x
     };
     assert!(slide1.contains(r#"<p:stSnd loop="1">"#) && slide1.contains(r#"name="Chime.wav""#), "{slide1}");
-    let back = deckcraft_pptx::import(&bytes).unwrap();
+    let back = seho_pptx::import(&bytes).unwrap();
     let t: Vec<_> = back.slides.iter().map(|s| s.transition.clone().unwrap_or_default()).collect();
     assert!(t[0].sound.is_some() && t[0].sound_loop && !t[0].stop_sound);
     assert!(t[1].sound.is_some() && !t[1].sound_loop);
@@ -1384,8 +1384,8 @@ fn literal_line_ends_in_run_text_read_as_breaks_and_survive_save() {
     s.text = Some(TextBody::from_text("CRLFHERE"));
     let first = p.slides[0].id;
     p.slide_mut(first).expect("slide").shapes.push(s);
-    let bytes = patch_slides(deckcraft_pptx::export(&p).expect("export"), "CRLFHERE", "one\r\n   two\rthree");
-    let a = deckcraft_pptx::import(&bytes).expect("import");
+    let bytes = patch_slides(seho_pptx::export(&p).expect("export"), "CRLFHERE", "one\r\n   two\rthree");
+    let a = seho_pptx::import(&bytes).expect("import");
     let want = vec![
         (RunKind::Text, "one".to_string()),
         (RunKind::Break, String::new()),
@@ -1444,7 +1444,7 @@ fn notes_master_placeholders_and_colour_map_survive_save() {
         )
         .map(|(a, b)| (a.to_string(), b.to_string()))
         .collect();
-    let m = deckcraft_model::Master { name: "Notes Master".into(), shapes: vec![box1], color_map: map.clone(), ..Default::default() };
+    let m = seho_model::Master { name: "Notes Master".into(), shapes: vec![box1], color_map: map.clone(), ..Default::default() };
     p.notes_master = Some(Arc::new(m));
     // No slide has notes: the notes master must still be written.
     let q = round(&p);
@@ -1501,10 +1501,10 @@ const WATERFALL_FRAME: &str = r#"<mc:AlternateContent xmlns:mc="http://schemas.o
 /// plain chart fallback; an edited one is written as a plain chart.
 #[test]
 fn chartex_waterfall_reads_and_round_trips() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     let mut s = Session::with_new();
     s.execute("slide.new", &serde_json::json!({"layout": "blank"})).unwrap();
-    let base = deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap();
+    let base = seho_pptx::export(&s.doc().unwrap().doc).unwrap();
     let slide = (1..=9).map(|i| format!("ppt/slides/slide{i}.xml")).find(|n| pkg_part(&base, n).is_some()).unwrap();
     let slide_rels = slide.replace("slides/", "slides/_rels/") + ".rels";
     let cx_rels = r#"<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../embeddings/Microsoft_Excel_Worksheet.xlsx"/></Relationships>"#;
@@ -1526,7 +1526,7 @@ fn chartex_waterfall_reads_and_round_trips() {
         },
         &[("ppt/charts/chartEx1.xml", WATERFALL_CX.as_bytes()), ("ppt/charts/_rels/chartEx1.xml.rels", cx_rels.as_bytes())],
     );
-    let doc = deckcraft_pptx::import(&pptx).unwrap();
+    let doc = seho_pptx::import(&pptx).unwrap();
     let chart = |d: &Presentation| -> Option<Chart> {
         d.slides.iter().flat_map(|s| s.shapes.iter()).find_map(|sh| match &sh.kind {
             ShapeKind::Chart(c) => Some((**c).clone()),
@@ -1546,7 +1546,7 @@ fn chartex_waterfall_reads_and_round_trips() {
     assert!(no_fallback_text);
 
     // Unchanged: chartEx back in a cx1 choice, a plain chart as fallback, no workbook link.
-    let out = deckcraft_pptx::export(&doc).unwrap();
+    let out = seho_pptx::export(&doc).unwrap();
     let ex = String::from_utf8(pkg_part(&out, "ppt/charts/chartEx1.xml").expect("chartEx part")).unwrap();
     assert!(ex.contains(r#"layoutId="waterfall""#) && !ex.contains("externalData"), "{ex}");
     let types = String::from_utf8(pkg_part(&out, "[Content_Types].xml").unwrap()).unwrap();
@@ -1556,7 +1556,7 @@ fn chartex_waterfall_reads_and_round_trips() {
     let srels = String::from_utf8(pkg_part(&out, &slide_rels).unwrap()).unwrap();
     assert!(srels.contains("relationships/chartEx") && srels.contains("relationships/chart\""), "{srels}");
     assert!(pkg_part(&out, "ppt/charts/chart1.xml").is_some());
-    let again = deckcraft_pptx::import(&out).unwrap();
+    let again = seho_pptx::import(&out).unwrap();
     assert_eq!(chart(&again).map(|c| (c.kind, c.categories, c.series.len())), Some((ChartType::Waterfall, c.categories.clone(), 1)));
 
     // Edited: the kept part no longer matches, so a chartEx part is written from the model,
@@ -1569,21 +1569,21 @@ fn chartex_waterfall_reads_and_round_trips() {
             }
         }
     }
-    let out = deckcraft_pptx::export(&edited).unwrap();
+    let out = seho_pptx::export(&edited).unwrap();
     let ex = String::from_utf8(pkg_part(&out, "ppt/charts/chartEx1.xml").expect("a written chartEx part")).unwrap();
     assert!(ex.contains(r#"layoutId="waterfall""#), "{ex}");
     assert!(String::from_utf8(pkg_part(&out, &slide).unwrap()).unwrap().contains("cx1"));
-    let again = chart(&deckcraft_pptx::import(&out).unwrap()).unwrap();
+    let again = chart(&seho_pptx::import(&out).unwrap()).unwrap();
     assert_eq!(again.kind, ChartType::Waterfall);
     assert_eq!(again.series[0].values[1], Some(55.0));
     assert_eq!(again.subtotals, c.subtotals);
 }
 
-/// New Office 2016 charts made in DeckCraft are written as chartEx parts that read back as the
+/// New Office 2016 charts made in Seho are written as chartEx parts that read back as the
 /// same type, data and options.
 #[test]
 fn chartex_new_charts_save_as_their_own_type() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     for (ty, kind) in [
         ("waterfall", ChartType::Waterfall),
         ("funnel", ChartType::Funnel),
@@ -1611,10 +1611,10 @@ fn chartex_new_charts_save_as_their_own_type() {
         s.execute("chart.options", &opts).unwrap();
         let doc = &s.doc().unwrap().doc;
         let before = chart(doc).unwrap();
-        let out = deckcraft_pptx::export(doc).unwrap();
+        let out = seho_pptx::export(doc).unwrap();
         assert!(pkg_part(&out, "ppt/charts/chartEx1.xml").is_some(), "{ty}: no chartEx part");
         assert!(pkg_part(&out, "ppt/charts/chart1.xml").is_some(), "{ty}: no fallback chart");
-        let after = chart(&deckcraft_pptx::import(&out).unwrap()).unwrap();
+        let after = chart(&seho_pptx::import(&out).unwrap()).unwrap();
         assert_eq!(after.kind, kind, "{ty}");
         assert_eq!(after.title.as_deref(), Some("T"), "{ty}");
         assert_eq!(after.categories, before.categories, "{ty}");
@@ -1629,7 +1629,7 @@ fn chartex_new_charts_save_as_their_own_type() {
 /// a save and reopen.
 #[test]
 fn chartex_levels_and_quartiles_round_trip() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     let chart = |d: &Presentation| -> Option<Chart> {
         d.slides.iter().flat_map(|s| s.shapes.iter()).find_map(|sh| match &sh.kind {
             ShapeKind::Chart(c) => Some((**c).clone()),
@@ -1651,14 +1651,14 @@ fn chartex_levels_and_quartiles_round_trip() {
             .unwrap();
         }
         let before = chart(&s.doc().unwrap().doc).unwrap();
-        let out = deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap();
-        let after = chart(&deckcraft_pptx::import(&out).unwrap()).unwrap();
+        let out = seho_pptx::export(&s.doc().unwrap().doc).unwrap();
+        let after = chart(&seho_pptx::import(&out).unwrap()).unwrap();
         assert_eq!(after.category_levels, before.category_levels, "{ty}");
         assert_eq!(after.inclusive_quartiles, before.inclusive_quartiles, "{ty}");
         assert_eq!(after.category_tree(), before.category_tree(), "{ty}");
         // Unchanged since import, the part is written back as read.
-        let again = deckcraft_pptx::export(&deckcraft_pptx::import(&out).unwrap()).unwrap();
-        assert_eq!(chart(&deckcraft_pptx::import(&again).unwrap()).unwrap().category_levels, before.category_levels, "{ty}");
+        let again = seho_pptx::export(&seho_pptx::import(&out).unwrap()).unwrap();
+        assert_eq!(chart(&seho_pptx::import(&again).unwrap()).unwrap().category_levels, before.category_levels, "{ty}");
     }
 }
 
@@ -1666,7 +1666,7 @@ fn chartex_levels_and_quartiles_round_trip() {
 /// through a save and reopen, written as PowerPoint writes them.
 #[test]
 fn radar_stock_and_combo_round_trip() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     let chart = |d: &Presentation| -> Option<Chart> {
         d.slides.iter().flat_map(|s| s.shapes.iter()).find_map(|sh| match &sh.kind {
             ShapeKind::Chart(c) => Some((**c).clone()),
@@ -1682,8 +1682,8 @@ fn radar_stock_and_combo_round_trip() {
             s.execute("chart.options", &serde_json::json!({"id": id, "upDownBars": true})).unwrap();
         }
         let before = chart(&s.doc().unwrap().doc).unwrap();
-        let out = deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap();
-        let after = chart(&deckcraft_pptx::import(&out).unwrap()).unwrap();
+        let out = seho_pptx::export(&s.doc().unwrap().doc).unwrap();
+        let after = chart(&seho_pptx::import(&out).unwrap()).unwrap();
         assert_eq!(after.kind, before.kind, "{ty}");
         assert_eq!(after.up_down_bars, bars, "{ty}");
         assert_eq!(after.series.len(), before.series.len(), "{ty}");
@@ -1701,9 +1701,9 @@ fn radar_stock_and_combo_round_trip() {
 /// default they take a destination layout; Keep Source Formatting brings the source master.
 #[test]
 fn reuse_slides_from_another_presentation() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     use serde_json::json;
-    let b64 = deckcraft_engine::cmd::base64_encode;
+    let b64 = seho_engine::cmd::base64_encode;
     // Source: three slides, a picture with an animation on the second.
     let mut src = Session::with_new();
     src.execute("slide.new", &json!({})).unwrap();
@@ -1711,7 +1711,7 @@ fn reuse_slides_from_another_presentation() {
     src.execute("insert.picture", &json!({"data": b64(&pic), "name": "green.png"})).unwrap();
     src.execute("animation.add", &json!({"effect": "fade"})).unwrap();
     src.execute("slide.new", &json!({})).unwrap();
-    let src_bytes = deckcraft_pptx::export(&src.doc().unwrap().doc).unwrap();
+    let src_bytes = seho_pptx::export(&src.doc().unwrap().doc).unwrap();
 
     let mut s = Session::with_new();
     // Media ids in the two decks overlap; the destination's own picture must stay its own.
@@ -1722,10 +1722,10 @@ fn reuse_slides_from_another_presentation() {
     let doc = s.doc().unwrap().doc.clone();
     assert_eq!(doc.slides.len(), 2);
     assert_eq!(s.doc().unwrap().selection.slide, 1, "the reused slide is selected");
-    let pictures = |sl: &deckcraft_model::Slide| {
+    let pictures = |sl: &seho_model::Slide| {
         let mut v = vec![];
-        deckcraft_model::walk(&sl.shapes, &mut |sh, _| {
-            if let deckcraft_model::ShapeKind::Picture { fill } = &sh.kind {
+        seho_model::walk(&sl.shapes, &mut |sh, _| {
+            if let seho_model::ShapeKind::Picture { fill } = &sh.kind {
                 v.push(fill.media);
             }
         });
@@ -1740,7 +1740,7 @@ fn reuse_slides_from_another_presentation() {
     assert!(doc.layout(doc.slides[1].layout).is_some(), "uses a destination layout");
     assert_eq!(doc.masters.len(), 1);
     // The result saves and reopens.
-    let back = deckcraft_pptx::import(&deckcraft_pptx::export(&doc).unwrap()).unwrap();
+    let back = seho_pptx::import(&seho_pptx::export(&doc).unwrap()).unwrap();
     assert_eq!(back.slides.len(), 2);
 
     // Keep Source Formatting: every slide, and the source master comes along.
@@ -1764,9 +1764,9 @@ fn reuse_slides_from_another_presentation() {
 /// the original, and undo brings everything back.
 #[test]
 fn compress_pictures_shrinks_the_file_and_keeps_shared_originals() {
-    use deckcraft_engine::Session;
+    use seho_engine::Session;
     use serde_json::json;
-    let b64 = deckcraft_engine::cmd::base64_encode;
+    let b64 = seho_engine::cmd::base64_encode;
     // A noisy 1600 × 1600 picture (doesn't compress away on its own).
     let big = {
         let img = image::RgbImage::from_fn(1600, 1600, |x, y| image::Rgb([(x * 31 % 251) as u8, (y * 17 % 253) as u8, ((x * y) % 255) as u8]));
@@ -1777,14 +1777,14 @@ fn compress_pictures_shrinks_the_file_and_keeps_shared_originals() {
     let mut s = Session::with_new();
     s.execute("insert.picture", &json!({"data": b64(&big), "name": "noise.png"})).unwrap();
     s.execute("shape.resize", &json!({"w": 144, "h": 144})).unwrap();
-    let size_before = deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap().len();
+    let size_before = seho_pptx::export(&s.doc().unwrap().doc).unwrap().len();
     let r = s.execute("picture.compress", &json!({"ppi": 150})).unwrap();
     assert_eq!(r["pictures"], 1, "{r}");
     let doc = s.doc().unwrap().doc.clone();
     assert_eq!(doc.media.len(), 1, "the original is gone");
     let img = image::load_from_memory(&doc.media[0].data).unwrap();
     assert_eq!((img.width(), img.height()), (300, 300), "2 in at 150 ppi");
-    let size_after = deckcraft_pptx::export(&doc).unwrap().len();
+    let size_after = seho_pptx::export(&doc).unwrap().len();
     assert!(size_after * 4 < size_before, "{size_before} → {size_after}");
     s.execute("edit.undo", &json!({})).unwrap();
     assert_eq!(s.doc().unwrap().doc.media[0].data.len(), big.len(), "undo restores the original");
@@ -1867,8 +1867,8 @@ fn legacy_ole_object_is_written_in_the_fallback_form() {
 /// one undo step and saves as linked pictures.
 #[test]
 fn zoom_inserts_linked_slide_pictures() {
-    use deckcraft_engine::Session;
-    use deckcraft_model::text::Action;
+    use seho_engine::Session;
+    use seho_model::text::Action;
     use serde_json::json;
     let mut s = Session::with_new();
     for t in ["Intro", "Plan", "Budget", "Risks"] {
@@ -1914,7 +1914,7 @@ fn zoom_inserts_linked_slide_pictures() {
     assert_eq!(s.doc().unwrap().doc.slides.len(), before, "one undo step");
 
     // Saved as linked pictures.
-    let back = deckcraft_pptx::import(&deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap()).unwrap();
+    let back = seho_pptx::import(&seho_pptx::export(&s.doc().unwrap().doc).unwrap()).unwrap();
     let z = back.slides[0].shapes.iter().find(|sh| matches!(sh.kind, ShapeKind::Picture { .. }) && sh.click.is_some()).unwrap();
     assert!(matches!(z.click.as_ref().unwrap().action, Action::Slide { .. }));
     assert!(s.execute("insert.zoom", &json!({"slides": [42]})).is_err());

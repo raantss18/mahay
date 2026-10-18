@@ -6,10 +6,10 @@
 //! tracked by id, not tab index, so closing one elsewhere while the prompt is up can't retarget it.
 
 use egui::Key;
-use photocraft_doc::DocId;
+use sary_doc::DocId;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::widgets::{ButtonRole, DialogButton};
 
 const EXIT: &str = "file.exit";
@@ -25,7 +25,7 @@ pub struct Prompt {
     focused: Option<DocId>,
 }
 
-fn index_of(app: &PhotocraftApp, id: DocId) -> Option<usize> {
+fn index_of(app: &SaryApp, id: DocId) -> Option<usize> {
     app.session.documents().iter().position(|d| d.doc.id == id)
 }
 
@@ -52,7 +52,7 @@ fn reach(id: &str) -> Option<Reach> {
 
 /// The command's target document and the unsaved documents it would discard (empty for commands
 /// that discard nothing).
-fn discarded(app: &PhotocraftApp, id: &str, params: &Value) -> (Option<DocId>, Vec<DocId>) {
+fn discarded(app: &SaryApp, id: &str, params: &Value) -> (Option<DocId>, Vec<DocId>) {
     let docs = app.session.documents();
     let target = params.get("document").and_then(Value::as_u64).map(|i| i as usize).or(app.session.active_index());
     let affected: Vec<usize> = match reach(id) {
@@ -66,7 +66,7 @@ fn discarded(app: &PhotocraftApp, id: &str, params: &Value) -> (Option<DocId>, V
 }
 
 /// Park `id` behind a prompt if it would discard unsaved work. Returns whether it did.
-pub fn intercept(app: &mut PhotocraftApp, id: &str, params: &Value) -> bool {
+pub fn intercept(app: &mut SaryApp, id: &str, params: &Value) -> bool {
     let (target, docs) = discarded(app, id, params);
     if docs.is_empty() {
         return false;
@@ -88,7 +88,7 @@ pub fn intercept(app: &mut PhotocraftApp, id: &str, params: &Value) -> bool {
 
 /// Puts up `prompt`. One over several documents shows the document it asks about first; each
 /// later one is shown as it comes up (see [`advance`]).
-fn ask(app: &mut PhotocraftApp, prompt: Prompt) {
+fn ask(app: &mut SaryApp, prompt: Prompt) {
     if !matches!(reach(&prompt.id), Some(Reach::Target)) {
         show_tab(app, prompt.docs.first().copied());
     }
@@ -96,13 +96,13 @@ fn ask(app: &mut PhotocraftApp, prompt: Prompt) {
 }
 
 /// Makes `doc` the active tab, if it is still open.
-fn show_tab(app: &mut PhotocraftApp, doc: Option<DocId>) {
+fn show_tab(app: &mut SaryApp, doc: Option<DocId>) {
     if let Some(i) = doc.and_then(|d| index_of(app, d)) {
         app.session.set_active(i);
     }
 }
 
-impl PhotocraftApp {
+impl SaryApp {
     /// Whether closing now would lose work: a document has unsaved changes and closing wasn't
     /// confirmed. The web build has the browser ask before leaving the page while this holds (#1380).
     pub fn has_unsaved_work(&self) -> bool {
@@ -113,7 +113,7 @@ impl PhotocraftApp {
 /// Called once per frame: holds back a window close request while there is unsaved work. Every
 /// way of leaving (File › Exit / Quit, the close button, the OS's quit event, `app.quit`) ends up
 /// here as a close request.
-pub fn guard_window_close(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn guard_window_close(app: &mut SaryApp, ctx: &egui::Context) {
     if !ctx.input(|i| i.viewport().close_requested()) {
         return;
     }
@@ -138,7 +138,7 @@ pub fn guard_window_close(app: &mut PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// Moves on to the next document, or runs the parked action once none are left.
-fn advance(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn advance(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(p) = app.discard.as_mut() else { return };
     let answered = (!p.docs.is_empty()).then(|| p.docs.remove(0));
     let (next, one_by_one) = (p.docs.first().copied(), !matches!(reach(&p.id), Some(Reach::Target)));
@@ -199,7 +199,7 @@ fn advance(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// Saves `doc`; true once it is saved. A document without a file to write back to asks where in
 /// the save dialog: the prompt then hides until it is answered, and moves on only if it saved.
-fn save(app: &mut PhotocraftApp, ctx: &egui::Context, doc: DocId) -> bool {
+fn save(app: &mut SaryApp, ctx: &egui::Context, doc: DocId) -> bool {
     let Some(i) = index_of(app, doc) else { return false };
     app.session.set_active(i);
     let saved = crate::menus::invoke_unguarded(app, ctx, "file.save", json!({}));
@@ -228,7 +228,7 @@ fn save(app: &mut PhotocraftApp, ctx: &egui::Context, doc: DocId) -> bool {
 /// A completed save may release the close prompt. Choosing a path only starts a layered TIFF
 /// save; TIFF Options calls this after the write, and `jobs_ui` when a background save ends.
 /// Copies and failed writes leave the doc dirty.
-pub(crate) fn saved_document(app: &mut PhotocraftApp, ctx: &egui::Context, doc: DocId) {
+pub(crate) fn saved_document(app: &mut SaryApp, ctx: &egui::Context, doc: DocId) {
     // Still the prompt that asked (quitting may have replaced it meanwhile).
     if !app.save_options_open()
         && app.discard.as_ref().and_then(|p| p.docs.first()) == Some(&doc)
@@ -243,7 +243,7 @@ fn couldnt_save(e: String) -> String {
     if e == crate::file_dialog::CANCELLED { e } else { format!("Couldn't save: {e}") }
 }
 
-pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
     // Save can ask for a path and then TIFF or Targa Options, and then write in the background.
     // Wait for all three; cancellation or a failed save brings us back.
     if app.file_dialog_open() || app.save_options_open() || app.saving() {
@@ -327,7 +327,7 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// Acts on the answer about `doc`, the document the prompt is asking about.
-fn apply(app: &mut PhotocraftApp, ctx: &egui::Context, doc: DocId, answer: Answer) {
+fn apply(app: &mut SaryApp, ctx: &egui::Context, doc: DocId, answer: Answer) {
     match answer {
         Answer::Cancel => app.discard = None,
         Answer::Discard => advance(app, ctx),
@@ -342,7 +342,7 @@ pub const CONTROL_ID: &str = "discard";
 
 /// The prompt as `ui.inspect` lists it among the dialogs: the command waiting on it, the document
 /// it asks about, how many are still to answer, and the choices `ui.dialog.confirm` takes.
-pub fn inspect(app: &PhotocraftApp) -> Option<Value> {
+pub fn inspect(app: &SaryApp) -> Option<Value> {
     let p = app.discard.as_ref()?;
     let doc = *p.docs.first()?;
     let name = index_of(app, doc).and_then(|i| app.session.documents().get(i)).map(|d| d.doc.name.clone())?;
@@ -358,13 +358,13 @@ pub fn inspect(app: &PhotocraftApp) -> Option<Value> {
 
 /// The command the prompt holds back and its params, for the automation policy to see before a
 /// control client answers it.
-pub fn pending_command(app: &PhotocraftApp) -> Option<(String, Value)> {
+pub fn pending_command(app: &SaryApp) -> Option<(String, Value)> {
     app.discard.as_ref().map(|p| (p.id.clone(), p.params.clone()))
 }
 
 /// Answers the prompt for a control client: `save`, `dontSave` or `cancel` (Revert takes
 /// `dontSave` or `cancel`). Like the buttons, Save may first ask for a path in the save dialog.
-pub fn answer_control(app: &mut PhotocraftApp, ctx: &egui::Context, choice: &str) -> Result<Value, String> {
+pub fn answer_control(app: &mut SaryApp, ctx: &egui::Context, choice: &str) -> Result<Value, String> {
     let Some(doc) = app.discard.as_ref().and_then(|p| p.docs.first().copied()) else {
         return Err("no unsaved-changes prompt is open".into());
     };
@@ -423,8 +423,8 @@ fn button_labels(mac: bool, buttons: &[(&str, Option<Key>)]) -> Vec<String> {
 mod tests {
     use super::*;
 
-    fn app_with_docs(n: usize) -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app_with_docs(n: usize) -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         for _ in 0..n {
             app.run("file.new", json!({"width": 8, "height": 8})).unwrap();
         }
@@ -432,23 +432,23 @@ mod tests {
         app
     }
 
-    fn make_dirty(app: &mut PhotocraftApp, doc: usize) {
+    fn make_dirty(app: &mut SaryApp, doc: usize) {
         app.session.set_active(doc);
         app.run("layer.new.layer", json!({})).unwrap();
     }
 
-    fn doc_id(app: &PhotocraftApp, i: usize) -> DocId {
+    fn doc_id(app: &SaryApp, i: usize) -> DocId {
         app.session.documents()[i].doc.id
     }
 
     #[test]
     fn a_save_document_script_that_edits_the_document_keeps_the_prompt_up() {
-        use photocraft_engine::automate_cmds::ScriptBinding;
+        use sary_engine::automate_cmds::ScriptBinding;
         let mut app = app_with_docs(1);
         let ctx = egui::Context::default();
         make_dirty(&mut app, 0);
         app.session.active_mut().unwrap().path = Some("/pics/kept.psd".into());
-        app.services.export = Some(Box::new(|_: &photocraft_doc::Document, _: &str, _: &crate::ExportSettings| Ok((b"out".to_vec(), Vec::new()))));
+        app.services.export = Some(Box::new(|_: &sary_doc::Document, _: &str, _: &crate::ExportSettings| Ok((b"out".to_vec(), Vec::new()))));
         app.services.write = Some(Box::new(|_: &str, _: &[u8]| Ok(())));
         app.session.edit_prefs(|prefs| {
             prefs.script_events.enabled = true;
@@ -611,11 +611,11 @@ mod tests {
         assert_eq!(button_label(false, "保存", Some(Key::S)), "保存 (S)");
     }
 
-    type Prompted = egui_kittest::Harness<'static, PhotocraftApp>;
+    type Prompted = egui_kittest::Harness<'static, SaryApp>;
 
     /// The unsaved-changes prompt for `command` over `app`'s dirty documents, as `os` draws it (with
     /// the file dialogs shown and answered at the end of each frame, as the app does).
-    fn prompt_for(app: PhotocraftApp, command: &str, os: egui::os::OperatingSystem) -> Prompted {
+    fn prompt_for(app: SaryApp, command: &str, os: egui::os::OperatingSystem) -> Prompted {
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(800.0, 600.0)).build_ui_state(
             |ui, app| {
                 show(app, ui.ctx());
@@ -623,7 +623,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.ctx.set_os(os);
         assert!(intercept(h.state_mut(), command, &Value::Null));
         h.run_steps(2);
@@ -848,7 +848,7 @@ mod tests {
         let held = waiting.clone();
         let mut app = app_with_docs(1);
         make_dirty(&mut app, 0);
-        app.services.export = Some(Box::new(|_: &photocraft_doc::Document, _: &str, _: &crate::ExportSettings| Ok((b"out".to_vec(), Vec::new()))));
+        app.services.export = Some(Box::new(|_: &sary_doc::Document, _: &str, _: &crate::ExportSettings| Ok((b"out".to_vec(), Vec::new()))));
         app.services.write = Some(Box::new(move |p: &str, _: &[u8]| {
             w.borrow_mut().push(p.to_string());
             Ok(())
@@ -904,7 +904,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.ctx.set_os(egui::os::OperatingSystem::Windows);
         assert!(intercept(h.state_mut(), "file.close", &Value::Null));
         h.run_steps(2);
@@ -931,7 +931,7 @@ mod tests {
     mod targa_tests;
 
     /// One frame with the window's close button pressed; the commands the guard sent.
-    fn window_close_commands(app: &mut PhotocraftApp) -> Vec<egui::ViewportCommand> {
+    fn window_close_commands(app: &mut SaryApp) -> Vec<egui::ViewportCommand> {
         let mut info = egui::ViewportInfo::default();
         info.events.push(egui::ViewportEvent::Close);
         let mut input = egui::RawInput::default();
@@ -942,7 +942,7 @@ mod tests {
     }
 
     /// One frame with the window's close button pressed; whether the guard cancelled the close.
-    fn press_window_close(app: &mut PhotocraftApp) -> bool {
+    fn press_window_close(app: &mut SaryApp) -> bool {
         let commands = &window_close_commands(app);
         let cancelled = commands.iter().any(|c| matches!(c, egui::ViewportCommand::CancelClose));
         assert_eq!(commands.iter().any(|c| matches!(c, egui::ViewportCommand::Focus)), cancelled);

@@ -8,7 +8,7 @@
 //! form ("the open options are incorrect", #291), so writers must emit it.
 //!
 //! The layout below was established by observing Photoshop-saved files (the
-//! `photocraft-corpus` oracles); fields whose meaning is not known are written
+//! `sary-corpus` oracles); fields whose meaning is not known are written
 //! with the values Photoshop writes for a new document.
 
 use crate::io::WriteExt;

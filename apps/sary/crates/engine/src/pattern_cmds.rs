@@ -4,15 +4,15 @@
 //! Two places hold patterns, as in Photoshop:
 //! - the **library** ([`PatternLibrary`], on the [`Session`]): built-in procedural patterns plus
 //!   defined and imported ones. Library edits are app state, not document history.
-//! - the **document** ([`photocraft_doc::Document::patterns`]): the patterns its layers use
-//!   (saved in PSD `Patt` blocks and `.pcraft`). Commands that apply a pattern copy it into the
+//! - the **document** ([`sary_doc::Document::patterns`]): the patterns its layers use
+//!   (saved in PSD `Patt` blocks and `.sary`). Commands that apply a pattern copy it into the
 //!   document in the same history step, so a document always renders on its own.
 //!
 //! Patterns are referenced by `"pattern": id | name` (document first, then library).
 
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Color, Document, Fill, Layer, LayerContent, Pattern, Rect};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_doc::{Color, Document, Fill, Layer, LayerContent, Pattern, Rect};
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -118,11 +118,11 @@ pub fn resolve(s: &Session, key: &str) -> Option<Pattern> {
         return crate::presets::patterns::current(s).or(s.patterns.items.first()).cloned();
     }
     if let Some(d) = s.active()
-        && let Some(p) = photocraft_doc::pattern::find(&d.doc.patterns, key, key)
+        && let Some(p) = sary_doc::pattern::find(&d.doc.patterns, key, key)
     {
         return Some(p.clone());
     }
-    photocraft_doc::pattern::find(&s.patterns.items, key, key).cloned()
+    sary_doc::pattern::find(&s.patterns.items, key, key).cloned()
 }
 
 pub(crate) fn resolve_param(s: &Session, cmd: &str, p: &Value) -> Result<Pattern> {
@@ -140,8 +140,8 @@ pub fn ensure_in_doc(doc: &mut Document, pat: &Pattern) {
 /// Resolves the pattern of a Pattern Overlay / pattern stroke built from params (its `name`
 /// holds the requested key) into a real pattern: returns the effect with name and id filled in,
 /// plus the pattern to copy into the document.
-pub fn resolve_effect(s: &Session, fx: photocraft_doc::Effect) -> Result<(photocraft_doc::Effect, Option<Pattern>)> {
-    use photocraft_doc::Effect;
+pub fn resolve_effect(s: &Session, fx: sary_doc::Effect) -> Result<(sary_doc::Effect, Option<Pattern>)> {
+    use sary_doc::Effect;
     match fx {
         Effect::PatternOverlay { common, name, id, scale, angle, link, phase } => {
             let key = if id.is_empty() { name } else { id };
@@ -170,13 +170,13 @@ fn list(s: &mut Session, _: &Value) -> Result<Value> {
 
 /// The visible composite over `r` as a surface in the document's pixel format (with alpha).
 fn composite_surface(doc: &Document, r: Rect) -> Surface {
-    let buf = photocraft_compose::render(doc, r);
+    let buf = sary_compose::render(doc, r);
     let df = doc.pixel_format();
     let fmt = PixelFormat::new(df.mode, df.sample, true);
     let n = fmt.channels();
     let mut px = vec![0.0f32; buf.px.len() * n];
     for (o, p) in px.chunks_exact_mut(n).zip(&buf.px) {
-        photocraft_raster::from_rgba_into(&fmt, *p, o);
+        sary_raster::from_rgba_into(&fmt, *p, o);
     }
     let mut s = Surface::new(fmt);
     s.write_region(Rect::new(0, 0, r.width() as i32, r.height() as i32), &px);
@@ -238,7 +238,7 @@ fn define(s: &mut Session, p: &Value) -> Result<Value> {
 fn library_index(s: &Session, cmd: &str, p: &Value) -> Result<usize> {
     let key = p.get("pattern").and_then(Value::as_str).ok_or_else(|| bad(cmd, "missing `pattern` (id or name)"))?;
     let found =
-        photocraft_doc::pattern::find(&s.patterns.items, key, key).map(|f| f.id.clone()).ok_or_else(|| bad(cmd, format!("no library pattern \"{key}\"")))?;
+        sary_doc::pattern::find(&s.patterns.items, key, key).map(|f| f.id.clone()).ok_or_else(|| bad(cmd, format!("no library pattern \"{key}\"")))?;
     Ok(s.patterns.items.iter().position(|q| q.id == found).unwrap_or(0))
 }
 
@@ -271,10 +271,10 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     // A file on disk, or its bytes (a dropped file, the web build).
     let bytes = match (p.get("path").and_then(Value::as_str), p.get("data").and_then(Value::as_str)) {
         (Some(path), _) => std::fs::read(path).map_err(|e| EngineError::Other(format!("{path}: {e}")))?,
-        (None, Some(b64)) => photocraft_paint::tile::b64_decode(b64).ok_or_else(|| bad(cmd, "`data` is not base64"))?,
+        (None, Some(b64)) => sary_paint::tile::b64_decode(b64).ok_or_else(|| bad(cmd, "`data` is not base64"))?,
         (None, None) => return Err(bad(cmd, "missing `path` (.pat file) or `data`")),
     };
-    let pats = photocraft_io::pattern_map::read_pat(&bytes).map_err(EngineError::Other)?;
+    let pats = sary_io::pattern_map::read_pat(&bytes).map_err(EngineError::Other)?;
     let mut ids = Vec::new();
     for pat in pats {
         ids.push(pat.id.clone());
@@ -295,7 +295,7 @@ fn export(s: &mut Session, p: &Value) -> Result<Value> {
         }
         None => s.patterns.items.clone(),
     };
-    let bytes = photocraft_io::pattern_map::write_pat(&pats).map_err(EngineError::Other)?;
+    let bytes = sary_io::pattern_map::write_pat(&pats).map_err(EngineError::Other)?;
     crate::file_cmds::write_file(path, &bytes)?;
     Ok(json!({"path": path, "count": pats.len(), "bytes": bytes.len()}))
 }
@@ -311,7 +311,7 @@ pub(crate) fn placement(p: &Value) -> (f32, f32, bool, (f32, f32)) {
 
 /// The edit of `layer.newFillLayer.pattern`: a Pattern Fill layer of `pat` placed as `p` asks,
 /// above `active`. The Pattern Fill dialog previews it on a copy of the document.
-pub(crate) fn insert_fill_layer(doc: &mut Document, active: &mut Option<photocraft_doc::LayerId>, pat: &Pattern, p: &Value) -> Result<photocraft_doc::LayerId> {
+pub(crate) fn insert_fill_layer(doc: &mut Document, active: &mut Option<sary_doc::LayerId>, pat: &Pattern, p: &Value) -> Result<sary_doc::LayerId> {
     let (scale, angle, link, phase) = placement(p);
     ensure_in_doc(doc, pat);
     let fill = Fill::Pattern { name: pat.name.clone(), scale, id: pat.id.clone(), angle, link, phase };
@@ -344,9 +344,9 @@ fn brush_texture(s: &mut Session, p: &Value) -> Result<Value> {
             l * q[3] + (1.0 - q[3])
         })
         .collect();
-    let tile = photocraft_paint::GrayTile::from_f32(pat.width, pat.height, &lum);
+    let tile = sary_paint::GrayTile::from_f32(pat.width, pat.height, &lum);
     let t = &mut s.tools.brush.texture;
-    t.pattern = photocraft_paint::Pattern::Tile(tile);
+    t.pattern = sary_paint::Pattern::Tile(tile);
     t.enabled = p.get("enabled").and_then(Value::as_bool).unwrap_or(true);
     if let Some(sc) = p.get("scale").and_then(Value::as_f64) {
         t.scale = (sc as f32 / 100.0).clamp(0.01, 10.0);
@@ -357,7 +357,7 @@ fn brush_texture(s: &mut Session, p: &Value) -> Result<Value> {
 /// A swatch colour for UIs (average of the tile), straight RGB.
 pub fn average_color(p: &Pattern) -> Color {
     // A pattern too large to paint is averaged over its paintable top-left corner.
-    let side = photocraft_doc::pattern::MAX_PAINT_PIXELS.isqrt() as u32;
+    let side = sary_doc::pattern::MAX_PAINT_PIXELS.isqrt() as u32;
     let (w, h) = (p.width.min(side), p.height.min(side));
     let mut px = vec![[0.0f32; 4]; w as usize * h as usize];
     p.surface.read_rgba_into(Rect::new(0, 0, w as i32, h as i32), &mut px);
@@ -454,7 +454,7 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::LayerId;
+    use sary_doc::LayerId;
 
     fn session(depth: u64) -> Session {
         let mut s = Session::new();
@@ -463,7 +463,7 @@ mod tests {
     }
 
     fn pixel(s: &Session, x: i32, y: i32) -> [f32; 4] {
-        let b = photocraft_compose::render(&s.active().unwrap().doc, Rect::new(x, y, x + 1, y + 1));
+        let b = sary_compose::render(&s.active().unwrap().doc, Rect::new(x, y, x + 1, y + 1));
         b.px[0]
     }
 
@@ -507,7 +507,7 @@ mod tests {
         // The same file as bytes (a dropped file, the web build).
         let bytes = std::fs::read(path).unwrap();
         s.execute("pattern.delete", json!({"pattern": "Crimson"})).unwrap();
-        let v = s.execute("pattern.import", json!({"data": photocraft_paint::tile::b64_encode(&bytes)})).unwrap();
+        let v = s.execute("pattern.import", json!({"data": sary_paint::tile::b64_encode(&bytes)})).unwrap();
         assert_eq!(v["count"], v["imported"].as_array().unwrap().len());
         assert_eq!(resolve(&s, "Crimson").unwrap().id, id);
         std::fs::remove_dir_all(dir).ok();
@@ -578,7 +578,7 @@ mod tests {
         assert_eq!(st.doc.layer(st.active_layer.unwrap()).unwrap().effects.items.len(), 2);
         s.execute("brush.texturePattern", json!({"pattern": "Dots", "scale": 50})).unwrap();
         assert!(s.tools.brush.texture.enabled);
-        assert!(matches!(s.tools.brush.texture.pattern, photocraft_paint::Pattern::Tile(_)));
+        assert!(matches!(s.tools.brush.texture.pattern, sary_paint::Pattern::Tile(_)));
     }
 
     #[test]

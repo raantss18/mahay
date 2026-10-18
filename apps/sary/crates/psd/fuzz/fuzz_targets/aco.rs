@@ -7,7 +7,7 @@
 //! fail. The name cap, which is reachable, is the one that bites.
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::aco;
+use sary_psd::aco;
 fuzz_target!(|data: &[u8]| {
     let Ok(f) = aco::parse(data) else { return };
     assert!(f.swatches.len() <= aco::MAX_SWATCHES, "{} swatches exceeds MAX_SWATCHES", f.swatches.len());

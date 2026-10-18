@@ -1,0 +1,18 @@
+Mahay
+Copyright (c) 2026 Antsa (raantss18) and the Mahay contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE). SPDX-License-Identifier: MIT OR Apache-2.0
+
+Forked from ArtCraft
+Mahay is a fork of the ArtCraft crafting apps (https://github.com/storytold).
+Copyright (c) 2026 ArtCraft Team and the ArtCraft contributors, and the contributors of
+each imported app; licensed MIT OR Apache-2.0. Each imported tree under apps/ and libs/
+keeps its upstream LICENSE-MIT, LICENSE-APACHE, NOTICE and ATTRIBUTION files unchanged.
+The upstream commit of every imported tree is recorded in docs/APPS_INVENTORY.md.
+
+The ArtCraft name, wordmark and logos (and the "…Craft" app names and icons) are trademarks
+of the ArtCraft Team. They are not covered by the license and are not used by Mahay, except
+in this attribution and in links to upstream issues kept for provenance.
+
+Third-party material is listed in THIRD_PARTY_LICENSES.md and in each imported tree's
+NOTICE and ATTRIBUTION files.

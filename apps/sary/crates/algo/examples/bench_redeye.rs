@@ -1,8 +1,8 @@
 //! 24 MP timing of the red-eye kernel on a window around one click (not a full-image scan).
-//! `cargo run --release -p photocraft-algo --example bench_redeye`
+//! `cargo run --release -p sary-algo --example bench_redeye`
 use std::time::Instant;
 
-use photocraft_algo::redeye;
+use sary_algo::redeye;
 
 fn main() {
     let (doc_w, doc_h) = (6016usize, 4000usize);

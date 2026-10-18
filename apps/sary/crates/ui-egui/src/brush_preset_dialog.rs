@@ -3,10 +3,10 @@
 //! a preset opens it: the picker's [+] and its gear menu, the Brush Settings [+] and the Brushes
 //! tab's [+]. Nothing is saved until OK.
 use egui::{Color32, pos2, vec2};
-use photocraft_paint::{BrushPreset, BrushSettings};
+use sary_paint::{BrushPreset, BrushSettings};
 use serde_json::{Map, Value, json};
 
-use crate::{PhotocraftApp, state::DialogKind, theme::Tokens, widgets};
+use crate::{SaryApp, state::DialogKind, theme::Tokens, widgets};
 
 const MARK: &str = "__newBrushPreset";
 const PREVIEW: f32 = 96.0;
@@ -30,7 +30,7 @@ fn taken(presets: &[BrushPreset], name: &str) -> bool {
 
 /// Open the dialog for the tool's brush, or for `brush` (the Brush Settings panel's copy, which
 /// may be ahead of the tool's by a frame). Returns the dialog's id.
-pub fn open(app: &mut PhotocraftApp, brush: Option<&BrushSettings>) -> u64 {
+pub fn open(app: &mut SaryApp, brush: Option<&BrushSettings>) -> u64 {
     let tools = &app.session.tools;
     let mut fields = Map::new();
     fields.insert(MARK.into(), json!(true));
@@ -54,7 +54,7 @@ fn name(f: &Map<String, Value>) -> &str {
 }
 
 /// Why OK is greyed out, if it is.
-fn problem(app: &PhotocraftApp, f: &Map<String, Value>) -> Option<&'static str> {
+fn problem(app: &SaryApp, f: &Map<String, Value>) -> Option<&'static str> {
     if name(f).is_empty() {
         Some(tl!("Enter a name for the brush preset"))
     } else if taken(&app.session.tools.presets, name(f)) {
@@ -72,7 +72,7 @@ fn check(ui: &mut egui::Ui, f: &mut Map<String, Value>, key: &str, label: &str) 
 }
 
 /// The dialog's three columns; it owns its OK and Cancel, so they stand in their own column.
-pub fn body(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, interactive: bool) -> Option<bool> {
+pub fn body(app: &SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, interactive: bool) -> Option<bool> {
     let t = Tokens::get(ui.ctx());
     let mut outcome = None;
     let brush: BrushSettings = f.get("brush").and_then(|b| serde_json::from_value(b.clone()).ok()).unwrap_or_else(|| app.session.tools.brush.clone());
@@ -143,7 +143,7 @@ pub fn body(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, 
 }
 
 /// OK: save the preset with the boxes as chosen. It becomes the current brush, as in Photoshop.
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     if let Some(why) = problem(app, f) {
         return Err(why.into());
     }

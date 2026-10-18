@@ -1,8 +1,8 @@
 //! Running a filter plug-in over a surface, band by band.
 
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_geom::{Rect, TILE_SIZE, TileCoord};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_geom::{Rect, TILE_SIZE, TileCoord};
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::manifest::Area;

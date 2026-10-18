@@ -2,8 +2,8 @@
 //! Hindi digits, or context-following digits — display only, the text is untouched.
 
 use super::*;
-use wordcraft_doc::props::ParaProps;
-use wordcraft_doc::{Pos, StoryRef};
+use soratra_doc::props::ParaProps;
+use soratra_doc::{Pos, StoryRef};
 
 fn lay_opts(text: &str, rtl_para: bool, numeral: NumeralMode) -> DocLayout {
     let mut d = Document::from_text(text);

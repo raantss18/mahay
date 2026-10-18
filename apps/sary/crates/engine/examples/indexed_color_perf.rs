@@ -1,9 +1,9 @@
 //! Local Indexed Color timing probe. Never commits or uploads the input image.
-//! Run in release: `cargo run -p photocraft-engine --release --example indexed_color_perf -- image.png`.
+//! Run in release: `cargo run -p sary-engine --release --example indexed_color_perf -- image.png`.
 //! Reports palette construction, diffusion and the complete CPU preview path (no GPU upload).
 
-use photocraft_algo::quantize::{self, Dither, Forced, PaletteKind};
-use photocraft_engine::Session;
+use sary_algo::quantize::{self, Dither, Forced, PaletteKind};
+use sary_engine::Session;
 use serde_json::json;
 use std::{error::Error, time::Instant};
 
@@ -23,9 +23,9 @@ fn pixel_hash(px: &[[f32; 4]]) -> String {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let path = std::env::args().nth(1).ok_or("provide a local image path")?;
-    let bytes = photocraft_format::read::read_file(std::path::Path::new(&path))?;
-    let doc = photocraft_io::import(&path, &bytes)?.document;
-    let px = photocraft_compose::flatten(&doc).px;
+    let bytes = sary_format::read::read_file(std::path::Path::new(&path))?;
+    let doc = sary_io::import(&path, &bytes)?.document;
+    let px = sary_compose::flatten(&doc).px;
     println!("{}", json!({"width":doc.size.width,"height":doc.size.height,"preview_factor":1}));
     for count in [8usize, 16, 32, 64, 128, 256] {
         for run in 0..4 {
@@ -45,12 +45,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             let diffusion_ms = elapsed(start);
             std::hint::black_box(indices);
             let start = Instant::now();
-            let proxy = photocraft_compose::proxy::proxy_document(&doc, 1);
+            let proxy = sary_compose::proxy::proxy_document(&doc, 1);
             let mut session = Session::new();
             session.add_document(proxy, None);
             session.execute("image.mode.indexedColor", json!({"colors":count}))?;
             let result = session.active().ok_or("preview has no document")?;
-            let composed = photocraft_compose::flatten(&result.doc);
+            let composed = sary_compose::flatten(&result.doc);
             let preview_ms = elapsed(start);
             println!(
                 "{}",

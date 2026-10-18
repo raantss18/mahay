@@ -3,7 +3,7 @@
 //! clusters and breaks are the same); shaping tests use a system font when one is installed.
 
 use super::*;
-use wordcraft_doc::{Pos, StoryRef};
+use soratra_doc::{Pos, StoryRef};
 
 fn lay(doc: &Document) -> DocLayout {
     let mut c = LayoutCache::new();
@@ -50,7 +50,7 @@ fn myanmar_without_spaces_wraps_between_syllables() {
     let l = lay(&Document::from_text(&text));
     let pl = para_layout(&l, 0);
     assert!(pl.lines.len() > 1, "a long Myanmar paragraph wraps");
-    let breaks = wordcraft_doc::cluster::myanmar_breaks(&text);
+    let breaks = soratra_doc::cluster::myanmar_breaks(&text);
     // A line may end before each syllable: before မာ and စာ, never before န် (a final).
     for c in &pl.clusters {
         assert_eq!(c.break_after, breaks.contains(&c.end), "break after {}", c.end);
@@ -65,8 +65,8 @@ fn myanmar_without_spaces_wraps_between_syllables() {
 }
 
 /// A face with Myanmar letters (an installed system font), or `None` to skip.
-fn myanmar_face() -> Option<wordcraft_fonts::FaceRef> {
-    wordcraft_fonts::FontDb::global().fallback_for('\u{1000}', 0).map(|f| wordcraft_fonts::FaceRef::of(&f)).filter(|f| f.has_layout_tables())
+fn myanmar_face() -> Option<soratra_fonts::FaceRef> {
+    soratra_fonts::FontDb::global().fallback_for('\u{1000}', 0).map(|f| soratra_fonts::FaceRef::of(&f)).filter(|f| f.has_layout_tables())
 }
 
 #[test]
@@ -77,14 +77,14 @@ fn myanmar_prevowel_is_drawn_before_its_consonant() {
     };
     // ကေ: in memory consonant first, on screen the vowel sign ေ first.
     let ka = face.glyph_for('\u{1000}');
-    let g = wordcraft_fonts::shape(&face, "\u{1000}\u{1031}", &[], |c| c);
+    let g = soratra_fonts::shape(&face, "\u{1000}\u{1031}", &[], |c| c);
     assert_eq!(g.len(), 2, "{g:?}");
     assert_eq!(g[1].gid, ka, "the consonant is drawn second: {g:?}");
     assert!(g.iter().all(|x| x.cluster == 0), "one cluster: {g:?}");
     // Itemised by script: the same syllable after Latin text in the same face shapes the same
     // (shaped as one Latin run, the vowel sign would stay after the consonant).
     if face.covers('H') {
-        let mixed = wordcraft_fonts::shape(&face, "Hi \u{1000}\u{1031}", &[], |c| c);
+        let mixed = soratra_fonts::shape(&face, "Hi \u{1000}\u{1031}", &[], |c| c);
         let tail: Vec<u32> = mixed.iter().filter(|x| x.cluster >= 3).map(|x| x.gid).collect();
         assert_eq!(tail, g.iter().map(|x| x.gid).collect::<Vec<_>>());
     }
@@ -115,12 +115,12 @@ const THAI_RUN: &str = "[D] น้ำ ค่ำ ปั้น ฝั่ง ปู
 
 /// Is a font with Thai letters installed? `false` skips the test.
 fn thai_font_installed() -> bool {
-    wordcraft_fonts::FontDb::global().fallback_for('\u{0E19}', 0).is_some()
+    soratra_fonts::FontDb::global().fallback_for('\u{0E19}', 0).is_some()
 }
 
 /// Body paragraph 0 of `text`, its run set in `font` at 16 pt (`None` keeps the document's
 /// default font), and the face of every cluster: (cluster start, face).
-fn cluster_faces(text: &str, font: Option<&str>) -> Vec<(usize, wordcraft_fonts::FaceRef)> {
+fn cluster_faces(text: &str, font: Option<&str>) -> Vec<(usize, soratra_fonts::FaceRef)> {
     let mut d = Document::from_text(text);
     let p = d.para_mut(StoryRef::Body, &Path::top(0)).unwrap();
     p.runs[0].props.font = font.map(Into::into);
@@ -139,7 +139,7 @@ fn a_missing_thai_font_draws_the_whole_run_in_one_thai_face() {
     // Word substitutes one font (Cordia New) for a missing Thai font, so the Latin letters, the
     // digits and the baht sign keep the Thai letters' face and size. A Thai name the lists don't
     // spell out ("TH Niramit AS") is matched by its "TH " prefix and substituted the same way.
-    let db = wordcraft_fonts::FontDb::global();
+    let db = soratra_fonts::FontDb::global();
     for font in ["TH Sarabun New", "Angsana New", "TH Niramit AS"] {
         if db.has_family(font) {
             continue;
@@ -160,7 +160,7 @@ fn a_thai_substitute_without_latin_hands_the_run_to_one_face_covering_it() {
     }
     // When the substitute lacks the run's Thai letters (no listed Thai font is installed, so the
     // Latin fallback family stands in) or its Latin ones, the run moves to one face covering all.
-    let latin = wordcraft_fonts::word::resolve("Source Sans 3", false, false).face;
+    let latin = soratra_fonts::word::resolve("Source Sans 3", false, false).face;
     let face = crate::para::thai_run_face("TH Sarabun New", true, latin, THAI_RUN, false, false).expect("one face covers the run");
     assert_ne!(face.id(), latin.id());
     for c in THAI_RUN.chars().filter(|c| !c.is_whitespace()) {
@@ -186,8 +186,8 @@ fn latin_text_in_a_missing_latin_font_stays_in_its_substitute_beside_thai() {
     // missing) must not move "Hello" into a Thai face.
     let myanmar = myanmar_face().is_some();
     for font in [Some("No Such Latin Font 1549"), None] {
-        let requested = font.unwrap_or(wordcraft_doc::styles::BODY_FONT);
-        let latin = wordcraft_fonts::word::resolve(requested, false, false).face;
+        let requested = font.unwrap_or(soratra_doc::styles::BODY_FONT);
+        let latin = soratra_fonts::word::resolve(requested, false, false).face;
         for text in ["Hello \u{0E2A}\u{0E27}\u{0E31}\u{0E2A}\u{0E14}\u{0E35}", "Hello \u{1019}\u{103C}\u{1014}\u{103A}\u{1019}\u{102C}"] {
             if text.contains('\u{1019}') && !myanmar {
                 continue;
@@ -215,7 +215,7 @@ fn thai_in_an_installed_latin_font_keeps_the_latin_face_for_latin() {
     // The family exists, so nothing is substituted: Latin stays in it and only the Thai letters
     // fall back, character by character, as before.
     let faces = cluster_faces(THAI_RUN, Some("Source Sans 3"));
-    let latin = wordcraft_fonts::word::resolve("Source Sans 3", false, false).face;
+    let latin = soratra_fonts::word::resolve("Source Sans 3", false, false).face;
     assert!(faces.iter().any(|(_, f)| f.id() == latin.id()), "Latin clusters stay in Source Sans 3");
     assert!(faces.iter().any(|(_, f)| f.id() != latin.id() && f.covers('\u{0E19}')), "Thai clusters fall back to a Thai face");
     assert_eq!(faces[0].1.id(), latin.id(), "[D] opens the run in Source Sans 3");
@@ -236,8 +236,8 @@ fn a_missing_latin_font_with_a_thai_complex_script_font_keeps_both() {
     let l = lay(&d);
     let pl = para_layout(&l, 0);
     let faces: Vec<_> = pl.clusters.iter().map(|c| pl.styles[c.style as usize].face).collect();
-    let latin = wordcraft_fonts::word::resolve("No Such Latin Font 1549", false, false).face;
-    let thai = wordcraft_fonts::word::resolve("TH Sarabun New", false, false).face;
+    let latin = soratra_fonts::word::resolve("No Such Latin Font 1549", false, false).face;
+    let thai = soratra_fonts::word::resolve("TH Sarabun New", false, false).face;
     assert_eq!(faces[0].id(), latin.id(), "[D] in the Latin substitute");
     assert!(faces.iter().any(|f| f.id() == thai.id()), "Thai letters in the Thai substitute {}", thai.family);
 }
@@ -246,7 +246,7 @@ fn a_missing_latin_font_with_a_thai_complex_script_font_keeps_both() {
 fn a_missing_roman_thai_font_is_not_drawn_in_cambria() {
     // Word draws a missing font the font table classes as roman in Cambria, but a missing Thai
     // font keeps its Thai substitute: the same face whether or not the table calls it roman.
-    let db = wordcraft_fonts::FontDb::global();
+    let db = soratra_fonts::FontDb::global();
     if db.has_family("TH Sarabun New") {
         eprintln!("skipped: TH Sarabun New is installed");
         return;
@@ -262,7 +262,7 @@ fn a_missing_roman_thai_font_is_not_drawn_in_cambria() {
         let pl = para_layout(&l, 0);
         pl.styles[pl.clusters.last().expect("a cluster").style as usize].face
     };
-    let cambria = wordcraft_fonts::word::resolve("Cambria", false, false).face;
+    let cambria = soratra_fonts::word::resolve("Cambria", false, false).face;
     assert_ne!(face(true).id(), cambria.id());
     assert_eq!(face(true).id(), face(false).id());
 }

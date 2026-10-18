@@ -7,7 +7,7 @@
 //! - **Images:** each image's effective resolution is measured where pages draw it (the
 //!   smallest over its uses, through form XObjects); colour and grayscale images above a
 //!   threshold are resampled (bicubic) to a target resolution and recompressed as JPEG or Flate.
-//!   A new image replaces the old one only if it is smaller. Images PdfCraft can't decode
+//!   A new image replaces the old one only if it is smaller. Images Taratasy can't decode
 //!   faithfully (CMYK and other colour spaces, masks, decode arrays other than the default,
 //!   JPEG 2000, JBIG2, CCITT, other than 8 bits) are left alone.
 //! - **Discard objects:** page thumbnails, alternate images, document tags (structure tree),
@@ -17,7 +17,7 @@
 //!   ASCIIHex layer from streams that have one.
 //!
 //! Metadata, attachments, comments, scripts, private data, hidden layers, bookmarks and form
-//! fields are discarded by `pdfcraft-redact`'s Remove Hidden Information, which the engine
+//! fields are discarded by `taratasy-redact`'s Remove Hidden Information, which the engine
 //! runs alongside.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -30,7 +30,7 @@ mod unused;
 
 pub use audit::{SpaceCategory, SpaceUse, audit_space};
 
-use pdfcraft_cos::{Document, ObjRef, Object, Stream, serialize};
+use taratasy_cos::{Document, ObjRef, Object, Stream, serialize};
 
 pub use images::effective_resolutions;
 
@@ -39,7 +39,7 @@ pub enum OptimizeError {
     #[error("the document has no page tree")]
     NoPages,
     #[error(transparent)]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
     #[error("the optimization was cancelled")]
     Cancelled,
 }
@@ -196,7 +196,7 @@ pub fn optimize(doc: &mut Document, settings: &Settings) -> Result<Report, Optim
 /// partly optimized and should be dropped.
 pub fn optimize_with_progress(doc: &mut Document, settings: &Settings, progress: &mut dyn FnMut(Stage) -> bool) -> Result<Report, OptimizeError> {
     let mut report = Report::default();
-    let pages = pdfcraft_annot::page_refs(doc).map_err(|_| OptimizeError::NoPages)?;
+    let pages = taratasy_annot::page_refs(doc).map_err(|_| OptimizeError::NoPages)?;
     if settings.merge_fragments {
         fragments::run(doc, &pages, &mut report, progress)?;
     }
@@ -252,7 +252,7 @@ pub fn optimize_with_progress(doc: &mut Document, settings: &Settings, progress:
     {
         const PRINT: [&[u8]; 7] = [b"PrintScaling", b"Duplex", b"PickTrayByPDFSize", b"PrintPageRange", b"NumCopies", b"PrintArea", b"PrintClip"];
         let vp = doc.get(root).as_dict().and_then(|c| c.get(b"ViewerPreferences").cloned());
-        let edit = |d: &mut pdfcraft_cos::Dict| PRINT.iter().filter(|k| d.remove(k).is_some()).count();
+        let edit = |d: &mut taratasy_cos::Dict| PRINT.iter().filter(|k| d.remove(k).is_some()).count();
         match vp {
             Some(Object::Ref(r)) => {
                 let mut n = 0;

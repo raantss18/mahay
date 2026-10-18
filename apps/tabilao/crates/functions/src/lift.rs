@@ -1,7 +1,7 @@
 //! Automatic array lifting: a function given an array where it expects a scalar is applied to
 //! each element, broadcasting single rows/columns like Excel's dynamic arrays.
 
-use gridcraft_core::{Array, CellError, Value};
+use tabilao_core::{Array, CellError, Value};
 
 use crate::util::MAX_CELLS;
 use crate::{Arg, Ctx, FnSpec};
@@ -53,7 +53,7 @@ pub(crate) fn call_lifted(spec: &FnSpec, args: &[Arg], ctx: &mut dyn Ctx) -> Val
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::{CellError, Value};
+    use tabilao_core::{CellError, Value};
 
     use crate::util::testutil::*;
     use crate::util::{R, num};
@@ -89,7 +89,7 @@ mod tests {
         is_err(crate::call(&s, &[n(1.0)], &mut TestCtx::default()), CellError::Value);
         let huge = crate::call(
             &s,
-            &[av(gridcraft_core::Array::filled(1, 100_000, nv(1.0)).into()), av(gridcraft_core::Array::filled(100_000, 1, nv(1.0)).into())],
+            &[av(tabilao_core::Array::filled(1, 100_000, nv(1.0)).into()), av(tabilao_core::Array::filled(100_000, 1, nv(1.0)).into())],
             &mut TestCtx::default(),
         );
         is_err(huge, CellError::Num);

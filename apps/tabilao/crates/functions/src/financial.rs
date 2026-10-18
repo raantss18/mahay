@@ -3,8 +3,8 @@
 //! Sign convention follows Excel: money paid out is negative, money received is positive.
 //! Date arguments are serial numbers (truncated) in the 1900 date system.
 
-use gridcraft_core::date::{datetime_from_serial, days_in_month, serial_from_ymd};
-use gridcraft_core::{CellError, DateSystem, Value};
+use tabilao_core::date::{datetime_from_serial, days_in_month, serial_from_ymd};
+use tabilao_core::{CellError, DateSystem, Value};
 
 use crate::util::{R, S, array_numbers, as_array, flatten, has, num, num_val, numbers, opt_bool, opt_num, round_half_away, text, to_sig_digits};
 use crate::{Arg, Ctx, FnSpec, VAR};
@@ -1762,7 +1762,7 @@ pub(crate) fn specs() -> Vec<FnSpec> {
 mod tests {
     use crate::Arg;
     use crate::util::testutil::*;
-    use gridcraft_core::{CellError, DateSystem, Value, date::serial_from_ymd};
+    use tabilao_core::{CellError, DateSystem, Value, date::serial_from_ymd};
 
     fn d(y: i64, m: i64, dd: i64) -> Arg {
         n(serial_from_ymd(DateSystem::D1900, y, m, dd).unwrap())

@@ -1,7 +1,7 @@
 use super::gmm::Gmm;
 use super::maxflow::Graph;
 use super::*;
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 // ---------- max-flow ----------
 
@@ -581,7 +581,7 @@ impl Sampler for TileReads<'_> {
 
 #[test]
 fn finish_region_cancel_stops_inside_the_band_cut() {
-    use photocraft_raster::{Cancelled, Interrupt};
+    use sary_raster::{Cancelled, Interrupt};
     use std::sync::atomic::{AtomicUsize, Ordering::SeqCst};
     // One 180-pixel window is one band tile, and nothing asks after the band re-cut, so a cancel
     // seen after the tile's own check can only have been seen inside its min cut.
@@ -612,7 +612,7 @@ fn finish_region_cancel_stops_inside_the_band_cut() {
 
 #[test]
 fn select_subject_cancelled_in_the_band_recut_reads_no_more_tiles() {
-    use photocraft_raster::{Cancelled, Interrupt};
+    use sary_raster::{Cancelled, Interrupt};
     use std::sync::atomic::{AtomicUsize, Ordering::SeqCst};
     let (w, h) = (3000, 2000);
     let (img, truth) = disc_scene(w, h, 1500.0, 1000.0, 700.0, 6);

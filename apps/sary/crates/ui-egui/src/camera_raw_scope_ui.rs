@@ -2,7 +2,7 @@
 //! the existing filter.cameraRaw command. Image analysis is cached per completed proxy revision.
 use crate::{camera_raw_ui::CameraRawDialog, state::CameraRawScopeState, theme::Tokens, widgets};
 use egui::{Align2, Color32, FontId, Pos2, Rect, Sense, Stroke, TextureHandle, pos2, vec2};
-use photocraft_algo::{
+use sary_algo::{
     camera_raw::CameraRaw,
     histogram::clipping,
     vectorscope::{HUES, SATURATIONS, Vectorscope},
@@ -168,7 +168,7 @@ impl CameraRawDialog {
             let mut scope_rgb = [0.0; 3];
             self.scope_transform.eval(&rgb, &mut scope_rgb);
             if scope_rgb.iter().all(|x| x.is_finite()) {
-                let (h, s) = photocraft_algo::vectorscope::hue_saturation(scope_rgb.map(|x| x.clamp(0.0, 1.0)));
+                let (h, s) = sary_algo::vectorscope::hue_saturation(scope_rgb.map(|x| x.clamp(0.0, 1.0)));
                 Some([h, s])
             } else {
                 None
@@ -214,7 +214,7 @@ impl CameraRawDialog {
 
 /// Remember dialog presentation through the existing preferences store, after a gesture ends.
 /// Probe positions are image-specific and never restored onto a different document.
-pub(crate) fn persist(app: &mut crate::PhotocraftApp, ctx: &egui::Context) {
+pub(crate) fn persist(app: &mut crate::SaryApp, ctx: &egui::Context) {
     if ctx.input(|i| i.pointer.any_down()) {
         return;
     }

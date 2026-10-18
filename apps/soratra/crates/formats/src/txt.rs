@@ -4,9 +4,9 @@
 //! Export writes UTF-8 with CRLF line ends; list paragraphs get their label and a tab, table
 //! cells are separated by tabs.
 
-use wordcraft_doc::Document;
+use soratra_doc::Document;
 
-pub use wordcraft_doc::encoding::cp1252;
+pub use soratra_doc::encoding::cp1252;
 
 use crate::model::{FBlock, ListCounter, from_doc};
 
@@ -34,7 +34,7 @@ fn unmarked_utf16(b: &[u8]) -> Option<bool> {
     None
 }
 
-/// Does `b` look like plain text, so a file with an extension WordCraft doesn't know (a
+/// Does `b` look like plain text, so a file with an extension Soratra doesn't know (a
 /// playlist, a log, a config file…) can open as text the way Word's text import opens it?
 ///
 /// Text has a BOM, or reads as UTF-16 by its zero bytes, or has no NUL byte and next to no
@@ -116,7 +116,7 @@ pub fn import(bytes: &[u8]) -> Document {
 }
 
 /// [`import`] onto `page`: plain text gives no page size (#1381).
-pub fn import_on(bytes: &[u8], page: &wordcraft_doc::SectionProps) -> Document {
+pub fn import_on(bytes: &[u8], page: &soratra_doc::SectionProps) -> Document {
     let mut doc = import(bytes);
     doc.last_section = page.clone();
     doc

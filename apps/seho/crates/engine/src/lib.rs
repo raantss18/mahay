@@ -1,4 +1,4 @@
-//! The DeckCraft engine façade.
+//! The Seho engine façade.
 //!
 //! Every user-visible action is a command with a stable id (`slide.new`, `shape.insert`,
 //! `text.insert`, `format.bold`…) and JSON parameters. The egui UI, the CLI, the control channel
@@ -31,16 +31,16 @@ pub mod tools;
 
 use std::sync::Arc;
 
-use deckcraft_model::{Presentation, Shape, ShapeId, Slide, SlideId};
+use seho_model::{Presentation, Shape, ShapeId, Slide, SlideId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub use cmd::{CommandInfo, CommandSpec, command_specs, find_command};
-pub use deckcraft_geom as geom;
-pub use deckcraft_media as media;
-pub use deckcraft_model as model;
-pub use deckcraft_pdf as pdf;
-pub use deckcraft_render as render;
+pub use seho_geom as geom;
+pub use seho_media as media;
+pub use seho_model as model;
+pub use seho_pdf as pdf;
+pub use seho_render as render;
 pub use tools::{Mods, PointerEvent, PointerKind, ToolKind};
 
 #[derive(Debug, thiserror::Error)]
@@ -59,8 +59,8 @@ pub enum EngineError {
     Internal(String, String),
 }
 
-impl From<deckcraft_model::ModelError> for EngineError {
-    fn from(e: deckcraft_model::ModelError) -> Self {
+impl From<seho_model::ModelError> for EngineError {
+    fn from(e: seho_model::ModelError) -> Self {
         EngineError::Other(e.to_string())
     }
 }
@@ -127,7 +127,7 @@ impl Target {
 }
 
 /// The handout or notes master edited in that view.
-pub fn page_master(doc: &Presentation, t: Target) -> Option<&Arc<deckcraft_model::Master>> {
+pub fn page_master(doc: &Presentation, t: Target) -> Option<&Arc<seho_model::Master>> {
     match t {
         Target::Handout => doc.handout_master.as_ref(),
         Target::NotesMaster => doc.notes_master.as_ref(),
@@ -135,7 +135,7 @@ pub fn page_master(doc: &Presentation, t: Target) -> Option<&Arc<deckcraft_model
     }
 }
 
-pub fn page_master_mut(doc: &mut Presentation, t: Target) -> Option<&mut Arc<deckcraft_model::Master>> {
+pub fn page_master_mut(doc: &mut Presentation, t: Target) -> Option<&mut Arc<seho_model::Master>> {
     match t {
         Target::Handout => doc.handout_master.as_mut(),
         Target::NotesMaster => doc.notes_master.as_mut(),
@@ -198,7 +198,7 @@ pub struct Composition {
     /// The part the input method is converting, relative to `start` (drawn with a thicker line).
     pub active: Option<(usize, usize)>,
     /// The formatting the composed text is typed with (as `text.insert` would choose).
-    pub props: Option<deckcraft_model::text::RunProps>,
+    pub props: Option<seho_model::text::RunProps>,
     /// The presentation and selection before the composition began.
     pub before: Arc<Presentation>,
     pub before_selection: Selection,
@@ -276,7 +276,7 @@ impl DocState {
         }
     }
     pub fn shape(&self, id: ShapeId) -> Option<&Shape> {
-        deckcraft_model::find_shape(self.shapes(), id)
+        seho_model::find_shape(self.shapes(), id)
     }
     pub fn selected_shapes(&self) -> Vec<&Shape> {
         self.selection.shapes.iter().filter_map(|id| self.shape(*id)).collect()
@@ -284,7 +284,7 @@ impl DocState {
 }
 
 /// The page being edited: the slide size, or the notes size in Handout Master view.
-pub fn page_size(st: &DocState) -> deckcraft_geom::Size {
+pub fn page_size(st: &DocState) -> seho_geom::Size {
     if st.selection.target.is_page_master() { st.doc.notes_size } else { st.doc.slide_size }
 }
 
@@ -433,12 +433,12 @@ pub struct Clipboard {
     pub shapes: Vec<Shape>,
     pub slides: Vec<Slide>,
     /// Media the copied shapes/slides reference.
-    pub media: Vec<deckcraft_model::MediaItem>,
-    pub text: Option<deckcraft_model::TextBody>,
+    pub media: Vec<seho_model::MediaItem>,
+    pub text: Option<seho_model::TextBody>,
     pub plain: String,
     /// The copied shapes' theme colours (colour map applied) and fonts, for Paste Special ›
     /// Keep Source Formatting.
-    pub source_theme: Option<(deckcraft_color::ColorScheme, deckcraft_model::theme::FontScheme)>,
+    pub source_theme: Option<(seho_color::ColorScheme, seho_model::theme::FontScheme)>,
     /// How many times the shapes were pasted (each paste offsets further).
     pub pastes: u32,
 }
@@ -455,7 +455,7 @@ pub struct Session {
     /// Format Painter: copied shape/text formatting and whether it stays on (double-click).
     pub painter: Option<(cmd::format::Painted, bool)>,
     /// Animation Painter: copied shape animations and whether it stays on (double-click).
-    pub anim_painter: Option<(Vec<deckcraft_model::anim::Animation>, bool)>,
+    pub anim_painter: Option<(Vec<seho_model::anim::Animation>, bool)>,
     /// Set as Default Shape: the look new shapes get.
     pub default_look: Option<cmd::format::Painted>,
     /// Nesting of commands run by commands: only the outermost one is an undo step and a journal
@@ -469,7 +469,7 @@ pub struct Session {
     pub gif_paused: std::collections::HashSet<ShapeId>,
     /// Text keys follow the Mac (Option+arrows move by word, Cmd+arrows to the line or text
     /// ends) instead of Windows and Linux (Ctrl+arrows by word or paragraph). Defaults to the
-    /// platform DeckCraft was built for.
+    /// platform Seho was built for.
     pub mac_keys: bool,
     /// Command panics caught by the guard (the document was rolled back); soak tests require 0.
     pub panics_caught: u64,
@@ -715,14 +715,14 @@ fn clamp_selection(st: &mut DocState) {
 pub const UNDO_BYTE_BUDGET: usize = 256 << 20;
 
 /// A rough size of a shape in memory: the struct, its text and kept XML, its children.
-fn shape_cost(sh: &deckcraft_model::Shape, depth: usize) -> usize {
+fn shape_cost(sh: &seho_model::Shape, depth: usize) -> usize {
     let text: usize =
         sh.text.as_ref().map_or(0, |t| t.paragraphs.iter().map(|p| 96 + p.runs.iter().map(|r| 128 + r.text.len()).sum::<usize>()).sum());
     let kids: usize = if depth < 64 { sh.children().iter().map(|c| shape_cost(c, depth + 1)).sum() } else { 0 };
     768 + text + sh.raw_ext.as_ref().map_or(0, String::len) + kids
 }
 
-fn shapes_cost(shapes: &[deckcraft_model::Shape]) -> usize {
+fn shapes_cost(shapes: &[seho_model::Shape]) -> usize {
     shapes.iter().map(|s| shape_cost(s, 0)).sum()
 }
 
@@ -730,8 +730,8 @@ fn shapes_cost(shapes: &[deckcraft_model::Shape]) -> usize {
 /// that aren't the same allocations (undo steps share everything an edit didn't touch).
 pub fn undo_cost(doc: &Presentation, newer: &Presentation) -> usize {
     use std::collections::HashSet;
-    let slides: HashSet<*const deckcraft_model::Slide> = newer.slides.iter().map(Arc::as_ptr).collect();
-    let masters: HashSet<*const deckcraft_model::Master> = newer.masters.iter().map(Arc::as_ptr).collect();
+    let slides: HashSet<*const seho_model::Slide> = newer.slides.iter().map(Arc::as_ptr).collect();
+    let masters: HashSet<*const seho_model::Master> = newer.masters.iter().map(Arc::as_ptr).collect();
     let media: HashSet<*const Vec<u8>> = newer.media.iter().map(|m| Arc::as_ptr(&m.data)).collect();
     let mut n = 64 * doc.slides.len();
     for s in doc.slides.iter().filter(|s| !slides.contains(&Arc::as_ptr(s))) {

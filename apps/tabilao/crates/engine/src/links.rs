@@ -3,7 +3,7 @@
 //! workbook for the system; `file:`, `smb:`, UNC paths, custom URL handlers, `javascript:` and
 //! the like are refused. Everything without a scheme stays an in-workbook reference.
 
-use gridcraft_core::RangeRef;
+use tabilao_core::RangeRef;
 
 /// What a link target is.
 #[derive(Clone, Debug, PartialEq, Eq)]

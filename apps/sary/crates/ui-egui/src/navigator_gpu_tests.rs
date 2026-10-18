@@ -2,10 +2,10 @@
 //! edit costs it no CPU composite; elsewhere (a flipped view draws on the CPU) it keeps the CPU
 //! thumbnail. Renders the real app offscreen; skips without a GPU adapter.
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use serde_json::json;
 
-type Harness = egui_kittest::Harness<'static, PhotocraftApp>;
+type Harness = egui_kittest::Harness<'static, SaryApp>;
 
 fn harness() -> Option<Harness> {
     let built = std::panic::catch_unwind(|| {
@@ -15,8 +15,8 @@ fn harness() -> Option<Harness> {
             .with_max_steps(64)
             .wgpu_setup(crate::gpu_canvas::wgpu_setup())
             .build_eframe(|cc| {
-                PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-                let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+                SaryApp::setup_context(&cc.egui_ctx, Default::default());
+                let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
                 if let Some(rs) = cc.wgpu_render_state.as_ref() {
                     app.set_wgpu(rs.clone());
                 }
@@ -52,7 +52,7 @@ fn near(a: [u8; 4], b: [u8; 3]) -> bool {
 
 #[test]
 fn navigator_draws_the_gpu_canvas_texture_and_follows_edits() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = harness() else { return };
     h.run_steps(8);
     if !h.state().perf.gpu {

@@ -162,7 +162,7 @@ pub fn organizer(app: &mut WordApp, ui: &mut Ui, f: &mut OrganizerForm) -> bool 
     if let Some(p) = app.dialog_pick.take() {
         f.load(app, &p);
     }
-    let mine = wordcraft_engine::cmd::templates::style_list(&app.session.doc);
+    let mine = soratra_engine::cmd::templates::style_list(&app.session.doc);
     let mine = mine.as_array().cloned().unwrap_or_default();
     let s = |x: &Value, k: &str| x.get(k).and_then(Value::as_str).unwrap_or("").to_string();
     if !mine.iter().any(|x| s(x, "id") == f.left) {
@@ -271,27 +271,27 @@ pub fn organizer(app: &mut WordApp, ui: &mut Ui, f: &mut OrganizerForm) -> bool 
 mod tests {
     use super::*;
     use crate::Services;
-    use wordcraft_engine::Session;
+    use soratra_engine::Session;
 
     /// The ribbon button opens Templates and Add-ins; OK attaches the typed template; the
     /// Organizer copies a style from it into the document and Close goes back.
     #[test]
     fn templates_dialog_attaches_and_organizer_copies() {
-        let dir = std::env::temp_dir().join(format!("wordcraft-ui-templates-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("soratra-ui-templates-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("House.dotx");
-        let mut t = wordcraft_doc::Document::new();
-        t.styles.upsert(wordcraft_doc::styles::Style {
+        let mut t = soratra_doc::Document::new();
+        t.styles.upsert(soratra_doc::styles::Style {
             id: "Memo".into(),
             name: "Memo".into(),
-            kind: wordcraft_doc::styles::StyleKind::Paragraph,
+            kind: soratra_doc::styles::StyleKind::Paragraph,
             ..Default::default()
         });
-        wordcraft_engine::io::save_path(&path, &t).unwrap();
+        soratra_engine::io::save_path(&path, &t).unwrap();
         let p = path.to_string_lossy().to_string();
 
-        let mut a = WordApp::new(Session::new(wordcraft_doc::Document::new()), Services::default());
+        let mut a = WordApp::new(Session::new(soratra_doc::Document::new()), Services::default());
         assert_eq!(a.run("tools.templates", json!({})).unwrap(), json!({"pending": "templates"}));
         let Some(Dialog::Templates { form }) = &mut a.dialog else { panic!("dialog") };
         form.path = p.clone();

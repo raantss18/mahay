@@ -1,7 +1,7 @@
 //! Design › Colors › Customize Colors… opens Create New Theme Colors and saves in one step.
 
-use deckcraft_color::SchemeSlot;
-use deckcraft_engine::Session;
+use seho_color::SchemeSlot;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 
@@ -21,7 +21,7 @@ fn harness() -> Harness<'static, SlideApp> {
     h
 }
 
-fn scheme(h: &Harness<'_, SlideApp>) -> deckcraft_color::ColorScheme {
+fn scheme(h: &Harness<'_, SlideApp>) -> seho_color::ColorScheme {
     h.state().session.active().unwrap().doc.masters[0].theme.colors.clone()
 }
 
@@ -130,7 +130,7 @@ fn typing_a_hex_replaces_accent_1() {
     h.get_by_label("Save").click();
     h.run_steps(2);
     assert!(h.state().dialog.is_none(), "status: {:?}", h.state().status);
-    assert_eq!(scheme(&h).name, "DeckCraft");
+    assert_eq!(scheme(&h).name, "Seho");
     assert_eq!(scheme(&h).get(SchemeSlot::Accent1).hex(), "11AA22");
     assert_eq!(undo_len(&h), n + 1);
 }

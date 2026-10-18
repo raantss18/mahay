@@ -1,7 +1,7 @@
 //! Task panes on the right: Format Shape, Format Background, Animation, Selection, Comments and
 //! Design Ideas.
 
-use deckcraft_model::{AnimClass, AnimStart, Fill, ShapeKind};
+use seho_model::{AnimClass, AnimStart, Fill, ShapeKind};
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
@@ -65,7 +65,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
 /// SmartArt Text Pane: one line per node, indented by level. Enter adds a line after, Tab and
 /// Shift+Tab demote and promote, Backspace in an empty line removes it.
 fn smartart(app: &mut SlideApp, ui: &mut Ui) {
-    let Some((gid, d)) = app.session.active().and_then(deckcraft_engine::cmd::smartart::selected) else {
+    let Some((gid, d)) = app.session.active().and_then(seho_engine::cmd::smartart::selected) else {
         ui.label("Select a SmartArt graphic to edit its text.");
         return;
     };
@@ -178,8 +178,8 @@ fn fill_transparency_to_apply(shown_percent: f32, seed_percent: f32) -> Option<f
     Some(f64::from(shown) / 100.0)
 }
 
-fn scheme(app: &SlideApp) -> deckcraft_color::ColorScheme {
-    app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.scheme())).unwrap_or_else(|| deckcraft_model::Theme::default().colors)
+fn scheme(app: &SlideApp) -> seho_color::ColorScheme {
+    app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.scheme())).unwrap_or_else(|| seho_model::Theme::default().colors)
 }
 
 fn color_button(
@@ -187,7 +187,7 @@ fn color_button(
     ui: &mut Ui,
     label: &str,
     none_label: Option<&str>,
-    on_pick: impl Fn(Option<deckcraft_model::ColorRef>) -> (String, Value),
+    on_pick: impl Fn(Option<seho_model::ColorRef>) -> (String, Value),
 ) {
     let sc = scheme(app);
     ui.horizontal(|ui| {
@@ -211,7 +211,7 @@ fn format_shape(app: &mut SlideApp, ui: &mut Ui) {
         ui.label(egui::RichText::new("Select a shape to format it.").color(t.text_dim));
         return;
     };
-    let x = deckcraft_engine::cmd::xfrm_of(&st.doc, &st.selection, &sh);
+    let x = seho_engine::cmd::xfrm_of(&st.doc, &st.selection, &sh);
     let uid = st.uid;
     // Tabs as icons.
     ui.horizontal(|ui| {
@@ -506,7 +506,7 @@ fn format_shape(app: &mut SlideApp, ui: &mut Ui) {
                 }
                 let mut rot = g.rotate_with_shape;
                 if ui.checkbox(&mut rot, "Rotate with shape").changed() {
-                    let ng = deckcraft_model::style::Gradient { rotate_with_shape: rot, ..g.clone() };
+                    let ng = seho_model::style::Gradient { rotate_with_shape: rot, ..g.clone() };
                     run(app, "shape.fill", json!({"gradient": crate::fillui::gradient_json(&ng)}));
                 }
             }
@@ -564,8 +564,8 @@ fn line_choice(app: &mut SlideApp, ui: &mut Ui, label: &str, key: &str, current:
 
 /// The rest of PowerPoint's Line page: compound type, cap and join types, and the begin and end
 /// arrows with their sizes.
-fn line_details(app: &mut SlideApp, ui: &mut Ui, sh: &deckcraft_model::Shape) {
-    use deckcraft_model::style::{Compound, LineCap, LineJoin};
+fn line_details(app: &mut SlideApp, ui: &mut Ui, sh: &seho_model::Shape) {
+    use seho_model::style::{Compound, LineCap, LineJoin};
     let l = sh.line.clone().unwrap_or_default();
     let compound = match l.compound.unwrap_or_default() {
         Compound::Single => "single",
@@ -645,7 +645,7 @@ fn pick_fill_picture(app: &mut SlideApp) {
         && let Some(path) = pick("picture")
         && let Some(Ok(bytes)) = app.services.read.as_ref().map(|r| r(&path))
     {
-        run(app, "shape.fill", json!({"picture": deckcraft_engine::cmd::base64_encode(&bytes)}));
+        run(app, "shape.fill", json!({"picture": seho_engine::cmd::base64_encode(&bytes)}));
     }
 }
 
@@ -663,8 +663,8 @@ fn pic_drag(app: &mut SlideApp, ui: &mut Ui, label: &str, value: f64, suffix: &s
 }
 
 /// Format Shape ▸ Fill ▸ Picture or texture fill: source, tiling, offsets, transparency.
-fn picture_fill_options(app: &mut SlideApp, ui: &mut Ui, id: u32, pf: &deckcraft_model::style::PictureFill) {
-    use deckcraft_model::style::PictureMode;
+fn picture_fill_options(app: &mut SlideApp, ui: &mut Ui, id: u32, pf: &seho_model::style::PictureFill) {
+    use seho_model::style::PictureMode;
     ui.horizontal(|ui| {
         ui.label("Picture source");
         if ui.button("Insert…").clicked() {
@@ -772,7 +772,7 @@ fn three_d_drag(app: &mut SlideApp, ui: &mut Ui, label: &str, value: f64, suffix
 
 /// Format Shape ▸ Effects ▸ 3-D Format and 3-D Rotation.
 fn three_d_options(app: &mut SlideApp, ui: &mut Ui, id: u32, raw: Option<&str>) {
-    use deckcraft_engine::cmd::three_d::{BEVELS, CAMERAS, LIGHTS, MATERIALS, Shape3d};
+    use seho_engine::cmd::three_d::{BEVELS, CAMERAS, LIGHTS, MATERIALS, Shape3d};
     let s3 = raw.map(Shape3d::parse).unwrap_or_default();
     let with_none: Vec<&str> = std::iter::once("none").chain(BEVELS.iter().copied()).collect();
     ui.add_space(6.0);
@@ -805,7 +805,7 @@ fn background(app: &mut SlideApp, ui: &mut Ui) {
     let sc = scheme(app);
     let bg = app.session.active().and_then(|d| d.current_slide().and_then(|s| s.background.clone()));
     let fill = match &bg {
-        Some(deckcraft_model::Background::Fill { fill }) => Some(fill.clone()),
+        Some(seho_model::Background::Fill { fill }) => Some(fill.clone()),
         _ => None,
     };
     let kind = match &fill {
@@ -829,7 +829,7 @@ fn background(app: &mut SlideApp, ui: &mut Ui) {
             match k {
                 "solid" => run(app, "design.background", json!({"color": "bg1"})),
                 "gradient" => {
-                    let mut g = crate::fillui::default_gradient(deckcraft_model::ColorRef::scheme(deckcraft_color::SchemeSlot::Bg2), 90.0);
+                    let mut g = crate::fillui::default_gradient(seho_model::ColorRef::scheme(seho_color::SchemeSlot::Bg2), 90.0);
                     g.rotate_with_shape = false;
                     run(app, "design.background", json!({"gradient": crate::fillui::gradient_json(&g)}));
                 }
@@ -838,7 +838,7 @@ fn background(app: &mut SlideApp, ui: &mut Ui) {
                         && let Some(path) = pick("picture")
                         && let Some(Ok(bytes)) = app.services.read.as_ref().map(|r| r(&path))
                     {
-                        let _ = app.run("design.background", json!({"picture": deckcraft_engine::cmd::base64_encode(&bytes)}));
+                        let _ = app.run("design.background", json!({"picture": seho_engine::cmd::base64_encode(&bytes)}));
                     }
                 }
                 "pattern" => run(app, "design.background", json!({"pattern": {"preset": "pct20", "fg": "accent1", "bg": "bg1"}})),
@@ -898,7 +898,7 @@ fn background(app: &mut SlideApp, ui: &mut Ui) {
                 && let Some(path) = pick("picture")
                 && let Some(Ok(bytes)) = app.services.read.as_ref().map(|r| r(&path))
             {
-                let _ = app.run("design.background", json!({"picture": deckcraft_engine::cmd::base64_encode(&bytes)}));
+                let _ = app.run("design.background", json!({"picture": seho_engine::cmd::base64_encode(&bytes)}));
             }
             picture_background_options(app, ui, pf);
         }
@@ -927,8 +927,8 @@ fn background(app: &mut SlideApp, ui: &mut Ui) {
     });
 }
 
-fn picture_background_options(app: &mut SlideApp, ui: &mut Ui, pf: &deckcraft_model::style::PictureFill) {
-    use deckcraft_model::style::PictureMode;
+fn picture_background_options(app: &mut SlideApp, ui: &mut Ui, pf: &seho_model::style::PictureFill) {
+    use seho_model::style::PictureMode;
     let alpha = pf.alpha.unwrap_or(1.0);
     let mut tr = ((1.0 - alpha) * 100.0) as f32;
     if ui.add(egui::Slider::new(&mut tr, 0.0..=100.0).text("Transparency").suffix("%")).drag_stopped() {
@@ -1013,7 +1013,7 @@ fn animation(app: &mut SlideApp, ui: &mut Ui) {
     let Some(slide) = st.current_slide() else { return };
     let anims = slide.animations.clone();
     let size = (st.doc.slide_size.width, st.doc.slide_size.height);
-    let effects = deckcraft_anim::Timeline::new(slide, size.0, size.1).effects();
+    let effects = seho_anim::Timeline::new(slide, size.0, size.1).effects();
     let names: Vec<(u32, String)> = st.shapes().iter().map(|s| (s.id.0, s.name.clone())).collect();
     let selected: Vec<u32> = st.selection.shapes.iter().map(|i| i.0).collect();
     ui.horizontal(|ui| {
@@ -1225,7 +1225,7 @@ fn comments(app: &mut SlideApp, ui: &mut Ui) {
         app.dialog = Some(crate::dialogs::Dialog::new("comment"));
     }
     ui.separator();
-    let threads: Vec<(usize, Vec<deckcraft_model::Comment>)> = app
+    let threads: Vec<(usize, Vec<seho_model::Comment>)> = app
         .session
         .active()
         .map(|st| st.doc.slides.iter().enumerate().filter(|(_, sl)| !sl.comments.is_empty()).map(|(i, sl)| (i, sl.comments.clone())).collect())
@@ -1250,7 +1250,7 @@ fn focus_comment(app: &mut SlideApp, slide: usize, index: usize) {
     app.ui.comment_focus = Some((slide, index));
 }
 
-fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c: &deckcraft_model::Comment, focused: bool) {
+fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c: &seho_model::Comment, focused: bool) {
     let t = Tokens::get(ui.ctx());
     let stroke = if focused { Stroke::new(2.0, t.accent) } else { Stroke::NONE };
     let shown = egui::Frame::NONE
@@ -1340,29 +1340,29 @@ fn designer(app: &mut SlideApp, ui: &mut Ui) {
     let w = ui.available_width() - 8.0;
     let ppp = ui.ctx().pixels_per_point();
     let px = (w * ppp).round().max(16.0) as u32;
-    let ideas = deckcraft_engine::cmd::ideas::ideas_for(&doc, idx);
-    let themes = deckcraft_model::theme::builtin_themes();
+    let ideas = seho_engine::cmd::ideas::ideas_for(&doc, idx);
+    let themes = seho_model::theme::builtin_themes();
     let cache_id = egui::Id::new("design-idea-thumbs");
     let key = (key_doc.0, key_doc.1, idx, px);
     let mut cache: IdeaThumbs = ui.ctx().data_mut(|d| d.get_temp(cache_id)).unwrap_or_default();
     if cache.key != key || cache.tex.is_empty() {
         cache = IdeaThumbs { key, tex: vec![] };
-        let mut render = |name: String, d: &deckcraft_model::Presentation| {
+        let mut render = |name: String, d: &seho_model::Presentation| {
             let (px, h) = crate::textures::fit_size(
                 (px, (px as f64 * d.slide_size.height / d.slide_size.width.max(1.0)).clamp(1.0, 1e9) as u32),
                 crate::textures::max_side(ui.ctx()),
             );
-            let img = deckcraft_render::render_slide(
+            let img = seho_render::render_slide(
                 d,
                 idx,
-                &deckcraft_render::RenderOpts { scale: px as f64 / d.slide_size.width.max(1.0), size: Some((px, h)), ..Default::default() },
+                &seho_render::RenderOpts { scale: px as f64 / d.slide_size.width.max(1.0), size: Some((px, h)), ..Default::default() },
             );
             let tex = crate::textures::upload_editor(ui.ctx(), format!("idea-{name}"), crate::textures::to_color_image(&img, false));
             cache.tex.push((name, tex, px, h));
         };
         for (id, _) in &ideas {
             let mut d = (*doc).clone();
-            if deckcraft_engine::cmd::ideas::apply_idea(&mut d, &sel, idx, id).is_ok() {
+            if seho_engine::cmd::ideas::apply_idea(&mut d, &sel, idx, id).is_ok() {
                 render(format!("layout:{id}"), &d);
             }
         }
@@ -1411,7 +1411,7 @@ fn designer(app: &mut SlideApp, ui: &mut Ui) {
 }
 
 /// The transparency (0–1) of a shape's first text run as stored on it.
-pub(crate) fn text_transparency_of(sh: &deckcraft_model::Shape) -> f64 {
+pub(crate) fn text_transparency_of(sh: &seho_model::Shape) -> f64 {
     let run = sh.text.as_ref().and_then(|t| t.paragraphs.iter().flat_map(|p| p.runs.iter()).next());
     match run.and_then(|r| r.props.fill.as_ref()) {
         Some(Fill::Solid { color }) => 1.0 - color.alpha(),
@@ -1421,7 +1421,7 @@ pub(crate) fn text_transparency_of(sh: &deckcraft_model::Shape) -> f64 {
 }
 
 /// Text Fill › Transparency, as in PowerPoint's Format Shape › Text Options (#32).
-pub(crate) fn text_transparency_slider(app: &mut SlideApp, ui: &mut Ui, sh: &deckcraft_model::Shape) {
+pub(crate) fn text_transparency_slider(app: &mut SlideApp, ui: &mut Ui, sh: &seho_model::Shape) {
     ui.horizontal(|ui| {
         ui.label("Transparency");
         let id = ui.id().with(("text-transparency", sh.id));
@@ -1449,9 +1449,9 @@ mod background_tests;
 mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-    use deckcraft_color::{ColorTransform, SchemeSlot};
-    use deckcraft_engine::Session;
-    use deckcraft_model::{ColorRef, Fill, ShapeId};
+    use seho_color::{ColorTransform, SchemeSlot};
+    use seho_engine::Session;
+    use seho_model::{ColorRef, Fill, ShapeId};
     use egui_kittest::Harness;
     use egui_kittest::kittest::{NodeT, Queryable};
     use serde_json::json;
@@ -1544,7 +1544,7 @@ fn thesaurus(app: &mut SlideApp, ui: &mut Ui) {
         app.thesaurus_query = q.clone();
     }
     ui.add_space(6.0);
-    let senses = deckcraft_engine::thesaurus::lookup(&q);
+    let senses = seho_engine::thesaurus::lookup(&q);
     if q.trim().is_empty() {
         ui.label(egui::RichText::new("Select a word on the slide, or type one above.").color(t.text_dim));
         return;

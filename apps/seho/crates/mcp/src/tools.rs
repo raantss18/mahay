@@ -60,7 +60,7 @@ fn tool(name: &str, title: &str, desc: &str, schema: Value, read_only: bool) -> 
     json!({"name": name, "title": title, "description": desc, "inputSchema": schema, "annotations": {"title": title, "readOnlyHint": read_only, "openWorldHint": false}})
 }
 
-const APP_ONLY: &str = " Desktop app only (`deckcraft-cli mcp --connect PORT`).";
+const APP_ONLY: &str = " Desktop app only (`seho-cli mcp --connect PORT`).";
 
 pub fn tool_definitions() -> Vec<Value> {
     vec![
@@ -94,32 +94,32 @@ pub fn tool_definitions() -> Vec<Value> {
         tool(
             "new_presentation",
             "New presentation",
-            "Start a new presentation (one title slide). Optional theme: DeckCraft, Harbor, Ember, Meadow, Nocturne, Paper, Coral Reef, Slate.",
+            "Start a new presentation (one title slide). Optional theme: Seho, Harbor, Ember, Meadow, Nocturne, Paper, Coral Reef, Slate.",
             obj(json!({"theme": string("Theme name"), "blank": boolean("No first slide")}), &[]),
             false,
         ),
         tool(
             "open_presentation",
             "Open presentation",
-            "Open a .deckcraft or .pptx file by path.",
+            "Open a .seho or .pptx file by path.",
             obj(json!({"path": string("File path")}), &["path"]),
             false,
         ),
         tool(
             "save_presentation",
             "Save presentation",
-            "Save the active presentation (.deckcraft or .pptx by extension).",
+            "Save the active presentation (.seho or .pptx by extension).",
             obj(json!({"path": string("File path (optional when it was opened from a file)")}), &[]),
             false,
         ),
         tool(
             "export",
             "Export",
-            "Export slides: png/jpeg (one slide, or all with all:true), pptx, deckcraft, outline text, pdf (slides, notes pages or handouts), or an animated gif of the deck (one frame per slide).",
+            "Export slides: png/jpeg (one slide, or all with all:true), pptx, seho, outline text, pdf (slides, notes pages or handouts), or an animated gif of the deck (one frame per slide).",
             obj(
                 json!({
                     "path": string("Output path"),
-                    "format": {"type": "string", "enum": ["png", "jpeg", "pptx", "deckcraft", "outline", "pdf", "gif"], "description": "Output format (default: from the path's extension)"},
+                    "format": {"type": "string", "enum": ["png", "jpeg", "pptx", "seho", "outline", "pdf", "gif"], "description": "Output format (default: from the path's extension)"},
                     "slide": int("Slide index for images"),
                     "all": boolean("All slides (images)"),
                     "scale": num("Pixels per point for images (default 2)"),
@@ -279,7 +279,7 @@ pub fn tool_definitions() -> Vec<Value> {
             obj(json!({"text": string("Text")}), &["text"]),
             false,
         ),
-        tool("screenshot", "Screenshot", &format!("Screenshot of the whole DeckCraft window (UI included).{APP_ONLY}"), obj(json!({}), &[]), true),
+        tool("screenshot", "Screenshot", &format!("Screenshot of the whole Seho window (UI included).{APP_ONLY}"), obj(json!({}), &[]), true),
         tool(
             "call_app",
             "Call app method",

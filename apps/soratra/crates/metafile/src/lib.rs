@@ -1,4 +1,4 @@
-//! WordCraft metafiles: reads Windows Metafiles (WMF) and Enhanced Metafiles (EMF) into a neutral
+//! Soratra metafiles: reads Windows Metafiles (WMF) and Enhanced Metafiles (EMF) into a neutral
 //! vector model of filled and stroked paths and RGBA bitmaps, in a picture frame with y down.
 //!
 //! The reader is pure Rust over byte slices (no file system), so it builds for wasm. Every read is

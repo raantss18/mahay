@@ -1,4 +1,4 @@
-//! Shared data model for AI in the Craft apps: connections, models, capabilities, roles,
+//! Shared data model for AI in the Mahay apps: connections, models, capabilities, roles,
 //! requests, jobs, consent and the launcher's shared store.
 //!
 //! This is the **interim contract** (task x1). It is small on purpose, has no I/O and no async

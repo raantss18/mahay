@@ -16,9 +16,9 @@
 
 use std::sync::Arc;
 
-use photocraft_color::PixelFormat;
-use photocraft_doc::{Document, LayerContent, LayerId};
-use photocraft_raster::Surface;
+use sary_color::PixelFormat;
+use sary_doc::{Document, LayerContent, LayerId};
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -108,7 +108,7 @@ impl CutParts {
             l.surface_mut().ok_or_else(|| EngineError::Other("the layer has no pixels to move".into()))?
         };
         let mut out = self.rest.clone();
-        let piece = photocraft_algo::resample::translate_surface(&self.piece, dx, dy);
+        let piece = sary_algo::resample::translate_surface(&self.piece, dx, dy);
         if self.mask {
             crate::fill_cmds::composite_over(&mut out, &piece, piece.content_bounds(), None)?;
         } else {
@@ -164,7 +164,7 @@ fn can_float(s: &Session) -> std::result::Result<(), String> {
 
 /// Do `l`'s locks (its own, or a locked group's: `effective_locks`) stop its selected pixels
 /// floating? The Background is position-locked, but its selected pixels move (Photoshop).
-pub fn locked_for_float(doc: &Document, l: &photocraft_doc::Layer) -> bool {
+pub fn locked_for_float(doc: &Document, l: &sary_doc::Layer) -> bool {
     let locks = doc.effective_locks(l.id);
     locks.all || (locks.position && !doc.is_background(l.id))
 }
@@ -198,7 +198,7 @@ pub fn drop_floating(s: &mut Session) -> Result<Value> {
     }
     s.edit("Move", |doc, _| {
         f.parts.place(doc, dx, dy)?;
-        doc.selection = doc.selection.as_ref().map(|sel| photocraft_algo::resample::translate_surface(sel, dx, dy));
+        doc.selection = doc.selection.as_ref().map(|sel| sary_algo::resample::translate_surface(sel, dx, dy));
         Ok(())
     })?;
     Ok(json!({"dropped": true, "offset": [dx, dy]}))

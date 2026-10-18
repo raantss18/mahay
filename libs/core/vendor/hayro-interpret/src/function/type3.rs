@@ -23,7 +23,7 @@ impl Type3 {
     ) -> Option<Self> {
         let clamper = Clamper::new(dict)?;
 
-        // PdfCraft patch: all descendants share the caller's depth, work and cycle guards.
+        // Taratasy patch: all descendants share the caller's depth, work and cycle guards.
         // The resolved iterator also ends on an unresolved/cyclic reference. Require one
         // resolved child per raw slot so that failure cannot silently shorten the function list.
         let array = dict.get::<Array<'_>>(FUNCTIONS)?;
@@ -84,7 +84,7 @@ impl Type3 {
         Some(evaluated)
     }
 
-    // PdfCraft patch (backport of hayro 0.8).
+    // Taratasy patch (backport of hayro 0.8).
     pub(crate) fn stitching_bounds(&self) -> StitchingBounds {
         let mut stitching_bounds = StitchingBounds::new();
         if self.bounds.len() > 2 {

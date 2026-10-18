@@ -6,7 +6,7 @@
 use egui::{Color32, Stroke, vec2};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::Tool;
 use crate::theme::Tokens;
@@ -25,7 +25,7 @@ pub(crate) fn alt_flipped(tool: Tool, alt: bool) -> Tool {
 /// Clone Stamp / Healing Brush params for the options bar and the clone source (without
 /// `points` and `target`): shared by the live preview and the commit. `None` when no source
 /// point is set yet.
-pub(crate) fn clone_params(app: &PhotocraftApp) -> Option<Value> {
+pub(crate) fn clone_params(app: &SaryApp) -> Option<Value> {
     let o = &app.ui.tool_options;
     let mut p = json!({"aligned": o.clone_aligned, "sampleLayer": o.clone_sample});
     if app.ui.tool == Tool::CloneStamp {
@@ -47,7 +47,7 @@ pub(crate) fn clone_params(app: &PhotocraftApp) -> Option<Value> {
 
 /// The command and options-bar params (without `points` and `target`) of a sequential-dab tool:
 /// Blur, Sharpen, Smudge, Dodge, Burn, Sponge. Shared by the live preview and the commit.
-pub(crate) fn dab_params(app: &PhotocraftApp, tool: Tool) -> Option<(&'static str, Value)> {
+pub(crate) fn dab_params(app: &SaryApp, tool: Tool) -> Option<(&'static str, Value)> {
     let o = &app.ui.tool_options;
     Some(match tool {
         Tool::Blur => ("paint.blur", json!({"strength": o.strength, "sampleAllLayers": o.sample_all_layers})),
@@ -65,7 +65,7 @@ pub(crate) fn dab_params(app: &PhotocraftApp, tool: Tool) -> Option<(&'static st
 /// `paint.colorReplacement` params from the options bar (without `points`): shared by the live
 /// preview and the commit. The replacement `color` is the foreground, recorded so a replayed
 /// stroke paints the same colour; Background Swatch sampling matches the background colour.
-pub(crate) fn color_replacement_params(app: &PhotocraftApp) -> Value {
+pub(crate) fn color_replacement_params(app: &SaryApp) -> Value {
     let o = &app.ui.tool_options;
     json!({
         "color": app.session.tools.foreground,
@@ -80,7 +80,7 @@ pub(crate) fn color_replacement_params(app: &PhotocraftApp) -> Value {
 }
 
 /// Finish a stroke with a retouching tool. Returns false if `tool` isn't one.
-pub fn finish_stroke(app: &mut PhotocraftApp, tool: Tool, points: &[[f64; 3]], mods: egui::Modifiers) -> bool {
+pub fn finish_stroke(app: &mut SaryApp, tool: Tool, points: &[[f64; 3]], mods: egui::Modifiers) -> bool {
     let o = app.ui.tool_options.clone();
     let pts = json!(points);
     let (cmd, mut p): (&str, Value) = match tool {
@@ -106,7 +106,7 @@ pub fn finish_stroke(app: &mut PhotocraftApp, tool: Tool, points: &[[f64; 3]], m
             {
                 p["phase"] = json!(ph);
             }
-            if let Some(id) = photocraft_engine::presets::patterns::current(&app.session).or(app.session.patterns.items.first()).map(|x| x.id.clone()) {
+            if let Some(id) = sary_engine::presets::patterns::current(&app.session).or(app.session.patterns.items.first()).map(|x| x.id.clone()) {
                 p["pattern"] = json!(id);
             }
             ("paint.patternStamp", p)
@@ -168,7 +168,7 @@ fn remove_params(o: &crate::state::ToolOptions) -> Value {
 
 /// Remove after each stroke off: a finished stroke waits with the others, tinted on the canvas,
 /// until ↩ or the options bar's ✓ applies them all as one removal (Esc or ⊘ drops them).
-pub fn remove_pending_add(app: &mut PhotocraftApp, points: &[[f64; 3]]) {
+pub fn remove_pending_add(app: &mut SaryApp, points: &[[f64; 3]]) {
     let Some(st) = app.session.active() else { return };
     let (doc, size) = (st.doc.id, [st.doc.size.width, st.doc.size.height]);
     if app.remove_pending_doc != Some(doc) {
@@ -184,7 +184,7 @@ pub fn remove_pending_add(app: &mut PhotocraftApp, points: &[[f64; 3]]) {
 }
 
 /// Apply the waiting strokes as one removal (one job, one undo step). False when none wait.
-pub fn remove_pending_commit(app: &mut PhotocraftApp) -> bool {
+pub fn remove_pending_commit(app: &mut SaryApp) -> bool {
     if app.remove_pending.is_empty() {
         return false;
     }
@@ -203,7 +203,7 @@ pub fn remove_pending_commit(app: &mut PhotocraftApp) -> bool {
 }
 
 /// Drop the waiting strokes. False when none wait.
-pub fn remove_pending_cancel(app: &mut PhotocraftApp) -> bool {
+pub fn remove_pending_cancel(app: &mut SaryApp) -> bool {
     if app.remove_pending.is_empty() {
         return false;
     }
@@ -217,7 +217,7 @@ pub fn remove_pending_cancel(app: &mut PhotocraftApp) -> bool {
 
 /// Whether Remove strokes are still waiting: they are dropped when the tool or the document
 /// changed under them (checked every frame).
-pub fn remove_pending_live(app: &mut PhotocraftApp) -> bool {
+pub fn remove_pending_live(app: &mut SaryApp) -> bool {
     if app.remove_pending.is_empty() {
         return false;
     }
@@ -230,7 +230,7 @@ pub fn remove_pending_live(app: &mut PhotocraftApp) -> bool {
 }
 
 /// The tint of the waiting Remove strokes, drawn every frame.
-pub fn draw_remove_pending(app: &mut PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_remove_pending(app: &mut SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     if !remove_pending_live(app) {
         return;
     }
@@ -244,7 +244,7 @@ pub fn draw_remove_pending(app: &mut PhotocraftApp, painter: &egui::Painter, xf:
 
 /// Patch Tool and Content-Aware Move Tool: a drag that starts inside the selection (without ⇧ or
 /// ⌥) drags the selection; any other drag draws a lasso selection.
-pub fn patch_drags_selection(app: &PhotocraftApp, at: [f64; 2], mods: egui::Modifiers) -> bool {
+pub fn patch_drags_selection(app: &SaryApp, at: [f64; 2], mods: egui::Modifiers) -> bool {
     if mods.shift || mods.alt {
         return false;
     }
@@ -254,7 +254,7 @@ pub fn patch_drags_selection(app: &PhotocraftApp, at: [f64; 2], mods: egui::Modi
 
 /// Whole-pixel offset for a drag from `start` to `end`, limited so the dragged outline stays on the
 /// canvas (the engine rejects a patch or move that leaves it).
-pub fn patch_offset(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2]) -> [i32; 2] {
+pub fn patch_offset(app: &mut SaryApp, start: [f64; 2], end: [f64; 2]) -> [i32; 2] {
     let (dx, dy) = ((end[0] - start[0]).round(), (end[1] - start[1]).round());
     let (dx, dy) = if dx.is_finite() && dy.is_finite() { (dx.clamp(-1e7, 1e7) as i32, dy.clamp(-1e7, 1e7) as i32) } else { (0, 0) };
     let Some((canvas, sel)) = app.session.active().and_then(|st| Some((st.doc.bounds(), st.doc.selection.clone()?))) else { return [dx, dy] };
@@ -270,13 +270,13 @@ pub fn patch_offset(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2]) -> 
 /// Status-bar hint for the Patch and Content-Aware Move tools: the selection is the patch and it
 /// has to be dragged somewhere. Without it a lasso, or a click inside the selection, changes
 /// nothing on the canvas and the tool looks dead (#1715).
-pub fn patch_hint(app: &mut PhotocraftApp) {
+pub fn patch_hint(app: &mut SaryApp) {
     app.ui.status = tl!("Now drag the selection onto another area").into();
     app.ui.status_error = false;
 }
 
 /// Patch Tool: the patch was dragged from `start` to `end`.
-pub fn finish_patch(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2]) {
+pub fn finish_patch(app: &mut SaryApp, start: [f64; 2], end: [f64; 2]) {
     let off = patch_offset(app, start, end);
     if off == [0, 0] {
         patch_hint(app);
@@ -313,7 +313,7 @@ pub fn finish_patch(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2]) {
 /// Content-Aware Move Tool: the selection was dragged from `start` to `end`. The engine runs it as
 /// a background job (progress dialog, Esc cancels); the selection follows the content. With
 /// Transform On Drop a transform box comes up on the dropped patch first ([`crate::cam_transform`]).
-pub fn finish_content_aware_move(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2]) {
+pub fn finish_content_aware_move(app: &mut SaryApp, start: [f64; 2], end: [f64; 2]) {
     let off = patch_offset(app, start, end);
     if off == [0, 0] {
         patch_hint(app);
@@ -330,7 +330,7 @@ pub fn finish_content_aware_move(app: &mut PhotocraftApp, start: [f64; 2], end: 
 }
 
 /// `paint.contentAwareMove`'s params for a drag by `offset`, from the options bar.
-pub fn content_aware_move_params(app: &PhotocraftApp, offset: [i64; 2]) -> Value {
+pub fn content_aware_move_params(app: &SaryApp, offset: [i64; 2]) -> Value {
     let o = &app.ui.tool_options;
     json!({
         "offset": offset,
@@ -348,7 +348,7 @@ pub fn content_aware_move_params(app: &PhotocraftApp, offset: [i64; 2]) -> Value
 /// falls back to a Quick Selection dab at
 /// the brush size instead of looking dead (⌥ subtracts, otherwise it adds). Larger drags
 /// run the rectangle GrabCut (⌥ subtracts, ⇧ adds, otherwise replaces).
-pub fn finish_object_selection(app: &mut PhotocraftApp, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) {
+pub fn finish_object_selection(app: &mut SaryApp, start: [f64; 2], end: [f64; 2], mods: egui::Modifiers) {
     let (x, y) = (start[0].min(end[0]), start[1].min(end[1]));
     let (w, h) = ((end[0] - start[0]).abs(), (end[1] - start[1]).abs());
     let sample_all = app.ui.tool_options.sample_all_layers;
@@ -384,10 +384,10 @@ pub fn finish_object_selection(app: &mut PhotocraftApp, start: [f64; 2], end: [f
 }
 
 /// Reports a smart-selection command result in the status bar. Engine errors are already
-/// reported by [`PhotocraftApp::run`], but an empty result (`changed: false`) is a silent
+/// reported by [`SaryApp::run`], but an empty result (`changed: false`) is a silent
 /// success that looks like a dead button (Select Subject finding nothing on a busy photo,
 /// Object Selection missing its rectangle). `empty_msg` says what to try next.
-pub fn report_smart_result(app: &mut PhotocraftApp, res: Result<Value, String>, empty_msg: &str) {
+pub fn report_smart_result(app: &mut SaryApp, res: Result<Value, String>, empty_msg: &str) {
     if matches!(res, Ok(ref v) if v.get("changed").and_then(Value::as_bool) == Some(false)) {
         app.ui.status = empty_msg.into();
         app.ui.status_error = false;
@@ -395,7 +395,7 @@ pub fn report_smart_result(app: &mut PhotocraftApp, res: Result<Value, String>, 
 }
 
 /// ⌥-click with Clone Stamp / Healing Brush sets the source.
-pub fn set_source(app: &mut PhotocraftApp, x: f64, y: f64) {
+pub fn set_source(app: &mut SaryApp, x: f64, y: f64) {
     app.ui.clone_source = Some([x.round(), y.round()]);
     app.ui.clone_offset = None;
     let _ = app.run("cloneSource.set", json!({"source": [x.round(), y.round()]}));
@@ -406,7 +406,7 @@ pub fn set_source(app: &mut PhotocraftApp, x: f64, y: f64) {
 
 /// Where the clone source is sampled from, shown only while a Clone Stamp or Healing Brush stroke
 /// is painted, as in Photoshop: setting the source (⌥-click) leaves nothing on the canvas (#668).
-pub fn source_marker_point(app: &PhotocraftApp) -> Option<[f64; 2]> {
+pub fn source_marker_point(app: &SaryApp) -> Option<[f64; 2]> {
     if !matches!(app.active_tool(), Tool::CloneStamp | Tool::Healing) {
         return None;
     }
@@ -419,7 +419,7 @@ pub fn source_marker_point(app: &PhotocraftApp) -> Option<[f64; 2]> {
 }
 
 /// Crosshair at [`source_marker_point`].
-pub fn draw_source_marker(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_source_marker(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let Some(s) = source_marker_point(app) else { return };
     let c = xf.to_screen(s[0] as f32, s[1] as f32);
     for (w, col) in [(3.0, Color32::from_black_alpha(160)), (1.0, Color32::WHITE)] {
@@ -439,7 +439,7 @@ fn pct(ui: &mut egui::Ui, label: &str, v: &mut f32) {
 }
 
 /// Options bar for the retouching and smart-selection tools. Returns false for other tools.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bool {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui, tool: Tool) -> bool {
     if !tool.is_brushlike() && !matches!(tool, Tool::QuickSelection | Tool::ObjectSelection | Tool::Patch | Tool::ContentAwareMove | Tool::RedEye)
         || matches!(tool, Tool::Brush | Tool::Pencil | Tool::MixerBrush | Tool::Eraser)
     {
@@ -638,9 +638,9 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bo
     true
 }
 
-fn pattern_stamp_options(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+fn pattern_stamp_options(app: &mut SaryApp, ui: &mut egui::Ui) {
     let opts: Vec<(String, String)> = app.session.patterns.items.iter().map(|p| (p.id.clone(), p.display_name().to_string())).collect();
-    let mut pat = photocraft_engine::presets::patterns::current(&app.session).or(app.session.patterns.items.first()).map(|p| p.id.clone()).unwrap_or_default();
+    let mut pat = sary_engine::presets::patterns::current(&app.session).or(app.session.patterns.items.first()).map(|p| p.id.clone()).unwrap_or_default();
     let o = &mut app.ui.tool_options;
     crate::widgets::checkbox(ui, &mut o.pattern_stamp_aligned, tl!("Aligned"));
     crate::widgets::checkbox(ui, &mut o.pattern_stamp_impressionist, tl!("Impressionist"));
@@ -667,14 +667,14 @@ mod tests {
     use super::*;
     use crate::canvas::{ToolEvent, tool_event};
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 100, "height": 60})).unwrap();
         app.run("tools.setBrush", json!({"brush": {"size": 16, "hardness": 1.0}})).unwrap();
         app
     }
 
-    fn drag(app: &mut PhotocraftApp, tool: Tool) {
+    fn drag(app: &mut SaryApp, tool: Tool) {
         app.ui.tool = tool;
         let m = egui::Modifiers::NONE;
         tool_event(app, ToolEvent::Down { x: 10.0, y: 30.0, pressure: 1.0 }, m);
@@ -683,12 +683,12 @@ mod tests {
         assert!(!app.ui.status_error, "{tool:?}: {}", app.ui.status);
     }
 
-    fn active(app: &PhotocraftApp) -> &photocraft_doc::Layer {
+    fn active(app: &SaryApp) -> &sary_doc::Layer {
         let st = app.session.active().unwrap();
         st.active_layer.and_then(|id| st.doc.layer(id)).unwrap()
     }
 
-    fn stripes(app: &mut PhotocraftApp, step: usize, target: &str) {
+    fn stripes(app: &mut SaryApp, step: usize, target: &str) {
         for x in (0..100).step_by(step) {
             app.run("paint.pencil", json!({"points": [[x, 0], [x, 60]], "size": 2, "color": "#606060", "target": target})).unwrap();
         }
@@ -899,7 +899,7 @@ mod tests {
     fn patch_tool_lassoes_then_drags_the_patch() {
         let mut app = app();
         app.run("paint.pencil", json!({"points": [[68, 30], [74, 30]], "size": 6, "color": "#ff0000"})).unwrap();
-        let red = |app: &PhotocraftApp| active(app).surface().unwrap().rgba(71, 30)[1] < 0.5;
+        let red = |app: &SaryApp| active(app).surface().unwrap().rgba(71, 30)[1] < 0.5;
         assert!(red(&app));
         app.ui.tool = Tool::Patch;
         let m = egui::Modifiers::NONE;
@@ -950,7 +950,7 @@ mod tests {
         for (mode, keeps) in [("move", false), ("extend", true)] {
             let mut app = app();
             app.run("paint.pencil", json!({"points": [[20, 30], [24, 30]], "size": 6, "color": "#0000ff"})).unwrap();
-            let blue = |app: &PhotocraftApp, x: i32| active(app).surface().unwrap().rgba(x, 30)[0] < 0.5;
+            let blue = |app: &SaryApp, x: i32| active(app).surface().unwrap().rgba(x, 30)[0] < 0.5;
             app.ui.tool = Tool::ContentAwareMove;
             app.ui.tool_options.cam_mode = mode.into();
             app.ui.tool_options.cam_structure = 7.0;
@@ -978,12 +978,12 @@ mod tests {
     fn content_aware_move_transform_on_drop_turns_the_patch_on_enter() {
         let mut app = app();
         app.run("paint.pencil", json!({"points": [[16, 30], [28, 30]], "size": 4, "color": "#0000ff"})).unwrap();
-        let blue = |app: &PhotocraftApp, x: i32, y: i32| active(app).surface().unwrap().rgba(x, y)[0] < 0.5;
+        let blue = |app: &SaryApp, x: i32, y: i32| active(app).surface().unwrap().rgba(x, y)[0] < 0.5;
         app.ui.tool = Tool::ContentAwareMove;
         app.ui.tool_options.cam_transform_on_drop = true;
         app.ui.tool_options.cam_structure = 7.0;
         let m = egui::Modifiers::NONE;
-        let drag = |app: &mut PhotocraftApp, path: &[[f64; 2]]| {
+        let drag = |app: &mut SaryApp, path: &[[f64; 2]]| {
             let ([x, y], rest) = (path[0], &path[1..]);
             tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, m);
             for &[x, y] in rest {
@@ -1045,7 +1045,7 @@ mod tests {
         let mut app = app();
         app.ui.tool = Tool::RedEye;
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1400.0, 60.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -1053,7 +1053,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, ThemeKind::Studio);
         h.run_steps(4);
         h.get_by_label("Pupil Size");
         h.get_by_label("Darken Amount");

@@ -15,7 +15,7 @@ use base64::Engine as _;
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::name::ResolveResult;
 use quick_xml::reader::NsReader;
-use wordcraft_doc::Document;
+use soratra_doc::Document;
 
 use crate::package::{ContentTypes, MAX_ENTRIES, MAX_PART, MAX_TOTAL, Package};
 use crate::xml::{self, W, esc};

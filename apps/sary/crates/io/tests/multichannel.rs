@@ -1,10 +1,10 @@
 //! Multichannel PSDs: alpha-type channels and the document's resources and global blocks survive
 //! an import → export → import round trip.
 
-use photocraft_doc::{ColorIndicates, Knot, NamedPath, Path, PathOp, Subpath};
-use photocraft_io::*;
-use photocraft_psd::resources::ImageResource;
-use photocraft_psd::{ColorMode, Compression, PsdFile, TaggedBlock, Version, testgen};
+use sary_doc::{ColorIndicates, Knot, NamedPath, Path, PathOp, Subpath};
+use sary_io::*;
+use sary_psd::resources::ImageResource;
+use sary_psd::{ColorMode, Compression, PsdFile, TaggedBlock, Version, testgen};
 
 /// DisplayInfo (1077) record: RGB colour, opacity (0..100) and kind (0/1 alpha, 2 spot).
 fn display_record(out: &mut Vec<u8>, rgb: [u16; 3], opacity: u16, kind: u8) {
@@ -26,7 +26,7 @@ fn file(depth: u16) -> PsdFile {
     f
 }
 
-fn roundtrip(d: &photocraft_doc::Document) -> (PsdFile, photocraft_doc::Document) {
+fn roundtrip(d: &sary_doc::Document) -> (PsdFile, sary_doc::Document) {
     let out = export(d, "x.psd", &ExportOptions::default()).unwrap();
     let back = PsdFile::from_bytes(&out.bytes).unwrap();
     let (doc, _) = psd_to_document(&back);
@@ -48,8 +48,8 @@ fn alpha_type_channels_import_as_alpha_and_round_trip() {
 
         // It still prints as black ink, so the composite is what a black spot channel gives.
         let mut as_ink = d.clone();
-        as_ink.channels[1].spot = Some((photocraft_color::Color::BLACK, 0.0));
-        assert_eq!(photocraft_compose::flatten(&d).px, photocraft_compose::flatten(&as_ink).px);
+        as_ink.channels[1].spot = Some((sary_color::Color::BLACK, 0.0));
+        assert_eq!(sary_compose::flatten(&d).px, sary_compose::flatten(&as_ink).px);
 
         // Saved back unchanged: same DisplayInfo, same planes, same channels on reopening.
         let (back, d2) = roundtrip(&d);

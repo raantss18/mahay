@@ -1,21 +1,21 @@
-//! Regenerates the shipped synthetic CMYK profile when `CRAFT_CMS_REGEN_PROFILES=1`:
+//! Regenerates the shipped synthetic CMYK profile when `MAHAY_CMS_REGEN_PROFILES=1`:
 //!
 //! ```sh
-//! CRAFT_CMS_REGEN_PROFILES=1 cargo test -p craft-cms --release --test regen
+//! MAHAY_CMS_REGEN_PROFILES=1 cargo test -p mahay-cms --release --test regen
 //! ```
 //!
 //! Without the variable the test only checks that the generator's model still matches the
 //! shipped AToB table (cheap), so model edits are not forgotten.
 
-use craft_cms::synth::{CmykModel, CmykParams};
-use craft_cms::{Builtin, Intent, Profile, Transform};
+use mahay_cms::synth::{CmykModel, CmykParams};
+use mahay_cms::{Builtin, Intent, Profile, Transform};
 
 #[test]
 fn regen_or_check_coated_cmyk() {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/profiles/photocraft-coated-cmyk.icc");
-    if std::env::var_os("CRAFT_CMS_REGEN_PROFILES").is_some() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/profiles/sary-coated-cmyk.icc");
+    if std::env::var_os("MAHAY_CMS_REGEN_PROFILES").is_some() {
         let t = std::time::Instant::now();
-        let p = craft_cms::synth::coated_cmyk().unwrap();
+        let p = mahay_cms::synth::coated_cmyk().unwrap();
         let bytes = p.to_bytes();
         std::fs::write(path, &*bytes).unwrap();
         eprintln!("wrote {} bytes in {:?}", bytes.len(), t.elapsed());
@@ -35,7 +35,7 @@ fn regen_or_check_coated_cmyk() {
                     t.eval(&[c as f32, m as f32, y as f32, k as f32], &mut o).unwrap();
                     let got = [o[0] as f64 * 100.0, o[1] as f64 * 255.0 - 128.0, o[2] as f64 * 255.0 - 128.0];
                     let want = model.lab([c, m, y, k]);
-                    worst = worst.max(craft_cms::math::delta_e76(got, want));
+                    worst = worst.max(mahay_cms::math::delta_e76(got, want));
                 }
             }
         }

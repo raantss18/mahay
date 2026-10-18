@@ -9,22 +9,22 @@ mod layout_doc;
 
 use egui::{Event, Modifiers, PointerButton, Pos2};
 use egui_kittest::Harness;
-use photocraft_doc::{Document, LayerContent, LayerId};
-use photocraft_engine::layer_multi_cmds::{layer_bounds, move_targets, moved};
-use photocraft_geom::Rect;
-use photocraft_ui_egui::canvas::ViewXform;
-use photocraft_ui_egui::state::Tool;
-use photocraft_ui_egui::{PhotocraftApp, Services};
+use sary_doc::{Document, LayerContent, LayerId};
+use sary_engine::layer_multi_cmds::{layer_bounds, move_targets, moved};
+use sary_geom::Rect;
+use sary_ui_egui::canvas::ViewXform;
+use sary_ui_egui::state::Tool;
+use sary_ui_egui::{SaryApp, Services};
 use serde_json::json;
 
-type H = Harness<'static, PhotocraftApp>;
+type H = Harness<'static, SaryApp>;
 
 /// The app (CPU canvas) with the small layout document open.
 fn app() -> (H, layout_doc::Handles) {
     let (doc, handles) = layout_doc::build(layout_doc::Spec::small());
     let h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_pixels_per_point(1.0).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Services::default());
         app.session.open_document(doc, None);
         app.sync_views();
         app
@@ -45,13 +45,13 @@ fn bounds(h: &H, id: LayerId) -> Rect {
 fn screen(h: &H, p: [f64; 2]) -> Pos2 {
     let app = h.state();
     let v = &app.ui.views[0];
-    let rect = photocraft_ui_egui::rulers::content_rect(app, app.last_canvas_rect);
+    let rect = sary_ui_egui::rulers::content_rect(app, app.last_canvas_rect);
     ViewXform { rect, zoom: v.zoom, center: v.center, flip: false, rotation: v.rotation, aspect: 1.0 }.to_screen(p[0] as f32, p[1] as f32)
 }
 
 /// A point where `id` (or, for a group, one of its layers) is the topmost layer with pixels.
 fn point_on(h: &H, id: LayerId) -> [f64; 2] {
-    fn holds(l: &photocraft_doc::Layer, id: LayerId) -> bool {
+    fn holds(l: &sary_doc::Layer, id: LayerId) -> bool {
         l.id == id || l.children().is_some_and(|c| c.iter().any(|c| holds(c, id)))
     }
     let d = doc(h);
@@ -59,7 +59,7 @@ fn point_on(h: &H, id: LayerId) -> [f64; 2] {
     let layer = d.layer(id).expect("layer");
     for y in b.y0..b.y1 {
         for x in b.x0..b.x1 {
-            if photocraft_engine::pick_cmds::layers_at(&d, x, y).first().is_some_and(|&top| holds(layer, top)) {
+            if sary_engine::pick_cmds::layers_at(&d, x, y).first().is_some_and(|&top| holds(layer, top)) {
                 return [x as f64 + 0.5, y as f64 + 0.5];
             }
         }
@@ -198,7 +198,7 @@ fn selecting_recomposites_nothing_and_hiding_only_the_layer() {
 #[test]
 fn the_move_preview_is_what_the_move_commits() {
     let (d, k) = layout_doc::build(layout_doc::Spec::small());
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.open_document(d, None);
     for id in [k.text, k.shape, k.group, k.smart, k.pixel, k.closed_group] {
         s.execute("layer.select", json!({"layer": id.0})).expect("select");
@@ -209,9 +209,9 @@ fn the_move_preview_is_what_the_move_commits() {
         let after = s.active().expect("doc");
         // The damage the canvas refreshes covers where the layer was and is.
         let dmg = after.last_damage.unwrap_or_else(|| panic!("{id:?} {}: a move has a damage rect", before.layer(id).map_or("?", |l| l.content.kind_name())));
-        let b0 = photocraft_compose::composite_bounds(before.layer(id).expect("layer"), before.bounds()).expect("bounds");
+        let b0 = sary_compose::composite_bounds(before.layer(id).expect("layer"), before.bounds()).expect("bounds");
         assert!(dmg.contains_rect(&b0) && dmg.contains_rect(&b0.translate(13, -7).intersect(&before.bounds())), "{dmg:?} vs {b0:?}");
-        let (a, b) = (photocraft_compose::flatten(&preview), photocraft_compose::flatten(&after.doc));
+        let (a, b) = (sary_compose::flatten(&preview), sary_compose::flatten(&after.doc));
         let worst = a.px.iter().zip(&b.px).flat_map(|(p, q)| (0..4).map(move |c| (p[c] * p[3] - q[c] * q[3]).abs())).fold(0.0f32, f32::max);
         assert!(worst <= 2.0 / 255.0, "{id:?}: preview differs from the commit by {}/255", worst * 255.0);
         s.execute("edit.undo", json!({})).expect("undo");
@@ -235,18 +235,18 @@ fn layout_document_composites_on_the_gpu_like_the_cpu() {
         eprintln!("skipping: no GPU adapter");
         return;
     };
-    if photocraft_gpu::Compositor::preferred_acc_format(&adapter) != wgpu::TextureFormat::Rgba32Float {
+    if sary_gpu::Compositor::preferred_acc_format(&adapter) != wgpu::TextureFormat::Rgba32Float {
         eprintln!("skipping: adapter can't render Rgba32Float");
         return;
     }
     let Ok((device, queue)) = block_on(adapter.request_device(&wgpu::DeviceDescriptor::default())) else { return };
-    let Ok(mut comp) = photocraft_gpu::Compositor::try_new_with_format(&device, wgpu::TextureFormat::Rgba32Float) else { return };
+    let Ok(mut comp) = sary_gpu::Compositor::try_new_with_format(&device, wgpu::TextureFormat::Rgba32Float) else { return };
     let (d, _) = layout_doc::build(layout_doc::Spec::small());
     let (_, texts) = layout_doc::count(&d);
     assert!(texts >= 10);
     assert!(d.walk().iter().any(|(_, _, l)| matches!(l.content, LayerContent::Smart(_))));
-    let cpu = photocraft_compose::flatten(&d);
-    let gpu = photocraft_gpu::render_to_vec(&mut comp, &device, &queue, &d, d.bounds()).expect("the layout composites on the GPU");
+    let cpu = sary_compose::flatten(&d);
+    let gpu = sary_gpu::render_to_vec(&mut comp, &device, &queue, &d, d.bounds()).expect("the layout composites on the GPU");
     let mut worst = 0.0f32;
     for (c, g) in cpu.px.iter().zip(&gpu) {
         for k in 0..4 {

@@ -70,7 +70,7 @@ fn reframe_preserves_single_direct_and_indirect_content_streams() {
             let contents = get(&sheets.sheets[0].dict, b"Contents").unwrap().array().unwrap();
             assert_eq!(contents.len(), 3);
             assert_eq!(contents[1], Obj::Ref(3, 0), "the square stream must survive, not a reference to the array");
-            if let Some(dir) = std::env::var_os("CRAFT_PRINT_PDF_FIXTURES") {
+            if let Some(dir) = std::env::var_os("MAHAY_PRINT_PDF_FIXTURES") {
                 let dir = std::path::PathBuf::from(dir);
                 std::fs::write(dir.join(format!("{name}-{compressed}-original.pdf")), &original).unwrap();
                 std::fs::write(dir.join(format!("{name}-{compressed}-updated.pdf")), &updated).unwrap();

@@ -8,8 +8,8 @@
 //! code instead of the result applies to simple fields; range fields keep showing their result.
 
 use serde_json::{Value, json};
-use wordcraft_doc::para::{InlineObject, OBJ};
-use wordcraft_doc::{Pos, StoryRef};
+use soratra_doc::para::{InlineObject, OBJ};
+use soratra_doc::{Pos, StoryRef};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -193,7 +193,7 @@ fn shown_text(s: &mut Session, f: &FieldAt) -> String {
         .map(|p| l.pages.iter().filter(|pg| pg.section == p.section).count() as u32)
         .unwrap_or_else(|| u32::try_from(l.pages.len()).unwrap_or(u32::MAX));
     let page_format = page.and_then(|p| s.doc.sections().get(p.section).map(|(_, sec)| sec.page_num_format)).unwrap_or_default();
-    let ctx = wordcraft_layout::fields::FieldCtx {
+    let ctx = soratra_layout::fields::FieldCtx {
         page: page.map(|p| p.number).unwrap_or(1),
         page_format,
         pages: u32::try_from(l.pages.len()).unwrap_or(u32::MAX),
@@ -204,7 +204,7 @@ fn shown_text(s: &mut Session, f: &FieldAt) -> String {
         filename: s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_default().into(),
         ..Default::default()
     };
-    wordcraft_layout::fields::field_text(&instr, &result, &ctx).0
+    soratra_layout::fields::field_text(&instr, &result, &ctx).0
 }
 
 /// Ctrl+Shift+F9: replace the selected fields with what they show (a simple field becomes its
@@ -269,12 +269,12 @@ fn go(s: &mut Session, forward: bool) -> CmdResult {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::para::InlineObject;
+    use soratra_doc::para::InlineObject;
 
     use crate::Session;
 
     fn session_with_fields() -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("text.insert", &json!({"text": "Made by "})).unwrap();
         s.run("insert.field", &json!({"instr": "AUTHOR", "result": "Old"})).unwrap();
         s.run("text.insert", &json!({"text": " on "})).unwrap();
@@ -288,7 +288,7 @@ mod tests {
         let mut out = String::new();
         for page in &l.pages {
             for it in &page.items {
-                if let wordcraft_layout::Placed::Lines { para, .. } = it {
+                if let soratra_layout::Placed::Lines { para, .. } = it {
                     for (_, shown, _) in &para.shown {
                         out.push_str(shown);
                         out.push('|');
@@ -330,7 +330,7 @@ mod tests {
     /// other keys, Alt+F1 and Alt+Shift+F1 (and Shift+F11).
     #[test]
     fn f11_is_full_screen_and_alt_f1_walks_fields() {
-        let s = Session::new(wordcraft_doc::Document::new());
+        let s = Session::new(soratra_doc::Document::new());
         let key = |k: &str| s.keymap.resolve(&s.registry, k).map(|c| c.id);
         assert_eq!(key("F11"), Some("view.fullScreen"));
         assert_eq!(key("Alt+F1"), Some("fields.next"));
@@ -383,7 +383,7 @@ mod tests {
         // Unlink: the field becomes its text; Undo brings it back.
         s.run("fields.unlink", &json!({})).unwrap();
         assert_eq!(objs(&s).len(), 1);
-        assert!(s.doc.plain_text(wordcraft_doc::StoryRef::Body).starts_with("Made by Changed on "));
+        assert!(s.doc.plain_text(soratra_doc::StoryRef::Body).starts_with("Made by Changed on "));
         assert!(s.undo());
         assert_eq!(objs(&s).len(), 2);
         // Nothing selected: an error, not a no-op undo step.
@@ -393,7 +393,7 @@ mod tests {
 
     #[test]
     fn unlink_uses_section_context() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         // Insert section break so there are 2 sections
         s.run("layout.break", &json!({"kind": "nextPage"})).unwrap();
         // In section 2: insert SECTION and SECTIONPAGES fields
@@ -403,7 +403,7 @@ mod tests {
         // Select both and unlink
         s.run("select.all", &json!({})).unwrap();
         s.run("fields.unlink", &json!({})).unwrap();
-        let text = s.doc.plain_text(wordcraft_doc::StoryRef::Body);
+        let text = s.doc.plain_text(soratra_doc::StoryRef::Body);
         assert!(text.contains("2 of 1"), "unlinked text should reflect section 2: {text}");
     }
 }

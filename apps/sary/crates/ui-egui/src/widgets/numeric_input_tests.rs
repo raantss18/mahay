@@ -74,7 +74,7 @@ fn oversized_numeric_text_paste_and_ime_are_bounded_before_layout() {
         }
         h.event(event);
         h.run();
-        if let Some(dir) = std::env::var_os("CRAFT_NUMERIC_INPUT_FIXTURES") {
+        if let Some(dir) = std::env::var_os("MAHAY_NUMERIC_INPUT_FIXTURES") {
             let dir = std::path::PathBuf::from(dir);
             std::fs::create_dir_all(&dir).expect("create numeric fixture directory");
             h.render().expect("render numeric fixture").save(dir.join(format!("event-{index}.png"))).expect("save numeric fixture");

@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 use egui::{CursorIcon, Painter, Pos2, Vec2};
-use photocraft_paint::brush::{BrushSettings, TipShape};
+use sary_paint::brush::{BrushSettings, TipShape};
 
 /// Below this on-screen radius an outline is unreadable: show the crosshair instead.
 const MIN_RADIUS: f32 = 3.0;
@@ -67,7 +67,7 @@ pub(crate) fn cursor(painter: &Painter, at: Pos2, brush: &BrushSettings, radius:
         }
         return crate::tool_cursor::outline(painter, at, pts, centre);
     }
-    let r = if normal { photocraft_paint::half_coverage_radius(radius, brush.hardness).max(1.0) } else { radius };
+    let r = if normal { sary_paint::half_coverage_radius(radius, brush.hardness).max(1.0) } else { radius };
     crate::tool_cursor::circle(painter, at, r, centre)
 }
 
@@ -77,13 +77,13 @@ pub(crate) fn rings(ctx: &egui::Context, brush: &BrushSettings, full: bool) -> O
     if matches!(brush.tip, TipShape::Round) && brush.angle == 0.0 && brush.roundness >= 1.0 {
         return None;
     }
-    let id = egui::Id::new("photocraft-tip-outline");
+    let id = egui::Id::new("sary-tip-outline");
     if let Some(c) = ctx.data(|d| d.get_temp::<Cached>(id))
         && c.key.matches(brush, full)
     {
         return c.rings;
     }
-    let traced = photocraft_paint::outline::tip_outline(brush, full).map(Arc::new);
+    let traced = sary_paint::outline::tip_outline(brush, full).map(Arc::new);
     ctx.data_mut(|d| d.insert_temp(id, Cached { key: Key::of(brush, full), rings: traced.clone() }));
     traced
 }

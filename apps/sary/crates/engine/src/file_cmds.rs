@@ -10,11 +10,11 @@
 
 use std::sync::Arc;
 
-use photocraft_algo::resample::{Resample, resize_surface, translate_surface};
-use photocraft_color::{ColorMode, PixelFormat};
-use photocraft_doc::{Affine, Document, Layer, LayerContent, LayerId, SmartObject, SmartSource};
-use photocraft_geom::Rect;
-use photocraft_raster::{Surface, from_rgba_into};
+use sary_algo::resample::{Resample, resize_surface, translate_surface};
+use sary_color::{ColorMode, PixelFormat};
+use sary_doc::{Affine, Document, Layer, LayerContent, LayerId, SmartObject, SmartSource};
+use sary_geom::Rect;
+use sary_raster::{Surface, from_rgba_into};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, layer_param};
@@ -78,9 +78,9 @@ fn is_file(_path: &str) -> bool {
 
 #[cfg(not(target_arch = "wasm32"))]
 /// Every file the engine opens is read here: in bounded reads, with a clear error when it does
-/// not fit in memory (see [`photocraft_format::read`]).
+/// not fit in memory (see [`sary_format::read`]).
 pub(crate) fn read_file(path: &str) -> Result<Vec<u8>> {
-    photocraft_format::read_file(std::path::Path::new(path)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+    sary_format::read_file(std::path::Path::new(path)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
 }
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn read_file(path: &str) -> Result<Vec<u8>> {
@@ -89,9 +89,9 @@ pub(crate) fn read_file(path: &str) -> Result<Vec<u8>> {
 
 #[cfg(not(target_arch = "wasm32"))]
 /// Every file the engine writes goes through here: crash-safe (temp file + fsync + rename, see
-/// [`photocraft_format::atomic`]), so a failed save never destroys the previous file.
+/// [`sary_format::atomic`]), so a failed save never destroys the previous file.
 pub(crate) fn write_file(path: &str, bytes: &[u8]) -> Result<()> {
-    photocraft_format::atomic_write(std::path::Path::new(path), bytes).map_err(|e| EngineError::Other(e.to_string()))
+    sary_format::atomic_write(std::path::Path::new(path), bytes).map_err(|e| EngineError::Other(e.to_string()))
 }
 #[cfg(target_arch = "wasm32")]
 pub(crate) fn write_file(path: &str, _bytes: &[u8]) -> Result<()> {
@@ -119,16 +119,16 @@ pub fn list_images(dir: &str) -> Result<Vec<String>> {
 /// Extensions the batch commands pick up from a folder.
 #[cfg(not(target_arch = "wasm32"))]
 const OPENABLE: &[&str] = &[
-    "pdn", "ora", "kra", "krz", "psd", "psb", "pcraft", "png", "jpg", "jpeg", "tif", "tiff", "webp", "gif", "bmp", "tga", "exr", "hdr", "qoi", "ico", "pnm",
+    "pdn", "ora", "kra", "krz", "psd", "psb", "sary", "png", "jpg", "jpeg", "tif", "tiff", "webp", "gif", "bmp", "tga", "exr", "hdr", "qoi", "ico", "pnm",
     "ppm", "pgm", "fits", "fit", "fts", "dpx", "heic", "heif", "hif", "dng", "cr2", "nef", "nrw", "arw", "pef", "svg", "svgz", "af", "afdesign", "afphoto",
     "afpub",
 ];
 
 /// Whether saving `doc` as a TIFF writes Photoshop layer data (anything beyond a lone
 /// Background layer). The UI asks before such a save when the "ask before saving layered TIFF"
-/// preference is on; see `photocraft_io::tiff_layers`.
+/// preference is on; see `sary_io::tiff_layers`.
 pub fn tiff_would_write_layers(doc: &Document) -> bool {
-    photocraft_io::tiff_layers::would_write_layers(doc)
+    sary_io::tiff_layers::would_write_layers(doc)
 }
 
 pub(crate) fn file_name(path: &str) -> String {
@@ -154,42 +154,42 @@ pub fn extension(path: &str) -> Option<String> {
 }
 
 /// Whether a save without a new path may write back to `path` as far as its format goes: only
-/// layered files (PSD, PSB, OpenRaster, .pcraft). A flat file goes through Save As instead, so it
+/// layered files (PSD, PSB, OpenRaster, .sary). A flat file goes through Save As instead, so it
 /// is never flattened over the original. Whether this document fits is [`holds_at`].
 pub fn saves_in_place(path: &str) -> bool {
     extension(path).is_some_and(|ext| layered_extension(&ext))
 }
 
 /// Whether the lower-case extension `ext` names a layered document format (PSD, PSB, OpenRaster,
-/// .pcraft). A save to one becomes the document's file; any other format is a copy for automation
+/// .sary). A save to one becomes the document's file; any other format is a copy for automation
 /// saves, desktop and headless alike (#1547, #2579).
 pub fn layered_extension(ext: &str) -> bool {
-    matches!(ext, "psd" | "psb" | "pcraft" | "ora")
+    matches!(ext, "psd" | "psb" | "sary" | "ora")
 }
 
 /// Whether a file in format `ext` (lower-case) holds the whole of `doc`, so it can be the
-/// document's own file: PSD, PSB and .pcraft always; OpenRaster only when it drops nothing (no
-/// adjustment layers, styles, masks…, [`photocraft_io::ora_losses`]). A save to a format that
+/// document's own file: PSD, PSB and .sary always; OpenRaster only when it drops nothing (no
+/// adjustment layers, styles, masks…, [`sary_io::ora_losses`]). A save to a format that
 /// doesn't hold the document is a copy, and File › Save goes through Save As, so an editable
 /// original is never overwritten with less than it had (#3806).
-pub fn holds(doc: &photocraft_doc::Document, ext: &str) -> bool {
+pub fn holds(doc: &sary_doc::Document, ext: &str) -> bool {
     match ext {
-        "psd" | "psb" | "pcraft" => true,
-        "ora" => photocraft_io::ora_losses(doc).is_empty(),
+        "psd" | "psb" | "sary" => true,
+        "ora" => sary_io::ora_losses(doc).is_empty(),
         _ => false,
     }
 }
 
 /// [`holds`] for the file at `path`.
-pub fn holds_at(doc: &photocraft_doc::Document, path: &str) -> bool {
+pub fn holds_at(doc: &sary_doc::Document, path: &str) -> bool {
     extension(path).is_some_and(|ext| holds(doc, &ext))
 }
 
 /// What a save of `doc` to `path` would leave out when its format can't hold it: OpenRaster's
-/// [`photocraft_io::ora_losses`]; empty for other formats.
-pub fn losses_at(doc: &photocraft_doc::Document, path: &str) -> Vec<String> {
+/// [`sary_io::ora_losses`]; empty for other formats.
+pub fn losses_at(doc: &sary_doc::Document, path: &str) -> Vec<String> {
     match extension(path).as_deref() {
-        Some("ora") => photocraft_io::ora_losses(doc),
+        Some("ora") => sary_io::ora_losses(doc),
         _ => Vec::new(),
     }
 }
@@ -272,7 +272,7 @@ pub(crate) fn sanitize(name: &str) -> String {
 
 pub(crate) fn import(name: &str, bytes: &[u8]) -> Result<Document> {
     crate::allocation::checkpoint("importing document")?;
-    let r = photocraft_io::import(name, bytes).map_err(|e| EngineError::Other(format!("{name}: {e}")))?;
+    let r = sary_io::import(name, bytes).map_err(|e| EngineError::Other(format!("{name}: {e}")))?;
     // Auxiliary imports return only a document and cannot surface the preview's fidelity warning.
     // Open has its own warning-preserving path; never silently place or process a thumbnail.
     if r.preview_only {
@@ -293,9 +293,9 @@ pub(crate) struct SaveOpts {
     pub tiff_layers: bool,
     /// Targa: 24 or 32 bits per pixel (`"tgaBits"`); unset, 32 with an alpha channel or
     /// transparency, else 24.
-    pub tga_bits: Option<photocraft_io::TgaBits>,
+    pub tga_bits: Option<sary_io::TgaBits>,
     /// DPX: 8, 10, 12 or 16 bits per sample (`"dpxBits"`); unset, 8 for an 8-bit document, else 16.
-    pub dpx_bits: Option<photocraft_io::DpxBits>,
+    pub dpx_bits: Option<sary_io::DpxBits>,
     /// PSD/PSB: embed the thumbnail resource (Preferences › File Handling › Image Previews).
     pub image_previews: bool,
     /// PSD/PSB: write the real merged image (Preferences › File Handling › Maximize PSD and PSB
@@ -341,12 +341,12 @@ impl From<Option<f64>> for SaveOpts {
 /// The Targa bits per pixel in `p` (`"tgaBits": 24 | 32`; absent or null: the automatic choice).
 /// Anything else is a bad parameter of command `cmd`. Shared by every save that takes it (the
 /// engine's commands, the app's Save As and control channel, the headless server).
-pub fn tga_bits_param(p: &Value, cmd: &str) -> Result<Option<photocraft_io::TgaBits>> {
+pub fn tga_bits_param(p: &Value, cmd: &str) -> Result<Option<sary_io::TgaBits>> {
     match p.get("tgaBits") {
         None | Some(Value::Null) => Ok(None),
         Some(v) => v
             .as_u64()
-            .and_then(photocraft_io::TgaBits::from_bits)
+            .and_then(sary_io::TgaBits::from_bits)
             .map(Some)
             .ok_or_else(|| EngineError::BadParams { cmd: cmd.into(), msg: format!("`tgaBits` must be 24 or 32, got {v}") }),
     }
@@ -354,12 +354,12 @@ pub fn tga_bits_param(p: &Value, cmd: &str) -> Result<Option<photocraft_io::TgaB
 
 /// The DPX bits per sample in `p` (`"dpxBits": 8 | 10 | 12 | 16`; absent or null: the document's
 /// depth). Anything else is a bad parameter of command `cmd`.
-pub fn dpx_bits_param(p: &Value, cmd: &str) -> Result<Option<photocraft_io::DpxBits>> {
+pub fn dpx_bits_param(p: &Value, cmd: &str) -> Result<Option<sary_io::DpxBits>> {
     match p.get("dpxBits") {
         None | Some(Value::Null) => Ok(None),
         Some(v) => v
             .as_u64()
-            .and_then(photocraft_io::DpxBits::from_bits)
+            .and_then(sary_io::DpxBits::from_bits)
             .map(Some)
             .ok_or_else(|| EngineError::BadParams { cmd: cmd.into(), msg: format!("`dpxBits` must be 8, 10, 12 or 16, got {v}") }),
     }
@@ -369,7 +369,7 @@ pub fn dpx_bits_param(p: &Value, cmd: &str) -> Result<Option<photocraft_io::DpxB
 pub(crate) fn encode(doc: &Document, path: &str, save: impl Into<SaveOpts>) -> Result<(Vec<u8>, Vec<String>)> {
     crate::allocation::checkpoint("saving document")?;
     let save = save.into();
-    let mut opts = photocraft_io::ExportOptions {
+    let mut opts = sary_io::ExportOptions {
         tiff_layers: save.tiff_layers,
         tga_bits: save.tga_bits,
         image_previews: save.image_previews,
@@ -380,7 +380,7 @@ pub(crate) fn encode(doc: &Document, path: &str, save: impl Into<SaveOpts>) -> R
     };
     // No quality chosen: write the file the way it was opened (a JPEG at its own quality, a WebP
     // lossy or lossless as it was), as Photoshop's Save does.
-    photocraft_io::apply_file_encoding(doc, &mut opts.encode);
+    sary_io::apply_file_encoding(doc, &mut opts.encode);
     opts.encode.dpx_bits = save.dpx_bits;
     if let Some(q) = save.quality {
         let q = (q.clamp(0.0, 12.0) / 12.0 * 99.0 + 1.0).round() as u8;
@@ -389,7 +389,7 @@ pub(crate) fn encode(doc: &Document, path: &str, save: impl Into<SaveOpts>) -> R
         opts.encode.webp_quality = q;
         opts.encode.webp_lossless = false;
     }
-    photocraft_io::export(doc, path, &opts).map(|r| (r.bytes, r.warnings)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+    sary_io::export(doc, path, &opts).map(|r| (r.bytes, r.warnings)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
 }
 
 pub(crate) fn save_doc(doc: &Document, path: &str, save: impl Into<SaveOpts>) -> Result<Vec<String>> {
@@ -414,7 +414,7 @@ fn size_param(p: &Value, key: &str) -> Option<f64> {
 // ---------- pixels ----------
 
 /// A composite buffer as a surface in `fmt` (straight RGBA → the format's model and depth).
-pub(crate) fn buffer_surface(buf: &photocraft_compose::Buffer, fmt: PixelFormat) -> Surface {
+pub(crate) fn buffer_surface(buf: &sary_compose::Buffer, fmt: PixelFormat) -> Surface {
     let n = fmt.channels();
     let mut data = vec![0.0f32; buf.px.len() * n];
     for (p, out) in buf.px.iter().zip(data.chunks_exact_mut(n)) {
@@ -430,7 +430,7 @@ pub(crate) fn buffer_surface(buf: &photocraft_compose::Buffer, fmt: PixelFormat)
 
 /// The flattened image of `doc` as a surface in `fmt`, placed at the origin.
 pub(crate) fn flattened(doc: &Document, fmt: PixelFormat) -> Surface {
-    photocraft_compose::flatten_to_surface(doc, fmt, None)
+    sary_compose::flatten_to_surface(doc, fmt, None)
 }
 
 // ---------- close / revert / save a copy / open as ----------
@@ -501,9 +501,9 @@ pub(crate) fn tag_exr_colorspace(s: &Session, name: &str, doc: &mut Document) {
     if !name.to_ascii_lowercase().ends_with(".exr") || !s.prefs.get().file_handling.exr_aces_cg {
         return;
     }
-    let linear = photocraft_cms::Builtin::LinearSrgb.profile().to_bytes();
+    let linear = sary_cms::Builtin::LinearSrgb.profile().to_bytes();
     if doc.icc_profile.as_ref().map(|v| v.as_slice()) == Some(linear.as_slice()) {
-        doc.icc_profile = Some(photocraft_cms::Builtin::AcesCg.profile().to_bytes());
+        doc.icc_profile = Some(sary_cms::Builtin::AcesCg.profile().to_bytes());
     }
 }
 
@@ -513,7 +513,7 @@ pub fn open_bytes_as(s: &mut Session, name: &str, bytes: &[u8], as_ext: Option<&
         Some(ext) => format!("{}.{}", stem(name), ext.trim_start_matches('.')),
         None => name.to_string(),
     };
-    let r = photocraft_io::import(&decode_name, bytes).map_err(|e| EngineError::Other(format!("{decode_name}: {e}")))?;
+    let r = sary_io::import(&decode_name, bytes).map_err(|e| EngineError::Other(format!("{decode_name}: {e}")))?;
     let mut doc = r.document;
     tag_exr_colorspace(s, &decode_name, &mut doc);
     let path = match template_name(s, name) {
@@ -556,9 +556,9 @@ pub fn place_bytes(s: &mut Session, name: &str, bytes: Vec<u8>, linked: Option<S
     let d = s.active().ok_or(EngineError::NoDocument)?;
     let (cw, ch) = (d.doc.size.width as f64, d.doc.size.height as f64);
     let fmt = d.doc.pixel_format();
-    let vector = photocraft_io::svg::is_svg(&bytes);
+    let vector = sary_io::svg::is_svg(&bytes);
     let max_svg_group_depth = s.prefs().file_handling.rasterize_svg_groups_deeper_than as usize;
-    let imported = photocraft_io::import_with_svg_group_depth(name, &bytes, max_svg_group_depth).map_err(|e| EngineError::Other(format!("{name}: {e}")))?;
+    let imported = sary_io::import_with_svg_group_depth(name, &bytes, max_svg_group_depth).map_err(|e| EngineError::Other(format!("{name}: {e}")))?;
     if imported.preview_only {
         return Err(EngineError::Other(format!(
             "{name}: only this Affinity file's embedded preview could be read; open it with File › Open to see the warning, or export PSD or PNG from Affinity before using it here"
@@ -799,7 +799,7 @@ fn xmp_number(x: &str, prop: &str) -> Option<f64> {
 /// for display. Read from the EXIF block (JPEG APP1, PSD resource 1058, …); properties it lacks
 /// fall back to the XMP `tiff:`/`exif:`/`aux:` copies (files without an EXIF block).
 pub fn camera_data(exif: Option<&[u8]>, xmp: Option<&str>) -> Value {
-    let e = exif.map(photocraft_algo::exif::read).unwrap_or_default();
+    let e = exif.map(sary_algo::exif::read).unwrap_or_default();
     let x = xmp.unwrap_or("");
     let text = |v: Option<String>, props: &[&str]| v.or_else(|| props.iter().find_map(|p| xmp_value(x, p)));
     let num =
@@ -1231,7 +1231,7 @@ fn load_files_into_stack(s: &mut Session, p: &Value) -> Result<Value> {
     let first = &docs[0].1;
     let w = docs.iter().map(|(_, d)| d.size.width).max().unwrap_or(1);
     let h = docs.iter().map(|(_, d)| d.size.height).max().unwrap_or(1);
-    let mut stack = Document::new(stem(&paths[0]), photocraft_doc::Size::new(w, h), first.mode, first.depth);
+    let mut stack = Document::new(stem(&paths[0]), sary_doc::Size::new(w, h), first.mode, first.depth);
     stack.resolution_dpi = first.resolution_dpi;
     stack.icc_profile = first.icc_profile.clone();
     let fmt = stack.pixel_format();
@@ -1285,7 +1285,7 @@ fn has_live_effects(l: &Layer) -> bool {
 fn bake(l: &Layer, canvas: Rect, fmt: PixelFormat, keep_effects: bool, apply_mask: bool) -> Surface {
     let mut tmp = l.clone();
     tmp.opacity = 1.0;
-    tmp.blend = photocraft_color::BlendMode::Normal;
+    tmp.blend = sary_color::BlendMode::Normal;
     tmp.visible = true;
     tmp.clipped = false;
     if !keep_effects {
@@ -1299,7 +1299,7 @@ fn bake(l: &Layer, canvas: Rect, fmt: PixelFormat, keep_effects: bool, apply_mas
     // Render over the union of the canvas and the content so off-canvas pixels survive.
     let area = l.surface().map_or(canvas, |s| s.content_bounds().union(&canvas));
     let area = if keep_effects { area.inflate(256) } else { area };
-    buffer_surface(&photocraft_compose::render_layer(&tmp, area), fmt)
+    buffer_surface(&sary_compose::render_layer(&tmp, area), fmt)
 }
 
 fn walk_ids(doc: &Document) -> Vec<LayerId> {
@@ -1452,7 +1452,7 @@ fn lut_layers<'a>(doc: &'a Document, ids: Option<&[LayerId]>) -> Result<Vec<&'a 
 fn bake_cube_layers(size: usize, title: &str, layers: &[&Layer]) -> String {
     let n = size;
     let (w, h) = ((n * n) as u32, n as u32);
-    let mut lattice = Document::new("lut", photocraft_doc::Size::new(w, h), ColorMode::Rgb, photocraft_color::SampleType::F32);
+    let mut lattice = Document::new("lut", sary_doc::Size::new(w, h), ColorMode::Rgb, sary_color::SampleType::F32);
     let fmt = lattice.pixel_format();
     let step = 1.0 / (n - 1) as f32;
     let mut data = Vec::with_capacity((w * h) as usize * fmt.channels());
@@ -1476,8 +1476,8 @@ fn bake_cube_layers(size: usize, title: &str, layers: &[&Layer]) -> String {
         a.clipped = false;
         lattice.layers.push(a);
     }
-    let out = photocraft_compose::flatten(&lattice);
-    let mut s = format!("TITLE \"{}\"\n# Created by PhotoCraft\nLUT_3D_SIZE {n}\nDOMAIN_MIN 0.0 0.0 0.0\nDOMAIN_MAX 1.0 1.0 1.0\n", title.replace('"', "'"));
+    let out = sary_compose::flatten(&lattice);
+    let mut s = format!("TITLE \"{}\"\n# Created by Sary\nLUT_3D_SIZE {n}\nDOMAIN_MIN 0.0 0.0 0.0\nDOMAIN_MAX 1.0 1.0 1.0\n", title.replace('"', "'"));
     // .cube order: red changes fastest, then green, then blue.
     for b in 0..n {
         for g in 0..n {
@@ -1494,7 +1494,7 @@ fn bake_cube_layers(size: usize, title: &str, layers: &[&Layer]) -> String {
 /// Backwards-compatible helper for exporting all visible top-level adjustments.
 pub fn bake_cube(doc: &Document, size: usize, title: &str) -> String {
     let layers: Vec<&Layer> = doc.layers.iter().filter(|l| l.visible && matches!(l.content, LayerContent::Adjustment(_))).collect();
-    bake_cube_layers(size.clamp(2, photocraft_cms::lutfile::MAX_SIZE), title, &layers)
+    bake_cube_layers(size.clamp(2, sary_cms::lutfile::MAX_SIZE), title, &layers)
 }
 
 /// Export either the whole visible stack (backward-compatible default), the Layers panel's
@@ -1506,8 +1506,8 @@ fn color_lookup_tables(s: &mut Session, p: &Value) -> Result<Value> {
         None | Some(Value::Null) => 33,
         Some(v) => v.as_u64().ok_or_else(|| EngineError::BadParams { cmd: CMD.into(), msg: "size must be an integer".into() })?,
     };
-    if !(2..=photocraft_cms::lutfile::MAX_SIZE as u64).contains(&size) {
-        return Err(EngineError::BadParams { cmd: CMD.into(), msg: format!("size must be 2..={}", photocraft_cms::lutfile::MAX_SIZE) });
+    if !(2..=sary_cms::lutfile::MAX_SIZE as u64).contains(&size) {
+        return Err(EngineError::BadParams { cmd: CMD.into(), msg: format!("size must be 2..={}", sary_cms::lutfile::MAX_SIZE) });
     }
     let scope = match p.get("scope") {
         None | Some(Value::Null) => "all",
@@ -1778,20 +1778,20 @@ mod aces_exr_tests {
     /// default; on, it opens as ACEScg — the working space ACES render pipelines write.
     #[test]
     fn exr_aces_cg_preference_retags_the_opened_document() {
-        let image = photocraft_codecs::Image::from_f32(
+        let image = sary_codecs::Image::from_f32(
             4,
             4,
-            photocraft_codecs::ChannelLayout::Rgb,
+            sary_codecs::ChannelLayout::Rgb,
             &[
                 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5,
                 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0, 0.25, 0.5, 0.75, 1.0,
             ],
         )
         .unwrap();
-        let bytes = photocraft_codecs::encode(&image, photocraft_codecs::Format::OpenExr, &photocraft_codecs::EncodeOptions::default()).unwrap();
+        let bytes = sary_codecs::encode(&image, sary_codecs::Format::OpenExr, &sary_codecs::EncodeOptions::default()).unwrap();
 
-        let linear = photocraft_cms::Builtin::LinearSrgb.profile().to_bytes();
-        let aces = photocraft_cms::Builtin::AcesCg.profile().to_bytes();
+        let linear = sary_cms::Builtin::LinearSrgb.profile().to_bytes();
+        let aces = sary_cms::Builtin::AcesCg.profile().to_bytes();
 
         // Off (the default): io's linear-sRGB tagging stays.
         let mut s = Session::new();
@@ -1812,11 +1812,11 @@ mod aces_exr_tests {
     #[test]
     fn exr_aces_cg_preference_applies_to_background_opens() {
         use crate::jobs::{OpenSource, Started};
-        let image = photocraft_codecs::Image::from_f32(4, 4, photocraft_codecs::ChannelLayout::Rgb, &[0.5; 48]).unwrap();
+        let image = sary_codecs::Image::from_f32(4, 4, sary_codecs::ChannelLayout::Rgb, &[0.5; 48]).unwrap();
         let bytes =
-            std::sync::Arc::new(photocraft_codecs::encode(&image, photocraft_codecs::Format::OpenExr, &photocraft_codecs::EncodeOptions::default()).unwrap());
-        let linear = photocraft_cms::Builtin::LinearSrgb.profile().to_bytes();
-        let aces = photocraft_cms::Builtin::AcesCg.profile().to_bytes();
+            std::sync::Arc::new(sary_codecs::encode(&image, sary_codecs::Format::OpenExr, &sary_codecs::EncodeOptions::default()).unwrap());
+        let linear = sary_cms::Builtin::LinearSrgb.profile().to_bytes();
+        let aces = sary_cms::Builtin::AcesCg.profile().to_bytes();
         for (on, want) in [(false, &linear), (true, &aces)] {
             let mut s = Session::new();
             s.prefs.edit(|p| p.file_handling.exr_aces_cg = on);

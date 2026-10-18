@@ -1,8 +1,8 @@
 //! Layer comps must continue targeting their layers after a copied document gets fresh ids.
 //! Cover current/old history states, nested layers, Last Document State and merged-only copies.
 
-use photocraft_doc::{CompLayerState, Layer, LayerId};
-use photocraft_engine::Session;
+use sary_doc::{CompLayerState, Layer, LayerId};
+use sary_engine::Session;
 use serde_json::json;
 
 fn scene() -> (Session, LayerId) {

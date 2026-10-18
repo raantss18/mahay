@@ -13,13 +13,13 @@ three groups, with its Effect Options (now also Page Curl Single, Glitter Hexago
 and Zoom and Rotate). All 48 round-trip through PPTX with the elements, attributes and defaults
 PowerPoint itself writes (`every_transition_kind_round_trips`,
 `transition_xml_matches_powerpoints_elements`, `transition_defaults_read_like_powerpoint`): 145 of
-145 PowerPoint-built test slides reopen in PowerPoint with the same effect after a DeckCraft
+145 PowerPoint-built test slides reopen in PowerPoint with the same effect after a Seho
 save.
 
 **Measured against PowerPoint (2026-10-13).** Synthetic two-colour decks with asymmetric markers
 were built in PowerPoint for Windows over COM with every transition and option (150 variants,
 2 s each), exported with `CreateVideo` at 30 fps, and compared frame by frame with
-`deckcraft-cli render-transition` at the same progress (`plan/powerpoint/tools/synth_transitions.ps1`,
+`seho-cli render-transition` at the same progress (`plan/powerpoint/tools/synth_transitions.ps1`,
 `trans_compare.py`). Mean absolute difference over all variants at t = 0.1…0.9 (0–255): **35.7
 before, 15.0 after**. Curves (fades are a smoothstep, moves ease in-out; Cover, Uncover and Pan
 have their own measured curves), directions and option meanings (e.g. Glitter starts on the
@@ -29,13 +29,13 @@ slides' contents over cross-fading backgrounds now follow PowerPoint. 3-D transi
 perspective-projected cards (`crates/anim/src/transition_geom.rs`) drawn with
 perspective-correct subdivided meshes.
 
-| Group | PowerPoint | DeckCraft | Fidelity |
+| Group | PowerPoint | Seho | Fidelity |
 |---|---|---|---|
 | Subtle (Morph, Fade, Push, Wipe, Split, Reveal, Cut, Random Bars, Shape, Uncover, Cover, Flash) | 12 | 12 | Matches PowerPoint's frames (mean diff 1–8; Random Bars and Reveal Through Black ~15) |
 | Exciting (Fall Over, Drape, Curtains, Wind, Prestige, Fracture, Crush, Peel Off, Page Curl, Airplane, Origami, Dissolve, Checkerboard, Blinds, Clock, Ripple, Honeycomb, Glitter, Vortex, Shred, Switch, Flip, Gallery, Cube, Doors, Box, Comb, Zoom, Random) | 29 | 29 | Perspective 3-D cards with measured motion; cloth, paper and particle effects (Curtains, Peel Off, Page Curl, Airplane, Origami, Fracture, Crush, Honeycomb, Vortex, Shred) are flat approximations of PowerPoint's meshes |
 | Dynamic Content (Pan, Ferris Wheel, Conveyor, Rotate, Window, Orbit, Fly Through) | 7 | 7 | Contents move over cross-fading backgrounds, as in PowerPoint (mean diff 5–17) |
 
-| Transition feature | PowerPoint | DeckCraft |
+| Transition feature | PowerPoint | Seho |
 |---|---|---|
 | Effect Options per transition | yes | yes |
 | Duration, advance on click / after time, Apply To All | yes | yes |
@@ -45,11 +45,11 @@ perspective-correct subdivided meshes.
 | Morph: Words and Characters | yes | yes (#5) |
 | Morph: geometry (circle to star) | yes | yes (#27) |
 | Morph: `!!` name forcing, pictures, 3-D models, ink | yes | names partly; no 3-D or ink |
-| Frame-by-frame comparison with PowerPoint | | done (Windows, 2026-10-13); headless frames: `deckcraft-cli render-transition` |
+| Frame-by-frame comparison with PowerPoint | | done (Windows, 2026-10-13); headless frames: `seho-cli render-transition` |
 
 ## Animations: 64 of ~190 effects
 
-| Class | PowerPoint (gallery + More Effects) | DeckCraft | Missing (examples) |
+| Class | PowerPoint (gallery + More Effects) | Seho | Missing (examples) |
 |---|---:|---:|---|
 | Entrance | ~50 | 24 | Plus, Wedge, Basic Zoom, Center Revolve, Compress, Stretch, Boomerang, Credits, Curve Up, Drop, Flip, Float, Pinwheel, Spiral In, Whip, Ascend, Descend, Unfold |
 | Emphasis | ~25 | 17 | Brush Color, Bold Reveal, Contrasting Color, Flicker, Grow With Color, Shimmer, Blink |
@@ -61,7 +61,7 @@ By how often people use them, the effects present cover nearly all real decks (A
 In, Wipe, Zoom, Float In, Grow/Shrink, Pulse, Spin, motion lines): weighted, ~85% of use; by count,
 ~34%.
 
-| Animation feature | PowerPoint | DeckCraft |
+| Animation feature | PowerPoint | Seho |
 |---|---|---|
 | Start On Click / With Previous / After Previous, duration, delay | yes | yes |
 | Effect Options (direction, sequence by paragraph) | yes | yes |

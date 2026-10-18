@@ -11,7 +11,7 @@
 # Vietnamese computing vocabulary. No Microsoft Word (or other product) localisation, string table
 # or translated UI was consulted or copied, and no other catalog in this repository was used;
 # add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
+# Product, format and technology names (Soratra, PDF, Markdown, MCP …) stay in Latin letters.
 # Commands and buttons use short imperatives (Lưu, Chèn, Dán); labels use natural Vietnamese.
 # A noun after a number stays unchanged (1 từ, 2 từ), so no plural forms are needed.
 # Counts use count-neutral wording (`Từ: 21`).
@@ -19,9 +19,9 @@
 	(no style)	(không có kiểu)
 	(no suggestions)	(không có gợi ý)
 	1.5 Line Spacing	Giãn dòng 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Trình xử lý văn bản miễn phí, mã nguồn mở được viết từ đầu bằng Rust.\nMột phần trong bộ ứng dụng Crafting Apps của đội ngũ ArtCraft.
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Trình xử lý văn bản miễn phí, mã nguồn mở được viết từ đầu bằng Rust.\nMột phần trong bộ ứng dụng Mahay apps của đội ngũ Mahay.
 	About	Giới thiệu
-	About WordCraft	Giới thiệu về WordCraft
+	About Soratra	Giới thiệu về Soratra
 	Accept	Chấp nhận
 	Accept All Changes	Chấp nhận tất cả thay đổi
 	Accept This Change	Chấp nhận thay đổi này
@@ -326,7 +326,7 @@
 	Envelopes	Phong bì
 	Eraser	Tẩy
 	Even Page	Trang chẵn
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Mọi lệnh đều khả dụng cho tập lệnh và tác tử AI: chạy `wordcraft-cli mcp` để khởi chạy máy chủ MCP, hoặc khởi động ứng dụng với `--control <port>` để mở kênh điều khiển JSON.
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Mọi lệnh đều khả dụng cho tập lệnh và tác tử AI: chạy `soratra-cli mcp` để khởi chạy máy chủ MCP, hoặc khởi động ứng dụng với `--control <port>` để mở kênh điều khiển JSON.
 	Export	Xuất
 	Export PDF	Xuất PDF
 	Export Page as PNG	Xuất trang dưới dạng PNG
@@ -441,8 +441,8 @@
 	Inspect Styles at Selection	Kiểm tra kiểu tại vùng chọn
 	Interface language:	Ngôn ngữ giao diện:
 	Italic	In nghiêng
-	Join the ArtCraft community on Discord	Tham gia cộng đồng ArtCraft trên Discord
-	Join us on Discord: discord.gg/artcraft	Tham gia cùng chúng tôi trên Discord: discord.gg/artcraft
+	Join the Mahay community on Discord	Tham gia cộng đồng Mahay trên Discord
+	Join us on Discord: discord.gg/mahay	Tham gia cùng chúng tôi trên Discord: discord.gg/mahay
 	Justify	Căn đều
 	Keep Lines Together	Giữ các dòng cùng nhau
 	Keep Text Only	Chỉ giữ văn bản
@@ -482,7 +482,7 @@
 	Link to Previous	Liên kết với phần trước
 	Links	Liên kết
 	Location: {path}	Vị trí: {path}
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Bản quyền (c) 2026 ArtCraft Team và các cộng tác viên WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0. Bản quyền (c) 2026 Mahay Team và các cộng tác viên Soratra.
 	Macros	Macro
 	Mailings	Gửi thư
 	Manage Sources	Quản lý nguồn
@@ -783,7 +783,7 @@
 	Small caps	Chữ hoa nhỏ
 	SmartArt	SmartArt
 	Sort	Sắp xếp
-	Source code: github.com/storytold/wordcraft	Mã nguồn: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	Mã nguồn: github.com/raantss18/soratra
 	Space	Dấu cách
 	Space before/after:	Khoảng cách trước/sau:
 	Spacing	Khoảng cách
@@ -918,7 +918,7 @@
 	Word Right	Đưa con trỏ sang phải một từ
 	Word document (*.docx)	Tài liệu Word (*.docx)
 	WordArt	WordArt
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	Từ
 	Words only	Chỉ gạch chân từ
 	Wrap Text	Văn bản quanh đối tượng
@@ -985,7 +985,7 @@
 	Stopped	Đã dừng
 	Speed	Tốc độ
 	Normal speed	Tốc độ bình thường
-	AutoSave documents you have saved in WordCraft	Tự động lưu các tài liệu bạn đã lưu trong WordCraft
+	AutoSave documents you have saved in Soratra	Tự động lưu các tài liệu bạn đã lưu trong Soratra
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Không thể tự động lưu: {error}. Hãy lưu tài liệu để bật lại tính năng này.
 	Couldn't download {name}: {error}	Không tải được {name}: {error}
 	Do you want to save changes to {name}?	Bạn có muốn lưu các thay đổi vào {name}?
@@ -1154,7 +1154,7 @@
 	Insert a new equation (Alt+=)	Chèn phương trình mới (Alt+=)
 	Leave the equation (Esc)	Rời khỏi phương trình (Esc)
 	Preview	Xem thử
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	Vẽ mực
 	Erase Ink	Xóa mực
 	Hide Ink	Ẩn mực
@@ -1290,7 +1290,7 @@
 	The document will be saved with a password. Save it to protect it.	Tài liệu sẽ được lưu kèm mật khẩu. Hãy lưu lại để bảo vệ tài liệu.
 	The password is removed. Save the document to keep the change.	Đã gỡ mật khẩu. Hãy lưu tài liệu để giữ lại thay đổi này.
 	The passwords don't match.	Hai mật khẩu không khớp.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Hãy giữ mật khẩu ở nơi an toàn: nếu mất thì không ai, kể cả WordCraft, có thể mở được tài liệu. Để trống cả hai ô nếu muốn gỡ mật khẩu.
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	Hãy giữ mật khẩu ở nơi an toàn: nếu mất thì không ai, kể cả Soratra, có thể mở được tài liệu. Để trống cả hai ô nếu muốn gỡ mật khẩu.
 	Align Top Left	Căn trên trái
 	Align Top Center	Căn trên giữa
 	Align Top Right	Căn trên phải
@@ -1317,7 +1317,7 @@
 	Version	Phiên bản
 	% of all commits	% tổng số commit
 	Lines +/−	Dòng +/−
-	Craft	Craft
+	Mahay	Mahay
 	Studio	Studio
 	Atelier	Atelier
 	Darkroom	Darkroom
@@ -2389,7 +2389,7 @@
 	Word document	Tài liệu Word
 	All files	Tất cả tệp
 	Recipient lists	Danh sách người nhận
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Hộp thoại tệp của hệ thống không khả dụng, nên WordCraft hiển thị hộp thoại riêng. Để dùng hộp thoại của hệ thống, hãy cài đặt cổng chọn tệp (như xdg-desktop-portal-gtk) hoặc zenity.
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Hộp thoại tệp của hệ thống không khả dụng, nên Soratra hiển thị hộp thoại riêng. Để dùng hộp thoại của hệ thống, hãy cài đặt cổng chọn tệp (như xdg-desktop-portal-gtk) hoặc zenity.
 	Up one level	Lên một cấp
 	Home folder	Thư mục chính
 	{name} wasn't found.	Không tìm thấy {name}.
@@ -2397,8 +2397,8 @@
 	This folder can't be read: {error}	Không thể đọc thư mục này: {error}
 	Showing the first {count} items.	Đang hiển thị {count} mục đầu tiên.
 	File name:	Tên tệp:
-	Browse in WordCraft…	Duyệt trong WordCraft…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Mở tệp bằng trình duyệt tệp của WordCraft khi hộp thoại tệp của hệ thống không xuất hiện.
+	Browse in Soratra…	Duyệt trong Soratra…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	Mở tệp bằng trình duyệt tệp của Soratra khi hộp thoại tệp của hệ thống không xuất hiện.
 	Resize Table by Dragging	Đổi cỡ bảng bằng cách kéo
 	Visual effects	Hiệu ứng hình ảnh
 	Animation effects:	Hiệu ứng động:
@@ -2424,23 +2424,23 @@
 	TOC {n}	Mục lục {n}
 	Good afternoon	Chào buổi chiều
 	Context	Theo ngữ cảnh
-	Couldn't make WordCraft the default: {error}	Không thể đặt WordCraft làm ứng dụng mặc định: {error}
+	Couldn't make Soratra the default: {error}	Không thể đặt Soratra làm ứng dụng mặc định: {error}
 	Do Not Check Spelling or Grammar	Không kiểm tra chính tả hoặc ngữ pháp
 	Hindi	Tiếng Hindi
-	In Default apps, choose WordCraft for the document types you want it to open.	Trong Ứng dụng mặc định, chọn WordCraft cho các loại tài liệu bạn muốn mở bằng ứng dụng này.
-	Make WordCraft the default for Word documents…	Đặt WordCraft làm ứng dụng mặc định cho tài liệu Word…
+	In Default apps, choose Soratra for the document types you want it to open.	Trong Ứng dụng mặc định, chọn Soratra cho các loại tài liệu bạn muốn mở bằng ứng dụng này.
+	Make Soratra the default for Word documents…	Đặt Soratra làm ứng dụng mặc định cho tài liệu Word…
 	Numerals	Chữ số
 	Numerals:	Chữ số:
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	Từ nay, mở tệp .docx, .doc, .rtf, .odt và mẫu Word bằng WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Mở Cài đặt › Ứng dụng mặc định để chọn WordCraft cho .docx và các loại tài liệu khác.
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	Từ nay, mở tệp .docx, .doc, .rtf, .odt và mẫu Word bằng Soratra.
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	Mở Cài đặt › Ứng dụng mặc định để chọn Soratra cho .docx và các loại tài liệu khác.
 	Reading	Đọc
 	Reading Column Width	Độ rộng cột khi đọc
 	Reading Line Spacing	Giãn dòng khi đọc
 	Reading Text Size	Cỡ chữ khi đọc
 	Show KeyTips (Alt or F10)	Hiện gợi ý phím (Alt hoặc F10)
 	System	Hệ thống
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Để mở tài liệu Word bằng WordCraft theo mặc định: chọn một tài liệu trong Finder, chọn Tệp › Lấy thông tin, chọn WordCraft ở mục Mở bằng, rồi nhấp Thay đổi tất cả.
-	WordCraft is now the default app for Word documents.	WordCraft hiện là ứng dụng mặc định cho tài liệu Word.
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	Để mở tài liệu Word bằng Soratra theo mặc định: chọn một tài liệu trong Finder, chọn Tệp › Lấy thông tin, chọn Soratra ở mục Mở bằng, rồi nhấp Thay đổi tất cả.
+	Soratra is now the default app for Word documents.	Soratra hiện là ứng dụng mặc định cho tài liệu Word.
 	Correct TWo INitial CApitals	Sửa lỗi viết hoa hai chữ cái đầu
 	Correct accidental usage of cAPS LOCK key	Sửa lỗi vô tình dùng phím Caps Lock
 	Picture	Ảnh
@@ -2452,8 +2452,8 @@
 	Undo History	Lịch sử hoàn tác
 	Undo {n} Actions	Hoàn tác {n} thao tác
 	Start-up	Khởi động
-	Show the Start screen when WordCraft starts	Hiện màn hình Bắt đầu khi khởi chạy WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Bật: WordCraft mở ở Tệp › Trang chủ, với tài liệu trống, các mẫu và tài liệu gần đây của bạn. Tắt: WordCraft mở một tài liệu trống.
+	Show the Start screen when Soratra starts	Hiện màn hình Bắt đầu khi khởi chạy Soratra
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Bật: Soratra mở ở Tệp › Trang chủ, với tài liệu trống, các mẫu và tài liệu gần đây của bạn. Tắt: Soratra mở một tài liệu trống.
 	Typing	Nhập liệu
 	Level 4	Cấp 4
 	Level 5	Cấp 5
@@ -2508,7 +2508,7 @@
 	Go to what:	Đi tới:
 	Language Preferences…	Tùy chọn ngôn ngữ…
 	Reading Mode	Chế độ đọc
-	Researcher needs an online service; WordCraft keeps your documents offline.	Trình nghiên cứu cần một dịch vụ trực tuyến; WordCraft giữ tài liệu của bạn ngoại tuyến.
+	Researcher needs an online service; Soratra keeps your documents offline.	Trình nghiên cứu cần một dịch vụ trực tuyến; Soratra giữ tài liệu của bạn ngoại tuyến.
 	Set Proofing Language…	Đặt ngôn ngữ soát lỗi…
 	Suggested	Đề xuất
 	Text size	Cỡ chữ
@@ -2642,7 +2642,7 @@
 	Place in This Document	Vị trí trong tài liệu này
 
 # Missing dictionary on the status bar (#1441)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Chưa cài từ điển chính tả cho {language}, nên ngôn ngữ này không được kiểm tra. WordCraft tìm từ điển Hunspell {name} trong thư mục WORDCRAFT_DICTIONARIES và ở các vị trí thông thường của hệ thống.
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	Chưa cài từ điển chính tả cho {language}, nên ngôn ngữ này không được kiểm tra. Soratra tìm từ điển Hunspell {name} trong thư mục SORATRA_DICTIONARIES và ở các vị trí thông thường của hệ thống.
 	{language} (no dictionary)	{language} (không có từ điển)
 # Table style parts in the Modify Table Style dialog (#714)
 	Odd Banded Rows	Hàng xen kẽ lẻ

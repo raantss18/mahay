@@ -1,8 +1,8 @@
 //! Theme parts (`a:theme`).
 
-use deckcraft_color::{ColorScheme, Rgba, SchemeSlot};
-use deckcraft_model::style::{ColorBase, Effects};
-use deckcraft_model::theme::{FontScheme, FontSet, FormatScheme, ScriptFont, Theme, default_format};
+use seho_color::{ColorScheme, Rgba, SchemeSlot};
+use seho_model::style::{ColorBase, Effects};
+use seho_model::theme::{FontScheme, FontSet, FormatScheme, ScriptFont, Theme, default_format};
 
 use super::{Imp, Part, dml};
 use crate::xml::El;
@@ -30,7 +30,7 @@ pub fn read_theme(imp: &mut Imp, part: &Part, root: &El) -> Theme {
                 let rgb = match c.base {
                     ColorBase::Rgb { rgb } => rgb,
                     ColorBase::System { last, .. } => last,
-                    ColorBase::Preset { name } => deckcraft_color::preset(&name).unwrap_or(Rgba::BLACK),
+                    ColorBase::Preset { name } => seho_color::preset(&name).unwrap_or(Rgba::BLACK),
                     ColorBase::Scheme { .. } => continue,
                 };
                 scheme.set(slot, rgb);

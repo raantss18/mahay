@@ -1,8 +1,8 @@
 //! Formula text conversion between the model (canonical text, no `=`) and files (`_xlfn.`
 //! prefixes for newer functions).
 
-use gridcraft_formula::Expr;
-use gridcraft_model::Formula;
+use tabilao_formula::Expr;
+use tabilao_model::Formula;
 
 /// Formula text for a file.
 pub fn to_file(f: &Formula) -> String {
@@ -15,7 +15,7 @@ pub fn to_file(f: &Formula) -> String {
 /// Arbitrary formula text (names, CF, validation) for a file. Unparseable text is kept.
 pub fn text_to_file(text: &str) -> String {
     let body = text.strip_prefix('=').unwrap_or(text);
-    match gridcraft_formula::parse(body) {
+    match tabilao_formula::parse(body) {
         Ok(e) => expr_to_file(e),
         Err(_) => body.to_string(),
     }
@@ -78,23 +78,23 @@ fn expr_to_file(e: Expr) -> String {
         },
         // Files have no `#` operator: Excel writes `A1#` as `_xlfn.ANCHORARRAY(A1)`, and a spill
         // reference that became `#REF!` (its cell was deleted) as plain `#REF!`.
-        Expr::Unary(gridcraft_formula::UnOp::Spill, r) if matches!(*r, Expr::Error(_)) => *r,
-        Expr::Unary(gridcraft_formula::UnOp::Spill, r) => Expr::Call("_xlfn.ANCHORARRAY".into(), vec![*r]),
+        Expr::Unary(tabilao_formula::UnOp::Spill, r) if matches!(*r, Expr::Error(_)) => *r,
+        Expr::Unary(tabilao_formula::UnOp::Spill, r) => Expr::Call("_xlfn.ANCHORARRAY".into(), vec![*r]),
         // Nor an `@` operator: Excel writes `@x` as `_xlfn.SINGLE(x)`.
-        Expr::Unary(gridcraft_formula::UnOp::At, x) => Expr::Call("_xlfn.SINGLE".into(), vec![*x]),
+        Expr::Unary(tabilao_formula::UnOp::At, x) => Expr::Call("_xlfn.SINGLE".into(), vec![*x]),
         // Nor the `[@Col]` shorthand: files spell it `[[#This Row],[Col]]`, or Excel repairs
         // the file and drops the table. Carried as a name, which prints verbatim.
-        Expr::Struct(st) => Expr::Name(gridcraft_formula::printer::struct_ref_file(&st)),
+        Expr::Struct(st) => Expr::Name(tabilao_formula::printer::struct_ref_file(&st)),
         // Nor trim-reference operators: written as the equivalent `TRIMRANGE(range,n,n)`, which
         // every Excel with trim references reads. (Excel's own file spelling of `A1:.E10` is
         // not publicly documented; the `_xlfn._TRO_*` call forms are accepted on read.)
-        Expr::Unary(gridcraft_formula::UnOp::Trim(mode), x) => {
+        Expr::Unary(tabilao_formula::UnOp::Trim(mode), x) => {
             let code = Expr::Number(f64::from(mode.code()));
             Expr::Call("_xlfn.TRIMRANGE".into(), vec![*x, code.clone(), code])
         }
         other => other,
     });
-    gridcraft_formula::print(&e)
+    tabilao_formula::print(&e)
 }
 
 /// `_xlpm.x` → `x` (any case, as the parser upper-cases function names).
@@ -108,8 +108,8 @@ fn strip_param_prefix(n: String) -> String {
 /// Formula text read from a file → model text (strips prefixes when it parses).
 pub fn from_file(text: &str) -> String {
     let body = text.strip_prefix('=').unwrap_or(text);
-    match gridcraft_formula::parse(body) {
-        Ok(e) => gridcraft_formula::print(&e.map(&mut |x| match x {
+    match tabilao_formula::parse(body) {
+        Ok(e) => tabilao_formula::print(&e.map(&mut |x| match x {
             Expr::Name(n) => Expr::Name(strip_param_prefix(n)),
             Expr::Call(n, args) => Expr::Call(strip_param_prefix(n), args),
             other => other,
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(from_file("SUM(_xlfn.ANCHORARRAY(Sheet1!$D$1))+_xlfn.ANCHORARRAY(B2)"), "SUM(Sheet1!$D$1#)+B2#");
         // Found by the command-sequence fuzzer: deleting the anchor of `H5#` left `=#REF!` in
         // the workbook but `ANCHORARRAY(#REF!)` in the file, which read back differently.
-        let deleted = Formula::from_expr(Expr::Unary(gridcraft_formula::UnOp::Spill, Box::new(Expr::Error(gridcraft_core::CellError::Ref))));
+        let deleted = Formula::from_expr(Expr::Unary(tabilao_formula::UnOp::Spill, Box::new(Expr::Error(tabilao_core::CellError::Ref))));
         assert_eq!(deleted.text, "#REF!");
         assert_eq!(to_file(&deleted), "#REF!");
     }

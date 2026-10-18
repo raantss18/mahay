@@ -3,8 +3,8 @@
 use std::sync::{Arc, Mutex};
 
 use egui_kittest::kittest::Queryable as _;
-use gridcraft_engine::{Session, core::CellRef, core::Value};
-use gridcraft_ui_egui::{Services, SheetApp};
+use tabilao_engine::{Session, core::CellRef, core::Value};
+use tabilao_ui_egui::{Services, SheetApp};
 
 fn harness(services: Services) -> egui_kittest::Harness<'static, SheetApp> {
     let mut session = Session::new();
@@ -95,7 +95,7 @@ fn save_actions_include_the_cell_draft_and_close_keeps_the_unsaved_prompt() {
     let saved = downloads.lock().unwrap();
     assert_eq!(saved.len(), 3);
     for (_, bytes) in saved.iter().take(2) {
-        let (wb, _) = gridcraft_engine::io::open_bytes("saved.xlsx", bytes).unwrap();
+        let (wb, _) = tabilao_engine::io::open_bytes("saved.xlsx", bytes).unwrap();
         assert_eq!(wb.active().unwrap().value(CellRef::new(0, 0)), Value::Number(123.0));
     }
     assert!(saved[2].0.ends_with(".csv"));
@@ -149,7 +149,7 @@ fn export_as_pdf_is_delivered_as_a_download() {
 
 #[test]
 fn save_as_offers_pdf_and_leaves_the_workbook_file_alone() {
-    let dir = std::env::temp_dir().join(format!("gridcraft-save-as-type-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tabilao-save-as-type-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let asked = Arc::new(Mutex::new(Vec::<String>::new()));
     let (capture, target) = (asked.clone(), dir.clone());
@@ -187,7 +187,7 @@ fn pdf_picker_harness(dir: &std::path::Path) -> (Arc<Mutex<Vec<String>>>, egui_k
 
 #[test]
 fn the_palette_export_as_pdf_asks_where_to_save() {
-    let dir = std::env::temp_dir().join(format!("gridcraft-export-pdf-palette-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("tabilao-export-pdf-palette-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let (asked, mut h) = pdf_picker_harness(&dir);
     h.state_mut().run("cell.set", serde_json::json!({"cell": "A1", "input": "42"})).unwrap();

@@ -1,4 +1,4 @@
-//! The DeckCraft document model.
+//! The Seho document model.
 //!
 //! A [`Presentation`] has slide masters (each with a theme and layouts) and slides. Each slide
 //! uses a layout; placeholders on a slide inherit position, formatting and text styles from the
@@ -23,8 +23,8 @@ pub mod words;
 
 use std::sync::Arc;
 
-pub use deckcraft_color::{ColorScheme, ColorTransform, Rgba, SchemeSlot};
-pub use deckcraft_geom::{Rect, Size, Xfrm};
+pub use seho_color::{ColorScheme, ColorTransform, Rgba, SchemeSlot};
+pub use seho_geom::{Rect, Size, Xfrm};
 use serde::{Deserialize, Serialize};
 
 pub use anim::{AnimClass, AnimStart, Animation, Transition};
@@ -213,13 +213,13 @@ pub struct CustomPath {
     pub h: f64,
     /// `M x y`, `L x y`, `C x1 y1 x2 y2 x y`, `Q x1 y1 x y`, `Z`.
     pub d: String,
-    pub fill: deckcraft_geom::preset::FillMode,
+    pub fill: seho_geom::preset::FillMode,
     pub stroke: bool,
 }
 
 impl Default for CustomPath {
     fn default() -> Self {
-        CustomPath { w: 0.0, h: 0.0, d: String::new(), fill: deckcraft_geom::preset::FillMode::Norm, stroke: true }
+        CustomPath { w: 0.0, h: 0.0, d: String::new(), fill: seho_geom::preset::FillMode::Norm, stroke: true }
     }
 }
 
@@ -462,7 +462,7 @@ impl Shape {
     }
     /// Is this a line-like shape (no area)?
     pub fn is_line(&self) -> bool {
-        matches!(self.kind, ShapeKind::Connector { .. }) || self.geom.preset_name().is_some_and(deckcraft_geom::preset::is_line_like)
+        matches!(self.kind, ShapeKind::Connector { .. }) || self.geom.preset_name().is_some_and(seho_geom::preset::is_line_like)
     }
     pub fn kind_name(&self) -> &'static str {
         match &self.kind {
@@ -947,7 +947,7 @@ fn lenient_size<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::Result<S
     Ok(Size::new(side("width"), side("height")))
 }
 
-/// An XML package part DeckCraft doesn't model, kept as written.
+/// An XML package part Seho doesn't model, kept as written.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct KeptPart {
@@ -966,7 +966,7 @@ pub struct KeptPart {
 #[serde(default, rename_all = "camelCase")]
 pub struct Presentation {
     /// Slide size in points (default 16:9, 960 × 540). Read leniently: a missing, null or
-    /// non-numeric side becomes NaN for `deckcraft_format::repair` to replace, instead of the
+    /// non-numeric side becomes NaN for `seho_format::repair` to replace, instead of the
     /// whole file failing to open.
     #[serde(deserialize_with = "lenient_size")]
     pub slide_size: Size,

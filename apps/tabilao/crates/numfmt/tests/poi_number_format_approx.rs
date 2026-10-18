@@ -2,8 +2,8 @@
 //! `test-data/spreadsheet/NumberFormatApproxTests.xlsx` (sheet `Tests`: B = format, C = value,
 //! A = `=TEXT(C, B)`). The workbook is not committed; its rows are copied here as data.
 
-use gridcraft_core::{DateSystem, Value};
-use gridcraft_numfmt::text_function;
+use tabilao_core::{DateSystem, Value};
+use tabilao_numfmt::text_function;
 
 /// (format, value, Excel's result).
 // The last row's 3.14159 is the workbook's value, not an approximation of pi.

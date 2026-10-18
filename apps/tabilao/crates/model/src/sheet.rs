@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, RangeRef, Value};
+use tabilao_core::{CellRef, RangeRef, Value};
 use serde::{Deserialize, Serialize};
 
 use crate::cell::{Cell, CellPicture};
@@ -213,7 +213,7 @@ impl Sheet {
     /// Pictures retain a scalar fallback for calculation and unsupported consumers.
     pub fn set_picture(&mut self, c: CellRef, picture: Arc<CellPicture>) {
         let style = self.style_id(c);
-        self.cells.set(c, Cell { value: Value::Error(gridcraft_core::CellError::Value), formula: None, style });
+        self.cells.set(c, Cell { value: Value::Error(tabilao_core::CellError::Value), formula: None, style });
         self.cell_pictures.insert(c, picture);
     }
     pub fn input_text(&self, c: CellRef) -> String {
@@ -292,10 +292,10 @@ impl Sheet {
     }
     /// Row containing y (points from the top), clamped.
     pub fn row_at(&self, y: f64) -> u32 {
-        line_at(y, self.default_row_height as f64, &self.rows, gridcraft_core::MAX_ROWS)
+        line_at(y, self.default_row_height as f64, &self.rows, tabilao_core::MAX_ROWS)
     }
     pub fn col_at(&self, x: f64) -> u32 {
-        line_at(x, self.default_col_width as f64, &self.cols, gridcraft_core::MAX_COLS)
+        line_at(x, self.default_col_width as f64, &self.cols, tabilao_core::MAX_COLS)
     }
 
     /// The merged range containing `c`, if any.
@@ -418,7 +418,7 @@ mod tests {
         for r in (0..5000).step_by(3) {
             s.rows.insert(r, LineInfo { size: Some(10.0 + (r % 7) as f32), hidden: r % 11 == 0, ..Default::default() });
         }
-        let idx = LineIndex::new(&s.rows, s.default_row_height, gridcraft_core::MAX_ROWS);
+        let idx = LineIndex::new(&s.rows, s.default_row_height, tabilao_core::MAX_ROWS);
         for r in [0u32, 1, 2, 3, 4, 100, 999, 4998, 5000, 6000] {
             assert!((idx.start(r) - s.row_top(r)).abs() < 1e-6, "start {r}");
         }
@@ -442,7 +442,7 @@ mod tests {
         assert_eq!(s.row_at(59.0), 1);
         assert_eq!(s.row_at(61.0), 3);
         assert_eq!(s.row_at(85.0), 4);
-        assert_eq!(s.col_at(1e12), gridcraft_core::MAX_COLS - 1);
+        assert_eq!(s.col_at(1e12), tabilao_core::MAX_COLS - 1);
         assert_eq!(s.col_at(-5.0), 0);
         assert_eq!(s.col_left(2), 128.0);
     }

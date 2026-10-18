@@ -17,7 +17,7 @@ use egui::{Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::{DockTabs, Panels};
 use crate::theme::Tokens;
 use crate::widgets;
@@ -394,7 +394,7 @@ impl DockLayout {
 
 /// Show `g` and expand it (Window › <panel>, the icon rail): a panel asked for is always
 /// brought back, whatever state it was left in (#129).
-pub fn reveal(app: &mut PhotocraftApp, g: Group) {
+pub fn reveal(app: &mut SaryApp, g: Group) {
     *g.shown_mut(&mut app.ui.panels) = true;
     let selected = *g.tab_mut(&mut app.ui.dock_tabs);
     let pro = app.ui.theme.is_pro();
@@ -406,7 +406,7 @@ pub fn reveal(app: &mut PhotocraftApp, g: Group) {
 /// collapsed to its tab strip. A docked group is never hidden from the rail (it used to
 /// toggle visibility, so one stray click made a panel vanish: #129); `docked` is false for
 /// Studio's floating Properties card, which the rail shows and hides.
-pub fn rail_click(app: &mut PhotocraftApp, g: Group, docked: bool) {
+pub fn rail_click(app: &mut SaryApp, g: Group, docked: bool) {
     if !g.shown(&app.ui.panels) {
         reveal(app, g);
     } else if !docked {
@@ -441,7 +441,7 @@ fn peek_id() -> egui::Id {
     egui::Id::new("dock-peek")
 }
 
-fn auto_collapse_peek(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn auto_collapse_peek(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(g) = ctx.data(|d| d.get_temp::<Option<Group>>(peek_id())).flatten() else { return };
     let Some(p) = ctx.input(|i| i.pointer.any_pressed().then(|| i.pointer.press_origin()).flatten()) else {
         return;
@@ -480,7 +480,7 @@ fn strips_id() -> egui::Id {
 
 /// Draw the `shown` groups (any order; the layout decides) filling `ui`. `body` draws one
 /// group's tab content.
-pub fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui, shown: &[Group], mut body: impl FnMut(&mut PhotocraftApp, &mut egui::Ui, Group, usize)) {
+pub fn show(app: &mut SaryApp, ui: &mut egui::Ui, shown: &[Group], mut body: impl FnMut(&mut SaryApp, &mut egui::Ui, Group, usize)) {
     let t = Tokens::get(ui.ctx());
     let auto_collapse = app.session.prefs().workspace.auto_collapse_icon_panels;
     if auto_collapse {
@@ -802,13 +802,13 @@ fn resize(layout: &mut DockLayout, heights: &[(Group, f32)], i: usize, dy: f32) 
 }
 
 /// What `prefs.panelLayout` holds: the live layout and open panels.
-fn snapshot(app: &PhotocraftApp) -> Value {
+fn snapshot(app: &SaryApp) -> Value {
     json!({"workspace": app.ui.workspace, "panels": app.ui.panels, "dockTabs": app.ui.dock_tabs, "dock": app.ui.dock, "timelineOpen": app.ui.timeline.open, "docking": app.ui.docking, "dockingHidden": app.ui.docking_hidden, "dockingCollapsed": app.ui.docking_collapsed})
 }
 
 /// Remember the layout in the preferences once the user lets go of the mouse (Workspace ›
 /// Remember Workspace Changes). Cheap: a small JSON compare per frame.
-pub fn persist(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn persist(app: &mut SaryApp, ctx: &egui::Context) {
     if !app.session.prefs().workspace.remember_workspace_changes || ctx.input(|i| i.pointer.any_down()) {
         return;
     }
@@ -819,7 +819,7 @@ pub fn persist(app: &mut PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// Restore the remembered layout at launch. Unreadable parts keep their defaults.
-pub fn restore(app: &mut PhotocraftApp) {
+pub fn restore(app: &mut SaryApp) {
     if !app.session.prefs().workspace.remember_workspace_changes {
         return;
     }
@@ -837,7 +837,7 @@ pub fn restore(app: &mut PhotocraftApp) {
 /// Apply the `panels`, `dockTabs`, `dock` and `timelineOpen` parts of a saved layout
 /// (a workspace or `panelLayout`). Missing or invalid dock parts are left alone; old
 /// layouts without Timeline visibility restore it closed.
-pub fn apply(app: &mut PhotocraftApp, v: &Value) {
+pub fn apply(app: &mut SaryApp, v: &Value) {
     app.ui.docking_collapsed = v.get("dockingCollapsed").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
     app.ui.docking_reveal = None;
     app.ui.docking_generation = app.ui.docking_generation.wrapping_add(1);

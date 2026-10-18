@@ -6,8 +6,8 @@
 //! Knots are addressed as `[subpath, knot]`. Every edit validates its indices and returns an
 //! error message instead of panicking.
 
-use photocraft_doc::{Knot, Path};
-use photocraft_geom::Point;
+use sary_doc::{Knot, Path};
+use sary_geom::Point;
 
 /// One of a knot's two direction handles.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -368,7 +368,7 @@ pub fn hit(path: &Path, p: Point, tol: f64, handles: &[([usize; 2], Handle)]) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::Subpath;
+    use sary_doc::Subpath;
 
     fn tri() -> Path {
         Path::new(vec![Subpath::polygon(&[(0.0, 0.0), (100.0, 0.0), (50.0, 80.0)])])

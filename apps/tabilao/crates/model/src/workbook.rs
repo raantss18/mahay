@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::DateSystem;
-use gridcraft_formula::Expr;
+use tabilao_core::DateSystem;
+use tabilao_formula::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::cell::Formula;
@@ -104,7 +104,7 @@ pub struct Workbook {
     pub custom_lists: Vec<Vec<String>>,
     /// Named cell styles (Cell Styles gallery): name → style.
     pub cell_styles: Vec<(String, crate::style::Style)>,
-    /// VBA project (`xl/vbaProject.bin`) carried through unchanged. GridCraft does not run
+    /// VBA project (`xl/vbaProject.bin`) carried through unchanged. Tabilao does not run
     /// macros; the blob is preserved so that saving a macro-enabled workbook never destroys the
     /// macros it arrived with. base64 in JSON. `None` = the workbook has no macros.
     #[serde(default, with = "crate::b64::opt")]
@@ -233,10 +233,10 @@ impl Workbook {
             }
         }
         for n in self.names.iter_mut() {
-            if let Ok(e) = gridcraft_formula::parse(&n.formula) {
+            if let Ok(e) = tabilao_formula::parse(&n.formula) {
                 let ne = spell_calls(e.clone(), &lambdas);
                 if ne != e {
-                    n.formula = gridcraft_formula::print(&ne);
+                    n.formula = tabilao_formula::print(&ne);
                 }
             }
         }

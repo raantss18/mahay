@@ -47,7 +47,7 @@ pub enum Command {
     Cancel {
         app: String,
     },
-    /// Download the newer ArtCraft Launcher, put it in place and restart into it.
+    /// Download the newer Mahay Trano, put it in place and restart into it.
     UpdateLauncher,
     /// Fetch the pictures of an app's details page (`core::details`), one [`Event::Screenshot`]
     /// each, the lead picture first. Pictures already saved on this machine arrive without
@@ -133,8 +133,8 @@ pub const INSTALL_CANCELLED: &str = "install cancelled";
 /// Which service an app's release information came from (the footer names them).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Origin {
-    /// ArtCraft's release feed (storyteller-web), which polls GitHub for everyone.
-    ArtCraftApi,
+    /// Mahay's release feed (storyteller-web), which polls GitHub for everyone.
+    MahayApi,
     /// GitHub directly: the fallback.
     GitHub,
 }
@@ -142,7 +142,7 @@ pub enum Origin {
 impl Origin {
     pub fn label(self) -> &'static str {
         match self {
-            Self::ArtCraftApi => "ArtCraft API",
+            Self::MahayApi => "Mahay API",
             Self::GitHub => "GitHub",
         }
     }
@@ -151,7 +151,7 @@ impl Origin {
 /// Where release information came from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Source {
-    /// ArtCraft's release feed (storyteller-web), which polls GitHub for everyone.
+    /// Mahay's release feed (storyteller-web), which polls GitHub for everyone.
     Feed,
     /// The GitHub REST API.
     GitHubApi,
@@ -164,7 +164,7 @@ pub enum Source {
 impl Source {
     pub fn label(self) -> &'static str {
         match self {
-            Self::Feed => "ArtCraft",
+            Self::Feed => "Mahay",
             Self::GitHubApi => "GitHub",
             Self::GitHubPages => "GitHub (release pages)",
             Self::Cache => "saved results",
@@ -181,11 +181,11 @@ pub enum Event {
         /// The service this answer came from.
         from: Origin,
     },
-    /// The latest ArtCraft Launcher release, when it's newer than this one.
+    /// The latest Mahay Trano release, when it's newer than this one.
     LauncherUpdate(Release),
     /// The new launcher is in place (or will be, once this one exits): quit now so it can start.
     LauncherRestarting,
-    /// News and alerts from ArtCraft's release feed (replaces any earlier set).
+    /// News and alerts from Mahay's release feed (replaces any earlier set).
     Notices {
         announcements: Vec<crate::feed::Notice>,
         alerts: Vec<crate::feed::Notice>,
@@ -271,13 +271,13 @@ mod tests {
     #[test]
     fn install_folders_inherit_the_default_unless_the_app_has_an_override() {
         let mut locations = InstallLocations::default();
-        assert_eq!(locations.folder("photocraft"), None);
-        locations.root = Some("/Volumes/Craft".into());
-        locations.per_app.insert("photocraft".into(), "/Volumes/Photo".into());
-        assert_eq!(locations.folder("photocraft"), Some("/Volumes/Photo"));
-        assert_eq!(locations.folder("filmcraft"), Some("/Volumes/Craft"));
-        locations.per_app.remove("photocraft");
-        assert_eq!(locations.folder("photocraft"), Some("/Volumes/Craft"));
+        assert_eq!(locations.folder("sary"), None);
+        locations.root = Some("/Volumes/Mahay".into());
+        locations.per_app.insert("sary".into(), "/Volumes/Photo".into());
+        assert_eq!(locations.folder("sary"), Some("/Volumes/Photo"));
+        assert_eq!(locations.folder("hetsika"), Some("/Volumes/Mahay"));
+        locations.per_app.remove("sary");
+        assert_eq!(locations.folder("sary"), Some("/Volumes/Mahay"));
     }
 
     #[test]

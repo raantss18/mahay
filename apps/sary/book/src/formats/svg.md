@@ -1,10 +1,10 @@
 # SVG
 
-An SVG opens as a document of shape layers, and places (File › Place Embedded / Place Linked) as a vector smart object. Both go through `photocraft-io`'s `svg` module; there is no SVG export.
+An SVG opens as a document of shape layers, and places (File › Place Embedded / Place Linked) as a vector smart object. Both go through `sary-io`'s `svg` module; there is no SVG export.
 
 ## Opening
 
-`usvg` parses the file (it is the same crate the UI's icons go through): CSS, `use`, units, nested transforms and `viewBox` are resolved, and text is shaped into outlines with the bundled craft fonts plus, on the desktop, the system's fonts. The resulting tree becomes layers in paint order:
+`usvg` parses the file (it is the same crate the UI's icons go through): CSS, `use`, units, nested transforms and `viewBox` are resolved, and text is shaped into outlines with the bundled Mahay fonts plus, on the desktop, the system's fonts. The resulting tree becomes layers in paint order:
 
 | SVG | Layer |
 |---|---|

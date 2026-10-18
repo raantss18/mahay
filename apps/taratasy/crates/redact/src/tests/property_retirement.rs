@@ -5,7 +5,7 @@ const DESCRIPTION: &[u8] = b"<< /ActualText (LEAK_ACTUAL) /Alt (LEAK_ALT) /E (LE
 const PUBLIC: &[u8] = b"<< /ActualText (PUBLIC_ACTUAL) /Alt (PUBLIC_ALT) /E (PUBLIC_EXPANSION) /T (PUBLIC_TITLE) >>";
 
 fn resources(doc: &Document, page: usize) -> Dict {
-    let page = pdfcraft_model::pages(doc).swap_remove(page);
+    let page = taratasy_model::pages(doc).swap_remove(page);
     doc.resolve(page.dict.get(b"Resources").unwrap()).as_dict().unwrap().clone()
 }
 
@@ -141,7 +141,7 @@ fn uninspectable_forms_with_candidate_properties_fail_closed() {
             let filter = if malformed { "" } else { "/Filter /UnsupportedPropertyTest" };
             let data = if malformed { b")".as_slice() } else { b"opaque" };
             if malformed {
-                assert!(pdfcraft_content::parse(data).skipped > 0, "fixture must need parser recovery");
+                assert!(taratasy_content::parse(data).skipped > 0, "fixture must need parser recovery");
             }
             let mut doc = one_page(
                 SECRET,

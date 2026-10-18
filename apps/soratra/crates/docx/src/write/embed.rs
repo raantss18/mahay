@@ -3,14 +3,14 @@
 //! Each written object gets its kept markup with fresh relationship ids, pointing at copies of the
 //! parts it needs. The first object to use a part writes it under its original name (unless that
 //! name is one this writer uses for something else: then it's renamed). An object written again
-//! (copied and pasted in WordCraft) gets its own renamed copies of every part, so the copies stay
+//! (copied and pasted in Soratra) gets its own renamed copies of every part, so the copies stay
 //! independent in Word; past [`MAX_COPY_BYTES`] of such copies, later ones share the first's parts.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
-use wordcraft_doc::graphic::Embedded;
-use wordcraft_doc::para::Float;
+use soratra_doc::graphic::Embedded;
+use soratra_doc::para::Float;
 
 use super::PartRels;
 use crate::package::{
@@ -51,7 +51,7 @@ pub(crate) struct EmbedWriter<'d> {
 }
 
 impl<'d> EmbedWriter<'d> {
-    pub fn new(doc: &'d wordcraft_doc::Document) -> EmbedWriter<'d> {
+    pub fn new(doc: &'d soratra_doc::Document) -> EmbedWriter<'d> {
         let manifest = doc.passthrough.get(EMBEDDED_PARTS).map(|m| EmbeddedManifest::parse(m)).unwrap_or_default();
         let mut taken: HashSet<String> = [
             "word/document.xml",
@@ -360,7 +360,7 @@ impl super::Writer<'_> {
     /// The `a:graphic` of a SmartArt graphic written from its model, laid out `w` × `h` points:
     /// new diagram parts (`word/diagrams/{data,layout,quickStyle,colors,drawing}N.xml`) related
     /// from the story part through `rels`.
-    pub(super) fn smart_art_graphic(&mut self, spec: &wordcraft_doc::smart_art::SmartArtSpec, w: f32, h: f32, rels: &mut PartRels) -> String {
+    pub(super) fn smart_art_graphic(&mut self, spec: &soratra_doc::smart_art::SmartArtSpec, w: f32, h: f32, rels: &mut PartRels) -> String {
         use crate::package::rt;
         use crate::smart_art as sa;
         let names = self.embeds.fresh_set(
@@ -404,7 +404,7 @@ impl super::Writer<'_> {
 
     /// The `a:graphic` of a chart written from its model: a new chart part (`word/charts/chartN.xml`)
     /// related from the story part through `rels`.
-    pub(super) fn chart_graphic(&mut self, spec: &wordcraft_doc::chart::ChartSpec, rels: &mut PartRels) -> String {
+    pub(super) fn chart_graphic(&mut self, spec: &soratra_doc::chart::ChartSpec, rels: &mut PartRels) -> String {
         let name = self.embeds.fresh("word/charts/chart", ".xml");
         let bytes = crate::chart_spec::chart_xml(spec).into_bytes();
         self.embeds.parts.push((name.clone(), bytes, crate::chart_spec::CHART_CT.to_string(), PartRels::default()));
@@ -647,7 +647,7 @@ fn vml_style_with(style: &str, w: f32, h: f32, float: &Float) -> String {
 
 /// Points for a VML style: finite, bounded, at most two decimals.
 fn pt(v: f32) -> String {
-    let v = wordcraft_geom::finite(v).clamp(-crate::units::MAX_LEN_PT, crate::units::MAX_LEN_PT);
+    let v = soratra_geom::finite(v).clamp(-crate::units::MAX_LEN_PT, crate::units::MAX_LEN_PT);
     let s = format!("{v:.2}");
     s.trim_end_matches('0').trim_end_matches('.').to_string()
 }
@@ -676,7 +676,7 @@ mod tests {
     #[test]
     fn vml_style_takes_the_rotation_and_flips() {
         let mut float = Float::default();
-        float.set_spin(wordcraft_geom::Spin::new(-30.5, true, true));
+        float.set_spin(soratra_geom::Spin::new(-30.5, true, true));
         let s = vml_style_with("width:1pt;rotation:10;flip:x;height:1pt;z-index:3", 2.0, 3.0, &float);
         assert_eq!(s, "z-index:3;width:2pt;height:3pt;rotation:329.5;flip:x y");
         // Unturned: no rotation or flip left behind.

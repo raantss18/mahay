@@ -1,7 +1,7 @@
 //! The Eyedropper on the slide canvas through real egui input.
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui::{Event, Id, Key, Modifiers, PointerButton, Pos2};
 use egui_kittest::Harness;
 use serde_json::json;

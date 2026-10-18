@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build and package ArtCraft Launcher for Linux (<arch> is x86_64, aarch64 or riscv64):
+# Build and package Mahay Trano for Linux (<arch> is x86_64, aarch64 or riscv64):
 #
-#   $DIST/artcraft-launcher-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
-#   $DIST/artcraft-launcher-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
-#   $DIST/artcraft-launcher-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
-#   $DIST/artcraft-launcher-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
-#   $DIST/artcraft-launcher-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
+#   $DIST/trano-<version>-linux-<arch>.AppImage  any distro with glibc >= the build host's
+#   $DIST/trano-<version>-linux-<arch>.AppImage.zsync  delta updates (needs zsyncmake)
+#   $DIST/trano-<version>-linux-<arch>.deb       Debian, Ubuntu, Mint, Pop!_OS, ...
+#   $DIST/trano-<version>-linux-<arch>.rpm       Fedora, openSUSE, RHEL, ...
+#   $DIST/trano-<version>-linux-<arch>.tar.gz    plain FHS-style tree (bin/, share/)
 #
 # Usage: packaging/linux/package.sh [--skip-build] [--formats "appimage deb rpm tar" or appimage,deb,rpm,tar]
 #
@@ -21,8 +21,8 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.artcraft-launcher
-PKG=artcraft-launcher
+APP_ID=ai.storyteller.trano
+PKG=trano
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar"
@@ -34,7 +34,7 @@ while [ $# -gt 0 ]; do
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
-# Accept "deb,rpm,tar" as well as "deb rpm tar" (craft-common-actions passes commas).
+# Accept "deb,rpm,tar" as well as "deb rpm tar" (mahay-common-actions passes commas).
 FORMATS="$(printf %s "$FORMATS" | tr ',' ' ')"
 for fmt in $FORMATS; do
   case "$fmt" in
@@ -50,10 +50,10 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export ARTCRAFT_LAUNCHER_MAINTAINER="${ARTCRAFT_LAUNCHER_MAINTAINER:-ArtCraft Launcher maintainers <craft-launcher@storyteller.ai>}"
+export TRANO_MAINTAINER="${TRANO_MAINTAINER:-Mahay Trano maintainers <mahay-launcher@storyteller.ai>}"
 BASENAME="$PKG-$VERSION-linux-$ARCH"
 
-echo "==> ArtCraft Launcher $VERSION for Linux $ARCH ($FORMATS)"
+echo "==> Mahay Trano $VERSION for Linux $ARCH ($FORMATS)"
 
 if [ "$SKIP_BUILD" = 0 ]; then
   if [ -n "${CROSS_TARGET:-}" ]; then
@@ -72,7 +72,7 @@ install -Dm755 "$BIN/$PKG" "$STAGE/usr/bin/$PKG"
 "${CROSS_COMPILE:-}strip" "$STAGE/usr/bin/$PKG" 2>/dev/null || true
 install -Dm644 "$HERE/$APP_ID.desktop" "$STAGE/usr/share/applications/$APP_ID.desktop"
 mkdir -p "$STAGE/usr/share/metainfo"
-sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$ARTCRAFT_LAUNCHER_BUILD_DATE/g" \
+sed -e "s/@VERSION@/$VERSION/g" -e "s/@DATE@/$TRANO_BUILD_DATE/g" \
   "$HERE/$APP_ID.metainfo.xml.in" >"$STAGE/usr/share/metainfo/$APP_ID.metainfo.xml"
 mkdir -p "$STAGE/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/usr/share/icons/"
@@ -110,7 +110,7 @@ fi
 
 # ---- AppImage -----------------------------------------------------------------------------------
 if has appimage; then
-  APPDIR="$WORK/ArtCraftLauncher.AppDir"
+  APPDIR="$WORK/MahayLauncher.AppDir"
   cp -R "$STAGE" "$APPDIR"
   mv "$APPDIR/usr/share/doc" "$WORK/doc-unused"
   # AppRun is a script, not a symlink: it installs the .desktop entry and icons into
@@ -141,8 +141,8 @@ if has appimage; then
   # file and fetch only the blocks that changed in a newer release, through the .zsync published
   # next to each AppImage on GitHub Releases. `latest` is the newest published release that is
   # not a pre-release. A fork's builds point at its own releases through GITHUB_REPOSITORY.
-  # The repo is craft-launcher while the files are artcraft-launcher-*.
-  REPO="${GITHUB_REPOSITORY:-storytold/craft-launcher}"
+  # The repo is mahay-launcher while the files are trano-*.
+  REPO="${GITHUB_REPOSITORY:-raantss18/mahay-launcher}"
   UPDATE_INFO="gh-releases-zsync|${REPO%%/*}|${REPO#*/}|latest|$PKG-*-linux-$ARCH.AppImage.zsync"
   # Extract-and-run: works without FUSE (containers, CI). The output embeds the static runtime,
   # so users don't need libfuse2 either. With zsyncmake on the host (CI installs the zsync

@@ -4,7 +4,7 @@
 use std::io::{Cursor, Read};
 use std::sync::Arc;
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 
 fn t(n: &str, v: &str) -> (String, String) {
     (n.to_string(), v.to_string())
@@ -13,7 +13,7 @@ fn t(n: &str, v: &str) -> (String, String) {
 #[test]
 fn tags_survive_round_trip() {
     let mut s = Session::new();
-    deckcraft_engine::sample::open_sample(&mut s).expect("sample");
+    seho_engine::sample::open_sample(&mut s).expect("sample");
     let mut p = s.doc().expect("doc").doc.as_ref().clone();
     p.tags = vec![t("THINKCELLPRESENTATIONDONOTDELETE", "<xml & stuff>")];
     let slide = Arc::make_mut(&mut p.slides[0]);
@@ -21,14 +21,14 @@ fn tags_survive_round_trip() {
     let shape_id = slide.shapes[0].id;
     slide.shapes[0].tags = vec![t("THINKCELLSHAPEDONOTDELETE", "t!abc")];
 
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut zip = zip::ZipArchive::new(Cursor::new(bytes.clone())).expect("zip");
     let mut ct = String::new();
     zip.by_name("[Content_Types].xml").expect("ct").read_to_string(&mut ct).expect("read");
     assert!(ct.contains("presentationml.tags+xml"));
     assert_eq!((0..zip.len()).filter(|i| zip.by_index(*i).is_ok_and(|f| f.name().starts_with("ppt/tags/"))).count(), 3);
 
-    let back = deckcraft_pptx::import(&bytes).expect("import");
+    let back = seho_pptx::import(&bytes).expect("import");
     assert_eq!(back.tags, p.tags);
     assert_eq!(back.slides[0].tags, p.slides[0].tags);
     let first = &back.slides[0].shapes[0];

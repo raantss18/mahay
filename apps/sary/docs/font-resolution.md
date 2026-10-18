@@ -24,7 +24,7 @@ has no `MT` tag before it (`CooperBlack`) is then stored as the shorter family
 
 Opening a PSD or Affinity file already replaces a run's guessed family with the
 installed family its PostScript name resolves to. A guess still stays on a run
-when the face was absent at import and the document is reopened from `.pcraft`
+when the face was absent at import and the document is reopened from `.sary`
 after the font is installed, when fonts are registered after opening, or when a
 command sets `font` and `postscriptName` together.
 

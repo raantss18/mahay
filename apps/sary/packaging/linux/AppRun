@@ -1,21 +1,21 @@
 #!/bin/sh
-# PhotoCraft AppImage entry point (packaging/linux/AppRun; installed by package.sh).
+# Sary AppImage entry point (packaging/linux/AppRun; installed by package.sh).
 #
 # On Wayland the compositor resolves a window's dock icon by taking the window's
-# app_id (ai.storyteller.photocraft) and looking up an installed .desktop file.
+# app_id (ai.storyteller.sary) and looking up an installed .desktop file.
 # An AppImage installs nothing, so every AppImage run would otherwise show the
 # generic "Wayland" icon (#593). Best-effort desktop integration: on first run
 # (and whenever the AppImage's path changes) install the .desktop entry and the
 # hicolor icons into $XDG_DATA_HOME, then launch. Every failure here must leave
-# the launch untouched. Opt out with PHOTOCRAFT_NO_DESKTOP_INTEGRATION=1.
+# the launch untouched. Opt out with SARY_NO_DESKTOP_INTEGRATION=1.
 
 set -u
 
 APPDIR="$(dirname "$(readlink -f "$0")")"
-DESK_ID=ai.storyteller.photocraft
+DESK_ID=ai.storyteller.sary
 
 integrate() {
-  case "${PHOTOCRAFT_NO_DESKTOP_INTEGRATION:-}" in
+  case "${SARY_NO_DESKTOP_INTEGRATION:-}" in
     1 | true | yes) return 0 ;;
   esac
   # The AppImage runtime exports $APPIMAGE; without it (an extracted AppDir) there
@@ -38,7 +38,7 @@ integrate() {
   # If another integrator already registered a .desktop whose Exec points at this
   # AppImage, do not write a second launcher (#3623); remove our own if one is left
   # over, and still install the hicolor icons below. $DESKTOPINTEGRATION is not that
-  # signal: PhotoCraft sets X-AppImage-Integrate=false, so AppImageLauncher skips the
+  # signal: Sary sets X-AppImage-Integrate=false, so AppImageLauncher skips the
   # AppImage and still exports the variable on its binfmt bypass. Treating it as
   # "already integrated" left the menu with no entry (#5534).
   apps="$data/applications"
@@ -57,7 +57,7 @@ integrate() {
   # PATH rather than this AppImage, so the check above misses it. AM's author
   # names the only two places it writes one: system-wide for AM, per user for
   # AppMan and rootless installs.
-  for f in /usr/local/share/applications/photocraft-AM.desktop "$apps/photocraft-AM.desktop"; do
+  for f in /usr/local/share/applications/sary-AM.desktop "$apps/sary-AM.desktop"; do
     if [ -f "$f" ]; then
       external=1
       break
@@ -102,4 +102,4 @@ integrate() {
 }
 
 integrate
-exec "$APPDIR/usr/bin/photocraft" "$@"
+exec "$APPDIR/usr/bin/sary" "$@"

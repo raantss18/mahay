@@ -7,7 +7,7 @@
 //! The cap assertion is an invariant, not a fast check: no 4 KB input can carry 100 001 blocks.
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::ase::{self, AseColor, AseEntry};
+use sary_psd::ase::{self, AseColor, AseEntry};
 fuzz_target!(|data: &[u8]| {
     let Ok(f) = ase::parse(data) else { return };
     assert!(f.swatch_count() <= ase::MAX_SWATCHES, "{} swatches exceeds MAX_SWATCHES", f.swatch_count());

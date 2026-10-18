@@ -5,14 +5,14 @@ use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// The app with a 400 × 300 document: a red 100 × 60 rectangle at (100, 100) on its own layer
 /// above the Background.
-fn app() -> Harness<'static, PhotocraftApp> {
+fn app() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 400, "height": 300, "background": "white"})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.run("select.rect", json!({"x": 100, "y": 100, "width": 100, "height": 60})).unwrap();
@@ -25,7 +25,7 @@ fn app() -> Harness<'static, PhotocraftApp> {
 }
 
 /// Open Free Transform and move the box 50 px right, 40 px down.
-fn transform_and_move(h: &mut Harness<'static, PhotocraftApp>) {
+fn transform_and_move(h: &mut Harness<'static, SaryApp>) {
     let ctx = h.ctx.clone();
     crate::menus::invoke(h.state_mut(), &ctx, "edit.freeTransform", json!({})).unwrap();
     h.run_steps(2);
@@ -37,7 +37,7 @@ fn transform_and_move(h: &mut Harness<'static, PhotocraftApp>) {
     h.run_steps(2);
 }
 
-fn red_bounds(h: &Harness<'static, PhotocraftApp>) -> photocraft_geom::Rect {
+fn red_bounds(h: &Harness<'static, SaryApp>) -> sary_geom::Rect {
     let st = h.state().session.active().unwrap();
     let top = st.doc.layers.last().unwrap();
     top.surface().unwrap().content_bounds()
@@ -51,16 +51,16 @@ fn picking_another_tool_in_the_toolbar_applies_the_transform() {
     hand.click();
     h.run_steps(4);
     assert!(h.state().ui.transform.is_none(), "the box closed");
-    assert_eq!(red_bounds(&h), photocraft_geom::Rect::new(150, 140, 250, 200), "the move was applied, not cancelled");
+    assert_eq!(red_bounds(&h), sary_geom::Rect::new(150, 140, 250, 200), "the move was applied, not cancelled");
 }
 
 /// The app with the red rectangle on a layer the last step made (Layer via Copy, which deselects in
 /// the same step), as Place Embedded leaves it for the box `begin_placed` opens: cancelling the
 /// place takes that step back.
-fn placed_app() -> Harness<'static, PhotocraftApp> {
+fn placed_app() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 400, "height": 300, "background": "white"})).unwrap();
         app.run("select.rect", json!({"x": 100, "y": 100, "width": 100, "height": 60})).unwrap();
         app.run("edit.fill", json!({"color": "#ff0000"})).unwrap();
@@ -72,12 +72,12 @@ fn placed_app() -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn history(h: &Harness<'static, PhotocraftApp>) -> Vec<String> {
+fn history(h: &Harness<'static, SaryApp>) -> Vec<String> {
     h.state().session.active().unwrap().history.entries().to_vec()
 }
 
 /// The box on a just-placed layer (a file dropped on the canvas), moved.
-fn placed_and_moved(h: &mut Harness<'static, PhotocraftApp>) {
+fn placed_and_moved(h: &mut Harness<'static, SaryApp>) {
     let ctx = h.ctx.clone();
     crate::transform_tool::begin_placed(h.state_mut(), &ctx).unwrap();
     h.run_steps(2);
@@ -97,7 +97,7 @@ fn a_placed_image_is_applied_when_another_tool_is_picked() {
     h.run_steps(4);
     assert!(h.state().ui.transform.is_none());
     assert_eq!(h.state().session.active().unwrap().doc.layers.len(), 2, "the placed layer stays");
-    assert_eq!(red_bounds(&h), photocraft_geom::Rect::new(150, 140, 250, 200));
+    assert_eq!(red_bounds(&h), sary_geom::Rect::new(150, 140, 250, 200));
 }
 
 #[test]
@@ -113,7 +113,7 @@ fn picking_another_layer_in_the_panel_applies_the_transform() {
         h.run_steps(4);
         assert!(h.state().ui.transform.is_none(), "placed {placed}");
         assert_eq!(h.state().session.active().unwrap().doc.layers.len(), 2, "placed {placed}");
-        assert_eq!(red_bounds(&h), photocraft_geom::Rect::new(150, 140, 250, 200), "placed {placed}");
+        assert_eq!(red_bounds(&h), sary_geom::Rect::new(150, 140, 250, 200), "placed {placed}");
     }
 }
 
@@ -134,11 +134,11 @@ fn new_layer_applies_the_transform_first() {
         let st = h.state().session.active().unwrap();
         assert_eq!(st.doc.layers.len(), 3, "placed {placed}");
         let red = st.doc.layers[1].surface().unwrap().content_bounds();
-        assert_eq!(red, photocraft_geom::Rect::new(150, 140, 250, 200), "placed {placed}: the moved image, not the original");
+        assert_eq!(red, sary_geom::Rect::new(150, 140, 250, 200), "placed {placed}: the moved image, not the original");
         // History: the transform (folded into Place Embedded for a placed layer), then New Layer.
         let after = history(&h);
         let added: Vec<&str> = after.iter().skip(before.len().saturating_sub(usize::from(placed))).map(String::as_str).collect();
-        let first = if placed { photocraft_engine::file_cmds::PLACE_EMBEDDED } else { "Free Transform" };
+        let first = if placed { sary_engine::file_cmds::PLACE_EMBEDDED } else { "Free Transform" };
         assert_eq!(added, [first, "New Layer"], "placed {placed}: {after:?}");
     }
 }
@@ -159,7 +159,7 @@ fn an_untouched_placed_image_stays_when_another_tool_or_layer_is_picked() {
         h.run_steps(4);
         let st = h.state().session.active().unwrap();
         assert_eq!(st.doc.layers.len(), 2, "via layer {via_layer}: the placed image stays");
-        assert_eq!(red_bounds(&h), photocraft_geom::Rect::new(100, 100, 200, 160));
+        assert_eq!(red_bounds(&h), sary_geom::Rect::new(100, 100, 200, 160));
     }
 }
 
@@ -218,6 +218,6 @@ fn new_layer_with_bad_params_leaves_the_box_open() {
         h.run_steps(2);
         assert!(h.state().ui.transform.is_some(), "{bad}: the box stays open");
         assert_eq!(history(&h), before, "{bad}: nothing applied");
-        assert_eq!(red_bounds(&h), photocraft_geom::Rect::new(100, 100, 200, 160), "{bad}");
+        assert_eq!(red_bounds(&h), sary_geom::Rect::new(100, 100, 200, 160), "{bad}");
     }
 }

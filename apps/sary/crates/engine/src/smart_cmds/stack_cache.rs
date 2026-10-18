@@ -5,10 +5,10 @@
 
 use std::sync::{Mutex, PoisonError};
 
-use photocraft_color::PixelFormat;
-use photocraft_doc::{SmartFilter, SmartObject};
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_color::PixelFormat;
+use sary_doc::{SmartFilter, SmartObject};
+use sary_geom::Rect;
+use sary_raster::Surface;
 
 /// blake3 of a stage's inputs: the source contents, the placement and the filters so far.
 pub(super) type StageKey = [u8; 32];

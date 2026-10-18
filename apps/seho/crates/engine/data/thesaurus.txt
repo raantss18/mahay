@@ -1,5 +1,5 @@
-# DeckCraft's built-in thesaurus: headword|synonym, synonym, ...
-# Written for DeckCraft (no third-party word list). Lowercase; one meaning group per line;
+# Seho's built-in thesaurus: headword|synonym, synonym, ...
+# Written for Seho (no third-party word list). Lowercase; one meaning group per line;
 # a headword may appear on several lines (one per sense).
 ability|capability, capacity, skill, competence, talent
 able|capable, competent, qualified, skilled

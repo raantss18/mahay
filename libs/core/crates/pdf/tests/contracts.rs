@@ -1,6 +1,6 @@
 #![cfg(feature = "raster")]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-use craft_pdf::{
+use mahay_pdf::{
     interpret::InterpreterSettings,
     raster::{self, Error, Options, RenderCache},
 };
@@ -38,7 +38,7 @@ fn assemble(objects: &[String]) -> Arc<Vec<u8>> {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn transparent_and_white_backgrounds_are_explicit() {
-    let doc = craft_pdf::open(pdf("0 0 1 rg 0 0 20 20 re f", ""), None).unwrap();
+    let doc = mahay_pdf::open(pdf("0 0 1 rg 0 0 20 20 re f", ""), None).unwrap();
     let page = &doc.pages()[0];
     let settings = InterpreterSettings::default();
     let a = raster::render(page, &RenderCache::new(), &settings, &Options::default()).unwrap();
@@ -52,7 +52,7 @@ fn transparent_and_white_backgrounds_are_explicit() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn cropped_rotated_geometry_and_tile_match_full_raster() {
-    let doc = craft_pdf::open(pdf("1 0 0 rg 0 0 40 20 re f", "/CropBox [10 0 40 20] /Rotate 90"), None).unwrap();
+    let doc = mahay_pdf::open(pdf("1 0 0 rg 0 0 40 20 re f", "/CropBox [10 0 40 20] /Rotate 90"), None).unwrap();
     let page = &doc.pages()[0];
     assert_eq!(raster::dimensions(page, &Options::default()).unwrap(), [20, 30]);
     let full = raster::render(page, &RenderCache::new(), &InterpreterSettings::default(), &Options::default()).unwrap();
@@ -71,7 +71,7 @@ fn cropped_rotated_geometry_and_tile_match_full_raster() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn user_unit_scales_rotated_crop_geometry_and_paint_together() {
-    let doc = craft_pdf::open(pdf("1 0 0 rg 0 0 40 20 re f", "/CropBox [10 0 40 20] /Rotate 90 /UserUnit 2"), None).unwrap();
+    let doc = mahay_pdf::open(pdf("1 0 0 rg 0 0 40 20 re f", "/CropBox [10 0 40 20] /Rotate 90 /UserUnit 2"), None).unwrap();
     let page = &doc.pages()[0];
     assert_eq!(raster::dimensions(page, &Options::default()).unwrap(), [40, 60]);
     let full = raster::render(page, &RenderCache::new(), &InterpreterSettings::default(), &Options::default()).unwrap();
@@ -82,7 +82,7 @@ fn user_unit_scales_rotated_crop_geometry_and_paint_together() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn subpixel_page_extent_still_produces_visible_pixels() {
-    let doc = craft_pdf::open(pdf("1 0 0 rg 0 0 40 20 re f", "/CropBox [0 0 40 0.2]"), None).unwrap();
+    let doc = mahay_pdf::open(pdf("1 0 0 rg 0 0 40 20 re f", "/CropBox [0 0 40 0.2]"), None).unwrap();
     let raster =
         raster::render(&doc.pages()[0], &RenderCache::new(), &InterpreterSettings::default(), &Options { scale: [0.5; 2], ..Default::default() })
             .unwrap();
@@ -93,7 +93,7 @@ fn subpixel_page_extent_still_produces_visible_pixels() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn rounded_up_viewport_draws_the_partial_edge_pixel() {
-    let doc = craft_pdf::open(pdf("0 0 1 rg 0 0 40 20 re f", ""), None).unwrap();
+    let doc = mahay_pdf::open(pdf("0 0 1 rg 0 0 40 20 re f", ""), None).unwrap();
     let raster = raster::render(
         &doc.pages()[0],
         &RenderCache::new(),
@@ -110,7 +110,7 @@ fn rounded_up_viewport_draws_the_partial_edge_pixel() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn hostile_options_are_rejected_before_buffer_changes() {
-    let doc = craft_pdf::open(pdf("", ""), None).unwrap();
+    let doc = mahay_pdf::open(pdf("", ""), None).unwrap();
     let page = &doc.pages()[0];
     let cache = RenderCache::new();
     for scale in [f32::NAN, f32::INFINITY, -1.0, 0.0] {
@@ -130,7 +130,7 @@ fn hostile_options_are_rejected_before_buffer_changes() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn pre_cancelled_requests_never_draw() {
-    let doc = craft_pdf::open(pdf("0 0 1 rg 0 0 40 20 re f", ""), None).unwrap();
+    let doc = mahay_pdf::open(pdf("0 0 1 rg 0 0 40 20 re f", ""), None).unwrap();
     let settings = InterpreterSettings { cancelled: Some(Arc::new(AtomicBool::new(true))), ..Default::default() };
     let mut bytes = vec![7; 40 * 20 * 4];
     assert_eq!(raster::render_into(&doc.pages()[0], &RenderCache::new(), &settings, &Options::default(), &mut bytes), Err(Error::Cancelled));
@@ -140,7 +140,7 @@ fn pre_cancelled_requests_never_draw() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn injected_font_resolver_is_used() {
-    let doc = craft_pdf::open(
+    let doc = mahay_pdf::open(
         pdf("BT /F1 12 Tf 2 5 Td (ABC) Tj ET", "/Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>"),
         None,
     )
@@ -162,7 +162,7 @@ fn injected_font_resolver_is_used() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn decode_warnings_reach_caller_and_result() {
-    let doc = craft_pdf::open(pdf("q 10 0 0 10 0 0 cm BI /W 32769 /H 8192 /BPC 8 /CS /RGB ID x EI Q", ""), None).unwrap();
+    let doc = mahay_pdf::open(pdf("q 10 0 0 10 0 0 cm BI /W 32769 /H 8192 /BPC 8 /CS /RGB ID x EI Q", ""), None).unwrap();
     let calls = Arc::new(AtomicUsize::new(0));
     let count = calls.clone();
     let settings = InterpreterSettings {
@@ -180,7 +180,7 @@ fn decode_warnings_reach_caller_and_result() {
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 #[cfg(not(target_arch = "wasm32"))]
 fn backend_callback_panic_is_an_error() {
-    let doc = craft_pdf::open(
+    let doc = mahay_pdf::open(
         pdf("BT /F1 12 Tf 2 5 Td (ABC) Tj ET", "/Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>"),
         None,
     )
@@ -194,7 +194,7 @@ fn backend_callback_panic_is_an_error() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn alpha_is_premultiplied_exactly_once() {
-    let doc = craft_pdf::open(pdf("/G gs 0 0 1 rg 0 0 40 20 re f", "/Resources << /ExtGState << /G << /ca 0.5 >> >> >>"), None).unwrap();
+    let doc = mahay_pdf::open(pdf("/G gs 0 0 1 rg 0 0 40 20 re f", "/Resources << /ExtGState << /G << /ca 0.5 >> >> >>"), None).unwrap();
     let r = raster::render(&doc.pages()[0], &RenderCache::new(), &InterpreterSettings::default(), &Options::default()).unwrap();
     assert_eq!(&r.bytes()[0..4], &[0, 0, 128, 128]);
 }
@@ -204,7 +204,7 @@ fn alpha_is_premultiplied_exactly_once() {
 fn annotation_policy_and_duplicate_ocg_names_remain_independent() {
     let content = "/OC /Left BDC 1 0 0 rg 0 0 20 20 re f EMC /OC /Right BDC 0 0 1 rg 20 0 20 20 re f EMC";
     let appearance = "0 1 0 rg 0 0 40 20 re f";
-    let doc=craft_pdf::open(assemble(&[
+    let doc=mahay_pdf::open(assemble(&[
         "<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [7 0 R 8 0 R] /D << /BaseState /ON >> >> >>".into(),
         "<< /Type /Pages /Count 1 /Kids [3 0 R] >>".into(),
         "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 40 20] /Contents 4 0 R /Annots [5 0 R] /Resources << /Properties << /Left 7 0 R /Right 8 0 R >> >> >>".into(),
@@ -229,7 +229,7 @@ fn annotation_policy_and_duplicate_ocg_names_remain_independent() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn colour_replacement_is_explicit_and_preserves_alpha() {
-    let doc = craft_pdf::open(pdf("/G gs 0 0 0 rg 0 0 40 20 re f", "/Resources << /ExtGState << /G << /ca 0.5 >> >> >>"), None).unwrap();
+    let doc = mahay_pdf::open(pdf("/G gs 0 0 0 rg 0 0 40 20 re f", "/Resources << /ExtGState << /G << /ca 0.5 >> >> >>"), None).unwrap();
     let page = &doc.pages()[0];
     let cache = RenderCache::new();
     let original = raster::render(page, &cache, &InterpreterSettings::default(), &Options::default()).unwrap();
@@ -246,7 +246,7 @@ fn colour_replacement_is_explicit_and_preserves_alpha() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn malformed_stream_completion_warning_reaches_raster_and_caller() {
-    let doc = craft_pdf::open(
+    let doc = mahay_pdf::open(
         assemble(&[
             "<< /Type /Catalog /Pages 2 0 R >>".into(),
             "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
@@ -260,7 +260,7 @@ fn malformed_stream_completion_warning_reaches_raster_and_caller() {
     let count = calls.clone();
     let settings = InterpreterSettings {
         warning_sink: Arc::new(move |w| {
-            if matches!(w, craft_pdf::interpret::InterpreterWarning::ContentTruncated) {
+            if matches!(w, mahay_pdf::interpret::InterpreterWarning::ContentTruncated) {
                 count.fetch_add(1, Ordering::Relaxed);
             }
         }),
@@ -276,7 +276,7 @@ fn malformed_stream_completion_warning_reaches_raster_and_caller() {
 fn preview_settings_and_cache_preserve_final_image_quality() {
     let content = "q 10 0 0 10 20 5 cm /Im0 Do Q q 0.5 0 0 0.5 2 2 cm /Im0 Do Q";
     let pixels = "A".repeat(4 * 4 * 3);
-    let doc = craft_pdf::open(assemble(&[
+    let doc = mahay_pdf::open(assemble(&[
         "<< /Type /Catalog /Pages 2 0 R >>".into(),
         "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
         "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 40 20] /Contents 4 0 R /Resources << /XObject << /Im0 5 0 R >> >> >>".into(),
@@ -324,14 +324,14 @@ fn document_decode_limit_warns_for_pages_and_nested_painting() {
         objects.extend(extras);
         let data = assemble(&objects);
         for low in [false, true] {
-            let decode_limits = if low { craft_pdf::syntax::DecodeLimits::default().with_max_decoded_stream(32) } else { Default::default() };
-            let options = craft_pdf::OpenOptions { decode_limits, ..Default::default() };
-            let doc = craft_pdf::open_with_options(data.clone(), None, &options).unwrap();
+            let decode_limits = if low { mahay_pdf::syntax::DecodeLimits::default().with_max_decoded_stream(32) } else { Default::default() };
+            let options = mahay_pdf::OpenOptions { decode_limits, ..Default::default() };
+            let doc = mahay_pdf::open_with_options(data.clone(), None, &options).unwrap();
             let calls = Arc::new(AtomicUsize::new(0));
             let count = calls.clone();
             let settings = InterpreterSettings {
                 warning_sink: Arc::new(move |w| {
-                    if matches!(w, craft_pdf::interpret::InterpreterWarning::ContentTruncated) {
+                    if matches!(w, mahay_pdf::interpret::InterpreterWarning::ContentTruncated) {
                         count.fetch_add(1, Ordering::Relaxed);
                     }
                 }),
@@ -347,7 +347,7 @@ fn document_decode_limit_warns_for_pages_and_nested_painting() {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn failed_form_decode_reports_incomplete_content() {
-    let doc = craft_pdf::open(
+    let doc = mahay_pdf::open(
         assemble(&[
             "<< /Type /Catalog /Pages 2 0 R >>".into(),
             "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),

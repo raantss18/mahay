@@ -1,6 +1,6 @@
 //! Prepare a form ▸ field detection on scanned pages. A page that is a picture has no text and
 //! no drawn shapes to read, so it is rendered and its lines and boxes are read from the pixels
-//! ([`pdfcraft_forms::detect::raster`]). The labels come from the page's text layer (an earlier
+//! ([`taratasy_forms::detect::raster`]). The labels come from the page's text layer (an earlier
 //! Recognize text), else from text recognition when its models are installed. Without either,
 //! the fields are still found and get the default names (Text1, Check Box1, …).
 //!
@@ -8,8 +8,8 @@
 //! stored sideways and turned upright by `/Rotate` reads like any other page. The fields are
 //! mapped back to user space and turned with the page (`/MK /R`), so typed text reads upright.
 
-use pdfcraft_forms::detect::{Candidate, Word, detect, raster};
-use pdfcraft_render::{PageInfo, PageRenderer, PageText, RenderRequest};
+use taratasy_forms::detect::{Candidate, Word, detect, raster};
+use taratasy_render::{PageInfo, PageRenderer, PageText, RenderRequest};
 
 use crate::{DocId, Document, Session, ocr};
 

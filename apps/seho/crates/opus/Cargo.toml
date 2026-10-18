@@ -1,5 +1,5 @@
 [package]
-name = "deckcraft-opus"
+name = "seho-opus"
 description = "Clean-room pure-Rust Opus decoder (RFC 6716 / RFC 8251; OpusHead, multistream surround)"
 version.workspace = true
 edition.workspace = true

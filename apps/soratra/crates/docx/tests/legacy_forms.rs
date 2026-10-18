@@ -4,8 +4,8 @@
 
 use std::io::Write;
 
-use wordcraft_doc::Block;
-use wordcraft_docx::{read, write};
+use soratra_doc::Block;
+use soratra_docx::{read, write};
 
 const NS: &str = r#"xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main""#;
 const ROOT_RELS: &str = r#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>"#;

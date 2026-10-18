@@ -3,7 +3,7 @@
 
 mod common;
 use common::*;
-use photocraft_codecs::*;
+use sary_codecs::*;
 
 const W: u32 = 24;
 const H: u32 = 16;

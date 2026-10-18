@@ -1,4 +1,4 @@
-//! WordCraft layout: turns a [`Document`] into pages.
+//! Soratra layout: turns a [`Document`] into pages.
 //!
 //! - [`para`]: one paragraph → lines (shaping, first-fit line breaking, tabs, list labels,
 //!   alignment). Results are memoised per paragraph revision in a [`LayoutCache`].
@@ -27,12 +27,12 @@ use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use wordcraft_doc::numbering::{Counters, Level};
-use wordcraft_doc::para::{Anchor, Float, FloatAlign, InlineObject, Wrap, WrapText};
-use wordcraft_doc::props::{Border, CharProps, HeightRule, Rgb, TableFloat, TextDirection};
-use wordcraft_doc::section::{HeaderSet, SectionProps, SectionStart};
-use wordcraft_doc::{Block, Blocks, Document, Paragraph, Path, StoryRef};
-use wordcraft_geom::{Point, Rect, Spin};
+use soratra_doc::numbering::{Counters, Level};
+use soratra_doc::para::{Anchor, Float, FloatAlign, InlineObject, Wrap, WrapText};
+use soratra_doc::props::{Border, CharProps, HeightRule, Rgb, TableFloat, TextDirection};
+use soratra_doc::section::{HeaderSet, SectionProps, SectionStart};
+use soratra_doc::{Block, Blocks, Document, Paragraph, Path, StoryRef};
+use soratra_geom::{Point, Rect, Spin};
 
 pub use fields::FieldCtx;
 pub use hit::VisualStep;
@@ -180,12 +180,12 @@ pub struct LayoutOptions {
 pub struct ProofOptions {
     /// Mark grammar errors as you type.
     pub grammar: bool,
-    pub spelling: wordcraft_proof::Options,
+    pub spelling: soratra_proof::Options,
 }
 
 impl Default for ProofOptions {
     fn default() -> Self {
-        ProofOptions { grammar: true, spelling: wordcraft_proof::Options::default() }
+        ProofOptions { grammar: true, spelling: soratra_proof::Options::default() }
     }
 }
 
@@ -255,22 +255,22 @@ pub enum Placed {
     },
     Shape {
         rect: Rect,
-        kind: wordcraft_doc::para::ShapeKind,
+        kind: soratra_doc::para::ShapeKind,
         fill: Option<Rgb>,
         stroke: Option<Rgb>,
         stroke_width: f32,
         /// A freeform's paths (ink strokes among them).
-        freeform: Option<Arc<wordcraft_doc::freeform::Freeform>>,
-        effects: wordcraft_doc::effects::ShapeEffects,
+        freeform: Option<Arc<soratra_doc::freeform::Freeform>>,
+        effects: soratra_doc::effects::ShapeEffects,
         spin: Spin,
-        /// Arrowheads and text warp (see [`wordcraft_doc::connector::ShapeExtra`]).
-        extra: wordcraft_doc::connector::ShapeExtra,
+        /// Arrowheads and text warp (see [`soratra_doc::connector::ShapeExtra`]).
+        extra: soratra_doc::connector::ShapeExtra,
     },
     /// A floating chart or diagram, drawn from its items inside `rect`. The object is the U+FFFC at
     /// byte `off` of paragraph `path` (its alt text).
     Graphic {
         rect: Rect,
-        graphic: Arc<wordcraft_doc::graphic::Graphic>,
+        graphic: Arc<soratra_doc::graphic::Graphic>,
         story: StoryRef,
         path: Path,
         off: usize,
@@ -312,7 +312,7 @@ pub enum Placed {
         wrap: Wrap,
         /// Its paragraph's column left and top: where offsets relative to the column and the
         /// paragraph (`Anchor::Column` / `Anchor::Paragraph`) start.
-        origin: wordcraft_geom::Point,
+        origin: soratra_geom::Point,
     },
 }
 
@@ -575,7 +575,7 @@ fn env_hash(doc: &Document, opts: &LayoutOptions) -> u64 {
         opts.numeral,
         opts.field_codes,
         opts.proof,
-        wordcraft_proof::dictionary_generation(),
+        soratra_proof::dictionary_generation(),
         hyphenation_key(doc),
         outline,
     ))
@@ -662,7 +662,7 @@ struct Ctx<'a> {
     /// Automatic equation numbers so far.
     eq_count: u32,
     /// Bounds laying out text boxes inside text boxes, for the whole layout.
-    boxes: wordcraft_doc::BoxBudget,
+    boxes: soratra_doc::BoxBudget,
     /// Linked text boxes (Create Link).
     chains: textbox::Chains,
     /// The current section's document grid (body text only: none for headers and footers).
@@ -715,7 +715,7 @@ impl Ctx<'_> {
         }
         let mut p = Paragraph::with_text(
             &n.to_string(),
-            CharProps { size: Some(10.0), color: Some(wordcraft_doc::TextColor::Rgb(Rgb(0x60, 0x60, 0x60))), ..Default::default() },
+            CharProps { size: Some(10.0), color: Some(soratra_doc::TextColor::Rgb(Rgb(0x60, 0x60, 0x60))), ..Default::default() },
         );
         p.props.space_after = Some(0.0);
         p.props.space_before = Some(0.0);
@@ -938,9 +938,9 @@ fn left_out_objects(
 /// earlier pass (empty: numbered on). With `hide_deleted`, notes whose reference mark is a
 /// tracked deletion are left out, as in the final text.
 fn note_info(doc: &Document, hide_deleted: HideDeleted, pages: &HashMap<u32, usize>) -> HashMap<u32, fields::NoteNum> {
-    use wordcraft_doc::section::NoteRestart;
+    use soratra_doc::section::NoteRestart;
     let sections = doc.sections();
-    let opts: Vec<[wordcraft_doc::section::NoteOptions; 2]> =
+    let opts: Vec<[soratra_doc::section::NoteOptions; 2]> =
         sections.iter().map(|(_, s)| [doc.note_options(s, false), doc.note_options(s, true)]).collect();
     let mut m = HashMap::new();
     // Per kind (footnotes, endnotes): the last number, and the section and page of the last note.
@@ -964,7 +964,7 @@ fn note_info(doc: &Document, hide_deleted: HideDeleted, pages: &HashMap<u32, usi
             while sections.get(si).is_some_and(|(end, _)| block > *end) && si + 1 < sections.len() {
                 si += 1;
             }
-            let ki = usize::from(*kind == wordcraft_doc::para::NoteKind::Endnote);
+            let ki = usize::from(*kind == soratra_doc::para::NoteKind::Endnote);
             let Some(o) = opts.get(si).and_then(|o| o.get(ki)) else { return true };
             let page = if ki == 0 { pages.get(id).copied() } else { None };
             let Some(slot) = last.get_mut(ki) else { return true };
@@ -1003,7 +1003,7 @@ fn footnote_pages(doc: &Document, pages: &[Page]) -> HashMap<u32, usize> {
     for (pi, p) in pages.iter().enumerate() {
         for it in &p.items {
             if let Placed::Lines { story: StoryRef::Part(id), .. } | Placed::Cell { story: StoryRef::Part(id), .. } = it
-                && doc.parts.get(id).is_some_and(|part| part.kind == wordcraft_doc::PartKind::Footnote)
+                && doc.parts.get(id).is_some_and(|part| part.kind == soratra_doc::PartKind::Footnote)
             {
                 m.entry(*id).or_insert(pi);
             }
@@ -1207,7 +1207,7 @@ fn natural_width(pl: &ParaLayout) -> f32 {
 }
 
 /// A text frame's placement as a floating object's (`w:framePr` → anchors, alignment, wrap).
-fn frame_float(fr: &wordcraft_doc::props::TextFrame) -> Float {
+fn frame_float(fr: &soratra_doc::props::TextFrame) -> Float {
     let anchor = |a: &str, text: Anchor| match a {
         "page" => Anchor::Page,
         "margin" => Anchor::Margin,
@@ -1314,7 +1314,7 @@ fn clear_of_float_tables(mut r: Rect, f: &TableFloat, legacy: f32, text_left: f3
 }
 
 /// A text box's default internal margins (Word's: 0.1" left/right, 0.05" top/bottom); a box's
-/// own come from its [`wordcraft_doc::TextBody`].
+/// own come from its [`soratra_doc::TextBody`].
 #[cfg(test)]
 const BOX_INSET_X: f32 = 7.2;
 #[cfg(test)]
@@ -1457,7 +1457,7 @@ struct PageBuilder<'a> {
     block_marks: Vec<usize>,
     /// The vertical alignment of the section the current page started in: a page finished when
     /// the next section starts is aligned as its own section asks, not the next one.
-    page_valign: wordcraft_doc::section::PageVAlign,
+    page_valign: soratra_doc::section::PageVAlign,
     /// The document's own footnote separators, laid out for the section's text width.
     seps: NoteSeps,
     /// Per page: how many items were inserted at the front of its list (behind the text), so a
@@ -1504,7 +1504,7 @@ struct NoteSeps {
 
 impl NoteSeps {
     /// Lay out `seps` `width` wide.
-    fn new(ctx: &mut Ctx, seps: &wordcraft_doc::NoteSeparators, width: f32) -> NoteSeps {
+    fn new(ctx: &mut Ctx, seps: &soratra_doc::NoteSeparators, width: f32) -> NoteSeps {
         let mut lay = |blocks: &Option<Blocks>| blocks.as_ref().map(|b| sep_box(ctx, b, width));
         NoteSeps { sep: lay(&seps.separator), cont: lay(&seps.continuation_separator), notice: lay(&seps.continuation_notice) }
     }
@@ -1832,10 +1832,10 @@ impl PageBuilder<'_> {
     /// blocks out (justified).
     fn apply_valign(&mut self) {
         let k = match self.page_valign {
-            wordcraft_doc::section::PageVAlign::Top => return,
-            wordcraft_doc::section::PageVAlign::Justify => return self.justify_page(),
-            wordcraft_doc::section::PageVAlign::Center => 0.5,
-            wordcraft_doc::section::PageVAlign::Bottom => 1.0,
+            soratra_doc::section::PageVAlign::Top => return,
+            soratra_doc::section::PageVAlign::Justify => return self.justify_page(),
+            soratra_doc::section::PageVAlign::Center => 0.5,
+            soratra_doc::section::PageVAlign::Bottom => 1.0,
         };
         if self.web {
             return;
@@ -1874,7 +1874,7 @@ impl PageBuilder<'_> {
         self.beneath = self.sect_beneath;
         self.excl.clear();
         self.float_tables.clear();
-        if self.sect.line_numbers.as_ref().is_some_and(|l| l.restart == wordcraft_doc::section::LineNumberRestart::Page) {
+        if self.sect.line_numbers.as_ref().is_some_and(|l| l.restart == soratra_doc::section::LineNumberRestart::Page) {
             self.line_no = 0;
         }
         let s = self.sect;
@@ -1973,7 +1973,7 @@ pub fn layout(doc: &Document, cache: &mut LayoutCache, opts: &LayoutOptions) -> 
     // paginating: lay out again with the totals found until they hold (bounded). Footnotes
     // numbered again on each page likewise settle over a few more passes.
     let per_page = opts.view == ViewMode::Print
-        && doc.sections().iter().any(|(_, s)| doc.note_options(s, false).num_restart == wordcraft_doc::section::NoteRestart::EachPage);
+        && doc.sections().iter().any(|(_, s)| doc.note_options(s, false).num_restart == soratra_doc::section::NoteRestart::EachPage);
     let mut note_pages = HashMap::new();
     let mut note_passes = 1;
     let mut totals = Totals::first_guess(doc.sections().len());
@@ -2046,7 +2046,7 @@ fn layout_pass(
         notes_hash,
         numbers: HashMap::new(),
         eq_count: 0,
-        boxes: wordcraft_doc::BoxBudget::default(),
+        boxes: soratra_doc::BoxBudget::default(),
         chains: Default::default(),
         grid: para::Grid::default(),
         uses_totals: false,
@@ -2098,7 +2098,7 @@ fn layout_pass(
         web_sect.margin_top = 18.0;
         web_sect.gutter = 0.0;
         web_sect.columns = Default::default();
-        web_sect.valign = wordcraft_doc::section::PageVAlign::Top;
+        web_sect.valign = soratra_doc::section::PageVAlign::Top;
         &web_sect
     } else {
         first_sect
@@ -2126,7 +2126,7 @@ fn layout_pass(
         line_no: 0,
         page_items_start: 0,
         block_marks: Vec::new(),
-        page_valign: wordcraft_doc::section::PageVAlign::Top,
+        page_valign: soratra_doc::section::PageVAlign::Top,
         seps: NoteSeps::default(),
         behind: Vec::new(),
         max_y: 0.0,
@@ -2144,7 +2144,7 @@ fn layout_pass(
             .fields
             .notes
             .iter()
-            .filter(|(id, _)| doc.parts.get(id).is_some_and(|p| p.kind == wordcraft_doc::PartKind::Endnote))
+            .filter(|(id, _)| doc.parts.get(id).is_some_and(|p| p.kind == soratra_doc::PartKind::Endnote))
             .map(|(id, n)| (n.order, *id, n.section))
             .collect();
         ids.sort();
@@ -2175,7 +2175,7 @@ fn layout_pass(
         pb.sect_idx = si;
         ctx.grid = para::Grid::default();
         let (foot, end_opts) = (doc.note_options(sect, false), doc.note_options(sect, true));
-        pb.sect_beneath = foot.pos == wordcraft_doc::section::NotePos::BeneathText;
+        pb.sect_beneath = foot.pos == soratra_doc::section::NotePos::BeneathText;
         if !web && !doc.footnote_separators.is_empty() {
             pb.seps = NoteSeps::new(&mut ctx, &doc.footnote_separators, sect.text_width());
         }
@@ -2204,7 +2204,7 @@ fn layout_pass(
         };
         ctx.grid = para::Grid::of(doc, sect);
         let restart = sect.page_num_start;
-        if sect.line_numbers.as_ref().is_some_and(|l| l.restart == wordcraft_doc::section::LineNumberRestart::Section) {
+        if sect.line_numbers.as_ref().is_some_and(|l| l.restart == soratra_doc::section::LineNumberRestart::Section) {
             pb.line_no = 0;
         }
         let start = if si == 0 { SectionStart::NextPage } else { sect.start };
@@ -2253,7 +2253,7 @@ fn layout_pass(
         // start of the block that reaches it, with shorter columns (see `balance_columns`).
         let balance = !web
             && pb.cols.len() > 1
-            && sect.valign == wordcraft_doc::section::PageVAlign::Top
+            && sect.valign == soratra_doc::section::PageVAlign::Top
             && sections.get(si + 1).is_some_and(|(_, s)| s.start == SectionStart::Continuous);
         pb.col_break_page = None;
         pb.next_starts_page = !web && sections.get(si + 1).is_some_and(|(_, s)| s.start != SectionStart::Continuous);
@@ -2279,7 +2279,7 @@ fn layout_pass(
             boxes_discarded += balance_columns(&mut ctx, &mut pb, (first, block), &snap, body_top);
         }
         // Endnotes at the end of the section: those referenced so far.
-        if end_opts.pos == wordcraft_doc::section::NotePos::SectEnd && !pb.pages.is_empty() {
+        if end_opts.pos == soratra_doc::section::NotePos::SectEnd && !pb.pages.is_empty() {
             let mut here = Vec::new();
             while let Some((id, _)) = endnotes.front().filter(|(_, s)| *s <= si).copied() {
                 endnotes.pop_front();
@@ -2845,7 +2845,7 @@ fn float_items(o: &InlineObject, rect: Rect, outer: (Spin, Point), story: StoryR
                     vec![
                         Placed::Shape {
                             rect,
-                            kind: wordcraft_doc::para::ShapeKind::Rectangle,
+                            kind: soratra_doc::para::ShapeKind::Rectangle,
                             fill: c.fill,
                             stroke: c.stroke,
                             stroke_width: c.stroke_width,
@@ -2991,7 +2991,7 @@ fn place_objects(
                 layer.extend(float_items(obj, rect, (Spin::default(), Point::default()), story, path, c.start));
             }
             let text_box = match obj {
-                InlineObject::Shape { story: Some(id), .. } if ctx.doc.parts.get(id).is_some_and(|p| p.kind == wordcraft_doc::PartKind::TextBox) => {
+                InlineObject::Shape { story: Some(id), .. } if ctx.doc.parts.get(id).is_some_and(|p| p.kind == soratra_doc::PartKind::TextBox) => {
                     Some(*id)
                 }
                 _ => None,
@@ -3017,7 +3017,7 @@ fn place_objects(
                     .into_iter()
                     .filter_map(|(r, c)| {
                         c.text_box()
-                            .filter(|id| ctx.doc.parts.get(id).is_some_and(|p| p.kind == wordcraft_doc::PartKind::TextBox))
+                            .filter(|id| ctx.doc.parts.get(id).is_some_and(|p| p.kind == soratra_doc::PartKind::TextBox))
                             .map(|id| (id, carried(r, float.spin(), centre)))
                     })
                     .collect(),
@@ -3304,7 +3304,7 @@ fn place_para_in_flow(ctx: &mut Ctx, pb: &mut PageBuilder, p: &Paragraph, block:
                     if *ci >= l.c0
                         && *ci < l.c1
                         && !pb.notes.iter().chain(new_notes.iter()).any(|x| x.id == *id)
-                        && let Some(part) = ctx.doc.parts.get(id).filter(|p| p.kind == wordcraft_doc::PartKind::Footnote)
+                        && let Some(part) = ctx.doc.parts.get(id).filter(|p| p.kind == soratra_doc::PartKind::Footnote)
                     {
                         let blocks = part.blocks.clone();
                         let BoxLayout { items, height: h, .. } =
@@ -3349,7 +3349,7 @@ fn place_para_in_flow(ctx: &mut Ctx, pb: &mut PageBuilder, p: &Paragraph, block:
             let only_break = matches!(l.end, LineEnd::PageBreak | LineEnd::ColumnBreak)
                 && p.text
                     .get(l.start..l.stop)
-                    .is_some_and(|t| t.chars().all(|c| matches!(c, wordcraft_doc::para::PAGE_BREAK | wordcraft_doc::para::COLUMN_BREAK)));
+                    .is_some_and(|t| t.chars().all(|c| matches!(c, soratra_doc::para::PAGE_BREAK | soratra_doc::para::COLUMN_BREAK)));
             // An empty paragraph closing a section before a new page: measured in Word, it stays
             // on a full page instead of starting one of its own.
             let closing_mark = pb.next_starts_page && p.section.is_some() && p.text.is_empty();
@@ -3483,7 +3483,7 @@ fn place_para_in_flow(ctx: &mut Ctx, pb: &mut PageBuilder, p: &Paragraph, block:
         // there (Word).
         let starts_with_break = l0 == 1
             && pl.lines.first().is_some_and(|l| {
-                p.text.get(l.start..l.stop).is_some_and(|t| !t.is_empty() && t.chars().all(|c| c == wordcraft_doc::para::PAGE_BREAK))
+                p.text.get(l.start..l.stop).is_some_and(|t| !t.is_empty() && t.chars().all(|c| c == soratra_doc::para::PAGE_BREAK))
             });
         match forced_break {
             Some(LineEnd::PageBreak) if mark_with_break => {
@@ -3530,7 +3530,7 @@ fn place_para_in_flow(ctx: &mut Ctx, pb: &mut PageBuilder, p: &Paragraph, block:
 /// control boundaries…), or nothing at all: a line of them takes no room after a page break.
 fn only_markers(p: &Paragraph, range: std::ops::Range<usize>) -> bool {
     let Some(text) = p.text.get(range.clone()) else { return false };
-    text.char_indices().all(|(i, c)| c == wordcraft_doc::para::OBJ && p.object_at(range.start + i).is_some_and(InlineObject::is_marker))
+    text.char_indices().all(|(i, c)| c == soratra_doc::para::OBJ && p.object_at(range.start + i).is_some_and(InlineObject::is_marker))
 }
 
 /// The outline of the body for an Outline view pass.
@@ -3596,7 +3596,7 @@ fn place_outline_para(ctx: &mut Ctx, pb: &mut PageBuilder, p: &Paragraph, block:
 
 /// How far a paragraph with mirrored indents (`w:mirrorIndents`) moves right on page `number`:
 /// its left and right indents are the inside and outside ones, which swap sides on even pages.
-fn mirror_shift(rp: &wordcraft_doc::resolve::ResolvedPara, number: u32, web: bool) -> f32 {
+fn mirror_shift(rp: &soratra_doc::resolve::ResolvedPara, number: u32, web: bool) -> f32 {
     if !rp.mirror_indents || web || !number.is_multiple_of(2) {
         return 0.0;
     }
@@ -3609,7 +3609,7 @@ fn mirror_shift(rp: &wordcraft_doc::resolve::ResolvedPara, number: u32, web: boo
 /// paragraph. Same tests as the spacing between paragraphs in `place_para_in_flow`: contextual
 /// spacing removes this paragraph's space after only when this one asks for it, and the next
 /// counts as a list item when it gets a label.
-fn space_after_kept(ctx: &Ctx, block: usize, rp: &wordcraft_doc::resolve::ResolvedPara, listed: bool) -> f32 {
+fn space_after_kept(ctx: &Ctx, block: usize, rp: &soratra_doc::resolve::ResolvedPara, listed: bool) -> f32 {
     let after = rp.space_after.max(0.0);
     if after <= 0.0 {
         return 0.0;
@@ -3704,7 +3704,7 @@ fn row_keeps_next(row: &table::RowLayout) -> bool {
         .unwrap_or(false)
 }
 
-fn row_can_start(row: &wordcraft_doc::Row, laid: &table::RowLayout, room: f32, page_height: f32) -> bool {
+fn row_can_start(row: &soratra_doc::Row, laid: &table::RowLayout, room: f32, page_height: f32) -> bool {
     if laid.height <= room + 0.01 {
         return true;
     }
@@ -3717,7 +3717,7 @@ fn row_can_start(row: &wordcraft_doc::Row, laid: &table::RowLayout, room: f32, p
     table::split_row(laid, room).is_some()
 }
 
-fn place_table(ctx: &mut Ctx, pb: &mut PageBuilder, t: &wordcraft_doc::Table, block: usize, body_top: f32) {
+fn place_table(ctx: &mut Ctx, pb: &mut PageBuilder, t: &soratra_doc::Table, block: usize, body_top: f32) {
     pb.prev = None;
     let width = pb.col_w();
     let mut tl = table::layout_table(ctx, StoryRef::Body, t, &[block as u32], width, 1);
@@ -3819,7 +3819,7 @@ fn place_table(ctx: &mut Ctx, pb: &mut PageBuilder, t: &wordcraft_doc::Table, bl
             let room = pb.bottom - pb.y;
             let short_of_min = rest.is_none()
                 && t.rows.get(ri).is_some_and(|r| {
-                    r.props.height_rule == wordcraft_doc::props::HeightRule::AtLeast
+                    r.props.height_rule == soratra_doc::props::HeightRule::AtLeast
                         && r.props.height.is_some_and(|h| h > room + 0.01 && h <= pb.bottom - body_top + 0.01)
                 });
             let split = if splittable && !short_of_min && !defer_kept { table::split_row(cur, room) } else { None };
@@ -3874,7 +3874,7 @@ fn table_notes(ctx: &mut Ctx, pb: &mut PageBuilder, items: &[Placed]) {
     }
     let before = pb.notes_h();
     for id in ids {
-        let Some(part) = ctx.doc.parts.get(&id).filter(|p| p.kind == wordcraft_doc::PartKind::Footnote) else { continue };
+        let Some(part) = ctx.doc.parts.get(&id).filter(|p| p.kind == soratra_doc::PartKind::Footnote) else { continue };
         let blocks = part.blocks.clone();
         let BoxLayout { items, height: h, .. } = layout_box(ctx, StoryRef::Part(id), &blocks, &[], pb.sect.text_width(), BoxContext::Other, 0, None);
         pb.notes.push(NoteBox { id, items, h, cont: false });
@@ -4025,7 +4025,7 @@ fn linked(sections: &[(usize, &SectionProps)], si: usize, get: fn(&SectionProps)
 /// Whether a header, a footer or a text box shows a `PAGEREF` field, which they resolve from the
 /// paginated body (see [`bookmark_pages`]).
 fn headers_footers_refer_to_pages(doc: &Document) -> bool {
-    use wordcraft_doc::PartKind;
+    use soratra_doc::PartKind;
     doc.parts.iter().filter(|(_, part)| matches!(part.kind, PartKind::Header | PartKind::Footer | PartKind::TextBox)).any(|(id, _)| {
         let story = StoryRef::Part(*id);
         doc.para_paths(story)

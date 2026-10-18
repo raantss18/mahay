@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use deckcraft_geom::{Affine, Point, Rect, Vec2, Xfrm};
-use deckcraft_model::{Shape, ShapeId, ShapeKind};
+use seho_geom::{Affine, Point, Rect, Vec2, Xfrm};
+use seho_model::{Shape, ShapeId, ShapeKind};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -62,7 +62,7 @@ pub enum ToolKind {
     /// Ink: pen (`pen`, `highlighter`) or `eraser`.
     Ink {
         mode: String,
-        color: deckcraft_color::Rgba,
+        color: seho_color::Rgba,
         width: f64,
     },
 }
@@ -303,22 +303,22 @@ pub fn box_handles(x: &Xfrm) -> ([Point; 8], Point) {
 }
 
 /// WordArt adjust handles for `sh`, in shape-local points (the text rectangle). Empty when the
-/// resolved body has no warp DeckCraft draws, or the shape has no text to store one on.
+/// resolved body has no warp Seho draws, or the shape has no text to store one on.
 pub fn wordart_handles(
-    doc: &deckcraft_model::Presentation,
+    doc: &seho_model::Presentation,
     sel: &crate::Selection,
     sh: &Shape,
     w: f64,
     h: f64,
-) -> Vec<deckcraft_geom::warp::WarpHandle> {
+) -> Vec<seho_geom::warp::WarpHandle> {
     if sh.text.is_none() {
         return Vec::new();
     }
     let Some(ctx) = crate::cmd::text::ctx_for(doc, sel) else { return Vec::new() };
-    let bp = deckcraft_model::resolve::body(&ctx, sh);
-    let Some(name) = bp.warp.as_deref().filter(|n| deckcraft_geom::warp::is_supported(n)) else { return Vec::new() };
-    let tr = deckcraft_render::shape_geometry(sh, w, h).text_rect;
-    deckcraft_geom::warp::handles(name, &bp.warp_adj, tr)
+    let bp = seho_model::resolve::body(&ctx, sh);
+    let Some(name) = bp.warp.as_deref().filter(|n| seho_geom::warp::is_supported(n)) else { return Vec::new() };
+    let tr = seho_render::shape_geometry(sh, w, h).text_rect;
+    seho_geom::warp::handles(name, &bp.warp_adj, tr)
 }
 
 /// Write one warp adjust, keeping the others from `base` (empty = the preset defaults).
@@ -327,7 +327,7 @@ fn set_warp_adj(sh: &mut Shape, name: &str, base: &[f64], index: usize, value: f
     if !value.is_finite() || index > 7 {
         return;
     }
-    let defaults = deckcraft_geom::warp::adjust_defaults(name);
+    let defaults = seho_geom::warp::adjust_defaults(name);
     let n = defaults.len().max(index + 1).min(8);
     if n == 0 {
         return;
@@ -387,7 +387,7 @@ impl Session {
                     }
                     continue;
                 }
-                let geo = deckcraft_render::shape_geometry(sh, x.w, x.h);
+                let geo = seho_render::shape_geometry(sh, x.w, x.h);
                 for hd in &geo.handles {
                     if (x.affine() * hd.pos - p).hypot() <= tol * 1.6 {
                         return Some(Hit::Adjust { id: *id, index: hd.index });
@@ -455,7 +455,7 @@ impl Session {
                 self.tool.hover = self.hit_test(p, tol);
                 self.tool.guide_hover =
                     if self.tool.hover.is_none() && matches!(self.tool.kind, ToolKind::Select) { self.guide_at(p, tol) } else { None };
-                let line_tool = matches!(&self.tool.kind, ToolKind::Shape { preset } if deckcraft_geom::preset::is_line_like(preset));
+                let line_tool = matches!(&self.tool.kind, ToolKind::Shape { preset } if seho_geom::preset::is_line_like(preset));
                 if line_tool {
                     self.update_sites(p, tol, None);
                 } else {
@@ -623,7 +623,7 @@ impl Session {
                 let orig = st.shape(id).map(|s| xfrm_of(&st.doc, &st.selection, s)).unwrap_or_default();
                 let found = st.shape(id).and_then(|sh| {
                     let ctx = crate::cmd::text::ctx_for(&st.doc, &st.selection)?;
-                    let bp = deckcraft_model::resolve::body(&ctx, sh);
+                    let bp = seho_model::resolve::body(&ctx, sh);
                     bp.warp.map(|n| (n, bp.warp_adj))
                 });
                 if let Some((name, base)) = found {
@@ -737,7 +737,7 @@ impl Session {
                 self.edit(|doc, sel| {
                     let list = crate::shapes_mut(doc, sel).ok_or_else(|| cmd::bad("move", "no slide"))?;
                     for (id, o) in &origs2 {
-                        if let Some(sh) = deckcraft_model::find_shape_mut(list, *id) {
+                        if let Some(sh) = seho_model::find_shape_mut(list, *id) {
                             sh.xfrm = Some(Xfrm { x: o.x + d.x, y: o.y + d.y, ..*o });
                         }
                     }
@@ -808,7 +808,7 @@ impl Session {
                 let st = self.doc()?;
                 let Some(sh) = st.shape(id).cloned() else { return Ok(Value::Null) };
                 let local = orig.affine().inverse() * p;
-                let geo = deckcraft_render::shape_geometry(&sh, orig.w, orig.h);
+                let geo = seho_render::shape_geometry(&sh, orig.w, orig.h);
                 let Some(h) = geo.handles.iter().find(|h| h.index == index) else { return Ok(Value::Null) };
                 let free2d = matches!(sh.geom.preset_name(), Some(n) if n.contains("Callout") && !n.contains("Arrow"));
                 let vals: Vec<(usize, f64)> = if free2d {
@@ -820,10 +820,10 @@ impl Session {
                 };
                 self.edit(|doc, sel| {
                     let list = crate::shapes_mut(doc, sel).ok_or_else(|| cmd::bad("adjust", "no slide"))?;
-                    if let Some(sh) = deckcraft_model::find_shape_mut(list, id)
-                        && let deckcraft_model::Geom::Preset { name, adj } = &mut sh.geom
+                    if let Some(sh) = seho_model::find_shape_mut(list, id)
+                        && let seho_model::Geom::Preset { name, adj } = &mut sh.geom
                     {
-                        let defaults = deckcraft_geom::preset::info(name).map(|x| x.defaults).unwrap_or(&[]);
+                        let defaults = seho_geom::preset::info(name).map(|x| x.defaults).unwrap_or(&[]);
                         for (i, v) in &vals {
                             while adj.len() <= *i {
                                 let k = adj.len();
@@ -854,14 +854,14 @@ impl Session {
                 let v = {
                     let st = self.doc()?;
                     let Some(sh) = st.shape(id) else { return Ok(Value::Null) };
-                    let tr = deckcraft_render::shape_geometry(sh, orig.w, orig.h).text_rect;
-                    let hs = deckcraft_geom::warp::handles(&name, &base, tr);
+                    let tr = seho_render::shape_geometry(sh, orig.w, orig.h).text_rect;
+                    let hs = seho_geom::warp::handles(&name, &base, tr);
                     let Some(h) = hs.iter().find(|h| h.index == index) else { return Ok(Value::Null) };
                     h.value_at(orig.affine().inverse() * p)
                 };
                 self.edit(|doc, sel| {
                     let list = crate::shapes_mut(doc, sel).ok_or_else(|| cmd::bad("adjust", "no slide"))?;
-                    if let Some(sh) = deckcraft_model::find_shape_mut(list, id) {
+                    if let Some(sh) = seho_model::find_shape_mut(list, id) {
                         set_warp_adj(sh, &name, &base, index, v);
                     }
                     Ok(())
@@ -871,7 +871,7 @@ impl Session {
                 self.tool.marquee = Some(Rect::from_points(start, p));
             }
             Drag::Create { start } => {
-                let line = matches!(&self.tool.kind, ToolKind::Shape { preset } if deckcraft_geom::preset::is_line_like(preset));
+                let line = matches!(&self.tool.kind, ToolKind::Shape { preset } if seho_geom::preset::is_line_like(preset));
                 let x = if line {
                     let mut q = if mods.shift { constrain_45(start, p) } else { p };
                     if let Some((_, _, at)) = self.update_sites(q, tol, None) {
@@ -1036,7 +1036,7 @@ impl Session {
                         }
                     }
                     ToolKind::Shape { preset } => {
-                        let line = deckcraft_geom::preset::is_line_like(preset);
+                        let line = seho_geom::preset::is_line_like(preset);
                         let rect = match preview.filter(|_| dragged) {
                             Some(x) => x,
                             None if line => Xfrm::new(start.x, start.y, 72.0, 0.0),
@@ -1356,7 +1356,7 @@ impl Session {
         });
         self.edit(|doc, sel| {
             let list = crate::shapes_mut(doc, sel).ok_or_else(|| cmd::bad("tool", "no slide"))?;
-            if let Some(sh) = deckcraft_model::find_shape_mut(list, id) {
+            if let Some(sh) = seho_model::find_shape_mut(list, id) {
                 sh.xfrm = Some(x);
                 if let ShapeKind::Table(t) = &mut sh.kind {
                     // Tables resize their columns and rows proportionally.
@@ -1381,7 +1381,7 @@ impl Session {
         self.execute("shape.setBounds", &json!({"id": id, "x": x.x, "y": x.y, "w": x.w, "h": x.h}))?;
         if x.flip_h || x.flip_v {
             self.edit(|doc, sel| {
-                if let Some(sh) = crate::shapes_mut(doc, sel).and_then(|l| deckcraft_model::find_shape_mut(l, id))
+                if let Some(sh) = crate::shapes_mut(doc, sel).and_then(|l| seho_model::find_shape_mut(l, id))
                     && let Some(xx) = sh.xfrm.as_mut()
                 {
                     xx.flip_h = x.flip_h;
@@ -1500,14 +1500,14 @@ impl Session {
             let rr = r + Vec2::new(d, 0.0);
             guides.push(Guide { vertical: true, pos: x, from: b.y0.min(rr.y0), to: b.y1.max(rr.y1) });
         } else if self.prefs.snap_to_grid {
-            off.x = deckcraft_geom::snap(r.x0, self.prefs.grid_spacing) - r.x0;
+            off.x = seho_geom::snap(r.x0, self.prefs.grid_spacing) - r.x0;
         }
         if let Some((d, y, b)) = best_y {
             off.y = d;
             let rr = r + Vec2::new(0.0, d);
             guides.push(Guide { vertical: false, pos: y, from: b.x0.min(rr.x0), to: b.x1.max(rr.x1) });
         } else if self.prefs.snap_to_grid {
-            off.y = deckcraft_geom::snap(r.y0, self.prefs.grid_spacing) - r.y0;
+            off.y = seho_geom::snap(r.y0, self.prefs.grid_spacing) - r.y0;
         }
         (off, guides)
     }
@@ -1554,7 +1554,7 @@ impl Session {
 
     fn add_ink(&mut self, points: Vec<(f64, f64, f32)>) -> Result<Value> {
         let ToolKind::Ink { mode, color, width } = self.tool.kind.clone() else { return Ok(Value::Null) };
-        let stroke = deckcraft_model::InkStroke { points, color, width, highlighter: mode == "highlighter" };
+        let stroke = seho_model::InkStroke { points, color, width, highlighter: mode == "highlighter" };
         // Strokes join the slide's ink layer (one ink shape per slide).
         let existing = self.doc()?.shapes().iter().rev().find(|s| matches!(s.kind, ShapeKind::Ink { .. })).map(|s| s.id);
         self.edit(|doc, sel| {
@@ -1575,7 +1575,7 @@ impl Session {
                 }
             };
             let list = crate::shapes_mut(doc, sel).ok_or_else(|| cmd::bad("ink", "no slide"))?;
-            if let Some(sh) = deckcraft_model::find_shape_mut(list, id)
+            if let Some(sh) = seho_model::find_shape_mut(list, id)
                 && let ShapeKind::Ink { strokes } = &mut sh.kind
             {
                 strokes.push(stroke);
@@ -1591,7 +1591,7 @@ impl Session {
         let sel_before = st.selection.clone();
         self.edit(|doc, sel| {
             let list = crate::shapes_mut(doc, sel).ok_or_else(|| cmd::bad("ink", "no slide"))?;
-            if let Some(sh) = deckcraft_model::find_shape_mut(list, ink)
+            if let Some(sh) = seho_model::find_shape_mut(list, ink)
                 && let ShapeKind::Ink { strokes } = &mut sh.kind
             {
                 strokes.retain(|s| !s.points.iter().any(|(x, y, _)| (Point::new(*x, *y) - p).hypot() <= tol * 2.0 + s.width));
@@ -1616,7 +1616,7 @@ fn text_member_at(st: &crate::DocState, sh: &Shape, p: Point, tol: f64) -> Optio
     let ShapeKind::Group { children, child } = &sh.kind else { return None };
     let x = xfrm_of(&st.doc, &st.selection, sh);
     let ch = Rect::new(child.x, child.y, child.x + child.w, child.y + child.h);
-    member_at(children, deckcraft_geom::group_child_affine(&x, ch), p, tol)
+    member_at(children, seho_geom::group_child_affine(&x, ch), p, tol)
 }
 
 /// Depth-first (topmost-first) search of `children` for a text-holding shape under `p`.
@@ -1631,7 +1631,7 @@ fn member_at(children: &[Shape], to_abs: Affine, p: Point, tol: f64) -> Option<S
         }
         if let ShapeKind::Group { children: gc, child: gch } = &c.kind {
             let gch = Rect::new(gch.x, gch.y, gch.x + gch.w, gch.y + gch.h);
-            let nested = to_abs * deckcraft_geom::group_child_affine(&cx, gch);
+            let nested = to_abs * seho_geom::group_child_affine(&cx, gch);
             if let Some(id) = member_at(gc, nested, p, tol) {
                 return Some(id);
             }
@@ -1808,7 +1808,7 @@ fn hit_shape(st: &crate::DocState, sh: &Shape, p: Point, tol: f64) -> Option<Hit
         ShapeKind::Group { children, child } => {
             // A group is hit when any child is hit; the group is what gets selected.
             let ch = Rect::new(child.x, child.y, child.x + child.w, child.y + child.h);
-            let m = deckcraft_geom::group_child_affine(&x, ch);
+            let m = seho_geom::group_child_affine(&x, ch);
             let q = m.inverse() * p;
             for c in children.iter().rev() {
                 if let Some(cx) = c.xfrm {
@@ -1830,9 +1830,9 @@ fn hit_shape(st: &crate::DocState, sh: &Shape, p: Point, tol: f64) -> Option<Hit
         }
         _ => {
             if sh.is_line() {
-                let geo = deckcraft_render::shape_geometry(sh, x.w, x.h);
+                let geo = seho_render::shape_geometry(sh, x.w, x.h);
                 let lw = sh.line.as_ref().and_then(|l| l.width).unwrap_or(1.0);
-                if deckcraft_geom::near_path(&geo.outline(), local, tol.max(lw)) {
+                if seho_geom::near_path(&geo.outline(), local, tol.max(lw)) {
                     return Some(Hit::Shape { id: sh.id, text: false });
                 }
                 return None;
@@ -1843,11 +1843,11 @@ fn hit_shape(st: &crate::DocState, sh: &Shape, p: Point, tol: f64) -> Option<Hit
             }
             let has_text = matches!(sh.kind, ShapeKind::Shape) && (sh.text.as_ref().is_some_and(|t| !t.is_empty()) || sh.ph.is_some() || sh.text_box);
             // Empty interiors of unfilled, text-less shapes don't catch clicks.
-            let filled = !matches!(sh.fill, Some(deckcraft_model::Fill::None)) || sh.style.is_some();
-            let geo = deckcraft_render::shape_geometry(sh, x.w, x.h);
+            let filled = !matches!(sh.fill, Some(seho_model::Fill::None)) || sh.style.is_some();
+            let geo = seho_render::shape_geometry(sh, x.w, x.h);
             let in_geo = {
-                use deckcraft_geom::KurboShape;
-                geo.outline().winding(local) != 0 || deckcraft_geom::near_path(&geo.outline(), local, tol)
+                use seho_geom::KurboShape;
+                geo.outline().winding(local) != 0 || seho_geom::near_path(&geo.outline(), local, tol)
             };
             if has_text
                 || sh.ph.is_some()
@@ -1861,7 +1861,7 @@ fn hit_shape(st: &crate::DocState, sh: &Shape, p: Point, tol: f64) -> Option<Hit
                         | ShapeKind::Opaque { .. }
                 )
                 || (filled && in_geo)
-                || deckcraft_geom::near_path(&geo.outline(), local, tol)
+                || seho_geom::near_path(&geo.outline(), local, tol)
             {
                 return Some(Hit::Shape { id: sh.id, text: has_text || matches!(sh.kind, ShapeKind::Shape) });
             }
@@ -1876,7 +1876,7 @@ pub fn text_pos(st: &crate::DocState, sh: &Shape, p: Point) -> (usize, usize) {
 }
 
 /// Row heights of table `t` as drawn: rows grow to fit their text.
-pub fn table_rows(st: &crate::DocState, t: &deckcraft_model::Table) -> Vec<f64> {
+pub fn table_rows(st: &crate::DocState, t: &seho_model::Table) -> Vec<f64> {
     cmd::table_drawn_heights(&st.doc, &st.selection, t)
 }
 

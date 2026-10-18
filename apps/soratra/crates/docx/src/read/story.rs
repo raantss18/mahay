@@ -2,14 +2,14 @@
 
 use std::sync::Arc;
 
-use wordcraft_doc::connector::{ConnEnd, ShapeExtra};
-use wordcraft_doc::control::{ContentControl, ControlKind, ControlWrap};
-use wordcraft_doc::effects::{Glow, Shadow, ShapeEffects};
-use wordcraft_doc::graphic::{Embedded, Graphic, GraphicItem, GraphicKind};
-use wordcraft_doc::para::{AltText, Anchor, Float, FloatAlign, NoteKind, PTabAlign, PTabBase, ShapeKind, Wrap, WrapText, cap_alt};
-use wordcraft_doc::props::{CharProps, NumChange, PropChange, Rgb, TextColor};
-use wordcraft_doc::table::{Cell, MAX_COLS, MAX_ROWS, Row, Table};
-use wordcraft_doc::{Block, Blocks, InlineObject, Paragraph, PartKind, RevisionKind, Run, para_block};
+use soratra_doc::connector::{ConnEnd, ShapeExtra};
+use soratra_doc::control::{ContentControl, ControlKind, ControlWrap};
+use soratra_doc::effects::{Glow, Shadow, ShapeEffects};
+use soratra_doc::graphic::{Embedded, Graphic, GraphicItem, GraphicKind};
+use soratra_doc::para::{AltText, Anchor, Float, FloatAlign, NoteKind, PTabAlign, PTabBase, ShapeKind, Wrap, WrapText, cap_alt};
+use soratra_doc::props::{CharProps, NumChange, PropChange, Rgb, TextColor};
+use soratra_doc::table::{Cell, MAX_COLS, MAX_ROWS, Row, Table};
+use soratra_doc::{Block, Blocks, InlineObject, Paragraph, PartKind, RevisionKind, Run, para_block};
 
 use super::Reader;
 use super::props::{sectpr, tcpr, trpr};
@@ -17,7 +17,7 @@ use super::shape_style::{preset_kind, shape_paint, vml_color, vml_preset_kind};
 use crate::package::{ContentTypes, Rels, rt};
 use crate::units::{int, measure, u32_of};
 use crate::xml::{El, Node};
-use wordcraft_doc::wordart::TextWarp;
+use soratra_doc::wordart::TextWarp;
 
 const INK_URI: &str = "http://schemas.microsoft.com/office/word/2010/wordprocessingInk";
 const INK_REL: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml";
@@ -71,7 +71,7 @@ struct FieldState {
     /// `FieldStart` and `FieldEnd` markers instead of being buffered.
     range: bool,
     /// The font size of each piece of the code (where it starts in `instr`): an enclosure's
-    /// style is the size of its symbol and text (see [`wordcraft_doc::eq`]).
+    /// style is the size of its symbol and text (see [`soratra_doc::eq`]).
     sizes: Vec<(usize, Option<f32>)>,
     /// A legacy form field's `w:ffData`, as raw XML.
     form: String,
@@ -80,8 +80,8 @@ struct FieldState {
 /// Enclosed characters (`eq \o\ac(○,字)`), with their style from the code's font sizes: Word
 /// enlarges the symbol (bigger than the text, which keeps the field's size) or shrinks the text
 /// (smaller than the symbol).
-fn enclosure(f: &FieldState) -> Option<wordcraft_doc::eq::Enclosure> {
-    use wordcraft_doc::eq::{EncloseShape, EncloseStyle, Enclosure};
+fn enclosure(f: &FieldState) -> Option<soratra_doc::eq::Enclosure> {
+    use soratra_doc::eq::{EncloseShape, EncloseStyle, Enclosure};
     let mut e = Enclosure::parse(&f.instr)?;
     let size_at = |at: usize| f.sizes.iter().rev().find(|(start, _)| *start <= at).and_then(|(_, s)| *s);
     let sym = f.instr.char_indices().find(|(_, c)| EncloseShape::from_symbol(&c.to_string()) == Some(e.shape)).map(|(i, _)| i)?;
@@ -150,9 +150,9 @@ impl PB {
         self.push_run(s.len(), props);
     }
     fn push_obj(&mut self, o: InlineObject, props: &CharProps) {
-        self.text.push(wordcraft_doc::para::OBJ);
+        self.text.push(soratra_doc::para::OBJ);
         self.objects.push(o);
-        self.push_run(wordcraft_doc::para::OBJ.len_utf8(), props);
+        self.push_run(soratra_doc::para::OBJ.len_utf8(), props);
     }
     fn push_run(&mut self, len: usize, props: &CharProps) {
         match self.runs.last_mut() {
@@ -169,7 +169,7 @@ fn clean_text(s: &str) -> String {
         .filter_map(|c| match c {
             '\n' | '\r' => Some(' '),
             '\t' => Some('\t'),
-            wordcraft_doc::para::OBJ => None,
+            soratra_doc::para::OBJ => None,
             c if (c as u32) < 0x20 => None,
             c => Some(c),
         })
@@ -287,9 +287,9 @@ impl Reader<'_> {
         if let Some(p) = last_para_mut(out, 0) {
             for o in sc.pending.drain(..) {
                 let props = p.runs.last().map(|r| r.props.clone()).unwrap_or_default();
-                p.text.push(wordcraft_doc::para::OBJ);
+                p.text.push(soratra_doc::para::OBJ);
                 p.objects.push(o);
-                p.runs.push(Run { len: wordcraft_doc::para::OBJ.len_utf8(), props });
+                p.runs.push(Run { len: soratra_doc::para::OBJ.len_utf8(), props });
             }
             p.normalize();
         }
@@ -426,7 +426,7 @@ impl Reader<'_> {
         PropChange::boxed(self.revision(RevisionKind::Format, ch), old)
     }
 
-    pub fn read_section(&mut self, s: &El, rels: &Rels) -> wordcraft_doc::SectionProps {
+    pub fn read_section(&mut self, s: &El, rels: &Rels) -> soratra_doc::SectionProps {
         let (mut sp, refs) = sectpr(s);
         // §17.13.5.32: the section's properties before a tracked change (no header references).
         if let Some(ch) = s.child("w:sectPrChange") {
@@ -513,7 +513,7 @@ impl Reader<'_> {
                 if let Some(InlineObject::ControlStart { control }) = pb.objects.get_mut(k0)
                     && control.showing_placeholder
                 {
-                    let shown: String = pb.text.get(at..).unwrap_or("").chars().filter(|c| *c != wordcraft_doc::para::OBJ).collect();
+                    let shown: String = pb.text.get(at..).unwrap_or("").chars().filter(|c| *c != soratra_doc::para::OBJ).collect();
                     control.placeholder_text = placeholder_of(&shown);
                 }
                 let end_props = pb.runs.last().map(|r| r.props.clone()).unwrap_or(props);
@@ -526,7 +526,7 @@ impl Reader<'_> {
                 if let Some(c) = super::math::lift_color(&mut math) {
                     props.color = Some(TextColor::Rgb(c));
                 }
-                let linear = wordcraft_doc::math::to_linear(&math.nodes);
+                let linear = soratra_doc::math::to_linear(&math.nodes);
                 self.emit_obj(sc, pb, InlineObject::Equation { linear, display: false, math }, &props);
             }
             "m:oMathPara" => {
@@ -538,7 +538,7 @@ impl Reader<'_> {
                     if let Some(c) = super::math::lift_color(&mut math) {
                         props.color = Some(TextColor::Rgb(c));
                     }
-                    let linear = wordcraft_doc::math::to_linear(&math.nodes);
+                    let linear = soratra_doc::math::to_linear(&math.nodes);
                     self.emit_obj(sc, pb, InlineObject::Equation { linear, display: true, math }, &props);
                 }
             }
@@ -782,7 +782,7 @@ impl Reader<'_> {
         let mut rp = ruby_props.unwrap_or_default();
         let base_size = pt("w:hpsBaseText").filter(|v| *v > 0.0).or(bp.size).unwrap_or(0.0).min(1584.0);
         let size = pt("w:hps").filter(|v| *v > 0.0).or(rp.size).unwrap_or(if base_size > 0.0 { base_size / 2.0 } else { 5.0 }).clamp(1.0, 1584.0);
-        let raise = pt("w:hpsRaise").unwrap_or_else(|| wordcraft_doc::para::ruby_raise(0.0, base_size.max(size), size)).min(1584.0);
+        let raise = pt("w:hpsRaise").unwrap_or_else(|| soratra_doc::para::ruby_raise(0.0, base_size.max(size), size)).min(1584.0);
         // The ruby's size is `size`; its run keeps what it sets beyond the base text's formatting
         // (writers repeat the base's).
         (rp.size, rp.size_cs) = (None, None);
@@ -790,7 +790,7 @@ impl Reader<'_> {
         let obj = InlineObject::Ruby {
             base,
             ruby,
-            align: val("w:rubyAlign").and_then(wordcraft_doc::para::RubyAlign::from_ooxml).unwrap_or_default(),
+            align: val("w:rubyAlign").and_then(soratra_doc::para::RubyAlign::from_ooxml).unwrap_or_default(),
             size,
             raise,
             base_size,
@@ -1033,7 +1033,7 @@ impl Reader<'_> {
         } else {
             let wsp = gd.find("wps:wsp")?;
             let mut obj = self.read_wsp(sc, wsp, rels, w, h, float);
-            // A freeform: whether it's ink WordCraft wrote.
+            // A freeform: whether it's ink Soratra wrote.
             if let InlineObject::Shape { freeform: Some(f), .. } = &mut obj
                 && let Some(name) = c.child("wp:docPr").and_then(|p| p.attr("name"))
                 && let Some(tool) = super::freeform::ink_tool(name)
@@ -1138,7 +1138,7 @@ impl Reader<'_> {
         }
         let items = if self.graphic_budget == 0 { Vec::new() } else { self.graphic_items(kind, &key.1, w, h) };
         self.graphic_budget = self.graphic_budget.saturating_sub(graphic_work(&items));
-        // A chart or SmartArt that is exactly what WordCraft writes for its model can be edited
+        // A chart or SmartArt that is exactly what Soratra writes for its model can be edited
         // (and is written from the model); any other stays as it was read.
         let chart = match kind {
             GraphicKind::Chart if !items.is_empty() => self.graphic_part(&key.1).and_then(|space| crate::chart_spec::spec_of(&space)).map(Arc::new),
@@ -1215,7 +1215,7 @@ impl Reader<'_> {
             e.and_then(|f| f.child("a:solidFill")).and_then(|f| f.child("a:srgbClr")).and_then(|c| c.attr("val")).and_then(Rgb::parse)
         };
         let ln = c.child("wpc:whole").and_then(|e| e.child("a:ln"));
-        let style = wordcraft_doc::para::CanvasStyle {
+        let style = soratra_doc::para::CanvasStyle {
             fill: solid(c.child("wpc:bg")),
             stroke: solid(ln),
             stroke_width: ln.and_then(|l| l.attr("w")).and_then(|v| measure(v, 12_700.0)).unwrap_or(0.0).clamp(0.0, 100.0),
@@ -1234,11 +1234,11 @@ impl Reader<'_> {
         rels: &Rels,
         t: (f32, f32, f32, f32),
         depth: usize,
-        out: &mut Vec<wordcraft_doc::para::GroupChild>,
+        out: &mut Vec<soratra_doc::para::GroupChild>,
     ) {
         let (x0, y0, sx, sy) = t;
         for e in g.els() {
-            if out.len() >= wordcraft_doc::para::MAX_GROUP_CHILDREN {
+            if out.len() >= soratra_doc::para::MAX_GROUP_CHILDREN {
                 return;
             }
             let e = match e.name.as_str() {
@@ -1270,7 +1270,7 @@ impl Reader<'_> {
                 continue;
             }
             let max = crate::units::MAX_LEN_PT;
-            let fit = |v: f32, lo: f32| wordcraft_geom::finite(v).clamp(lo, max);
+            let fit = |v: f32, lo: f32| soratra_geom::finite(v).clamp(lo, max);
             let (w, h) = (fit(ew * sx, 0.0), fit(eh * sy, 0.0));
             let nv = if e.name == "pic:pic" { e.find("pic:cNvPr") } else { e.child("wps:cNvPr") };
             let (alt, meta) = nv_alt(nv);
@@ -1287,7 +1287,7 @@ impl Reader<'_> {
                 o
             });
             if let Some(obj) = obj {
-                out.push(wordcraft_doc::para::GroupChild { x: fit(x0 + ox * sx, -max), y: fit(y0 + oy * sy, -max), obj });
+                out.push(soratra_doc::para::GroupChild { x: fit(x0 + ox * sx, -max), y: fit(y0 + oy * sy, -max), obj });
             }
         }
     }
@@ -1341,19 +1341,19 @@ impl Reader<'_> {
             && let Some(part) = self.doc.parts.get_mut(&id)
         {
             if let Some(v) = bp.attr("vert") {
-                part.body.vert = wordcraft_doc::props::TextVert::from_ooxml(v);
+                part.body.vert = soratra_doc::props::TextVert::from_ooxml(v);
             }
             if let Some(a) = bp.attr("anchor") {
-                part.body.anchor = wordcraft_doc::props::valign_from_anchor(a);
+                part.body.anchor = soratra_doc::props::valign_from_anchor(a);
             }
             // Internal margins, each defaulting to Word's (#743).
-            let mut inset = wordcraft_doc::TEXT_BOX_INSET;
+            let mut inset = soratra_doc::TEXT_BOX_INSET;
             for (slot, n) in inset.iter_mut().zip(["lIns", "tIns", "rIns", "bIns"]) {
                 if let Some(v) = bp.attr(n).and_then(int) {
-                    *slot = u32::try_from(v.clamp(0, i64::from(wordcraft_doc::MAX_TEXT_BOX_INSET))).unwrap_or(0);
+                    *slot = u32::try_from(v.clamp(0, i64::from(soratra_doc::MAX_TEXT_BOX_INSET))).unwrap_or(0);
                 }
             }
-            part.body.inset = (inset != wordcraft_doc::TEXT_BOX_INSET).then_some(inset);
+            part.body.inset = (inset != soratra_doc::TEXT_BOX_INSET).then_some(inset);
             part.body.auto_fit = bp.child("a:spAutoFit").is_some();
         }
         // The shape style's text colour (`a:fontRef`, often `lt1`: white on the accent fill).
@@ -1371,7 +1371,7 @@ impl Reader<'_> {
             extra.corner = sppr
                 .and_then(|s| s.child("a:prstGeom"))
                 .and_then(|g| preset_adj(g, "adj"))
-                .and_then(|v| u32::try_from(v.clamp(0, i64::from(wordcraft_doc::connector::MAX_CORNER))).ok());
+                .and_then(|v| u32::try_from(v.clamp(0, i64::from(soratra_doc::connector::MAX_CORNER))).ok());
         }
         // Arrowheads: any end type but `none` (ECMA-376 §20.1.10.33) is drawn as a triangle.
         let arrow = |tag: &str| ln.and_then(|l| l.child(tag)).and_then(|e| e.attr("type")).is_some_and(|t| t != "none");
@@ -1382,7 +1382,7 @@ impl Reader<'_> {
             let end = |tag: &str| {
                 let e = cn.child(tag)?;
                 let id = e.attr("id").and_then(u32_of).filter(|v| *v != 0)?;
-                let site = e.attr("idx").and_then(u32_of).unwrap_or(0).min(wordcraft_doc::connector::MAX_SITE);
+                let site = e.attr("idx").and_then(u32_of).unwrap_or(0).min(soratra_doc::connector::MAX_SITE);
                 Some(ConnEnd { id, site })
             };
             extra.start = end("a:stCxn");
@@ -1423,7 +1423,7 @@ impl Reader<'_> {
     fn read_vml_all(&mut self, sc: &mut StoryCtx, pict: &El, rels: &Rels) -> Vec<InlineObject> {
         let mut out = Vec::new();
         for e in pict.els().filter(|e| e.name.starts_with("v:") && e.local() != "shapetype") {
-            if out.len() >= wordcraft_doc::para::MAX_GROUP_CHILDREN {
+            if out.len() >= soratra_doc::para::MAX_GROUP_CHILDREN {
                 break;
             }
             if sc.in_hf
@@ -1477,20 +1477,20 @@ impl Reader<'_> {
         rels: &Rels,
         t: (f32, f32, f32, f32),
         depth: usize,
-        out: &mut Vec<wordcraft_doc::para::GroupChild>,
+        out: &mut Vec<soratra_doc::para::GroupChild>,
     ) {
         let (x0, y0, sx, sy) = t;
         let max = crate::units::MAX_LEN_PT;
-        let fit = |v: f32, lo: f32| wordcraft_geom::finite(v).clamp(lo, max);
+        let fit = |v: f32, lo: f32| soratra_geom::finite(v).clamp(lo, max);
         for e in g.els() {
-            if out.len() >= wordcraft_doc::para::MAX_GROUP_CHILDREN {
+            if out.len() >= soratra_doc::para::MAX_GROUP_CHILDREN {
                 return;
             }
             if !e.name.starts_with("v:") || e.local() == "shapetype" {
                 continue;
             }
             let style = e.attr("style").unwrap_or("");
-            let num = |k: &str| vml_style(style, k).and_then(|v| measure(v, 1.0)).map_or(0.0, wordcraft_geom::finite);
+            let num = |k: &str| vml_style(style, k).and_then(|v| measure(v, 1.0)).map_or(0.0, soratra_geom::finite);
             let ((ox, oy), (ew, eh)) = ((num("left"), num("top")), (num("width"), num("height")));
             if e.local() == "group" {
                 if depth >= MAX_VML_GROUP_DEPTH {
@@ -1514,7 +1514,7 @@ impl Reader<'_> {
                 }
                 None => (0.0, 0.0),
             };
-            out.push(wordcraft_doc::para::GroupChild { x: fit(x0 + (ox + dx) * sx, -max), y: fit(y0 + (oy + dy) * sy, -max), obj });
+            out.push(soratra_doc::para::GroupChild { x: fit(x0 + (ox + dx) * sx, -max), y: fit(y0 + (oy + dy) * sy, -max), obj });
         }
     }
 
@@ -1570,23 +1570,23 @@ impl Reader<'_> {
                 // Internal margins `inset="l,t,r,b"` (ECMA-376 Part 4 §19.1.2.22), each one left
                 // out keeping Word's default; a bare number is in EMUs, VML's base unit.
                 // `o:insetmode="auto"` leaves them to the application.
-                let mut inset = wordcraft_doc::TEXT_BOX_INSET;
+                let mut inset = soratra_doc::TEXT_BOX_INSET;
                 let custom = tb.attr("o:insetmode").is_none_or(|m| !m.eq_ignore_ascii_case("auto"));
                 for (slot, v) in inset.iter_mut().zip(tb.attr("inset").filter(|_| custom).unwrap_or("").split(',')) {
                     if let Some(pt) = measure(v, 12_700.0) {
-                        *slot = (pt.max(0.0) * 12_700.0).round().min(wordcraft_doc::MAX_TEXT_BOX_INSET as f32) as u32;
+                        *slot = (pt.max(0.0) * 12_700.0).round().min(soratra_doc::MAX_TEXT_BOX_INSET as f32) as u32;
                     }
                 }
-                part.body.inset = (inset != wordcraft_doc::TEXT_BOX_INSET).then_some(inset);
+                part.body.inset = (inset != soratra_doc::TEXT_BOX_INSET).then_some(inset);
                 // Resize shape to fit text (DrawingML's `a:spAutoFit`).
                 let fit = vml_style(tb.attr("style").unwrap_or(""), "mso-fit-shape-to-text");
                 part.body.auto_fit = fit.is_some_and(|v| v.eq_ignore_ascii_case("t") || v.eq_ignore_ascii_case("true"));
                 // Where the text sits between the box's top and bottom (DrawingML's `anchor`).
                 if let Some(a) = vml_style(style, "v-text-anchor") {
                     part.body.anchor = match a {
-                        a if a.starts_with("middle") => wordcraft_doc::props::VAlign::Center,
-                        a if a.starts_with("bottom") => wordcraft_doc::props::VAlign::Bottom,
-                        _ => wordcraft_doc::props::VAlign::Top,
+                        a if a.starts_with("middle") => soratra_doc::props::VAlign::Center,
+                        a if a.starts_with("bottom") => soratra_doc::props::VAlign::Bottom,
+                        _ => soratra_doc::props::VAlign::Top,
                     };
                 }
             }
@@ -1650,7 +1650,7 @@ impl Reader<'_> {
             let pt = |name: &str| -> (f32, f32) {
                 let v = shape.attr(name).unwrap_or("0,0");
                 let (x, y) = v.split_once(',').unwrap_or((v, "0"));
-                let m = |s: &str| measure(s, 1.0).map_or(0.0, wordcraft_geom::finite).clamp(-crate::units::MAX_LEN_PT, crate::units::MAX_LEN_PT);
+                let m = |s: &str| measure(s, 1.0).map_or(0.0, soratra_geom::finite).clamp(-crate::units::MAX_LEN_PT, crate::units::MAX_LEN_PT);
                 (m(x), m(y))
             };
             let ((x0, y0), (x1, y1)) = (pt("from"), pt("to"));
@@ -1729,7 +1729,7 @@ impl Reader<'_> {
                 let (mut props, hcont) = tc
                     .child("w:tcPr")
                     .map(|p| tcpr(&self.pc, p))
-                    .unwrap_or_else(|| (wordcraft_doc::props::CellProps { span: 1, ..Default::default() }, false));
+                    .unwrap_or_else(|| (soratra_doc::props::CellProps { span: 1, ..Default::default() }, false));
                 if let Some(ch) = tc.child("w:tcPr").and_then(|p| p.child("w:tcPrChange")) {
                     let old = ch.child("w:tcPr").map(|o| tcpr(&self.pc, o).0).unwrap_or_default();
                     props.fmt_change = PropChange::boxed(self.revision(RevisionKind::Format, ch), old);
@@ -1792,7 +1792,7 @@ fn collect<'a>(e: &'a El, name: &str, out: &mut Vec<(&'a El, ControlWrap)>, pend
 
 /// Placeholder text as read from a control showing it: one line, bounded.
 fn placeholder_of(s: &str) -> String {
-    s.chars().map(|c| if c.is_control() { ' ' } else { c }).take(wordcraft_doc::control::MAX_CONTROL_TEXT).collect::<String>().trim().to_string()
+    s.chars().map(|c| if c.is_control() { ' ' } else { c }).take(soratra_doc::control::MAX_CONTROL_TEXT).collect::<String>().trim().to_string()
 }
 
 fn on_off_attr(e: &El, name: &str) -> bool {
@@ -1878,11 +1878,11 @@ fn anchor_float(c: &El) -> Float {
 }
 
 /// A `wp:wrapPolygon`: `wp:start`, then the `wp:lineTo` points (ECMA-376 Part 1, §20.4.2.16).
-fn wrap_polygon(e: &El) -> Option<wordcraft_doc::wrap::WrapPolygon> {
+fn wrap_polygon(e: &El) -> Option<soratra_doc::wrap::WrapPolygon> {
     let pts = e
         .els()
         .filter(|k| k.name == "wp:start" || k.name == "wp:lineTo")
-        .take(wordcraft_doc::wrap::MAX_WRAP_POINTS + 1)
+        .take(soratra_doc::wrap::MAX_WRAP_POINTS + 1)
         .filter_map(|k| Some((int(k.attr("x")?)?, int(k.attr("y")?)?)));
     let mut pts: Vec<(i64, i64)> = pts.collect();
     // The last point usually repeats the start to close the polygon.
@@ -1892,13 +1892,13 @@ fn wrap_polygon(e: &El) -> Option<wordcraft_doc::wrap::WrapPolygon> {
     let edited = on_off_attr(e, "edited");
     // An unedited polygon round the whole frame says nothing the object doesn't (it's what we
     // write when there's no outline): keep deriving the outline.
-    let s = i64::from(wordcraft_doc::wrap::WRAP_SPACE);
+    let s = i64::from(soratra_doc::wrap::WRAP_SPACE);
     let mut corners = pts.clone();
     corners.sort_unstable();
     if !edited && corners == [(0, 0), (0, s), (s, 0), (s, s)] {
         return None;
     }
-    wordcraft_doc::wrap::WrapPolygon::new(edited, pts)
+    soratra_doc::wrap::WrapPolygon::new(edited, pts)
 }
 
 /// A VML shape's preset type (`o:spt`): its own, its shapetype's, or the number in Word's
@@ -1920,7 +1920,7 @@ fn vml_spt(shape: &El, shapetype: Option<&El>, type_id: Option<&str>) -> Option<
 fn vml_coordpair(e: &El, name: &str) -> Option<(f32, f32)> {
     let v = e.attr(name)?;
     let (x, y) = v.split_once(',')?;
-    let n = |s: &str| measure(s.trim(), 1.0).map(wordcraft_geom::finite);
+    let n = |s: &str| measure(s.trim(), 1.0).map(soratra_geom::finite);
     Some((n(x)?, n(y)?))
 }
 
@@ -1948,7 +1948,7 @@ fn vml_float(shape: &El, style: &str) -> Float {
     let get = |k: &str| vml_style(style, k);
     let hidden = get("visibility").is_some_and(|v| v.eq_ignore_ascii_case("hidden"));
     if !get("position").is_some_and(|p| p.eq_ignore_ascii_case("absolute")) {
-        // Inline: only the turn (an OLE object turned in WordCraft is saved so, #319).
+        // Inline: only the turn (an OLE object turned in Soratra is saved so, #319).
         let mut f = Float { hidden, ..Float::default() };
         f.set_spin(vml_spin(style));
         return f;
@@ -2008,7 +2008,7 @@ fn vml_float(shape: &El, style: &str) -> Float {
 /// with the shape's `fillcolor`, semitransparent when its `v:fill` has an `opacity` below 1, and
 /// diagonal when the shape is turned. Only Word's watermark shape counts (its `id`), or text
 /// placed absolutely and centred both ways; other header WordArt (a logo or a title) is None.
-fn vml_watermark(shape: &El) -> Option<wordcraft_doc::Watermark> {
+fn vml_watermark(shape: &El) -> Option<soratra_doc::Watermark> {
     let tp = shape.child("v:textpath")?;
     if tp.attr("on").is_some_and(|v| matches!(v, "f" | "false" | "0")) {
         return None;
@@ -2026,7 +2026,7 @@ fn vml_watermark(shape: &El) -> Option<wordcraft_doc::Watermark> {
     if text.trim().is_empty() {
         return None;
     }
-    let default = wordcraft_doc::Watermark::default();
+    let default = soratra_doc::Watermark::default();
     let font = tp
         .attr("style")
         .and_then(|s| vml_style(s, "font-family"))
@@ -2035,7 +2035,7 @@ fn vml_watermark(shape: &El) -> Option<wordcraft_doc::Watermark> {
         .unwrap_or(default.font);
     let color = shape.attr("fillcolor").and_then(vml_color).unwrap_or(default.color);
     let opacity = shape.child("v:fill").and_then(|f| f.attr("opacity")).and_then(vml_fraction).unwrap_or(1.0);
-    Some(wordcraft_doc::Watermark { text, font, color, diagonal: vml_spin(style).deg != 0.0, semitransparent: opacity < 1.0 })
+    Some(soratra_doc::Watermark { text, font, color, diagonal: vml_spin(style).deg != 0.0, semitransparent: opacity < 1.0 })
 }
 
 /// A VML fraction (`opacity`): a number, a percentage, or 65536ths with an `f` suffix; 0..=1.
@@ -2053,14 +2053,14 @@ fn vml_fraction(v: &str) -> Option<f32> {
 
 /// A VML shape's turn: `rotation` in degrees, or 65536ths of one with an `fd` suffix; `flip`: `x`
 /// and/or `y`.
-fn vml_spin(style: &str) -> wordcraft_geom::Spin {
+fn vml_spin(style: &str) -> soratra_geom::Spin {
     let get = |k: &str| vml_style(style, k);
     let rot = get("rotation").and_then(|v| match v.strip_suffix("fd") {
         Some(fd) => fd.trim().parse::<f32>().ok().map(|f| f / 65_536.0),
         None => v.trim().parse::<f32>().ok(),
     });
     let flip = get("flip").unwrap_or("");
-    wordcraft_geom::Spin::new(rot.unwrap_or(0.0), flip.contains('x'), flip.contains('y'))
+    soratra_geom::Spin::new(rot.unwrap_or(0.0), flip.contains('x'), flip.contains('y'))
 }
 
 /// What a graphic's items cost to keep and draw: one per item, plus one per path segment.
@@ -2141,12 +2141,12 @@ struct Xfrm {
 
 /// The rotation and flips of the `a:xfrm` in shape properties `sppr` (ECMA-376 §20.1.7.6:
 /// `rot` in 60000ths of a degree, clockwise; `flipH`, `flipV`). None when missing or junk.
-fn xfrm_spin(sppr: Option<&El>) -> wordcraft_geom::Spin {
+fn xfrm_spin(sppr: Option<&El>) -> soratra_geom::Spin {
     let Some(x) = sppr.and_then(|s| if matches!(s.name.as_str(), "a:xfrm" | "w14:xfrm") { Some(s) } else { s.child("a:xfrm") }) else {
-        return wordcraft_geom::Spin::default();
+        return soratra_geom::Spin::default();
     };
     let rot = x.attr("rot").and_then(int).map(|v| v.rem_euclid(21_600_000) as f32 / 60_000.0).unwrap_or(0.0);
-    wordcraft_geom::Spin::new(rot, on_off_attr(x, "flipH"), on_off_attr(x, "flipV"))
+    soratra_geom::Spin::new(rot, on_off_attr(x, "flipH"), on_off_attr(x, "flipV"))
 }
 
 /// The `a:xfrm` in shape properties `sppr` (zeros when missing).

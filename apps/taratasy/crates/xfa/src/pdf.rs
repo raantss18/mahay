@@ -4,8 +4,8 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
-use pdfcraft_fonts::{literal, win_ansi};
+use taratasy_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
+use taratasy_fonts::{literal, win_ansi};
 
 use crate::XfaError;
 use crate::layout::{Action, BorderShape, Form, Item, Page, Widget, WidgetKind};
@@ -18,7 +18,7 @@ pub const SOM_KEY: &[u8] = b"PCSom";
 /// laid out again.
 pub const LAYOUT_KEY: &[u8] = b"PCXfaLayout";
 /// Private key on generated push buttons whose template has a click script: the button has no
-/// PDF action (the script is XFA's, not Acrobat JavaScript); PdfCraft runs the script by the
+/// PDF action (the script is XFA's, not Acrobat JavaScript); Taratasy runs the script by the
 /// field's SOM path.
 pub const CLICK_KEY: &[u8] = b"PCXfaClick";
 
@@ -444,7 +444,7 @@ impl Emitter<'_> {
                 mk.set(b"CA".to_vec(), Object::String(PdfString::text(caption)));
                 if let Some(Action::Script(_)) = &w.action {
                     // An XFA click script is no Acrobat JavaScript: no PDF action, which other
-                    // viewers would run; PdfCraft finds the script by the field's SOM path.
+                    // viewers would run; Taratasy finds the script by the field's SOM path.
                     d.set(CLICK_KEY.to_vec(), Object::Bool(true));
                 } else if let Some(a) = &w.action {
                     let mut ad = Dict::new();
@@ -600,11 +600,11 @@ impl Emitter<'_> {
                 Item::Text(s) => {
                     // The form's own text, set in the standard fonts: what they can't draw is
                     // shown as `?` and reported once (the layout goes on), never silently.
-                    if let Some(c) = pdfcraft_fonts::first_undrawable(&s.text) {
+                    if let Some(c) = taratasy_fonts::first_undrawable(&s.text) {
                         const PREFIX: &str = "some of the form's text has characters the standard fonts can't draw";
                         if !self.warnings.iter().any(|w| w.starts_with(PREFIX)) {
                             self.warnings.push(format!(
-                                "{PREFIX} (the first is \"{}\" (U+{:04X})); they are shown as ? until PdfCraft can embed fonts for them",
+                                "{PREFIX} (the first is \"{}\" (U+{:04X})); they are shown as ? until Taratasy can embed fonts for them",
                                 c.escape_debug(),
                                 u32::from(c)
                             ));
@@ -831,12 +831,12 @@ pub struct XfaShape {
     pub needs_rendering: bool,
     /// The AcroForm has fields of its own.
     pub has_fields: bool,
-    /// PdfCraft laid the form out (the layout mark is there).
+    /// Taratasy laid the form out (the layout mark is there).
     pub laid_out: bool,
 }
 
 impl XfaShape {
-    /// Whether taking the XFA out leaves a form every viewer shows: the pages PdfCraft laid out
+    /// Whether taking the XFA out leaves a form every viewer shows: the pages Taratasy laid out
     /// (with their fields), or a static form's own pages and fields. A dynamic form that was
     /// never laid out has only placeholder pages: stripping it would leave nothing.
     pub fn strippable(self) -> bool {
@@ -864,7 +864,7 @@ const MAX_STRIP_FIELDS: usize = 1_000_000;
 /// Take the XFA out of a document, leaving what every viewer shows: the pages as laid out
 /// and, when the fields were kept, an ordinary AcroForm. The packets (template, data and
 /// all), `/NeedsRendering`, the layout mark, the overrides and Reader usage rights go, and
-/// the fields lose the private keys PdfCraft gave them. A flattened form (no fields left)
+/// the fields lose the private keys Taratasy gave them. A flattened form (no fields left)
 /// becomes a plain PDF; one with its fields becomes a static form that Adobe's viewers no
 /// longer lay out again. What the packets held beyond the fields is counted in the report,
 /// so the user can be told; the caller decides whether the form is one to strip

@@ -7,7 +7,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use deckcraft_media::{Bytes, Container, MediaError, audio, probe, video};
+use seho_media::{Bytes, Container, MediaError, audio, probe, video};
 
 fn fixture(name: &str) -> Bytes {
     let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures").join(name);
@@ -299,7 +299,7 @@ fn av1_mkv() {
 
 #[test]
 fn video_feed_follows_the_clock() {
-    let mut feed = deckcraft_media::VideoFeed::new(fixture("clip-h264.mov")).expect("feed");
+    let mut feed = seho_media::VideoFeed::new(fixture("clip-h264.mov")).expect("feed");
     assert_eq!(feed.size(), (64, 48));
     let t = Duration::from_secs(5);
     assert!(feed.frame_at_blocking(0.0, t).is_some_and(|f| f.time == 0.0));
@@ -316,7 +316,7 @@ fn video_feed_follows_the_clock() {
 fn video_feed_repeated_seeks_keep_the_requested_frame() {
     let timeout = Duration::from_secs(5);
     for name in ["clip-h264.mov", "clip-hevc.mp4", "clip-vp9.webm", "clip-av1.mkv"] {
-        let mut feed = deckcraft_media::VideoFeed::new(fixture(name)).expect("feed");
+        let mut feed = seho_media::VideoFeed::new(fixture(name)).expect("feed");
         for _ in 0..20 {
             // A decoder can finish this small clip before the consumer next polls it.
             // Rewinding must keep the new generation's first frame, even at end of stream.
@@ -331,7 +331,7 @@ fn video_feed_repeated_seeks_keep_the_requested_frame() {
 
 #[test]
 fn player_plays_decoded_audio_through_the_mixer() {
-    use deckcraft_media::{ClipParams, Player, VoiceSpec};
+    use seho_media::{ClipParams, Player, VoiceSpec};
     let b: Bytes = Arc::new(wav(48_000, 1, &sine(48_000, 0.5)));
     let mut p = Player::new(None);
     p.play(1, 1, &b, VoiceSpec { clip: ClipParams { volume: 0.5, ..Default::default() }, looping: false, duration: 0.5, audio: true }, None);

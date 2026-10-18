@@ -4,9 +4,9 @@
 //! from affected operations inside it: SUM(range * range) returns a scalar yet needs array
 //! evaluation. Legacy array-aware contexts such as SUMPRODUCT already preserve those operations.
 
-use gridcraft_core::CellRef;
-use gridcraft_formula::{BinOp, Expr, SheetSel, StructItem, UnOp};
-use gridcraft_model::{Formula, Workbook};
+use tabilao_core::CellRef;
+use tabilao_formula::{BinOp, Expr, SheetSel, StructItem, UnOp};
+use tabilao_model::{Formula, Workbook};
 
 #[derive(Clone, Copy, Default)]
 struct Shape {
@@ -57,7 +57,7 @@ impl Scan<'_> {
                     None => (sheet, n.as_str()),
                 };
                 if let Some(def) = self.wb.name(bare, scope) {
-                    return match gridcraft_formula::parse(def.formula.trim_start_matches('=')) {
+                    return match tabilao_formula::parse(def.formula.trim_start_matches('=')) {
                         Ok(expr) => self.expr(&expr, def.scope.unwrap_or(scope), array_context, depth + 1),
                         Err(_) => Shape::array(),
                     };
@@ -142,7 +142,7 @@ impl Scan<'_> {
         let array = match name {
             "INDIRECT" => match args.first() {
                 Some(Expr::Text(text)) if !matches!(args.get(1), Some(Expr::Bool(false))) => {
-                    gridcraft_formula::parse(text).map(|e| self.expr(&e, sheet, array_context, depth).array).unwrap_or(true)
+                    tabilao_formula::parse(text).map(|e| self.expr(&e, sheet, array_context, depth).array).unwrap_or(true)
                 }
                 _ => true,
             },

@@ -3,10 +3,10 @@
 //! preview of the current page. "Update" opens the same dialog in replace mode.
 
 use egui::{Align, Color32, CornerRadius, Layout, Rect, Stroke, pos2, vec2};
-use pdfcraft_engine::{Background, Edit, HeaderFooter, MarkKind, Watermark};
+use taratasy_engine::{Background, Edit, HeaderFooter, MarkKind, Watermark};
 
 use crate::theme::{self, Tokens};
-use crate::{PdfCraftApp, widgets};
+use crate::{TaratasyApp, widgets};
 
 /// How far a watermark may be moved from the page centre, in points.
 const MAX_OFFSET: f64 = 20_000.0;
@@ -141,7 +141,7 @@ fn rgb32(c: [f64; 3]) -> Color32 {
 }
 
 /// The dialog for `kind`; returns (apply, cancel).
-pub(crate) fn body(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens, kind: MarkKind) -> (bool, bool) {
+pub(crate) fn body(ui: &mut egui::Ui, app: &mut TaratasyApp, t: &Tokens, kind: MarkKind) -> (bool, bool) {
     let Some((i, id)) = app.active_ids() else { return (false, true) };
     let current = app.views[i].current;
     let Some(doc) = app.session.get(id) else { return (false, true) };
@@ -444,9 +444,9 @@ fn undrawable(kind: MarkKind, d: &MarksDraft) -> Option<char> {
     }
 }
 
-fn mark_file(d: &MarksDraft) -> Option<pdfcraft_engine::MarkFile> {
+fn mark_file(d: &MarksDraft) -> Option<taratasy_engine::MarkFile> {
     let (name, bytes) = d.file.clone().filter(|_| d.use_file)?;
-    Some(pdfcraft_engine::MarkFile { name, bytes, page: d.file_page.max(1) - 1 })
+    Some(taratasy_engine::MarkFile { name, bytes, page: d.file_page.max(1) - 1 })
 }
 
 /// Source ▸ File: Browse…, the page of a PDF, and the size relative to the page. Returns true

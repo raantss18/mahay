@@ -13,10 +13,10 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use pdfcraft_content::{Matrix, Op, Pieces, parse, serialize_ops};
-use pdfcraft_cos::{Dict, Document, Object, PdfString, Stream};
-use pdfcraft_fonts::pdf::Metrics;
-use pdfcraft_fonts::{CraftFont, GlyphError, japanese_glyph_from};
+use taratasy_content::{Matrix, Op, Pieces, parse, serialize_ops};
+use taratasy_cos::{Dict, Document, Object, PdfString, Stream};
+use taratasy_fonts::pdf::Metrics;
+use taratasy_fonts::{MahayFont, GlyphError, japanese_glyph_from};
 
 use crate::EditError;
 
@@ -95,7 +95,7 @@ pub fn text_editor_fonts(doc: &Document, page: usize) -> Result<Vec<TextEditorFo
     let mut result = Vec::new();
     for (name, font) in fonts.iter().take(128) {
         let Some(font) = doc.dict(font) else { continue };
-        let Some(bytes) = pdfcraft_fonts::pdf::embedded_sfnt(doc, &font) else { continue };
+        let Some(bytes) = taratasy_fonts::pdf::embedded_sfnt(doc, &font) else { continue };
         if bytes.len() > budget {
             continue;
         }
@@ -110,7 +110,7 @@ pub fn text_editor_fonts(doc: &Document, page: usize) -> Result<Vec<TextEditorFo
     // display newly inserted glyphs before Apply without changing the source text's face.
     let source_faces: Vec<_> = result.iter().map(|p| p.face.clone()).collect();
     for face in source_faces {
-        for full in pdfcraft_fonts::embedding::matching_faces(&face) {
+        for full in taratasy_fonts::embedding::matching_faces(&face) {
             if full.bytes.len() > budget || result.iter().any(|p| p.resource == format!("PCApproved{}", full.name())) {
                 continue;
             }
@@ -124,12 +124,12 @@ pub fn text_editor_fonts(doc: &Document, page: usize) -> Result<Vec<TextEditorFo
 /// Load an explicit full face into this page's resources. Nothing on the page is replaced;
 /// the new resource can complete matching source subsets or be chosen in a text style.
 pub fn register_text_font(doc: &mut Document, page: usize, bytes: &[u8]) -> Result<String, EditError> {
-    pdfcraft_fonts::embedding::validate_document_input(bytes).map_err(EditError::Invalid)?;
-    let (_, postscript) = pdfcraft_fonts::embedding::names(bytes).map_err(EditError::Invalid)?;
+    taratasy_fonts::embedding::validate_document_input(bytes).map_err(EditError::Invalid)?;
+    let (_, postscript) = taratasy_fonts::embedding::names(bytes).map_err(EditError::Invalid)?;
     let p = page_dict(doc, page)?;
     let mut resources = p.dict.get(b"Resources").and_then(|o| doc.dict(o)).unwrap_or_default();
     let mut fonts = resources.get(b"Font").and_then(|o| doc.dict(o)).unwrap_or_default();
-    let name = pdfcraft_fonts::embedding::embed(doc, &mut fonts, bytes, &postscript).map_err(EditError::Invalid)?;
+    let name = taratasy_fonts::embedding::embed(doc, &mut fonts, bytes, &postscript).map_err(EditError::Invalid)?;
     resources.set(b"Font".to_vec(), Object::Dict(fonts));
     doc.update_dict(p.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(resources)))?;
     Ok(name)
@@ -209,7 +209,7 @@ impl TextState {
 
     /// Operators that set this state (inside a text object).
     fn ops(&self) -> Vec<Op> {
-        let n = pdfcraft_content::num;
+        let n = taratasy_content::num;
         let mut v = Vec::new();
         if let Some((f, size)) = &self.font {
             v.push(Op::new("Tf", vec![Object::name(f), n(*size)]));
@@ -585,8 +585,8 @@ pub(crate) fn rewritten_contents(doc: &mut Document, streams: &[(Object, Vec<u8>
     }
 }
 
-fn page_dict(doc: &Document, page: usize) -> Result<pdfcraft_model::Page, EditError> {
-    pdfcraft_model::pages(doc).into_iter().nth(page).ok_or(EditError::NoSuchPage(page))
+fn page_dict(doc: &Document, page: usize) -> Result<taratasy_model::Page, EditError> {
+    taratasy_model::pages(doc).into_iter().nth(page).ok_or(EditError::NoSuchPage(page))
 }
 
 fn fill_color(fill: &[Op]) -> [f64; 3] {
@@ -1180,7 +1180,7 @@ pub(crate) const MAX_FORM_VISITS: usize = 4096;
 /// A form XObject a page draws: its object, content, resources and its matrix composed with the
 /// CTM at the `Do`.
 pub(crate) struct FormCall {
-    pub(crate) obj: Option<pdfcraft_cos::ObjRef>,
+    pub(crate) obj: Option<taratasy_cos::ObjRef>,
     pub(crate) data: Vec<u8>,
     pub(crate) resources: Dict,
     pub(crate) ctm: Matrix,
@@ -1194,7 +1194,7 @@ pub(crate) fn form_call(
     resources: &Dict,
     name: &[u8],
     ctm: Matrix,
-    path: &[pdfcraft_cos::ObjRef],
+    path: &[taratasy_cos::ObjRef],
     visits: &mut usize,
 ) -> Option<FormCall> {
     if path.len() >= MAX_FORM_DEPTH || *visits >= MAX_FORM_VISITS {
@@ -1234,7 +1234,7 @@ fn reading_lines(doc: &Document, page: usize) -> Result<Vec<TextLine>, EditError
         doc: &'a Document,
         lines: Vec<TextLine>,
         next_stream: usize,
-        path: Vec<pdfcraft_cos::ObjRef>,
+        path: Vec<taratasy_cos::ObjRef>,
         visits: usize,
     }
     /// `stream` gives the stream number of the operator at an index of `ops`.
@@ -1304,7 +1304,7 @@ fn reading_lines(doc: &Document, page: usize) -> Result<Vec<TextLine>, EditError
 type Encoder = Box<dyn Fn(&str) -> Option<Vec<(String, Vec<u8>)>>>;
 
 fn is_win_ansi_char(c: char) -> bool {
-    c == '\t' || pdfcraft_fonts::win_ansi_byte(c).is_some()
+    c == '\t' || taratasy_fonts::win_ansi_byte(c).is_some()
 }
 
 fn needs_type3(text: &str) -> bool {
@@ -1372,7 +1372,7 @@ fn pdf_num(v: f64) -> String {
     if v.fract() == 0.0 { format!("{v:.0}") } else { format!("{v:.4}").trim_end_matches('0').trim_end_matches('.').to_string() }
 }
 
-fn type3_path(face: &CraftFont, ch: char) -> Result<(Vec<u8>, f64), EditError> {
+fn type3_path(face: &MahayFont, ch: char) -> Result<(Vec<u8>, f64), EditError> {
     let glyph = japanese_glyph_from(face, ch).map_err(|e| match e {
         GlyphError::NoFont => no_japanese_font(),
         GlyphError::Missing => EditError::Invalid(format!("the {} fallback font has no glyph for U+{:04X}", face.family, ch as u32)),
@@ -1411,7 +1411,7 @@ const SIDE_BEARING: f64 = 0.05;
 /// (one em each, as in JIS X 0208) and have no proportional (`palt`) metrics for them, so a
 /// word set that way reads as letter-spaced. Those letters get their ink width plus a side
 /// bearing instead; everything else keeps the face's own advance.
-fn proportional(ch: char, glyph: &pdfcraft_fonts::GlyphOutline) -> (f64, f64) {
+fn proportional(ch: char, glyph: &taratasy_fonts::GlyphOutline) -> (f64, f64) {
     let respace = matches!(ch, '\u{0370}'..='\u{03FF}' | '\u{0400}'..='\u{052F}' | '\u{1F00}'..='\u{1FFF}');
     let ink = glyph.bbox[2] - glyph.bbox[0];
     if !respace || glyph.contours.is_empty() || !(ink > 0.0 && ink < glyph.width) {
@@ -1437,7 +1437,7 @@ fn no_fallback_font(text: &str) -> EditError {
     EditError::Invalid(format!(
         "the paragraph's font has no glyph for {ch} (U+{:04X}) and this build has no fallback font for it; \
          choose a font that has it (Load font… or Installed fonts…), or use an official release, which includes \
-         PdfCraft's fallback fonts (to build them in, set CRAFT_FONTS_DIR to a craft-fonts checkout)",
+         Taratasy's fallback fonts (to build them in, set MAHAY_FONTS_DIR to a mahay-fonts checkout)",
         u32::from(ch)
     ))
 }
@@ -1445,22 +1445,22 @@ fn no_fallback_font(text: &str) -> EditError {
 /// This build has no Japanese face to draw replacement text with.
 fn no_japanese_font() -> EditError {
     EditError::Invalid(
-        "this text needs PdfCraft's Japanese fallback font, which this build doesn't include \
-         (official releases do; to build it in, set CRAFT_FONTS_DIR to a craft-fonts checkout)"
+        "this text needs Taratasy's Japanese fallback font, which this build doesn't include \
+         (official releases do; to build it in, set MAHAY_FONTS_DIR to a mahay-fonts checkout)"
             .into(),
     )
 }
 
 /// The first of `faces` (best match first) that has a glyph for every one of `chars`, else the first.
-fn fallback_face<'a>(faces: &[&'a CraftFont], chars: &[char], has_glyph: impl Fn(&CraftFont, char) -> bool) -> Option<&'a CraftFont> {
+fn fallback_face<'a>(faces: &[&'a MahayFont], chars: &[char], has_glyph: impl Fn(&MahayFont, char) -> bool) -> Option<&'a MahayFont> {
     faces.iter().copied().find(|face| chars.iter().all(|ch| has_glyph(face, *ch))).or_else(|| faces.first().copied())
 }
 
 /// This build has no Hebrew face to draw replacement text with.
 fn no_hebrew_font() -> EditError {
     EditError::Invalid(
-        "this text needs PdfCraft's Hebrew fallback font (Noto Sans Hebrew), which this build doesn't include \
-         (to build it in, set CRAFT_FONTS_DIR to a craft-fonts checkout that has it)"
+        "this text needs Taratasy's Hebrew fallback font (Noto Sans Hebrew), which this build doesn't include \
+         (to build it in, set MAHAY_FONTS_DIR to a mahay-fonts checkout that has it)"
             .into(),
     )
 }
@@ -1468,8 +1468,8 @@ fn no_hebrew_font() -> EditError {
 /// The faces a Type 3 replacement may draw `text` with, best first. Text with Hebrew takes the
 /// Hebrew face first (its Latin and digits too, so a line keeps one look), then the Japanese
 /// faces for anything it lacks; other text takes the Japanese faces, as before.
-fn type3_faces(text: &str, family: crate::added::Family, bold: bool) -> Result<(Vec<&'static CraftFont>, bool), EditError> {
-    let japanese = pdfcraft_fonts::document_japanese_fonts_for_style(family == crate::added::Family::Times, bold);
+fn type3_faces(text: &str, family: crate::added::Family, bold: bool) -> Result<(Vec<&'static MahayFont>, bool), EditError> {
+    let japanese = taratasy_fonts::document_japanese_fonts_for_style(family == crate::added::Family::Times, bold);
     if !text.chars().any(crate::bidi::is_hebrew) {
         return Ok((japanese, false));
     }
@@ -1478,7 +1478,7 @@ fn type3_faces(text: &str, family: crate::added::Family, bold: bool) -> Result<(
     if text.chars().any(crate::bidi::is_hebrew_mark) {
         return Err(EditError::Invalid("Hebrew points (niqqud) can't be written into a PDF yet; type the text without them".into()));
     }
-    let hebrew = pdfcraft_fonts::document_hebrew_font(bold).ok_or_else(no_hebrew_font)?;
+    let hebrew = taratasy_fonts::document_hebrew_font(bold).ok_or_else(no_hebrew_font)?;
     Ok((std::iter::once(hebrew).chain(japanese).collect(), true))
 }
 
@@ -1507,7 +1507,7 @@ fn type3_font(
     // text keeps the Hebrew face and takes each character it lacks from the next face that has it.
     let face = if hebrew { faces.first().copied() } else { fallback_face(&faces, &chars, |face, ch| japanese_glyph_from(face, ch).is_ok()) }
         .ok_or_else(|| no_fallback_font(text))?;
-    let others: &[&CraftFont] = if hebrew { faces.get(1..).unwrap_or_default() } else { &[] };
+    let others: &[&MahayFont] = if hebrew { faces.get(1..).unwrap_or_default() } else { &[] };
     // Every outline is read before the document is touched, so a character that fails leaves it
     // as it was. Each font takes the next `per_font` characters; codes restart at 1 in each.
     let per_font = max_glyphs.clamp(1, MAX_TYPE3_GLYPHS);
@@ -1540,7 +1540,7 @@ fn type3_font(
 /// Adds one generated font whose codes 1 to `glyphs.len()` show `glyphs`, and returns its resource
 /// name (`PCJp`, then `PCJp1`, ...; `PCHe`, ... for Hebrew text). Nothing here can fail: the
 /// outlines were read already.
-fn add_type3_font(doc: &mut Document, fonts_res: &mut Dict, face: &CraftFont, hebrew: bool, glyphs: Vec<Type3Glyph>) -> String {
+fn add_type3_font(doc: &mut Document, fonts_res: &mut Dict, face: &MahayFont, hebrew: bool, glyphs: Vec<Type3Glyph>) -> String {
     let last_char = glyphs.len();
     let mut charprocs = Dict::new();
     let mut widths = Vec::with_capacity(last_char);
@@ -1623,8 +1623,8 @@ fn source_program(doc: &Document, fonts: &Dict, name: &str) -> Option<Vec<u8>> {
     if base.split_once('+').is_some_and(|(tag, _)| tag.len() == 6 && tag.bytes().all(|b| b.is_ascii_uppercase())) {
         return None;
     }
-    let bytes = pdfcraft_fonts::pdf::embedded_sfnt(doc, &font)?;
-    pdfcraft_fonts::embedding::validate(&bytes).is_ok().then_some(bytes)
+    let bytes = taratasy_fonts::pdf::embedded_sfnt(doc, &font)?;
+    taratasy_fonts::embedding::validate(&bytes).is_ok().then_some(bytes)
 }
 
 /// Whether `text` has characters `line`'s font can't encode that its own program can draw.
@@ -1633,7 +1633,7 @@ fn source_program_completes(doc: &Document, fonts: &Dict, line: &TextLine, text:
         return false;
     };
     let missing: String = text.chars().filter(|c| !c.is_whitespace() && !source_encodes(&metrics, &c.to_string())).collect();
-    !missing.is_empty() && source_program(doc, fonts, &line.font).is_some_and(|bytes| pdfcraft_fonts::embedding::covers(&bytes, &missing))
+    !missing.is_empty() && source_program(doc, fonts, &line.font).is_some_and(|bytes| taratasy_fonts::embedding::covers(&bytes, &missing))
 }
 
 /// A subset may contain all the letters but no space glyph: producers use another subset
@@ -1689,7 +1689,7 @@ fn source_show(metrics: &Metrics, text: &str, size: f64, space: f64, char_spacin
     let mut out = Vec::new();
     for (i, word) in text.split(' ').enumerate() {
         if i > 0 {
-            out.push(Op::new("TJ", vec![Object::Array(vec![pdfcraft_content::num(adjustment)])]));
+            out.push(Op::new("TJ", vec![Object::Array(vec![taratasy_content::num(adjustment)])]));
         }
         if !word.is_empty() {
             let bytes = metrics.encode(word).ok_or_else(|| EditError::Invalid("the source font cannot show the replacement text".into()))?;
@@ -1752,13 +1752,13 @@ pub(crate) fn replace_line_with_limit(doc: &mut Document, page: usize, line: usi
                     .ok_or_else(|| EditError::Invalid(format!("\"{text}\" can't be shown by the {} fallback", fallback.family)))?;
                 let size = font_size_before(&ops, first).unwrap_or(target.size);
                 for (name, bytes) in runs {
-                    replacement.push(Op::new("Tf", vec![Object::name(&name), pdfcraft_content::num(size)]));
+                    replacement.push(Op::new("Tf", vec![Object::name(&name), taratasy_content::num(size)]));
                     replacement.push(Op::new("Tj", vec![Object::String(PdfString::literal(bytes))]));
                 }
-                replacement.push(Op::new("Tf", vec![Object::name(&target.font), pdfcraft_content::num(size)]));
+                replacement.push(Op::new("Tf", vec![Object::name(&target.font), taratasy_content::num(size)]));
                 substituted = Some(format!("{} Type3", fallback.family));
             } else {
-                let win = pdfcraft_fonts::win_ansi(&fallback_shown);
+                let win = taratasy_fonts::win_ansi(&fallback_shown);
                 // WinAnsi turns what it can't show into '?'; refuse rather than print the wrong thing.
                 let back: String = win.iter().map(|b| char::from_u32(u32::from(*b)).unwrap_or('?')).collect();
                 if fallback_shown.chars().zip(back.chars()).any(|(a, b)| b == '?' && a != '?') {
@@ -1769,9 +1769,9 @@ pub(crate) fn replace_line_with_limit(doc: &mut Document, page: usize, line: usi
                 let family = source_family(&target.base_font);
                 let base = family.base_font(target.bold, target.italic);
                 let substitute_name = format!("PCEd{}", base.replace('-', ""));
-                replacement.push(Op::new("Tf", vec![Object::name(&substitute_name), pdfcraft_content::num(size)]));
+                replacement.push(Op::new("Tf", vec![Object::name(&substitute_name), taratasy_content::num(size)]));
                 replacement.push(Op::new("Tj", vec![Object::String(PdfString::literal(win))]));
-                replacement.push(Op::new("Tf", vec![Object::name(&target.font), pdfcraft_content::num(size)]));
+                replacement.push(Op::new("Tf", vec![Object::name(&target.font), taratasy_content::num(size)]));
                 substituted = Some(base.to_string());
                 let mut f = Dict::new();
                 f.set(b"Type".to_vec(), Object::name("Font"));
@@ -1886,7 +1886,7 @@ pub fn clear_block(doc: &mut Document, page: usize, block: usize) -> Result<(), 
                 replacement.push(Op::new("T*", vec![]));
             }
         }
-        replacement.push(Op::new("TJ", vec![Object::Array(vec![pdfcraft_content::num(adjustment)])]));
+        replacement.push(Op::new("TJ", vec![Object::Array(vec![taratasy_content::num(adjustment)])]));
         patches.insert(s.op, replacement);
     }
     let data = splice(&pieces, &ops, |i| patches.remove(&i).map_or((Vec::new(), true), |v| (v, false)));
@@ -2048,8 +2048,8 @@ fn rewrite_block_from(
             || style.resource.is_some()
             || (text.is_some_and(|draft| {
                 draft.contains('\n')
-                    || pdfcraft_fonts::source_shaping::required(draft)
-                    || !pdfcraft_fonts::embedding::matching_faces(&b.base_font).is_empty()
+                    || taratasy_fonts::source_shaping::required(draft)
+                    || !taratasy_fonts::embedding::matching_faces(&b.base_font).is_empty()
             }) || registered_face
                 || text.is_some_and(|draft| source_program_completes(doc, &fonts_res, first, draft))
                 || b.rows.iter().any(|row| row.len() > 1)
@@ -2179,7 +2179,7 @@ fn rewrite_block_from(
         let first = fallback.names.first().cloned().ok_or_else(no_japanese_font)?;
         (first, Box::new(move |s: &str| type3_encode(&fallback, s)))
     } else {
-        let win = pdfcraft_fonts::win_ansi(&flat);
+        let win = taratasy_fonts::win_ansi(&flat);
         let back: String = win.iter().map(|c| char::from_u32(u32::from(*c)).unwrap_or('?')).collect();
         let base = family.base_font(bold, italic);
         if flat.chars().zip(back.chars()).any(|(a, c)| c == '?' && a != '?') {
@@ -2196,7 +2196,7 @@ fn rewrite_block_from(
             substituted = Some(base.to_string());
         }
         let shown = name.clone();
-        (name, Box::new(move |s: &str| Some(vec![(shown.clone(), pdfcraft_fonts::win_ansi(s))])))
+        (name, Box::new(move |s: &str| Some(vec![(shown.clone(), taratasy_fonts::win_ansi(s))])))
     };
     // Line spacing in text space: the paragraph's own (scaled with the size), or 1.2 × the size.
     let lead = match style.line_spacing {
@@ -2214,7 +2214,7 @@ fn rewrite_block_from(
         None if o_state.leading > 0.0 => o_state.leading,
         None => size * 1.2,
     };
-    let n = pdfcraft_content::num;
+    let n = taratasy_content::num;
     // In its own graphics state, so a new colour (or anything else) stops at the paragraph.
     let mut block_ops = vec![Op::new("q", vec![])];
     block_ops.extend(reveal_ops(&b, &lines, style, o.ctm)?);
@@ -2373,7 +2373,7 @@ pub(crate) fn reveal_ops(block: &TextBlock, lines: &[TextLine], style: &BlockSty
     if !block.invisible {
         return Ok(Vec::new());
     }
-    let n = pdfcraft_content::num;
+    let n = taratasy_content::num;
     let mut ops = Vec::new();
     if let Some(colour) = style.cover {
         if colour.iter().any(|c| !c.is_finite() || !(0.0..=1.0).contains(c)) {
@@ -2407,7 +2407,7 @@ pub(crate) fn reveal_ops(block: &TextBlock, lines: &[TextLine], style: &BlockSty
 pub(crate) fn selectable_blocks(
     doc: &Document,
     page: usize,
-    excluded: &std::collections::BTreeSet<pdfcraft_cos::ObjRef>,
+    excluded: &std::collections::BTreeSet<taratasy_cos::ObjRef>,
 ) -> Result<Vec<(usize, TextBlock)>, EditError> {
     let p = page_dict(doc, page)?;
     let streams = content_streams(doc, &p.dict);
@@ -2597,11 +2597,11 @@ mod tests {
     #[test]
     fn fallback_face_moves_on_when_the_best_face_lacks_a_character() {
         static JPAN: &[&str] = &["Jpan"];
-        let mincho = CraftFont { family: "Mincho", style: "Regular", scripts: JPAN, bytes: b"" };
-        let gothic = CraftFont { family: "Gothic", style: "Regular", scripts: JPAN, bytes: b"" };
+        let mincho = MahayFont { family: "Mincho", style: "Regular", scripts: JPAN, bytes: b"" };
+        let gothic = MahayFont { family: "Gothic", style: "Regular", scripts: JPAN, bytes: b"" };
         let faces = [&mincho, &gothic];
         // Only the Gothic face has the Cyrillic letter.
-        let has = |face: &CraftFont, ch: char| ch.is_ascii() || face.family == "Gothic";
+        let has = |face: &MahayFont, ch: char| ch.is_ascii() || face.family == "Gothic";
         assert_eq!(fallback_face(&faces, &['a', 'ф'], has).map(|f| f.family), Some("Gothic"));
         // Characters the best face has keep it.
         assert_eq!(fallback_face(&faces, &['a', 'b'], has).map(|f| f.family), Some("Mincho"));
@@ -2613,7 +2613,7 @@ mod tests {
     #[test]
     fn hebrew_and_japanese_fallback_shards_are_recognized_as_ours() {
         static HEBR: &[&str] = &["Hebr"];
-        let face = CraftFont { family: "FakeHebrew", style: "Regular", scripts: HEBR, bytes: b"" };
+        let face = MahayFont { family: "FakeHebrew", style: "Regular", scripts: HEBR, bytes: b"" };
         let glyph = |code, ch| Type3Glyph { code, ch, path: b"0 0 0 0 0 0 d1\nf\n".to_vec(), width: 0.5 };
         let mut doc = Document::new_empty();
         let mut fonts = Dict::new();

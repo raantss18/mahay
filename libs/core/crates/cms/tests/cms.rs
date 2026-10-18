@@ -2,8 +2,8 @@
 //! behaviour, intents, BPC, interpolation accuracy, real-world profiles and an independent
 //! oracle (moxcms, dev-dependency only).
 
-use craft_cms::math::{self, delta_e76};
-use craft_cms::{Builtin, Clut, ColorSpace, Intent, Lut3d, Profile, Transform, TransformOptions};
+use mahay_cms::math::{self, delta_e76};
+use mahay_cms::{Builtin, Clut, ColorSpace, Intent, Lut3d, Profile, Transform, TransformOptions};
 
 fn lab() -> &'static Profile {
     Builtin::LabD50.profile()
@@ -255,7 +255,7 @@ fn absolute_colorimetric_refuses_a_degenerate_media_white() {
     for (name, bad) in [("zero", &zero), ("parsed zero", &parsed_zero), ("negative", &negative), ("nan", &nan)] {
         for (src, dst) in [(srgb(), bad), (bad, srgb())] {
             match Transform::new(src, dst, Intent::AbsoluteColorimetric, false) {
-                Err(craft_cms::CmsError::Invalid(m)) => assert!(m.contains("media white"), "{name}: {m}"),
+                Err(mahay_cms::CmsError::Invalid(m)) => assert!(m.contains("media white"), "{name}: {m}"),
                 Err(e) => panic!("{name}: wrong error {e}"),
                 Ok(t) => {
                     let mut out = [0.0f32; 3];
@@ -286,10 +286,10 @@ fn absolute_colorimetric_refuses_a_degenerate_media_white() {
 
 #[test]
 fn black_point_compensation() {
-    let bp = craft_cms::black_point(cmyk(), Intent::RelativeColorimetric, false).unwrap();
+    let bp = mahay_cms::black_point(cmyk(), Intent::RelativeColorimetric, false).unwrap();
     let bl = math::xyz_to_lab([bp * 0.9642, bp, bp * 0.8249], math::D50)[0];
     assert!(bl > 4.0 && bl < 20.0, "CMYK black L* {bl}");
-    assert_eq!(craft_cms::black_point(srgb(), Intent::RelativeColorimetric, true).unwrap(), 0.0);
+    assert_eq!(mahay_cms::black_point(srgb(), Intent::RelativeColorimetric, true).unwrap(), 0.0);
     // sRGB → CMYK: without BPC, deep shadows below the paper's black clip together; with BPC
     // they stay distinct.
     let with = Transform::new(srgb(), cmyk(), Intent::RelativeColorimetric, true).unwrap();
@@ -467,9 +467,9 @@ fn cmyk_endpoints_valid(paper: [f64; 3], black: [f64; 3]) -> bool {
 
 #[test]
 fn a_light_black_cmyk_lut_has_the_known_relative_ramp() {
-    use craft_cms::Curve;
-    use craft_cms::pipeline::Stage;
-    use craft_cms::profile::{Lut, LutKind};
+    use mahay_cms::Curve;
+    use mahay_cms::pipeline::Stage;
+    use mahay_cms::profile::{Lut, LutKind};
 
     let mut p = cmyk().clone();
     // Independent linear test model: L* = 100 - 52 K, neutral a*/b*. Exercise A2B1 only;
@@ -547,10 +547,10 @@ fn system_profiles() {
             seen += 1;
             if !matches!(
                 p.class,
-                craft_cms::ProfileClass::Input
-                    | craft_cms::ProfileClass::Display
-                    | craft_cms::ProfileClass::Output
-                    | craft_cms::ProfileClass::ColorSpace
+                mahay_cms::ProfileClass::Input
+                    | mahay_cms::ProfileClass::Display
+                    | mahay_cms::ProfileClass::Output
+                    | mahay_cms::ProfileClass::ColorSpace
             ) {
                 continue;
             }
@@ -757,8 +757,8 @@ fn gray_profile_with_reversed_lut_type_reencodes() {
 /// sRGB the way Photoshop embeds it: a v2 profile whose TRCs are 1024-entry 16-bit tables.
 fn srgb_as_v2_tables() -> Profile {
     let mut p = srgb().clone();
-    let table = |c: &craft_cms::Curve| {
-        craft_cms::Curve::Table((0..1024).map(|i| ((c.eval64(i as f64 / 1023.0) * 65535.0).round() / 65535.0) as f32).collect())
+    let table = |c: &mahay_cms::Curve| {
+        mahay_cms::Curve::Table((0..1024).map(|i| ((c.eval64(i as f64 / 1023.0) * 65535.0).round() / 65535.0) as f32).collect())
     };
     let trc = p.trc.clone().unwrap();
     p.trc = Some([table(&trc[0]), table(&trc[1]), table(&trc[2])]);
@@ -851,15 +851,15 @@ fn device_links_parse_and_are_reported_unsupported() {
         let p = Profile::parse(&device_link(space, out_space, inputs, outputs)).unwrap();
         assert_eq!(p.color_space.channels(), inputs);
         for err in [Transform::new(&p, srgb(), Intent::Perceptual, false).err(), Transform::new(srgb(), &p, Intent::Perceptual, false).err()] {
-            assert!(matches!(err, Some(craft_cms::CmsError::Unsupported(_))), "{err:?}");
+            assert!(matches!(err, Some(mahay_cms::CmsError::Unsupported(_))), "{err:?}");
         }
     }
     // The output space still bounds the tag: a CMYK→CMYK link with a 4→3 table is malformed.
-    assert!(matches!(Profile::parse(&device_link(b"CMYK", b"CMYK", 4, 3)), Err(craft_cms::CmsError::Invalid(_))));
+    assert!(matches!(Profile::parse(&device_link(b"CMYK", b"CMYK", 4, 3)), Err(mahay_cms::CmsError::Invalid(_))));
 }
 
-fn is_arg_err<T: std::fmt::Debug>(r: Result<T, craft_cms::CmsError>) -> bool {
-    matches!(r, Err(craft_cms::CmsError::InvalidArgument(_)))
+fn is_arg_err<T: std::fmt::Debug>(r: Result<T, mahay_cms::CmsError>) -> bool {
+    matches!(r, Err(mahay_cms::CmsError::InvalidArgument(_)))
 }
 
 /// Strides, buffer lengths and slices that do not fit are refused before anything is written.
@@ -880,12 +880,12 @@ fn transform_rejects_bad_buffers() {
     assert!(is_arg_err(t.apply(&mut [0.0; 12], 3)), "in-place stride below 4 outputs");
     assert!(is_arg_err(t.apply(&mut [0.0; 10], 4)), "partial in-place pixel");
     let (s, mut d) = ([0u8; 6], [0u8; 7]);
-    assert!(is_arg_err(t.convert_bytes_many(craft_cms::SampleKind::U16, vec![(&s[..], &mut d[..])], 3, 4, false)));
+    assert!(is_arg_err(t.convert_bytes_many(mahay_cms::SampleKind::U16, vec![(&s[..], &mut d[..])], 3, 4, false)));
     let mut out = [0.0f32; 4];
     assert!(is_arg_err(t.eval(&[1.0, 1.0], &mut out)));
     assert!(is_arg_err(t.eval(&[1.0; 3], &mut out[..3])));
     assert!(is_arg_err(t.eval_fast(&[1.0, 1.0], &mut out)));
-    let g = craft_cms::GamutCheck::new(srgb(), cmyk(), 4.0).unwrap();
+    let g = mahay_cms::GamutCheck::new(srgb(), cmyk(), 4.0).unwrap();
     assert!(is_arg_err(g.delta_e(&[0.5, 0.5])));
     assert!(is_arg_err(Lut3d::from_transform(&t, 33)), "3→4 transform");
     let d = Transform::new(srgb(), Builtin::DisplayP3.profile(), Intent::RelativeColorimetric, true).unwrap();
@@ -896,7 +896,7 @@ fn transform_rejects_bad_buffers() {
 /// Table and pipeline dimensions that do not fit are refused.
 #[test]
 fn tables_and_pipelines_reject_bad_dimensions() {
-    use craft_cms::pipeline::{Pipeline, Stage};
+    use mahay_cms::pipeline::{Pipeline, Stage};
     assert!(is_arg_err(Clut::new(vec![2, 2], 3, vec![0.0; 11])), "data length");
     assert!(is_arg_err(Clut::new(vec![2, 0], 3, Vec::new())), "zero grid points");
     assert!(is_arg_err(Clut::new(vec![2; 16], 1, vec![0.0; 1 << 16])), "16 inputs");
@@ -917,11 +917,11 @@ fn tables_and_pipelines_reject_bad_dimensions() {
     assert!(is_arg_err(p.extend([bad])));
     assert_eq!(p.stages().len(), 1, "a refused extend leaves the pipeline unchanged");
     assert!(is_arg_err(p.eval(&[0.0; 2], &mut [0.0; 3])));
-    assert!(craft_cms::lutfile::LutFile::from_fn("x", 1, |c| c).is_err());
-    assert!(craft_cms::lutfile::LutFile::identity(1 << 20).is_err());
-    let params = |a2b, b2a| craft_cms::synth::CmykParams { grid_a2b: a2b, grid_b2a: b2a, ..Default::default() };
-    assert!(is_arg_err(craft_cms::synth::cmyk_profile(&params(1, 21))));
-    assert!(is_arg_err(craft_cms::synth::cmyk_profile(&params(11, 100_000))));
+    assert!(mahay_cms::lutfile::LutFile::from_fn("x", 1, |c| c).is_err());
+    assert!(mahay_cms::lutfile::LutFile::identity(1 << 20).is_err());
+    let params = |a2b, b2a| mahay_cms::synth::CmykParams { grid_a2b: a2b, grid_b2a: b2a, ..Default::default() };
+    assert!(is_arg_err(mahay_cms::synth::cmyk_profile(&params(1, 21))));
+    assert!(is_arg_err(mahay_cms::synth::cmyk_profile(&params(11, 100_000))));
 }
 
 /// sRGB white separates to no ink on every evaluation path, for every intent but absolute
@@ -959,7 +959,7 @@ fn white_is_exact_on_every_path() {
 
                     // Near white: the last step to white exceeds the step before it by the ink
                     // the profile itself puts at white: 2·10⁻⁵ for Coated FOGRA39, whose white
-                    // is a grid node, and up to 0.8 % (C + M + Y) for the Photocraft profile,
+                    // is a grid node, and up to 0.8 % (C + M + Y) for the Sary profile,
                     // whose white falls between nodes (as with lcms's white-node fix).
                     let ink = |g: f32| {
                         let mut o = [0.0f32; 4];

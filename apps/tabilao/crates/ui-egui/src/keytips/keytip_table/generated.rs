@@ -8,7 +8,7 @@ use super::{Action, Entry};
 pub const SEQUENCES: &[(&str, Entry)] = &[
     ("H", Entry::Tab("Home")),
     ("N", Entry::Tab("Insert")),
-    ("JI", Entry::Tab("Draw")), // Two-letter unit. Deeper Draw letters differ between Excel and GridCraft; left blank for future contributors.
+    ("JI", Entry::Tab("Draw")), // Two-letter unit. Deeper Draw letters differ between Excel and Tabilao; left blank for future contributors.
     ("P", Entry::Tab("Page Layout")),
     ("M", Entry::Tab("Formulas")),
     ("A", Entry::Tab("Data")),

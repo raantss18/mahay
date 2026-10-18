@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: wordcraft
+name: soratra
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -12,15 +12,15 @@ version_schema: semver
 release: 1
 section: graphics
 priority: optional
-maintainer: ${WORDCRAFT_MAINTAINER}
+maintainer: ${SORATRA_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/wordcraft
+homepage: https://github.com/raantss18/mahay
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native word processor that works the way Word users expect.
   The ribbon, styles, tables, track changes, references and mail merge; reads
   and writes .docx, opens .odt, .rtf, .html, .md and .txt, and exports PDF.
-  Includes wordcraft-cli, a headless converter and command runner.
+  Includes soratra-cli, a headless converter and command runner.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
@@ -55,11 +55,11 @@ overrides:
       - xdg-desktop-portal
 
 contents:
-  - src: ${STAGE}/usr/bin/wordcraft
-    dst: /usr/bin/wordcraft
+  - src: ${STAGE}/usr/bin/soratra
+    dst: /usr/bin/soratra
     file_info: { mode: 0755 }
-  - src: ${STAGE}/usr/bin/wordcraft-cli
-    dst: /usr/bin/wordcraft-cli
+  - src: ${STAGE}/usr/bin/soratra-cli
+    dst: /usr/bin/soratra-cli
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/

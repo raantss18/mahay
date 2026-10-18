@@ -1,42 +1,42 @@
-use photocraft_doc::LayerContent;
-use photocraft_doc::vector::LiveShape;
+use sary_doc::LayerContent;
+use sary_doc::vector::LiveShape;
 use serde_json::json;
 
 use super::*;
 use crate::canvas::{Drag, finish_gesture};
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
     app.run("file.new", json!({"width": 400, "height": 300, "background": "white"})).unwrap();
     app.run("tools.setColors", json!({"foreground": "#ff0000", "background": "#0000ff"})).unwrap();
     app
 }
 
-fn press(app: &mut PhotocraftApp, tool: Tool, start: [f64; 2], end: [f64; 2]) {
+fn press(app: &mut SaryApp, tool: Tool, start: [f64; 2], end: [f64; 2]) {
     app.ui.tool = tool;
     let d = Drag::new(tool, start, vec![[start[0], start[1], 1.0], [end[0], end[1], 1.0]], egui::Modifiers::NONE, false);
     finish_gesture(app, d);
 }
 
-fn layers(app: &PhotocraftApp) -> usize {
+fn layers(app: &SaryApp) -> usize {
     app.session.active().unwrap().doc.layers.len()
 }
 
-fn live(app: &PhotocraftApp) -> LiveShape {
+fn live(app: &SaryApp) -> LiveShape {
     let st = app.session.active().unwrap();
     let l = st.doc.layer(st.active_layer.unwrap()).unwrap();
     let LayerContent::Shape(sh) = &l.content else { panic!("not a shape layer") };
     sh.live.clone().unwrap()
 }
 
-fn set(app: &mut PhotocraftApp, id: u64, fields: Value) {
+fn set(app: &mut SaryApp, id: u64, fields: Value) {
     let d = app.ui.dialog_mut(id).unwrap();
     for (k, v) in fields.as_object().unwrap() {
         d.fields.insert(k.clone(), v.clone());
     }
 }
 
-fn only_dialog(app: &PhotocraftApp) -> u64 {
+fn only_dialog(app: &SaryApp) -> u64 {
     assert_eq!(app.ui.dialogs.len(), 1, "a click opens one dialog");
     let d = &app.ui.dialogs[0];
     assert!(owns(&d.fields));
@@ -101,9 +101,9 @@ fn drags_still_draw_and_tools_without_a_dialog_ignore_clicks() {
 #[test]
 fn click_dialogs_and_drags_keep_complete_stroke_defaults() {
     let style = crate::shape_stroke_ui::StrokeOptions {
-        align: photocraft_doc::StrokeAlign::Outside,
-        cap: photocraft_doc::LineCap::Square,
-        join: photocraft_doc::LineJoin::Bevel,
+        align: sary_doc::StrokeAlign::Outside,
+        cap: sary_doc::LineCap::Square,
+        join: sary_doc::LineJoin::Bevel,
         miter_limit: 7.0,
         dashes: vec![3.0, 1.0, 0.0, 2.0],
         dash_offset: -0.75,
@@ -219,7 +219,7 @@ fn bad_values_are_errors_not_panics() {
 fn agents_click_set_and_confirm_over_the_control_channel() {
     let mut app = app();
     let ctx = egui::Context::default();
-    let call = |app: &mut PhotocraftApp, method: &str, params: Value| {
+    let call = |app: &mut SaryApp, method: &str, params: Value| {
         let (req, _rx) = crate::control::ControlRequest::new(method, params);
         match crate::control::handle(app, &ctx, &req) {
             crate::control::Outcome::Done(v) => v,

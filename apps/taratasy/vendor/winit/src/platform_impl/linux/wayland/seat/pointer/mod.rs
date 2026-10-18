@@ -176,7 +176,7 @@ impl PointerHandler for WinitState {
 
                     let has_discrete_scroll = horizontal.discrete != 0 || vertical.discrete != 0;
 
-                    // PdfCraft patch (13, #991): use the source as well as discrete steps;
+                    // Taratasy patch (13, #991): use the source as well as discrete steps;
                     // pixel-only wheels do not promise an Ended event either.
                     let phase = scroll::phase(
                         pointer_data.phase,

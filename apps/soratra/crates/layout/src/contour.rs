@@ -8,9 +8,9 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use wordcraft_doc::para::{Float, InlineObject, Wrap};
-use wordcraft_doc::wrap::{ALPHA_GRID, MAX_WRAP_POINTS, alpha_outline, shape_outline};
-use wordcraft_geom::{Rect, finite};
+use soratra_doc::para::{Float, InlineObject, Wrap};
+use soratra_doc::wrap::{ALPHA_GRID, MAX_WRAP_POINTS, alpha_outline, shape_outline};
+use soratra_geom::{Rect, finite};
 
 /// A wrap outline placed on the page, in the coordinates of its wrap area's top-left corner
 /// (see [`crate::para::Exclusion`]).
@@ -257,7 +257,7 @@ mod tests {
             image::Rgba([0, 0, 0, if dx * dx + dy * dy < 400.0 { 255 } else { 0 }])
         });
         let pts = picture_outline(&png(disc.clone().into()), [0.0; 4]).unwrap();
-        assert!(pts.len() >= 8 && pts.len() <= wordcraft_doc::wrap::MAX_DERIVED_POINTS);
+        assert!(pts.len() >= 8 && pts.len() <= soratra_doc::wrap::MAX_DERIVED_POINTS);
         assert!(pts.iter().all(|(x, y)| (0.15..=0.85).contains(x) && (0.15..=0.85).contains(y)), "{pts:?}");
         // Cropped to its left half, the disc reaches the right edge.
         let half = picture_outline(&png(disc.into()), [0.0, 0.0, 0.5, 0.0]).unwrap();

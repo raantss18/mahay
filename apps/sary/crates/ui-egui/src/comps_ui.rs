@@ -8,12 +8,12 @@
 use egui::{Align2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 
 /// The comp footer and row actions act on: the panel selection if still valid, else the last
 /// applied comp.
-pub fn target(app: &PhotocraftApp) -> Option<u32> {
+pub fn target(app: &SaryApp) -> Option<u32> {
     let doc = &app.session.active()?.doc;
     app.ui.layer_comp_selected.filter(|id| doc.comp(*id).is_some()).or(doc.last_applied_comp.filter(|id| doc.comp(*id).is_some()))
 }
@@ -24,14 +24,14 @@ fn clear_warning_action(comp: u32) -> (&'static str, Value) {
     ("layerComp.updateWarnings", json!({"clear": true, "comp": comp}))
 }
 
-fn run(app: &mut PhotocraftApp, id: &str, p: Value) {
+fn run(app: &mut SaryApp, id: &str, p: Value) {
     if let Err(e) = app.run(id, p) {
         app.ui.status = e;
         app.ui.status_error = true;
     }
 }
 
-pub fn panel(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn panel(app: &mut SaryApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else {
         ui.label(egui::RichText::new(tl!("No document")).color(t.text_faint).size(11.5));
@@ -195,7 +195,7 @@ pub fn panel(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_engine::Session;
+    use sary_engine::Session;
 
     #[test]
     fn warning_icon_clears_only_its_own_comp() {

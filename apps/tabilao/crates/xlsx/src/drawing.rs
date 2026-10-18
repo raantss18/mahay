@@ -3,8 +3,8 @@
 
 use std::fmt::Write as _;
 
-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS};
-use gridcraft_model::{Anchor, AnchorMode, Color, Image, Shape, ShapeFormat, ShapeKind, ShapeTextAlign, ShapeTextAnchor, Sheet, Theme};
+use tabilao_core::{CellRef, MAX_COLS, MAX_ROWS};
+use tabilao_model::{Anchor, AnchorMode, Color, Image, Shape, ShapeFormat, ShapeKind, ShapeTextAlign, ShapeTextAnchor, Sheet, Theme};
 
 use crate::IoError;
 use crate::read::Ctx;
@@ -309,7 +309,7 @@ pub fn srgb(c: &Color, theme: &Theme) -> Option<String> {
 /// One drawing object to write.
 pub enum Obj<'a> {
     Image(&'a Image, String),
-    Chart(&'a gridcraft_model::Chart, String),
+    Chart(&'a tabilao_model::Chart, String),
     Shape(&'a Shape),
 }
 

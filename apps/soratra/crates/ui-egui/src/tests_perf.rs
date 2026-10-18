@@ -2,8 +2,8 @@
 
 use std::time::Instant;
 
-use wordcraft_doc::table::{Cell, Table};
-use wordcraft_doc::{Block, Document, Path, StoryRef};
+use soratra_doc::table::{Cell, Table};
+use soratra_doc::{Block, Document, Path, StoryRef};
 
 use crate::{Services, WordApp};
 
@@ -23,7 +23,7 @@ pub(crate) fn big_table_doc(rows: usize, cols: usize) -> Document {
 }
 
 fn harness(doc: Document) -> egui_kittest::Harness<'static, WordApp> {
-    let a = WordApp::new(wordcraft_engine::Session::new(doc), Services::default());
+    let a = WordApp::new(soratra_engine::Session::new(doc), Services::default());
     egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
         |ui, app: &mut WordApp| {
             let ctx = ui.ctx().clone();
@@ -44,16 +44,16 @@ fn wheel(h: &mut egui_kittest::Harness<'static, WordApp>, dy: f32) {
     });
 }
 
-/// `cargo test -p wordcraft-ui-egui --release big_table_scroll_bench -- --ignored --nocapture`
-/// (`WORDCRAFT_BENCH_DOCX=path` times that file instead of the synthetic table).
+/// `cargo test -p soratra-ui-egui --release big_table_scroll_bench -- --ignored --nocapture`
+/// (`SORATRA_BENCH_DOCX=path` times that file instead of the synthetic table).
 #[test]
 #[ignore]
 fn big_table_scroll_bench() {
-    let doc = match std::env::var("WORDCRAFT_BENCH_DOCX") {
-        Ok(p) => wordcraft_engine::io::open_path(std::path::Path::new(&p)).unwrap(),
+    let doc = match std::env::var("SORATRA_BENCH_DOCX") {
+        Ok(p) => soratra_engine::io::open_path(std::path::Path::new(&p)).unwrap(),
         Err(_) => big_table_doc(2000, 8),
     };
-    let mut s = wordcraft_engine::Session::new(doc.clone());
+    let mut s = soratra_engine::Session::new(doc.clone());
     let t = Instant::now();
     let l = s.layout();
     eprintln!("layout: {:.1} ms, {} pages", t.elapsed().as_secs_f64() * 1e3, l.pages.len());
@@ -62,7 +62,7 @@ fn big_table_scroll_bench() {
     eprintln!("export_layout: {:.1} ms", t.elapsed().as_secs_f64() * 1e3);
     if let Some(p) = l.pages.get(1) {
         let t = Instant::now();
-        let _ = wordcraft_render::render_page(&s.doc, p, 1.5, &crate::canvas::screen_render_options());
+        let _ = soratra_render::render_page(&s.doc, p, 1.5, &crate::canvas::screen_render_options());
         eprintln!("render_page: {:.1} ms", t.elapsed().as_secs_f64() * 1e3);
     }
     let mut h = harness(doc);

@@ -1,7 +1,7 @@
 //! Inspection for agents: the deck, slides and shapes as JSON (verify work without screenshots).
 
-use deckcraft_model::resolve::{self, Ctx};
-use deckcraft_model::{Shape, ShapeKind};
+use seho_model::resolve::{self, Ctx};
+use seho_model::{Shape, ShapeKind};
 use serde_json::{Value, json};
 
 use super::*;
@@ -51,8 +51,8 @@ pub fn shape_summary(ctx: Option<&Ctx>, sh: &Shape, depth: usize) -> Value {
     let fill = ctx.map(|c| {
         let (f, ph) = resolve::fill(c, sh);
         match f {
-            Some(deckcraft_model::Fill::Solid { color }) => json!(format!("#{}", c.color(&color, ph).hex())),
-            Some(deckcraft_model::Fill::None) | None => json!("none"),
+            Some(seho_model::Fill::Solid { color }) => json!(format!("#{}", c.color(&color, ph).hex())),
+            Some(seho_model::Fill::None) | None => json!("none"),
             Some(other) => json!(serde_json::to_value(&other).ok().and_then(|v| v.get("kind").cloned()).unwrap_or_default()),
         }
     });
@@ -116,7 +116,7 @@ fn slide(s: &mut Session, p: &Value) -> Result<Value> {
     let ctx = Ctx::for_slide(&st.doc, sl);
     let shapes: Vec<Value> = sl.shapes.iter().map(|sh| shape_summary(ctx.as_ref(), sh, 0)).collect();
     let bg = ctx.as_ref().map(|c| match resolve::background(c, Some(sl)) {
-        (deckcraft_model::Fill::Solid { color }, ph) => json!(format!("#{}", c.color(&color, ph).hex())),
+        (seho_model::Fill::Solid { color }, ph) => json!(format!("#{}", c.color(&color, ph).hex())),
         (f, _) => serde_json::to_value(&f).ok().and_then(|v| v.get("kind").cloned()).unwrap_or_default(),
     });
     Ok(json!({

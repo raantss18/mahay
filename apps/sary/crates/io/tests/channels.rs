@@ -1,10 +1,10 @@
 //! Alpha / spot channels, channel options and the Quick Mask through PSD.
 
-use photocraft_color::{Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{AlphaChannel, ColorIndicates, Document};
-use photocraft_geom::{Rect, Size};
-use photocraft_io::{document_to_psd, psd_to_document};
-use photocraft_raster::Surface;
+use sary_color::{Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{AlphaChannel, ColorIndicates, Document};
+use sary_geom::{Rect, Size};
+use sary_io::{document_to_psd, psd_to_document};
+use sary_raster::Surface;
 
 fn channel(depth: SampleType, x1: i32) -> Surface {
     let mut s = Surface::new(PixelFormat::new(ColorMode::Grayscale, depth, false));
@@ -45,9 +45,9 @@ fn channel_options_spot_and_quick_mask_roundtrip() {
     let mut full = Document::with_background("full", Size::new(1, 1), ColorMode::Rgb, SampleType::U8, Color::WHITE);
     full.channels = (0..53).map(|i| AlphaChannel::new(format!("Alpha {i}"), Surface::new(PixelFormat::GRAY8))).collect();
     full.quick_mask = Some(AlphaChannel::new("Quick Mask", Surface::new(PixelFormat::GRAY8)));
-    let out = photocraft_io::export(&full, "full.psd", &Default::default()).unwrap();
+    let out = sary_io::export(&full, "full.psd", &Default::default()).unwrap();
     assert!(out.warnings.iter().any(|warning| warning.contains("Quick Mask")), "{:?}", out.warnings);
-    let file = photocraft_psd::PsdFile::from_bytes(&out.bytes).unwrap();
+    let file = sary_psd::PsdFile::from_bytes(&out.bytes).unwrap();
     assert_eq!(file.header.channels, 56);
     assert!(file.resources.iter().all(|resource| resource.id != 1022));
 }

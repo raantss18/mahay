@@ -1,4 +1,4 @@
-# Japanese (ja) catalog for ArtCraft Launcher.
+# Japanese (ja) catalog for Mahay Trano.
 # Format: context<TAB>source<TAB>translation
 # Empty context = plain UI string (tl!, t).
 # @id = command-id keyed (tr_id).
@@ -6,15 +6,15 @@
 # @msg = status/error message template (message, msg).
 # Other context = disambiguation for tr_ctx.
 #
-# Clean-room: written from the meaning of ArtCraft Launcher's English labels in neutral Japanese,
+# Clean-room: written from the meaning of Mahay Trano's English labels in neutral Japanese,
 # using the terms Japanese-speaking users of creative software know. The user is addressed with
 # the neutral polite form (です・ます), as in most current Japanese software.
 #
 # Coverage: the whole interface — every menu string and tl! literal (complete_menus = true).
-# Left in English on purpose: product name "ArtCraft Launcher" (and its "Launcher" tag), suite
-# name "Craft App Suite",
-# app names (PhotoCraft, LightCraft, FilmCraft, DesignCraft, VectorCraft, PdfCraft, EffectCraft,
-# WordCraft, DeckCraft, GridCraft, CADCraft, SoundCraft, FigCraft), "GitHub", "Discord".
+# Left in English on purpose: product name "Mahay Trano" (and its "Launcher" tag), suite
+# name "Mahay App Suite",
+# app names (Sary, Hazavana, Hetsika, Pejy, Tsipika, Taratasy, Tselatra,
+# Soratra, Seho, Tabilao, Drafitra, Feo, Endrika), "GitHub", "Discord".
 # Shortcut keys keep their key-cap names (Shift, Alt, Ctrl, Cmd, Esc).
 # Trailing "…" (U+2026) must be preserved. Placeholders {name}, {n}, {version}, {count}, {v},
 # {what}, {unit}, {real}, {e} must appear in translation.
@@ -22,7 +22,7 @@
 # system has none, the interface stays in English.
 
 	Launcher	Launcher
-	Craft App Suite	Craft App Suite
+	Mahay App Suite	Mahay App Suite
 	Open Source Tools for Creatives, Makers, and Builders	クリエイター、メイカー、ビルダーのためのオープンソースツール
 	Settings	設定
 	Check for updates	更新を確認
@@ -75,7 +75,7 @@
 	Reinstall	再インストール
 	Uninstall…	アンインストール…
 	All releases	すべてのリリース
-	ArtCraft Launcher {version} is available.	ArtCraft Launcher {version} が利用可能です。
+	Mahay Trano {version} is available.	Mahay Trano {version} が利用可能です。
 	Dismiss	閉じる
 	Update and restart	更新して再起動
 	A new version is available. Would you like to relaunch with the updated version?	新しいバージョンがあります。更新後のバージョンで再起動しますか？
@@ -85,7 +85,7 @@
 	Released {date}	{date} 公開
 	Open on GitHub	GitHub で開く
 	Close	閉じる
-	ArtCraft Launcher {version}	ArtCraft Launcher {version}
+	Mahay Trano {version}	Mahay Trano {version}
 	Only when I ask	手動で確認したときのみ
 	Automatically download and install updates	更新を自動でダウンロードしてインストール
 	Notify me when an installed app has an update	インストール済みアプリに更新があるときに通知する
@@ -98,11 +98,11 @@
 	Running in the background	バックグラウンドで実行
 	Keep running in the tray when the window is closed	ウィンドウを閉じてもトレイで実行し続ける
 	Show the window on the current desktop	現在のデスクトップにウィンドウを表示
-	Start ArtCraft Launcher when I log in	ログイン時に ArtCraft Launcher を起動
+	Start Mahay Trano when I log in	ログイン時に Mahay Trano を起動
 	Community	コミュニティ
-	Questions, ideas and news from the ArtCraft team	ArtCraft チームからの質問、アイデア、ニュース
+	Questions, ideas and news from the Mahay team	Mahay チームからの質問、アイデア、ニュース
 	Appearance	外観
-	Quit ArtCraft Launcher	ArtCraft Launcher を終了
+	Quit Mahay Trano	Mahay Trano を終了
 	Done	完了
 	Uninstall {name}?	{name} をアンインストールしますか？
 	The app will be moved to the Trash. Your documents and settings stay.	アプリはゴミ箱に移動されます。ドキュメントと設定はそのまま残ります。
@@ -117,7 +117,7 @@
 	{month} {day}, {year}	{year}年{month}{day}日
 
 	Automatically	自動
-	Every Craft app	すべての Craft アプリ
+	Every Mahay app	すべての Mahay アプリ
 	Apps on this computer	このコンピューターのアプリ
 	Installed apps with a newer version	新しいバージョンがあるインストール済みアプリ
 	Apps you can install	インストールできるアプリ
@@ -137,7 +137,7 @@
 	Open link	リンクを開く
 	Update	更新
 	{name} icon	{name} のアイコン
-	Loading ArtCraft Launcher…	ArtCraft Launcher を読み込み中…
+	Loading Mahay Trano…	Mahay Trano を読み込み中…
 	Cancel update	更新をキャンセル
 	Stop waiting; the update can be started again later	待機を中止します。更新は後で再開できます
 	Download again	再ダウンロード
@@ -162,19 +162,19 @@
 	Tarball (.tar.gz)	tarball (.tar.gz)
 
 # Contextual: each app's tagline, keyed by app id
-photocraft	Image editing	画像編集
-vectorcraft	Vector illustration	ベクターイラスト
-filmcraft	Video editing, color and sound	動画編集、カラー、サウンド
-lightcraft	Photo library and raw development	フォトライブラリと RAW 現像
-pdfcraft	Reading, organizing and protecting PDFs	PDF の閲覧、整理、保護
-effectcraft	Motion graphics and visual effects	モーショングラフィックスと視覚効果
-designcraft	Page layout and publishing	ページレイアウトと出版
-wordcraft	Writing and document design	文書作成とデザイン
-deckcraft	Presentations and slide shows	プレゼンテーションとスライドショー
-gridcraft	Spreadsheets and data	表計算とデータ
-cadcraft	Computer-aided design and drafting	コンピューター支援設計と製図
-soundcraft	Recording, editing and mixing audio	オーディオの録音、編集、ミックス
-figcraft	Interface design and prototyping	インターフェースデザインとプロトタイピング
+sary	Image editing	画像編集
+tsipika	Vector illustration	ベクターイラスト
+hetsika	Video editing, color and sound	動画編集、カラー、サウンド
+hazavana	Photo library and raw development	フォトライブラリと RAW 現像
+taratasy	Reading, organizing and protecting PDFs	PDF の閲覧、整理、保護
+tselatra	Motion graphics and visual effects	モーショングラフィックスと視覚効果
+pejy	Page layout and publishing	ページレイアウトと出版
+soratra	Writing and document design	文書作成とデザイン
+seho	Presentations and slide shows	プレゼンテーションとスライドショー
+tabilao	Spreadsheets and data	表計算とデータ
+drafitra	Computer-aided design and drafting	コンピューター支援設計と製図
+feo	Recording, editing and mixing audio	オーディオの録音、編集、ミックス
+endrika	Interface design and prototyping	インターフェースデザインとプロトタイピング
 
 # Contextual: month abbreviations for date rendering
 month	Jan	1月
@@ -195,8 +195,8 @@ month	Dec	12月
 	Installing for {platform}	{platform} にインストール
 	Downloads for {platform}	{platform} 用のダウンロード
 	No downloads for this system	このシステム用のダウンロードはありません
-	Join the ArtCraft community on Discord	Discord で ArtCraft コミュニティに参加
-	ArtCraft on {name}	{name} の ArtCraft
+	Join the Mahay community on Discord	Discord で Mahay コミュニティに参加
+	Mahay on {name}	{name} の Mahay
 	Couldn't open {name}: {e}	{name} を開けませんでした: {e}
 	Download cancelled	ダウンロードをキャンセルしました
 	Available to install	インストール可能
@@ -216,7 +216,7 @@ month	Dec	12月
 	Version {version} installed	バージョン {version} インストール済み
 	Version {latest}	バージョン {latest}
 	No release published yet	まだリリースがありません
-	ArtCraft Launcher	ArtCraft Launcher
+	Mahay Trano	Mahay Trano
 	App	アプリ
 	Latest	最新
 	Released	公開日
@@ -238,7 +238,7 @@ month	Dec	12月
 	Couldn't check for updates: {f}	更新を確認できませんでした: {f}
 	Website (coming soon)	ウェブサイト（近日公開）
 	GitHub repository	GitHub リポジトリ
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Update 1 app	1 個のアプリを更新
 	Update all ({count})	すべて更新（{count}）
 	⊞  Grid	⊞  グリッド
@@ -251,7 +251,7 @@ month	Dec	12月
 	Full changelog	完全な変更履歴
 	link	リンク
 	No apps match	一致するアプリがありません
-	Open ArtCraft Launcher to update.	更新するには ArtCraft Launcher を開いてください。
+	Open Mahay Trano to update.	更新するには Mahay Trano を開いてください。
 	{name} {v} is available	{name} {v} が利用可能です
 	{count} updates are available	{count} 件の更新があります
 	These notes weren't fetched (GitHub's request limit was reached). They're on the release page.	このリリースノートは取得できませんでした（GitHub のリクエスト上限に達しました）。リリースページにあります。
@@ -315,7 +315,7 @@ filter	Installed	インストール済み
 @id	launcher.notes	新着情報
 @id	launcher.dismiss	閉じる
 @id	settings.open	設定
-@id	settings.quit	ArtCraft Launcher を終了
+@id	settings.quit	Mahay Trano を終了
 @id	view.grid	グリッド
 @id	view.table	テーブル
 @id	filter.all	すべて
@@ -339,16 +339,16 @@ filter	Installed	インストール済み
 @id	linux.preferred_kind	新しいアプリのインストール形式
 @id	tray.close_to_tray	ウィンドウを閉じてもトレイで実行し続ける
 @id	tray.show_on_current_desktop	現在のデスクトップにウィンドウを表示
-@id	tray.login_item	ログイン時に ArtCraft Launcher を起動
+@id	tray.login_item	ログイン時に Mahay Trano を起動
 @id	appearance.theme	外観
 
 # Tray (menu bar) menu and tooltip
-	Show ArtCraft Launcher	ArtCraft Launcher を表示
+	Show Mahay Trano	Mahay Trano を表示
 	Check for Updates	更新を確認
-	Visit getartcraft.com	getartcraft.com を開く
-	ArtCraft on GitHub	GitHub の ArtCraft
-	Join the ArtCraft Discord	ArtCraft Discord に参加
-@plural	ArtCraft Launcher · {n} update available|ArtCraft Launcher · {n} updates available	ArtCraft Launcher · {n} 件の更新があります
+	Visit mahay.com	mahay.com を開く
+	Mahay on GitHub	GitHub の Mahay
+	Join the Mahay Discord	Mahay Discord に参加
+@plural	Mahay Trano · {n} update available|Mahay Trano · {n} updates available	Mahay Trano · {n} 件の更新があります
 	Install folder	インストール先フォルダー
 	Default install folder	既定のインストール先フォルダー
 	System default	システムの既定
@@ -360,7 +360,7 @@ filter	Installed	インストール済み
 @msg	couldn't use install folder {path}: {reason}	インストール先フォルダー {path} を使用できませんでした: {reason}
 @msg	this release has no AppImage for a custom install folder	このリリースには任意のインストール先フォルダーで使用できるAppImageがありません
 @msg	custom install folders aren't supported on this system	このシステムではインストール先フォルダーの変更に対応していません
-@msg	{path} already exists and wasn't installed by ArtCraft Launcher	{path} は既に存在し、ArtCraft Launcherでインストールされたものではありません
+@msg	{path} already exists and wasn't installed by Mahay Trano	{path} は既に存在し、Mahay Tranoでインストールされたものではありません
 @msg	couldn't move {path} to Trash ({reason}). Remove it in Finder instead.	{path} をゴミ箱に移動できませんでした（{reason}）。Finderで削除してください。
 	Apps are placed inside this folder.	アプリはこのフォルダー内に配置されます。
 	Replace what's there?	既存の項目を置き換えますか？

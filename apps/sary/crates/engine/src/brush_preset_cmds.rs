@@ -14,7 +14,7 @@
 //! and the order of every preset, built-ins included. A built-in that is renamed or moved to
 //! another group becomes the user's preset (built-ins are regenerated with their own group).
 
-use photocraft_paint::BrushPreset;
+use sary_paint::BrushPreset;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -30,7 +30,7 @@ fn always(_: &Session) -> std::result::Result<(), String> {
 /// Longest preset or group name accepted.
 pub const MAX_NAME: usize = 255;
 /// Deepest folder path accepted inside a group (matches the `.abr` reader's limit).
-pub const MAX_FOLDER_DEPTH: usize = photocraft_psd::abr::MAX_FOLDER_DEPTH;
+pub const MAX_FOLDER_DEPTH: usize = sary_psd::abr::MAX_FOLDER_DEPTH;
 
 fn text(p: &Value, k: &str, cmd: &str) -> Result<String> {
     let v = p.get(k).and_then(Value::as_str).map(str::trim).filter(|n| !n.is_empty()).ok_or_else(|| bad(cmd, format!("missing `{k}`")))?;
@@ -530,7 +530,7 @@ mod tests {
         // A built-in moved to another group becomes the user's.
         let b = s.tools.presets.iter().find(|x| x.builtin).unwrap().name.clone();
         s.execute("brush.presets.move", json!({"name": b, "group": "Beta", "index": 0})).unwrap();
-        let moved = photocraft_paint::presets::find(&s.tools.presets, &b).unwrap();
+        let moved = sary_paint::presets::find(&s.tools.presets, &b).unwrap();
         assert!(!moved.builtin && moved.group == "Beta");
         assert_eq!(names(&s, "Beta")[0], b);
     }
@@ -561,13 +561,13 @@ mod tests {
     fn rename_checks_names() {
         let mut s = with_groups();
         s.execute("brush.presets.rename", json!({"name": "a1", "newName": "Alpha One"})).unwrap();
-        assert!(photocraft_paint::presets::find(&s.tools.presets, "Alpha One").is_some());
+        assert!(sary_paint::presets::find(&s.tools.presets, "Alpha One").is_some());
         assert!(s.execute("brush.presets.rename", json!({"name": "A2", "newName": "alpha one"})).is_err());
         // Case-only renames of itself are fine.
         s.execute("brush.presets.rename", json!({"name": "Alpha One", "newName": "ALPHA ONE"})).unwrap();
         let b = s.tools.presets.iter().find(|x| x.builtin).unwrap().name.clone();
         s.execute("brush.presets.rename", json!({"name": b, "newName": "My Round"})).unwrap();
-        assert!(!photocraft_paint::presets::find(&s.tools.presets, "My Round").unwrap().builtin);
+        assert!(!sary_paint::presets::find(&s.tools.presets, "My Round").unwrap().builtin);
     }
 
     #[test]
@@ -621,7 +621,7 @@ mod tests {
     }
 
     fn folder_of(s: &Session, n: &str) -> Vec<String> {
-        photocraft_paint::presets::find(&s.tools.presets, n).unwrap().folder.clone()
+        sary_paint::presets::find(&s.tools.presets, n).unwrap().folder.clone()
     }
 
     #[test]
@@ -674,8 +674,8 @@ mod tests {
         // Delete a nested folder: only the presets in it (and below) go.
         let r = s.execute("brush.presets.deleteGroup", json!({"group": "Kit", "folder": ["Inks"]})).unwrap();
         assert_eq!(r["deleted"], 3);
-        assert!(photocraft_paint::presets::find(&s.tools.presets, "S0").is_some());
-        assert!(photocraft_paint::presets::find(&s.tools.presets, "D1").is_some());
+        assert!(sary_paint::presets::find(&s.tools.presets, "S0").is_some());
+        assert!(sary_paint::presets::find(&s.tools.presets, "D1").is_some());
     }
 
     #[test]
@@ -742,7 +742,7 @@ mod tests {
         let r = s.execute("brush.presets.moveGroup", json!({"group": "Other", "folder": ["Ink", "Fine"], "into": {}})).unwrap();
         assert_eq!(r["group"], "Fine");
         assert_eq!(folder_of(&s, "D1"), ["Dry"]);
-        assert_eq!(photocraft_paint::presets::find(&s.tools.presets, "F1").unwrap().group, "Fine");
+        assert_eq!(sary_paint::presets::find(&s.tools.presets, "F1").unwrap().group, "Fine");
         // A whole group into another group's folder.
         s.execute("brush.presets.moveGroup", json!({"group": "Fine", "into": {"group": "Set"}})).unwrap();
         assert!(names(&s, "Fine").is_empty());

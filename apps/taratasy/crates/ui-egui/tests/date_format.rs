@@ -4,7 +4,7 @@ use egui::accesskit::Role;
 use egui::{Key, Modifiers, pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::PdfCraftApp;
+use taratasy_ui_egui::TaratasyApp;
 
 const PDF: &[u8] = b"%PDF-1.7
 1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
@@ -14,11 +14,11 @@ trailer << /Root 1 0 R >>
 %%EOF";
 
 /// Some widget shows `text`, as its label or its value (a combo box shows its choice as a value).
-fn shows(h: &Harness<'static, PdfCraftApp>, text: &str) -> bool {
+fn shows(h: &Harness<'static, TaratasyApp>, text: &str) -> bool {
     h.query_all_by(|n| n.label().is_some_and(|l| l.contains(text)) || n.value().is_some_and(|v| v.contains(text))).next().is_some()
 }
 
-fn retype(h: &mut Harness<'static, PdfCraftApp>, text: &str) {
+fn retype(h: &mut Harness<'static, TaratasyApp>, text: &str) {
     // The preferences scroll; bring the field into view before clicking it.
     h.get_by_role_and_label(Role::TextInput, "Pattern").scroll_to_me();
     h.run_steps(4);
@@ -32,7 +32,7 @@ fn retype(h: &mut Harness<'static, PdfCraftApp>, text: &str) {
 #[test]
 fn fill_and_sign_dates_follow_the_date_format_preference_and_it_is_remembered() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, PDF.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -87,10 +87,10 @@ fn fill_and_sign_dates_follow_the_date_format_preference_and_it_is_remembered() 
     assert!(expected.ends_with('.') && expected.matches('.').count() == 3, "{expected}");
 
     // It survives a restart; an unusable saved pattern keeps the default; the control channel checks it too.
-    let mut restored = PdfCraftApp::new();
+    let mut restored = TaratasyApp::new();
     restored.restore(&h.state().persist());
     assert_eq!(restored.session.date_format(), "yyyy.mm.dd.");
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.restore(&format!(r#"{{"date_format": "{}"}}"#, "d".repeat(10_000)));
     fresh.restore(r#"{"date_format": "HH:MM"}"#);
     assert_eq!(fresh.session.date_format(), "m/d/yyyy");
@@ -102,7 +102,7 @@ fn fill_and_sign_dates_follow_the_date_format_preference_and_it_is_remembered() 
 #[test]
 fn month_names_follow_the_date_language_or_else_the_interface_language() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.set_option("date-format", "d mmmm yyyy").unwrap();
         app.set_option("language", "cs").unwrap();
@@ -110,7 +110,7 @@ fn month_names_follow_the_date_language_or_else_the_interface_language() {
         app
     });
     h.run_steps(3);
-    let text = |h: &Harness<'static, PdfCraftApp>| h.state().date_text(None).unwrap();
+    let text = |h: &Harness<'static, TaratasyApp>| h.state().date_text(None).unwrap();
     assert_eq!(text(&h), h.state().session.today_text(None, Some("cs")).unwrap(), "follows the interface (Czech)");
     // The picker offers following the interface first, then the interface languages.
     assert!(shows(&h, "Stejný jako rozhraní (Čeština)"));
@@ -120,10 +120,10 @@ fn month_names_follow_the_date_language_or_else_the_interface_language() {
     assert!(shows(&h, "Español"));
 
     // Remembered; an unknown saved language is ignored; auto follows the interface again.
-    let mut restored = PdfCraftApp::new();
+    let mut restored = TaratasyApp::new();
     restored.restore(&h.state().persist());
     assert_eq!(restored.session.date_language(), Some("es"));
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.restore(r#"{"date_language": "klingon"}"#);
     assert_eq!(fresh.session.date_language(), None);
     assert!(fresh.set_option("date-language", "klingon").is_err());
@@ -134,7 +134,7 @@ fn month_names_follow_the_date_language_or_else_the_interface_language() {
 #[test]
 fn a_date_the_pdf_cannot_hold_is_refused_with_a_warning_first() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, PDF.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();

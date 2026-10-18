@@ -1,10 +1,10 @@
-//! SmartArt graphics WordCraft makes and edits (Insert › SmartArt): a layout, an outline of items
+//! SmartArt graphics Soratra makes and edits (Insert › SmartArt): a layout, an outline of items
 //! (text and level) and a colour variant.
 //!
 //! A SmartArt object ([`crate::graphic::Graphic`] with `smart_art` set) keeps this model next to
-//! the items it is drawn with. WordCraft lays it out with its own algorithms; the DOCX writer
+//! the items it is drawn with. Soratra lays it out with its own algorithms; the DOCX writer
 //! saves it as diagram parts (data, layout, style, colours and the drawing of the shapes) and the
-//! reader turns a diagram back into it only when its data part is exactly what WordCraft writes.
+//! reader turns a diagram back into it only when its data part is exactly what Soratra writes.
 //! SmartArt from other programs stays as it was read.
 //!
 //! Every value from outside (commands, files) goes through [`SmartArtSpec::sanitize`]: item
@@ -206,7 +206,7 @@ impl SmartArtItem {
     }
 }
 
-/// A SmartArt graphic WordCraft can edit.
+/// A SmartArt graphic Soratra can edit.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SmartArtSpec {
@@ -218,7 +218,7 @@ pub struct SmartArtSpec {
 }
 
 impl SmartArtSpec {
-    /// A new graphic of `layout` with WordCraft's sample items.
+    /// A new graphic of `layout` with Soratra's sample items.
     pub fn sample(layout: SmartArtLayout) -> SmartArtSpec {
         let items: Vec<SmartArtItem> = match layout {
             SmartArtLayout::Hierarchy => vec![

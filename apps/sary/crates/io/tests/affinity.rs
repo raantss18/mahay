@@ -2,14 +2,14 @@
 //! embedded preview only as a warned fallback that keeps its pixels and alpha; never written back.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
-use photocraft_io::{ExportOptions, export, import};
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
+use sary_io::{ExportOptions, export, import};
 use proptest::prelude::*;
 use std::io::Write as _;
 
 fn png() -> Vec<u8> {
     let img = Image::from_raw(2, 1, ChannelLayout::Rgba, SampleType::U8, vec![220, 40, 60, 255, 0, 0, 0, 0]).unwrap();
-    photocraft_codecs::encode(&img, Format::Png, &EncodeOptions::default()).unwrap()
+    sary_codecs::encode(&img, Format::Png, &EncodeOptions::default()).unwrap()
 }
 
 fn chunk(kind: &[u8; 4], data: &[u8]) -> Vec<u8> {
@@ -24,7 +24,7 @@ fn chunk(kind: &[u8; 4], data: &[u8]) -> Vec<u8> {
 /// A synthetic record envelope, not an Affinity document writer (there is no object graph).
 fn file(png: &[u8]) -> Vec<u8> {
     let mut b = vec![0; 72];
-    b[..4].copy_from_slice(photocraft_affinity::MAGIC);
+    b[..4].copy_from_slice(sary_affinity::MAGIC);
     b[4..6].copy_from_slice(&12u16.to_le_bytes());
     b[8..12].copy_from_slice(b"nsrP");
     b[12..16].copy_from_slice(b"#Inf");
@@ -51,13 +51,13 @@ fn preview_is_named_and_warns_at_its_actual_size() {
     assert!(r.warnings[0].contains("2×1"));
     assert!(r.warnings[0].contains("native Affinity document could not be read") && r.warnings[0].contains("no layers"), "{}", r.warnings[0]);
     let out = export(&r.document, "copy.png", &ExportOptions::default()).unwrap();
-    let img = photocraft_codecs::decode(&out.bytes).unwrap();
+    let img = sary_codecs::decode(&out.bytes).unwrap();
     assert_eq!(img.data(), &[220, 40, 60, 255, 0, 0, 0, 0]);
-    let native = export(&r.document, "copy.pcraft", &ExportOptions::default()).unwrap();
-    let back = import("copy.pcraft", &native.bytes).unwrap();
+    let native = export(&r.document, "copy.sary", &ExportOptions::default()).unwrap();
+    let back = import("copy.sary", &native.bytes).unwrap();
     assert_eq!(back.document.size, r.document.size);
     assert!(!back.source_read_only && !back.preview_only);
-    for ext in photocraft_io::affinity::EXTENSIONS {
+    for ext in sary_io::affinity::EXTENSIONS {
         assert!(export(&r.document, ext, &ExportOptions::default()).unwrap_err().to_string().contains("Affinity export"));
     }
 }
@@ -78,12 +78,12 @@ fn magic_wins_over_the_name_and_renamed_legacy_files_are_rejected() {
 #[test]
 fn preview_decoder_preserves_16_bit_gray_and_alpha() {
     let img = Image::from_u16(2, 1, ChannelLayout::GrayA, &[12345, 65535, 0, 0]).unwrap();
-    let encoded = photocraft_codecs::encode(&img, Format::Png, &EncodeOptions::default()).unwrap();
+    let encoded = sary_codecs::encode(&img, Format::Png, &EncodeOptions::default()).unwrap();
     let r = import("gray.af", &file(&encoded)).unwrap();
-    assert_eq!(r.document.depth, photocraft_color::SampleType::U16);
-    assert_eq!(r.document.mode, photocraft_color::ColorMode::Grayscale);
+    assert_eq!(r.document.depth, sary_color::SampleType::U16);
+    assert_eq!(r.document.mode, sary_color::ColorMode::Grayscale);
     let out = export(&r.document, "copy.png", &ExportOptions::default()).unwrap();
-    let decoded = photocraft_codecs::decode(&out.bytes).unwrap();
+    let decoded = sary_codecs::decode(&out.bytes).unwrap();
     assert_eq!(decoded.sample_type(), SampleType::U16);
     assert_eq!(decoded.data(), img.data());
 }
@@ -196,8 +196,8 @@ proptest! {
 
 mod native {
     use super::*;
-    use photocraft_affinity::synth::{self, F, Method, tag};
-    use photocraft_doc::LayerContent;
+    use sary_affinity::synth::{self, F, Method, tag};
+    use sary_doc::LayerContent;
 
     fn rgba(r: f32, g: f32, b: f32, a: f32) -> F {
         F::Struct([r, g, b, a].iter().flat_map(|v| v.to_le_bytes()).collect())
@@ -294,16 +294,16 @@ mod native {
             let LayerContent::Shape(sh) = &ring.content else { panic!() };
             assert_eq!(sh.path.subpaths.len(), 2);
             assert_eq!(sh.path.subpaths[0].knots.len(), 4, "the closing duplicate knot is merged");
-            assert_eq!(sh.path.subpaths[0].knots[0].anchor, photocraft_geom::Point::new(20.0, 10.0));
+            assert_eq!(sh.path.subpaths[0].knots[0].anchor, sary_geom::Point::new(20.0, 10.0));
             assert_eq!(sh.stroke.as_ref().unwrap().width, 4.0);
             // The cache shows the ring: red on it, empty in its hole.
             let cache = sh.cache.as_ref().unwrap();
-            let px = |x: i32, y: i32| cache.to_interleaved(photocraft_geom::Rect::new(x, y, x + 1, y + 1));
+            let px = |x: i32, y: i32| cache.to_interleaved(sary_geom::Rect::new(x, y, x + 1, y + 1));
             assert_eq!(px(30, 20), [255, 0, 0, 255]);
             assert_eq!(px(50, 40)[3], 0, "even-odd hole");
-            // Saved as a native PhotoCraft document and opened again.
-            let saved = export(d, "copy.pcraft", &ExportOptions::default()).unwrap();
-            let back = import("copy.pcraft", &saved.bytes).unwrap();
+            // Saved as a native Sary document and opened again.
+            let saved = export(d, "copy.sary", &ExportOptions::default()).unwrap();
+            let back = import("copy.sary", &saved.bytes).unwrap();
             assert_eq!(back.document.layers.len(), d.layers.len());
             assert!(export(d, "copy.psd", &ExportOptions::default()).is_ok());
             assert!(export(d, "copy.af", &ExportOptions::default()).is_err());

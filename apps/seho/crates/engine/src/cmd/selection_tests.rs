@@ -27,7 +27,7 @@ fn deck() -> (Session, Vec<u32>) {
 
 /// The tree as text, back to front: `A B C G[D H[E F]]`.
 fn tree(s: &Session) -> String {
-    fn rec(v: &[deckcraft_model::Shape]) -> String {
+    fn rec(v: &[seho_model::Shape]) -> String {
         v.iter().map(|x| if x.is_group() { format!("{}[{}]", x.name, rec(x.children())) } else { x.name.clone() }).collect::<Vec<_>>().join(" ")
     }
     rec(s.doc().unwrap().shapes())
@@ -35,7 +35,7 @@ fn tree(s: &Session) -> String {
 
 /// (hidden, locked)
 fn flags(s: &Session, id: u32) -> (bool, bool) {
-    let sh = s.doc().unwrap().shape(deckcraft_model::ShapeId(id)).unwrap();
+    let sh = s.doc().unwrap().shape(seho_model::ShapeId(id)).unwrap();
     (sh.hidden, sh.locked)
 }
 
@@ -185,7 +185,7 @@ fn locked_objects_refuse_moving_sizing_rotating_but_take_formatting() {
     // Formatting and the name still change.
     s.execute("shape.fill", &json!({"ids": [a], "color": "#00ff00"})).unwrap();
     s.execute("shape.rename", &json!({"id": a, "name": "Anchor"})).unwrap();
-    assert_eq!(s.doc().unwrap().shape(deckcraft_model::ShapeId(a)).unwrap().name, "Anchor");
+    assert_eq!(s.doc().unwrap().shape(seho_model::ShapeId(a)).unwrap().name, "Anchor");
     // The arrow keys don't nudge it.
     s.execute("edit.select", &json!({"ids": [a]})).unwrap();
     let _ = s.key("ArrowRight", Mods::default());
@@ -258,7 +258,7 @@ fn rename_from_the_pane_undoes() {
     let (mut s, ids) = deck();
     let e = ids[4];
     s.execute("shape.rename", &json!({"id": e, "name": "Eagle"})).unwrap();
-    assert_eq!(s.doc().unwrap().shape(deckcraft_model::ShapeId(e)).unwrap().name, "Eagle");
+    assert_eq!(s.doc().unwrap().shape(seho_model::ShapeId(e)).unwrap().name, "Eagle");
     undo(&mut s);
-    assert_eq!(s.doc().unwrap().shape(deckcraft_model::ShapeId(e)).unwrap().name, "E");
+    assert_eq!(s.doc().unwrap().shape(seho_model::ShapeId(e)).unwrap().name, "E");
 }

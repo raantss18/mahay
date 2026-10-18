@@ -1,6 +1,6 @@
 [package]
-name = "photocraft-automation"
-description = "MCP server (rmcp) over the PhotoCraft engine, plus a bridge to a running GUI"
+name = "sary-automation"
+description = "MCP server (rmcp) over the Sary engine, plus a bridge to a running GUI"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,13 +10,13 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-photocraft-geom = { workspace = true }
-photocraft-doc = { workspace = true }
-photocraft-compose = { workspace = true }
-photocraft-codecs = { workspace = true }
-photocraft-io = { workspace = true }
-photocraft-format = { path = "../format" }
-photocraft-engine = { workspace = true }
+sary-geom = { workspace = true }
+sary-doc = { workspace = true }
+sary-compose = { workspace = true }
+sary-codecs = { workspace = true }
+sary-io = { workspace = true }
+sary-format = { path = "../format" }
+sary-engine = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }

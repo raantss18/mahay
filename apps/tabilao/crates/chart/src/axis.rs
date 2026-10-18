@@ -1,7 +1,7 @@
 //! Value-axis scaling ("nice numbers") and label formatting.
 
-use gridcraft_core::{DateSystem, Value, number_to_text};
-use gridcraft_numfmt::{NumberFormat, format_value};
+use tabilao_core::{DateSystem, Value, number_to_text};
+use tabilao_numfmt::{NumberFormat, format_value};
 
 /// Largest magnitude we plot; bigger values are clamped so ranges stay finite.
 pub(crate) const MAX_ABS: f64 = 1e300;

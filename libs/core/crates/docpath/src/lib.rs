@@ -66,7 +66,7 @@
 //!
 //! ```
 //! use std::path::Path;
-//! use craft_docpath::{resolve, resolve_absolute, Refused};
+//! use mahay_docpath::{resolve, resolve_absolute, Refused};
 //!
 //! let doc = Path::new(r"\\server\share\docs\report.doc");
 //! assert!(resolve(r"img\logo.png", Some(doc)).is_ok());

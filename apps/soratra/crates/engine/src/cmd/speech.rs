@@ -4,8 +4,8 @@
 //! ribbon, the CLI and agents all control reading the same way.
 
 use serde_json::Value;
-use wordcraft_doc::para::OBJ;
-use wordcraft_doc::{InlineObject, Pos};
+use soratra_doc::para::OBJ;
+use soratra_doc::{InlineObject, Pos};
 
 use super::sel_result;
 use crate::speech::{self, State};
@@ -157,8 +157,8 @@ fn past_citation(s: &mut Session, _: &Value) -> CmdResult {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::props::CharProps;
-    use wordcraft_doc::{Document, InlineObject, Path, Pos, StoryRef};
+    use soratra_doc::props::CharProps;
+    use soratra_doc::{Document, InlineObject, Path, Pos, StoryRef};
 
     use crate::Session;
     use crate::speech::State;

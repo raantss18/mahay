@@ -3,8 +3,8 @@
 
 use super::*;
 use crate::para::{bidi_levels, visual_order};
-use wordcraft_doc::props::{Align, ParaProps};
-use wordcraft_doc::{Pos, StoryRef};
+use soratra_doc::props::{Align, ParaProps};
+use soratra_doc::{Pos, StoryRef};
 
 fn lay(doc: &Document) -> DocLayout {
     let mut c = LayoutCache::new();
@@ -131,7 +131,7 @@ fn numbers_and_latin_inside_persian_keep_their_order() {
 
 #[test]
 fn caret_and_hit_agree_in_bidi_text() {
-    for (s, rtl) in [("سلام world ۱۲۳", true), ("Hello سلام دنیا end", false), ("کتاب «WordCraft» (نسخه ۲)", true)] {
+    for (s, rtl) in [("سلام world ۱۲۳", true), ("Hello سلام دنیا end", false), ("کتاب «Soratra» (نسخه ۲)", true)] {
         let d = doc_of(&[(s, rtl)]);
         let l = lay(&d);
         let (pl, _) = first_line(&l, 0);
@@ -214,9 +214,9 @@ fn rtl_indents_and_alignment_are_measured_from_the_right() {
 #[test]
 fn rtl_list_label_sits_on_the_right() {
     let mut d = doc_of(&[("مورد اول", true), ("مورد دوم", true)]);
-    let id = d.numbering.add_list(wordcraft_doc::ListKind::Numbered);
+    let id = d.numbering.add_list(soratra_doc::ListKind::Numbered);
     d.format_paragraphs(&Pos::body(0, 0), &Pos::body(1, 0), &|p: &mut ParaProps| {
-        p.numbering = Some(wordcraft_doc::props::NumRef { num: id, level: 0 })
+        p.numbering = Some(soratra_doc::props::NumRef { num: id, level: 0 })
     })
     .unwrap();
     let l = lay(&d);
@@ -240,7 +240,7 @@ fn rtl_empty_and_trailing_lines_mirror() {
     // A paragraph ending in a line break gets an empty last line, also on the right.
     let mut d = doc_of(&[("سطر", true)]);
     let end = "سطر".len();
-    d.para_mut(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().insert_text(end, "\n", &Default::default()).unwrap();
+    d.para_mut(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().insert_text(end, "\n", &Default::default()).unwrap();
     let l = lay(&d);
     assert!((caret_x(&l, 0, end + 1) - 540.0).abs() < 0.5, "{}", caret_x(&l, 0, end + 1));
 }
@@ -299,13 +299,13 @@ fn hostile_bidi_text_never_panics() {
 }
 
 /// A face that has Arabic letters (installed system fonts), or `None` to skip.
-fn arabic_face() -> Option<wordcraft_fonts::FaceRef> {
-    wordcraft_fonts::FontDb::global().fallback_for('ب', 0).map(|f| wordcraft_fonts::FaceRef::of(&f)).filter(|f| f.covers('پ'))
+fn arabic_face() -> Option<soratra_fonts::FaceRef> {
+    soratra_fonts::FontDb::global().fallback_for('ب', 0).map(|f| soratra_fonts::FaceRef::of(&f)).filter(|f| f.covers('پ'))
 }
 
 /// The glyph ids of each cluster, in order. A font may draw a letter as several glyphs (Noto
 /// Naskh Arabic draws ب as its dotless form plus the dot), so letters are compared by cluster.
-fn cluster_glyphs(glyphs: &[wordcraft_fonts::ShapedGlyph]) -> Vec<Vec<u32>> {
+fn cluster_glyphs(glyphs: &[soratra_fonts::ShapedGlyph]) -> Vec<Vec<u32>> {
     let mut out: Vec<(usize, Vec<u32>)> = Vec::new();
     for g in glyphs {
         match out.last_mut() {
@@ -322,9 +322,9 @@ fn persian_letters_join_and_brackets_mirror() {
         eprintln!("skipped: no font with Persian letters installed");
         return;
     };
-    let isolated = cluster_glyphs(&wordcraft_fonts::shape_run(&face, "ب", &[], |c| c, true));
+    let isolated = cluster_glyphs(&soratra_fonts::shape_run(&face, "ب", &[], |c| c, true));
     assert_eq!(isolated.len(), 1, "{isolated:?}");
-    let shaped = wordcraft_fonts::shape_run(&face, "ببب", &[], |c| c, true);
+    let shaped = soratra_fonts::shape_run(&face, "ببب", &[], |c| c, true);
     let joined = cluster_glyphs(&shaped);
     assert_eq!(joined.len(), 3, "one cluster per letter: {joined:?}");
     assert!(shaped.iter().all(|g| g.gid != 0), "the font has the letters");
@@ -333,11 +333,11 @@ fn persian_letters_join_and_brackets_mirror() {
     // Clusters come back in logical order.
     assert!(shaped.windows(2).all(|w| w[0].cluster <= w[1].cluster));
     // ZWNJ (نیم‌فاصله) breaks the join: "می‌خواهم" keeps می separate.
-    let with_zwnj = cluster_glyphs(&wordcraft_fonts::shape_run(&face, "ب\u{200C}ب", &[], |c| c, true));
+    let with_zwnj = cluster_glyphs(&soratra_fonts::shape_run(&face, "ب\u{200C}ب", &[], |c| c, true));
     assert_eq!(with_zwnj.first(), isolated.first(), "a letter before ZWNJ takes its isolated form");
     // In right-to-left text, "(" is drawn with the mirrored glyph.
-    let open = wordcraft_fonts::shape_run(&face, "(", &[], |c| c, true);
-    let close = wordcraft_fonts::shape_run(&face, ")", &[], |c| c, false);
+    let open = soratra_fonts::shape_run(&face, "(", &[], |c| c, true);
+    let close = soratra_fonts::shape_run(&face, ")", &[], |c| c, false);
     if let (Some(o), Some(c)) = (open.first(), close.first())
         && c.gid != 0
     {
@@ -365,11 +365,11 @@ fn persian_text_in_a_latin_font_stays_in_one_fallback_face() {
 
 #[test]
 fn glyph_runs_carry_their_text_for_pdf_export() {
-    let s = "سلام WordCraft می‌خواهم";
+    let s = "سلام Soratra می‌خواهم";
     let d = doc_of(&[(s, true)]);
     let l = lay(&d);
     let lam_alef_ligature = arabic_face().is_some_and(|f| {
-        let g = wordcraft_fonts::shape_run(&f, "لا", &[], |c| c, true);
+        let g = soratra_fonts::shape_run(&f, "لا", &[], |c| c, true);
         !g.is_empty() && g.iter().all(|g| g.cluster == 0)
     });
     let mut all = String::new();
@@ -396,7 +396,7 @@ fn glyph_runs_carry_their_text_for_pdf_export() {
 fn character_border_boxes_a_whole_rtl_word() {
     let s = "کتاب خوب";
     let mut d = doc_of(&[(s, true)]);
-    let b = wordcraft_doc::props::Border { space: 0.0, ..wordcraft_doc::props::Border::single(0.5) };
+    let b = soratra_doc::props::Border { space: 0.0, ..soratra_doc::props::Border::single(0.5) };
     d.format_range(&Pos::body(0, 0), &Pos::body(0, at(s, 4)), &|c| c.border = Some(b)).unwrap();
     let l = lay(&d);
     let (pl, x) = first_line(&l, 0);
@@ -423,7 +423,7 @@ fn inline_picture_in_rtl_text_sits_in_its_place() {
     let s = "متن  بیشتر";
     let mut d = doc_of(&[(s, true)]);
     let off = at(s, 4);
-    let pic = wordcraft_doc::InlineObject::Image {
+    let pic = soratra_doc::InlineObject::Image {
         media: "m".into(),
         w: 30.0,
         h: 20.0,
@@ -432,7 +432,7 @@ fn inline_picture_in_rtl_text_sits_in_its_place() {
         crop: [0.0; 4],
         ole: None,
     };
-    d.para_mut(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().insert_object(off, pic, &Default::default()).unwrap();
+    d.para_mut(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().insert_object(off, pic, &Default::default()).unwrap();
     let l = lay(&d);
     let (pl, x) = first_line(&l, 0);
     let line = &pl.lines[0];
@@ -455,15 +455,15 @@ fn inline_picture_in_rtl_text_sits_in_its_place() {
 /// margin and border are drawn on its right. Clicks find cells by where they are drawn.
 #[test]
 fn rtl_table_lays_its_columns_out_right_to_left() {
-    use wordcraft_doc::props::{Border, Borders};
-    use wordcraft_doc::{Path, Table};
+    use soratra_doc::props::{Border, Borders};
+    use soratra_doc::{Path, Table};
     let mut d = Document::from_text("before\nafter");
     let mut t = Table::new(1, 3, 300.0);
     t.props.bidi_visual = true;
     // Start margin 10pt, end margin 2pt.
     t.props.cell_margins = Some([0.0, 10.0, 0.0, 2.0]);
     for (i, c) in t.rows[0].cells.iter_mut().enumerate() {
-        c.blocks = vec![wordcraft_doc::para_block(wordcraft_doc::Paragraph::with_text(&format!("c{i}"), Default::default()))];
+        c.blocks = vec![soratra_doc::para_block(soratra_doc::Paragraph::with_text(&format!("c{i}"), Default::default()))];
     }
     // A thick start border on the first cell.
     t.rows[0].cells[0].props.borders = Some(Borders { left: Some(Border::single(3.0)), ..Default::default() });
@@ -502,7 +502,7 @@ fn rtl_table_lays_its_columns_out_right_to_left() {
 /// first column at the right, and the line between them stays midway.
 #[test]
 fn rtl_section_puts_its_first_column_on_the_right() {
-    use wordcraft_doc::section::Columns;
+    use soratra_doc::section::Columns;
     let text = "Columns flow from the right edge in a right-to-left section. ".repeat(150);
     let mut d = Document::from_text(&text);
     d.last_section.rtl = true;
@@ -526,9 +526,9 @@ fn list_label_moves_with_its_text_when_the_paragraph_is_aligned() {
     // margin. In Word the label stays attached to the start of the text, in both directions.
     for (rtl, text) in [(false, "alpha beta"), (true, "مورد اول")] {
         let mut d = doc_of(&[(text, rtl), (text, rtl), (text, rtl), (text, rtl)]);
-        let id = d.numbering.add_list(wordcraft_doc::ListKind::Bullet);
+        let id = d.numbering.add_list(soratra_doc::ListKind::Bullet);
         d.format_paragraphs(&Pos::body(0, 0), &Pos::body(3, 1), &|p: &mut ParaProps| {
-            p.numbering = Some(wordcraft_doc::props::NumRef { num: id, level: 0 })
+            p.numbering = Some(soratra_doc::props::NumRef { num: id, level: 0 })
         })
         .unwrap();
         // Start edge (the default), centre, end edge, and a justified one.

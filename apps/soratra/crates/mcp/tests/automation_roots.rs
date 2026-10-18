@@ -1,4 +1,4 @@
-//! `wordcraft-cli mcp --automation-read-root <dir> --automation-write-root <dir>` (#769): through
+//! `soratra-cli mcp --automation-read-root <dir> --automation-write-root <dir>` (#769): through
 //! the MCP protocol, files open and load only from inside the read root and are saved and
 //! exported only inside the write root; paths that leave a root (`..`, another folder, a sibling
 //! with the same prefix, a link) are refused, and nothing is written outside.
@@ -8,8 +8,8 @@
 use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
-use wordcraft_engine::file_access::AutomationRoots;
-use wordcraft_mcp::{Headless, Server};
+use soratra_engine::file_access::AutomationRoots;
+use soratra_mcp::{Headless, Server};
 
 /// A 1x1 PNG, so `insert.picture` has something real to read.
 const PNG: &[u8] = &[

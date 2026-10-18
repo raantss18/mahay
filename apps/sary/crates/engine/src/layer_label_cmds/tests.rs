@@ -1,6 +1,6 @@
 use super::*;
-use photocraft_color::SampleType;
-use photocraft_doc::{Layer, LayerContent};
+use sary_color::SampleType;
+use sary_doc::{Layer, LayerContent};
 
 fn fixture(depth: u8) -> (Session, [LayerId; 4]) {
     let mut s = Session::new();
@@ -41,7 +41,7 @@ fn layer_color_groups_and_overlapping_selection_are_one_undo_step() {
         assert_eq!(r["layers"], json!([outer.0, inner.0, leaf.0]));
         assert_eq!(s.active().unwrap().history.past_len(), past + 1);
         assert_eq!(s.active().unwrap().selected_layers(), selected);
-        assert_eq!(s.active().unwrap().last_damage, Some(photocraft_geom::Rect::EMPTY));
+        assert_eq!(s.active().unwrap().last_damage, Some(sary_geom::Rect::EMPTY));
         let after = s.active().unwrap().doc.clone();
         for id in [outer, inner, leaf] {
             assert_eq!(after.layer(id).unwrap().label, LabelColor::Seafoam);

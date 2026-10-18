@@ -3,7 +3,7 @@ mod common;
 use std::time::Duration;
 
 use common::{Prefs, Theme, empty_probe, open_in, read_config, write_config};
-use craft_settings::{LegacyFile, Location, OpenOptions, SettingsStore, Source};
+use mahay_settings::{LegacyFile, Location, OpenOptions, SettingsStore, Source};
 
 #[test]
 fn older_schema_is_migrated_step_by_step_and_saved() {
@@ -51,7 +51,7 @@ fn parse_legacy_json(bytes: &[u8]) -> Result<Prefs, String> {
     Ok(prefs)
 }
 
-fn open_with_legacy(dir: &std::path::Path, files: Vec<LegacyFile<Prefs>>) -> (SettingsStore<Prefs>, craft_settings::LoadReport) {
+fn open_with_legacy(dir: &std::path::Path, files: Vec<LegacyFile<Prefs>>) -> (SettingsStore<Prefs>, mahay_settings::LoadReport) {
     SettingsStore::open_with(
         OpenOptions::new(Location::Dir(dir.to_path_buf())).probe(empty_probe()).debounce(Duration::from_millis(100)).legacy(files),
     )

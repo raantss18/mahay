@@ -952,7 +952,7 @@ mod tests {
     #[test]
     fn try_load_skips_a_broken_candidate() {
         // A candidate that exists but is not a readable font must not win over a good one behind it.
-        let dir = std::env::temp_dir().join(format!("gridcraft-font-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("tabilao-font-test-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let bad = dir.join("broken.ttf");
         let good = dir.join("good.ttf");

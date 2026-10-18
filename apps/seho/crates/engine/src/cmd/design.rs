@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use deckcraft_geom::Size;
-use deckcraft_model::text::{Run, RunKind, TextBody};
-use deckcraft_model::theme::{builtin_color_schemes, builtin_font_schemes, builtin_format_schemes, builtin_themes};
-use deckcraft_model::{Background, Fill, PhType, Presentation, Shape, ShapeId, defaults};
+use seho_geom::Size;
+use seho_model::text::{Run, RunKind, TextBody};
+use seho_model::theme::{builtin_color_schemes, builtin_font_schemes, builtin_format_schemes, builtin_themes};
+use seho_model::{Background, Fill, PhType, Presentation, Shape, ShapeId, defaults};
 use serde_json::{Value, json};
 
 use super::*;
@@ -157,10 +157,10 @@ fn browse_theme(s: &mut Session, p: &Value) -> Result<Value> {
         #[cfg(target_arch = "wasm32")]
         return Err(bad("design.browseTheme", "give `data`"));
     };
-    if !deckcraft_pptx::sniff(&bytes) {
+    if !seho_pptx::sniff(&bytes) {
         return Err(bad("design.browseTheme", "not a theme or PowerPoint file"));
     }
-    let (theme, media) = deckcraft_pptx::import_theme(&bytes).map_err(|e| bad("design.browseTheme", e.to_string()))?;
+    let (theme, media) = seho_pptx::import_theme(&bytes).map_err(|e| bad("design.browseTheme", e.to_string()))?;
     let name = theme.name.clone();
     s.edit(|doc, sel| {
         // The theme's pictures (format-scheme blip fills) get ids of this deck.
@@ -180,7 +180,7 @@ fn browse_theme(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// `theme` with every `media` id field rewritten through `map` (format-scheme picture fills).
-fn remap_media_ids(theme: &deckcraft_model::theme::Theme, map: &std::collections::HashMap<u32, u32>) -> Result<deckcraft_model::theme::Theme> {
+fn remap_media_ids(theme: &seho_model::theme::Theme, map: &std::collections::HashMap<u32, u32>) -> Result<seho_model::theme::Theme> {
     fn rec(v: &mut Value, map: &std::collections::HashMap<u32, u32>, depth: usize) {
         if depth > 64 {
             return;
@@ -264,7 +264,7 @@ fn variant(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit(|doc, sel| {
         let mi = master_index(doc, sel);
         let m = Arc::make_mut(doc.masters.get_mut(mi).ok_or_else(|| bad("design.variant", "no master"))?);
-        let v = deckcraft_model::theme::theme_variants(&m.theme);
+        let v = seho_model::theme::theme_variants(&m.theme);
         m.theme.colors =
             v.get(index).cloned().ok_or_else(|| bad("design.variant", format!("no variant {index}; 0..{}", v.len().saturating_sub(1))))?;
         Ok(())
@@ -276,7 +276,7 @@ fn variants(s: &mut Session, _p: &Value) -> Result<Value> {
     let st = s.doc()?;
     let mi = master_index(&st.doc, &st.selection);
     let th = st.doc.masters.get(mi).map(|m| m.theme.clone()).unwrap_or_default();
-    let v = deckcraft_model::theme::theme_variants(&th);
+    let v = seho_model::theme::theme_variants(&th);
     let current = v.iter().position(|c| c.colors == th.colors.colors);
     Ok(json!({
         "theme": th.name,
@@ -285,15 +285,15 @@ fn variants(s: &mut Session, _p: &Value) -> Result<Value> {
     }))
 }
 
-fn current_colors(s: &Session) -> Result<deckcraft_color::ColorScheme> {
+fn current_colors(s: &Session) -> Result<seho_color::ColorScheme> {
     let st = s.doc()?;
     let mi = master_index(&st.doc, &st.selection);
     st.doc.masters.get(mi).map(|m| m.theme.colors.clone()).ok_or_else(|| bad("design.colors", "no master"))
 }
 
-fn scheme_dialog_params(sc: &deckcraft_color::ColorScheme) -> Value {
+fn scheme_dialog_params(sc: &seho_color::ColorScheme) -> Value {
     let mut colors = serde_json::Map::new();
-    for slot in deckcraft_color::SchemeSlot::THEME {
+    for slot in seho_color::SchemeSlot::THEME {
         colors.insert(slot.xml_name().to_string(), Value::String(format!("#{}", sc.get(slot).hex())));
     }
     json!({"name": sc.name, "colors": colors})
@@ -301,7 +301,7 @@ fn scheme_dialog_params(sc: &deckcraft_color::ColorScheme) -> Value {
 
 /// `None` when the key is absent. Present values must be the twelve stored slots; aliases such
 /// as `bg1` are rejected because `ColorScheme::set` ignores them.
-fn parse_color_slots(colors_v: Option<&Value>) -> Result<Option<Vec<(deckcraft_color::SchemeSlot, deckcraft_color::Rgba)>>> {
+fn parse_color_slots(colors_v: Option<&Value>) -> Result<Option<Vec<(seho_color::SchemeSlot, seho_color::Rgba)>>> {
     let Some(v) = colors_v else { return Ok(None) };
     let Some(map) = v.as_object() else {
         return Err(bad("design.colors", "`colors` must be an object"));
@@ -311,13 +311,13 @@ fn parse_color_slots(colors_v: Option<&Value>) -> Result<Option<Vec<(deckcraft_c
     }
     let mut slots = Vec::with_capacity(map.len());
     for (k, v) in map {
-        let Some(slot) = deckcraft_color::SchemeSlot::from_xml(k) else {
+        let Some(slot) = seho_color::SchemeSlot::from_xml(k) else {
             return Err(bad("design.colors", format!("unknown colour `{k}`")));
         };
-        if !deckcraft_color::SchemeSlot::THEME.contains(&slot) {
+        if !seho_color::SchemeSlot::THEME.contains(&slot) {
             return Err(bad("design.colors", format!("`{k}` is not a theme colour")));
         }
-        let Some(rgb) = v.as_str().and_then(deckcraft_color::Rgba::from_hex) else {
+        let Some(rgb) = v.as_str().and_then(seho_color::Rgba::from_hex) else {
             return Err(bad("design.colors", format!("`{k}` needs a colour like #RRGGBB")));
         };
         slots.push((slot, rgb));
@@ -328,10 +328,10 @@ fn parse_color_slots(colors_v: Option<&Value>) -> Result<Option<Vec<(deckcraft_c
 /// A builtin `name` is applied first, then `colors` overlays those slots. The stored scheme name
 /// is the given name, or `Custom` when only colours are sent. An unknown name without colours is an error.
 fn next_scheme(
-    current: &deckcraft_color::ColorScheme,
+    current: &seho_color::ColorScheme,
     given: Option<&str>,
-    slots: Option<&[(deckcraft_color::SchemeSlot, deckcraft_color::Rgba)]>,
-) -> Result<deckcraft_color::ColorScheme> {
+    slots: Option<&[(seho_color::SchemeSlot, seho_color::Rgba)]>,
+) -> Result<seho_color::ColorScheme> {
     let mut next = current.clone();
     if let Some(name) = given {
         if let Some(builtin) = builtin_color_schemes().into_iter().find(|c| c.name.eq_ignore_ascii_case(name)) {
@@ -387,13 +387,13 @@ fn fonts(s: &mut Session, p: &Value) -> Result<Value> {
     ok()
 }
 
-fn current_fonts(s: &Session) -> Result<deckcraft_model::theme::FontScheme> {
+fn current_fonts(s: &Session) -> Result<seho_model::theme::FontScheme> {
     let st = s.doc()?;
     let mi = master_index(&st.doc, &st.selection);
     st.doc.masters.get(mi).map(|m| m.theme.fonts.clone()).ok_or_else(|| bad("design.fonts", "no master"))
 }
 
-fn font_dialog_params(scheme: &deckcraft_model::theme::FontScheme) -> Value {
+fn font_dialog_params(scheme: &seho_model::theme::FontScheme) -> Value {
     json!({"name": scheme.name, "major": scheme.major.latin, "minor": scheme.minor.latin})
 }
 
@@ -414,11 +414,11 @@ fn face_param(key: &str, v: Option<&Value>) -> Result<Option<String>> {
 /// faces are overlaid or the name is not a builtin; a name-only builtin keeps its own name.
 /// Faces without a name are a custom scheme: an omitted `minor` copies `major`.
 fn next_font_scheme(
-    current: &deckcraft_model::theme::FontScheme,
+    current: &seho_model::theme::FontScheme,
     given: Option<&str>,
     major: Option<&str>,
     minor: Option<&str>,
-) -> Result<deckcraft_model::theme::FontScheme> {
+) -> Result<seho_model::theme::FontScheme> {
     let mut next = current.clone();
     if let Some(name) = given {
         let replaced = if let Some(builtin) = builtin_font_schemes().into_iter().find(|f| f.name.eq_ignore_ascii_case(name)) {
@@ -498,11 +498,11 @@ fn background(s: &mut Session, p: &Value) -> Result<Value> {
     } else if let Some(i) = style {
         // Background styles: 3 theme bg fills × 4 colours (bg1, bg2, tx1, tx2).
         let slots =
-            [deckcraft_color::SchemeSlot::Bg1, deckcraft_color::SchemeSlot::Bg2, deckcraft_color::SchemeSlot::Tx2, deckcraft_color::SchemeSlot::Tx1];
+            [seho_color::SchemeSlot::Bg1, seho_color::SchemeSlot::Bg2, seho_color::SchemeSlot::Tx2, seho_color::SchemeSlot::Tx1];
         let i = i.clamp(1, 12) - 1;
         BgOp::Set(Some(Background::Ref {
             idx: 1001 + (i / 4) as u32,
-            color: deckcraft_model::ColorRef::scheme(slots.get(i % 4).copied().unwrap_or(deckcraft_color::SchemeSlot::Bg1)),
+            color: seho_model::ColorRef::scheme(slots.get(i % 4).copied().unwrap_or(seho_color::SchemeSlot::Bg1)),
         }))
     } else if let Some(g) = p.get("gradient") {
         let mut g = super::shape::gradient_param(g).ok_or_else(|| bad("design.background", "gradient needs two or more `stops`"))?;
@@ -510,17 +510,17 @@ fn background(s: &mut Session, p: &Value) -> Result<Value> {
         BgOp::Set(Some(Background::Fill { fill: Fill::Gradient(g) }))
     } else if let Some(pt) = p.get("pattern") {
         BgOp::Set(Some(Background::Fill {
-            fill: Fill::Pattern(deckcraft_model::style::PatternFill {
+            fill: Fill::Pattern(seho_model::style::PatternFill {
                 preset: pt.get("preset").and_then(Value::as_str).unwrap_or("pct50").to_string(),
-                fg: pt.get("fg").and_then(color_value).unwrap_or(deckcraft_model::ColorRef::scheme(deckcraft_color::SchemeSlot::Accent1)),
-                bg: pt.get("bg").and_then(color_value).unwrap_or(deckcraft_model::ColorRef::scheme(deckcraft_color::SchemeSlot::Bg1)),
+                fg: pt.get("fg").and_then(color_value).unwrap_or(seho_model::ColorRef::scheme(seho_color::SchemeSlot::Accent1)),
+                bg: pt.get("bg").and_then(color_value).unwrap_or(seho_model::ColorRef::scheme(seho_color::SchemeSlot::Bg1)),
             }),
         }))
     } else if p.get("picture").is_some() {
         let (name, bytes) = super::insert::media_bytes(&with_param(p, "data", p.get("picture").cloned().unwrap_or_default()), "design.background")?;
         let ct = super::insert::content_type(&name, &bytes);
         let media = s.edit(|doc, _| doc.add_media(&name, ct, bytes).ok_or_else(|| bad("design.background", NO_ID_SPACE)))?;
-        let mut pf = deckcraft_model::style::PictureFill { media, ..Default::default() };
+        let mut pf = seho_model::style::PictureFill { media, ..Default::default() };
         if let Some(pp) = &props {
             apply_picture_props(&mut pf, pp);
         }
@@ -670,22 +670,22 @@ fn adjust_background(bg: &mut Background, props: Option<&Value>, transparency: O
     }
 }
 
-fn set_picture_transparency(pf: &mut deckcraft_model::style::PictureFill, t: f64) {
+fn set_picture_transparency(pf: &mut seho_model::style::PictureFill, t: f64) {
     let a = 1.0 - t.clamp(0.0, 1.0);
     pf.alpha = (a < 1.0).then_some(a);
 }
 
-fn set_solid_transparency(color: &mut deckcraft_model::ColorRef, t: f64) {
-    color.mods.retain(|m| !matches!(m, deckcraft_color::ColorTransform::Alpha(_)));
+fn set_solid_transparency(color: &mut seho_model::ColorRef, t: f64) {
+    color.mods.retain(|m| !matches!(m, seho_color::ColorTransform::Alpha(_)));
     let t = t.clamp(0.0, 1.0);
     if t > 0.0 {
-        color.mods.push(deckcraft_color::ColorTransform::Alpha(((1.0 - t) * 100_000.0).round() as i32));
+        color.mods.push(seho_color::ColorTransform::Alpha(((1.0 - t) * 100_000.0).round() as i32));
     }
 }
 
 /// Picture-fill options for Format Background (tile, offsets, scale, alignment, mirror, stretch).
-fn apply_picture_props(pf: &mut deckcraft_model::style::PictureFill, pp: &Value) {
-    use deckcraft_model::style::PictureMode;
+fn apply_picture_props(pf: &mut seho_model::style::PictureFill, pp: &Value) {
+    use seho_model::style::PictureMode;
     let f = |k: &str| pp.get(k).and_then(Value::as_f64).filter(|v| v.is_finite());
     if let Some(up) = pp.get("rotateWithShape").and_then(Value::as_bool) {
         pf.upright = !up;
@@ -752,7 +752,7 @@ fn scale_shapes(shapes: &mut [Shape], sx: f64, sy: f64, k: f64, ox: f64, oy: f64
             x.h *= sy;
         }
         if let Some(t) = sh.text.as_mut() {
-            deckcraft_model::edit::format_all(t, &|r| {
+            seho_model::edit::format_all(t, &|r| {
                 if let Some(sz) = r.size.as_mut() {
                     *sz = (*sz * k).max(1.0);
                 }
@@ -841,7 +841,7 @@ fn header_footer(s: &mut Session, p: &Value) -> Result<Value> {
         for i in list {
             let Some(layout) = doc.slides.get(i).map(|x| x.layout) else { continue };
             let lay = doc.layout(layout).map(|(_, l)| l.clone());
-            let is_title = lay.as_ref().is_some_and(|l| l.kind == deckcraft_model::LayoutType::Title);
+            let is_title = lay.as_ref().is_some_and(|l| l.kind == seho_model::LayoutType::Title);
             let want = |k: PhType| {
                 !(hf.hide_on_title && is_title)
                     && match k {
@@ -868,7 +868,7 @@ fn header_footer(s: &mut Session, p: &Value) -> Result<Value> {
                         let Some(lp) = lp else { continue };
                         let body = match k {
                             PhType::SlideNum => TextBody {
-                                paragraphs: vec![deckcraft_model::Paragraph {
+                                paragraphs: vec![seho_model::Paragraph {
                                     runs: vec![Run {
                                         text: "‹#›".into(),
                                         props: Default::default(),
@@ -879,7 +879,7 @@ fn header_footer(s: &mut Session, p: &Value) -> Result<Value> {
                                 ..Default::default()
                             },
                             PhType::Date if hf.date_text.is_empty() => TextBody {
-                                paragraphs: vec![deckcraft_model::Paragraph {
+                                paragraphs: vec![seho_model::Paragraph {
                                     runs: vec![Run { text: today(), props: Default::default(), kind: RunKind::Field { field: "datetime1".into() } }],
                                     ..Default::default()
                                 }],
@@ -919,7 +919,7 @@ fn header_footer(s: &mut Session, p: &Value) -> Result<Value> {
 /// `fixed`, at an automatic date field (one it already has keeps its format).
 fn set_date(sh: &mut Shape, fixed: &str) {
     let runs = || sh.text.iter().flat_map(|t| &t.paragraphs).flat_map(|p| &p.runs);
-    let has_field = runs().any(|r| matches!(&r.kind, RunKind::Field { field } if deckcraft_text::datetime::is_date_field(field)));
+    let has_field = runs().any(|r| matches!(&r.kind, RunKind::Field { field } if seho_text::datetime::is_date_field(field)));
     let props = runs().next().map(|r| r.props.clone()).unwrap_or_default();
     let (text, kind) = match fixed {
         "" if has_field => return,
@@ -927,7 +927,7 @@ fn set_date(sh: &mut Shape, fixed: &str) {
         _ if !has_field && sh.text.as_ref().is_some_and(|t| t.text() == fixed) => return,
         _ => (fixed.to_string(), RunKind::Text),
     };
-    let para = deckcraft_model::Paragraph { runs: vec![Run { text, props, kind }], ..Default::default() };
+    let para = seho_model::Paragraph { runs: vec![Run { text, props, kind }], ..Default::default() };
     sh.text = Some(TextBody { paragraphs: vec![para], ..sh.text.clone().unwrap_or_default() });
 }
 
@@ -939,7 +939,7 @@ pub fn today() -> String {
 
 /// What date field `kind` shows now (empty if unknown or there is no clock).
 pub fn date_field_text(kind: &str) -> String {
-    use deckcraft_text::datetime::{DateTime, field_text};
+    use seho_text::datetime::{DateTime, field_text};
     DateTime::now_local().and_then(|now| field_text(kind, None, now)).unwrap_or_default()
 }
 
@@ -997,13 +997,13 @@ pub fn handout_placeholder(kind: PhType, size: Size, id: ShapeId) -> Shape {
     if let Some(p) = text.paragraphs.first_mut()
         && matches!(kind, PhType::Date | PhType::SlideNum)
     {
-        p.props.align = Some(deckcraft_model::text::Align::Right);
+        p.props.align = Some(seho_model::text::Align::Right);
     }
     Shape {
         id,
         name: format!("{name} {}", idx + 1),
-        xfrm: Some(deckcraft_geom::Xfrm::new(x, y, w * 0.43, h * 0.05)),
-        ph: Some(deckcraft_model::Placeholder { kind, idx, size: Some("quarter".into()), ..Default::default() }),
+        xfrm: Some(seho_geom::Xfrm::new(x, y, w * 0.43, h * 0.05)),
+        ph: Some(seho_model::Placeholder { kind, idx, size: Some("quarter".into()), ..Default::default() }),
         text: Some(text),
         ..Default::default()
     }
@@ -1016,7 +1016,7 @@ fn handout_view(s: &mut Session, _p: &Value) -> Result<Value> {
     let created = s.doc()?.doc.handout_master.is_none();
     if created {
         s.edit(|doc, _| {
-            let mut m = deckcraft_model::Master {
+            let mut m = seho_model::Master {
                 name: "Handout Master".into(),
                 theme: doc.masters.first().map(|m| m.theme.clone()).unwrap_or_default(),
                 color_map: doc.masters.first().map(|m| m.color_map.clone()).unwrap_or_default(),
@@ -1087,20 +1087,20 @@ pub fn notes_placeholder(kind: PhType, size: Size, id: ShapeId) -> Shape {
         PhType::SlideImage => Shape {
             id,
             name: "Slide Image Placeholder 3".into(),
-            xfrm: Some(deckcraft_geom::Xfrm::new(w * 0.125, h * 0.125, w * 0.75, h * 0.375)),
-            ph: Some(deckcraft_model::Placeholder { kind, idx: 2, ..Default::default() }),
+            xfrm: Some(seho_geom::Xfrm::new(w * 0.125, h * 0.125, w * 0.75, h * 0.375)),
+            ph: Some(seho_model::Placeholder { kind, idx: 2, ..Default::default() }),
             fill: Some(Fill::None),
-            line: Some(deckcraft_model::Line::solid(deckcraft_model::ColorRef::rgb(deckcraft_color::Rgba::BLACK), 1.0)),
+            line: Some(seho_model::Line::solid(seho_model::ColorRef::rgb(seho_color::Rgba::BLACK), 1.0)),
             ..Default::default()
         },
         PhType::Body => {
             let mut text = TextBody::default();
-            text.paragraphs = vec![deckcraft_model::text::Paragraph::new("Click to edit Master text styles")];
+            text.paragraphs = vec![seho_model::text::Paragraph::new("Click to edit Master text styles")];
             Shape {
                 id,
                 name: "Notes Placeholder 4".into(),
-                xfrm: Some(deckcraft_geom::Xfrm::new(w * 0.1, h * 0.53, w * 0.8, h * 0.36)),
-                ph: Some(deckcraft_model::Placeholder { kind, idx: 3, size: Some("quarter".into()), ..Default::default() }),
+                xfrm: Some(seho_geom::Xfrm::new(w * 0.1, h * 0.53, w * 0.8, h * 0.36)),
+                ph: Some(seho_model::Placeholder { kind, idx: 3, size: Some("quarter".into()), ..Default::default() }),
                 text: Some(text),
                 ..Default::default()
             }
@@ -1124,7 +1124,7 @@ fn notes_view(s: &mut Session, _p: &Value) -> Result<Value> {
     let created = s.doc()?.doc.notes_master.as_ref().is_none_or(|m| m.shapes.is_empty());
     if created {
         s.edit(|doc, _| {
-            let mut m = doc.notes_master.as_deref().cloned().unwrap_or_else(|| deckcraft_model::Master {
+            let mut m = doc.notes_master.as_deref().cloned().unwrap_or_else(|| seho_model::Master {
                 name: "Notes Master".into(),
                 theme: doc.masters.first().map(|m| m.theme.clone()).unwrap_or_default(),
                 color_map: doc.masters.first().map(|m| m.color_map.clone()).unwrap_or_default(),
@@ -1185,7 +1185,7 @@ fn insert_layout(s: &mut Session, p: &Value) -> Result<Value> {
     let name = str_param(p, "name").unwrap_or("Custom Layout").to_string();
     s.edit(|doc, sel| {
         let mi = master_index(doc, sel);
-        let id = deckcraft_model::LayoutId(doc.alloc_id().ok_or_else(|| bad("master.insertLayout", NO_ID_SPACE))?);
+        let id = seho_model::LayoutId(doc.alloc_id().ok_or_else(|| bad("master.insertLayout", NO_ID_SPACE))?);
         let tid = ShapeId(doc.alloc_id().ok_or_else(|| bad("master.insertLayout", NO_ID_SPACE))?);
         let size = doc.slide_size;
         let m = Arc::make_mut(doc.masters.get_mut(mi).ok_or_else(|| bad("master.insertLayout", "no master"))?);
@@ -1201,10 +1201,10 @@ fn insert_layout(s: &mut Session, p: &Value) -> Result<Value> {
         };
         m.layouts.insert(
             at.min(m.layouts.len()),
-            deckcraft_model::Layout {
+            seho_model::Layout {
                 id,
                 name,
-                kind: deckcraft_model::LayoutType::Custom,
+                kind: seho_model::LayoutType::Custom,
                 shapes: title.into_iter().collect(),
                 background: None,
                 show_master_shapes: true,
@@ -1270,11 +1270,11 @@ fn insert_placeholder(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad("master.insertPlaceholder", "select a layout in Slide Master view"));
     }
     let size = s.doc()?.doc.slide_size;
-    let rect = rect_param(p, "rect").unwrap_or(deckcraft_geom::Xfrm::new(size.width * 0.25, size.height * 0.3, size.width * 0.5, size.height * 0.4));
+    let rect = rect_param(p, "rect").unwrap_or(seho_geom::Xfrm::new(size.width * 0.25, size.height * 0.3, size.width * 0.5, size.height * 0.4));
     let idx = s.doc()?.shapes().iter().filter_map(|x| x.ph.as_ref().map(|p| p.idx)).max().unwrap_or(0) + 1;
     let shape = Shape {
         xfrm: Some(rect),
-        ph: Some(deckcraft_model::Placeholder { kind, idx, ..Default::default() }),
+        ph: Some(seho_model::Placeholder { kind, idx, ..Default::default() }),
         text: Some(TextBody::default()),
         ..Default::default()
     };
@@ -1428,14 +1428,14 @@ fn synthesized_placeholder(kind: PhType, id: ShapeId, idx: u32, size: Size) -> S
         id,
         name: name.into(),
         xfrm: Some(placeholder_rect(kind, size)),
-        ph: Some(deckcraft_model::Placeholder { kind, idx, ..Default::default() }),
+        ph: Some(seho_model::Placeholder { kind, idx, ..Default::default() }),
         text: Some(text),
         ..Default::default()
     }
 }
 
 /// Standard placeholder boxes at 960×540, scaled to the slide size.
-fn placeholder_rect(kind: PhType, size: Size) -> deckcraft_geom::Xfrm {
+fn placeholder_rect(kind: PhType, size: Size) -> seho_geom::Xfrm {
     let sx = size.width / 960.0;
     let sy = size.height / 540.0;
     let (x, y, w, h) = match kind {
@@ -1444,11 +1444,11 @@ fn placeholder_rect(kind: PhType, size: Size) -> deckcraft_geom::Xfrm {
         PhType::SlideNum => (684.0, 500.0, 216.0, 28.0),
         _ => (60.0, 29.0, 840.0, 104.0),
     };
-    deckcraft_geom::Xfrm::new(x * sx, y * sy, w * sx, h * sy)
+    seho_geom::Xfrm::new(x * sx, y * sy, w * sx, h * sy)
 }
 
-fn slide_number_paragraph() -> deckcraft_model::Paragraph {
-    deckcraft_model::Paragraph {
+fn slide_number_paragraph() -> seho_model::Paragraph {
+    seho_model::Paragraph {
         runs: vec![Run { text: "‹#›".into(), props: Default::default(), kind: RunKind::Field { field: "slidenum".into() } }],
         ..Default::default()
     }
@@ -1456,15 +1456,15 @@ fn slide_number_paragraph() -> deckcraft_model::Paragraph {
 
 #[cfg(test)]
 mod tests {
-    use deckcraft_color::SchemeSlot;
-    use deckcraft_model::style::PictureMode;
-    use deckcraft_model::theme::{FontScheme, ScriptFont, builtin_color_schemes, builtin_font_schemes};
-    use deckcraft_model::{Background, Fill};
+    use seho_color::SchemeSlot;
+    use seho_model::style::PictureMode;
+    use seho_model::theme::{FontScheme, ScriptFont, builtin_color_schemes, builtin_font_schemes};
+    use seho_model::{Background, Fill};
     use serde_json::{Value, json};
 
     use crate::{Session, UiRequest};
 
-    fn scheme(s: &Session) -> deckcraft_color::ColorScheme {
+    fn scheme(s: &Session) -> seho_color::ColorScheme {
         s.doc().unwrap().doc.masters[0].theme.colors.clone()
     }
 
@@ -1484,7 +1484,7 @@ mod tests {
         crate::cmd::base64_encode(&bytes)
     }
 
-    fn picture(s: &Session) -> deckcraft_model::style::PictureFill {
+    fn picture(s: &Session) -> seho_model::style::PictureFill {
         match &s.doc().unwrap().doc.slides[0].background {
             Some(Background::Fill { fill: Fill::Picture(pf) }) => pf.clone(),
             other => panic!("expected a picture background, got {other:?}"),
@@ -1510,7 +1510,7 @@ mod tests {
         match &s.ui_requests[0] {
             UiRequest::Dialog { id, params } => {
                 assert_eq!(id, "themeColors");
-                assert_eq!(params["name"], "DeckCraft");
+                assert_eq!(params["name"], "Seho");
                 let colors = params["colors"].as_object().unwrap();
                 assert_eq!(colors.len(), 12);
                 assert_eq!(colors["accent1"].as_str().unwrap(), format!("#{}", original.get(SchemeSlot::Accent1).hex()));
@@ -1731,8 +1731,8 @@ mod tests {
 
 #[cfg(test)]
 mod browse_theme_tests {
-    use deckcraft_model::PhType;
-    use deckcraft_model::text::RunKind;
+    use seho_model::PhType;
+    use seho_model::text::RunKind;
     use serde_json::json;
 
     use crate::{Session, Target};
@@ -1750,7 +1750,7 @@ mod browse_theme_tests {
         let t = &s.doc().unwrap().doc.masters[0].theme;
         assert_eq!(t.fonts.major.latin, "Lato");
         assert_eq!(t.fonts.minor.latin, "Source Sans 3");
-        assert_eq!(t.colors.get(deckcraft_color::SchemeSlot::Accent1).hex().to_lowercase(), "123456");
+        assert_eq!(t.colors.get(seho_color::SchemeSlot::Accent1).hex().to_lowercase(), "123456");
         assert!(s.doc().unwrap().doc.validate().is_empty());
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc().unwrap().doc.masters[0].theme, before);
@@ -1767,10 +1767,10 @@ mod browse_theme_tests {
         let mut s = crate::Session::with_new();
         let listed = s.execute("design.themes", &json!({})).unwrap();
         let names: Vec<String> = listed["effectSchemes"].as_array().unwrap().iter().filter_map(|v| v.as_str().map(str::to_string)).collect();
-        assert_eq!(names, ["DeckCraft", "Soft", "Crisp", "Lift", "Glow", "Plain"]);
+        assert_eq!(names, ["Seho", "Soft", "Crisp", "Lift", "Glow", "Plain"]);
 
         let n = undo_len(&s);
-        s.execute("design.effects", &json!({"name": "DeckCraft"})).unwrap();
+        s.execute("design.effects", &json!({"name": "Seho"})).unwrap();
         assert_eq!(undo_len(&s), n, "the scheme already on the theme is not an undo step");
         let err = s.execute("design.effects", &json!({"name": "Office"})).unwrap_err().to_string();
         assert!(err.contains("no effect scheme"), "{err}");
@@ -1801,7 +1801,7 @@ mod browse_theme_tests {
         assert_eq!(plain.lines[2].width, Some(0.75));
     }
 
-    fn shapes(s: &Session) -> Vec<deckcraft_model::Shape> {
+    fn shapes(s: &Session) -> Vec<seho_model::Shape> {
         s.doc().unwrap().shapes().to_vec()
     }
 

@@ -1,9 +1,9 @@
 //! Edit text on a scanned page: rewriting an OCR word (invisible text over the scan) shows the
 //! new text and hides the scanned word. Synthetic image only.
 
-use pdfcraft_engine::ocr::PlacedWord;
-use pdfcraft_engine::{Edit, Session, export};
-use pdfcraft_render::{PageRenderer, RenderRequest};
+use taratasy_engine::ocr::PlacedWord;
+use taratasy_engine::{Edit, Session, export};
+use taratasy_render::{PageRenderer, RenderRequest};
 
 const PAPER: [u8; 3] = [230, 225, 200];
 const INK: [u8; 3] = [20, 30, 90];
@@ -11,11 +11,11 @@ const INK: [u8; 3] = [20, 30, 90];
 const WORD: [u32; 4] = [40, 40, 100, 60];
 
 /// A 200 × 100 pt "scan" on tinted paper, with OCR text over its word.
-fn scanned() -> (Session, pdfcraft_engine::DocId) {
+fn scanned() -> (Session, taratasy_engine::DocId) {
     scanned_with(vec![PlacedWord { text: "John".into(), origin: [40.0, 40.0], across: [60.0, 0.0], up: [0.0, 20.0] }])
 }
 
-fn scanned_with(words: Vec<PlacedWord>) -> (Session, pdfcraft_engine::DocId) {
+fn scanned_with(words: Vec<PlacedWord>) -> (Session, taratasy_engine::DocId) {
     let (w, h) = (200u32, 100u32);
     let mut rgba = Vec::new();
     for y in 0..h {
@@ -33,7 +33,7 @@ fn scanned_with(words: Vec<PlacedWord>) -> (Session, pdfcraft_engine::DocId) {
     (s, id)
 }
 
-fn word_pixels(s: &Session, id: pdfcraft_engine::DocId) -> Vec<[u8; 3]> {
+fn word_pixels(s: &Session, id: taratasy_engine::DocId) -> Vec<[u8; 3]> {
     let doc = s.get(id).unwrap();
     let out = PageRenderer::new(doc.bytes.clone(), Default::default()).render(RenderRequest { page: 0, scale: 1.0, ..Default::default() });
     assert!(out.error.is_none(), "{:?}", out.error);
@@ -75,7 +75,7 @@ fn editing_an_ocr_word_covers_the_scan_and_shows_the_new_text() {
 #[test]
 fn an_explicit_colour_is_kept_for_the_new_text() {
     let (mut s, id) = scanned();
-    let style = pdfcraft_engine::BlockStyle { color: Some([1.0, 0.0, 0.0]), ..Default::default() };
+    let style = taratasy_engine::BlockStyle { color: Some([1.0, 0.0, 0.0]), ..Default::default() };
     s.apply(id, Edit::EditTextBlock { page: 0, block: 0, text: "Jane".into(), style }).unwrap();
     let px = word_pixels(&s, id);
     assert!(px.iter().any(|p| p[0] > 200 && p[1] < 60 && p[2] < 60), "red text");
@@ -148,7 +148,7 @@ fn a_rewritten_ocr_phrase_keeps_its_word_widths() {
 
 /// Visible text set with a horizontally stretched text matrix (3 × 1), as some generators write.
 fn stretched_visible() -> std::sync::Arc<Vec<u8>> {
-    use pdfcraft_cos::{Dict, Document, Object, SaveOptions, Stream};
+    use taratasy_cos::{Dict, Document, Object, SaveOptions, Stream};
     let mut d = Document::new_empty();
     let pages = d.add(Object::Dict(Dict::new()));
     let contents = d.add(Object::Stream(Stream::flate(Dict::new(), b"BT /F1 12 Tf 3 0 0 1 20 60 Tm (Source) Tj ET")));
@@ -178,7 +178,7 @@ fn stretched_visible() -> std::sync::Arc<Vec<u8>> {
     root.set(b"Pages".to_vec(), Object::Ref(pages));
     let root = d.add(Object::Dict(root));
     d.trailer_mut().set(b"Root".to_vec(), Object::Ref(root));
-    std::sync::Arc::new(pdfcraft_cos::write_full(&d, &SaveOptions::default()).unwrap())
+    std::sync::Arc::new(taratasy_cos::write_full(&d, &SaveOptions::default()).unwrap())
 }
 
 /// Visible text is not OCR: a styled rewrite of stretched text keeps its width, draws no cover
@@ -190,7 +190,7 @@ fn visible_stretched_text_rewrites_unchanged() {
     let before = s.get(id).unwrap().text_blocks(0);
     assert_eq!(before.len(), 1);
     assert!(!before[0].invisible);
-    let style = pdfcraft_engine::BlockStyle { color: Some([1.0, 0.0, 0.0]), ..Default::default() };
+    let style = taratasy_engine::BlockStyle { color: Some([1.0, 0.0, 0.0]), ..Default::default() };
     s.apply(id, Edit::EditTextBlock { page: 0, block: 0, text: "Source".into(), style }).unwrap();
     let after = s.get(id).unwrap().text_blocks(0);
     assert_eq!(after.iter().map(|b| b.text.as_str()).collect::<Vec<_>>(), ["Source"]);

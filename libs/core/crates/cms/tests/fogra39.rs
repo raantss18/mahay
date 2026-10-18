@@ -2,7 +2,7 @@
 //! (`tests/data/FOGRA39.txt`), conversions to sRGB against reference values, and its generator:
 //!
 //! ```sh
-//! CRAFT_CMS_REGEN_PROFILES=1 cargo test -p craft-cms --release --test fogra39
+//! MAHAY_CMS_REGEN_PROFILES=1 cargo test -p mahay-cms --release --test fogra39
 //! ```
 //!
 //! The generator fits a Yule–Nielsen modified Neugebauer model (free 16 overprints, per-ink
@@ -11,12 +11,12 @@
 //! samples the result into the AToB table. The BToA tables invert that table
 //! ([`synth::cmyk_profile_from_model`]).
 
-use craft_cms::math::{self, delta_e2000};
-use craft_cms::synth::{self, CmykParams, Forward};
-use craft_cms::{Builtin, Intent, Profile, Transform};
+use mahay_cms::math::{self, delta_e2000};
+use mahay_cms::synth::{self, CmykParams, Forward};
+use mahay_cms::{Builtin, Intent, Profile, Transform};
 
 const DATA: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/FOGRA39.txt");
-const PROFILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/profiles/craft-coated-fogra39.icc");
+const PROFILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/profiles/mahay-coated-fogra39.icc");
 
 #[derive(Clone)]
 struct Patch {
@@ -334,7 +334,7 @@ fn fitted(p: &[Patch]) -> Fitted {
 
 #[test]
 fn regen_coated_fogra39() {
-    if std::env::var_os("CRAFT_CMS_REGEN_PROFILES").is_none() {
+    if std::env::var_os("MAHAY_CMS_REGEN_PROFILES").is_none() {
         return;
     }
     let t = std::time::Instant::now();
@@ -344,7 +344,7 @@ fn regen_coated_fogra39() {
     eprintln!("model n {:.3}: mean ΔE00 {:.2} p95 {:.2} max {:.2} at {:?}", f.model.n, s.mean, s.p95, s.max, s.worst);
     let params = CmykParams {
         description: Builtin::CoatedFogra39.description().into(),
-        copyright: craft_cms::builtin::COATED_FOGRA39_COPYRIGHT.into(),
+        copyright: mahay_cms::builtin::COATED_FOGRA39_COPYRIGHT.into(),
         tac: 3.3,
         grid_b2a: 33,
         white_on_node: true,
@@ -408,7 +408,7 @@ fn fits_the_fogra39_data() {
     eprintln!("Coated FOGRA39 builtin: mean ΔE00 {:.2} p95 {:.2} max {:.2} at {:?}", s.mean, s.p95, s.max, s.worst);
     assert!(s.mean <= 0.15 && s.p95 <= 0.35 && s.max <= 0.8, "mean {} p95 {} max {}", s.mean, s.p95, s.max);
     let s = stats(&p, profile_lab(Builtin::CoatedCmyk.profile()));
-    eprintln!("Photocraft coated builtin: mean ΔE00 {:.2} p95 {:.2} max {:.2} at {:?}", s.mean, s.p95, s.max, s.worst);
+    eprintln!("Sary coated builtin: mean ΔE00 {:.2} p95 {:.2} max {:.2} at {:?}", s.mean, s.p95, s.max, s.worst);
 }
 
 #[test]
@@ -436,7 +436,7 @@ fn in_gamut_lab_round_trips() {
     let to_lab = profile_lab(profile);
     // Targets: the profile's own colours of the patches inside the gamut (no solid ink, well
     // within the 330 % ink limit). Gamut-edge colours with black (e.g. C100 K100) come back
-    // up to ~7 ΔE00 off, as with the Photocraft profile: black generation fixes K before the
+    // up to ~7 ΔE00 off, as with the Sary profile: black generation fixes K before the
     // CMY solve.
     let mut de: Vec<f64> = patches()
         .iter()
@@ -468,7 +468,7 @@ const REFERENCE_SRGB: [([f64; 4], [u8; 3]); 15] = [
     ([0.0, 0.0, 0.0, 1.0], [29, 29, 27]),
     ([1.0, 1.0, 0.0, 0.0], [49, 39, 131]),
     ([0.0, 1.0, 1.0, 0.0], [227, 6, 19]),
-    // Reported DesignCraft orange: shown as 245,144,25 by the uncalibrated formula.
+    // Reported Pejy orange: shown as 245,144,25 by the uncalibrated formula.
     ([0.0, 0.41, 0.9, 0.04], [239, 161, 35]),
     // Grey, rich black, tint, skin tone, green and a near-neutral.
     ([0.0, 0.0, 0.0, 0.5], [157, 157, 156]),
@@ -498,13 +498,13 @@ fn srgb_lab(rgb: [u8; 3]) -> [f64; 3] {
 #[test]
 fn matches_reference_srgb_values() {
     let ours = to_srgb(fogra39());
-    let photocraft = to_srgb(Builtin::CoatedCmyk.profile());
+    let sary = to_srgb(Builtin::CoatedCmyk.profile());
     let mut worst = 0.0f64;
     for (cmyk, want) in REFERENCE_SRGB {
-        let (got, pc) = (ours(cmyk), photocraft(cmyk));
+        let (got, pc) = (ours(cmyk), sary(cmyk));
         let de = delta_e2000(srgb_lab(got), srgb_lab(want));
         let de_pc = delta_e2000(srgb_lab(pc), srgb_lab(want));
-        eprintln!("{cmyk:?}: reference {want:?} | FOGRA39 {got:?} ΔE00 {de:.2} | Photocraft {pc:?} ΔE00 {de_pc:.2}");
+        eprintln!("{cmyk:?}: reference {want:?} | FOGRA39 {got:?} ΔE00 {de:.2} | Sary {pc:?} ΔE00 {de_pc:.2}");
         worst = worst.max(de);
     }
     assert!(worst <= 1.0, "worst ΔE00 {worst}");
@@ -517,7 +517,7 @@ fn builtins_by_document_profile_name() {
         assert_eq!(Builtin::stand_in_for(b.description()), Some(b), "{b:?}");
     }
     assert_eq!(Builtin::from_profile_name(" srgb iec61966-2.1 "), Some(Builtin::Srgb));
-    assert_eq!(Builtin::from_profile_name("coated fogra39 (FITTED, craft-cms)"), Some(Builtin::CoatedFogra39));
+    assert_eq!(Builtin::from_profile_name("coated fogra39 (FITTED, mahay-cms)"), Some(Builtin::CoatedFogra39));
     for name in FOGRA39_STAND_IN_NAMES.into_iter().chain(["coated  FOGRA39 (iso 12647-2:2004)", "iso coated v2(eci)"]) {
         assert_eq!(Builtin::from_profile_name(name), None, "{name}");
         assert_eq!(Builtin::stand_in_for(name), Some(Builtin::CoatedFogra39), "{name}");

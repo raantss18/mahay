@@ -2,7 +2,7 @@ use crate::reader::Reader;
 use alloc::vec;
 use alloc::vec::Vec;
 
-/// PdfCraft patch: `limit` is the most bytes produced (see `filter::decode_limit`); a run of 128
+/// Taratasy patch: `limit` is the most bytes produced (see `filter::decode_limit`); a run of 128
 /// copies costs two input bytes, so a few megabytes could ask for gigabytes.
 pub(crate) fn decode(data: &[u8], limit: usize) -> Option<Vec<u8>> {
     let mut reader = Reader::new(data);
@@ -33,7 +33,7 @@ pub(crate) fn decode(data: &[u8], limit: usize) -> Option<Vec<u8>> {
         }
     }
 
-    // PdfCraft patch: output cut at the limit is reported, never dropped silently.
+    // Taratasy patch: output cut at the limit is reported, never dropped silently.
     if decoded.len() >= limit {
         warn!("run-length stream stopped at its decode limit of {limit} bytes");
     }

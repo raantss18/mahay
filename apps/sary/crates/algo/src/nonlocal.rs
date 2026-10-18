@@ -26,7 +26,7 @@
 //! `w × h` hole mask. Deterministic for a seed, whatever the thread count.
 
 use crate::inpaint::Rng;
-use photocraft_raster::{Cancelled, Interrupt};
+use sary_raster::{Cancelled, Interrupt};
 
 /// Below this many grid cells a level runs single-threaded (thread hand-off costs more than it saves).
 #[cfg(not(target_arch = "wasm32"))]

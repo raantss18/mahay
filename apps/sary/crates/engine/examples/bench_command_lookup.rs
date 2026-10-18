@@ -1,6 +1,6 @@
 //! Registry lookup cost, separate from command execution and canvas refresh.
-//! Run with `cargo run --release -p photocraft-engine --example bench_command_lookup`.
-use photocraft_engine::commands;
+//! Run with `cargo run --release -p sary-engine --example bench_command_lookup`.
+use sary_engine::commands;
 use std::hint::black_box;
 use std::time::Instant;
 

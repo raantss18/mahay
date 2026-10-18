@@ -1,7 +1,7 @@
 //! The Organize Pages selection, as an editable list of physical page numbers.
 use std::collections::BTreeSet;
 
-use pdfcraft_engine::print::PrintError;
+use taratasy_engine::print::PrintError;
 
 #[derive(Default)]
 pub(crate) struct PageSelectionInput {

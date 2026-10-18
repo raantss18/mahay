@@ -2,8 +2,8 @@
 
 use egui::{Event, Key, Modifiers, accesskit::Role, vec2};
 use egui_kittest::kittest::Queryable as _;
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::SheetApp;
+use tabilao_engine::Session;
+use tabilao_ui_egui::SheetApp;
 use serde_json::json;
 
 type Harness = egui_kittest::Harness<'static, SheetApp>;

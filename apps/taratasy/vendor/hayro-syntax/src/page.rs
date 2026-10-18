@@ -56,7 +56,7 @@ impl<'a> Pages<'a> {
     ) -> Option<Self> {
         let mut pages = vec![];
         let pages_ctx = PagesContext::new();
-        // PdfCraft patch: guard against page-tree cycles (a `/Kids` entry pointing back up
+        // Taratasy patch: guard against page-tree cycles (a `/Kids` entry pointing back up
         // the tree), which otherwise recurse until the stack overflows.
         let mut visited = BTreeSet::new();
         resolve_pages(
@@ -112,10 +112,10 @@ impl<'a> Deref for Pages<'a> {
     }
 }
 
-/// PdfCraft patch: maximum page-tree depth (direct dictionaries have no id to track).
+/// Taratasy patch: maximum page-tree depth (direct dictionaries have no id to track).
 const MAX_PAGE_TREE_DEPTH: usize = 256;
 
-/// PdfCraft patch: the largest `/UserUnit` honoured, as in Acrobat (a larger value counts as
+/// Taratasy patch: the largest `/UserUnit` honoured, as in Acrobat (a larger value counts as
 /// this one).
 const MAX_USER_UNIT: f64 = 75_000.0;
 
@@ -127,7 +127,7 @@ fn resolve_pages<'a>(
     visited: &mut BTreeSet<ObjectIdentifier>,
     depth: usize,
 ) -> Option<()> {
-    // PdfCraft patch: skip nodes already visited and absurdly deep trees.
+    // Taratasy patch: skip nodes already visited and absurdly deep trees.
     if depth > MAX_PAGE_TREE_DEPTH {
         return None;
     }
@@ -186,13 +186,13 @@ pub enum Rotation {
     FlippedHorizontal,
 }
 
-/// PdfCraft patch: the cut-off for content that expands from its compressed streams. The decoded
+/// Taratasy patch: the cut-off for content that expands from its compressed streams. The decoded
 /// content of a page may be `MAX_CONTENT_EXPANSION` times the size of those streams, and never less
 /// than `MAX_DECODED_STREAM`. Real content expands a few times, and a stream that inflates a
 /// thousandfold from a few kilobytes is a decompression bomb.
 const MAX_CONTENT_EXPANSION: usize = 64;
 
-/// PdfCraft patch: the decoded content of a page, produced a piece at a time, so that the whole of
+/// Taratasy patch: the decoded content of a page, produced a piece at a time, so that the whole of
 /// it need not be in memory at once (see `interpret_page`). Plain streams and Flate streams without
 /// a predictor are decoded as they are read. Any other stream is decoded whole when the reader is
 /// made, as `page_stream` does, and the decoded streams share one `MAX_DECODED_STREAM`.
@@ -423,7 +423,7 @@ impl<'a> Page<'a> {
             _ => Rotation::None,
         };
 
-        // PdfCraft patch: the page's own `/UserUnit` (it isn't inherited), read as Acrobat reads
+        // Taratasy patch: the page's own `/UserUnit` (it isn't inherited), read as Acrobat reads
         // it: a number from 1 up, at most `MAX_USER_UNIT`; anything else counts as 1.
         let user_unit = dict
             .get::<f64>(USER_UNIT)
@@ -455,13 +455,13 @@ impl<'a> Page<'a> {
         Some(iter)
     }
 
-    /// PdfCraft patch: the content of the page, to be read a piece at a time (see
+    /// Taratasy patch: the content of the page, to be read a piece at a time (see
     /// [`ContentReader`]).
     pub fn content_reader(&self) -> ContentReader<'a> {
         self.content_reader_within(MAX_DECODED_STREAM)
     }
 
-    /// PdfCraft patch: [`Page::content_reader`], with `cap` in place of `MAX_DECODED_STREAM`.
+    /// Taratasy patch: [`Page::content_reader`], with `cap` in place of `MAX_DECODED_STREAM`.
     fn content_reader_within(&self, cap: usize) -> ContentReader<'a> {
         if let Some(stream) = self.inner.get::<Stream<'a>>(CONTENTS) {
             ContentReader::new(vec![stream], false, cap)
@@ -478,7 +478,7 @@ impl<'a> Page<'a> {
     pub fn page_stream(&self) -> Option<&[u8]> {
         let convert_single = |s: Stream<'_>| {
             let data = s.decoded().ok()?;
-            // PdfCraft patch: take the decoded buffer instead of copying it (up to
+            // Taratasy patch: take the decoded buffer instead of copying it (up to
             // `MAX_DECODED_STREAM` twice over).
             Some(data.into_owned())
         };
@@ -491,7 +491,7 @@ impl<'a> Page<'a> {
                     let mut collected = vec![];
 
                     for stream in array.iter::<Stream<'_>>() {
-                        // PdfCraft patch: the streams share one `MAX_DECODED_STREAM` (an array
+                        // Taratasy patch: the streams share one `MAX_DECODED_STREAM` (an array
                         // naming one inflating stream twenty times decoded 5 GB).
                         let left = MAX_DECODED_STREAM.saturating_sub(collected.len());
                         if left == 0 {
@@ -539,7 +539,7 @@ impl<'a> Page<'a> {
         self.crop_box
     }
 
-    /// PdfCraft patch: the size of the page's user-space unit in points (`/UserUnit`).
+    /// Taratasy patch: the size of the page's user-space unit in points (`/UserUnit`).
     pub fn user_unit(&self) -> f32 {
         self.user_unit
     }
@@ -558,7 +558,7 @@ impl<'a> Page<'a> {
         {
             (A4.width() as f32, A4.height() as f32)
         } else {
-            // PdfCraft patch: retain a one-point floor after UserUnit, not one raw unit.
+            // Taratasy patch: retain a one-point floor after UserUnit, not one raw unit.
             // The stored unit is finite and within 1..=75000. Round upward only if the
             // reciprocal's f32 product would fall below one and trigger a placeholder.
             let mut raw_floor = 1.0 / self.user_unit;
@@ -579,7 +579,7 @@ impl<'a> Page<'a> {
     /// of the page. In addition to that, it also takes the rotation of the page into account.
     pub fn render_dimensions(&self) -> (f32, f32) {
         let (base_width, base_height) = self.base_dimensions();
-        // PdfCraft patch: in points, after `/UserUnit`.
+        // Taratasy patch: in points, after `/UserUnit`.
         let (mut base_width, mut base_height) =
             (base_width * self.user_unit, base_height * self.user_unit);
 
@@ -621,7 +621,7 @@ impl<'a> Page<'a> {
     pub fn initial_transform(&self, invert_y: bool) -> Transform {
         let crop_box = self.intersected_crop_box();
         let (_, base_height) = self.base_dimensions();
-        // PdfCraft patch: the page in points, after `/UserUnit`.
+        // Taratasy patch: the page in points, after `/UserUnit`.
         let base_height = base_height * self.user_unit;
         let (width, height) = self.render_dimensions();
 
@@ -657,7 +657,7 @@ impl<'a> Page<'a> {
         };
 
         let user_space = Transform::translate((-crop_box.x0, -crop_box.y0));
-        // PdfCraft patch: user space in units of `/UserUnit` points. A page without it keeps
+        // Taratasy patch: user space in units of `/UserUnit` points. A page without it keeps
         // exactly the transform it had.
         let user_space = if self.user_unit == 1.0 {
             user_space

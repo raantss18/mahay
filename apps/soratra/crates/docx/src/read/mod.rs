@@ -16,15 +16,15 @@ mod wordart;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
-use wordcraft_doc::graphic::{Graphic, GraphicKind};
-use wordcraft_doc::numbering::{AbstractNum, Level, LevelSuffix, Num};
-use wordcraft_doc::para::NoteKind;
-use wordcraft_doc::para::OBJ;
-use wordcraft_doc::props::Rgb;
-use wordcraft_doc::props::VAlign;
-use wordcraft_doc::section::NumFormat;
-use wordcraft_doc::styles::{PartFormat, Style, StyleKind, StyleSheet, TablePart, TableStyleParts};
-use wordcraft_doc::{
+use soratra_doc::graphic::{Graphic, GraphicKind};
+use soratra_doc::numbering::{AbstractNum, Level, LevelSuffix, Num};
+use soratra_doc::para::NoteKind;
+use soratra_doc::para::OBJ;
+use soratra_doc::props::Rgb;
+use soratra_doc::props::VAlign;
+use soratra_doc::section::NumFormat;
+use soratra_doc::styles::{PartFormat, Style, StyleKind, StyleSheet, TablePart, TableStyleParts};
+use soratra_doc::{
     Block, Blocks, Comment, Document, InlineObject, PagePicture, Paragraph, PartKind, Revision, RevisionKind, Zoom, ZoomFit, para_block,
 };
 
@@ -199,7 +199,7 @@ pub(crate) fn read_opened(pkg: &Package) -> Result<Document, DocxError> {
         lenient("numbering", r.read_numbering(&p));
     }
     // Without a stated mode (or settings at all) Word lays a document out as Word 2007 did.
-    r.doc.settings.compat_mode = wordcraft_doc::LEGACY_COMPAT_MODE;
+    r.doc.settings.compat_mode = soratra_doc::LEGACY_COMPAT_MODE;
     if let Some(p) = part(rt::SETTINGS) {
         lenient("settings", r.read_settings(&p));
     }
@@ -382,7 +382,7 @@ impl Reader<'_> {
 
 /// Link the text boxes read as (id, seq, part) into chains (see [`Reader::txbx_links`]): each
 /// id's boxes in `seq` order after the box holding the text. A repeated seq, a chain without its
-/// first box or more than [`wordcraft_doc::MAX_LINKED_BOXES`] boxes: the extra boxes stay apart.
+/// first box or more than [`soratra_doc::MAX_LINKED_BOXES`] boxes: the extra boxes stay apart.
 fn link_text_boxes(doc: &mut Document, mut links: Vec<(u32, u32, u32)>) {
     links.sort_by_key(|l| (l.0, l.1));
     links.dedup_by_key(|l| (l.0, l.1));
@@ -390,7 +390,7 @@ fn link_text_boxes(doc: &mut Document, mut links: Vec<(u32, u32, u32)>) {
         if group.first().is_none_or(|l| l.1 != 0) {
             continue;
         }
-        let chain: Vec<u32> = group.iter().take(wordcraft_doc::MAX_LINKED_BOXES).map(|l| l.2).collect();
+        let chain: Vec<u32> = group.iter().take(soratra_doc::MAX_LINKED_BOXES).map(|l| l.2).collect();
         for pair in chain.windows(2) {
             if let [a, b] = pair
                 && let Some(p) = doc.parts.get_mut(a)
@@ -428,7 +428,7 @@ fn keep_glued_ids(doc: &mut Document, glued: &HashSet<u32>) {
 /// direct formatting, or a hyperlink in another field keep their look). The style is dropped from
 /// those runs so they look the same here; the links stay.
 fn unstyle_toc_links(doc: &mut Document) {
-    for f in doc.field_ranges(wordcraft_doc::StoryRef::Body) {
+    for f in doc.field_ranges(soratra_doc::StoryRef::Body) {
         if is_toc(&f.instr) {
             let _ = doc.format_range(&f.start, &f.end, &|c| {
                 if c.link.is_some() && c.style.as_deref() == Some("Hyperlink") {
@@ -491,7 +491,7 @@ fn is_toc(instr: &str) -> bool {
 /// of the last contiguous TOC entry, with no section break or trailing content outside it.
 fn toc_range_end(body: &Blocks, start: usize) -> Option<usize> {
     let entry =
-        |p: &wordcraft_doc::Paragraph| p.section.is_none() && p.props.style.as_deref().is_some_and(|s| s.starts_with("TOC") && s != "TOCHeading");
+        |p: &soratra_doc::Paragraph| p.section.is_none() && p.props.style.as_deref().is_some_and(|s| s.starts_with("TOC") && s != "TOCHeading");
     let mut depth = 0_usize;
     for (i, b) in body.iter().enumerate().skip(start) {
         let p = b.as_para().filter(|p| entry(p))?;
@@ -869,13 +869,13 @@ impl Reader<'_> {
         }
         // Styles that give only a list level take the list from the style they are based on
         // (Heading 3: level 3 of Heading 2's outline list).
-        let fixed: Vec<Option<wordcraft_doc::props::NumRef>> = sheet
+        let fixed: Vec<Option<soratra_doc::props::NumRef>> = sheet
             .styles
             .iter()
             .map(|s| match s.para.numbering {
                 Some(n) if n.num == props::LEVEL_ONLY => {
                     let base = s.based_on.as_deref().and_then(|b| props::chain_list(&sheet, b));
-                    base.map(|num| wordcraft_doc::props::NumRef { num, level: n.level })
+                    base.map(|num| soratra_doc::props::NumRef { num, level: n.level })
                 }
                 other => other,
             })
@@ -1421,7 +1421,7 @@ impl Reader<'_> {
                 seen.tags.insert(tag.clone())
             };
             if fresh {
-                self.doc.sources.push(wordcraft_doc::Source {
+                self.doc.sources.push(soratra_doc::Source {
                     tag,
                     kind,
                     author,
@@ -1499,7 +1499,7 @@ pub(crate) const PROTECTION_HASH_ATTRS: [&str; 16] = [
 /// Restrict Editing (`w:documentProtection`, §17.15.1.29): the editing restriction, whether
 /// formatting is limited to unlocked styles, and the password hash. Only enforced protection is
 /// kept; a hostile attribute value can't be longer than a hash needs.
-fn read_protection(k: &El, s: &mut wordcraft_doc::Settings) {
+fn read_protection(k: &El, s: &mut soratra_doc::Settings) {
     let on = |v: &str| !matches!(v, "0" | "false" | "off");
     if !k.attr("w:enforcement").is_some_and(on) {
         return;

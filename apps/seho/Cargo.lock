@@ -178,6 +178,7 @@ dependencies = [
  "ndk-context",
  "ndk-sys",
  "num_enum",
+ "simd_cesu8",
  "thiserror 2.0.21",
 ]
 
@@ -186,6 +187,23 @@ name = "android-properties"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7eb209b1518d6bb87b283c20095f5228ecda460da70b44f0802523dea6da04"
+
+[[package]]
+name = "android_log-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84521a3cf562bc62942e294181d9eef17eb38ceb8c68677bc49f144e4c3d4f8d"
+
+[[package]]
+name = "android_logger"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbb4e440d04be07da1f1bf44fb4495ebd58669372fe0cffa6e48595ac5bd88a3"
+dependencies = [
+ "android_log-sys",
+ "env_filter",
+ "log",
+]
 
 [[package]]
 name = "android_system_properties"
@@ -214,12 +232,11 @@ dependencies = [
 [[package]]
 name = "arboard"
 version = "3.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
 dependencies = [
  "clipboard-win",
  "image",
  "log",
+ "mahay-android",
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -821,15 +838,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "craft-pdf"
-version = "0.1.0"
-source = "git+https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320b2d1de657b860b3c8abb44e1f2b32bd8"
-dependencies = [
- "krilla",
- "thiserror 2.0.21",
-]
-
-[[package]]
 name = "crc32fast"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -889,324 +897,6 @@ name = "dasp_sample"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
-
-[[package]]
-name = "deckcraft"
-version = "0.8.0"
-dependencies = [
- "arboard",
- "cpal",
- "deckcraft-engine",
- "deckcraft-media",
- "deckcraft-ui-egui",
- "eframe",
- "egui",
- "image",
- "log",
- "rfd",
- "serde_json",
- "winit",
- "winresource",
-]
-
-[[package]]
-name = "deckcraft-anim"
-version = "0.8.0"
-dependencies = [
- "deckcraft-geom",
- "deckcraft-model",
- "serde",
-]
-
-[[package]]
-name = "deckcraft-av1"
-version = "0.8.0"
-dependencies = [
- "deckcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-bitstream"
-version = "0.8.0"
-dependencies = [
- "proptest",
-]
-
-[[package]]
-name = "deckcraft-cli"
-version = "0.8.0"
-dependencies = [
- "deckcraft-engine",
- "deckcraft-mcp",
- "serde_json",
-]
-
-[[package]]
-name = "deckcraft-color"
-version = "0.8.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "deckcraft-engine"
-version = "0.8.0"
-dependencies = [
- "deckcraft-anim",
- "deckcraft-color",
- "deckcraft-fonts",
- "deckcraft-format",
- "deckcraft-geom",
- "deckcraft-media",
- "deckcraft-model",
- "deckcraft-pdf",
- "deckcraft-pptx",
- "deckcraft-render",
- "deckcraft-text",
- "i_overlay",
- "image",
- "js-sys",
- "log",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "zip",
-]
-
-[[package]]
-name = "deckcraft-fonts"
-version = "0.8.0"
-dependencies = [
- "epaint_default_fonts",
- "harfrust 0.13.3",
- "kurbo",
- "log",
- "skrifa 0.47.0",
- "unicode-bidi",
-]
-
-[[package]]
-name = "deckcraft-format"
-version = "0.8.0"
-dependencies = [
- "deckcraft-model",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "zip",
-]
-
-[[package]]
-name = "deckcraft-geom"
-version = "0.8.0"
-dependencies = [
- "kurbo",
- "serde",
-]
-
-[[package]]
-name = "deckcraft-h264"
-version = "0.8.0"
-dependencies = [
- "deckcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-hevc"
-version = "0.8.0"
-dependencies = [
- "deckcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-isobmff"
-version = "0.8.0"
-dependencies = [
- "deckcraft-bitstream",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-matroska"
-version = "0.8.0"
-
-[[package]]
-name = "deckcraft-mcp"
-version = "0.8.0"
-dependencies = [
- "deckcraft-engine",
- "deckcraft-render",
- "log",
- "serde_json",
-]
-
-[[package]]
-name = "deckcraft-media"
-version = "0.8.0"
-dependencies = [
- "deckcraft-av1",
- "deckcraft-h264",
- "deckcraft-hevc",
- "deckcraft-isobmff",
- "deckcraft-matroska",
- "deckcraft-ogg",
- "deckcraft-opus",
- "deckcraft-vp9",
- "image",
- "log",
- "symphonia",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-metafile"
-version = "0.8.0"
-dependencies = [
- "image",
- "kurbo",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-model"
-version = "0.8.0"
-dependencies = [
- "deckcraft-color",
- "deckcraft-geom",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "unicode-segmentation",
-]
-
-[[package]]
-name = "deckcraft-ogg"
-version = "0.8.0"
-
-[[package]]
-name = "deckcraft-opus"
-version = "0.8.0"
-
-[[package]]
-name = "deckcraft-pdf"
-version = "0.8.0"
-dependencies = [
- "craft-pdf",
- "deckcraft-fonts",
- "deckcraft-model",
- "deckcraft-render",
- "deckcraft-text",
- "hayro-syntax",
- "krilla",
- "kurbo",
- "log",
- "serde",
- "thiserror 2.0.21",
- "wasm-bindgen-test",
-]
-
-[[package]]
-name = "deckcraft-pptx"
-version = "0.8.0"
-dependencies = [
- "deckcraft-color",
- "deckcraft-engine",
- "deckcraft-geom",
- "deckcraft-model",
- "image",
- "log",
- "quick-xml",
- "serde_json",
- "thiserror 2.0.21",
- "zip",
-]
-
-[[package]]
-name = "deckcraft-render"
-version = "0.8.0"
-dependencies = [
- "deckcraft-anim",
- "deckcraft-color",
- "deckcraft-fonts",
- "deckcraft-geom",
- "deckcraft-metafile",
- "deckcraft-model",
- "deckcraft-text",
- "image",
- "kurbo",
- "log",
- "skrifa 0.47.0",
- "vello_common 0.2.0",
- "vello_cpu 0.2.0",
-]
-
-[[package]]
-name = "deckcraft-text"
-version = "0.8.0"
-dependencies = [
- "chrono",
- "deckcraft-color",
- "deckcraft-fonts",
- "deckcraft-geom",
- "deckcraft-model",
- "unicode-bidi",
- "unicode-linebreak",
- "unicode-segmentation",
-]
-
-[[package]]
-name = "deckcraft-ui-egui"
-version = "0.8.0"
-dependencies = [
- "deckcraft-anim",
- "deckcraft-color",
- "deckcraft-engine",
- "deckcraft-fonts",
- "deckcraft-geom",
- "deckcraft-media",
- "deckcraft-model",
- "deckcraft-render",
- "deckcraft-text",
- "egui",
- "egui_kittest",
- "js-sys",
- "log",
- "serde",
- "serde_json",
- "toml",
-]
-
-[[package]]
-name = "deckcraft-vp9"
-version = "0.8.0"
-dependencies = [
- "deckcraft-bitstream",
- "rayon",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "deckcraft-web"
-version = "0.8.0"
-dependencies = [
- "deckcraft-engine",
- "deckcraft-ui-egui",
- "eframe",
- "egui",
- "js-sys",
- "log",
- "rfd",
- "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
 
 [[package]]
 name = "derive_arbitrary"
@@ -1487,6 +1177,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "env_filter"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bf3c259d255ca70051b30e2e95b5446cdb8949ac4cd22c0d7fd634d89f568e2"
+dependencies = [
+ "log",
 ]
 
 [[package]]
@@ -2425,7 +2124,6 @@ dependencies = [
 [[package]]
 name = "krilla"
 version = "0.8.2"
-source = "git+https://github.com/storytold/craft-libs?rev=c3487320b2d1de657b860b3c8abb44e1f2b32bd8#c3487320b2d1de657b860b3c8abb44e1f2b32bd8"
 dependencies = [
  "base64",
  "bumpalo",
@@ -2555,6 +2253,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "mahay-android"
+version = "0.1.0"
+dependencies = [
+ "android-activity",
+ "android_logger",
+ "egui",
+ "jni 0.21.1",
+ "log",
+]
+
+[[package]]
+name = "mahay-pdf"
+version = "0.1.0"
+dependencies = [
+ "krilla",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -3658,14 +3375,13 @@ checksum = "19b30a45b0cd0bcca8037f3d0dc3421eaf95327a17cad11964fb8179b4fc4832"
 [[package]]
 name = "rfd"
 version = "0.17.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
 dependencies = [
  "block2 0.6.2",
  "dispatch2",
  "js-sys",
  "libc",
  "log",
+ "mahay-android",
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
  "objc2-core-foundation",
@@ -3791,6 +3507,339 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
+
+[[package]]
+name = "seho"
+version = "0.8.0"
+dependencies = [
+ "arboard",
+ "cpal",
+ "eframe",
+ "egui",
+ "image",
+ "log",
+ "rfd",
+ "seho-engine",
+ "seho-media",
+ "seho-ui-egui",
+ "serde_json",
+ "winit",
+ "winresource",
+]
+
+[[package]]
+name = "seho-android"
+version = "0.8.0"
+dependencies = [
+ "cpal",
+ "eframe",
+ "egui",
+ "log",
+ "mahay-android",
+ "seho-engine",
+ "seho-media",
+ "seho-ui-egui",
+ "serde_json",
+]
+
+[[package]]
+name = "seho-anim"
+version = "0.8.0"
+dependencies = [
+ "seho-geom",
+ "seho-model",
+ "serde",
+]
+
+[[package]]
+name = "seho-av1"
+version = "0.8.0"
+dependencies = [
+ "rayon",
+ "seho-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-bitstream"
+version = "0.8.0"
+dependencies = [
+ "proptest",
+]
+
+[[package]]
+name = "seho-cli"
+version = "0.8.0"
+dependencies = [
+ "seho-engine",
+ "seho-mcp",
+ "serde_json",
+]
+
+[[package]]
+name = "seho-color"
+version = "0.8.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "seho-engine"
+version = "0.8.0"
+dependencies = [
+ "i_overlay",
+ "image",
+ "js-sys",
+ "log",
+ "seho-anim",
+ "seho-color",
+ "seho-fonts",
+ "seho-format",
+ "seho-geom",
+ "seho-media",
+ "seho-model",
+ "seho-pdf",
+ "seho-pptx",
+ "seho-render",
+ "seho-text",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "zip",
+]
+
+[[package]]
+name = "seho-fonts"
+version = "0.8.0"
+dependencies = [
+ "epaint_default_fonts",
+ "harfrust 0.13.3",
+ "kurbo",
+ "log",
+ "skrifa 0.47.0",
+ "unicode-bidi",
+]
+
+[[package]]
+name = "seho-format"
+version = "0.8.0"
+dependencies = [
+ "seho-model",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "zip",
+]
+
+[[package]]
+name = "seho-geom"
+version = "0.8.0"
+dependencies = [
+ "kurbo",
+ "serde",
+]
+
+[[package]]
+name = "seho-h264"
+version = "0.8.0"
+dependencies = [
+ "rayon",
+ "seho-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-hevc"
+version = "0.8.0"
+dependencies = [
+ "rayon",
+ "seho-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-isobmff"
+version = "0.8.0"
+dependencies = [
+ "seho-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-matroska"
+version = "0.8.0"
+
+[[package]]
+name = "seho-mcp"
+version = "0.8.0"
+dependencies = [
+ "log",
+ "seho-engine",
+ "seho-render",
+ "serde_json",
+]
+
+[[package]]
+name = "seho-media"
+version = "0.8.0"
+dependencies = [
+ "image",
+ "log",
+ "seho-av1",
+ "seho-h264",
+ "seho-hevc",
+ "seho-isobmff",
+ "seho-matroska",
+ "seho-ogg",
+ "seho-opus",
+ "seho-vp9",
+ "symphonia",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-metafile"
+version = "0.8.0"
+dependencies = [
+ "image",
+ "kurbo",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-model"
+version = "0.8.0"
+dependencies = [
+ "seho-color",
+ "seho-geom",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "seho-ogg"
+version = "0.8.0"
+
+[[package]]
+name = "seho-opus"
+version = "0.8.0"
+
+[[package]]
+name = "seho-pdf"
+version = "0.8.0"
+dependencies = [
+ "hayro-syntax",
+ "krilla",
+ "kurbo",
+ "log",
+ "mahay-pdf",
+ "seho-fonts",
+ "seho-model",
+ "seho-render",
+ "seho-text",
+ "serde",
+ "thiserror 2.0.21",
+ "wasm-bindgen-test",
+]
+
+[[package]]
+name = "seho-pptx"
+version = "0.8.0"
+dependencies = [
+ "image",
+ "log",
+ "quick-xml",
+ "seho-color",
+ "seho-engine",
+ "seho-geom",
+ "seho-model",
+ "serde_json",
+ "thiserror 2.0.21",
+ "zip",
+]
+
+[[package]]
+name = "seho-render"
+version = "0.8.0"
+dependencies = [
+ "image",
+ "kurbo",
+ "log",
+ "seho-anim",
+ "seho-color",
+ "seho-fonts",
+ "seho-geom",
+ "seho-metafile",
+ "seho-model",
+ "seho-text",
+ "skrifa 0.47.0",
+ "vello_common 0.2.0",
+ "vello_cpu 0.2.0",
+]
+
+[[package]]
+name = "seho-text"
+version = "0.8.0"
+dependencies = [
+ "chrono",
+ "seho-color",
+ "seho-fonts",
+ "seho-geom",
+ "seho-model",
+ "unicode-bidi",
+ "unicode-linebreak",
+ "unicode-segmentation",
+]
+
+[[package]]
+name = "seho-ui-egui"
+version = "0.8.0"
+dependencies = [
+ "egui",
+ "egui_kittest",
+ "js-sys",
+ "log",
+ "seho-anim",
+ "seho-color",
+ "seho-engine",
+ "seho-fonts",
+ "seho-geom",
+ "seho-media",
+ "seho-model",
+ "seho-render",
+ "seho-text",
+ "serde",
+ "serde_json",
+ "toml",
+]
+
+[[package]]
+name = "seho-vp9"
+version = "0.8.0"
+dependencies = [
+ "rayon",
+ "seho-bitstream",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "seho-web"
+version = "0.8.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "js-sys",
+ "log",
+ "rfd",
+ "seho-engine",
+ "seho-ui-egui",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "self_cell"

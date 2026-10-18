@@ -1,8 +1,8 @@
-//! Responsiveness probe: runs the real WordCraft UI headless (like `ui_shot`, without a window or
+//! Responsiveness probe: runs the real Soratra UI headless (like `ui_shot`, without a window or
 //! focus), opens a document, and times the frames that handle typing, scrolling, zooming,
 //! ribbon tabs and window resizes. Prints numbers only (JSON), never document text.
 //!
-//! `cargo run --release -p wordcraft-ui-egui --example perf_probe -- doc.docx [block]`
+//! `cargo run --release -p soratra-ui-egui --example perf_probe -- doc.docx [block]`
 //!
 //! A frame's time is the CPU time of `WordApp::logic` + `ui` for that frame (layout, page
 //! rasterisation, widgets). What the user sees adds the wait for the next frame and the
@@ -11,8 +11,8 @@
 use std::time::Instant;
 
 use serde_json::json;
-use wordcraft_engine::Session;
-use wordcraft_ui_egui::{Services, WordApp};
+use soratra_engine::Session;
+use soratra_ui_egui::{Services, WordApp};
 
 static READY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -36,7 +36,7 @@ fn main() {
     let path = std::env::args().nth(1).expect("usage: perf_probe doc.docx [block]");
     let block: Option<usize> = std::env::args().nth(2).and_then(|b| b.parse().ok());
     let t_open = Instant::now();
-    let mut session = Session::new(wordcraft_doc::Document::new());
+    let mut session = Session::new(soratra_doc::Document::new());
     session.run("file.open", &json!({"path": path})).expect("open");
     let open_ms = t_open.elapsed().as_secs_f64() * 1000.0;
     let app = WordApp::new(session, Services::default());
@@ -89,7 +89,7 @@ fn main() {
     };
     out["typing_long_para"] = typing(&mut h, json!({"story": "body", "path": [doc_block], "off": mid}));
     out["typing_para_len"] = json!(h.state().session.doc.body.get(doc_block).and_then(|b| b.as_para()).map(|p| p.len()).unwrap_or(0));
-    let table = h.state().session.doc.body.iter().position(|b| matches!(&**b, wordcraft_doc::Block::Table(_)));
+    let table = h.state().session.doc.body.iter().position(|b| matches!(&**b, soratra_doc::Block::Table(_)));
     if let Some(t) = table {
         out["typing_table"] = typing(&mut h, json!({"story": "body", "path": [t, 0, 0, 0], "off": 0}));
     }

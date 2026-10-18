@@ -1,16 +1,16 @@
 //! Layer comps (resource 1065 + per-layer `cmls`) and artboards (`artb`) through PSD and
-//! `.pcraft`: byte-exact while unchanged, regenerated after edits.
+//! `.sary`: byte-exact while unchanged, regenerated after edits.
 
 #[cfg(feature = "corpus")]
 use std::path::PathBuf;
 
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::comps::capture_states;
-use photocraft_doc::{Artboard, ArtboardBackground, Document, Layer, LayerComp, LayerContent};
-use photocraft_geom::{Rect, Size};
-use photocraft_io::comps_map::LAYER_COMPS;
-use photocraft_io::{ExportOptions, export, import};
-use photocraft_psd::PsdFile;
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::comps::capture_states;
+use sary_doc::{Artboard, ArtboardBackground, Document, Layer, LayerComp, LayerContent};
+use sary_geom::{Rect, Size};
+use sary_io::comps_map::LAYER_COMPS;
+use sary_io::{ExportOptions, export, import};
+use sary_psd::PsdFile;
 
 #[cfg(feature = "corpus")]
 fn corpus(rel: &str) -> Vec<u8> {
@@ -43,7 +43,7 @@ fn corpus_layer_comps_import_and_verbatim_export() {
     let moved: Vec<_> = doc.layer_comps[0].states.iter().filter(|s| s.position.is_some()).collect();
     assert_eq!(moved.len(), 1);
     let l = doc.layer(moved[0].layer).unwrap();
-    let here = photocraft_doc::comps::layer_position(l).unwrap();
+    let here = sary_doc::comps::layer_position(l).unwrap();
     assert_eq!(moved[0].position, Some((here.0 - 48, here.1 - 35)));
 
     // Unchanged: resource 1065 and every layer's shmd block are written back byte for byte.
@@ -71,7 +71,7 @@ fn corpus_layer_comps_import_and_verbatim_export() {
     assert_eq!(back.last_applied_comp, edited.last_applied_comp);
     // Other metadata items in shmd (`cust`) survive regeneration.
     let r = out2.layers().iter().find(|r| r.block(b"shmd").is_some()).unwrap();
-    let items = photocraft_psd::metadata::parse_shmd(&r.block(b"shmd").unwrap().data).unwrap();
+    let items = sary_psd::metadata::parse_shmd(&r.block(b"shmd").unwrap().data).unwrap();
     assert!(items.iter().any(|i| &i.key == b"cust"));
     assert!(items.iter().any(|i| &i.key == b"cmls"));
 
@@ -84,7 +84,7 @@ fn corpus_layer_comps_import_and_verbatim_export() {
     assert!(out3.resource(LAYER_COMPS).is_none());
     for r in out3.layers() {
         if let Some(b) = r.block(b"shmd") {
-            assert!(photocraft_psd::metadata::parse_shmd(&b.data).unwrap().iter().all(|i| &i.key != b"cmls"));
+            assert!(sary_psd::metadata::parse_shmd(&b.data).unwrap().iter().all(|i| &i.key != b"cmls"));
         }
     }
 }
@@ -197,7 +197,7 @@ fn synthetic_psd_roundtrip_all_depths() {
 }
 
 #[test]
-fn synthetic_pcraft_roundtrip_keeps_everything() {
+fn synthetic_sary_roundtrip_keeps_everything() {
     let mut d = synthetic(SampleType::U16);
     d.last_document_state = Some(LayerComp {
         id: 0,
@@ -208,43 +208,43 @@ fn synthetic_pcraft_roundtrip_keeps_everything() {
         apply_appearance: true,
         states: capture_states(&d),
     });
-    let bytes = photocraft_format::save_to_bytes(&d, &Default::default()).unwrap();
-    let back = photocraft_format::load_from_bytes(&bytes).unwrap();
+    let bytes = sary_format::save_to_bytes(&d, &Default::default()).unwrap();
+    let back = sary_format::load_from_bytes(&bytes).unwrap();
     assert_eq!(back.layer_comps, d.layer_comps);
     assert_eq!(back.last_applied_comp, d.last_applied_comp);
     assert_eq!(back.last_document_state, d.last_document_state);
     assert_eq!(back.artboards().len(), 2);
     assert_eq!(back.layers[1].artboard(), d.layers[1].artboard());
     // Remapped ids still point at the same layers.
-    let fresh = photocraft_format::load_from_bytes_with(&bytes, &photocraft_format::LoadOptions { preserve_ids: false, ..Default::default() }).unwrap();
+    let fresh = sary_format::load_from_bytes_with(&bytes, &sary_format::LoadOptions { preserve_ids: false, ..Default::default() }).unwrap();
     let c = &fresh.layer_comps[0];
     assert_eq!(c.states.len(), fresh.layer_count());
     assert!(c.states.iter().all(|s| fresh.layer(s.layer).is_some()));
 
     // Native identity is independent of ZIP entry order and the filename extension.
-    let zip = photocraft_format::zip::ZipReader::new(&bytes).unwrap();
-    let mut reordered = photocraft_format::zip::ZipWriter::new();
+    let zip = sary_format::zip::ZipReader::new(&bytes).unwrap();
+    let mut reordered = sary_format::zip::ZipWriter::new();
     reordered.add("extra.txt", b"not the manifest").unwrap();
     for entry in &zip.entries {
         reordered.add(&entry.name, &zip.read(entry, bytes.len()).unwrap()).unwrap();
     }
     let reordered = reordered.finish().unwrap();
-    for name in ["x.PCRAFT", "no-extension"] {
+    for name in ["x.SARY", "no-extension"] {
         let imported = import(name, &reordered).unwrap().document;
         assert_eq!(imported.layer_comps, d.layer_comps);
         assert_eq!(imported.layers[1].artboard(), d.layers[1].artboard());
     }
 
     let png = export(&d, "x.png", &ExportOptions::default()).unwrap().bytes;
-    assert!(import("pcraft", &png).is_ok());
-    assert!(matches!(import("broken.pcraft", b"not a native bundle"), Err(photocraft_io::IoError::Pcraft(_))));
+    assert!(import("sary", &png).is_ok());
+    assert!(matches!(import("broken.sary", b"not a native bundle"), Err(sary_io::IoError::Sary(_))));
 }
 
 /// A layer at (4, 4) whose preserved `shmd` block offsets it by `(dx, 0)` in comp 1, plus the
 /// matching resource 1065: what a PSD with that comp data imports to before decoding comps.
 fn doc_with_raw_comp_offset(dx: i32) -> Document {
-    use photocraft_psd::descriptor::{Descriptor, UnicodeString, Value, VersionedDescriptor};
-    use photocraft_psd::metadata::{MetadataItem, write_shmd};
+    use sary_psd::descriptor::{Descriptor, UnicodeString, Value, VersionedDescriptor};
+    use sary_psd::metadata::{MetadataItem, write_shmd};
     let obj = |class: &str| Descriptor { name: UnicodeString(vec![0]), ..Descriptor::new(class) };
     let mut d = Document::new("s", Size::new(32, 32), ColorMode::Rgb, SampleType::U8);
     let mut l = Layer::raster("A", PixelFormat::RGBA8);
@@ -272,7 +272,7 @@ fn out_of_range_comp_offsets_import_and_export_without_panic() {
     // the rest of the comp survives, and the file data is still written back verbatim.
     let mut src = doc_with_raw_comp_offset(i32::MAX);
     (src.layer_comps, src.last_applied_comp, src.last_document_state) =
-        photocraft_io::comps_map::comps_from_psd(src.metadata.psd_resources.last().map(|r| r.2.as_slice()), &src);
+        sary_io::comps_map::comps_from_psd(src.metadata.psd_resources.last().map(|r| r.2.as_slice()), &src);
     let bytes = to_psd(&src);
     let imported = import("x.psd", &bytes).unwrap();
     assert!(imported.warnings.iter().any(|w| w.contains("layer comp position")), "{:?}", imported.warnings);
@@ -288,7 +288,7 @@ fn out_of_range_comp_offsets_import_and_export_without_panic() {
     let mut d = Document::new("s", Size::new(32, 32), ColorMode::Rgb, SampleType::U8);
     let mut l = Layer::raster("A", PixelFormat::RGBA8);
     l.surface_mut().unwrap().fill_rect(Rect::new(4, 4, 8, 8), &[1.0, 0.0, 0.0, 1.0]);
-    let st = photocraft_doc::CompLayerState { layer: l.id, visible: Some(false), position: Some((i32::MIN, 0)), appearance: None };
+    let st = sary_doc::CompLayerState { layer: l.id, visible: Some(false), position: Some((i32::MIN, 0)), appearance: None };
     d.layers.push(l);
     d.layer_comps.push(LayerComp {
         id: 1,
@@ -306,7 +306,7 @@ fn out_of_range_comp_offsets_import_and_export_without_panic() {
     // Control: an ordinary offset imports as layer origin + offset, without a warning.
     let mut ok = doc_with_raw_comp_offset(6);
     (ok.layer_comps, ok.last_applied_comp, ok.last_document_state) =
-        photocraft_io::comps_map::comps_from_psd(ok.metadata.psd_resources.last().map(|r| r.2.as_slice()), &ok);
+        sary_io::comps_map::comps_from_psd(ok.metadata.psd_resources.last().map(|r| r.2.as_slice()), &ok);
     let imported = import("x.psd", &to_psd(&ok)).unwrap();
     assert!(!imported.warnings.iter().any(|w| w.contains("layer comp")), "{:?}", imported.warnings);
     assert_eq!(imported.document.layer_comps[0].states[0].position, Some((10, 4)));

@@ -3,7 +3,7 @@
      Full UI gets welcome (with the desktop-shortcut and PDF context-menu checkboxes)/progress/outcome screens; /qn and /qb stay unattended. -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
-    <UI Id="PdfcraftInstallerUI">
+    <UI Id="TaratasyInstallerUI">
       <TextStyle Id="InstallerNormal" FaceName="Segoe UI" Size="9" />
       <TextStyle Id="InstallerTitle" FaceName="Segoe UI" Size="12" Bold="yes" />
       <Property Id="DefaultUIFont" Value="InstallerNormal" />
@@ -15,7 +15,7 @@
         <Control Id="DesktopShortcut" Type="CheckBox" X="20" Y="105" Width="330" Height="17"
             Property="INSTALLDESKTOPSHORTCUT" CheckBoxValue="1" Text="Create a &amp;desktop shortcut" />
         <Control Id="PdfContextMenu" Type="CheckBox" X="20" Y="123" Width="330" Height="17"
-            Property="INSTALLPDFCONTEXTMENU" CheckBoxValue="1" Text="Add &quot;&amp;Edit with PdfCraft&quot; to the right-click menu of PDF files" />
+            Property="INSTALLPDFCONTEXTMENU" CheckBoxValue="1" Text="Add &quot;&amp;Edit with Taratasy&quot; to the right-click menu of PDF files" />
         <Control Id="Install" Type="PushButton" X="195" Y="145" Width="75" Height="23" Default="yes" ElevationShield="yes" Text="&amp;Install">
           <Publish Event="EndDialog" Value="Return" />
         </Control>
@@ -92,7 +92,7 @@
       </Dialog>
 
       <!-- Shown by Windows Installer (Restart Manager) when an upgrade or repair must replace files
-           that a running PdfCraft holds open. OK closes those programs (MSIRMSHUTDOWN=2) and
+           that a running Taratasy holds open. OK closes those programs (MSIRMSHUTDOWN=2) and
            continues; Cancel ends setup. -->
       <Dialog Id="MsiRMFilesInUse" Width="370" Height="200" Title="[ProductName] Setup" KeepModeless="yes">
         <Control Id="Title" Type="Text" X="20" Y="15" Width="330" Height="25" Text="{\InstallerTitle}Files in use" />

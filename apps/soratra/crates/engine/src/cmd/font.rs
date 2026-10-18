@@ -6,7 +6,7 @@
 //! folder (desktop); without one it lasts for the session (the web shell stores it itself).
 
 use serde_json::{Value, json};
-use wordcraft_fonts::{FontDb, UserFont};
+use soratra_fonts::{FontDb, UserFont};
 
 use crate::cmd::insert::base64_decode;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};
@@ -40,7 +40,7 @@ fn font_json(f: &UserFont) -> Value {
 #[cfg(not(target_arch = "wasm32"))]
 fn read_font_file(path: &str) -> Result<Vec<u8>, CmdError> {
     // Through `io`, which keeps automation inside its read root (#769).
-    crate::io::read_file_capped(path, wordcraft_fonts::MAX_FONT_FILE_BYTES as u64, "font file").map_err(CmdError::Failed)
+    crate::io::read_file_capped(path, soratra_fonts::MAX_FONT_FILE_BYTES as u64, "font file").map_err(CmdError::Failed)
 }
 
 fn add(s: &mut Session, v: &Value) -> CmdResult {
@@ -51,8 +51,8 @@ fn add(s: &mut Session, v: &Value) -> CmdResult {
     }
     let (name, bytes) = if let Some(d) = p::str(v, "data") {
         // Base64 is a third larger than the file: refuse before decoding an oversized one.
-        if d.len() / 4 * 3 > wordcraft_fonts::MAX_FONT_FILE_BYTES + 3 {
-            return Err(CmdError::Failed(format!("the font file is larger than {} MB", wordcraft_fonts::MAX_FONT_FILE_BYTES >> 20)));
+        if d.len() / 4 * 3 > soratra_fonts::MAX_FONT_FILE_BYTES + 3 {
+            return Err(CmdError::Failed(format!("the font file is larger than {} MB", soratra_fonts::MAX_FONT_FILE_BYTES >> 20)));
         }
         let bytes = base64_decode(d).ok_or_else(|| CmdError::Params("bad base64 data".into()))?;
         (p::str(v, "name").unwrap_or("font").to_string(), bytes)

@@ -1,5 +1,5 @@
 //! Charts, SmartArt diagrams and native ink: drawings kept as neutral items ready to draw. Charts and SmartArt
-//! WordCraft can edit also keep their model ([`crate::chart::ChartSpec`],
+//! Soratra can edit also keep their model ([`crate::chart::ChartSpec`],
 //! [`crate::smart_art::SmartArtSpec`]); the rest are shown, not edited.
 
 use serde::{Deserialize, Serialize};
@@ -26,19 +26,19 @@ pub struct Graphic {
     /// only these items). `None` for graphics made some other way.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<std::sync::Arc<Embedded>>,
-    /// A SmartArt graphic WordCraft can edit (one it made, or one read back exactly as it wrote
+    /// A SmartArt graphic Soratra can edit (one it made, or one read back exactly as it wrote
     /// it): saving writes the diagram parts from it, and the items are drawn from it. See
     /// [`crate::smart_art`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub smart_art: Option<std::sync::Arc<crate::smart_art::SmartArtSpec>>,
-    /// A chart WordCraft can edit (one it made, or one read back that holds nothing more): saving
+    /// A chart Soratra can edit (one it made, or one read back that holds nothing more): saving
     /// writes the chart part from it, and the items are drawn from it. See [`crate::chart`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chart: Option<std::sync::Arc<crate::chart::ChartSpec>>,
 }
 
 /// What an object read from a file needs to be written back as it was: its own markup in the
-/// source format and the package parts that markup refers to. Never edited; WordCraft only moves
+/// source format and the package parts that markup refers to. Never edited; Soratra only moves
 /// and resizes the object around it. The parts themselves (bytes, content type and their own
 /// relationships) are kept in [`crate::Document::passthrough`] under their part names.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

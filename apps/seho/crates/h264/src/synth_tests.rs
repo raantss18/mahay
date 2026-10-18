@@ -6,7 +6,7 @@
 
 use crate::Decoder;
 use crate::cabac::{Cabac, NEXT_STATE, RANGE_TAB_LPS};
-use deckcraft_bitstream::{BitWriter, escape_rbsp};
+use seho_bitstream::{BitWriter, escape_rbsp};
 
 const MB_W: usize = 4;
 const MB_H: usize = 3;
@@ -437,7 +437,7 @@ type Planes3 = (Vec<u8>, Vec<u8>, Vec<u8>);
 
 /// Validate the hand-built stream and its expected output with ffmpeg when available.
 fn cross_check_ffmpeg(stream: &[u8], expected: &[Planes3], name: &str) {
-    // The ffmpeg cross-check lives in FilmCraft (test oracle); this copy checks the expected planes only.
+    // The ffmpeg cross-check lives in Hetsika (test oracle); this copy checks the expected planes only.
     let _ = (stream, expected, name);
 }
 
@@ -562,22 +562,22 @@ fn decodes_within(stream: &[u8], budget: u64) -> bool {
 fn picture_store_is_checked_against_the_memory_budget() {
     let stream = idr_stream(4);
     let sps_nal = sps(66, 4, false, PocType::T2);
-    let parsed = crate::params::Sps::parse(&deckcraft_bitstream::unescape_rbsp(&sps_nal[5..])).unwrap();
+    let parsed = crate::params::Sps::parse(&seho_bitstream::unescape_rbsp(&sps_nal[5..])).unwrap();
     // 4:2:0, 8-bit: luma plus two quarter-size chroma planes per picture; the DPB, the current
     // picture and threads + 2 in flight.
     let one = (NMB * 256 + 2 * NMB * 64) as u64;
     let pictures = (parsed.max_dpb_frames() + 1 + 3) as u64;
     assert!(decodes_within(&stream, pictures * one));
     assert!(!decodes_within(&stream, pictures * one - 1));
-    assert!(decodes_within(&stream, deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET));
+    assert!(decodes_within(&stream, seho_bitstream::budget::DECODE_MEMORY_BUDGET));
 }
 
 #[test]
 fn largest_accepted_h264_size_is_over_the_default_budget() {
     // 1024 x 1024 macroblocks (16384 x 16384) with 16 references and 3 in flight.
     let shape =
-        deckcraft_bitstream::budget::PictureShape { width: 16384, height: 16384, shift_x: 1, shift_y: 1, chroma_planes: 2, bytes_per_sample: 1 };
-    assert!(!shape.fits(16 + 1 + 3, deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET));
+        seho_bitstream::budget::PictureShape { width: 16384, height: 16384, shift_x: 1, shift_y: 1, chroma_planes: 2, bytes_per_sample: 1 };
+    assert!(!shape.fits(16 + 1 + 3, seho_bitstream::budget::DECODE_MEMORY_BUDGET));
 }
 
 fn gap_stream(gaps: bool) -> Vec<u8> {

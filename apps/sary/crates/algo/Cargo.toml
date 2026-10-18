@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-algo"
+name = "sary-algo"
 description = "Depth-agnostic, tile-aware CPU image filters (blur, sharpen, noise, distort, stylize)"
 version.workspace = true
 edition.workspace = true
@@ -10,9 +10,9 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-photocraft-geom = { workspace = true }
-photocraft-color = { workspace = true }
-photocraft-raster = { workspace = true }
+sary-geom = { workspace = true }
+sary-color = { workspace = true }
+sary-raster = { workspace = true }
 serde = { workspace = true }
 rustfft = "6.4.1"
 

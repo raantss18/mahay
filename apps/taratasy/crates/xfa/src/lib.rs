@@ -1,9 +1,9 @@
-//! pdfcraft-xfa — XFA forms (L3). See the README.
+//! taratasy-xfa — XFA forms (L3). See the README.
 //!
 //! A dynamic XFA form is a PDF shell around an XML template; viewers without an XFA engine
 //! show its one placeholder page ("requires Adobe Reader"). This crate reads the template,
 //! lays it out and writes ordinary pages and AcroForm fields into the document, so the rest
-//! of PdfCraft (rendering, filling, saving, printing, tools) works on it unchanged.
+//! of Taratasy (rendering, filling, saving, printing, tools) works on it unchanged.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -18,7 +18,7 @@ pub mod pdf;
 pub mod script;
 pub mod text;
 
-use pdfcraft_cos::Document;
+use taratasy_cos::Document;
 
 /// The deepest element nesting accepted before an XML document reaches the parser.
 ///
@@ -28,7 +28,7 @@ use pdfcraft_cos::Document;
 /// walking the result. Around three thousand levels still parse on the default stack, so this stays
 /// clear of the cliff while leaving far more room than the walks below, which cut off at 64 - and
 /// more than the five hundred levels `hostile_templates_fail_without_panicking` keeps parsing.
-/// `pdfcraft-xfdf` carries the same check for form data files.
+/// `taratasy-xfdf` carries the same check for form data files.
 pub(crate) const MAX_XML_DEPTH: usize = 1_024;
 
 /// Element nesting depth of `text`, skipping comments, CDATA, processing instructions, the DOCTYPE
@@ -113,7 +113,7 @@ pub enum XfaError {
     #[error("{0}")]
     TooLarge(String),
     #[error("{0}")]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
 }
 
 /// What laying out a form produced.
@@ -127,7 +127,7 @@ pub struct Report {
     pub warnings: Vec<String>,
 }
 
-/// Is this a dynamic XFA form still showing its placeholder pages (one PdfCraft has not laid
+/// Is this a dynamic XFA form still showing its placeholder pages (one Taratasy has not laid
 /// out yet)?
 pub fn is_dynamic(doc: &Document) -> bool {
     existing_layout(doc).is_none() && matches!(read_packets(doc), Ok(Some(p)) if p.needs_rendering || !p.has_fields)

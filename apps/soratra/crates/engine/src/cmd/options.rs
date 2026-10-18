@@ -47,7 +47,7 @@ fn flags() -> [(&'static str, fn(&mut Prefs) -> &mut bool); 7] {
     ]
 }
 
-fn mark_flags() -> [(&'static str, fn(&mut wordcraft_layout::display::FormattingMarks) -> &mut bool); 4] {
+fn mark_flags() -> [(&'static str, fn(&mut soratra_layout::display::FormattingMarks) -> &mut bool); 4] {
     [("tabs", |m| &mut m.tabs), ("spaces", |m| &mut m.spaces), ("paragraphs", |m| &mut m.paragraphs), ("hidden", |m| &mut m.hidden)]
 }
 
@@ -100,7 +100,7 @@ fn options(s: &mut Session, v: &Value) -> CmdResult {
         // `auto` forgets the choice: lengths follow the region again (#838).
         Some(Value::String(a)) if a == "auto" => Some(None),
         Some(u) => Some(Some(
-            serde_json::from_value::<wordcraft_geom::Unit>(u.clone())
+            serde_json::from_value::<soratra_geom::Unit>(u.clone())
                 .map_err(|_| CmdError::Params("`units` is one of inches, centimeters, millimeters, points, picas, auto".into()))?,
         )),
     };
@@ -110,7 +110,7 @@ fn options(s: &mut Session, v: &Value) -> CmdResult {
         Some(Value::String(t)) if t.trim().is_empty() || t.trim().eq_ignore_ascii_case("auto") => Some(None),
         // Kept as the tag (normalised, short), so it is saved and read back as chosen.
         Some(Value::String(t)) => {
-            let r = wordcraft_geom::Region::from_tag(t);
+            let r = soratra_geom::Region::from_tag(t);
             Some(Some(if r.territory.is_empty() { r.language } else { format!("{}-{}", r.language, r.territory) }))
         }
         Some(_) => return Err(CmdError::Params("`region` must be a locale tag like pl-PL, or auto".into())),
@@ -178,10 +178,10 @@ fn options(s: &mut Session, v: &Value) -> CmdResult {
         s.view.proofing = b;
     }
     for w in &add {
-        wordcraft_proof::add_word(w);
+        soratra_proof::add_word(w);
     }
     for w in &remove {
-        wordcraft_proof::remove_word(w);
+        soratra_proof::remove_word(w);
     }
     if !add.is_empty() || !remove.is_empty() {
         s.persist_user_dictionary(&remove);
@@ -219,9 +219,9 @@ pub fn current(s: &Session) -> Value {
         "ignoreUppercase": pr.ignore_uppercase,
         "ignoreNumbers": pr.ignore_numbers,
         "ignoreInternet": pr.ignore_internet,
-        "dictionary": wordcraft_proof::user_dictionary(),
+        "dictionary": soratra_proof::user_dictionary(),
         "dictionariesFolder": pr.dictionaries_folder,
-        "dictionaries": wordcraft_proof::installed_dictionaries()
+        "dictionaries": soratra_proof::installed_dictionaries()
             .into_iter()
             .map(|(lang, dic)| json!({"language": lang.code(), "file": dic.map(|d| d.to_string_lossy().into_owned())}))
             .collect::<Vec<_>>(),
@@ -255,5 +255,5 @@ fn dictionaries_folder(f: &str) -> Result<Option<String>, CmdError> {
 /// Search `folder` for Hunspell dictionaries before the system locations, from now on (the saved
 /// setting, applied when the app starts and when it changes).
 pub fn use_dictionaries_folder(folder: Option<&str>) {
-    wordcraft_proof::set_dictionaries_folder(folder.map(std::path::PathBuf::from));
+    soratra_proof::set_dictionaries_folder(folder.map(std::path::PathBuf::from));
 }

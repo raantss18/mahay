@@ -1,40 +1,40 @@
-# Releasing GridCraft
+# Releasing Tabilao
 
 Every push to the `release` branch runs `.github/workflows/release.yml`. The workflow builds
 signed installers for macOS, Windows, Linux, FreeBSD and the web, then creates or updates a
-**draft** GitHub Release named `GridCraft v<version>`. Nobody sees a draft until a maintainer
+**draft** GitHub Release named `Tabilao v<version>`. Nobody sees a draft until a maintainer
 publishes it.
 
-This is GridCraft's implementation of the shared [release playbook](release-playbook.md)
-(craftrules `release/playbook.md`), copied from DesignCraft and renamed. User-facing names say
-**GridCraft**. Files, binaries and ids stay lowercase
-(`gridcraft-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.gridcraft`).
+This is Tabilao's implementation of the shared [release playbook](release-playbook.md)
+(mahay-rules `release/playbook.md`), copied from Pejy and renamed. User-facing names say
+**Tabilao**. Files, binaries and ids stay lowercase
+(`tabilao-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.tabilao`).
 
 | App-specific value | Where |
 |---|---|
-| Display name `GridCraft`, binaries `gridcraft` + `gridcraft-cli` | every script and workflow |
-| Bundle / app id `ai.storyteller.gridcraft` | `packaging/macos/Info.plist.in`, `packaging/linux/*`, flatpak manifest |
-| WiX UpgradeCode `5511327B-F305-41BE-92D0-EB84944E7C4D` (fixed forever) | `packaging/windows/gridcraft.wxs` |
-| File types `.xlsx` `.xlsm` `.xlsb` `.ods` `.csv` `.tsv` | Info.plist (`CFBundleDocumentTypes`), WiX (ProgIds/OpenWithProgids), `.desktop` `MimeType=`, `ai.storyteller.gridcraft.mime.xml`, metainfo |
-| Web app dir `apps/gridcraft-web` | `packaging/web/package.sh` |
+| Display name `Tabilao`, binaries `tabilao` + `tabilao-cli` | every script and workflow |
+| Bundle / app id `ai.storyteller.tabilao` | `packaging/macos/Info.plist.in`, `packaging/linux/*`, flatpak manifest |
+| WiX UpgradeCode `5511327B-F305-41BE-92D0-EB84944E7C4D` (fixed forever) | `packaging/windows/tabilao.wxs` |
+| File types `.xlsx` `.xlsm` `.xlsb` `.ods` `.csv` `.tsv` | Info.plist (`CFBundleDocumentTypes`), WiX (ProgIds/OpenWithProgids), `.desktop` `MimeType=`, `ai.storyteller.tabilao.mime.xml`, metainfo |
+| Web app dir `apps/tabilao-web` | `packaging/web/package.sh` |
 | App colour `#1f9d55` (ink `#147a40`), **proposed** | `assets/app-icon/README.md`, metainfo `<branding>` |
 
 ## Prerequisites still owned by the app crates
 
 The pipeline references crates that don't exist yet; the first release run fails until they do:
 
-- **`apps/gridcraft`** (the GUI binary `gridcraft`) and **`apps/gridcraft-web`** (trunk
-  site) must be workspace members. `apps/gridcraft-cli` exists and supports `--version`.
-- **Windows resources:** move `packaging/windows/app-build.rs.in` to `apps/gridcraft/build.rs`
+- **`apps/tabilao`** (the GUI binary `tabilao`) and **`apps/tabilao-web`** (trunk
+  site) must be workspace members. `apps/tabilao-cli` exists and supports `--version`.
+- **Windows resources:** move `packaging/windows/app-build.rs.in` to `apps/tabilao/build.rs`
   and add `winresource = "0.1"` under `[build-dependencies]` (instructions at the top of the
-  file). `package.ps1` sets `GRIDCRAFT_REQUIRE_WINRES=1`, so a release build without the icon
-  fails, and it checks that `gridcraft.exe` is a GUI-subsystem binary, so `main.rs` needs
+  file). `package.ps1` sets `TABILAO_REQUIRE_WINRES=1`, so a release build without the icon
+  fails, and it checks that `tabilao.exe` is a GUI-subsystem binary, so `main.rs` needs
   `#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]`.
-- **Build info:** CI exports `GRIDCRAFT_BUILD_SHA` and `GRIDCRAFT_BUILD_DATE`; read them
-  with `option_env!` (fallback: "dev build") for `--version` and *Help › About GridCraft*.
-- **Runtime icon:** embed `assets/app-icon/gridcraft-macos-512.png` (macOS Dock) and
-  `hicolor/256x256/apps/ai.storyteller.gridcraft.png` (Windows/Linux) as the window icon, and
-  use `ai.storyteller.gridcraft` as the Wayland app id / `StartupWMClass`.
+- **Build info:** CI exports `TABILAO_BUILD_SHA` and `TABILAO_BUILD_DATE`; read them
+  with `option_env!` (fallback: "dev build") for `--version` and *Help › About Tabilao*.
+- **Runtime icon:** embed `assets/app-icon/tabilao-macos-512.png` (macOS Dock) and
+  `hicolor/256x256/apps/ai.storyteller.tabilao.png` (Windows/Linux) as the window icon, and
+  use `ai.storyteller.tabilao` as the Wayland app id / `StartupWMClass`.
 - **`cargo xtask` alias:** the docs use `cargo xtask …`, which needs
   `.cargo/config.toml` with `[alias] xtask = "run --package xtask --"`. Until it exists, use
   `cargo run -p xtask -- …`. The workflows already call `cargo run -p xtask` directly.
@@ -52,7 +52,7 @@ The pipeline references crates that don't exist yet; the first release run fails
    Commit the change (`Cargo.toml` + `Cargo.lock`) through the normal review flow.
 2. **Merge `main` into `release`** (or fast-forward it) and push. The workflow starts by itself.
 3. **Wait for the draft.** Notarization and the FreeBSD VM are the slow parts. The Releases
-   page then has a draft `GridCraft v0.2.0`, tagged `v0.2.0` on the pushed commit, with every
+   page then has a draft `Tabilao v0.2.0`, tagged `v0.2.0` on the pushed commit, with every
    artifact and `SHA256SUMS.txt`. The notes are generated from the merged PRs.
 4. **Check it.** Download an installer or two and read the job summaries. Any `::warning::`
    there means a signing secret was missing and that artifact is unsigned.
@@ -76,26 +76,26 @@ and upload their artifacts, the environment refuses macOS and Windows, and no re
 
 | Platform | Artifacts | Built on |
 |---|---|---|
-| macOS 11+ (universal: Apple silicon + Intel) | `gridcraft-<v>-macos-universal.dmg`, `gridcraft-cli-<v>-macos-universal.zip` | `macos-15` |
-| Windows 10+ x64 | `gridcraft-<v>-windows-x64.msi`, `gridcraft-<v>-windows-x64-portable.zip` | `windows-latest` |
-| Windows 10+ x86 (32-bit) | `gridcraft-<v>-windows-x86.msi`, `gridcraft-<v>-windows-x86-portable.zip` | `windows-latest` |
-| Windows 11 ARM64 | `gridcraft-<v>-windows-arm64.msi`, `…-portable.zip` (cross-compiled, signed like x64) | `windows-latest`; installed and run on `windows-11-arm` by `windows-arm64.yml` |
-| Linux x86_64 | `gridcraft-<v>-linux-x86_64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}` | `ubuntu-22.04` |
-| Linux aarch64 | `gridcraft-<v>-linux-aarch64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}` | `ubuntu-22.04-arm` |
-| Linux riscv64 | `gridcraft-<v>-linux-riscv64.tar.gz` (cross-compiled, glibc >= 2.39; CLI smoke-tested under QEMU) | `ubuntu-24.04` |
-| Flatpak x86_64, aarch64 | `gridcraft-<v>-linux-<arch>.flatpak` (repackages the Linux tarball) | `ubuntu-24.04`, `ubuntu-24.04-arm` |
-| FreeBSD 14 x86_64 | `gridcraft-<v>-freebsd-x86_64.tar.gz` | FreeBSD 14.3 VM (`freebsd.yml`, called by `release.yml`) |
-| Web | `gridcraft-web-<v>.zip` (static site; see [`packaging/web/README.md`](../packaging/web/README.md)) | `ubuntu-latest` |
+| macOS 11+ (universal: Apple silicon + Intel) | `tabilao-<v>-macos-universal.dmg`, `tabilao-cli-<v>-macos-universal.zip` | `macos-15` |
+| Windows 10+ x64 | `tabilao-<v>-windows-x64.msi`, `tabilao-<v>-windows-x64-portable.zip` | `windows-latest` |
+| Windows 10+ x86 (32-bit) | `tabilao-<v>-windows-x86.msi`, `tabilao-<v>-windows-x86-portable.zip` | `windows-latest` |
+| Windows 11 ARM64 | `tabilao-<v>-windows-arm64.msi`, `…-portable.zip` (cross-compiled, signed like x64) | `windows-latest`; installed and run on `windows-11-arm` by `windows-arm64.yml` |
+| Linux x86_64 | `tabilao-<v>-linux-x86_64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}` | `ubuntu-22.04` |
+| Linux aarch64 | `tabilao-<v>-linux-aarch64.{AppImage,AppImage.zsync,deb,rpm,tar.gz}` | `ubuntu-22.04-arm` |
+| Linux riscv64 | `tabilao-<v>-linux-riscv64.tar.gz` (cross-compiled, glibc >= 2.39; CLI smoke-tested under QEMU) | `ubuntu-24.04` |
+| Flatpak x86_64, aarch64 | `tabilao-<v>-linux-<arch>.flatpak` (repackages the Linux tarball) | `ubuntu-24.04`, `ubuntu-24.04-arm` |
+| FreeBSD 14 x86_64 | `tabilao-<v>-freebsd-x86_64.tar.gz` | FreeBSD 14.3 VM (`freebsd.yml`, called by `release.yml`) |
+| Web | `tabilao-web-<v>.zip` (static site; see [`packaging/web/README.md`](../packaging/web/README.md)) | `ubuntu-latest` |
 
 ### macOS
 
 `packaging/macos/package.sh` builds `aarch64-apple-darwin` and `x86_64-apple-darwin` with
-`MACOSX_DEPLOYMENT_TARGET=11.0`, joins them with `lipo`, and assembles `GridCraft.app`:
+`MACOSX_DEPLOYMENT_TARGET=11.0`, joins them with `lipo`, and assembles `Tabilao.app`:
 
-- `Info.plist` comes from `Info.plist.in`: bundle id `ai.storyteller.gridcraft`,
+- `Info.plist` comes from `Info.plist.in`: bundle id `ai.storyteller.tabilao`,
   `LSMinimumSystemVersion` 11.0, `NSHighResolutionCapable`, category productivity, and
   `CFBundleDocumentTypes` for `.xlsx`, `.xlsm`, `.xlsb`, `.ods`, `.csv` and `.tsv` with rank
-  **Alternate**, so GridCraft is offered in *Open With* without taking over Numbers' (or another
+  **Alternate**, so Tabilao is offered in *Open With* without taking over Numbers' (or another
   app's) defaults. `.xlsm` and `.xlsb` get imported UTIs in case macOS doesn't know them.
 - **Signing** goes inside-out with the hardened runtime and a secure timestamp; no `--deep` on
   the final signature; `entitlements.plist` is deliberately empty.
@@ -103,33 +103,33 @@ and upload their artifacts, the environment refuses macOS and Windows, and no re
   stapled. The DMG (with an `Applications` link) is signed, notarized and stapled too, and
   checked with `codesign --verify --strict`, `stapler validate` and `spctl -a -vvv`.
   Its Finder window (background, icon size and positions) comes from
-  [`packaging/macos/dmg/`](../packaging/macos/dmg/README.md), and its volume is named `GridCraft`
+  [`packaging/macos/dmg/`](../packaging/macos/dmg/README.md), and its volume is named `Tabilao`
   without the version, which the window's background needs; the DMG file name keeps the version.
-- **CLI:** the universal `gridcraft-cli` is signed, zipped and notarized.
+- **CLI:** the universal `tabilao-cli` is signed, zipped and notarized.
 
 Locally, without certificates, the script signs ad-hoc (`codesign -s -`) and skips notarization:
 
 ```sh
 packaging/macos/package.sh                    # universal; needs both rustup targets
 packaging/macos/package.sh --arch aarch64     # quicker, host-only
-open dist/release/gridcraft-*-macos-*.dmg
+open dist/release/tabilao-*-macos-*.dmg
 ```
 
 ### Windows
 
 `packaging/windows/package.ps1 -Arch x64|x86|arm64` builds with `-C target-feature=+crt-static`
-(no VC++ redistributable needed), checks both PE headers (machine matches `-Arch`; `gridcraft.exe`
-is GUI, `gridcraft-cli.exe` console), signs both executables, builds the MSI with WiX v5, signs
+(no VC++ redistributable needed), checks both PE headers (machine matches `-Arch`; `tabilao.exe`
+is GUI, `tabilao-cli.exe` console), signs both executables, builds the MSI with WiX v5, signs
 the MSI, and zips a portable build.
 
-- `gridcraft.wxs`: per-machine install into Program Files, advertised Start Menu shortcut, App
-  Paths (Win+R `gridcraft`). File types: ProgIds `GridCraft.Workbook` (`.xlsx`, `.xlsm`) and
-  `GridCraft.TextData` (`.csv`, `.tsv`), listed under each extension's `OpenWithProgids` and
-  in `Capabilities` + `RegisteredApplications`, so GridCraft appears in *Open with* and
+- `tabilao.wxs`: per-machine install into Program Files, advertised Start Menu shortcut, App
+  Paths (Win+R `tabilao`). File types: ProgIds `Tabilao.Workbook` (`.xlsx`, `.xlsm`) and
+  `Tabilao.TextData` (`.csv`, `.tsv`), listed under each extension's `OpenWithProgids` and
+  in `Capabilities` + `RegisteredApplications`, so Tabilao appears in *Open with* and
   *Settings › Default apps* but never silently becomes the default. The MSI version is the
   numeric `X.Y.Z`; same-version upgrades let release candidates replace each other.
 - **Desktop shortcut:** full installer UI offers an unchecked checkbox on a new installation.
-  Unattended installs can use `msiexec /i gridcraft.msi /qn DESKTOPSHORTCUT=1` to opt in
+  Unattended installs can use `msiexec /i tabilao.msi /qn DESKTOPSHORTCUT=1` to opt in
   (or `DESKTOPSHORTCUT=0` to opt out). The choice is stored per machine and reused on upgrades;
   repair retains the installed component choice, and uninstall removes the managed shortcut.
   The Start Menu shortcut is always installed. Run
@@ -147,12 +147,12 @@ the MSI, and zips a portable build.
   the separate silent lifecycle test verifies installation behavior. Normal full UI presents
   the shortcut choice and then completion; cancel/failure and files-in-use dialogs are support
   paths. To review on a maintainer branch, run **Packaging lint** with that branch selected
-  (or `gh workflow run packaging-lint.yml --repo storytold/gridcraft --ref BRANCH`). No release
+  (or `gh workflow run packaging-lint.yml --repo raantss18/tabilao --ref BRANCH`). No release
   environment, signing credentials or Rust build is required. Interactive checkbox behavior
   still needs a Windows desktop check; previews alone do not establish that behavior.
 - **Signing:** `packaging/windows/sign.ps1` uses `signtool` with SHA-256 and an RFC 3161
   timestamp, from a `.pfx` (`WINDOWS_CERTIFICATE*`) if present, otherwise **Azure Trusted
-  Signing** (`AZURE_*`, the storytold setup). With neither it warns and leaves files unsigned.
+  Signing** (`AZURE_*`, the raantss18 setup). With neither it warns and leaves files unsigned.
 
 Locally on Windows: `dotnet tool install -g wix --version 5.0.2`, then
 `pwsh packaging/windows/package.ps1 -Arch x64`.
@@ -160,23 +160,23 @@ Locally on Windows: `dotnet tool install -g wix --version 5.0.2`, then
 ### Linux
 
 `packaging/linux/package.sh` stages one FHS tree (both binaries,
-`ai.storyteller.gridcraft.desktop` with `MimeType=` for the four types, hicolor icons 16–512 px
+`ai.storyteller.tabilao.desktop` with `MimeType=` for the four types, hicolor icons 16–512 px
 + scalable SVG, AppStream metainfo, shared-mime-info) and builds the AppImage (appimagetool),
 `.deb` and `.rpm` (nfpm, `nfpm.yaml`) and `.tar.gz` from it. Built on Ubuntu 22.04, so the
 binaries need glibc ≥ 2.35. X11/Wayland/xkbcommon/Vulkan/EGL are loaded at runtime; the
 packages declare them (see `nfpm.yaml`).
 
 Each AppImage embeds update information
-(`gh-releases-zsync|storytold|gridcraft|latest|gridcraft-*-linux-<arch>.AppImage.zsync`), and the
+(`gh-releases-zsync|raantss18|tabilao|latest|tabilao-*-linux-<arch>.AppImage.zsync`), and the
 matching `.zsync` is published beside it, so AppImageUpdate and AppImageLauncher fetch only the
 changed blocks of the newest published release. appimagetool writes the `.zsync` when
 `zsyncmake` (the `zsync` package) is installed; without it the script warns and skips it.
 
-Flatpak: `packaging/linux/flatpak/ai.storyteller.gridcraft.yml` builds from source and is ready
+Flatpak: `packaging/linux/flatpak/ai.storyteller.tabilao.yml` builds from source and is ready
 for a Flathub submission (freedesktop 25.08; Wayland + X11 fallback, `dri`, IPC; Documents and
 Downloads; everything else through portals); build it by hand with the commands in its header.
 The single-file `.flatpak` on each release comes from `packaging/linux/flatpak-bundle.sh` and
-`ai.storyteller.gridcraft.bundle.yml`, which repackage the release's Linux tarball (no Rust
+`ai.storyteller.tabilao.bundle.yml`, which repackage the release's Linux tarball (no Rust
 build) and smoke-test the result in the sandbox. packaging-lint checks that both manifests
 agree on runtime and finish-args.
 
@@ -188,14 +188,14 @@ Locally (on Linux): install [nfpm](https://nfpm.goreleaser.com/install/), then
 GitHub has no FreeBSD runners. `.github/workflows/freebsd.yml` boots a FreeBSD 14.3 VM
 (`vmactions/freebsd-vm`). Run by hand from `release`, it builds and tests the workspace; called
 from `release.yml` with `package: true` it runs `packaging/freebsd/package.sh`, which builds the
-release binaries and writes `gridcraft-<v>-freebsd-x86_64.tar.gz` (`bin/` + `share/`, extract
+release binaries and writes `tabilao-<v>-freebsd-x86_64.tar.gz` (`bin/` + `share/`, extract
 under `/usr/local`). The target dir lives outside the synced checkout so only `dist/release`
 comes back from the VM. No signing (checksums are in `SHA256SUMS.txt`).
 
 ### Web
 
 `packaging/web/package.sh` runs `trunk build --release --dist dist/web --public-url ./` in
-`apps/gridcraft-web` and zips the site with sample `_headers` / `.htaccess` and the hosting guide
+`apps/tabilao-web` and zips the site with sample `_headers` / `.htaccess` and the hosting guide
 ([`packaging/web/README.md`](../packaging/web/README.md)). Relative URLs only, so it works under
 any path and in an iframe; the script fails on root-absolute URLs.
 
@@ -215,20 +215,20 @@ shows a `::warning::`. Never store these as org- or repo-level Actions secrets (
 | `APPLE_ID` | Apple ID used by `notarytool` |
 | `APPLE_PASSWORD` | app-specific password for that Apple ID |
 | `APPLE_TEAM_ID` | `DJ6XS33FX8` |
-| `WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD` | `.pfx` signing (unused by storytold; Azure is used) |
+| `WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD` | `.pfx` signing (unused by raantss18; Azure is used) |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | service principal for Azure Trusted Signing |
 | `AZURE_SIGNING_ENDPOINT` | `https://eus.codesigning.azure.net` |
 | `AZURE_SIGNING_ACCOUNT`, `AZURE_CERT_PROFILE` | `LearningMachinesInc`, `learningmachines` |
 
 `GITHUB_TOKEN` creates the release; only the final job gets `contents: write`.
 
-The exact commands (from craftrules `release/signing-setup.md`, steps 1–3), run by an org
-admin. Done for storytold/gridcraft on 2026-10-07; the `release-managers` team also has write
+The exact commands (from mahay-rules `release/signing-setup.md`, steps 1–3), run by an org
+admin. Done for raantss18/tabilao on 2026-10-07; the `release-managers` team also has write
 access to the repo, which its ruleset bypass needs.
 
 ```sh
-REPO=storytold/gridcraft
-RMTEAM_ID=19837241   # release-managers team; `gh api orgs/storytold/teams/release-managers --jq .id`
+REPO=raantss18/tabilao
+RMTEAM_ID=19837241   # release-managers team; `gh api orgs/raantss18/teams/release-managers --jq .id`
 
 # 1a. release branch from the default branch head
 gh api repos/$REPO/git/ref/heads/release >/dev/null 2>&1 || \
@@ -250,7 +250,7 @@ cat > /tmp/ruleset.json <<JSON
 JSON
 gh api --method POST repos/$REPO/rulesets --input /tmp/ruleset.json >/dev/null 2>&1 || echo "ruleset exists"
 
-# 2. sync the twelve secrets into the release environment (run in ~/secrets/storytold/)
+# 2. sync the twelve secrets into the release environment (run in ~/secrets/raantss18/)
 for s in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID KEYCHAIN_PASSWORD \
          AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET AZURE_SIGNING_ENDPOINT AZURE_SIGNING_ACCOUNT AZURE_CERT_PROFILE; do
   [ -f "$s.txt" ] && gh secret set "$s" --env release --repo "$REPO" < "$s.txt" && echo "  set $s" || echo "  MISSING $s.txt"
@@ -271,8 +271,8 @@ the publisher.
 
 ## Icons
 
-`assets/app-icon/gridcraft.svg` is a **placeholder** (an original ledger-page drawing on
-GridCraft green) until the owner makes GridCraft's engraved creature portrait (craftrules
+`assets/app-icon/tabilao.svg` is a **placeholder** (an original ledger-page drawing on
+Tabilao green) until the owner makes Tabilao's engraved creature portrait (mahay-rules
 `standards/icon-design.md`). `packaging/icons.sh` regenerates the 1024 px PNG, the macOS 512 px
 PNG, the `.icns` (iconutil), the `.ico` (`cargo xtask ico`) and the hicolor PNGs from it; it
 needs `resvg`. The outputs are committed, so packaging never needs those tools. Every file has a

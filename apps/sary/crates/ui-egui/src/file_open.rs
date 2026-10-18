@@ -1,12 +1,12 @@
 //! Opening files from disk: File › Open, Open Recent, drag-and-drop onto the window (except onto
 //! a document's canvas, which places the file as a layer), command-line paths at launch
 //! and the OS's "open these documents" requests (macOS Finder double-click, Open With, drops on the
-//! Dock icon) all go through [`PhotocraftApp::open_file`], so each one names the document after the
+//! Dock icon) all go through [`SaryApp::open_file`], so each one names the document after the
 //! file, remembers its path (File › Save writes back to it) and adds it to Open Recent. Failures
 //! are shown as errors (status bar + notice); import warnings as a notice.
 
-use crate::{PhotocraftApp, notices};
-use photocraft_engine::file_cmds::{is_template, untitled_name};
+use crate::{SaryApp, notices};
+use sary_engine::file_cmds::{is_template, untitled_name};
 
 /// A request from the operating system, delivered by the platform shell through
 /// [`Services::os_events`](crate::Services::os_events).
@@ -45,7 +45,7 @@ pub(crate) enum DropPlace {
 /// `warnings` from an import, plus one for each font family the active document's type uses that
 /// isn't installed (#4559): Photoshop warns about missing fonts as a file opens, and the CLI and
 /// automation already report them; the type would otherwise silently render in a fallback face.
-pub(crate) fn with_missing_fonts(app: &PhotocraftApp, warnings: Vec<String>) -> Vec<String> {
+pub(crate) fn with_missing_fonts(app: &SaryApp, warnings: Vec<String>) -> Vec<String> {
     match app.session.active() {
         Some(st) => with_missing_fonts_of(&st.doc, warnings),
         None => warnings,
@@ -54,8 +54,8 @@ pub(crate) fn with_missing_fonts(app: &PhotocraftApp, warnings: Vec<String>) -> 
 
 /// [`with_missing_fonts`] for `doc` itself: a file held back for its profile prompt
 /// (`open_prompt`) isn't the active document yet.
-pub(crate) fn with_missing_fonts_of(doc: &photocraft_doc::Document, mut warnings: Vec<String>) -> Vec<String> {
-    for w in photocraft_engine::type_extra_cmds::missing_font_warnings(doc) {
+pub(crate) fn with_missing_fonts_of(doc: &sary_doc::Document, mut warnings: Vec<String>) -> Vec<String> {
+    for w in sary_engine::type_extra_cmds::missing_font_warnings(doc) {
         if !warnings.contains(&w) {
             warnings.push(w);
         }
@@ -73,7 +73,7 @@ pub fn display_name(path: &str) -> String {
     std::path::Path::new(path).file_name().map(|n| n.to_string_lossy().to_string()).filter(|n| !n.is_empty()).unwrap_or_else(|| path.to_string())
 }
 
-impl PhotocraftApp {
+impl SaryApp {
     /// Open `bytes` read from the file at `path`: the document is named after the file, keeps
     /// `path` for File › Save unless it is a derivative preview, and `path` goes to the top of Open Recent. Returns the import
     /// warnings (also shown to the user).
@@ -123,10 +123,10 @@ impl PhotocraftApp {
         // would block the window). Preset files (brushes, gradients) go the usual way.
         let ext = std::path::Path::new(path).extension().map(|e| e.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
         if self.background_jobs && !crate::preset_files_ui::PRESET_EXTS.contains(&ext.as_str()) {
-            crate::jobs_ui::start_open(self, &display_name(path), Some(path.to_string()), photocraft_engine::jobs::OpenSource::Path(path.to_string()))?;
+            crate::jobs_ui::start_open(self, &display_name(path), Some(path.to_string()), sary_engine::jobs::OpenSource::Path(path.to_string()))?;
             return Ok(Vec::new());
         }
-        let bytes = photocraft_format::read_file(std::path::Path::new(path)).map_err(|e| format!("{path}: {e}"))?;
+        let bytes = sary_format::read_file(std::path::Path::new(path)).map_err(|e| format!("{path}: {e}"))?;
         self.open_file(path, &bytes)
     }
 
@@ -315,7 +315,7 @@ impl PhotocraftApp {
     /// Place a file's bytes as a smart object layer (File › Place; `linked`: Place Linked, to that
     /// path), for files that weren't read from a path the command can read.
     pub(crate) fn place_bytes(&mut self, name: &str, bytes: Vec<u8>, linked: Option<String>) -> Result<serde_json::Value, String> {
-        let r = photocraft_engine::file_cmds::place_bytes(&mut self.session, name, bytes, linked, &serde_json::json!({})).map_err(|e| e.to_string());
+        let r = sary_engine::file_cmds::place_bytes(&mut self.session, name, bytes, linked, &serde_json::json!({})).map_err(|e| e.to_string());
         self.sync_views();
         r
     }

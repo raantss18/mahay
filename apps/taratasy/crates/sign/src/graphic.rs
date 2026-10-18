@@ -5,8 +5,8 @@
 
 use std::sync::Arc;
 
-use pdfcraft_annot::appearance::smooth_segments;
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, Stream};
+use taratasy_annot::appearance::smooth_segments;
+use taratasy_cos::{Dict, Document, ObjRef, Object, Stream};
 
 use crate::SignError;
 

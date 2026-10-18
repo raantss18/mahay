@@ -1,15 +1,15 @@
-//! `pdfcraft-cli mcp --automation-read-root <dir> --automation-write-root <dir>`: through the MCP
+//! `taratasy-cli mcp --automation-read-root <dir> --automation-write-root <dir>`: through the MCP
 //! protocol, files open and load only from inside the read root and are written only inside the
 //! write root. Paths that leave a root (`..`, another folder, a sibling with the same prefix, a
-//! link) are refused with the wording VectorCraft uses, nothing is read into the result and
+//! link) are refused with the wording Tsipika uses, nothing is read into the result and
 //! nothing is written outside.
 #![cfg(feature = "mcp")]
 
 use std::path::{Path, PathBuf};
 
-use pdfcraft_automation::Automation;
-use pdfcraft_automation::file_access::AutomationRoots;
-use pdfcraft_automation::mcp::McpServer;
+use taratasy_automation::Automation;
+use taratasy_automation::file_access::AutomationRoots;
+use taratasy_automation::mcp::McpServer;
 use serde_json::{Value, json};
 
 /// A 1x1 PNG, so the tools that take a picture have something real to read.
@@ -51,7 +51,7 @@ fn pdf(text: &str) -> Vec<u8> {
 /// A fresh folder holding `in` (the read root, with `a.pdf`, `b.pdf` and `pic.png`), `out` (the
 /// write root), `outside` (with `secret.pdf` and a picture) and `in2`.
 fn folders(tag: &str) -> PathBuf {
-    let base = std::env::temp_dir().join(format!("pdfcraft-mcp-roots-{tag}-{}", std::process::id()));
+    let base = std::env::temp_dir().join(format!("taratasy-mcp-roots-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
     for d in ["in", "out", "outside", "in2"] {
         std::fs::create_dir_all(base.join(d)).unwrap();
@@ -107,7 +107,7 @@ fn refused(server: &mut McpServer, name: &str, args: Value, why: &str) {
 
 /// The text of document 1, through the resource a client can read it with.
 fn text_of(server: &mut McpServer, doc: u64) -> String {
-    rpc(server, "resources/read", json!({"uri": format!("pdfcraft://doc/{doc}/text")}))["result"]["contents"][0]["text"]
+    rpc(server, "resources/read", json!({"uri": format!("taratasy://doc/{doc}/text")}))["result"]["contents"][0]["text"]
         .as_str()
         .unwrap_or_default()
         .to_owned()

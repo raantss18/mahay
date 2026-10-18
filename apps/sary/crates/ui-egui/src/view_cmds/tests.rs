@@ -1,8 +1,8 @@
 use super::*;
 use crate::menus::{invoke as menu, is_live, menu_items};
 
-fn app_with(n: usize) -> (PhotocraftApp, egui::Context) {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app_with(n: usize) -> (SaryApp, egui::Context) {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     for i in 0..n {
         app.run("file.new", json!({"width": 100 + i as u32 * 10, "height": 80})).unwrap();
     }
@@ -10,7 +10,7 @@ fn app_with(n: usize) -> (PhotocraftApp, egui::Context) {
     (app, egui::Context::default())
 }
 
-fn checked(app: &PhotocraftApp, id: &str) -> Option<bool> {
+fn checked(app: &SaryApp, id: &str) -> Option<bool> {
     menu_items(app).into_iter().find(|i| i.id == id).and_then(|i| i.checked)
 }
 
@@ -290,7 +290,7 @@ fn apply_image_dialog_offers_source_layer_scale_and_offset() {
     app.run("edit.fill", json!({"color": "#406080"})).unwrap();
     app.sync_views();
     let background = app.session.active().unwrap().doc.walk()[0].2.name.clone();
-    let open = |app: &mut PhotocraftApp| menu(app, &ctx, "image.applyImage", json!({})).unwrap()["dialog"].as_u64().unwrap();
+    let open = |app: &mut SaryApp| menu(app, &ctx, "image.applyImage", json!({})).unwrap()["dialog"].as_u64().unwrap();
     let d = open(&mut app);
     let fields = &app.ui.dialog_mut(d).unwrap().fields;
     assert_eq!(fields["sourceLayer"], "merged");
@@ -390,12 +390,12 @@ fn lookup_export_dialog_uses_the_current_adjustment_selection() {
 #[test]
 fn batch_dialogs_include_all_subfolders() {
     let (mut app, ctx) = app_with(1);
-    let dir = std::env::temp_dir().join(format!("photocraft-ui-batch-subfolders-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-ui-batch-subfolders-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("in/sub")).unwrap();
     let input = dir.join("in").to_string_lossy().into_owned();
     app.run("file.saveACopy", json!({"path": dir.join("in/sub/a.png").to_string_lossy()})).unwrap();
-    app.session.actions.list.push(photocraft_engine::actions_cmds::Action::new("Invert", vec![("image.adjustments.invert".into(), json!({}))]));
+    app.session.actions.list.push(sary_engine::actions_cmds::Action::new("Invert", vec![("image.adjustments.invert".into(), json!({}))]));
     for (id, out) in [("file.automate.batch", "batch"), ("file.scripts.imageProcessor", "processed")] {
         let d = menu(&mut app, &ctx, id, json!({})).unwrap()["dialog"].as_u64().unwrap();
         let fields = &mut app.ui.dialog_mut(d).unwrap().fields;
@@ -490,7 +490,7 @@ fn load_selection_without_alpha_channels_offers_the_composite() {
 }
 
 /// One frame of the shortcut handler with a plain Esc press.
-fn press_esc(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn press_esc(app: &mut SaryApp, ctx: &egui::Context) {
     let key = egui::Key::Escape;
     let input = egui::RawInput {
         focused: true,

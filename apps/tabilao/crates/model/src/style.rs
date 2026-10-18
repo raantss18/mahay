@@ -122,10 +122,10 @@ pub struct Theme {
 }
 
 impl Default for Theme {
-    /// GridCraft's own default theme ("Craft"): original palette.
+    /// Tabilao's own default theme ("Mahay"): original palette.
     fn default() -> Self {
         Theme {
-            name: "Craft".into(),
+            name: "Mahay".into(),
             colors: [0xFFFFFF, 0x000000, 0xE8E8E8, 0x0E2841, 0x156082, 0xE97132, 0x196B24, 0x0F9ED5, 0xA02B93, 0x4EA72E, 0x467886, 0x96607D],
             major_font: crate::DEFAULT_FONT.into(),
             minor_font: crate::DEFAULT_FONT.into(),

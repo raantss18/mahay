@@ -4,7 +4,7 @@ use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use craft_settings::{DocumentMut, Location, MigrateError, OpenOptions, Probe, Settings, SettingsStore};
+use mahay_settings::{DocumentMut, Location, MigrateError, OpenOptions, Probe, Settings, SettingsStore};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default, Clone, PartialEq, Debug)]
@@ -79,7 +79,7 @@ pub fn probe_with_env(name: &'static str, value: &'static str) -> Probe {
     Probe { env: Box::new(move |n| (n == name).then(|| OsString::from(value))), exe_dir: None, platform_config_dir: None }
 }
 
-pub fn open_in(dir: &Path) -> (SettingsStore<Prefs>, craft_settings::LoadReport) {
+pub fn open_in(dir: &Path) -> (SettingsStore<Prefs>, mahay_settings::LoadReport) {
     SettingsStore::open_with(OpenOptions::new(Location::Dir(dir.to_path_buf())).probe(empty_probe()).debounce(Duration::from_millis(100)))
 }
 

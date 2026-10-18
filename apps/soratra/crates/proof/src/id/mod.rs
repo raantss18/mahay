@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn dictionary_lookup_accepts_indonesian_file_names() {
-        let dir = std::env::temp_dir().join(format!("wordcraft-id-aliases-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("soratra-id-aliases-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         for name in ["id_ID", "id-ID", "id", "in_ID"] {
             std::fs::write(dir.join(format!("{name}.aff")), test_dict::AFF).unwrap();

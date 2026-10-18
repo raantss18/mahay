@@ -3,10 +3,10 @@
 //! Layers, Merge Visible, Stamp Visible and Stamp Down made layers that spanned the whole canvas:
 //! Free Transform, the Move tool and alignment then worked on the canvas instead of the content.
 
-use photocraft_doc::{Layer, LayerId};
-use photocraft_engine::Session;
-use photocraft_engine::transform_cmds::transform_bounds;
-use photocraft_geom::Rect;
+use sary_doc::{Layer, LayerId};
+use sary_engine::Session;
+use sary_engine::transform_cmds::transform_bounds;
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
 const W: u32 = 300;

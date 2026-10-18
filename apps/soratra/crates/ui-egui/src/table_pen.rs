@@ -6,8 +6,8 @@
 
 use egui::{Pos2, Rect, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use wordcraft_engine::cmd::table_draw::{self, Stroke as Kind};
-use wordcraft_layout::DocLayout;
+use soratra_engine::cmd::table_draw::{self, Stroke as Kind};
+use soratra_layout::DocLayout;
 
 use crate::WordApp;
 use crate::theme::Tokens;
@@ -190,7 +190,7 @@ mod tests {
     /// The buttons toggle the tools (one at a time); coordinates go to the engine.
     #[test]
     fn buttons_toggle_the_pen_and_the_eraser() {
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         assert_eq!(a.run("table.draw", json!({})).unwrap()["tool"], "table.draw");
         assert_eq!(a.canvas.table_tool, Some(TableTool::Draw));
         assert_eq!(a.run("table.eraser", json!({})).unwrap()["tool"], "table.eraser");
@@ -206,7 +206,7 @@ mod tests {
     /// Deleting a table or removing its last cells turns off the eraser.
     #[test]
     fn deleting_table_turns_off_the_eraser() {
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         a.run("insert.table", json!({"rows": 2, "cols": 2})).unwrap();
         a.run("table.eraser", json!({"on": true})).unwrap();
         assert_eq!(a.canvas.table_tool, Some(TableTool::Erase));

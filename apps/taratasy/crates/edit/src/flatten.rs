@@ -11,7 +11,7 @@
 
 use std::collections::HashSet;
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object};
+use taratasy_cos::{Dict, Document, ObjRef, Object};
 
 use crate::{EditError, check, n, page_list, place_tagged};
 
@@ -67,7 +67,7 @@ fn selected(doc: &Document, d: &Dict, which: Which) -> bool {
             let widget = subtype == b"Widget";
             !matches!(subtype, b"Link" | b"Popup") && (!widget || fields) && (widget || comments)
         }
-        Which::FillSign => !matches!(subtype, b"Link" | b"Popup" | b"Widget") && pdfcraft_annot::is_fill_sign(doc, d),
+        Which::FillSign => !matches!(subtype, b"Link" | b"Popup" | b"Widget") && taratasy_annot::is_fill_sign(doc, d),
     }
 }
 
@@ -99,11 +99,11 @@ pub fn flatten_fill_sign(doc: &mut Document, pages: &[usize]) -> Result<usize, E
 }
 
 /// The first annotation flattening would turn into page content with `?` in it, before anything
-/// changes: one whose appearance PdfCraft drew with `?` for characters its fonts can't draw
-/// (`pdfcraft_fonts::UNDRAWN_MARK`: a form field's value, a comment's text), or a comment without
+/// changes: one whose appearance Taratasy drew with `?` for characters its fonts can't draw
+/// (`taratasy_fonts::UNDRAWN_MARK`: a form field's value, a comment's text), or a comment without
 /// an appearance whose text the standard fonts can't draw. Its page (0-based), whether it is a
 /// form field, and the character.
-fn undrawn_on(doc: &Document, all: &[pdfcraft_model::Page], pages: &[usize], which: Which) -> Option<(usize, bool, char)> {
+fn undrawn_on(doc: &Document, all: &[taratasy_model::Page], pages: &[usize], which: Which) -> Option<(usize, bool, char)> {
     for &i in pages {
         let list = all.get(i)?.dict.get(b"Annots").map(|a| doc.resolve(a)).and_then(|a| a.as_array().cloned()).unwrap_or_default();
         for entry in &list {
@@ -113,8 +113,8 @@ fn undrawn_on(doc: &Document, all: &[pdfcraft_model::Page], pages: &[usize], whi
                 continue;
             }
             let widget = d.name(b"Subtype") == Some(b"Widget");
-            let drawn = pdfcraft_fonts::undrawn_mark(&d);
-            let would_draw = || (!widget && appearance(doc, &d).is_none()).then(|| pdfcraft_annot::appearance::undrawable_text(&d)).flatten();
+            let drawn = taratasy_fonts::undrawn_mark(&d);
+            let would_draw = || (!widget && appearance(doc, &d).is_none()).then(|| taratasy_annot::appearance::undrawable_text(&d)).flatten();
             if let Some(c) = drawn.or_else(|| would_draw().map(|(_, c)| c)) {
                 return Some((i, widget, c));
             }
@@ -174,7 +174,7 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             // A subtype this build cannot draw fails here and is kept below, so the comment is
             // not deleted with nothing drawn in its place. (Text the standard fonts can't draw
             // was refused before anything changed: `undrawn_on`.)
-            let _ = pdfcraft_annot::set_appearance(doc, r);
+            let _ = taratasy_annot::set_appearance(doc, r);
         }
         for (k, entry) in list.iter().enumerate() {
             let obj = doc.resolve(entry);

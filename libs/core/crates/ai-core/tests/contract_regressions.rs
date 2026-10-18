@@ -1,5 +1,5 @@
-use craft_ai_core::role::{eligible, fits, resolve};
-use craft_ai_core::*;
+use mahay_ai_core::role::{eligible, fits, resolve};
+use mahay_ai_core::*;
 
 fn draft(endpoint: &str) -> ConnectionDraft {
     let mut draft = ConnectionDraft::default();

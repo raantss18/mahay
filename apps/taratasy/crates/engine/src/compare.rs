@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-pub use pdfcraft_compare::{Change, Comparison, Kind, Side};
+pub use taratasy_compare::{Change, Comparison, Kind, Side};
 
 use crate::{DocId, Edit, EditError, Markup, NewAnnotation, NoteIcon, Session, Shape};
 
@@ -18,24 +18,24 @@ pub fn colour(kind: Kind) -> crate::Rgb {
 
 impl crate::Document {
     /// Standards ▸ Verify PDF/A: the rules the document breaks for `level`.
-    pub fn pdfa_verify(&self, level: pdfcraft_preflight::Level) -> Vec<pdfcraft_preflight::Issue> {
-        self.editor.as_ref().map(|e| pdfcraft_preflight::verify(&e.cos, level)).unwrap_or_default()
+    pub fn pdfa_verify(&self, level: taratasy_preflight::Level) -> Vec<taratasy_preflight::Issue> {
+        self.editor.as_ref().map(|e| taratasy_preflight::verify(&e.cos, level)).unwrap_or_default()
     }
 
     /// The standards the document declares (Standards panel).
-    pub fn standards(&self) -> pdfcraft_preflight::Declared {
-        self.editor.as_ref().map(|e| pdfcraft_preflight::declared(&e.cos)).unwrap_or_default()
+    pub fn standards(&self) -> taratasy_preflight::Declared {
+        self.editor.as_ref().map(|e| taratasy_preflight::declared(&e.cos)).unwrap_or_default()
     }
 
     /// Every word of the document in reading order, with page and box.
-    pub fn words(&self) -> Vec<pdfcraft_compare::Word> {
-        let config = pdfcraft_render::RenderConfig { password: self.password.as_deref().map(Arc::from), ..Default::default() };
-        let mut r = pdfcraft_render::PageRenderer::new(self.bytes.clone(), config);
+    pub fn words(&self) -> Vec<taratasy_compare::Word> {
+        let config = taratasy_render::RenderConfig { password: self.password.as_deref().map(Arc::from), ..Default::default() };
+        let mut r = taratasy_render::PageRenderer::new(self.bytes.clone(), config);
         let mut out = Vec::new();
         for (page, info) in self.info.pages.iter().enumerate() {
-            let res = r.render(pdfcraft_render::RenderRequest { page, kind: pdfcraft_render::RequestKind::Text, scale: 1.0, ..Default::default() });
+            let res = r.render(taratasy_render::RenderRequest { page, kind: taratasy_render::RequestKind::Text, scale: 1.0, ..Default::default() });
             if let Some(t) = res.text {
-                out.extend(crate::js::page_words(&t, info).into_iter().map(|(text, rect)| pdfcraft_compare::Word { text, page, rect }));
+                out.extend(crate::js::page_words(&t, info).into_iter().map(|(text, rect)| taratasy_compare::Word { text, page, rect }));
             }
         }
         out
@@ -47,7 +47,7 @@ impl Session {
     pub fn compare(&self, old: DocId, new: DocId) -> Result<Comparison, EditError> {
         let a = self.get(old).ok_or(EditError::NoDocument)?;
         let b = self.get(new).ok_or(EditError::NoDocument)?;
-        Ok(pdfcraft_compare::compare(&a.words(), &b.words()))
+        Ok(taratasy_compare::compare(&a.words(), &b.words()))
     }
 
     /// Visual compare: regions where page n of `new` looks different from page n of `old`
@@ -56,22 +56,22 @@ impl Session {
         let a = self.get(old).ok_or(EditError::NoDocument)?;
         let b = self.get(new).ok_or(EditError::NoDocument)?;
         let renderer = |d: &crate::Document| {
-            pdfcraft_render::PageRenderer::new(
+            taratasy_render::PageRenderer::new(
                 d.bytes.clone(),
-                pdfcraft_render::RenderConfig { password: d.password.as_deref().map(Arc::from), ..Default::default() },
+                taratasy_render::RenderConfig { password: d.password.as_deref().map(Arc::from), ..Default::default() },
             )
         };
         let (mut ra, mut rb) = (renderer(a), renderer(b));
         let scale = dpi.clamp(18.0, 150.0) / 72.0;
         let mut out = Vec::new();
         for (page, info) in b.info.pages.iter().enumerate().take(a.info.pages.len()) {
-            let req = pdfcraft_render::RenderRequest { page, scale, ..Default::default() };
+            let req = taratasy_render::RenderRequest { page, scale, ..Default::default() };
             let (x, y) = (ra.render(req), rb.render(req));
             if x.error.is_some() || y.error.is_some() {
                 continue;
             }
             let s = y.width as f32 / info.width.max(1e-3);
-            for r in pdfcraft_compare::visual_regions((&y.rgba, y.width, y.height), (&x.rgba, x.width, x.height), 24) {
+            for r in taratasy_compare::visual_regions((&y.rgba, y.width, y.height), (&x.rgba, x.width, x.height), 24) {
                 let p = info.view_to_user(r[0] as f32 / s, r[1] as f32 / s);
                 let q = info.view_to_user(r[2] as f32 / s, r[3] as f32 / s);
                 out.push((page, [p[0].min(q[0]) as f64, p[1].min(q[1]) as f64, p[0].max(q[0]) as f64, p[1].max(q[1]) as f64]));
@@ -84,7 +84,7 @@ impl Session {
     pub fn compare_report(&self, old: DocId, new: DocId) -> Result<Arc<Vec<u8>>, EditError> {
         let c = self.compare(old, new)?;
         let name = |id| self.get(id).map(|d| d.name.clone()).unwrap_or_default();
-        self.create_report("Compare Report", &pdfcraft_compare::report(&c, &name(old), &name(new)))
+        self.create_report("Compare Report", &taratasy_compare::report(&c, &name(old), &name(new)))
     }
 
     /// Mark the differences in `new` as comments: highlights over replaced and inserted text
@@ -154,7 +154,7 @@ impl OfficeFormat {
 impl crate::Document {
     /// The pages as paragraphs and images (for Word, HTML and RTF export), including what
     /// form XObjects draw.
-    pub fn export_pages(&self) -> Vec<pdfcraft_export::Page> {
+    pub fn export_pages(&self) -> Vec<taratasy_export::Page> {
         let Some(cos) = self.editor.as_ref().map(|e| &e.cos) else { return Vec::new() };
         self.info
             .pages
@@ -171,13 +171,13 @@ impl crate::Document {
                 let crop_width = f64::from(info.crop[2] - info.crop[0]);
                 let display_width = f64::from(if info.rotation % 180 == 0 { info.width } else { info.height });
                 let unit = if crop_width > 0.0 && crop_width.is_finite() && display_width.is_finite() { display_width / crop_width } else { 1.0 };
-                let blocks = pdfcraft_edit::reading_blocks(cos, i)
+                let blocks = taratasy_edit::reading_blocks(cos, i)
                     .unwrap_or_default()
                     .into_iter()
                     .filter(|b| !b.text.trim().is_empty())
                     .map(|b| {
                         let f = b.base_font.to_ascii_lowercase();
-                        pdfcraft_export::Block {
+                        taratasy_export::Block {
                             text: b.text,
                             rect: visible_rect(b.rect),
                             size: b.size * unit,
@@ -188,12 +188,12 @@ impl crate::Document {
                         }
                     })
                     .collect();
-                let images = pdfcraft_edit::reading_images(cos, i)
+                let images = taratasy_edit::reading_images(cos, i)
                     .unwrap_or_default()
                     .iter()
                     .filter_map(|im| {
-                        let (ext, bytes) = pdfcraft_create::image_file(cos, im.object?).ok()?;
-                        Some(pdfcraft_export::Image {
+                        let (ext, bytes) = taratasy_create::image_file(cos, im.object?).ok()?;
+                        Some(taratasy_export::Image {
                             ext: if ext == "jpg" { "jpg" } else { "png" },
                             bytes,
                             rect: visible_rect(im.rect),
@@ -202,7 +202,7 @@ impl crate::Document {
                         })
                     })
                     .collect();
-                pdfcraft_export::Page { width: info.width as f64, height: info.height as f64, blocks, images }
+                taratasy_export::Page { width: info.width as f64, height: info.height as f64, blocks, images }
             })
             .collect()
     }
@@ -212,10 +212,10 @@ impl crate::Document {
         let pages = self.export_pages();
         let title = self.info.title.clone().unwrap_or_else(|| self.name.trim_end_matches(".pdf").to_string());
         match format {
-            OfficeFormat::Docx => pdfcraft_export::docx(&pages, &title),
-            OfficeFormat::Pptx => pdfcraft_export::pptx(&pages, &title),
-            OfficeFormat::Html => pdfcraft_export::html(&pages, &title).into_bytes(),
-            OfficeFormat::Rtf => pdfcraft_export::rtf(&pages).into_bytes(),
+            OfficeFormat::Docx => taratasy_export::docx(&pages, &title),
+            OfficeFormat::Pptx => taratasy_export::pptx(&pages, &title),
+            OfficeFormat::Html => taratasy_export::html(&pages, &title).into_bytes(),
+            OfficeFormat::Rtf => taratasy_export::rtf(&pages).into_bytes(),
         }
     }
 }

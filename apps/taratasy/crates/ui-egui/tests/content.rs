@@ -4,23 +4,23 @@
 use egui::{Pos2, pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::{PdfCraftApp, QuickTool};
+use taratasy_ui_egui::{TaratasyApp, QuickTool};
 
-fn harness() -> Harness<'static, PdfCraftApp> {
+fn harness() -> Harness<'static, TaratasyApp> {
     harness_with_step_dt(0.25)
 }
 
-fn harness_with_step_dt(step_dt: f32) -> Harness<'static, PdfCraftApp> {
+fn harness_with_step_dt(step_dt: f32) -> Harness<'static, TaratasyApp> {
     harness_bytes_with_step_dt(include_bytes!("data/form.pdf").to_vec(), step_dt)
 }
 
-fn harness_bytes(bytes: Vec<u8>) -> Harness<'static, PdfCraftApp> {
+fn harness_bytes(bytes: Vec<u8>) -> Harness<'static, TaratasyApp> {
     harness_bytes_with_step_dt(bytes, 0.25)
 }
 
-fn harness_bytes_with_step_dt(bytes: Vec<u8>, step_dt: f32) -> Harness<'static, PdfCraftApp> {
+fn harness_bytes_with_step_dt(bytes: Vec<u8>, step_dt: f32) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(step_dt).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, bytes.clone()).unwrap();
         app.set_option("zoom", "150").unwrap();
@@ -36,13 +36,13 @@ fn harness_bytes_with_step_dt(bytes: Vec<u8>, step_dt: f32) -> Harness<'static, 
     h
 }
 
-fn at(h: &Harness<'static, PdfCraftApp>, x: f32, y: f32) -> Pos2 {
+fn at(h: &Harness<'static, TaratasyApp>, x: f32, y: f32) -> Pos2 {
     let r = h.state().views[0].page_screen_rect(0).expect("on screen");
     let k = r.width() / 300.0;
     r.min + egui::vec2(x * k, y * k)
 }
 
-fn click(h: &mut Harness<'static, PdfCraftApp>, p: Pos2) {
+fn click(h: &mut Harness<'static, TaratasyApp>, p: Pos2) {
     h.hover_at(p);
     h.run_steps(1);
     h.drag_at(p);
@@ -51,13 +51,13 @@ fn click(h: &mut Harness<'static, PdfCraftApp>, p: Pos2) {
     h.run_steps(3);
 }
 
-fn added(h: &Harness<'static, PdfCraftApp>) -> Vec<pdfcraft_engine::Added> {
+fn added(h: &Harness<'static, TaratasyApp>) -> Vec<taratasy_engine::Added> {
     let s = h.state();
     s.session.get(s.views[0].id).unwrap().added().to_vec()
 }
 
 /// A click whose press and release arrive in the same frame, as a quick real mouse click does.
-fn quick_click(h: &mut Harness<'static, PdfCraftApp>, p: Pos2) {
+fn quick_click(h: &mut Harness<'static, TaratasyApp>, p: Pos2) {
     h.hover_at(p);
     h.run_steps(1);
     for pressed in [true, false] {
@@ -66,11 +66,11 @@ fn quick_click(h: &mut Harness<'static, PdfCraftApp>, p: Pos2) {
     h.run_steps(3);
 }
 
-fn texts(h: &Harness<'static, PdfCraftApp>) -> Vec<String> {
+fn texts(h: &Harness<'static, TaratasyApp>) -> Vec<String> {
     added(h)
         .into_iter()
         .filter_map(|a| match a.content {
-            pdfcraft_engine::AddedContent::Text(t) => Some(t.text),
+            taratasy_engine::AddedContent::Text(t) => Some(t.text),
             _ => None,
         })
         .collect()
@@ -90,18 +90,18 @@ fn text_tool_drafts_grow_for_latin_and_arabic() {
         let draft = h.state().views[0].content.draft.as_ref().unwrap();
         assert!(draft.rect[2] - draft.rect[0] > before[2] - before[0] + 10.0, "the editor grows before wrapping: {}", text);
         assert!(draft.rect[2] <= 300.0 && draft.rect[1] < before[1], "the frame stays on the page and grows vertically");
-        if let Ok(dir) = std::env::var("PDFCRAFT_SHOTS") {
+        if let Ok(dir) = std::env::var("TARATASY_SHOTS") {
             let language = if text.starts_with("Wide") { "latin" } else { "arabic" };
             h.render().unwrap().save(format!("{dir}/growing-{language}-text.png")).unwrap();
         }
         h.get_by_label("Done adding text").click();
         h.run_steps(3);
-        if text.starts_with("سلام") && pdfcraft_fonts::document_arabic_font().is_none() {
+        if text.starts_with("سلام") && taratasy_fonts::document_arabic_font().is_none() {
             assert!(h.state().views[0].content.draft.is_some(), "without a document font the draft remains available");
             assert!(added(&h).is_empty());
             continue;
         }
-        let pdfcraft_engine::AddedContent::Text(saved) = &added(&h)[0].content else { panic!() };
+        let taratasy_engine::AddedContent::Text(saved) = &added(&h)[0].content else { panic!() };
         assert_eq!(saved.text, text.trim_end());
         assert!(saved.rect[2] - saved.rect[0] > before[2] - before[0] + 10.0, "Save uses the grown width");
     }
@@ -111,13 +111,13 @@ fn text_tool_drafts_grow_for_latin_and_arabic() {
 fn text_tool_single_click_retypes_added_text_without_another_item() {
     for command in ["edit.text", "edit.edit_text"] {
         for (original, replacement) in [("Original", "Replacement"), ("سلام", "سلام عليكم ورحمة الله")] {
-            if original == "سلام" && pdfcraft_fonts::document_arabic_font().is_none() {
+            if original == "سلام" && taratasy_fonts::document_arabic_font().is_none() {
                 continue;
             }
             let mut h = harness();
-            assert!(h.state_mut().apply_edit(pdfcraft_engine::Edit::AddText {
+            assert!(h.state_mut().apply_edit(taratasy_engine::Edit::AddText {
                 page: 0,
-                text: pdfcraft_engine::AddedText { rect: [40.0, 195.0, 140.0, 210.0], text: original.into(), ..Default::default() },
+                text: taratasy_engine::AddedText { rect: [40.0, 195.0, 140.0, 210.0], text: original.into(), ..Default::default() },
             }));
             assert!(h.state_mut().execute(command));
             h.run_steps(3);
@@ -134,10 +134,10 @@ fn text_tool_single_click_retypes_added_text_without_another_item() {
             assert_eq!(texts(&h), [replacement]);
             let state = h.state();
             let bytes = state.session.save_bytes(state.views[0].id).unwrap();
-            let mut reopened = pdfcraft_engine::Session::new();
+            let mut reopened = taratasy_engine::Session::new();
             let id = reopened.open("again.pdf", None, bytes, None).unwrap();
             assert_eq!(reopened.get(id).unwrap().added().len(), 1);
-            let pdfcraft_engine::AddedContent::Text(text) = &reopened.get(id).unwrap().added()[0].content else { panic!() };
+            let taratasy_engine::AddedContent::Text(text) = &reopened.get(id).unwrap().added()[0].content else { panic!() };
             assert_eq!(text.text, replacement);
         }
     }
@@ -146,9 +146,9 @@ fn text_tool_single_click_retypes_added_text_without_another_item() {
 #[test]
 fn text_tool_deleting_a_draft_hides_the_old_added_glyphs_and_cancel_restores_them() {
     let mut h = harness();
-    assert!(h.state_mut().apply_edit(pdfcraft_engine::Edit::AddText {
+    assert!(h.state_mut().apply_edit(taratasy_engine::Edit::AddText {
         page: 0,
-        text: pdfcraft_engine::AddedText { rect: [40.0, 195.0, 240.0, 220.0], text: "Original glyphs".into(), size: 18.0, ..Default::default() },
+        text: taratasy_engine::AddedText { rect: [40.0, 195.0, 240.0, 220.0], text: "Original glyphs".into(), size: 18.0, ..Default::default() },
     }));
     let bytes = h.state().session.get(h.state().views[0].id).unwrap().bytes.clone();
     assert!(h.state_mut().execute("edit.edit_text"));
@@ -173,7 +173,7 @@ fn text_tool_deleting_a_draft_hides_the_old_added_glyphs_and_cancel_restores_the
             assert!(r > 200 && g > 200 && b > 200 && a == 255, "old glyph ink remains at {x},{y}: {r},{g},{b},{a}");
         }
     }
-    if let Ok(dir) = std::env::var("PDFCRAFT_SHOTS") {
+    if let Ok(dir) = std::env::var("TARATASY_SHOTS") {
         shot.save(format!("{dir}/cleared-added-text.png")).unwrap();
     }
     assert_eq!(h.state().session.get(h.state().views[0].id).unwrap().bytes, bytes, "previewing does not edit the document");
@@ -230,7 +230,7 @@ fn typing_moving_styling_and_deleting_added_content() {
     h.run_steps(3);
     let a = added(&h);
     assert_eq!(a.len(), 1);
-    let pdfcraft_engine::AddedContent::Text(t) = &a[0].content else { panic!() };
+    let taratasy_engine::AddedContent::Text(t) = &a[0].content else { panic!() };
     assert_eq!(t.text, "Reviewed");
     assert_eq!(h.state().quick_tool, QuickTool::Select);
     h.run_steps(2);
@@ -239,7 +239,7 @@ fn typing_moving_styling_and_deleting_added_content() {
     h.get_by_label("B").click();
     h.run_steps(3);
 
-    let pdfcraft_engine::AddedContent::Text(t) = &added(&h)[0].content else { panic!() };
+    let taratasy_engine::AddedContent::Text(t) = &added(&h)[0].content else { panic!() };
     assert!(t.bold);
     {
         let s = h.state();
@@ -267,11 +267,11 @@ fn typing_moving_styling_and_deleting_added_content() {
     h.get_by_label("Rotate clockwise").click();
     h.run_steps(3);
     let a = added(&h);
-    let pdfcraft_engine::AddedContent::Image(img) = &a[0].content else { panic!() };
+    let taratasy_engine::AddedContent::Image(img) = &a[0].content else { panic!() };
     assert_eq!((img.rotation, img.rect), (3, [140.0, 185.0, 160.0, 215.0]));
     h.get_by_label("Flip horizontal").click();
     h.run_steps(3);
-    let pdfcraft_engine::AddedContent::Image(img) = &added(&h)[0].content else { panic!() };
+    let taratasy_engine::AddedContent::Image(img) = &added(&h)[0].content else { panic!() };
     assert!(img.flip_h);
 }
 
@@ -287,7 +287,7 @@ fn text_the_standard_fonts_cant_draw_stays_in_the_editor() {
     h.event(egui::Event::Text("Hello 世界".into()));
     h.run_steps(2);
     h.get_by_label_contains("can't draw “世” (U+4E16)");
-    if let Ok(dir) = std::env::var("PDFCRAFT_SHOTS") {
+    if let Ok(dir) = std::env::var("TARATASY_SHOTS") {
         h.render().unwrap().save(format!("{dir}/undrawable-text.png")).unwrap();
     }
     h.get_by_label("Done adding text").click();
@@ -316,7 +316,7 @@ fn text_the_standard_fonts_cant_draw_stays_in_the_editor() {
 #[test]
 fn a_kept_draft_goes_with_its_deleted_page() {
     let mut h = harness();
-    assert!(h.state_mut().apply_edit(pdfcraft_engine::Edit::InsertBlankPage { at: 1, width: 612.0, height: 792.0 }));
+    assert!(h.state_mut().apply_edit(taratasy_engine::Edit::InsertBlankPage { at: 1, width: 612.0, height: 792.0 }));
     h.run_steps(2);
     assert!(h.state_mut().execute("edit.text"));
     h.state_mut().views[0].go_to_page(1);
@@ -326,18 +326,18 @@ fn a_kept_draft_goes_with_its_deleted_page() {
     h.event(egui::Event::Text("日本語".into()));
     h.run_steps(2);
     assert_eq!(h.state().views[0].content.draft.as_ref().map(|d| (d.page, d.text.as_str())), Some((1, "日本語")));
-    assert!(h.state_mut().apply_edit(pdfcraft_engine::Edit::DeletePages { pages: vec![1] }));
+    assert!(h.state_mut().apply_edit(taratasy_engine::Edit::DeletePages { pages: vec![1] }));
     h.run_steps(2);
     assert!(h.state().views[0].content.draft.is_none());
 }
 
 #[test]
 fn typing_thai_text_keeps_marks_and_commits_to_page() {
-    if pdfcraft_fonts::document_thai_font().is_none() {
+    if taratasy_fonts::document_thai_font().is_none() {
         return;
     }
-    let fonts = pdfcraft_ui_egui::theme::font_definitions();
-    let face = pdfcraft_fonts::document_thai_font().unwrap();
+    let fonts = taratasy_ui_egui::theme::font_definitions();
+    let face = taratasy_fonts::document_thai_font().unwrap();
     assert!(fonts.families[&egui::FontFamily::Proportional].contains(&face.name()));
     let mut h = harness();
     assert!(h.state_mut().execute("edit.text"));
@@ -392,7 +392,7 @@ fn finished_text_over_form_field_keeps_selection_and_drag_ownership() {
     assert_eq!(h.state().views[0].forms.focus.as_ref().map(|f| f.name.as_str()), Some("city"));
 }
 
-fn text_over_city() -> Harness<'static, PdfCraftApp> {
+fn text_over_city() -> Harness<'static, TaratasyApp> {
     let mut h = harness_with_step_dt(1.0 / 60.0);
     assert!(h.state_mut().execute("edit.text"));
     h.run_steps(2);
@@ -462,7 +462,7 @@ fn closing_edit_panel_leaves_form_filling_available() {
 }
 
 /// The screen rectangle of an added item's display-space box (y up, from the page's bottom).
-fn item_on_screen(h: &Harness<'static, PdfCraftApp>, r: [f64; 4]) -> egui::Rect {
+fn item_on_screen(h: &Harness<'static, TaratasyApp>, r: [f64; 4]) -> egui::Rect {
     let s = h.state();
     let ph = s.session.get(s.views[0].id).unwrap().info.pages[0].height;
     let page = s.views[0].page_screen_rect(0).expect("on screen");
@@ -486,14 +486,14 @@ fn probe(r: egui::Rect) -> egui::Rect {
 }
 
 /// Ink in the probes of the text's first and dragged places.
-fn ink_at(h: &mut Harness<'static, PdfCraftApp>, from: egui::Rect, to: egui::Rect) -> (usize, usize) {
+fn ink_at(h: &mut Harness<'static, TaratasyApp>, from: egui::Rect, to: egui::Rect) -> (usize, usize) {
     let pixels = h.render().unwrap();
     (ink(&pixels, probe(from)), ink(&pixels, probe(to)))
 }
 
 /// Types text, finishes it, and drags it up without releasing, until the drag preview shows.
 /// Returns the text's box, its screen rectangles before and after, and the pointer.
-fn drag_added_text(h: &mut Harness<'static, PdfCraftApp>) -> ([f64; 4], egui::Rect, egui::Rect, Pos2) {
+fn drag_added_text(h: &mut Harness<'static, TaratasyApp>) -> ([f64; 4], egui::Rect, egui::Rect, Pos2) {
     assert!(h.state_mut().execute("edit.text"));
     h.run_steps(2);
     let p = at(h, 40.0, 300.0);
@@ -539,7 +539,7 @@ fn drag_added_text(h: &mut Harness<'static, PdfCraftApp>) -> ([f64; 4], egui::Re
 fn dragged_text_follows_the_pointer_before_release() {
     let mut h = harness();
     let (rect, from, to, end) = drag_added_text(&mut h);
-    if let Ok(dir) = std::env::var("PDFCRAFT_SHOTS") {
+    if let Ok(dir) = std::env::var("TARATASY_SHOTS") {
         h.render().unwrap().save(format!("{dir}/added-text-drag.png")).unwrap();
     }
     let (old, new) = ink_at(&mut h, from, to);

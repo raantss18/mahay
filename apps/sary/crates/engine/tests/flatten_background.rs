@@ -1,7 +1,7 @@
 //! Flatten Image must leave the same Background behaviour as a newly created document (#1105).
 
-use photocraft_doc::Layer;
-use photocraft_engine::Session;
+use sary_doc::Layer;
+use sary_engine::Session;
 use serde_json::json;
 
 fn layered(depth: u32) -> Session {

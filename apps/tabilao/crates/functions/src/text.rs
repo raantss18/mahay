@@ -1,7 +1,7 @@
 //! Text functions.
 
-use gridcraft_core::parse::parse_number_text_in;
-use gridcraft_core::{CellError, Value, number_to_text};
+use tabilao_core::parse::parse_number_text_in;
+use tabilao_core::{CellError, Value, number_to_text};
 
 use crate::criteria::wildcard_find;
 use crate::util::{
@@ -937,7 +937,7 @@ pub(crate) fn specs() -> Vec<FnSpec> {
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::{CellError, Value};
+    use tabilao_core::{CellError, Value};
 
     use crate::util::testutil::*;
 

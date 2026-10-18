@@ -74,8 +74,8 @@ fn move_group_reorders() {
     assert_eq!(l.order()[0], Group::Color);
 }
 
-fn app_with_layers() -> (PhotocraftApp, photocraft_doc::LayerId, photocraft_doc::LayerId) {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app_with_layers() -> (SaryApp, sary_doc::LayerId, sary_doc::LayerId) {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 150})).unwrap();
     app.run("layer.new.layer", json!({})).unwrap();
     let pixel = app.session.active().unwrap().active_layer.unwrap();
@@ -86,10 +86,10 @@ fn app_with_layers() -> (PhotocraftApp, photocraft_doc::LayerId, photocraft_doc:
     (app, pixel, adj)
 }
 
-fn harness(app: PhotocraftApp, size: egui::Vec2, theme: ThemeKind) -> Harness<'static, PhotocraftApp> {
+fn harness(app: SaryApp, size: egui::Vec2, theme: ThemeKind) -> Harness<'static, SaryApp> {
     // 60 fps steps, so two clicks a frame apart count as a double-click.
     let mut h = Harness::builder().with_size(size).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -99,17 +99,17 @@ fn harness(app: PhotocraftApp, size: egui::Vec2, theme: ThemeKind) -> Harness<'s
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, theme);
+    SaryApp::setup_context(&h.ctx, theme);
     h.state_mut().ui.theme = theme;
     h.run_steps(4);
     h
 }
 
-fn rect_of(h: &Harness<'static, PhotocraftApp>, g: Group) -> Rect {
+fn rect_of(h: &Harness<'static, SaryApp>, g: Group) -> Rect {
     last_rects(&h.ctx).into_iter().find(|(x, _)| *x == g).map(|(_, r)| r).unwrap_or_else(|| panic!("{g:?} not drawn"))
 }
 
-fn drag(h: &mut Harness<'static, PhotocraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'static, SaryApp>, from: Pos2, to: Pos2) {
     h.event(egui::Event::PointerMoved(from));
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -127,7 +127,7 @@ fn switching_layer_kinds_keeps_the_layers_panel_still() {
     for theme in [ThemeKind::ProMedium, ThemeKind::Studio] {
         let (app, pixel, adj) = app_with_layers();
         let mut h = harness(app, vec2(1200.0, 800.0), theme);
-        let rects = |h: &Harness<'static, PhotocraftApp>| last_rects(&h.ctx);
+        let rects = |h: &Harness<'static, SaryApp>| last_rects(&h.ctx);
         let with_adj = rects(&h);
         assert!(with_adj.iter().any(|(g, _)| *g == Group::Layers));
         h.state_mut().run("layer.select", json!({"layer": pixel.0})).unwrap();
@@ -179,16 +179,16 @@ fn dragging_the_splitter_resizes_and_survives_a_ui_state_round_trip() {
 
     // Remembered in the preferences once the mouse is up, and restored at the next launch.
     let prefs = h.state().session.prefs_to_json();
-    let mut s2 = photocraft_engine::Session::new();
+    let mut s2 = sary_engine::Session::new();
     s2.load_prefs_json(&prefs).unwrap();
-    let mut app3 = PhotocraftApp::new(s2, crate::Services::default());
+    let mut app3 = SaryApp::new(s2, crate::Services::default());
     restore(&mut app3);
     assert_eq!(app3.ui.dock, h.state().ui.dock);
     // …unless Remember Workspace Changes is off.
-    let mut s3 = photocraft_engine::Session::new();
+    let mut s3 = sary_engine::Session::new();
     s3.load_prefs_json(&prefs).unwrap();
     s3.prefs.edit(|p| p.workspace.remember_workspace_changes = false);
-    let mut app4 = PhotocraftApp::new(s3, crate::Services::default());
+    let mut app4 = SaryApp::new(s3, crate::Services::default());
     restore(&mut app4);
     assert_eq!(app4.ui.dock, DockLayout::default());
 }
@@ -436,10 +436,10 @@ fn dragging_a_tab_onto_another_group_moves_only_that_panel() {
     drag(&mut h, source, destination);
 
     let layout = h.state().ui.docking.as_ref().expect("moving one native tab promotes to the shared layout");
-    fn tabs<'a>(node: &'a craft_ui::docking::Node<String>, panel: &str) -> Option<&'a [String]> {
+    fn tabs<'a>(node: &'a mahay_ui::docking::Node<String>, panel: &str) -> Option<&'a [String]> {
         match node {
-            craft_ui::docking::Node::Tabs { panels, .. } if panels.iter().any(|id| id == panel) => Some(panels),
-            craft_ui::docking::Node::Split { first, second, .. } => tabs(first, panel).or_else(|| tabs(second, panel)),
+            mahay_ui::docking::Node::Tabs { panels, .. } if panels.iter().any(|id| id == panel) => Some(panels),
+            mahay_ui::docking::Node::Split { first, second, .. } => tabs(first, panel).or_else(|| tabs(second, panel)),
             _ => None,
         }
     }
@@ -469,10 +469,10 @@ fn dragging_a_reordered_tab_onto_another_group_moves_that_panel() {
     drag(&mut h, source, destination);
 
     let layout = h.state().ui.docking.as_ref().expect("moving one native tab promotes to the shared layout");
-    fn tabs<'a>(node: &'a craft_ui::docking::Node<String>, panel: &str) -> Option<&'a [String]> {
+    fn tabs<'a>(node: &'a mahay_ui::docking::Node<String>, panel: &str) -> Option<&'a [String]> {
         match node {
-            craft_ui::docking::Node::Tabs { panels, .. } if panels.iter().any(|id| id == panel) => Some(panels),
-            craft_ui::docking::Node::Split { first, second, .. } => tabs(first, panel).or_else(|| tabs(second, panel)),
+            mahay_ui::docking::Node::Tabs { panels, .. } if panels.iter().any(|id| id == panel) => Some(panels),
+            mahay_ui::docking::Node::Split { first, second, .. } => tabs(first, panel).or_else(|| tabs(second, panel)),
             _ => None,
         }
     }
@@ -541,7 +541,7 @@ fn the_rail_and_window_menu_never_lose_a_panel() {
 #[test]
 fn clicking_around_the_ui_keeps_the_panels_put() {
     let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
         let (app, _, _) = app_with_layers();
         app
     });
@@ -608,7 +608,7 @@ fn closing_tabs_keeps_stable_names_across_themes_and_workspace_round_trips() {
     assert_eq!(restored.visible_tabs(Group::Color, false).len(), 4);
 }
 
-fn right_click_tab(h: &mut Harness<'static, PhotocraftApp>, group: Group, original_index: usize) {
+fn right_click_tab(h: &mut Harness<'static, SaryApp>, group: Group, original_index: usize) {
     let p = last_strips(&h.ctx)
         .into_iter()
         .find(|s| s.group == group)
@@ -700,10 +700,10 @@ fn theme_switch_keeps_the_selected_color_group_panel() {
 }
 
 /// Full app at `size` (1× scale) on a document with `n` layers named "Row 00", "Row 01", …
-fn app_harness_rows(size: egui::Vec2, theme: ThemeKind, n: usize) -> Harness<'static, PhotocraftApp> {
+fn app_harness_rows(size: egui::Vec2, theme: ThemeKind, n: usize) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(size).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, theme);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, theme);
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.ui.theme = theme;
         app.run("file.new", json!({"width": 200, "height": 150})).unwrap();
         for i in 0..n {
@@ -717,7 +717,7 @@ fn app_harness_rows(size: egui::Vec2, theme: ThemeKind, n: usize) -> Harness<'st
 }
 
 /// Layer rows fully inside the Layers rows viewport.
-fn rows_in_view(h: &Harness<'static, PhotocraftApp>, n: usize) -> usize {
+fn rows_in_view(h: &Harness<'static, SaryApp>, n: usize) -> usize {
     use egui_kittest::kittest::Queryable;
     let layers = rect_of(h, Group::Layers);
     (0..n)
@@ -835,7 +835,7 @@ fn tab_strips_never_overlap_the_menu_button() {
                             },
                             None,
                         );
-                        PhotocraftApp::setup_context(&h.ctx, theme);
+                        SaryApp::setup_context(&h.ctx, theme);
                         h.run_steps(3);
                         let (shown, menu, chevron, card) = h.state().clone().unwrap();
                         let what = format!("{theme:?} {scale}x {width}pt {g:?} selected {sel}");
@@ -869,7 +869,7 @@ fn dock_strips_fit_and_the_chevron_menu_switches_tabs() {
         app.ui.panels.navigator = true;
         app.ui.panels.character = true;
         let mut h = Harness::builder().with_size(vec2(900.0, 1000.0)).with_pixels_per_point(2.0).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -878,7 +878,7 @@ fn dock_strips_fit_and_the_chevron_menu_switches_tabs() {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, theme);
+        SaryApp::setup_context(&h.ctx, theme);
         h.state_mut().ui.theme = theme;
         h.run_steps(4);
         let strips = last_strips(&h.ctx);
@@ -901,7 +901,7 @@ fn dock_strips_fit_and_the_chevron_menu_switches_tabs() {
         },
         0usize,
     );
-    PhotocraftApp::setup_context(&h.ctx, ThemeKind::ProMedium);
+    SaryApp::setup_context(&h.ctx, ThemeKind::ProMedium);
     h.run_steps(3);
     use egui_kittest::kittest::Queryable;
     h.get_by_label("More panels").click();
@@ -917,7 +917,7 @@ fn tab_hides_all_panels_and_shift_tab_only_the_dock() {
     // brings back what it hid); ⇧Tab hides and shows the dock alone.
     let (mut app, _, _) = app_with_layers();
     let ctx = egui::Context::default();
-    let run = |app: &mut PhotocraftApp, id: &str| crate::menus::invoke(app, &ctx, id, json!({})).unwrap();
+    let run = |app: &mut SaryApp, id: &str| crate::menus::invoke(app, &ctx, id, json!({})).unwrap();
     app.ui.panels.options_bar = false;
     run(&mut app, "window.togglePanels");
     let p = &app.ui.panels;
@@ -953,8 +953,8 @@ fn navigator_preview_fills_its_group_and_keeps_aspect() {
         let mut sizes = Vec::new();
         for tall in [150.0, 260.0, 420.0] {
             let mut h = Harness::builder().with_size(vec2(1200.0, 1000.0)).with_max_steps(64).build_eframe(move |cc| {
-                PhotocraftApp::setup_context(&cc.egui_ctx, theme);
-                let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+                SaryApp::setup_context(&cc.egui_ctx, theme);
+                let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
                 app.ui.theme = theme;
                 app.ui.panels.navigator = true;
                 app.ui.dock.heights.insert(Group::Navigator, tall);
@@ -980,15 +980,15 @@ fn navigator_preview_fills_its_group_and_keeps_aspect() {
     }
 }
 
-fn strip_tabs(h: &Harness<'static, PhotocraftApp>, g: Group) -> Vec<(usize, Rect)> {
+fn strip_tabs(h: &Harness<'static, SaryApp>, g: Group) -> Vec<(usize, Rect)> {
     last_strips(&h.ctx).into_iter().find(|s| s.group == g).map(|s| s.tabs).unwrap_or_else(|| panic!("{g:?} strip not drawn"))
 }
 
-fn tab_rect(h: &Harness<'static, PhotocraftApp>, g: Group, tab: usize) -> Rect {
+fn tab_rect(h: &Harness<'static, SaryApp>, g: Group, tab: usize) -> Rect {
     strip_tabs(h, g).into_iter().find(|(i, _)| *i == tab).map(|(_, r)| r).unwrap_or_else(|| panic!("{g:?} tab {tab} not on the strip"))
 }
 
-fn click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
+fn click(h: &mut Harness<'static, SaryApp>, p: Pos2) {
     h.event(egui::Event::PointerMoved(p));
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE });
@@ -1123,7 +1123,7 @@ fn a_tab_dragged_off_the_strip_moves_the_group_and_locking_stops_reordering() {
 
 #[test]
 fn brush_settings_window_is_closed_on_restart_but_can_be_reopened() {
-    let mut first = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut first = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     first.ui.panels.brush_settings = true;
     first.ui.panels.history = true;
     let saved = snapshot(&first);
@@ -1133,9 +1133,9 @@ fn brush_settings_window_is_closed_on_restart_but_can_be_reopened() {
     });
     let persisted = first.session.prefs_to_json();
 
-    let mut session = photocraft_engine::Session::new();
+    let mut session = sary_engine::Session::new();
     session.load_prefs_json(&persisted).unwrap();
-    let mut next = PhotocraftApp::new(session, crate::Services::default());
+    let mut next = SaryApp::new(session, crate::Services::default());
     restore(&mut next);
     assert!(!next.ui.panels.brush_settings, "a floating Brush Settings window should not reopen on startup");
     assert!(next.ui.panels.history, "remembered dock panel visibility is preserved");
@@ -1144,7 +1144,7 @@ fn brush_settings_window_is_closed_on_restart_but_can_be_reopened() {
     crate::menus::invoke(&mut next, &ctx, "window.toggle.brushSettings", json!({})).unwrap();
     assert!(next.ui.panels.brush_settings, "Window > Brush Settings can still open it");
 
-    let mut workspace = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut workspace = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     apply(&mut workspace, &saved);
     assert!(workspace.ui.panels.brush_settings, "switching workspaces still restores their saved layout");
 }

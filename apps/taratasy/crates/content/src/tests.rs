@@ -152,7 +152,7 @@ fn filtered_unknown_and_damaged_inline_images_keep_the_existing_fallback() {
 }
 
 fn inline_pdf(content: &[u8], object_streams: bool) -> Vec<u8> {
-    use pdfcraft_cos::{Document, SaveOptions, Stream, write_full};
+    use taratasy_cos::{Document, SaveOptions, Stream, write_full};
 
     let mut doc = Document::new_empty();
     let pages = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
@@ -178,7 +178,7 @@ fn inline_pdf(content: &[u8], object_streams: bool) -> Vec<u8> {
 
 #[test]
 fn rewritten_inline_image_pixels_survive_saving_and_reopening_a_pdf() {
-    use pdfcraft_cos::{Document, Object};
+    use taratasy_cos::{Document, Object};
     use std::sync::Arc;
 
     let original = b"q 4 0 0 1 0 0 cm BI /W 4 /H 1 /BPC 8 /CS /G ID  EI \nEI Q";
@@ -194,7 +194,7 @@ fn rewritten_inline_image_pixels_survive_saving_and_reopening_a_pdf() {
         let Object::Stream(stream) = &*content else { panic!("page content stream") };
         assert_eq!(parse(&stream.decoded_strict().unwrap()).ops[2].inline.as_ref().unwrap().1, b" EI ");
         // Opt-in artifacts for independent readers/renderers; synthetic PDFs are never committed.
-        if let Some(dir) = std::env::var_os("PDFCRAFT_INLINE_FIXTURE_DIR") {
+        if let Some(dir) = std::env::var_os("TARATASY_INLINE_FIXTURE_DIR") {
             let dir = std::path::PathBuf::from(dir);
             std::fs::create_dir_all(&dir).unwrap();
             std::fs::write(dir.join("original.pdf"), inline_pdf(original, false)).unwrap();

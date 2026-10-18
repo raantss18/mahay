@@ -1,7 +1,7 @@
 //! Shape Blur's row-wise convolution. Each sample sees the same f64 additions,
 //! in the same span order as the scalar implementation, but contiguous slices
 //! let the compiler vectorize without architecture-specific code or unsafe.
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 use crate::{
     BlurShape, Ctx,

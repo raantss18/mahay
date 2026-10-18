@@ -4,7 +4,7 @@
 //! text, from a
 //! document's working file (so unsaved edits and hidden layers are respected, as on screen).
 
-use pdfcraft_render::{PageRenderer, RenderRequest, RequestKind};
+use taratasy_render::{PageRenderer, RenderRequest, RequestKind};
 
 use crate::Document;
 
@@ -20,7 +20,7 @@ pub struct Exporter {
 #[derive(Clone)]
 pub struct ExportSource {
     pub bytes: std::sync::Arc<Vec<u8>>,
-    pub config: pdfcraft_render::RenderConfig,
+    pub config: taratasy_render::RenderConfig,
     pub pages: usize,
     /// Each page's displayed size in points (after `/Rotate` and `/UserUnit`).
     pub sizes: Vec<(f32, f32)>,
@@ -28,7 +28,7 @@ pub struct ExportSource {
 
 impl Document {
     /// What an export reads, for exporting on another thread. These are the displayed
-    /// bytes, so they may carry missing comment appearances PdfCraft drew. Signature
+    /// bytes, so they may carry missing comment appearances Taratasy drew. Signature
     /// artwork stays original; viewer validation badges are not document content and
     /// do not enter image/text exports or Print as Image. Saving uses the working file.
     pub fn export_source(&self) -> ExportSource {
@@ -43,15 +43,15 @@ impl Document {
 
 /// Export all images: the images `pages` (0-based) use, each once, skipping those under
 /// `min_side` pixels on their shorter side. JPEGs come out unchanged, other images as PNG.
-pub fn extract_images(src: &ExportSource, pages: &[usize], min_side: u32) -> Result<pdfcraft_create::ImageExport, String> {
-    let doc = pdfcraft_cos::Document::open_with_password(src.bytes.clone(), src.config.password.as_deref()).map_err(|e| e.to_string())?;
-    Ok(pdfcraft_create::extract_images(&doc, pages, min_side))
+pub fn extract_images(src: &ExportSource, pages: &[usize], min_side: u32) -> Result<taratasy_create::ImageExport, String> {
+    let doc = taratasy_cos::Document::open_with_password(src.bytes.clone(), src.config.password.as_deref()).map_err(|e| e.to_string())?;
+    Ok(taratasy_create::extract_images(&doc, pages, min_side))
 }
 
 /// The file name for the `index`-th (1-based) exported image: `<stem>_Page_<n>_Image_<index>.<ext>`.
 /// The page number has leading zeros for as many digits as the document's `page_count` has, so the
 /// files sort in page order (#2208): page 7 of 120 is `Page_007`.
-pub fn image_file_name(stem: &str, image: &pdfcraft_create::ExtractedImage, index: usize, page_count: usize) -> String {
+pub fn image_file_name(stem: &str, image: &taratasy_create::ExtractedImage, index: usize, page_count: usize) -> String {
     let width = page_count.max(1).to_string().len();
     format!("{stem}_Page_{:0width$}_Image_{index:04}.{}", image.page + 1, image.extension)
 }
@@ -73,7 +73,7 @@ impl Exporter {
     pub fn dpi_used(&self, page: usize, dpi: f64) -> f64 {
         let dpi = dpi.clamp(18.0, 1200.0);
         match self.sizes.get(page) {
-            Some(&(w, h)) => f64::from(pdfcraft_render::effective_scale(w, h, (dpi / 72.0) as f32)) * 72.0,
+            Some(&(w, h)) => f64::from(taratasy_render::effective_scale(w, h, (dpi / 72.0) as f32)) * 72.0,
             None => dpi,
         }
     }
@@ -223,10 +223,10 @@ pub fn encode_tiff(width: u32, height: u32, premultiplied: &[u8]) -> Result<Vec<
 mod image_name_tests {
     use super::image_file_name;
 
-    fn image(page: usize) -> pdfcraft_create::ExtractedImage {
-        pdfcraft_create::ExtractedImage {
+    fn image(page: usize) -> taratasy_create::ExtractedImage {
+        taratasy_create::ExtractedImage {
             page,
-            object: pdfcraft_cos::ObjRef { num: 1, generation: 0 },
+            object: taratasy_cos::ObjRef { num: 1, generation: 0 },
             width: 1,
             height: 1,
             extension: "png",

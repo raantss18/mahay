@@ -18,7 +18,7 @@ pub struct IconButtonStyle {
     /// `None` keeps the ordinary hover/normal appearance while pressed. Some apps have no
     /// separate pressed treatment; others retain it when the pointer leaves the button.
     pub pressed: Option<ButtonVisuals>,
-    /// Selection takes precedence over press and hover, matching the existing Craft buttons.
+    /// Selection takes precedence over press and hover, matching the existing Mahay buttons.
     pub selected: ButtonVisuals,
     pub corner_radius: CornerRadius,
     /// An inset outline while the button has keyboard focus; `Stroke::NONE` opts out.

@@ -2,7 +2,7 @@
 //!
 //! `type.characterStyle.*` and `type.paragraphStyle.*`: new, duplicate, delete, rename, set
 //! (Style Options), apply, redefine (from the selected text), clear override and list. The style
-//! model is [`photocraft_doc::TextStyles`]; text runs keep fully resolved attributes plus a style
+//! model is [`sary_doc::TextStyles`]; text runs keep fully resolved attributes plus a style
 //! reference, so whatever differs from the referenced styles is a local override ("+").
 //!
 //! Text targets: `layer` (one type layer) or `layers` (several), default the selected type
@@ -11,16 +11,16 @@
 
 use std::collections::HashSet;
 
-use photocraft_doc::text::{CharStyle, ParagraphRun, ParagraphStyle, TextRun};
-use photocraft_doc::text_styles::{self as ts, CharacterStyleDef, ParagraphStyleDef, StyleAttrs};
-use photocraft_doc::{Document, LayerContent, LayerId, TextLayer, TextStyles};
+use sary_doc::text::{CharStyle, ParagraphRun, ParagraphStyle, TextRun};
+use sary_doc::text_styles::{self as ts, CharacterStyleDef, ParagraphStyleDef, StyleAttrs};
+use sary_doc::{Document, LayerContent, LayerId, TextLayer, TextStyles};
 use serde_json::{Map, Value, json};
 
 use crate::commands::CommandSpec;
 use crate::type_cmds::{apply_char_props, apply_para_props, refresh};
 use crate::{EngineError, Result, Session};
 
-const FAMILY: &str = photocraft_text::fonts::DEFAULT_FAMILY;
+const FAMILY: &str = sary_text::fonts::DEFAULT_FAMILY;
 
 fn bad(cmd: &str, msg: impl Into<String>) -> EngineError {
     EngineError::BadParams { cmd: cmd.into(), msg: msg.into() }
@@ -84,7 +84,7 @@ fn id_param(cmd: &str, p: &Value) -> Result<Option<u32>> {
 /// A character style with every field changed from the default, to see which fields a set of
 /// Character-panel keys touches.
 fn perturbed_char() -> CharStyle {
-    use photocraft_doc::text::{Caps, FontFeature, FontVariation, Kerning};
+    use sary_doc::text::{Caps, FontFeature, FontVariation, Kerning};
     CharStyle {
         font_family: "\u{1}".into(),
         font_style: "\u{1}".into(),
@@ -92,7 +92,7 @@ fn perturbed_char() -> CharStyle {
         weight: 1,
         italic: true,
         size_pt: -1.0,
-        color: photocraft_doc::Color::rgba(0.123, 0.456, 0.789, 0.5),
+        color: sary_doc::Color::rgba(0.123, 0.456, 0.789, 0.5),
         tracking: -12345.0,
         leading_pt: Some(-1.0),
         baseline_shift_pt: -1.0,
@@ -115,7 +115,7 @@ fn perturbed_char() -> CharStyle {
 }
 
 fn perturbed_para() -> ParagraphStyle {
-    use photocraft_doc::text::{TextAlign, TextDirection};
+    use sary_doc::text::{TextAlign, TextDirection};
     ParagraphStyle {
         align: TextAlign::JustifyAll,
         first_line_indent_pt: -1.0,
@@ -219,7 +219,7 @@ fn restyle(t: &mut TextLayer, old: &TextStyles, new: &TextStyles, range: Option<
         .collect();
     let para_at = |off: usize| old_paras[starts.iter().rposition(|&s| s <= off).unwrap_or(0)].style.clone();
     let mut paras: Vec<(std::ops::Range<usize>, ParagraphStyle, Option<u32>)> = Vec::new(); // range, new style, old ref
-    for pr in photocraft_text::layout::split_paragraphs(&text) {
+    for pr in sary_text::layout::split_paragraphs(&text) {
         let old_p = para_at(pr.start);
         let touches = whole || (pr.start < b && pr.end > a) || (a == b && a >= pr.start && (a < pr.end || pr.end == text.len()));
         let new_ref = match op.set_para {

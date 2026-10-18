@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-use artcraft_launcher_core::PackageKind;
+use trano_core::PackageKind;
 use serde::{Deserialize, Serialize};
 
 /// One app the launcher installed.
@@ -50,7 +50,7 @@ mod tests {
         assert_eq!(Manifest::load(&path), Manifest::default());
         let mut m = Manifest::default();
         m.apps.insert(
-            "photocraft".into(),
+            "sary".into(),
             Record { version: "0.5.0".into(), kind: PackageKind::AppImage, path: "/x/y".into(), installed_at: 1, files: vec![], needs_root: false },
         );
         m.save(&path).unwrap();

@@ -4,11 +4,11 @@
 //! drag it up or down its own stack to reorder it).
 
 use egui::{Align2, Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
-use photocraft_doc::{Document, Layer, LayerContent, LayerId, SmartObject};
+use sary_doc::{Document, Layer, LayerContent, LayerId, SmartObject};
 use serde_json::{Value, json};
 
 use crate::theme::Tokens;
-use crate::{PhotocraftApp, icons};
+use crate::{SaryApp, icons};
 
 /// What the badge on a layer thumbnail marks the layer as.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -59,20 +59,20 @@ pub fn thumb_badge(ui: &egui::Ui, l: &Layer, thumb: Rect) {
 }
 
 /// The display name of a smart filter (its command's label without the ellipsis). A Photoshop
-/// filter PhotoCraft doesn't implement shows its own name and is marked as kept as is.
-fn filter_label(f: &photocraft_doc::SmartFilter) -> String {
+/// filter Sary doesn't implement shows its own name and is marked as kept as is.
+fn filter_label(f: &sary_doc::SmartFilter) -> String {
     let command = f.command.as_str();
-    if command == photocraft_engine::smart_cmds::UNSUPPORTED_FILTER {
+    if command == sary_engine::smart_cmds::UNSUPPORTED_FILTER {
         let name = f.params.get("name").and_then(Value::as_str).unwrap_or("Smart filter");
         return format!("{} (kept, not editable)", name.trim_end_matches("...").trim_end_matches('…'));
     }
-    photocraft_engine::commands::find(command)
+    sary_engine::commands::find(command)
         .map_or_else(|| command.rsplit('.').next().unwrap_or(command).to_string(), |c| tl!(c.label).trim_end_matches('…').to_string())
 }
 
 /// Smart Filters header + one row per filter (top filter first, as in Photoshop) under a smart
 /// layer. Edits are queued in `actions` as engine commands.
-pub fn filter_rows(app: &mut PhotocraftApp, ui: &mut egui::Ui, l: &Layer, depth: usize, actions: &mut Vec<(String, Value)>) {
+pub fn filter_rows(app: &mut SaryApp, ui: &mut egui::Ui, l: &Layer, depth: usize, actions: &mut Vec<(String, Value)>) {
     let LayerContent::Smart(sm) = &l.content else { return };
     if sm.smart_filters.is_empty() {
         return;
@@ -156,7 +156,7 @@ pub(crate) fn drag_key() -> egui::Id {
 }
 
 /// The selected smart filter row of a document.
-fn selected_key(doc: photocraft_doc::DocId) -> egui::Id {
+fn selected_key(doc: sary_doc::DocId) -> egui::Id {
     egui::Id::new(("smart-filter-selected", doc))
 }
 
@@ -176,7 +176,7 @@ pub(crate) fn selected(ctx: &egui::Context, doc: &Document, active: Option<Layer
 
 /// Forgets the selected smart filter row: its smart object's own row was clicked, or the filter
 /// was deleted (its index would now name the next one).
-pub(crate) fn deselect(ctx: &egui::Context, doc: photocraft_doc::DocId) {
+pub(crate) fn deselect(ctx: &egui::Context, doc: sary_doc::DocId) {
     ctx.data_mut(|d| d.remove::<FilterDrag>(selected_key(doc)));
 }
 
@@ -277,11 +277,11 @@ pub(crate) fn trash_action((layer, filter): FilterDrag) -> (String, Value) {
 
 /// Re-opens a smart filter's dialog with its recorded parameters; OK runs
 /// `layer.smartFilter.setParams` instead of adding another filter (see `dialogs::confirm`).
-pub fn open_editor(app: &mut PhotocraftApp, ctx: &egui::Context, layer: u64, sm: &SmartObject, index: usize) {
+pub fn open_editor(app: &mut SaryApp, ctx: &egui::Context, layer: u64, sm: &SmartObject, index: usize) {
     let Some(f) = sm.smart_filters.get(index) else { return };
     // Camera Raw has its own full-window dialog rather than a generic parameter form.
-    if f.command == photocraft_engine::lens_cmds::RAW {
-        if let Err(e) = crate::camera_raw_ui::open_smart_filter(app, ctx, photocraft_doc::LayerId(layer), index) {
+    if f.command == sary_engine::lens_cmds::RAW {
+        if let Err(e) = crate::camera_raw_ui::open_smart_filter(app, ctx, sary_doc::LayerId(layer), index) {
             app.ui.status = e;
             app.ui.status_error = true;
         }
@@ -289,7 +289,7 @@ pub fn open_editor(app: &mut PhotocraftApp, ctx: &egui::Context, layer: u64, sm:
     }
     // So has the Filter Gallery.
     if f.command == "filter.filterGallery" {
-        if let Err(e) = crate::gallery_ui::open_smart_filter(app, photocraft_doc::LayerId(layer), index) {
+        if let Err(e) = crate::gallery_ui::open_smart_filter(app, sary_doc::LayerId(layer), index) {
             app.ui.status = e;
             app.ui.status_error = true;
         }
@@ -312,7 +312,7 @@ pub fn open_editor(app: &mut PhotocraftApp, ctx: &egui::Context, layer: u64, sm:
 
 /// Hands the open dialog `id` the smart filter's recorded `params` and makes OK update that
 /// filter (`layer.smartFilter.setParams`, see [`confirm_command`]) instead of adding another.
-fn edit_filter(app: &mut PhotocraftApp, id: u64, layer: u64, index: usize, params: &Value) {
+fn edit_filter(app: &mut SaryApp, id: u64, layer: u64, index: usize, params: &Value) {
     if let Some(d) = app.ui.dialog_mut(id) {
         // The live preview would stack a second copy of the filter on the smart object.
         d.fields.remove("__preview");
@@ -341,7 +341,7 @@ mod tests {
 
     /// A pixel layer, a shape layer and a smart object, in that order.
     fn layers() -> [Layer; 3] {
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width": 64, "height": 48})).unwrap();
         // An empty layer can't become a smart object: fill it first.
         s.execute("layer.new.layer", json!({})).unwrap();
@@ -350,7 +350,7 @@ mod tests {
         let shape = s.execute("shape.create", json!({"kind": "rect", "rect": [8, 8, 40, 24], "fill": "#cc3333"})).unwrap()["layer"].as_u64().unwrap();
         let pixel = s.execute("layer.new.layer", json!({})).unwrap()["layer"].as_u64().unwrap();
         let doc = &s.active().unwrap().doc;
-        [pixel, shape, smart].map(|id| doc.layer(photocraft_doc::LayerId(id)).unwrap().clone())
+        [pixel, shape, smart].map(|id| doc.layer(sary_doc::LayerId(id)).unwrap().clone())
     }
 
     /// Stack [A, B, C] (A at the bottom, drawn last): where a dragged filter lands.
@@ -425,14 +425,14 @@ mod tests {
     /// filter instead of stacking another.
     #[test]
     fn an_adjustment_smart_filter_opens_its_editor_and_updates_it() {
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width": 64, "height": 48})).unwrap();
         s.execute("layer.new.layer", json!({})).unwrap();
         s.execute("edit.fill", json!({"contents": "black"})).unwrap();
         let id = s.execute("layer.smartObjects.convertToSmartObject", json!({})).unwrap()["layer"].as_u64().unwrap();
         s.execute("image.adjustments.brightnessContrast", json!({"brightness": 40, "contrast": -10})).unwrap();
-        let mut app = PhotocraftApp::new(s, crate::Services::default());
-        let sm = match &app.session.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content {
+        let mut app = SaryApp::new(s, crate::Services::default());
+        let sm = match &app.session.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content {
             LayerContent::Smart(sm) => sm.clone(),
             other => panic!("expected a smart object, got {other:?}"),
         };
@@ -445,7 +445,7 @@ mod tests {
         let dialog = d.id;
         // OK updates the recorded filter (one history step), it does not add a second filter.
         crate::dialogs::confirm(&mut app, dialog).unwrap();
-        let LayerContent::Smart(sm) = &app.session.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content else {
+        let LayerContent::Smart(sm) = &app.session.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content else {
             panic!("the layer stays a smart object");
         };
         assert_eq!(sm.smart_filters.len(), 1, "no filter was stacked");

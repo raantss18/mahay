@@ -4,11 +4,11 @@
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::{Document, Layer, LayerContent};
-use photocraft_geom::{Rect, Size};
-use photocraft_io::{ExportOptions, IoError};
-use photocraft_raster::{Interrupt, Surface};
+use sary_color::{ColorMode, SampleType};
+use sary_doc::{Document, Layer, LayerContent};
+use sary_geom::{Rect, Size};
+use sary_io::{ExportOptions, IoError};
+use sary_raster::{Interrupt, Surface};
 
 /// Three pixel layers (two in a group) of noise-like pixels at `depth`.
 fn layered(depth: SampleType) -> Document {
@@ -29,7 +29,7 @@ fn export_recorded(doc: &Document, name: &str, opts: &ExportOptions) -> (Vec<u8>
     let seen = Mutex::new(Vec::new());
     let cancel = || false;
     let progress = |f: f32| seen.lock().unwrap().push(f);
-    let r = photocraft_io::export_with(doc, name, opts, &Interrupt::new(&cancel, &progress)).unwrap();
+    let r = sary_io::export_with(doc, name, opts, &Interrupt::new(&cancel, &progress)).unwrap();
     (r.bytes, seen.into_inner().unwrap())
 }
 
@@ -41,7 +41,7 @@ fn export_reports_monotonic_progress_and_writes_the_same_bytes() {
         ("a.psd", ExportOptions::default(), 6),
         ("a.psb", ExportOptions::default(), 6),
         ("a.tif", layered_tiff, 6),
-        ("a.pcraft", ExportOptions::default(), 3),
+        ("a.sary", ExportOptions::default(), 3),
         ("a.png", ExportOptions::default(), 2),
         ("a.jpg", ExportOptions::default(), 2),
     ];
@@ -52,9 +52,9 @@ fn export_reports_monotonic_progress_and_writes_the_same_bytes() {
                 continue;
             }
             let (bytes, seen) = export_recorded(&doc, name, opts);
-            let plain = photocraft_io::export(&doc, name, opts).unwrap().bytes;
-            // .pcraft bundles carry a save time, so only the formats without one compare exactly.
-            if !name.ends_with(".pcraft") {
+            let plain = sary_io::export(&doc, name, opts).unwrap().bytes;
+            // .sary bundles carry a save time, so only the formats without one compare exactly.
+            if !name.ends_with(".sary") {
                 assert!(bytes == plain, "{name} {depth:?}: progress reporting changed the bytes");
             }
             assert!(seen.len() >= *min_reports, "{name} {depth:?}: only {} reports: {seen:?}", seen.len());
@@ -79,15 +79,15 @@ fn psd_progress_moves_per_layer_before_the_composite() {
 #[test]
 fn a_cancelled_export_stops_with_cancelled() {
     let doc = layered(SampleType::U8);
-    for name in ["a.psd", "a.tif", "a.pcraft", "a.png"] {
+    for name in ["a.psd", "a.tif", "a.sary", "a.png"] {
         // Cancelled from the start, and cancelled after the first progress report.
         let cancelled = || true;
-        let r = photocraft_io::export_with(&doc, name, &ExportOptions { tiff_layers: true, ..Default::default() }, &Interrupt::cancel_only(&cancelled));
+        let r = sary_io::export_with(&doc, name, &ExportOptions { tiff_layers: true, ..Default::default() }, &Interrupt::cancel_only(&cancelled));
         assert!(matches!(r, Err(IoError::Cancelled)), "{name}: {:?}", r.map(|r| r.bytes.len()));
         let stop = AtomicBool::new(false);
         let cancel = || stop.load(Ordering::Relaxed);
         let progress = |_: f32| stop.store(true, Ordering::Relaxed);
-        let r = photocraft_io::export_with(&doc, name, &ExportOptions { tiff_layers: true, ..Default::default() }, &Interrupt::new(&cancel, &progress));
+        let r = sary_io::export_with(&doc, name, &ExportOptions { tiff_layers: true, ..Default::default() }, &Interrupt::new(&cancel, &progress));
         assert!(matches!(r, Err(IoError::Cancelled)), "{name} midway: {:?}", r.map(|r| r.bytes.len()));
     }
 }

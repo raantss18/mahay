@@ -1,11 +1,11 @@
 //! Everyday Photoshop commands: clipboard (Cut/Copy/Copy Merged/Paste/Paste in Place), Layer via
 //! Copy/Cut, Merge Visible, Auto Tone/Contrast/Color, Toggle Last State and Transform Again.
 
-use photocraft_color::{ColorMode, PixelFormat};
-use photocraft_doc::adjust::LevelsChannel;
-use photocraft_doc::{Adjustment, Document, Layer, LayerContent, LayerId};
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat};
+use sary_doc::adjust::LevelsChannel;
+use sary_doc::{Adjustment, Document, Layer, LayerContent, LayerId};
+use sary_geom::Rect;
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -59,12 +59,12 @@ fn scratch_doc(doc: &Document) -> Document {
 /// to unselected or hidden layers, which must not follow this copy into a native save.
 fn copy_linked_sources(source: &Document, copies: &mut Document) -> Result<()> {
     fn collect<'a>(layers: &'a [Layer], depth: usize, paths: &mut std::collections::HashSet<&'a str>) -> Result<()> {
-        if depth > photocraft_doc::MAX_GROUP_DEPTH {
+        if depth > sary_doc::MAX_GROUP_DEPTH {
             return Err(EngineError::Other("can't copy linked smart objects from layers nested too deeply".into()));
         }
         for layer in layers {
             if let LayerContent::Smart(sm) = &layer.content
-                && let photocraft_doc::SmartSource::Linked { path } = &sm.source
+                && let sary_doc::SmartSource::Linked { path } = &sm.source
             {
                 paths.try_reserve(1).map_err(|_| EngineError::Other("not enough memory to copy smart-object source IDs".into()))?;
                 paths.insert(path);
@@ -84,7 +84,7 @@ fn copy_linked_sources(source: &Document, copies: &mut Document) -> Result<()> {
         if !matches!(key, b"lnk2" | b"lnk3" | b"lnkD" | b"lnkE") {
             continue;
         }
-        let selected = photocraft_io::linked::select_items(data, &|uuid, _| paths.contains(uuid))
+        let selected = sary_io::linked::select_items(data, &|uuid, _| paths.contains(uuid))
             .map_err(|e| EngineError::Other(format!("Could not copy smart-object contents: {e}; the clipboard was not changed")))?;
         let selected = selected.map(std::sync::Arc::new).unwrap_or_else(|| data.clone());
         if !selected.is_empty() {
@@ -263,7 +263,7 @@ fn lift_region(src: &Surface, sel: Option<&Surface>, r: Rect, n: usize) -> Resul
 /// Merged composite of the visible document as a surface in the document's format.
 fn merged_surface(doc: &Document) -> Surface {
     let fmt = doc.pixel_format();
-    photocraft_compose::flatten_to_surface(doc, PixelFormat::new(fmt.mode, fmt.sample, true), None)
+    sary_compose::flatten_to_surface(doc, PixelFormat::new(fmt.mode, fmt.sample, true), None)
 }
 
 fn copy(s: &mut Session, merged: bool) -> Result<Value> {
@@ -424,8 +424,8 @@ fn paste_layers(s: &mut Session, layers: &Document, dx: i32, dy: i32) -> Result<
         }
         // The clipboard may contain a subset of a destination block. Compare complete records,
         // so copying one layer in the same document does not duplicate large embedded files.
-        let missing = photocraft_io::linked::select_items(data, &|_, raw| {
-            !d.doc.metadata.psd_global_blocks.iter().any(|(_, dk, dd)| dk == key && photocraft_io::linked::contains_item(dd, raw))
+        let missing = sary_io::linked::select_items(data, &|_, raw| {
+            !d.doc.metadata.psd_global_blocks.iter().any(|(_, dk, dd)| dk == key && sary_io::linked::contains_item(dd, raw))
         })
         .map_err(|e| EngineError::Other(format!("Could not paste smart-object contents: {e}; the document was not changed")))?;
         let missing = missing.map(std::sync::Arc::new).unwrap_or_else(|| data.clone());
@@ -460,7 +460,7 @@ pub(crate) fn paste_offset(clip: &Clip, canvas: Rect, p: &Value, in_place: bool)
 }
 
 pub(crate) fn shifted(surface: &Surface, dx: i32, dy: i32) -> Surface {
-    if dx == 0 && dy == 0 { surface.clone() } else { photocraft_algo::resample::translate_surface(surface, dx, dy) }
+    if dx == 0 && dy == 0 { surface.clone() } else { sary_algo::resample::translate_surface(surface, dx, dy) }
 }
 
 /// Paste into the targeted layer mask, alpha channel or Quick Mask (`"target"`) instead of as a
@@ -500,8 +500,8 @@ fn new_from_clipboard(s: &mut Session) -> Result<Value> {
     };
     let fmt = clip.surface.format();
     let target = PixelFormat::new(fmt.mode, fmt.sample, true);
-    let moved = if dx == 0 && dy == 0 { clip.surface } else { photocraft_algo::resample::translate_surface(&clip.surface, dx, dy) };
-    let mut doc = Document::new("Untitled", photocraft_geom::Size::new(w, h), fmt.mode, fmt.sample);
+    let moved = if dx == 0 && dy == 0 { clip.surface } else { sary_algo::resample::translate_surface(&clip.surface, dx, dy) };
+    let mut doc = Document::new("Untitled", sary_geom::Size::new(w, h), fmt.mode, fmt.sample);
     if let Some(r) = clip.resolution.filter(|r| r.is_finite() && *r > 0.0) {
         doc.resolution_dpi = r;
     }
@@ -756,7 +756,7 @@ fn transform_again_params(s: &Session) -> Result<Value> {
             if r.len() != 4 || q.len() != 4 || q.iter().any(|row| row.len() < 2) {
                 return Err(EngineError::Other("the last transform can't be repeated".into()));
             }
-            let h = photocraft_algo::transform::Homography::rect_to_quad(
+            let h = sary_algo::transform::Homography::rect_to_quad(
                 [r[0], r[1], r[2], r[3]],
                 [[q[0][0], q[0][1]], [q[1][0], q[1][1]], [q[2][0], q[2][1]], [q[3][0], q[3][1]]],
             )
@@ -1311,7 +1311,7 @@ mod tests {
     /// exactly the old pixels.
     #[test]
     fn paste_damages_only_the_pasted_layer() {
-        let render = |s: &Session| photocraft_compose::render(&s.active().unwrap().doc, s.active().unwrap().doc.bounds());
+        let render = |s: &Session| sary_compose::render(&s.active().unwrap().doc, s.active().unwrap().doc.bounds());
         for depth in [8, 16, 32] {
             let mut s = Session::new();
             s.execute("file.new", json!({"width": 60, "height": 50, "depth": depth, "background": "white"})).unwrap();
@@ -1365,7 +1365,7 @@ mod tests {
     /// The luminosity of `src`'s pixel at (`x`, `y`): what a paste into a mask writes there.
     fn luminosity(s: &Session, src: LayerId, x: i32, y: i32) -> f32 {
         let p = s.active().unwrap().doc.layer(src).unwrap().surface().unwrap().rgba(x, y);
-        photocraft_color::convert::rgb_to_gray([p[0], p[1], p[2]])
+        sary_color::convert::rgb_to_gray([p[0], p[1], p[2]])
     }
 
     fn mask_at(s: &Session, id: LayerId, x: i32, y: i32) -> f32 {
@@ -1550,9 +1550,9 @@ mod tests {
         s.execute("file.new", json!({"width": 120, "height": 120, "mode": "gray"})).unwrap();
         s.execute("edit.paste", json!({})).unwrap();
         let d = &s.active().unwrap().doc;
-        assert_eq!(d.mode, photocraft_doc::ColorMode::Grayscale);
+        assert_eq!(d.mode, sary_doc::ColorMode::Grayscale);
         let pasted = d.layers.last().unwrap().surface().unwrap();
-        assert_eq!(pasted.format().mode, photocraft_color::ColorMode::Grayscale, "pasted layer is grayscale");
+        assert_eq!(pasted.format().mode, sary_color::ColorMode::Grayscale, "pasted layer is grayscale");
         assert!(!pasted.content_bounds().is_empty(), "pasted content exists");
     }
 
@@ -1605,7 +1605,7 @@ mod tests {
             let mut s = Session::new();
             s.execute("file.new", json!({"width": 40, "height": 30, "depth": depth, "background": "#336699"})).unwrap();
             s.edit("partial selection", |doc, _| {
-                let mut m = photocraft_raster::Surface::new(PixelFormat::GRAY8);
+                let mut m = sary_raster::Surface::new(PixelFormat::GRAY8);
                 m.fill_rect(Rect::new(5, 5, 15, 15), &[1.0]);
                 m.fill_rect(Rect::new(15, 5, 20, 15), &[0.5]);
                 doc.selection = Some(m);
@@ -1859,9 +1859,9 @@ mod tests {
             let LayerContent::Smart(sm) = &mut doc.layer_mut(outer).ok_or(EngineError::NoDocument)?.content else {
                 return Err(EngineError::Other("not a smart object".into()));
             };
-            sm.source = photocraft_doc::SmartSource::Linked { path: "uuid-1".into() };
-            let linked = photocraft_io::linked::LinkedFile { uuid: "uuid-1".into(), file_name: "in.png".into(), bytes: vec![1, 2, 3, 4] };
-            doc.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(photocraft_io::linked::encode_linked_file(&linked))));
+            sm.source = sary_doc::SmartSource::Linked { path: "uuid-1".into() };
+            let linked = sary_io::linked::LinkedFile { uuid: "uuid-1".into(), file_name: "in.png".into(), bytes: vec![1, 2, 3, 4] };
+            doc.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(sary_io::linked::encode_linked_file(&linked))));
             Ok(())
         })
         .unwrap();
@@ -2209,10 +2209,10 @@ mod tests {
         assert_eq!(s.active().unwrap().history.can_undo(), undo_before, "a refused guide records no history step");
     }
 
-    /// Guides keep their exact place (#2918): 1 cm at 300 ppi through New Guide and .pcraft, and
+    /// Guides keep their exact place (#2918): 1 cm at 300 ppi through New Guide and .sary, and
     /// a 1/32 px PSD position past 2^19 px, where f32 has no 1/32 steps left.
     #[test]
-    fn guides_keep_sub_pixel_positions_through_pcraft_and_psd() {
+    fn guides_keep_sub_pixel_positions_through_sary_and_psd() {
         let (cm, far) = (300.0 / 2.54, 600_000.031_25);
         let mut s = session();
         s.execute("view.newGuide", json!({"orientation": "horizontal", "position": cm})).unwrap();
@@ -2220,13 +2220,13 @@ mod tests {
         fn wide(v: impl Into<f64>) -> f64 {
             v.into()
         }
-        let exact = |g: &photocraft_doc::Guides| (wide(g.horizontal[0]), wide(g.vertical[0]));
+        let exact = |g: &sary_doc::Guides| (wide(g.horizontal[0]), wide(g.vertical[0]));
         let doc = &s.active().unwrap().doc;
         assert_eq!(exact(&doc.guides), (cm, far));
-        let pcraft = photocraft_format::save_to_bytes(doc, &Default::default()).unwrap();
-        assert_eq!(exact(&photocraft_format::load_from_bytes(&pcraft).unwrap().guides), (cm, far));
-        let psd = photocraft_io::export(doc, "psd", &Default::default()).unwrap().bytes;
-        let back = photocraft_io::import("g.psd", &psd).unwrap().document.guides;
+        let sary = sary_format::save_to_bytes(doc, &Default::default()).unwrap();
+        assert_eq!(exact(&sary_format::load_from_bytes(&sary).unwrap().guides), (cm, far));
+        let psd = sary_io::export(doc, "psd", &Default::default()).unwrap().bytes;
+        let back = sary_io::import("g.psd", &psd).unwrap().document.guides;
         assert_eq!(wide(back.vertical[0]), far, "1032 stores 1/32 px");
     }
 
@@ -2280,7 +2280,7 @@ mod tests {
     /// the tile grid, and for content reaching past the canvas.
     #[test]
     fn tiled_lift_matches_the_whole_area_lift() {
-        use photocraft_color::{ColorMode, SampleType};
+        use sary_color::{ColorMode, SampleType};
         let canvas = Rect::new(0, 0, 700, 600);
         for sample in [SampleType::U8, SampleType::U16, SampleType::F32] {
             for alpha in [true, false] {

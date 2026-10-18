@@ -12,11 +12,11 @@
 //! editable equivalent for them. Vector masks, paths, notes, slices and guides follow the affine
 //! map closest to the homography (exact when the quad is a parallelogram).
 
-use photocraft_algo::transform::{Homography, Interp, convex_quad, quad_size, quad_to_rect, warp_surface_clipped};
-use photocraft_color::PixelFormat;
-use photocraft_doc::{Document, Layer, LayerContent, LayerId, Size};
-use photocraft_geom::{Affine, Rect};
-use photocraft_raster::Surface;
+use sary_algo::transform::{Homography, Interp, convex_quad, quad_size, quad_to_rect, warp_surface_clipped};
+use sary_color::PixelFormat;
+use sary_doc::{Document, Layer, LayerContent, LayerId, Size};
+use sary_geom::{Affine, Rect};
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -188,7 +188,7 @@ fn warp_layers(layers: &mut [Layer], h: &Homography, interp: Interp, clip: Rect,
 fn apply(doc: &mut Document, q: &[[f64; 2]; 4], h: &Homography, size: (u32, u32), interp: Interp, bg: [f32; 4]) -> Result<()> {
     let (w, ht) = size;
     let clip = Rect::from_xywh(0, 0, w, ht);
-    let bg = photocraft_raster::from_rgba(&doc.pixel_format(), bg);
+    let bg = sary_raster::from_rgba(&doc.pixel_format(), bg);
     let background_id = doc.background().map(|l| l.id);
     warp_layers(&mut doc.layers, h, interp, clip, &bg, background_id)?;
     for ch in doc.channels.iter_mut().chain(doc.quick_mask.as_mut()) {
@@ -247,8 +247,8 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::{ColorMode, SampleType};
-    use photocraft_doc::Color;
+    use sary_color::{ColorMode, SampleType};
+    use sary_doc::Color;
 
     /// A document whose Background shows a W x H ramp (red = u / W, green = v / H) seen in
     /// perspective through the quad `q`: pixel (x, y) holds the ramp at the rectified point.
@@ -261,7 +261,7 @@ mod tests {
         for y in 0..120 {
             for x in 0..160 {
                 let (u, v) = to_out.apply(x as f64 + 0.5, y as f64 + 0.5);
-                px.extend(photocraft_raster::from_rgba(&fmt, [(u / w).clamp(0.0, 1.0) as f32, (v / h).clamp(0.0, 1.0) as f32, 0.5, 1.0]));
+                px.extend(sary_raster::from_rgba(&fmt, [(u / w).clamp(0.0, 1.0) as f32, (v / h).clamp(0.0, 1.0) as f32, 0.5, 1.0]));
             }
         }
         doc.layers[0].surface_mut().unwrap().write_region(Rect::from_xywh(0, 0, 160, 120), &px);
@@ -288,7 +288,7 @@ mod tests {
             for y in (2..78).step_by(5) {
                 for x in (2..98).step_by(5) {
                     let i = (y * 100 + x) * n;
-                    let p = photocraft_raster::to_rgba(&fmt, &out[i..i + n]);
+                    let p = sary_raster::to_rgba(&fmt, &out[i..i + n]);
                     let (u, v) = (p[0] as f64 * w, p[1] as f64 * h);
                     assert!((u - (x as f64 + 0.5)).abs() < 1.0 && (v - (y as f64 + 0.5)).abs() < 1.0, "{depth:?} ({x}, {y}) shows ({u:.2}, {v:.2})");
                 }

@@ -29,7 +29,7 @@ const DARK: Color32 = Color32::from_rgb(0x2B, 0x2B, 0x2B);
 
 macro_rules! icons {
     ($($(#[$m:meta])* $v:ident => $n:literal,)*) => {
-        /// Every icon DeckCraft draws.
+        /// Every icon Seho draws.
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
         pub enum Icon {
             $($(#[$m])* $v,)*

@@ -1,4 +1,4 @@
-//! [`FeedThrottle`]: how often the launcher may call ArtCraft's API (the release feed).
+//! [`FeedThrottle`]: how often the launcher may call Mahay's API (the release feed).
 //!
 //! Every launcher in the world polls the same server, so the limits are strict and favour the
 //! server over freshness (the last saved answer always stands in):
@@ -66,7 +66,7 @@ struct Saved {
     throttles: u32,
 }
 
-/// The pacing state for ArtCraft's API. Times are Unix seconds, passed in so it can be tested.
+/// The pacing state for Mahay's API. Times are Unix seconds, passed in so it can be tested.
 #[derive(Debug)]
 pub struct FeedThrottle {
     saved: Saved,
@@ -167,7 +167,7 @@ impl FeedThrottle {
         let Some(file) = &self.file else { return };
         let saved = serde_json::to_vec(&self.saved).unwrap_or_default();
         if let Err(e) = crate::paths::write_atomic(file, &saved) {
-            log::warn!("couldn't save the ArtCraft API backoff: {e}");
+            log::warn!("couldn't save the Mahay API backoff: {e}");
         }
     }
 }

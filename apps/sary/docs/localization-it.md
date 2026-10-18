@@ -7,7 +7,7 @@ already translate: filter and adjustment parameter names, Camera Raw panels, lig
 History, Layers, path and channel menu labels, metadata fields, status messages, System Info and
 dialog text. In Italian those showed in English.
 They are now translated, and a review pass fixed mistranslations and inconsistent terms in the
-existing entries. Translations are written from the meaning of PhotoCraft's English labels; no
+existing entries. Translations are written from the meaning of Sary's English labels; no
 proprietary translation resources, fonts, screenshots or user documents are included.
 
 ## Register and style
@@ -64,10 +64,10 @@ current code; they are translated to stay aligned with the other catalogs.
   enumerates every filter and adjustment parameter, symbolic choice and gallery name, like the
   Korean test, and requires an Italian row for each. With the catalog on `main` before this change
   it lists 388 missing labels; now none.
-- `cargo test -p photocraft-ui-egui --lib`: the catalog tests pass. Two layout tests,
+- `cargo test -p sary-ui-egui --lib`: the catalog tests pass. Two layout tests,
   `type_controls_fill_the_panel_at_every_width_and_scale` and
   `properties_edit_shown_metrics_and_paragraphs_with_a_non_type_primary`, fail on `main` as well
   without this change.
 - `cargo xtask i18n-coverage`: 1,726 / 1,726 for `it`.
-- The offscreen `snapshot` example with `PHOTOCRAFT_LOCALE=it` rendered Lighting Effects, the
+- The offscreen `snapshot` example with `SARY_LOCALE=it` rendered Lighting Effects, the
   Camera Raw filter and Wind with Italian labels, without missing glyphs or clipped text.

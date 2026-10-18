@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{RangeRef, Value};
-use gridcraft_formula::Expr;
+use tabilao_core::{RangeRef, Value};
+use tabilao_formula::Expr;
 use serde::{Deserialize, Serialize};
 
 use crate::style::StyleId;
@@ -24,21 +24,21 @@ impl Formula {
     /// `#NAME?`.
     pub fn new(text: &str) -> Formula {
         let body = text.strip_prefix('=').unwrap_or(text);
-        match gridcraft_formula::parse(body) {
-            Ok(e) => Formula { text: gridcraft_formula::print(&e), expr: Some(Arc::new(e)), array: None },
+        match tabilao_formula::parse(body) {
+            Ok(e) => Formula { text: tabilao_formula::print(&e), expr: Some(Arc::new(e)), array: None },
             Err(_) => Formula { text: body.to_string(), expr: None, array: None },
         }
     }
     pub fn from_expr(e: Expr) -> Formula {
-        Formula { text: gridcraft_formula::print(&e), expr: Some(Arc::new(e)), array: None }
+        Formula { text: tabilao_formula::print(&e), expr: Some(Arc::new(e)), array: None }
     }
     /// The parsed expression, re-parsing after deserialization.
     pub fn expr(&self) -> Option<Expr> {
-        self.expr.as_deref().cloned().or_else(|| gridcraft_formula::parse(&self.text).ok())
+        self.expr.as_deref().cloned().or_else(|| tabilao_formula::parse(&self.text).ok())
     }
     /// The parsed expression without copying it (re-parses after deserialization).
     pub fn expr_arc(&self) -> Option<Arc<Expr>> {
-        self.expr.clone().or_else(|| gridcraft_formula::parse(&self.text).ok().map(Arc::new))
+        self.expr.clone().or_else(|| tabilao_formula::parse(&self.text).ok().map(Arc::new))
     }
 }
 

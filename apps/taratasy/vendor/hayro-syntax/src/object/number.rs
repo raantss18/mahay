@@ -125,7 +125,7 @@ fn read_inner(r: &mut Reader<'_>) -> Option<Number> {
         _ => false,
     };
 
-    // PdfCraft patch: high-precision float mantissa overflow (jsPDF double-precision coordinates).
+    // Taratasy patch: high-precision float mantissa overflow (jsPDF double-precision coordinates).
     // Digits that don't fit in `mantissa` are dropped: past the dot they are only precision;
     // before it, each one scales the value by ten (`extra_int_digits`).
     let mut mantissa: u64 = 0;

@@ -1,10 +1,10 @@
 //! Fonts a presentation uses that this machine doesn't have, so opening it can say so (its text
 //! draws in a stand-in; see `FontDb::document_face`).
 
-use deckcraft_fonts::FontDb;
-use deckcraft_model::resolve::{self, Ctx};
-use deckcraft_model::text::{Bullet, TextBody};
-use deckcraft_model::{Presentation, Shape, ShapeKind};
+use seho_fonts::FontDb;
+use seho_model::resolve::{self, Ctx};
+use seho_model::text::{Bullet, TextBody};
+use seho_model::{Presentation, Shape, ShapeKind};
 
 /// Load each embedded face into the font database, so text in that family draws with the file's
 /// font on a machine that doesn't have it. A face already loaded (bundled or installed) stays;
@@ -15,7 +15,7 @@ pub fn install_embedded_fonts(p: &Presentation) {
     for font in &p.embedded_fonts {
         for id in font.faces().into_iter().flatten() {
             let Some(item) = p.media(id) else { continue };
-            let Some(sfnt) = deckcraft_fonts::embedded_sfnt(&item.data) else { continue };
+            let Some(sfnt) = seho_fonts::embedded_sfnt(&item.data) else { continue };
             db.add_font(sfnt.to_vec());
         }
     }
@@ -46,7 +46,7 @@ pub fn used_fonts(p: &Presentation) -> Vec<String> {
     };
     for slide in &p.slides {
         let Some(ctx) = Ctx::for_slide(p, slide) else { continue };
-        deckcraft_model::walk(&slide.shapes, &mut |s, _| {
+        seho_model::walk(&slide.shapes, &mut |s, _| {
             if let Some(body) = &s.text {
                 body_fonts(&ctx, s, body, &mut add);
             }
@@ -154,14 +154,14 @@ fn replace_body(body: &mut TextBody, fix: &mut dyn FnMut(&mut Option<String>)) {
     }
 }
 
-fn replace_list(l: &mut deckcraft_model::text::ListStyle, fix: &mut dyn FnMut(&mut Option<String>)) {
+fn replace_list(l: &mut seho_model::text::ListStyle, fix: &mut dyn FnMut(&mut Option<String>)) {
     for lvl in l.levels.iter_mut().flatten() {
         fix(&mut lvl.para.bullet_font);
         replace_run(&mut lvl.run, fix);
     }
 }
 
-fn replace_run(r: &mut deckcraft_model::text::RunProps, fix: &mut dyn FnMut(&mut Option<String>)) {
+fn replace_run(r: &mut seho_model::text::RunProps, fix: &mut dyn FnMut(&mut Option<String>)) {
     for f in [&mut r.font, &mut r.font_ea, &mut r.font_cs, &mut r.font_sym] {
         fix(f);
     }

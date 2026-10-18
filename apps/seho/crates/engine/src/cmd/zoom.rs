@@ -7,10 +7,10 @@
 
 use std::sync::Arc;
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::style::PictureFill;
-use deckcraft_model::text::{Action, Hyperlink, TextBody};
-use deckcraft_model::{LayoutType, Shape, ShapeId, ShapeKind, SlideId, defaults};
+use seho_geom::Xfrm;
+use seho_model::style::PictureFill;
+use seho_model::text::{Action, Hyperlink, TextBody};
+use seho_model::{LayoutType, Shape, ShapeId, ShapeKind, SlideId, defaults};
 use serde_json::{Value, json};
 
 use super::*;

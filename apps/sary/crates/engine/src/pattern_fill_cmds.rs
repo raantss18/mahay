@@ -1,7 +1,7 @@
 //! Editing a Pattern Fill layer: Photoshop's Pattern Fill dialog (pattern, Angle, Scale, Link with
 //! Layer, Snap to Origin) commits one undoable content edit, independent of the layer's masks.
 
-use photocraft_doc::{Document, Fill, LayerContent, Pattern};
+use sary_doc::{Document, Fill, LayerContent, Pattern};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, check_pixels_unlocked, layer_param};
@@ -66,7 +66,7 @@ fn edited(s: &Session, base: &Fill, p: &Value) -> Result<(Fill, Option<Pattern>)
 }
 
 /// The target layer and the fill `p` gives it, checked against the active document.
-fn target(s: &Session, p: &Value) -> Result<(photocraft_doc::LayerId, Fill, Fill, Option<Pattern>)> {
+fn target(s: &Session, p: &Value) -> Result<(sary_doc::LayerId, Fill, Fill, Option<Pattern>)> {
     if !p.is_object() || p.get("layer").is_some_and(|v| v.as_u64().is_none()) {
         return Err(bad("params must be an object and layer an unsigned id"));
     }
@@ -99,7 +99,7 @@ fn set(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(info(id, &fill))
 }
 
-fn info(layer: photocraft_doc::LayerId, fill: &Fill) -> Value {
+fn info(layer: sary_doc::LayerId, fill: &Fill) -> Value {
     match fill {
         Fill::Pattern { scale, id, angle, link, phase, .. } => {
             json!({"layer": layer.0, "pattern": id, "scale": scale * 100.0, "angle": angle, "link": link, "phase": [phase.0, phase.1]})
@@ -147,7 +147,7 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::LayerId;
+    use sary_doc::LayerId;
     use std::sync::Arc;
 
     fn session(depth: u64) -> (Session, LayerId) {
@@ -210,8 +210,8 @@ mod tests {
         s.execute(CREATE, p).unwrap();
         // Layer ids are allocated per process, so the preview's new layer has its own id: compare
         // what the documents look like.
-        let all = photocraft_geom::Rect::new(0, 0, 40, 30);
-        assert_eq!(photocraft_compose::render(&shown, all).px, photocraft_compose::render(&s.active().unwrap().doc, all).px);
+        let all = sary_geom::Rect::new(0, 0, 40, 30);
+        assert_eq!(sary_compose::render(&shown, all).px, sary_compose::render(&s.active().unwrap().doc, all).px);
         assert_eq!(shown.layers.len(), s.active().unwrap().doc.layers.len());
         assert!(preview(&s, "edit.fill", &json!({})).is_err());
     }

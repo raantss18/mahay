@@ -412,7 +412,7 @@ pub fn unwritable(text: &str) -> String {
     let mut out = String::new();
     for c in text.chars() {
         let mut buf = [0u8; 4];
-        if c != '?' && pdfcraft_fonts::win_ansi(c.encode_utf8(&mut buf)) == b"?" && !out.contains(c) {
+        if c != '?' && taratasy_fonts::win_ansi(c.encode_utf8(&mut buf)) == b"?" && !out.contains(c) {
             out.push(c);
         }
     }

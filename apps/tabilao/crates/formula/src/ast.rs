@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{CellError, CellRef, MAX_COLS, MAX_ROWS, RangeRef};
+use tabilao_core::{CellError, CellRef, MAX_COLS, MAX_ROWS, RangeRef};
 use serde::{Deserialize, Serialize};
 
 /// One end of a reference, with `$` anchors.

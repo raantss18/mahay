@@ -46,7 +46,7 @@ impl ShadingPattern {
         self.encode_within(None)
     }
 
-    /// PdfCraft patch: encode the shading pattern for drawing inside `area` (device space) only.
+    /// Taratasy patch: encode the shading pattern for drawing inside `area` (device space) only.
     /// Mesh shadings are sampled pixel by pixel, and only there (see `TriangleSampler`).
     pub fn encode_within(&self, area: Option<kurbo::Rect>) -> EncodedShadingPattern {
         let base_transform;
@@ -91,7 +91,7 @@ impl ShadingPattern {
                 }
             }
             ShadingType::CoonsPatchMesh { patches, function } => {
-                // PdfCraft patch: one patch's triangles at a time (each is 722); collecting all
+                // Taratasy patch: one patch's triangles at a time (each is 722); collecting all
                 // of them first held 150 KB per patch before any limit applied.
                 let full_transform = self.matrix;
                 let mut sampler = TriangleSampler::new(area);
@@ -116,7 +116,7 @@ impl ShadingPattern {
                 }
             }
             ShadingType::TensorProductPatchMesh { patches, function } => {
-                // PdfCraft patch: one patch's triangles at a time, as for Coons patches.
+                // Taratasy patch: one patch's triangles at a time, as for Coons patches.
                 let full_transform = self.matrix;
                 let mut sampler = TriangleSampler::new(area);
                 let mut triangles = vec![];
@@ -210,7 +210,7 @@ fn encode_axial_shading(
     )
 }
 
-/// PdfCraft patch: pixel visits one mesh shading may make, per pixel of the area it is drawn in
+/// Taratasy patch: pixel visits one mesh shading may make, per pixel of the area it is drawn in
 /// and per triangle. Sampling walks each triangle's bounding box (rounded out to whole pixels),
 /// so triangles far off the page (a fuzzed patch decoded onto ±40000) asked for 65536 × 65536
 /// samples, and many triangles covering the same pixels repeat the work. A triangle's box is
@@ -218,10 +218,10 @@ fn encode_axial_shading(
 const MESH_VISITS_PER_PIXEL: u64 = 8;
 const MESH_VISITS_PER_TRIANGLE: u64 = 4;
 
-/// PdfCraft patch: the visits allowed when no area is given (the public `encode`).
+/// Taratasy patch: the visits allowed when no area is given (the public `encode`).
 const MESH_VISITS_WITHOUT_AREA: u64 = 1 << 24;
 
-/// PdfCraft patch: mesh triangles one page may sample in all, across every shading painted on
+/// Taratasy patch: mesh triangles one page may sample in all, across every shading painted on
 /// it. A shading is triangulated again each time it is painted (2^16 patches are 47 million
 /// triangles, several seconds), so painting one a thousand times took hours. A 200 × 200
 /// gradient mesh is 29 million triangles.
@@ -232,18 +232,18 @@ std::thread_local! {
         const { core::cell::Cell::new(MAX_PAGE_MESH_TRIANGLES) };
 }
 
-/// PdfCraft patch: a page starts with a fresh mesh triangle budget (called from
+/// Taratasy patch: a page starts with a fresh mesh triangle budget (called from
 /// `Context::new`).
 pub(crate) fn reset_mesh_budget() {
     MESH_TRIANGLES_LEFT.with(|n| n.set(MAX_PAGE_MESH_TRIANGLES));
 }
 
-/// PdfCraft patch: `false` once this page's mesh triangle budget is spent.
+/// Taratasy patch: `false` once this page's mesh triangle budget is spent.
 fn mesh_budget_left() -> bool {
     MESH_TRIANGLES_LEFT.with(|n| n.get() > 0)
 }
 
-/// PdfCraft patch: samples mesh triangles into a map with one entry per pixel, only inside
+/// Taratasy patch: samples mesh triangles into a map with one entry per pixel, only inside
 /// `area` (device space), within the visit budget above.
 struct TriangleSampler {
     map: FxHashMap<(u16, u16), ColorComponents>,

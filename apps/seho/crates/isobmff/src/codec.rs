@@ -2,7 +2,7 @@
 
 use crate::bytes::{BoxBuf, Cur, FourCc, boxes};
 use crate::error::{Error, Result, invalid};
-use deckcraft_bitstream::BitReader;
+use seho_bitstream::BitReader;
 
 /// One sample description (an entry of `stsd`).
 #[derive(Clone, Debug, PartialEq)]

@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-annot"
+name = "taratasy-annot"
 description = "Annotations (comments): builders, appearance streams and edits, ISO 32000-2 §12.5"
 version.workspace = true
 edition.workspace = true
@@ -9,9 +9,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-fonts = { workspace = true }
-pdfcraft-model = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-fonts = { workspace = true }
+taratasy-model = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

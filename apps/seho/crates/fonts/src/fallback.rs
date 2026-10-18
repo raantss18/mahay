@@ -3,11 +3,11 @@
 //! The cascade for a cluster (a base character with its marks, never split across faces) is:
 //! 1. the faces the document asks for, in order (the run's slot typeface, then the theme's script
 //!    font, `a:font[@script="Arab"]`);
-//! 2. for scripts with a platform cascade (Arabic, Hebrew, Thai, Devanagari): the craft-fonts face
+//! 2. for scripts with a platform cascade (Arabic, Hebrew, Thai, Devanagari): the mahay-fonts face
 //!    bundled for the script (Noto Naskh Arabic for Arabic), so every machine draws the same; then
 //!    openly licensed or OS-native families found by name among the installed fonts (no platform
 //!    API is called); then any installed face covering the cluster;
-//! 3. any loaded face (bundled first: Japanese keeps its craft-fonts faces), then the first
+//! 3. any loaded face (bundled first: Japanese keeps its mahay-fonts faces), then the first
 //!    requested face (drawn as .notdef).
 
 use std::sync::Arc;
@@ -15,7 +15,7 @@ use std::sync::Arc;
 use skrifa::raw::TableProvider;
 
 use crate::script::{ScriptTag, script_of};
-use crate::{CRAFT_FONTS, FontDb, FontFace};
+use crate::{MAHAY_FONTS, FontDb, FontFace};
 
 /// Variation selector 15: text presentation.
 const TEXT_SELECTOR: char = '\u{FE0E}';
@@ -115,10 +115,10 @@ fn os_families(script: ScriptTag) -> &'static [&'static str] {
     }
 }
 
-/// The craft-fonts families for a script (manifest order), e.g. Noto Naskh Arabic for `Arab`.
+/// The mahay-fonts families for a script (manifest order), e.g. Noto Naskh Arabic for `Arab`.
 pub fn bundled_families(script: ScriptTag) -> Vec<&'static str> {
     let tag = std::str::from_utf8(&script).unwrap_or("");
-    let mut v: Vec<&'static str> = CRAFT_FONTS.iter().filter(|f| f.scripts.contains(&tag)).map(|f| f.family).collect();
+    let mut v: Vec<&'static str> = MAHAY_FONTS.iter().filter(|f| f.scripts.contains(&tag)).map(|f| f.family).collect();
     v.dedup();
     v
 }
@@ -156,7 +156,7 @@ impl FontDb {
         let script = cluster.iter().find_map(|c| script_of(*c));
         // Scripts with a platform cascade (Arabic, Hebrew, Thai, Devanagari): the bundled face,
         // then installed ones; the others keep the loaded-faces-first order (Japanese documents
-        // prefer the bundled craft-fonts faces).
+        // prefer the bundled mahay-fonts faces).
         if let Some(s) = script.filter(|s| !os_families(*s).is_empty()) {
             let bundled = bundled_families(s);
             for fam in &bundled {
@@ -214,7 +214,7 @@ impl FontDb {
             let faces = db.read_faces();
             let mut v: Vec<&Arc<FontFace>> = faces
                 .iter()
-                .filter(|f| !bundled.iter().any(|b| f.family.eq_ignore_ascii_case(b)) && !CRAFT_FONTS.iter().any(|c| c.family == f.family))
+                .filter(|f| !bundled.iter().any(|b| f.family.eq_ignore_ascii_case(b)) && !MAHAY_FONTS.iter().any(|c| c.family == f.family))
                 .filter(|f| covers_cluster(f, cluster))
                 .collect();
             v.sort_by_key(|f| (f.italic, (f.weight - 400.0).abs() as i32));

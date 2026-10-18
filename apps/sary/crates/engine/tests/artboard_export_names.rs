@@ -4,7 +4,7 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 struct Board {
@@ -37,7 +37,7 @@ fn check_export(depth: u32, names: &[&str], prefix: Option<&str>, format: &str, 
         params["artboards"] = json!(selected.iter().map(|i| boards[*i].id).collect::<Vec<_>>());
     }
     let expected: Vec<_> = boards.iter().enumerate().rev().filter(|(i, _)| selected.is_none_or(|ids| ids.contains(i))).map(|(_, b)| b).collect();
-    let before = photocraft_format::save_to_bytes(&s.active().unwrap().doc, &Default::default()).unwrap();
+    let before = sary_format::save_to_bytes(&s.active().unwrap().doc, &Default::default()).unwrap();
     let revision = s.active().unwrap().revision;
     let history = s.active().unwrap().history.past_len();
     let result = s.execute("file.export.artboardsToFiles", params).unwrap();
@@ -49,15 +49,15 @@ fn check_export(depth: u32, names: &[&str], prefix: Option<&str>, format: &str, 
     for (file, board) in files.iter().zip(expected) {
         assert_eq!(Path::new(file).parent(), Some(dir.path()));
         let bytes = std::fs::read(file).unwrap();
-        let doc = photocraft_io::import(file, &bytes).unwrap().document;
+        let doc = sary_io::import(file, &bytes).unwrap().document;
         assert_eq!((doc.size.width, doc.size.height), (board.width, 2), "wrong artboard in {file}");
-        let px = photocraft_compose::flatten(&doc).px[0];
+        let px = sary_compose::flatten(&doc).px[0];
         for (actual, expected) in px.iter().zip(board.color) {
             assert!((actual - expected).abs() < 1e-3, "wrong pixels in {file}: {px:?}");
         }
     }
     let after = s.active().unwrap();
-    assert_eq!(photocraft_format::save_to_bytes(&after.doc, &Default::default()).unwrap(), before);
+    assert_eq!(sary_format::save_to_bytes(&after.doc, &Default::default()).unwrap(), before);
     assert_eq!(after.revision, revision, "export must not edit the source document");
     assert_eq!(after.history.past_len(), history);
 }

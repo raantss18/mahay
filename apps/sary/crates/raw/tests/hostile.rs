@@ -1,8 +1,8 @@
 //! Truncated and corrupted raw files must fail cleanly, never panic, and
 //! never allocate beyond the limits.
 
-use photocraft_raw::testgen::{Cr2Spec, DngSpec, DngStorage, RafPacking, RafSpec, XTRANS, mosaic, mosaic_cfa, orf, rw2, scene, sony_craw, tiff_ep};
-use photocraft_raw::*;
+use sary_raw::testgen::{Cr2Spec, DngSpec, DngStorage, RafPacking, RafSpec, XTRANS, mosaic, mosaic_cfa, orf, rw2, scene, sony_craw, tiff_ep};
+use sary_raw::*;
 
 /// Losslessly encodes 16-bit RGB as a JPEG XL codestream.
 fn jxl_rgb16(rgb: &[u16], w: usize, h: usize) -> Vec<u8> {

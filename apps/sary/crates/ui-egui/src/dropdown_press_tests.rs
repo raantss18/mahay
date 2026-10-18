@@ -4,16 +4,16 @@
 use egui::accesskit::Role;
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
-use photocraft_doc::BlendMode;
+use sary_doc::BlendMode;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
-fn app_with_a_layer() -> Harness<'static, PhotocraftApp> {
+fn app_with_a_layer() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         // No tool options bar Mode dropdown showing "Normal" too.
@@ -24,13 +24,13 @@ fn app_with_a_layer() -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn blend(h: &Harness<'_, PhotocraftApp>) -> BlendMode {
+fn blend(h: &Harness<'_, SaryApp>) -> BlendMode {
     let st = h.state().session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().blend
 }
 
 /// The Layers panel's Blend Mode dropdown (showing `value`).
-fn blend_box(h: &Harness<'_, PhotocraftApp>, value: &str) -> egui::Rect {
+fn blend_box(h: &Harness<'_, SaryApp>, value: &str) -> egui::Rect {
     let named = |n: &egui_kittest::Node<'_>| {
         let a = n.accesskit_node();
         a.value().as_deref() == Some(value) || a.label().as_deref() == Some(value)

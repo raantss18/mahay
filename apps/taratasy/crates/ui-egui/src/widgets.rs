@@ -3,7 +3,7 @@
 use egui::{Align2, Color32, CornerRadius, Rect, Response, Sense, Stroke, vec2};
 
 use crate::theme::{self, Tokens};
-use crate::{PdfCraftApp, icons};
+use crate::{TaratasyApp, icons};
 
 /// Horizontal and vertical inset of a single-line field.
 const FIELD_MARGIN: egui::Margin = egui::Margin::symmetric(10, 6);
@@ -339,7 +339,7 @@ fn wrapped_lines(ui: &egui::Ui, text: &str, font: &egui::FontId, width: f32, tru
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     (text, font, width.to_bits(), ui.ctx().pixels_per_point().to_bits(), truncate).hash(&mut hasher);
     let key = hasher.finish();
-    let cache_id = egui::Id::new("pdfcraft-rtl-wrap-cache");
+    let cache_id = egui::Id::new("taratasy-rtl-wrap-cache");
     if let Some(hit) = ui.ctx().data_mut(|d| d.get_temp_mut_or_default::<WrapCache>(cache_id).lines.get(&key).cloned()) {
         return hit;
     }
@@ -376,7 +376,7 @@ fn wrapped_lines(ui: &egui::Ui, text: &str, font: &egui::FontId, width: f32, tru
 }
 
 /// Transient message at the bottom centre.
-pub fn toast(app: &mut PdfCraftApp, ctx: &egui::Context) {
+pub fn toast(app: &mut TaratasyApp, ctx: &egui::Context) {
     let Some((msg, start)) = app.toast.clone() else { return };
     let now = ctx.input(|i| i.time);
     let start = if start == 0.0 { now } else { start };
@@ -428,10 +428,10 @@ pub struct ProgressNotice {
 /// Where the progress notice keeps its height this frame, for placing the toast above it.
 const PROGRESS_HEIGHT: &str = "progress-notice-height";
 
-/// Draw [`PdfCraftApp::progress_notice`]: the label, a bar that eases towards the fraction with
+/// Draw [`TaratasyApp::progress_notice`]: the label, a bar that eases towards the fraction with
 /// a light sweeping across it, the percentage and Cancel. Returns true when Cancel was clicked.
 /// With animation effects off ([`crate::motion`]) the bar steps to the fraction and has no sweep.
-pub fn progress_notice(app: &PdfCraftApp, ctx: &egui::Context) -> bool {
+pub fn progress_notice(app: &TaratasyApp, ctx: &egui::Context) -> bool {
     let Some(p) = &app.progress_notice else { return false };
     let t = Tokens::get(ctx);
     let screen = ctx.content_rect();
@@ -499,33 +499,33 @@ pub fn progress_notice(app: &PdfCraftApp, ctx: &egui::Context) -> bool {
     cancel
 }
 
-/// The ArtCraft wordmark (Storyteller's brand, docs/brand/; not open source), sized to `height`.
-pub fn artcraft_logo(ui: &mut egui::Ui, height: f32) -> Response {
+/// The Mahay wordmark (Storyteller's brand, docs/brand/; not open source), sized to `height`.
+pub fn mahay_logo(ui: &mut egui::Ui, height: f32) -> Response {
     let dark = ui.visuals().dark_mode;
     let (uri, bytes): (&str, &'static [u8]) = if dark {
-        ("bytes://artcraft-logo-white.svg", include_bytes!("../../../docs/brand/artcraft-logo-white.svg"))
+        ("bytes://mahay-logo-white.svg", include_bytes!("../../../docs/brand/mahay-logo-white.svg"))
     } else {
-        ("bytes://artcraft-logo.svg", include_bytes!("../../../docs/brand/artcraft-logo.svg"))
+        ("bytes://mahay-logo.svg", include_bytes!("../../../docs/brand/mahay-logo.svg"))
     };
-    ui.add(egui::Image::from_bytes(uri, bytes).max_height(height).alt_text("ArtCraft"))
+    ui.add(egui::Image::from_bytes(uri, bytes).max_height(height).alt_text("Mahay"))
 }
 
-/// The ArtCraft mark (brand blue, works on light and dark), `size` points square.
-pub fn artcraft_mark(ui: &mut egui::Ui, size: f32) -> Response {
+/// The Mahay mark (brand blue, works on light and dark), `size` points square.
+pub fn mahay_mark(ui: &mut egui::Ui, size: f32) -> Response {
     ui.add(
-        egui::Image::from_bytes("bytes://artcraft-mark.svg", include_bytes!("../../../docs/brand/artcraft-mark.svg"))
+        egui::Image::from_bytes("bytes://mahay-mark.svg", include_bytes!("../../../docs/brand/mahay-mark.svg"))
             .fit_to_exact_size(vec2(size, size))
-            .alt_text("ArtCraft"),
+            .alt_text("Mahay"),
     )
 }
 
-/// Buttons for every community link (`pdfcraft_engine::links`), Discord first and prominent.
+/// Buttons for every community link (`taratasy_engine::links`), Discord first and prominent.
 /// Returns the registry command of the one clicked.
 pub fn community_links(ui: &mut egui::Ui) -> Option<&'static str> {
     let mut clicked = None;
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = vec2(8.0, 8.0);
-        for (i, l) in pdfcraft_engine::links::LINKS.iter().enumerate() {
+        for (i, l) in taratasy_engine::links::LINKS.iter().enumerate() {
             let resp = if i == 0 { icon_pill(ui, l.icon, tl!("Join our Discord"), true) } else { icon_pill(ui, l.icon, tl!(l.label), false) };
             if resp.on_hover_text(l.url).clicked() {
                 clicked = Some(l.command);
@@ -687,7 +687,7 @@ mod tests {
         output.drop_without_applying_deltas();
     }
 
-    fn toast_rect(app: &mut PdfCraftApp, ctx: &egui::Context, width: f32, now: &mut f64) -> Rect {
+    fn toast_rect(app: &mut TaratasyApp, ctx: &egui::Context, width: f32, now: &mut f64) -> Rect {
         // Let the Area settle after a notice/viewport change, without advancing to
         // expiry. No native rendering or renderer worker is needed for this layout.
         for _ in 0..3 {
@@ -704,7 +704,7 @@ mod tests {
     #[test]
     fn toast_width_adapts_to_long_notices_and_narrow_viewports() {
         let ctx = egui::Context::default();
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         let mut now = 1.0;
         app.notify("Saved");
         let short = toast_rect(&mut app, &ctx, 1280.0, &mut now);
@@ -749,7 +749,7 @@ mod tests {
         let ctx = egui::Context::default();
         ctx.set_fonts(theme::font_definitions());
         let cache_len =
-            |ctx: &egui::Context| ctx.data_mut(|d| d.get_temp_mut_or_default::<WrapCache>(egui::Id::new("pdfcraft-rtl-wrap-cache")).lines.len());
+            |ctx: &egui::Context| ctx.data_mut(|d| d.get_temp_mut_or_default::<WrapCache>(egui::Id::new("taratasy-rtl-wrap-cache")).lines.len());
         let persian = "این یک نظر طولانی به زبان فارسی است که باید در چند خط شکسته شود";
         let long = persian.repeat(2_000);
         let mut first = None;

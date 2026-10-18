@@ -4,15 +4,15 @@
 //! (crate::display::Draw::Art), which [`art_layers`] turns into plain fills and strokes for the
 //! raster and PDF back ends: reflection, shadow, glow, fill, outline, in that order. A warped
 //! text box's outlines are bent by [`Warp`] before that. Blurs are approximated with
-//! [`wordcraft_doc::effects::bands`], as for shapes.
+//! [`soratra_doc::effects::bands`], as for shapes.
 
 use kurbo::{Affine, BezPath, PathEl, Point, Shape};
-use wordcraft_doc::effects::Shadow;
-use wordcraft_doc::props::Rgb;
-use wordcraft_doc::resolve::ResolvedChar;
-use wordcraft_doc::wordart::{TextEffects, TextFill, TextOutline, TextWarp};
-use wordcraft_fonts::FaceRef;
-use wordcraft_geom::Rect;
+use soratra_doc::effects::Shadow;
+use soratra_doc::props::Rgb;
+use soratra_doc::resolve::ResolvedChar;
+use soratra_doc::wordart::{TextEffects, TextFill, TextOutline, TextWarp};
+use soratra_fonts::FaceRef;
+use soratra_geom::Rect;
 
 /// How a layer is painted.
 #[derive(Clone, Debug, PartialEq)]
@@ -40,7 +40,7 @@ pub struct ArtLayer {
 /// The outlines of `glyphs` (glyph id, pen x, baseline y in page points) of `face` at `size`, as
 /// one path in page coordinates (slanted for synthetic italics).
 pub fn glyph_path(face: &FaceRef, size: f32, glyphs: &[(u32, f32, f32)], synth_italic: bool) -> BezPath {
-    let db = wordcraft_fonts::FontDb::global();
+    let db = soratra_fonts::FontDb::global();
     let k = f64::from(size) / face.upem.max(1.0);
     let skew = if synth_italic { Affine::new([1.0, 0.0, -0.21, 1.0, 0.0, 0.0]) } else { Affine::IDENTITY };
     let mut out = BezPath::new();
@@ -114,7 +114,7 @@ pub fn art_layers(path: &BezPath, fx: &TextEffects, color: Rgb, alpha: f32) -> V
     if let Some(sh) = fx.shadow {
         let (dx, dy) = sh.offset();
         let moved = Affine::translate((f64::from(dx), f64::from(dy))) * path.clone();
-        for (g, a) in wordcraft_doc::effects::bands(0.0, sh.blur / 2.0, sh.opacity() * alpha) {
+        for (g, a) in soratra_doc::effects::bands(0.0, sh.blur / 2.0, sh.opacity() * alpha) {
             let paint = ArtPaint::Solid(sh.color, a);
             out.push(ArtLayer { path: moved.clone(), paint: paint.clone(), stroke: None, letters: false });
             if g > 0.05 {
@@ -123,7 +123,7 @@ pub fn art_layers(path: &BezPath, fx: &TextEffects, color: Rgb, alpha: f32) -> V
         }
     }
     if let Some(gl) = fx.glow {
-        for (g, a) in wordcraft_doc::effects::bands(0.0, gl.size, gl.opacity() * alpha) {
+        for (g, a) in soratra_doc::effects::bands(0.0, gl.size, gl.opacity() * alpha) {
             if g > 0.05 {
                 out.push(ArtLayer { path: path.clone(), paint: ArtPaint::Solid(gl.color, a), stroke: Some(2.0 * g), letters: false });
             }
@@ -166,7 +166,7 @@ pub fn run_effects(rc: &ResolvedChar, color: Rgb) -> Option<TextEffects> {
 /// (the raster glyphs' synthetic-bold stroke), or such an outline in a solid fill's colour and
 /// transparency (`color` for the default fill) when there is none.
 pub fn embolden(fx: &mut TextEffects, color: Rgb, size: f32) {
-    let w = if size.is_finite() { (size * 0.03).clamp(0.0, wordcraft_doc::wordart::MAX_OUTLINE) } else { 0.0 };
+    let w = if size.is_finite() { (size * 0.03).clamp(0.0, soratra_doc::wordart::MAX_OUTLINE) } else { 0.0 };
     match &mut fx.outline {
         Some(o) if o.color.is_some() => o.width += w,
         _ => {
@@ -243,7 +243,7 @@ fn triangle_down(u: f32, k: f32) -> (f32, f32) {
 
 impl Warp {
     /// The warp `w` fitted to `frame` for text whose box is `aspect` times as tall as it is
-    /// wide. `None` for warps drawn flat (plain, and those WordCraft doesn't bend).
+    /// wide. `None` for warps drawn flat (plain, and those Soratra doesn't bend).
     pub fn new(w: &TextWarp, frame: Rect, aspect: f32) -> Option<Warp> {
         use std::f32::consts::PI;
         if !(frame.w > 0.5 && frame.h > 0.5 && frame.w.is_finite() && frame.h.is_finite()) {
@@ -373,8 +373,8 @@ mod tests {
     /// #2534: the legacy font effects become text effects, under any WordArt effects.
     #[test]
     fn legacy_font_effects_are_drawn_as_text_effects() {
-        use wordcraft_doc::CharProps;
-        let rc = |c: CharProps| wordcraft_doc::styles::StyleSheet::default().resolve_char(None, &CharProps { size: Some(20.0), ..c });
+        use soratra_doc::CharProps;
+        let rc = |c: CharProps| soratra_doc::styles::StyleSheet::default().resolve_char(None, &CharProps { size: Some(20.0), ..c });
         let red = Rgb(200, 0, 0);
         assert_eq!(run_effects(&rc(CharProps::default()), red), None);
         let o = run_effects(&rc(CharProps { outline: Some(true), ..Default::default() }), red).unwrap();
@@ -418,7 +418,7 @@ mod tests {
         let mut glass = TextEffects { fill: Some(TextFill::Solid { color: red, transparency: 40.0 }), ..Default::default() };
         embolden(&mut glass, Rgb::BLACK, 20.0);
         assert_eq!(glass.outline, Some(TextOutline { color: Some(red), width: 20.0 * 0.03, transparency: 40.0 }));
-        let stops = vec![wordcraft_doc::wordart::GradStop { pos: 0.0, color: red, transparency: 0.0 }];
+        let stops = vec![soratra_doc::wordart::GradStop { pos: 0.0, color: red, transparency: 0.0 }];
         let mut grad = TextEffects { fill: Some(TextFill::Gradient { stops, angle: 0.0 }), ..Default::default() };
         embolden(&mut grad, red, 20.0);
         assert_eq!(grad.outline, None);
@@ -429,8 +429,8 @@ mod tests {
     #[test]
     fn effects_on_tracked_and_turned_text() {
         use crate::display::{DisplayOptions, Draw, InsertMark, page_display};
-        use wordcraft_doc::props::TextDirection;
-        use wordcraft_doc::{CharProps, Document, Paragraph, Revision, RevisionKind, para_block};
+        use soratra_doc::props::TextDirection;
+        use soratra_doc::{CharProps, Document, Paragraph, Revision, RevisionKind, para_block};
         let mut d = Document::new();
         d.revisions.push(Revision { kind: RevisionKind::Insert, author: "Ada".into(), date: String::new(), move_name: None });
         let cp = CharProps { outline: Some(true), size: Some(20.0), ins: Some(0), ..Default::default() };

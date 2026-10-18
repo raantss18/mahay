@@ -33,7 +33,7 @@ private keys prefixed with `__`. Never use `__` for user-facing or engine params
 | Kind | Body module | Typical entry |
 |---|---|---|
 | `NewDocument` | `new_doc_ui.rs` | File › New, `file.new` with no size params |
-| `About` | `dialogs.rs` (About / Contributors / Models tabs) | Help › About PhotoCraft; `systemInfo: true` → System Info variant |
+| `About` | `dialogs.rs` (About / Contributors / Models tabs) | Help › About Sary; `systemInfo: true` → System Info variant |
 | `Command` | Routed—see below | Most menu commands with parameters |
 | `LayerStyle` | `layer_style.rs` | Layer › Layer Style… |
 | `Error` | inline in `dialogs.rs` | `message` field only (e.g. move lock, locked transform) |

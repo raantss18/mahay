@@ -6,9 +6,9 @@ use std::rc::Rc;
 use egui::accesskit::Role;
 use egui::{Event, Modifiers, OutputCommand, PointerButton};
 use egui_kittest::kittest::Queryable as _;
-use gridcraft_engine::Session;
-use gridcraft_engine::core::{CellRef, Value};
-use gridcraft_ui_egui::{Services, SheetApp, grid};
+use tabilao_engine::Session;
+use tabilao_engine::core::{CellRef, Value};
+use tabilao_ui_egui::{Services, SheetApp, grid};
 use serde_json::json;
 
 fn harness(services: Services) -> egui_kittest::Harness<'static, SheetApp> {
@@ -97,8 +97,8 @@ fn pasting_reads_the_clipboard_html_for_the_numbers_behind_the_text() {
     h.state_mut().run("selection.set", json!({"cell": "D5"})).unwrap();
     h.input_mut().events.push(Event::Paste("Rp10,000.00".into()));
     h.run_steps(2);
-    let value = h.state().session.active().and_then(|d| d.wb.active().map(|s| s.value(gridcraft_engine::core::CellRef::new(4, 3))));
-    assert_eq!(value, Some(gridcraft_engine::core::Value::number(10000.0)));
+    let value = h.state().session.active().and_then(|d| d.wb.active().map(|s| s.value(tabilao_engine::core::CellRef::new(4, 3))));
+    assert_eq!(value, Some(tabilao_engine::core::Value::number(10000.0)));
 }
 
 #[test]
@@ -129,9 +129,9 @@ fn enter_pastes_the_copied_cells_and_ends_copy_mode() {
     h.state_mut().run("selection.set", json!({"cell": "D5"})).unwrap();
     h.key_press(egui::Key::Enter);
     h.run_steps(2);
-    let value = |r, c| h.state().session.active().and_then(|d| d.wb.active().map(|s| s.value(gridcraft_engine::core::CellRef::new(r, c))));
-    assert_eq!(value(4, 3), Some(gridcraft_engine::core::Value::text("Name")));
-    assert_eq!(value(5, 4), Some(gridcraft_engine::core::Value::number(42.0)));
+    let value = |r, c| h.state().session.active().and_then(|d| d.wb.active().map(|s| s.value(tabilao_engine::core::CellRef::new(r, c))));
+    assert_eq!(value(4, 3), Some(tabilao_engine::core::Value::text("Name")));
+    assert_eq!(value(5, 4), Some(tabilao_engine::core::Value::number(42.0)));
     assert!(h.state().session.clipboard.is_none(), "the marching ants are gone");
     assert_eq!(h.state().session.active().map(|d| d.selection.active.a1()), Some("D5".to_string()), "Enter does not also move down");
 
@@ -152,7 +152,7 @@ fn clicking_the_ribbon_paste_button_or_its_menu_does_not_freeze() {
         let mut h = harness(Services::default());
         h.state_mut().run("edit.copy", json!({"range": "A1:B2"})).unwrap();
         h.state_mut().run("selection.set", json!({"cell": "D4"})).unwrap();
-        // No host clipboard here (as on the web): GridCraft's own copy is pasted.
+        // No host clipboard here (as on the web): Tabilao's own copy is pasted.
         h.get_by_role_and_label(Role::Button, "Paste").click();
         h.run_steps(3);
         assert_eq!(cell(&h, "D4"), Some(Value::from("Name")));
@@ -182,7 +182,7 @@ fn clicking_the_ribbon_paste_button_or_its_menu_does_not_freeze() {
 type Harness = egui_kittest::Harness<'static, SheetApp>;
 
 fn value_at(h: &Harness, a1: &str) -> Option<Value> {
-    let at = gridcraft_engine::core::CellRef::parse(a1).unwrap();
+    let at = tabilao_engine::core::CellRef::parse(a1).unwrap();
     h.state().session.active().and_then(|d| d.wb.active().map(|s| s.value(at)))
 }
 
@@ -216,7 +216,7 @@ fn ribbon_paste_pastes_the_system_clipboard_like_cmd_v() {
     assert_eq!(value_at(&h, "E5"), Some(Value::number(2.0)));
     assert!(h.state().message.is_none(), "{:?}", h.state().message);
 
-    // The clipboard text is GridCraft's own copy: the copy is pasted with its formulas.
+    // The clipboard text is Tabilao's own copy: the copy is pasted with its formulas.
     h.state_mut().run("cell.set", json!({"cell": "A3", "input": "=B2*2"})).unwrap();
     let copied = h.state_mut().run("edit.copy", json!({"range": "A3"})).unwrap();
     clipboard.borrow_mut().0 = copied["text"].as_str().unwrap().to_string();
@@ -226,7 +226,7 @@ fn ribbon_paste_pastes_the_system_clipboard_like_cmd_v() {
     let sh = h.state().session.active().unwrap().wb.active().unwrap();
     assert_eq!(sh.cell(CellRef::parse("B9").unwrap()).unwrap().formula.as_ref().unwrap().text, "C8*2");
 
-    // Nothing on the system clipboard (an image, say): GridCraft's own copy is pasted.
+    // Nothing on the system clipboard (an image, say): Tabilao's own copy is pasted.
     clipboard.borrow_mut().0.clear();
     h.state_mut().run("selection.set", json!({"cell": "B12"})).unwrap();
     h.get_by_role_and_label(Role::Button, "Paste").click();

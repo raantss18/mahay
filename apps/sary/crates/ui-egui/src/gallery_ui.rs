@@ -14,13 +14,13 @@
 use std::hash::{Hash, Hasher};
 
 use egui::{Align2, Color32, FontId, Rect as ERect, Sense, Stroke, TextureHandle, pos2, vec2};
-use photocraft_algo::{FilterParams, GALLERY_CATEGORIES, GalleryFilter};
-use photocraft_doc::LayerId;
-use photocraft_geom::Rect;
-use photocraft_raster::{Interrupt, Surface};
+use sary_algo::{FilterParams, GALLERY_CATEGORIES, GalleryFilter};
+use sary_doc::LayerId;
+use sary_geom::Rect;
+use sary_raster::{Interrupt, Surface};
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::edit_history::{EditHistory, Step};
 use crate::filter_dialog::{Kind, parse_spec};
 use crate::theme::Tokens;
@@ -189,10 +189,10 @@ fn sample(surf: &Surface, r: Rect, k: u32) -> Surface {
 
 /// Runs a stack on a small surface (the preview and thumbnails).
 fn render(src: &Surface, params: &Value) -> Surface {
-    let effects = photocraft_engine::gallery_cmds::effects_from_json(params).unwrap_or_default();
+    let effects = sary_engine::gallery_cmds::effects_from_json(params).unwrap_or_default();
     let b = src.content_bounds().union(&Rect::new(0, 0, 1, 1));
     let b = Rect::new(0, 0, b.x1, b.y1);
-    photocraft_algo::apply_in(src, &FilterParams::FilterGallery { effects }, b, b, None, b)
+    sary_algo::apply_in(src, &FilterParams::FilterGallery { effects }, b, b, None, b)
 }
 
 /// The preview of `vis` at 1/`k` (#2502): the stack runs at full resolution exactly as OK runs it
@@ -200,11 +200,11 @@ fn render(src: &Surface, params: &Value) -> Surface {
 /// the pixels equal the same crop of the applied result; then `k`×`k` blocks are averaged.
 /// `None` when cancelled.
 fn preview_pixels(src: &Surface, canvas: Rect, params: &Value, vis: Rect, k: u32, ctl: &Interrupt) -> Option<Surface> {
-    let effects = photocraft_engine::gallery_cmds::effects_from_json(params).unwrap_or_default();
+    let effects = sary_engine::gallery_cmds::effects_from_json(params).unwrap_or_default();
     let fp = FilterParams::FilterGallery { effects };
     let content = src.content_bounds();
-    let area = photocraft_algo::output_area(&fp, content, canvas, None).intersect(&vis);
-    let full = if area.is_empty() { src.clone() } else { photocraft_algo::apply_in_with(src, &fp, area, canvas, None, canvas.union(&content), ctl)? };
+    let area = sary_algo::output_area(&fp, content, canvas, None).intersect(&vis);
+    let full = if area.is_empty() { src.clone() } else { sary_algo::apply_in_with(src, &fp, area, canvas, None, canvas.union(&content), ctl)? };
     Some(reduce(&full, vis, k))
 }
 
@@ -298,7 +298,7 @@ fn colour_param(p: &Value, key: &str) -> Option<[f32; 4]> {
 }
 
 /// Opens the dialog on the active layer, starting from the last gallery stack used.
-pub fn open(app: &mut PhotocraftApp) -> Result<(), String> {
+pub fn open(app: &mut SaryApp) -> Result<(), String> {
     let (layer, src, _) = crate::distort_ui::active_pixels(app)?;
     let last = app.session.journal.iter().rev().find(|(id, _)| id == "filter.filterGallery").map(|(_, p)| p.clone());
     let effects = last.as_ref().map(effects_from).unwrap_or_default();
@@ -308,9 +308,9 @@ pub fn open(app: &mut PhotocraftApp) -> Result<(), String> {
 
 /// Re-opens Filter Gallery smart filter `index` of smart object `layer` with its recorded stack,
 /// previewing on the pixels below it; OK updates that filter (`layer.smartFilter.setParams`).
-pub fn open_smart_filter(app: &mut PhotocraftApp, layer: LayerId, index: usize) -> Result<(), String> {
+pub fn open_smart_filter(app: &mut SaryApp, layer: LayerId, index: usize) -> Result<(), String> {
     let st = app.session.active().ok_or("no document")?;
-    let Some(photocraft_doc::LayerContent::Smart(sm)) = st.doc.layer(layer).map(|l| &l.content) else {
+    let Some(sary_doc::LayerContent::Smart(sm)) = st.doc.layer(layer).map(|l| &l.content) else {
         return Err("the layer is not a smart object".into());
     };
     let filter = sm.smart_filters.get(index).ok_or("no such smart filter")?;
@@ -318,7 +318,7 @@ pub fn open_smart_filter(app: &mut PhotocraftApp, layer: LayerId, index: usize) 
         return Err("the smart filter is not a Filter Gallery filter".into());
     }
     let p = filter.params.clone();
-    let src = photocraft_engine::smart_cmds::render_below_filter(&st.doc, sm, index)
+    let src = sary_engine::smart_cmds::render_below_filter(&st.doc, sm, index)
         .map_err(|e| e.to_string())?
         .ok_or("the smart object's contents are unavailable (missing linked file?)")?;
     let fg = colour_param(&p, "foreground").unwrap_or(app.session.tools.foreground);
@@ -327,7 +327,7 @@ pub fn open_smart_filter(app: &mut PhotocraftApp, layer: LayerId, index: usize) 
 }
 
 fn open_on(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     layer: LayerId,
     src: Surface,
     mut effects: Vec<EffectLayer>,
@@ -378,7 +378,7 @@ fn open_on(
 }
 
 /// OK: runs `filter.filterGallery` with the stack (one history step).
-pub fn commit(app: &mut PhotocraftApp) -> Result<Value, String> {
+pub fn commit(app: &mut SaryApp) -> Result<Value, String> {
     let Some(d) = app.distort.gallery.take() else { return Err("the Filter Gallery is not open".into()) };
     if !d.effects.iter().any(|e| e.visible) {
         return Ok(json!({"committed": false}));
@@ -392,7 +392,7 @@ pub fn commit(app: &mut PhotocraftApp) -> Result<Value, String> {
 }
 
 /// Control channel: `filter.filterGallery {"ui": {...}}` while the dialog is open.
-pub fn control(app: &mut PhotocraftApp, ui: &Value) -> Result<Value, String> {
+pub fn control(app: &mut SaryApp, ui: &Value) -> Result<Value, String> {
     let flag = |k: &str| ui.get(k).and_then(Value::as_bool) == Some(true);
     if flag("commit") {
         let r = commit(app)?;
@@ -447,7 +447,7 @@ struct PreviewJob {
     key: u64,
     vis: Rect,
     rx: std::sync::mpsc::Receiver<Result<Option<(egui::ColorImage, f64)>, String>>,
-    ctl: photocraft_engine::jobs::JobCtx,
+    ctl: sary_engine::jobs::JobCtx,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -556,7 +556,7 @@ fn start_job(d: &mut GalleryDialog, ctx: &egui::Context, key: u64, vis: Rect, k:
         return;
     }
     let (tx, rx) = std::sync::mpsc::sync_channel(1);
-    let ctl = photocraft_engine::jobs::JobCtx::new();
+    let ctl = sary_engine::jobs::JobCtx::new();
     let (work, src, canvas, params, repaint) = (ctl.clone(), d.src.clone(), d.canvas, params.clone(), ctx.clone());
     let spawned = std::thread::Builder::new().name("gallery-preview".into()).spawn(move || {
         let run = || {
@@ -599,7 +599,7 @@ fn update_thumbs(d: &mut GalleryDialog, ctx: &egui::Context, budget: usize) {
 }
 
 /// Draws the dialog (a full-window layer over the app).
-pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
     let t = Tokens::get(ctx);
     let screen = ctx.content_rect();
     let mut action: Option<&str> = None;
@@ -774,7 +774,7 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                             .and_then(Value::as_array)
                             .map(|a| a.iter().filter_map(Value::as_f64).map(|v| v as f32).collect::<Vec<_>>())
                             .filter(|v| v.len() >= 3);
-                        let neon = photocraft_algo::GalleryEffect::new(GalleryFilter::NeonGlow).color;
+                        let neon = sary_algo::GalleryEffect::new(GalleryFilter::NeonGlow).color;
                         let mut rgb = c.map_or([neon[0], neon[1], neon[2]], |v| [v[0], v[1], v[2]]);
                         ui.horizontal(|ui| {
                             ui.label(egui::RichText::new(tl!("Glow Color")).color(t.text_dim));
@@ -855,8 +855,8 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
 mod tests {
     use super::*;
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 90, "height": 60, "depth": 16})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -918,8 +918,8 @@ mod tests {
         app.run("filter.filterGallery", stack).unwrap();
         app.run("filter.blur.gaussianBlur", json!({"radius": 2.0})).unwrap();
         let layer = app.session.active().unwrap().active_layer.unwrap();
-        let smart = |app: &PhotocraftApp| match &app.session.active().unwrap().doc.layer(layer).unwrap().content {
-            photocraft_doc::LayerContent::Smart(sm) => sm.clone(),
+        let smart = |app: &SaryApp| match &app.session.active().unwrap().doc.layer(layer).unwrap().content {
+            sary_doc::LayerContent::Smart(sm) => sm.clone(),
             _ => panic!("not a smart object"),
         };
         let steps = app.session.active().unwrap().history.past_len();
@@ -932,7 +932,7 @@ mod tests {
         assert_eq!(d.effects.len(), 1);
         assert_eq!((d.effects[0].filter, &d.effects[0].params["detail"]), (GalleryFilter::Chrome, &json!(2)));
         // The preview starts from the pixels below the filter (no blur, no chrome).
-        let below = photocraft_engine::smart_cmds::render_below_filter(&app.session.active().unwrap().doc, &sm, 0).unwrap().unwrap();
+        let below = sary_engine::smart_cmds::render_below_filter(&app.session.active().unwrap().doc, &sm, 0).unwrap().unwrap();
         let d = app.distort.gallery.as_ref().unwrap();
         assert_eq!(d.src.read_region(d.canvas), below.read_region(d.canvas));
 
@@ -968,7 +968,7 @@ mod tests {
         // Preview equals the engine's algorithm on the sampled pixels.
         let src = sample(&d.src, d.canvas, 1);
         let a = render(&src, &d.params());
-        let mut s2 = photocraft_engine::Session::new();
+        let mut s2 = sary_engine::Session::new();
         s2.add_document(app.session.active().unwrap().doc.as_ref().clone(), None);
         s2.select_layer(d.layer).unwrap();
         s2.execute("filter.filterGallery", d.params()).unwrap();
@@ -980,9 +980,9 @@ mod tests {
 
     /// A 240×160 layer with gradients, edges and fine detail, so every gallery filter has
     /// something to draw.
-    fn photo_app() -> PhotocraftApp {
+    fn photo_app() -> SaryApp {
         let (w, h) = (240, 160);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": w, "height": h, "depth": 16})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -1004,8 +1004,8 @@ mod tests {
     }
 
     /// What OK applies: `filter.filterGallery` with the dialog's stack on a copy of the document.
-    fn applied(app: &PhotocraftApp, d: &GalleryDialog) -> Surface {
-        let mut s2 = photocraft_engine::Session::new();
+    fn applied(app: &SaryApp, d: &GalleryDialog) -> Surface {
+        let mut s2 = sary_engine::Session::new();
         s2.add_document(app.session.active().unwrap().doc.as_ref().clone(), None);
         s2.select_layer(d.layer).unwrap();
         s2.execute("filter.filterGallery", d.params()).unwrap();
@@ -1088,7 +1088,7 @@ mod tests {
 
     #[test]
     fn reduce_averages_blocks_weighted_by_alpha() {
-        let mut s = Surface::new(photocraft_color::PixelFormat::new(photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::F32, true));
+        let mut s = Surface::new(sary_color::PixelFormat::new(sary_color::ColorMode::Rgb, sary_color::SampleType::F32, true));
         s.write_pixel(0, 0, &[1.0, 0.0, 0.0, 1.0]);
         s.write_pixel(1, 0, &[0.0, 1.0, 0.0, 0.0]); // transparent: its colour doesn't count
         s.write_pixel(2, 0, &[0.2, 0.4, 0.6, 1.0]); // a partial block at the edge
@@ -1129,13 +1129,13 @@ mod tests {
         app.distort.gallery = None;
     }
 
-    /// Preview cost on 24 MP: `cargo test -p photocraft-ui-egui --lib bench_gallery_preview -- --ignored --nocapture`.
+    /// Preview cost on 24 MP: `cargo test -p sary-ui-egui --lib bench_gallery_preview -- --ignored --nocapture`.
     #[test]
     #[ignore]
     fn bench_gallery_preview() {
         let (w, h) = (6000, 4000);
         let canvas = Rect::new(0, 0, w, h);
-        let mut s = Surface::new(photocraft_color::PixelFormat::new(photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8, true));
+        let mut s = Surface::new(sary_color::PixelFormat::new(sary_color::ColorMode::Rgb, sary_color::SampleType::U8, true));
         s.fill_rect(canvas, &[0.5, 0.4, 0.3, 1.0]);
         for y in (0..h).step_by(9) {
             s.fill_rect(Rect::new(0, y, w, y + 3), &[0.9, 0.8, 0.2, 1.0]);

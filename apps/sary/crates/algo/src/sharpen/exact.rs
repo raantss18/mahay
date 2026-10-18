@@ -2,8 +2,8 @@
 //! the blurred output for the final arithmetic. Each sample retains its tap order.
 use crate::image::premultiply;
 use crate::{Ctx, Image};
-use photocraft_geom::Rect;
-use photocraft_raster::Interrupt;
+use sary_geom::Rect;
+use sary_raster::Interrupt;
 
 const MAX_SAMPLES: usize = 128 * 1024 * 1024;
 // The filter dialog caps radius at 1000. Preserve Details resampling can ask

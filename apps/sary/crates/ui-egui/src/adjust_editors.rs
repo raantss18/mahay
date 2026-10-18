@@ -1,7 +1,7 @@
 //! One editor per adjustment kind, shared by the adjustment-layer Properties panel and the modal
 //! Image › Adjustments dialogs (`adjust_dialog`).
 //!
-//! Every editor edits the kind's complete parameter set (`photocraft_engine::adjust_params`) as a
+//! Every editor edits the kind's complete parameter set (`sary_engine::adjust_params`) as a
 //! JSON object and reports an [`Edit`]: `changed` while values move (the host previews them live)
 //! and `commit` when a gesture ends (the Properties host then runs one `layer.setAdjustment`; a
 //! dialog commits on OK). Selective Color and Color Lookup keep their editors in `adjust_ui`.
@@ -11,14 +11,14 @@ use crate::state::CurvesEditorState as CurveUi;
 use std::sync::Arc;
 
 use egui::{Color32, Pos2, Rect, RichText, Sense, Stroke, StrokeKind, pos2, vec2};
-use photocraft_doc::adjust::{HueRange, ToneSpace};
-use photocraft_doc::{Adjustment, LayerId};
-use photocraft_engine::adjust_params::{self, HUE_RANGES, PHOTO_FILTERS};
-use photocraft_engine::presets::Group;
-use photocraft_engine::presets::gradients::GradientPreset;
+use sary_doc::adjust::{HueRange, ToneSpace};
+use sary_doc::{Adjustment, LayerId};
+use sary_engine::adjust_params::{self, HUE_RANGES, PHOTO_FILTERS};
+use sary_engine::presets::Group;
+use sary_engine::presets::gradients::GradientPreset;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 use crate::tone::{self, HistSource, Histograms};
 use crate::widgets;
@@ -93,7 +93,7 @@ pub struct EditorCx {
     /// (off: the plain track).
     pub dynamic_color_sliders: bool,
     /// Image › Curves with a single Channels-panel target: that channel only (#5335).
-    pub isolated_curve: Option<photocraft_engine::channel_cmds::IsolatedCurveChannel>,
+    pub isolated_curve: Option<sary_engine::channel_cmds::IsolatedCurveChannel>,
 }
 
 /// The Levels/Curves channel space the values address.
@@ -387,9 +387,9 @@ fn read_map(v: &Value, key: &str) -> Vec<f32> {
     let map: Option<Vec<f32>> = v
         .get(key)
         .and_then(Value::as_array)
-        .filter(|a| a.len() == photocraft_doc::adjust::CURVE_MAP_LEN)
+        .filter(|a| a.len() == sary_doc::adjust::CURVE_MAP_LEN)
         .and_then(|a| a.iter().map(|o| o.as_f64().map(|o| o as f32)).collect());
-    map.unwrap_or_else(|| (0..photocraft_doc::adjust::CURVE_MAP_LEN).map(|k| k as f32).collect())
+    map.unwrap_or_else(|| (0..sary_doc::adjust::CURVE_MAP_LEN).map(|k| k as f32).collect())
 }
 
 fn write_map(v: &mut Value, key: &str, map: &[f32]) {
@@ -401,7 +401,7 @@ fn write_map(v: &mut Value, key: &str, map: &[f32]) {
 fn set_pencil(v: &mut Value, pencil: bool, gray: bool) -> bool {
     let mut p = v.clone();
     p["pencil"] = json!(pencil);
-    let mode = if gray { photocraft_doc::ColorMode::Grayscale } else { photocraft_doc::ColorMode::Rgb };
+    let mode = if gray { sary_doc::ColorMode::Grayscale } else { sary_doc::ColorMode::Rgb };
     let Ok(a) = adjust_params::from_params("curves", &p, None, mode) else { return false };
     *v = adjust_params::to_params(&a);
     // Explicit, so an update over a pencil-drawn layer leaves the pencil.
@@ -520,9 +520,9 @@ fn curves(ui: &mut egui::Ui, v: &mut Value, cx: &EditorCx) -> Edit {
     gradient_bar(&p, hbar, Color32::BLACK, bar_color(&chan, &t), false);
     gradient_bar(&p, vbar, Color32::BLACK, bar_color(&chan, &t), true);
     let draw_curve = |pts: &[[f32; 2]], color: Color32, width: f32| {
-        let cp: Vec<photocraft_doc::adjust::CurvePoint> =
-            pts.iter().map(|q| photocraft_doc::adjust::CurvePoint { input: q[0] / 255.0, output: q[1] / 255.0 }).collect();
-        let lut = photocraft_compose::adjust::curve_lut(&cp);
+        let cp: Vec<sary_doc::adjust::CurvePoint> =
+            pts.iter().map(|q| sary_doc::adjust::CurvePoint { input: q[0] / 255.0, output: q[1] / 255.0 }).collect();
+        let lut = sary_compose::adjust::curve_lut(&cp);
         let n = lut.len().max(2);
         let line: Vec<Pos2> =
             (0..n).step_by((n / 256).max(1)).map(|i| to_scr([i as f32 / (n - 1) as f32 * 255.0, lut.get(i).copied().unwrap_or(0.0) * 255.0])).collect();
@@ -881,16 +881,16 @@ fn move_hue_range_handle(bounds: [f32; 4], k: usize, deg: f32) -> [f32; 4] {
 
 /// The spectrum bar after the adjustment (what each hue becomes), sampled at `n` hues.
 fn adjusted_spectrum(v: &Value, n: usize) -> Vec<Color32> {
-    let adj = photocraft_engine::commands::adjustment_from_params("hueSaturation", v);
-    let rect = photocraft_geom::Rect::new(0, 0, n as i32, 1);
+    let adj = sary_engine::commands::adjustment_from_params("hueSaturation", v);
+    let rect = sary_geom::Rect::new(0, 0, n as i32, 1);
     let px = (0..n)
         .map(|i| {
             let c = egui::ecolor::Hsva::new(i as f32 / (n - 1).max(1) as f32, 1.0, 1.0, 1.0).to_rgb();
             [c[0], c[1], c[2], 1.0]
         })
         .collect();
-    let mut buf = photocraft_compose::Buffer { rect, px };
-    photocraft_compose::adjust::apply(&adj, &mut buf);
+    let mut buf = sary_compose::Buffer { rect, px };
+    sary_compose::adjust::apply(&adj, &mut buf);
     buf.px.iter().map(|p| color32([p[0], p[1], p[2]])).collect()
 }
 
@@ -992,7 +992,7 @@ fn hue_saturation(ui: &mut egui::Ui, v: &mut Value, cx: &EditorCx) -> Edit {
     spectrum_bar(&p, bottom, &adjusted_spectrum(v, 37));
     if range > 0 {
         let key = HUE_RANGES[range - 1];
-        let neutral = photocraft_doc::adjust::HueRange::neutral(range - 1).bounds;
+        let neutral = sary_doc::adjust::HueRange::neutral(range - 1).bounds;
         let mut b = HueRange::canonical_bounds(nums(&v[key], "range", neutral));
         let xof = |deg: f32| bars.left() + deg.rem_euclid(360.0) / 360.0 * w;
         let deg_of = |x: f32| ((x - bars.left()) / w * 360.0).clamp(0.0, 360.0);
@@ -1517,16 +1517,16 @@ fn gradient_map(ui: &mut egui::Ui, v: &mut Value, cx: &EditorCx) -> Edit {
 // Hosts
 
 /// Whether a document of this mode edits Levels/Curves through a single Gray channel.
-pub fn is_gray(mode: photocraft_doc::ColorMode) -> bool {
-    matches!(mode, photocraft_doc::ColorMode::Grayscale | photocraft_doc::ColorMode::Duotone | photocraft_doc::ColorMode::Bitmap)
+pub fn is_gray(mode: sary_doc::ColorMode) -> bool {
+    matches!(mode, sary_doc::ColorMode::Grayscale | sary_doc::ColorMode::Duotone | sary_doc::ColorMode::Bitmap)
 }
 
 /// The gradient preset library for a `kind` editor's picker (Gradient Map only; empty otherwise).
-pub fn gradient_presets(app: &PhotocraftApp, kind: &str) -> Vec<Group<GradientPreset>> {
+pub fn gradient_presets(app: &SaryApp, kind: &str) -> Vec<Group<GradientPreset>> {
     if kind == "gradientMap" { app.session.presets.gradients.clone() } else { Vec::new() }
 }
 
-pub fn swatches(app: &PhotocraftApp) -> [[f32; 3]; 2] {
+pub fn swatches(app: &SaryApp) -> [[f32; 3]; 2] {
     let c = |x: [f32; 4]| [x[0], x[1], x[2]];
     [c(app.session.tools.foreground), c(app.session.tools.background)]
 }
@@ -1590,7 +1590,7 @@ pub fn session_start(ctx: &egui::Context, doc: u64, id: LayerId) -> Option<Value
 /// found (Tone choice kept); otherwise the defaults (Color Balance: [`reset_color_balance`]).
 /// Either way part of the layer's edit step.
 pub fn properties_reset(ctx: &egui::Context, doc: u64, id: LayerId, adj: &Adjustment) -> Option<Value> {
-    let kind = photocraft_engine::commands::adjustment_kind(adj);
+    let kind = sary_engine::commands::adjustment_kind(adj);
     if !photoshop_session(kind) {
         return None;
     }
@@ -1610,9 +1610,9 @@ pub fn properties_reset(ctx: &egui::Context, doc: u64, id: LayerId, adj: &Adjust
 
 /// The Properties-panel editor of an adjustment layer: previews live (`app.live_adjust`) while a
 /// control moves and commits one `layer.setAdjustment` per gesture.
-pub fn layer_editor(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: LayerId, adj: &Adjustment) {
+pub fn layer_editor(app: &mut SaryApp, ui: &mut egui::Ui, id: LayerId, adj: &Adjustment) {
     let t = Tokens::get(ui.ctx());
-    let kind = photocraft_engine::commands::adjustment_kind(adj);
+    let kind = sary_engine::commands::adjustment_kind(adj);
     match adj {
         Adjustment::SelectiveColor { .. } => return crate::adjust_ui::selective_color_editor(app, ui, id, adj),
         Adjustment::ColorLookup { .. } => return crate::adjust_ui::color_lookup_editor(app, ui, id, adj),

@@ -1,11 +1,11 @@
-//! DeckCraft media: everything between embedded media bytes and the speakers / the screen.
+//! Seho media: everything between embedded media bytes and the speakers / the screen.
 //!
 //! - [`probe`]: container, duration, audio channels / sample rate, video size / frame rate.
 //! - [`audio::decode`]: every common audio format to interleaved f32 [`audio::Pcm`] — MP3, AAC
 //!   (M4A, ADTS), ALAC, WAV, AIFF, CAF, FLAC, Ogg Vorbis, Opus (Ogg / WebM / Matroska) and the audio
 //!   track of MP4/MOV/WebM videos. WMA (ASF) is recognised and probed but not decoded.
 //! - [`video::VideoDecoder`]: H.264, HEVC, VP9 and AV1 in MP4/MOV and WebM/Matroska to RGBA
-//!   [`video::Frame`]s (our own decoders, ported from FilmCraft); [`video::poster_png`].
+//!   [`video::Frame`]s (our own decoders, ported from Hetsika); [`video::poster_png`].
 //! - [`clip::ClipParams`]: trim, fade in/out and volume.
 //! - [`player::Player`]: the playback mixer and clock the UI host drives, over an
 //!   [`player::AudioOut`] it injects (cpal on desktop; none on the web or in tests, where the clock

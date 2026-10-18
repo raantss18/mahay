@@ -33,13 +33,13 @@
     <string>vi</string>
   </array>
   <key>CFBundleDisplayName</key>
-  <string>PhotoCraft</string>
+  <string>Sary</string>
   <key>CFBundleName</key>
-  <string>PhotoCraft</string>
+  <string>Sary</string>
   <key>CFBundleExecutable</key>
-  <string>PhotoCraft</string>
+  <string>Sary</string>
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.photocraft</string>
+  <string>ai.storyteller.sary</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -50,12 +50,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>PhotoCraftVersion</key>
+  <key>SaryVersion</key>
   <string>@VERSION@</string>
-  <key>PhotoCraftBuildCommit</key>
+  <key>SaryBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>PhotoCraft</string>
+  <string>Sary</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.graphics-design</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
@@ -69,29 +69,29 @@
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © the PhotoCraft authors. MIT OR Apache-2.0.</string>
+  <string>Copyright © the Sary authors. MIT OR Apache-2.0.</string>
 
-  <!-- PhotoCraft's own format. -->
+  <!-- Sary's own format. -->
   <key>UTExportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.document</string>
+      <string>ai.storyteller.sary.document</string>
       <key>UTTypeDescription</key>
-      <string>PhotoCraft Document</string>
+      <string>Sary Document</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
         <string>public.image</string>
       </array>
       <key>UTTypeIconFile</key>
-      <string>PhotoCraft</string>
+      <string>Sary</string>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
-        <array><string>pcraft</string></array>
+        <array><string>sary</string></array>
         <key>public.mime-type</key>
-        <array><string>application/x-photocraft</string></array>
+        <array><string>application/x-sary</string></array>
       </dict>
     </dict>
   </array>
@@ -100,7 +100,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.ora</string>
+      <string>ai.storyteller.sary.ora</string>
       <key>UTTypeDescription</key>
       <string>OpenRaster Image</string>
       <key>UTTypeConformsTo</key>
@@ -115,7 +115,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.kra</string>
+      <string>ai.storyteller.sary.kra</string>
       <key>UTTypeDescription</key>
       <string>Krita Document</string>
       <key>UTTypeConformsTo</key>
@@ -130,7 +130,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.pdn</string>
+      <string>ai.storyteller.sary.pdn</string>
       <key>UTTypeDescription</key>
       <string>Paint.NET Document</string>
       <key>UTTypeConformsTo</key>
@@ -161,7 +161,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.qoi</string>
+      <string>ai.storyteller.sary.qoi</string>
       <key>UTTypeDescription</key>
       <string>QOI Image</string>
       <key>UTTypeConformsTo</key>
@@ -181,15 +181,15 @@
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>PhotoCraft Document</string>
+      <string>Sary Document</string>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>LSHandlerRank</key>
       <string>Owner</string>
       <key>CFBundleTypeIconFile</key>
-      <string>PhotoCraft</string>
+      <string>Sary</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.photocraft.document</string></array>
+      <array><string>ai.storyteller.sary.document</string></array>
     </dict>
     <dict>
       <key>CFBundleTypeName</key>
@@ -225,10 +225,10 @@
         <string>com.ilm.openexr-image</string>
         <string>public.radiance</string>
         <string>public.avif</string>
-        <string>ai.storyteller.photocraft.qoi</string>
-        <string>ai.storyteller.photocraft.pdn</string>
-        <string>ai.storyteller.photocraft.ora</string>
-        <string>ai.storyteller.photocraft.kra</string>
+        <string>ai.storyteller.sary.qoi</string>
+        <string>ai.storyteller.sary.pdn</string>
+        <string>ai.storyteller.sary.ora</string>
+        <string>ai.storyteller.sary.kra</string>
       </array>
     </dict>
   </array>

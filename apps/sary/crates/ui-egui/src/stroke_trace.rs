@@ -1,7 +1,7 @@
 //! Stroke latency trace (#1343): where each frame's time goes while a brush stroke is drawn, so
 //! a tester on any platform can report a per-stage breakdown instead of one input-to-pixel number.
 //!
-//! Set `PHOTOCRAFT_STROKE_TRACE` before launching: `1` prints a summary to stderr when each stroke
+//! Set `SARY_STROKE_TRACE` before launching: `1` prints a summary to stderr when each stroke
 //! ends; a file path also appends every frame of every stroke to that CSV. The last summary is in
 //! the control channel's `perf` output (`strokeTrace`).
 //!
@@ -110,17 +110,17 @@ fn percentiles(mut v: Vec<f64>) -> [f64; 2] {
 }
 
 impl StrokeTrace {
-    /// Reads `PHOTOCRAFT_STROKE_TRACE` (off on the web, where there is no clock).
+    /// Reads `SARY_STROKE_TRACE` (off on the web, where there is no clock).
     pub fn from_env() -> Self {
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(v) = std::env::var_os("PHOTOCRAFT_STROKE_TRACE") {
+        if let Some(v) = std::env::var_os("SARY_STROKE_TRACE") {
             return Self::from_value(&v.to_string_lossy());
         }
         Self::default()
     }
 
     /// A trace set by value: `""`, `"0"` or `"off"` is off, `"1"` or `"stderr"` prints
-    /// summaries, anything else is a CSV path (`--stroke-trace`, `PHOTOCRAFT_STROKE_TRACE`; the
+    /// summaries, anything else is a CSV path (`--stroke-trace`, `SARY_STROKE_TRACE`; the
     /// control channel's `ui.set {"strokeTrace"}` passes only on or off, never a path).
     pub fn from_value(v: &str) -> Self {
         let v = v.trim();
@@ -309,7 +309,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn the_csv_gets_one_header_and_every_strokes_frames() {
-        let dir = std::env::temp_dir().join(format!("photocraft-stroke-trace-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-stroke-trace-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
         let path = dir.join("trace.csv");
         let _ = std::fs::remove_file(&path);

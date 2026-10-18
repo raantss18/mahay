@@ -1,4 +1,4 @@
-//! PhotoCraft colour management: a pure-Rust ICC v2/v4 colour management module.
+//! Sary colour management: a pure-Rust ICC v2/v4 colour management module.
 //!
 //! * [`Profile`] parses ICC profiles (matrix/TRC RGB, gray TRC, `mft1`/`mft2`/`mAB `/`mBA `
 //!   LUT profiles incl. CMYK↔Lab, `curv`/`para` curves) and writes ICC v4 profiles.

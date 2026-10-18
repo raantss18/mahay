@@ -5,7 +5,7 @@ fn start(run: &str, at_ms: u64) -> StartRecord {
         v: HISTORY_SCHEMA,
         run: run.into(),
         at_ms,
-        app: "photocraft".into(),
+        app: "sary".into(),
         role_id: "fill".into(),
         role_label: "Generative Fill".into(),
         capability: "image.inpaint".into(),

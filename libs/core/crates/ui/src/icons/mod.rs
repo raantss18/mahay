@@ -11,7 +11,7 @@ use egui::{ImageSource, load::Bytes};
 
 /// Literal substitutions for trusted, embedded, monochrome SVG assets.
 ///
-/// These preserve the conventions of the existing Craft catalogs; they are not a general
+/// These preserve the conventions of the existing Mahay catalogs; they are not a general
 /// CSS/SVG transformation. In particular, only the exact `stroke-width="2"` spelling is
 /// replaced. Other widths, quoting and explicit colors are left alone.
 #[derive(Clone, Copy, Debug)]

@@ -13,7 +13,7 @@ fallback treats white-balanced camera channels as linear sRGB and looks flat.
 The Nikon `44 40` quarter-span decoder issue addressed elsewhere does not apply.
 
 This branch uses the existing embedded-JPEG rendering work in
-[PhotoCraft #2135](https://github.com/storytold/photocraft/pull/2135), head
+[Sary #2135](https://github.com/storytold/photocraft/pull/2135), head
 `d1a91d1f0dff1ed7ac74767b602051e88198b2e5`. That work fits a matrix and monotone
 tone curve with held-out acceptance checks. It supplies the appearance fix;
 this follow-up preserves that rendering in `import_raw_tuned`. Fitting happens
@@ -47,7 +47,7 @@ Full-resolution default, +0.5 EV and Temperature +20/Tint −15 imports were exp
 for each file and independently verified as RGB16 TIFFs with the ProPhoto-compatible
 ICC profile. Default tuned pixels and ICC bytes equal normal import exactly. Local
 whole-frame and 100% edge comparisons were inspected against the camera JPEG and
-installed LightCraft 0.6.0: the border is gone and colour/contrast improve, with
+installed Hazavana 0.6.0: the border is gone and colour/contrast improve, with
 remaining differences in sunset highlight saturation and noise/detail rendering.
 
 ## Regression coverage

@@ -1,4 +1,4 @@
-//! Charts WordCraft makes ([`ChartSpec`]) as chart parts (ECMA-376 Part 1 §21.2) and back.
+//! Charts Soratra makes ([`ChartSpec`]) as chart parts (ECMA-376 Part 1 §21.2) and back.
 //!
 //! [`chart_xml`] writes a `c:chartSpace` with the data as literals in the part itself
 //! (`c:strLit`, `c:numLit`): no embedded workbook (`c:externalData`) and no external references.
@@ -6,9 +6,9 @@
 //! [`spec_of`] turns a chart part back into the model only when writing that model again gives
 //! the same markup, so a chart with anything the model leaves out stays as it was read.
 
-use wordcraft_doc::chart::{ChartSeries, ChartSpec, ChartType, LegendPos};
-use wordcraft_doc::graphic::GraphicItem;
-use wordcraft_doc::props::Rgb;
+use soratra_doc::chart::{ChartSeries, ChartSpec, ChartType, LegendPos};
+use soratra_doc::graphic::GraphicItem;
+use soratra_doc::props::Rgb;
 
 use crate::xml::{self, El, MAX_DEPTH, Node, W};
 
@@ -320,13 +320,13 @@ pub(crate) fn spec_of(space: &El) -> Option<ChartSpec> {
         _ => return None,
     };
     let scatter = kind == ChartType::Scatter;
-    let sers: Vec<&El> = ty.children("c:ser").take(wordcraft_doc::chart::MAX_SERIES + 1).collect();
+    let sers: Vec<&El> = ty.children("c:ser").take(soratra_doc::chart::MAX_SERIES + 1).collect();
     // More than the model holds can't be the same chart: don't build it to find out.
     let count = |s: &&El| s.find("c:ptCount").and_then(|c| c.attr("val")).and_then(|v| v.parse::<usize>().ok()).unwrap_or(0);
     let longest = sers.iter().map(count).max().unwrap_or(0);
-    if sers.len() > wordcraft_doc::chart::MAX_SERIES
-        || longest > wordcraft_doc::chart::MAX_POINTS
-        || sers.len().saturating_mul(longest) > wordcraft_doc::chart::MAX_CELLS
+    if sers.len() > soratra_doc::chart::MAX_SERIES
+        || longest > soratra_doc::chart::MAX_POINTS
+        || sers.len().saturating_mul(longest) > soratra_doc::chart::MAX_CELLS
     {
         return None;
     }
@@ -366,7 +366,7 @@ fn literal(e: &El) -> Vec<String> {
         .and_then(|c| c.attr("val"))
         .and_then(|v| v.parse::<usize>().ok())
         .unwrap_or(0)
-        .min(wordcraft_doc::chart::MAX_POINTS + 1);
+        .min(soratra_doc::chart::MAX_POINTS + 1);
     let mut out = vec![String::new(); n];
     for p in lit.children("c:pt") {
         if let Some(slot) = p.attr("idx").and_then(|i| i.parse::<usize>().ok()).and_then(|i| out.get_mut(i)) {
@@ -410,7 +410,7 @@ fn same(a: &El, b: &El, depth: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_doc::THEME_COLORS;
+    use soratra_doc::THEME_COLORS;
 
     fn parse(spec: &ChartSpec) -> El {
         xml::parse(chart_xml(spec).as_bytes()).unwrap()

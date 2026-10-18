@@ -3,9 +3,9 @@
 //! Like Photoshop it is non-destructive (the pixels stay; the mask hides the background), turns
 //! the Background layer into a normal layer first and has no menu item.
 
-use photocraft_algo::matting::{self, RefineParams};
-use photocraft_algo::segment::subject;
-use photocraft_doc::{Document, Layer, LayerContent, LayerMask};
+use sary_algo::matting::{self, RefineParams};
+use sary_algo::segment::subject;
+use sary_doc::{Document, Layer, LayerContent, LayerMask};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, layer_param};
@@ -92,9 +92,9 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_algo::segment::Rng;
-    use photocraft_doc::LayerId;
-    use photocraft_geom::Rect;
+    use sary_algo::segment::Rng;
+    use sary_doc::LayerId;
+    use sary_geom::Rect;
 
     fn session_with(w: u32, h: u32, depth: u32, px: impl Fn(u32, u32) -> [f32; 3]) -> Session {
         let mut s = Session::new();
@@ -182,7 +182,7 @@ mod tests {
             assert!(mask_cov(&s, 100, 80) >= 0.8, "depth {depth}: disc centre hidden");
             // Non-destructive: the pixels are untouched, only masked.
             assert_eq!(layer(&s, id).surface().unwrap().read_region(Rect::new(0, 0, 200, 160)), pixels, "depth {depth}");
-            let corner = photocraft_compose::render(&s.active().unwrap().doc, Rect::new(0, 0, 1, 1)).px[0][3];
+            let corner = sary_compose::render(&s.active().unwrap().doc, Rect::new(0, 0, 1, 1)).px[0][3];
             assert!(corner < 0.2, "depth {depth}: composite corner alpha {corner}");
             assert!(s.active().unwrap().doc.selection.is_none());
             s.execute("edit.undo", json!({})).unwrap();

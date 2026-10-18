@@ -146,7 +146,7 @@ impl Layer {
 /// Slide aspect assumed by [`transition_layers`] (16:9).
 pub const DEFAULT_ASPECT: f64 = 16.0 / 9.0;
 
-/// Layers of the transition `kind` (a [`deckcraft_model::anim::TRANSITIONS`] id) with `option` at
+/// Layers of the transition `kind` (a [`seho_model::anim::TRANSITIONS`] id) with `option` at
 /// progress `t` (0..1) on a 16:9 slide. See [`transition_frame`].
 pub fn transition_layers(kind: &str, option: &str, t: f64) -> Vec<Layer> {
     transition_frame(kind, option, t, DEFAULT_ASPECT)

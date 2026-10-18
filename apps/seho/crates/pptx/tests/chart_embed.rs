@@ -3,9 +3,9 @@
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::chart::{Chart, ChartType};
-use deckcraft_model::{LayoutType, Shape, ShapeId, ShapeKind, defaults};
+use seho_geom::Xfrm;
+use seho_model::chart::{Chart, ChartType};
+use seho_model::{LayoutType, Shape, ShapeId, ShapeKind, defaults};
 
 const WORKBOOK: &[u8] = b"chart-workbook-bytes-v1";
 const EMBED: &str = "ppt/embeddings/Microsoft_Excel_Worksheet1.xlsx";
@@ -20,7 +20,7 @@ fn chart_pptx() -> Vec<u8> {
     shape.kind = ShapeKind::Chart(Box::new(Chart::sample(ChartType::Pie)));
     slide.shapes.push(shape);
     p.slides.push(Arc::new(slide));
-    deckcraft_pptx::export(&p).expect("export")
+    seho_pptx::export(&p).expect("export")
 }
 
 /// Add an embedded workbook and point the chart part at it, the way PowerPoint writes a chart.
@@ -78,8 +78,8 @@ fn parts(bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
     out
 }
 
-fn chart_of(bytes: &[u8]) -> deckcraft_model::Chart {
-    let p = deckcraft_pptx::import(bytes).expect("import");
+fn chart_of(bytes: &[u8]) -> seho_model::Chart {
+    let p = seho_pptx::import(bytes).expect("import");
     p.slides
         .iter()
         .flat_map(|s| s.shapes.iter())
@@ -97,7 +97,7 @@ fn an_unchanged_chart_keeps_its_embedded_workbook() {
     assert_eq!(chart.kept.parts.iter().filter(|p| p.name == EMBED).count(), 1);
     assert_eq!(chart.kept.parts.iter().find(|p| p.name == EMBED).map(|p| p.bytes.as_slice()), Some(WORKBOOK));
 
-    let saved = deckcraft_pptx::export(&deckcraft_pptx::import(&src).expect("import")).expect("export");
+    let saved = seho_pptx::export(&seho_pptx::import(&src).expect("import")).expect("export");
     let saved_parts = parts(&saved);
     // Kept parts are written under fresh names, so they can't land on a part the writer makes.
     let workbook = saved_parts.iter().find(|(n, _)| n == "ppt/embeddings/kept1.xlsx").map(|(_, d)| d.as_slice());
@@ -123,7 +123,7 @@ fn an_unchanged_chart_keeps_its_embedded_workbook() {
 #[test]
 fn an_edited_chart_does_not_write_a_stale_workbook() {
     let src = with_workbook(&chart_pptx());
-    let mut p = deckcraft_pptx::import(&src).expect("import");
+    let mut p = seho_pptx::import(&src).expect("import");
     let slide = Arc::make_mut(p.slides.get_mut(0).expect("slide"));
     let chart = slide.shapes.iter_mut().find_map(|s| match &mut s.kind {
         ShapeKind::Chart(c) if s.name == "Pie" => Some(c),
@@ -132,7 +132,7 @@ fn an_edited_chart_does_not_write_a_stale_workbook() {
     let chart = chart.expect("pie");
     let value = chart.series.get_mut(0).and_then(|s| s.values.get_mut(0)).expect("value");
     *value = Some(99.0);
-    let saved = parts(&deckcraft_pptx::export(&p).expect("export"));
+    let saved = parts(&seho_pptx::export(&p).expect("export"));
     assert!(saved.iter().all(|(n, _)| !n.starts_with("ppt/embeddings/")), "a stale workbook was written after the chart changed");
     let xml = saved
         .iter()
@@ -201,10 +201,10 @@ fn kept_chart_parts_never_collide_with_written_parts() {
     slide.shapes.push(chart);
     let mut pic =
         Shape { id: ShapeId(p.alloc_id().expect("id")), name: "Pic".into(), xfrm: Some(Xfrm::new(500.0, 40.0, 80.0, 80.0)), ..Default::default() };
-    pic.kind = ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { media: img, ..Default::default() } };
+    pic.kind = ShapeKind::Picture { fill: seho_model::style::PictureFill { media: img, ..Default::default() } };
     slide.shapes.push(pic);
     p.slides.push(Arc::new(slide));
-    let base = deckcraft_pptx::export(&p).expect("export");
+    let base = seho_pptx::export(&p).expect("export");
     assert!(parts(&base).iter().any(|(n, d)| n == "ppt/media/image1.png" && *d == picture));
 
     // The chart's own relationships reach the slide picture's part and a drawing whose
@@ -236,7 +236,7 @@ fn kept_chart_parts_never_collide_with_written_parts() {
         ],
     );
 
-    let saved = parts(&deckcraft_pptx::export(&deckcraft_pptx::import(&src).expect("import")).expect("export"));
+    let saved = parts(&seho_pptx::export(&seho_pptx::import(&src).expect("import")).expect("export"));
     unique_names(&saved);
     let picture_parts: Vec<&String> = saved.iter().filter(|(_, d)| *d == picture).map(|(n, _)| n).collect();
     assert!(picture_parts.iter().any(|n| *n == "ppt/media/image1.png"), "{picture_parts:?}");
@@ -268,7 +268,7 @@ fn kept_chart_parts_never_collide_with_written_parts() {
     assert!(!drels.contains("slide"), "{drels}");
 
     // And the result reads back with the same kept parts.
-    let again = deckcraft_pptx::export(&deckcraft_pptx::import(&saved_zip(&saved)).expect("reimport")).expect("export again");
+    let again = seho_pptx::export(&seho_pptx::import(&saved_zip(&saved)).expect("reimport")).expect("export again");
     unique_names(&parts(&again));
 }
 
@@ -295,7 +295,7 @@ fn an_unchanged_chartex_keeps_its_embedded_workbook() {
     shape.kind = ShapeKind::Chart(Box::new(Chart::sample(ChartType::Waterfall)));
     slide.shapes.push(shape);
     p.slides.push(Arc::new(slide));
-    let base = deckcraft_pptx::export(&p).expect("export");
+    let base = seho_pptx::export(&p).expect("export");
     assert!(parts(&base).iter().any(|(n, _)| n == "ppt/charts/chartEx1.xml"));
     let rels = format!(
         r#"<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="{RT}/package" Target="../embeddings/Microsoft_Excel_Worksheet1.xlsx"/></Relationships>"#
@@ -318,7 +318,7 @@ fn an_unchanged_chartex_keeps_its_embedded_workbook() {
     assert_eq!(chart.kind, ChartType::Waterfall);
     assert!(chart.kept.parts.iter().any(|p| p.bytes == WORKBOOK));
 
-    let saved = parts(&deckcraft_pptx::export(&deckcraft_pptx::import(&src).expect("import")).expect("export"));
+    let saved = parts(&seho_pptx::export(&seho_pptx::import(&src).expect("import")).expect("export"));
     unique_names(&saved);
     let xml = text_of(&saved, "ppt/charts/chartEx1.xml");
     assert!(xml.contains("externalData"), "{xml}");

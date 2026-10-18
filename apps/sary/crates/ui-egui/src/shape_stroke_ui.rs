@@ -1,6 +1,6 @@
 //! Shape stroke geometry controls shared by the tool defaults and Properties.
 use egui::vec2;
-use photocraft_doc::{LineCap, LineJoin, ShapeStroke, StrokeAlign};
+use sary_doc::{LineCap, LineJoin, ShapeStroke, StrokeAlign};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -36,7 +36,7 @@ impl StrokeOptions {
             "miterLimit": self.miter_limit, "dashes": self.dashes, "dashOffset": self.dash_offset, "opacity": self.opacity * 100.0})
     }
 
-    pub fn stroke(&self, width: f32, paint: photocraft_doc::Fill) -> ShapeStroke {
+    pub fn stroke(&self, width: f32, paint: sary_doc::Fill) -> ShapeStroke {
         ShapeStroke {
             width,
             paint,
@@ -75,13 +75,13 @@ impl StrokeOptions {
     }
 
     fn valid(&self) -> bool {
-        self.stroke(3.0, photocraft_doc::Fill::Solid(photocraft_doc::Color::BLACK)).validate().is_ok()
+        self.stroke(3.0, sary_doc::Fill::Solid(sary_doc::Color::BLACK)).validate().is_ok()
     }
 }
 
 #[derive(Clone)]
 struct DragCache {
-    shape: photocraft_doc::ShapeLayer,
+    shape: sary_doc::ShapeLayer,
     clip: egui::Rect,
     image_rect: egui::Rect,
     texture: egui::TextureHandle,
@@ -89,7 +89,7 @@ struct DragCache {
 
 /// The drag uses the committed vector rasterizer. Cache by geometry/style/visible region, and
 /// cap proxy resolution so oversized windows cannot allocate a document-sized preview.
-pub fn paint_shape_preview(painter: &egui::Painter, shape: &photocraft_doc::ShapeLayer) {
+pub fn paint_shape_preview(painter: &egui::Painter, shape: &sary_doc::ShapeLayer) {
     let clip = painter.clip_rect();
     if !clip.is_finite() || clip.is_negative() {
         return;
@@ -99,13 +99,13 @@ pub fn paint_shape_preview(painter: &egui::Painter, shape: &photocraft_doc::Shap
     let cache = cached.filter(|c| c.shape == *shape && c.clip == clip).or_else(|| {
         let scale = (2048.0 / clip.width().max(clip.height()).max(1.0)).min(1.0);
         let mut proxy = shape.clone();
-        let tr = photocraft_geom::Affine { m: [scale as f64, 0.0, 0.0, scale as f64, -(clip.left() * scale) as f64, -(clip.top() * scale) as f64] };
+        let tr = sary_geom::Affine { m: [scale as f64, 0.0, 0.0, scale as f64, -(clip.left() * scale) as f64, -(clip.top() * scale) as f64] };
         proxy.path = proxy.path.transform(&tr);
         if let Some(stroke) = proxy.stroke.as_mut() {
             stroke.width *= scale;
         }
-        let canvas = photocraft_geom::Rect::from_size(photocraft_geom::Size::new((clip.width() * scale).ceil() as u32, (clip.height() * scale).ceil() as u32));
-        let compiled = photocraft_vector::CompiledShape::new(&proxy, photocraft_vector::DEFAULT_TOLERANCE, canvas);
+        let canvas = sary_geom::Rect::from_size(sary_geom::Size::new((clip.width() * scale).ceil() as u32, (clip.height() * scale).ceil() as u32));
+        let compiled = sary_vector::CompiledShape::new(&proxy, sary_vector::DEFAULT_TOLERANCE, canvas);
         let bounds = compiled.bounds()?.intersect(&canvas);
         if bounds.is_empty() {
             return None;
@@ -146,7 +146,7 @@ pub(super) fn mark_rendered(ctx: &egui::Context, key: &str) {
 
 /// A hidden options row or collapsed Appearance section no longer owns input.
 /// Called after all options bars and Properties windows have had a chance to draw.
-pub(crate) fn finish_frame(app: &mut crate::PhotocraftApp, ctx: &egui::Context) {
+pub(crate) fn finish_frame(app: &mut crate::SaryApp, ctx: &egui::Context) {
     let Some(e) = &app.ui.stroke_editor else { return };
     let shown = ctx.data(|d| d.get_temp::<u64>(egui::Id::new(("shape-stroke-rendered", e.key.as_str()))));
     if shown != Some(ctx.cumulative_pass_nr()) {
@@ -163,7 +163,7 @@ struct CanvasDismissal {
 
 /// Pressing the canvas dismisses this popup and consumes that entire gesture. In particular,
 /// its release must not open a shape-size dialog or commit a shape dragged behind the popup.
-pub(crate) fn dismiss_from_canvas(app: &mut crate::PhotocraftApp, response: &egui::Response) -> bool {
+pub(crate) fn dismiss_from_canvas(app: &mut crate::SaryApp, response: &egui::Response) -> bool {
     let ctx = &response.ctx;
     let frame = ctx.cumulative_frame_nr();
     let was_open = app.ui.stroke_editor.is_some() || ctx.data(|d| d.get_temp::<u64>(open_frame_id())) == Some(frame);
@@ -186,7 +186,7 @@ pub(crate) fn dismiss_from_canvas(app: &mut crate::PhotocraftApp, response: &egu
 }
 
 /// Drop a popup whose source disappeared or changed outside this editor (including Undo).
-pub(crate) fn sync_editor(app: &mut crate::PhotocraftApp, ctx: &egui::Context) {
+pub(crate) fn sync_editor(app: &mut crate::SaryApp, ctx: &egui::Context) {
     let Some(e) = &app.ui.stroke_editor else { return };
     let valid = if let Some((doc, layer)) = e.target {
         app.session.active().is_some_and(|st| {
@@ -196,7 +196,7 @@ pub(crate) fn sync_editor(app: &mut crate::PhotocraftApp, ctx: &egui::Context) {
                 && !locks.all
                 && !locks.pixels
                 && st.doc.layer(layer).is_some_and(|l| match &l.content {
-                    photocraft_doc::LayerContent::Shape(shape) => shape.stroke.as_ref().map(StrokeOptions::from).unwrap_or_default() == e.original,
+                    sary_doc::LayerContent::Shape(shape) => shape.stroke.as_ref().map(StrokeOptions::from).unwrap_or_default() == e.original,
                     _ => false,
                 })
         })

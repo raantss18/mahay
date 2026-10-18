@@ -5,11 +5,11 @@
 //! child rectangle, so the diagram keeps its size and place. Text typed straight into a diagram
 //! shape is read back into the nodes before each regeneration.
 
-use deckcraft_color::SchemeSlot;
-use deckcraft_geom::Xfrm;
-use deckcraft_model::style::{Gradient, GradientShape, GradientStop, Shadow};
-use deckcraft_model::text::{Align, AutoFit, Paragraph, TextBody};
-use deckcraft_model::{
+use seho_color::SchemeSlot;
+use seho_geom::Xfrm;
+use seho_model::style::{Gradient, GradientShape, GradientStop, Shadow};
+use seho_model::text::{Align, AutoFit, Paragraph, TextBody};
+use seho_model::{
     ColorRef, ColorTransform, Diagram, DiagramNode, Effects, Fill, Geom, Line, Presentation, Shape, ShapeId, ShapeKind, ShapeStyle,
 };
 use serde_json::{Value, json};
@@ -22,7 +22,7 @@ pub const MAX_LEVEL: u8 = 8;
 /// Most top-level shapes a layout draws.
 const MAX_SHAPES: usize = 40;
 
-/// DeckCraft's layouts, with the names PowerPoint's gallery gives them.
+/// Seho's layouts, with the names PowerPoint's gallery gives them.
 pub const LAYOUTS: [(&str, &str); 45] = [
     ("list", "Vertical Bullet List"),
     ("blockList", "Basic Block List"),
@@ -523,7 +523,7 @@ fn paint(d: &Diagram, sh: &mut Shape, i: usize, light: bool) {
 
 fn shadow(blur: f64, dist: f64) -> Shadow {
     Shadow {
-        color: ColorRef::rgb(deckcraft_model::Rgba { r: 0, g: 0, b: 0, a: 255 }).with(ColorTransform::Alpha(40_000)),
+        color: ColorRef::rgb(seho_model::Rgba { r: 0, g: 0, b: 0, a: 255 }).with(ColorTransform::Alpha(40_000)),
         blur,
         dist,
         dir: 90.0,
@@ -551,7 +551,7 @@ fn text_shape(preset: &str, x: Xfrm, lines: &[&DiagramNode], title: bool) -> Sha
         } else {
             para.level = n.level.saturating_sub(top).saturating_sub(1).min(MAX_LEVEL);
             para.props.align = Some(Align::Left);
-            para.props.bullet = Some(deckcraft_model::text::Bullet::Char { char: "•".into() });
+            para.props.bullet = Some(seho_model::text::Bullet::Char { char: "•".into() });
             para.props.margin_left = Some(12.0 * (para.level as f64 + 1.0));
             para.props.indent = Some(-10.0);
         }
@@ -566,7 +566,7 @@ fn text_shape(preset: &str, x: Xfrm, lines: &[&DiagramNode], title: bool) -> Sha
         body.paragraphs.push(Paragraph::new(""));
     }
     if !title {
-        body.body.anchor = Some(deckcraft_model::text::Anchor::Top);
+        body.body.anchor = Some(seho_model::text::Anchor::Top);
     }
     Shape { name: "SmartArt shape".into(), xfrm: Some(x), geom: Geom::preset(preset), text: Some(body), ..Default::default() }
 }
@@ -661,7 +661,7 @@ fn picture_shape(d: &Diagram, preset: &str, x: Xfrm, i: usize, node: usize) -> S
     let mut sh = Shape { name: "SmartArt picture".into(), xfrm: Some(x), geom: Geom::preset(preset), ..Default::default() };
     paint(d, &mut sh, i, true);
     if let Some(m) = d.nodes.get(node).and_then(|n| n.picture) {
-        sh.fill = Some(Fill::Picture(deckcraft_model::style::PictureFill { media: m, ..Default::default() }));
+        sh.fill = Some(Fill::Picture(seho_model::style::PictureFill { media: m, ..Default::default() }));
         sh.line = Some(Line::solid(ColorRef::scheme(SchemeSlot::Lt1), 1.5));
     }
     sh
@@ -826,7 +826,7 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                 let path = format!("M {it:.2} 0 L {:.2} 0 L {:.2} {bh:.2} L {ib:.2} {bh:.2} Z", w - it, w - ib);
                 let mut sh = text_shape("rect", Xfrm::new(x, area.y + i as f64 * h, w, bh), &nodes(g), true);
                 sh.geom = Geom::Custom {
-                    paths: vec![deckcraft_model::CustomPath { w, h: bh, d: path, fill: deckcraft_geom::preset::FillMode::Norm, stroke: true }],
+                    paths: vec![seho_model::CustomPath { w, h: bh, d: path, fill: seho_geom::preset::FillMode::Norm, stroke: true }],
                 };
                 // Keep the text inside the sloped sides: inset it to a bit past the band's mid width.
                 // The tip band is a triangle: its text sits at the wide end, inset to the width there.
@@ -836,7 +836,7 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                     b.body.inset_l = Some(inset);
                     b.body.inset_r = Some(inset);
                     if tip {
-                        b.body.anchor = Some(if inverted { deckcraft_model::text::Anchor::Top } else { deckcraft_model::text::Anchor::Bottom });
+                        b.body.anchor = Some(if inverted { seho_model::text::Anchor::Top } else { seho_model::text::Anchor::Bottom });
                     }
                 }
                 paint(d, &mut sh, i, false);
@@ -1015,7 +1015,7 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                         // Text in the box's outer part, clear of the circle.
                         body.body.inset_l = Some(if sx > 0.0 { b * 0.35 } else { 6.0 });
                         body.body.inset_r = Some(if sx < 0.0 { b * 0.35 } else { 6.0 });
-                        body.body.anchor = Some(if sy < 0.0 { deckcraft_model::text::Anchor::Top } else { deckcraft_model::text::Anchor::Bottom });
+                        body.body.anchor = Some(if sy < 0.0 { seho_model::text::Anchor::Top } else { seho_model::text::Anchor::Bottom });
                     }
                     out.push((sh, g[1..].to_vec()));
                 }
@@ -1058,11 +1058,11 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                         format!("M {:.2} 0 L {tw:.2} {th:.2} L 0 {th:.2} Z", tw / 2.0)
                     };
                     sh.geom = Geom::Custom {
-                        paths: vec![deckcraft_model::CustomPath {
+                        paths: vec![seho_model::CustomPath {
                             w: tw,
                             h: th,
                             d: path,
-                            fill: deckcraft_geom::preset::FillMode::Norm,
+                            fill: seho_geom::preset::FillMode::Norm,
                             stroke: true,
                         }],
                     };
@@ -1071,10 +1071,10 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                         b.body.inset_l = Some(tw * 0.22);
                         b.body.inset_r = Some(tw * 0.22);
                         if c % 2 == 1 {
-                            b.body.anchor = Some(deckcraft_model::text::Anchor::Top);
+                            b.body.anchor = Some(seho_model::text::Anchor::Top);
                             b.body.inset_b = Some(th * 0.35);
                         } else {
-                            b.body.anchor = Some(deckcraft_model::text::Anchor::Bottom);
+                            b.body.anchor = Some(seho_model::text::Anchor::Bottom);
                             b.body.inset_t = Some(th * 0.35);
                         }
                     }
@@ -1117,7 +1117,7 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                 let x = Xfrm::new(area.x + k as f64 * w + w * 0.02, area.y + top, w * 0.96, area.h - top);
                 let mut sh = text_shape(if table { "rect" } else { "trapezoid" }, x, &nodes(g), true);
                 if let Some(b) = &mut sh.text {
-                    b.body.anchor = Some(deckcraft_model::text::Anchor::Top);
+                    b.body.anchor = Some(seho_model::text::Anchor::Top);
                     if !table {
                         b.body.inset_l = Some(x.w * 0.2);
                         b.body.inset_r = Some(x.w * 0.2);
@@ -1321,7 +1321,7 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                 out.push((picture_shape(d, "rect", Xfrm::new(x, area.y, bw, ph), i, g[0]), vec![]));
                 let mut sh = text_shape("rect", Xfrm::new(x, area.y + ph, bw, area.h - ph), &nodes(g), true);
                 if let Some(b) = &mut sh.text {
-                    b.body.anchor = Some(deckcraft_model::text::Anchor::Top);
+                    b.body.anchor = Some(seho_model::text::Anchor::Top);
                 }
                 paint(d, &mut sh, i, false);
                 out.push((sh, g.clone()));
@@ -1346,7 +1346,7 @@ fn layout_raw(d: &Diagram, area: Xfrm) -> Vec<Item> {
                 let y = if i % 2 == 0 { area.y } else { mid + bar * 1.6 };
                 let mut t = text_shape("rect", Xfrm::new(cx - w * 0.48, y, w * 0.96, th.max(1.0)), &nodes(g), true);
                 if let Some(b) = &mut t.text {
-                    b.body.anchor = Some(if i % 2 == 0 { deckcraft_model::text::Anchor::Bottom } else { deckcraft_model::text::Anchor::Top });
+                    b.body.anchor = Some(if i % 2 == 0 { seho_model::text::Anchor::Bottom } else { seho_model::text::Anchor::Top });
                 }
                 paint(d, &mut t, i, true);
                 t.fill = Some(Fill::None);
@@ -1673,7 +1673,7 @@ fn diagram_group(shapes: &[Shape], id: ShapeId) -> Option<&Shape> {
             return Some(sh);
         }
         if let ShapeKind::Group { children, .. } = &sh.kind {
-            if sh.diagram.is_some() && deckcraft_model::find_shape(children, id).is_some() {
+            if sh.diagram.is_some() && seho_model::find_shape(children, id).is_some() {
                 return Some(sh);
             }
             if let Some(g) = diagram_group(children, id) {
@@ -1715,7 +1715,7 @@ fn regenerate(cmd: &str, doc: &mut Presentation, d: &Diagram, area: Xfrm) -> Res
 fn edit_diagram<T>(s: &mut Session, p: &Value, cmd: &str, f: impl FnOnce(&mut Diagram) -> Result<T>) -> Result<T> {
     let gid = target_group(s, p, cmd)?;
     s.edit(|doc, sel| {
-        let g = current_shapes(doc, sel).and_then(|v| deckcraft_model::find_shape(v, gid)).cloned().ok_or_else(|| bad(cmd, "no such shape"))?;
+        let g = current_shapes(doc, sel).and_then(|v| seho_model::find_shape(v, gid)).cloned().ok_or_else(|| bad(cmd, "no such shape"))?;
         let (ShapeKind::Group { children, child }, Some(mut d)) = (g.kind, g.diagram) else { return Err(bad(cmd, "not a SmartArt graphic")) };
         sync_text(&mut d, &children);
         let out = f(&mut d)?;
@@ -1723,7 +1723,7 @@ fn edit_diagram<T>(s: &mut Session, p: &Value, cmd: &str, f: impl FnOnce(&mut Di
         d.imported = false;
         let kids = regenerate(cmd, doc, &d, child)?;
         let shapes = crate::shapes_mut(doc, sel).ok_or_else(|| bad(cmd, "no slide"))?;
-        let sh = deckcraft_model::find_shape_mut(shapes, gid).ok_or_else(|| bad(cmd, "no such shape"))?;
+        let sh = seho_model::find_shape_mut(shapes, gid).ok_or_else(|| bad(cmd, "no such shape"))?;
         sh.kind = ShapeKind::Group { children: kids, child };
         sh.diagram = Some(d);
         sel.shapes = vec![gid];
@@ -1904,7 +1904,7 @@ fn to_text(s: &mut Session, p: &Value) -> Result<Value> {
                 r.props.size = Some(size);
             }
             para.end_props.size = Some(size);
-            para.props.bullet = Some(deckcraft_model::text::Bullet::Char { char: "•".into() });
+            para.props.bullet = Some(seho_model::text::Bullet::Char { char: "•".into() });
             para.props.margin_left = Some(18.0 * (para.level as f64 + 1.0));
             para.props.indent = Some(-14.0);
             body.paragraphs.push(para);
@@ -1932,7 +1932,7 @@ fn to_shapes(s: &mut Session, p: &Value) -> Result<Value> {
     let gid = target_group(s, p, CMD)?;
     s.edit(|doc, sel| {
         let shapes = crate::shapes_mut(doc, sel).ok_or_else(|| bad(CMD, "no slide"))?;
-        let g = deckcraft_model::find_shape_mut(shapes, gid).ok_or_else(|| bad(CMD, "no such shape"))?;
+        let g = seho_model::find_shape_mut(shapes, gid).ok_or_else(|| bad(CMD, "no such shape"))?;
         g.diagram = None;
         g.name = "Group".into();
         sel.shapes = vec![gid];

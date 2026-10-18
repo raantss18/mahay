@@ -1,7 +1,7 @@
 //! Frozen exact Unsharp Mask from a28d7866, independent of production helpers.
 use crate::Ctx;
 use crate::image::{Image, premultiply, unpremultiply};
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 pub(crate) fn gaussian_kernel(sigma: f32) -> Vec<f32> {
     if sigma < 0.05 {
         return vec![1.0];

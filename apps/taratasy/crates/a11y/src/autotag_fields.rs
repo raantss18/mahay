@@ -4,7 +4,7 @@
 //! widgets. An existing direct `/Document` root and direct `/ParentTree /Nums` are extended;
 //! unusual tree layouts are refused before any edit is made.
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object};
+use taratasy_cos::{Dict, Document, ObjRef, Object};
 
 fn reference(object: Option<&Object>, what: &str) -> Result<ObjRef, String> {
     object.and_then(Object::as_ref).ok_or_else(|| format!("the {what} must be an indirect reference"))
@@ -36,7 +36,7 @@ pub fn tag_form_fields(doc: &mut Document) -> Result<usize, String> {
     }
     let existing_root = catalog.get(b"StructTreeRoot").cloned();
     let mark_info = catalog.get(b"MarkInfo").map(|v| doc.resolve(v)).as_deref().and_then(Object::as_dict).cloned().unwrap_or_default();
-    let pages = pdfcraft_model::pages(doc);
+    let pages = taratasy_model::pages(doc);
     let mut widgets = Vec::new();
     // A widget listed in more than one page's /Annots is tagged once (one key, one /Form).
     let mut seen = std::collections::HashSet::new();

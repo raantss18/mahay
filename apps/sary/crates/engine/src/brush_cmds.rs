@@ -6,15 +6,15 @@
 //! (`{"scattering": {"enabled": true}}`). Strokes are deterministic: the jitter seed is the `seed`
 //! param or a hash of the points, so a journaled command replays to identical pixels.
 
-use photocraft_doc::LayerContent;
-use photocraft_geom::Rect;
-use photocraft_paint::mixer::{MixerSettings, apply_mixer_stroke};
-use photocraft_paint::replace::{Limits, ReplaceMode, ReplaceSettings, Sampling, apply_color_replacement, color_replacement_effect};
-use photocraft_paint::tile::PREVIEW_SIDE;
-use photocraft_paint::{
+use sary_doc::LayerContent;
+use sary_geom::Rect;
+use sary_paint::mixer::{MixerSettings, apply_mixer_stroke};
+use sary_paint::replace::{Limits, ReplaceMode, ReplaceSettings, Sampling, apply_color_replacement, color_replacement_effect};
+use sary_paint::tile::PREVIEW_SIDE;
+use sary_paint::{
     BrushPreset, BrushSettings, GrayTile, Pattern, PresetCaptures, StoredTile, Stroke, StrokePoint, StrokeRenderer, TipShape, render_stroke,
 };
-use photocraft_raster::Surface;
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, has_paintable, is_mask_target, paint_surface};
@@ -154,7 +154,7 @@ pub fn merge_brush(base: &BrushSettings, patch: &Value, cmd: &str) -> Result<Bru
 /// Rejects brush sizes and Scatter amounts outside their documented ranges, before a brush is
 /// stored or painted with.
 pub(crate) fn validate_brush(brush: &BrushSettings, cmd: &str) -> Result<()> {
-    let max = photocraft_paint::MAX_BRUSH_SIZE;
+    let max = sary_paint::MAX_BRUSH_SIZE;
     if !brush.size.is_finite() || brush.size > max {
         return Err(bad(cmd, format!("brush size must be finite and at most {max} px")));
     }
@@ -163,7 +163,7 @@ pub(crate) fn validate_brush(brush: &BrushSettings, cmd: &str) -> Result<()> {
     }
     // Scatter may exceed 1 (100 %) but not the 1000 % maximum: a huge amount pushed dab centres to
     // infinity (#977). `{:?}` keeps 1e38 short and shows infinity as `inf`.
-    let scatter_max = photocraft_paint::MAX_SCATTER;
+    let scatter_max = sary_paint::MAX_SCATTER;
     let in_range = |v: f32| (0.0..=scatter_max).contains(&v);
     let sc = brush.scattering.scatter.jitter;
     if brush.scattering.enabled && !in_range(sc) {
@@ -177,7 +177,7 @@ pub(crate) fn validate_brush(brush: &BrushSettings, cmd: &str) -> Result<()> {
 }
 
 fn find_preset<'a>(s: &'a Session, name: &str, cmd: &str) -> Result<&'a BrushPreset> {
-    photocraft_paint::presets::find(&s.tools.presets, name).ok_or_else(|| bad(cmd, format!("no brush preset named `{name}`")))
+    sary_paint::presets::find(&s.tools.presets, name).ok_or_else(|| bad(cmd, format!("no brush preset named `{name}`")))
 }
 
 /// Resolve the brush for a stroke command: session brush ← `preset` ← `brush` ← legacy scalar
@@ -217,15 +217,15 @@ pub fn resolve_brush(s: &Session, p: &Value, cmd: &str) -> Result<BrushSettings>
     b.erase = flag(p, "erase", false);
     b.seed = match p.get("seed").and_then(Value::as_u64) {
         Some(v) => v,
-        None => photocraft_paint::rng::seed_from_bytes(p.get("points").map(|v| v.to_string()).unwrap_or_default().as_bytes()),
+        None => sary_paint::rng::seed_from_bytes(p.get("points").map(|v| v.to_string()).unwrap_or_default().as_bytes()),
     };
     validate_brush(&b, cmd)?;
     Ok(b)
 }
 
-fn layer_id(s: &Session, p: &Value) -> Result<photocraft_doc::LayerId> {
+fn layer_id(s: &Session, p: &Value) -> Result<sary_doc::LayerId> {
     match p.get("layer").and_then(Value::as_u64) {
-        Some(id) => Ok(photocraft_doc::LayerId(id)),
+        Some(id) => Ok(sary_doc::LayerId(id)),
         None => s.active().and_then(|d| d.active_layer).ok_or(EngineError::Other("no active layer".into())),
     }
 }
@@ -239,7 +239,7 @@ fn damage_json(s: &mut Session, dmg: Rect) -> Value {
 
 /// The target layer (`None` for a channel), brush and zoom of a stroke. On a mask or channel the
 /// eraser paints the background colour (Photoshop).
-fn stroke_target(s: &Session, p: &Value, brush: BrushSettings) -> Result<(Option<photocraft_doc::LayerId>, BrushSettings, f32)> {
+fn stroke_target(s: &Session, p: &Value, brush: BrushSettings) -> Result<(Option<sary_doc::LayerId>, BrushSettings, f32)> {
     let gray = is_mask_target(p) || crate::channel_cmds::is_channel_target(p);
     let id = if crate::channel_cmds::is_channel_target(p) { None } else { Some(layer_id(s, p)?) };
     let brush = if gray && brush.erase { BrushSettings { erase: false, color: s.tools.background, ..brush } } else { brush };
@@ -258,8 +258,8 @@ fn erase_locked(brush: &mut BrushSettings, lock: bool, bg: [f32; 4]) {
 /// The document's own CMYK profile (absent, built-in or not a CMYK document: `None`, the
 /// default conversions), which the stroke's colour conversions must honour — the compositors
 /// and composite exports enter the same scope.
-pub(crate) fn doc_cmyk_space(s: &Session) -> Option<std::sync::Arc<photocraft_color::convert::CmykSpace>> {
-    photocraft_color::convert::CmykSpace::for_profile(s.active().and_then(|d| d.doc.icc_profile.as_ref()))
+pub(crate) fn doc_cmyk_space(s: &Session) -> Option<std::sync::Arc<sary_color::convert::CmykSpace>> {
+    sary_color::convert::CmykSpace::for_profile(s.active().and_then(|d| d.doc.icc_profile.as_ref()))
 }
 
 /// Stroke with a resolved brush onto the target layer (pixels or mask).
@@ -273,7 +273,7 @@ fn stroke_with(s: &mut Session, cmd: &str, p: &Value, label: &str, brush: BrushS
     // instead of rendering the whole stroke again (the hitch at pen-up).
     let live = s.live_commit.take().filter(|l| l.matches(s, cmd, p, &pts));
     let from_live = live.is_some();
-    let dmg = photocraft_color::convert::with_cmyk_space(cmyk.as_ref(), || {
+    let dmg = sary_color::convert::with_cmyk_space(cmyk.as_ref(), || {
         s.edit(label, |doc, _| {
             if let Some(l) = live {
                 let (surf, _) = crate::channel_cmds::target_surface(doc, id, p)?;
@@ -356,7 +356,7 @@ pub const BLOCK_SCREEN_PX: f64 = 16.0;
 /// pixels (a zoom that is not a positive number counts as 100 %).
 pub fn block_size(zoom: f64) -> f32 {
     let zoom = if zoom.is_finite() && zoom > 0.0 { zoom } else { 1.0 };
-    (BLOCK_SCREEN_PX / zoom).round().clamp(1.0, f64::from(photocraft_paint::brush::MAX_BRUSH_SIZE)) as f32
+    (BLOCK_SCREEN_PX / zoom).round().clamp(1.0, f64::from(sary_paint::brush::MAX_BRUSH_SIZE)) as f32
 }
 
 /// The Eraser's Block mode (`"block": true`): a hard, aliased square of
@@ -387,7 +387,7 @@ fn block_brush(b: BrushSettings, p: &Value) -> Result<BrushSettings> {
 
 /// Is the stroke in Photoshop's Clear painting mode (`"mode": "clear"`, #3439)? It erases with the
 /// Brush's or Pencil's own brush; unlike a blend mode it is not a layer mode, so it is not a
-/// [`photocraft_color::BlendMode`].
+/// [`sary_color::BlendMode`].
 fn clear_mode(p: &Value) -> bool {
     p.get("mode").and_then(Value::as_str).is_some_and(|m| m.eq_ignore_ascii_case("clear"))
 }
@@ -398,7 +398,7 @@ fn clear_mode(p: &Value) -> bool {
 fn with_blend_mode(mut b: BrushSettings, p: &Value) -> BrushSettings {
     b.erase |= clear_mode(p);
     if b.erase {
-        b.mode = photocraft_color::BlendMode::Normal;
+        b.mode = sary_color::BlendMode::Normal;
     } else if let Some(m) = p.get("mode").and_then(Value::as_str).and_then(crate::commands::blend_from_str) {
         b.mode = m;
     }
@@ -418,7 +418,7 @@ pub fn paint_stroke(s: &mut Session, p: &Value) -> Result<Value> {
 /// `"seed": live.seed` gives the same pixels.
 pub struct LiveStroke {
     /// The active document with the stroke so far.
-    pub doc: std::sync::Arc<photocraft_doc::Document>,
+    pub doc: std::sync::Arc<sary_doc::Document>,
     /// Jitter seed to pass to `paint.stroke`.
     pub seed: u64,
     cmd: String,
@@ -428,21 +428,21 @@ pub struct LiveStroke {
     mirror_distinct: Vec<bool>,
     /// What the symmetric preview drew last, once a mirror differs from the stroke, and how many
     /// passes it merged (a mirror joining redraws every tile).
-    union_live: Option<(photocraft_paint::UnionLive, usize)>,
+    union_live: Option<(sary_paint::UnionLive, usize)>,
     pre: Surface,
     sel: Option<Surface>,
     lock: bool,
-    layer: Option<photocraft_doc::LayerId>,
+    layer: Option<sary_doc::LayerId>,
     params: Value,
     /// Where the doc shows the stroke's end as finishing it would draw it (see `push`).
     tail: Rect,
     /// The document's CMYK profile the commit enters (`stroke_with`), so the preview shows the
     /// pixels a `paint.stroke` with `seed` will write.
-    cmyk: Option<std::sync::Arc<photocraft_color::convert::CmykSpace>>,
+    cmyk: Option<std::sync::Arc<sary_color::convert::CmykSpace>>,
     /// Every point rendered so far, in order.
     points: Vec<StrokePoint>,
     /// The document and revision the stroke started on.
-    base: (photocraft_doc::DocId, u64),
+    base: (sary_doc::DocId, u64),
 }
 
 /// A finished live stroke offered to its own commit ([`Session::offer_live_stroke`],
@@ -451,7 +451,7 @@ pub struct LiveStroke {
 /// stroke again.
 pub struct LiveCommit {
     pub(crate) cmd: String,
-    pub(crate) base: (photocraft_doc::DocId, u64),
+    pub(crate) base: (sary_doc::DocId, u64),
     pub(crate) params: Value,
     /// The Brush's and Pencil's seed; the retouching tools have none.
     pub(crate) seed: Option<u64>,
@@ -557,7 +557,7 @@ impl LiveStroke {
     }
 
     /// Does the stroke change with time while the pointer is held still (airbrush Build-up, or
-    /// smoothing still catching up)? See `photocraft_paint::dynamics::DabGenerator::wants_time`.
+    /// smoothing still catching up)? See `sary_paint::dynamics::DabGenerator::wants_time`.
     pub fn wants_time(&self) -> bool {
         self.renderer.wants_time()
     }
@@ -571,7 +571,7 @@ impl LiveStroke {
         check_coords(pts, &self.cmd)?;
         self.points.extend_from_slice(pts);
         let cmyk = self.cmyk.clone();
-        photocraft_color::convert::with_cmyk_space(cmyk.as_ref(), || {
+        sary_color::convert::with_cmyk_space(cmyk.as_ref(), || {
             self.renderer.push(pts);
             if let Some(symmetry) = &self.symmetry {
                 for ((mirror, distinct), reflected) in self.mirrors.iter_mut().zip(&mut self.mirror_distinct).zip(symmetry.reflected_passes(pts)) {
@@ -592,7 +592,7 @@ impl LiveStroke {
                         if !old.is_empty() {
                             surf.write_region(old, &self.pre.read_region(old));
                         }
-                        (photocraft_paint::UnionLive::default(), true, old)
+                        (sary_paint::UnionLive::default(), true, old)
                     }
                 };
                 let mut renderers: Vec<&mut StrokeRenderer> = std::iter::once(&mut self.renderer)
@@ -656,11 +656,11 @@ fn mixer_brush(s: &mut Session, p: &Value) -> Result<Value> {
     let dmg = s.edit("Mixer Brush", |doc, _| {
         let sel = doc.selection.clone();
         let sample = if sample_all {
-            let ds = photocraft_paint::dabs(&stroke);
-            let ctx = photocraft_paint::BrushContext::new(&stroke.brush);
+            let ds = sary_paint::dabs(&stroke);
+            let ctx = sary_paint::BrushContext::new(&stroke.brush);
             let area = ds.iter().fold(Rect::EMPTY, |r, d| r.union(&ctx.dab_rect(d, false)));
-            let buf = photocraft_compose::render(doc, area);
-            let mut surf = Surface::new(photocraft_color::PixelFormat::RGBA32F);
+            let buf = sary_compose::render(doc, area);
+            let mut surf = Surface::new(sary_color::PixelFormat::RGBA32F);
             let flat: Vec<f32> = buf.px.iter().flatten().copied().collect();
             if !area.is_empty() {
                 surf.write_region(area, &flat);
@@ -682,7 +682,7 @@ fn mixer_brush(s: &mut Session, p: &Value) -> Result<Value> {
 /// `paint.colorReplacement`'s stroke and settings. The replacement colour is the brush colour
 /// (the foreground unless `color` says otherwise). It paints layer pixels only: a mask, alpha
 /// channel or Quick Mask `target` is refused rather than recolouring the layer instead.
-fn color_replacement_setup(s: &Session, p: &Value) -> Result<(Stroke, ReplaceSettings, photocraft_doc::LayerId)> {
+fn color_replacement_setup(s: &Session, p: &Value) -> Result<(Stroke, ReplaceSettings, sary_doc::LayerId)> {
     let cmd = "paint.colorReplacement";
     if let Some(t) = p.get("target").filter(|t| t.as_str() != Some("pixels")) {
         return Err(bad(cmd, format!("Color Replacement paints layer pixels only (`target` {t} is not \"pixels\")")));
@@ -882,7 +882,7 @@ fn define_from_selection(s: &mut Session, p: &Value) -> Result<Value> {
     for y in 0..h {
         for x in 0..w {
             let c = surf.rgba(area.x0 + x as i32, area.y0 + y as i32);
-            let l = photocraft_color::blend::lum([c[0], c[1], c[2]]);
+            let l = sary_color::blend::lum([c[0], c[1], c[2]]);
             v[y * w + x] = ((1.0 - l) * c[3] * sv[(y * w + x) * sc]).clamp(0.0, 1.0);
         }
     }
@@ -1058,7 +1058,7 @@ fn light_json(b: &BrushSettings, skip: (bool, bool, bool)) -> Value {
         c.dual_brush.tip = TipShape::Round;
     }
     if skip.2 {
-        c.texture.pattern = photocraft_paint::Pattern::default();
+        c.texture.pattern = sary_paint::Pattern::default();
     }
     serde_json::to_value(&c).unwrap_or(Value::Null)
 }

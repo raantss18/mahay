@@ -113,7 +113,7 @@ fn quick_selection_preserves_textures_low_contrast_and_thin_features() {
 #[ignore = "release comparison through editor raster surfaces on 24-36 MP documents"]
 #[allow(clippy::assertions_on_constants)]
 fn quick_selection_surface_release_comparison() {
-    use photocraft_color::PixelFormat;
+    use sary_color::PixelFormat;
     use std::{hint::black_box, time::Instant};
     assert!(!cfg!(debug_assertions), "run with --release");
     for (w, h) in [(6000usize, 4000usize), (7200, 5000)] {

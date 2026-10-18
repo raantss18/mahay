@@ -10,7 +10,7 @@
 
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ToolEvent;
 
 /// ⌘ + ⌥ + ⌃ held together. Always false off macOS, where egui never sets `mac_cmd`.
@@ -19,7 +19,7 @@ pub fn is_gesture(mods: egui::Modifiers) -> bool {
 }
 
 /// Handles one canvas pointer event; true when it was consumed.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
     match ev {
         ToolEvent::Down { x, y, .. } => {
             if app.drag.is_some() || app.session.active().is_none() || !is_gesture(mods) {
@@ -40,7 +40,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) ->
 #[cfg(test)]
 mod tests {
     use egui::Modifiers;
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
     use serde_json::json;
 
     use super::*;
@@ -50,8 +50,8 @@ mod tests {
     const PICK: Modifiers = Modifiers { alt: true, ctrl: true, shift: false, mac_cmd: true, command: true };
 
     /// A 64×64 document with A painted at (8..24)² and B at (40..56)²; B is active.
-    fn app() -> (PhotocraftApp, photocraft_doc::LayerId) {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> (SaryApp, sary_doc::LayerId) {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         let mut first = None;

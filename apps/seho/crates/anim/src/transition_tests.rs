@@ -3,7 +3,7 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use deckcraft_model::anim::TRANSITIONS;
+use seho_model::anim::TRANSITIONS;
 
 use crate::transition::{Layer, Source, transition_frame, transition_layers, uses_slide_parts};
 use crate::transition_geom::{edge, pow_inout, q2, ss};

@@ -5,7 +5,7 @@
 
 use std::collections::HashSet;
 
-use deckcraft_model::Shape;
+use seho_model::Shape;
 use egui::{Align2, CornerRadius, Id, Rect, Sense, Stroke, Ui, WidgetInfo, WidgetType, pos2, vec2};
 use serde_json::json;
 

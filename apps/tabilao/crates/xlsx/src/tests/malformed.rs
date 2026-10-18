@@ -10,7 +10,7 @@ fn garbage_and_truncation() {
     assert!(read_xlsx(b"").is_err());
     assert!(read_xlsx(b"hello world").is_err());
     assert!(read_xlsx(b"PK\x03\x04garbage").is_err());
-    let good = write_xlsx(&gridcraft_model::Workbook::new()).unwrap();
+    let good = write_xlsx(&tabilao_model::Workbook::new()).unwrap();
     for n in [10, 100, good.len() / 2, good.len() - 10] {
         let _ = read_xlsx(&good[..n]);
     }
@@ -57,7 +57,7 @@ fn huge_coordinates_and_dimensions() {
       <sheetViews><sheetView zoomScale="99999"><pane xSplit="1e9" ySplit="-5" state="frozen"/></sheetView></sheetViews>"#;
     let (wb, rep) = read_xlsx(&minimal(body, &[], "", "")).unwrap();
     let s = wb.sheet(0).unwrap();
-    assert_eq!(s.value(gridcraft_core::CellRef::parse("XFD3").unwrap()), gridcraft_core::Value::Number(7.0));
+    assert_eq!(s.value(tabilao_core::CellRef::parse("XFD3").unwrap()), tabilao_core::Value::Number(7.0));
     assert!(s.cells.len() <= 4);
     assert!(s.hyperlinks.len() <= 10_000);
     assert_eq!(s.zoom, 400);
@@ -78,7 +78,7 @@ fn deeply_nested_and_broken_xml() {
     assert!(rep.warnings.iter().any(|w| w.contains("could not be read") || w.contains("damaged")));
     // Truncated sheet XML keeps earlier rows.
     let (wb, _) = read_xlsx(&minimal(r#"<sheetData><row r="1"><c r="A1"><v>5</v></c></row><row r="2"><c r="A2"><v"#, &[], "", "")).unwrap();
-    assert_eq!(wb.sheet(0).unwrap().value(gridcraft_core::CellRef::new(0, 0)), gridcraft_core::Value::Number(5.0));
+    assert_eq!(wb.sheet(0).unwrap().value(tabilao_core::CellRef::new(0, 0)), tabilao_core::Value::Number(5.0));
     // Broken optional parts are warnings.
     let rels = r#"<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>"#;
     let (_, rep) = read_xlsx(&minimal(
@@ -126,8 +126,8 @@ fn zip_bomb_is_rejected() {
 /// broken parts are skipped, nothing panics.
 #[test]
 fn hostile_threaded_comments_persons_and_note_vml() {
-    use gridcraft_core::CellRef;
-    use gridcraft_model::{Comment, Workbook};
+    use tabilao_core::CellRef;
+    use tabilao_model::{Comment, Workbook};
     let mut wb = Workbook::new();
     let s = std::sync::Arc::make_mut(&mut wb.sheets[0]);
     let c = |threaded| Comment { author: "A".into(), text: "t".into(), replies: vec![], threaded, resolved: false, visible: false, dates: vec![] };
@@ -207,8 +207,8 @@ fn an_overlong_number_format_code_does_not_stop_the_open() {
     let body = r#"<sheetData><row r="1"><c r="A1" s="1"><v>0.5</v></c></row></sheetData>"#;
     let (wb, _) = read_xlsx(&minimal(body, &[("xl/styles.xml", &styles)], rels, "")).unwrap();
     let s = wb.sheet(0).unwrap();
-    let cell = s.cell(gridcraft_core::CellRef::parse("A1").unwrap()).unwrap();
-    assert_eq!(s.value(gridcraft_core::CellRef::parse("A1").unwrap()), gridcraft_core::Value::Number(0.5));
+    let cell = s.cell(tabilao_core::CellRef::parse("A1").unwrap()).unwrap();
+    assert_eq!(s.value(tabilao_core::CellRef::parse("A1").unwrap()), tabilao_core::Value::Number(0.5));
     assert_eq!(wb.styles.get(cell.style).num_fmt.as_str(), code);
 }
 
@@ -242,9 +242,9 @@ fn hostile_formula_text_does_not_overflow_the_stack() {
         .spawn(move || {
             let (wb, _) = read_xlsx(&bytes).expect("readable");
             let s = wb.sheet(0).expect("sheet");
-            let a1 = s.cell(gridcraft_core::CellRef::new(0, 0)).and_then(|c| c.formula.clone()).expect("formula kept");
-            let b1 = s.cell(gridcraft_core::CellRef::new(0, 1)).and_then(|c| c.formula.clone()).expect("formula kept");
-            let kept = (a1.expr.is_none(), b1.expr.is_none(), a1.text.len(), s.value(gridcraft_core::CellRef::new(0, 0)));
+            let a1 = s.cell(tabilao_core::CellRef::new(0, 0)).and_then(|c| c.formula.clone()).expect("formula kept");
+            let b1 = s.cell(tabilao_core::CellRef::new(0, 1)).and_then(|c| c.formula.clone()).expect("formula kept");
+            let kept = (a1.expr.is_none(), b1.expr.is_none(), a1.text.len(), s.value(tabilao_core::CellRef::new(0, 0)));
             assert_eq!(wb.names.first().map(|n| n.formula.len()), Some(1_000_001));
             let out = write_xlsx(&wb).expect("writable");
             drop(wb);
@@ -254,5 +254,5 @@ fn hostile_formula_text_does_not_overflow_the_stack() {
     let ((a_unparsed, b_unparsed, a_len, a_value), written) = handle.join().expect("no stack overflow");
     assert!(a_unparsed && b_unparsed && written);
     assert_eq!(a_len, 1_000_001);
-    assert_eq!(a_value, gridcraft_core::Value::Number(3.0));
+    assert_eq!(a_value, tabilao_core::Value::Number(3.0));
 }

@@ -1,7 +1,7 @@
 //! Background jobs in the shell (#210): long commands and file opens run on worker threads (see
-//! `photocraft_engine::jobs`) while the window keeps drawing at full frame rate.
+//! `sary_engine::jobs`) while the window keeps drawing at full frame rate.
 //!
-//! - [`run`] starts a job-capable command in the background (when [`PhotocraftApp::background_jobs`]
+//! - [`run`] starts a job-capable command in the background (when [`SaryApp::background_jobs`]
 //!   is on: the desktop app; tests and the web run inline as before).
 //! - [`tick`] (every frame) applies finished jobs, reports failures, answers control requests
 //!   waiting on a job, finishes background opens and keeps frames coming while anything runs.
@@ -20,12 +20,12 @@ use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::mpsc::Sender;
 
 use egui::{Color32, Rect, RichText, Sense, Stroke, vec2};
-use photocraft_doc::DocId;
-use photocraft_engine::jobs::{JobCtx, JobEvent, JobId, JobInfo, JobOutcome, OPEN_JOB, OpenSource, Started};
+use sary_doc::DocId;
+use sary_engine::jobs::{JobCtx, JobEvent, JobId, JobInfo, JobOutcome, OPEN_JOB, OpenSource, Started};
 use serde_json::{Value, json};
 
 use crate::theme::Tokens;
-use crate::{ControlResponse, ExportSettings, PhotocraftApp, SaveFileFn, notices};
+use crate::{ControlResponse, ExportSettings, SaryApp, SaveFileFn, notices};
 
 /// Delay before the modal progress dialog appears (quick jobs finish without it).
 pub const DIALOG_DELAY_MS: f64 = 250.0;
@@ -172,8 +172,8 @@ pub struct JobsUi {
 
 /// Run command `id`: in the background when background jobs are on and the command is a job
 /// (the result is then `{"job": id, "pending": true}` and the edit lands when [`tick`] applies
-/// it), else synchronously like [`photocraft_engine::Session::execute`].
-pub fn run(app: &mut PhotocraftApp, id: &str, params: Value) -> Result<Value, String> {
+/// it), else synchronously like [`sary_engine::Session::execute`].
+pub fn run(app: &mut SaryApp, id: &str, params: Value) -> Result<Value, String> {
     if !app.background_jobs {
         return app.session.execute(id, params).map_err(|e| e.to_string());
     }
@@ -191,7 +191,7 @@ pub fn run(app: &mut PhotocraftApp, id: &str, params: Value) -> Result<Value, St
 
 /// Open a file in the background: a tab appears at once and shows the progress; the document
 /// replaces it when decoded. `path` is remembered for File › Save and Open Recent.
-pub fn start_open(app: &mut PhotocraftApp, name: &str, path: Option<String>, source: OpenSource) -> Result<(), String> {
+pub fn start_open(app: &mut SaryApp, name: &str, path: Option<String>, source: OpenSource) -> Result<(), String> {
     let name = &app.open_name(name);
     match app.session.start_open(name, source).map_err(|e| e.to_string())? {
         // Inline (wasm): finish now, like a background open that ended at once.
@@ -209,7 +209,7 @@ pub fn start_open(app: &mut PhotocraftApp, name: &str, path: Option<String>, sou
 
 /// Start a set of files opened together: the `batch` of their [`OpenOrder`]s. Its tabs follow the
 /// documents and opens already there. Call [`end_batch`] once every member has been started.
-pub(crate) fn begin_batch(app: &mut PhotocraftApp) -> u64 {
+pub(crate) fn begin_batch(app: &mut SaryApp) -> u64 {
     let id = app.jobs.next_batch;
     app.jobs.next_batch = app.jobs.next_batch.wrapping_add(1);
     let base = app.session.documents().len() + app.jobs.opens.len();
@@ -242,7 +242,7 @@ fn batch_slot(jobs: &mut JobsUi, order: OpenOrder) -> Option<usize> {
 
 /// A background open's result (`{document, warnings, color}`) for `tab`, already taken out of
 /// [`JobsUi::opens`]: the document goes to the tab's slot, or to its place in its set.
-pub(crate) fn finish_open_tab(app: &mut PhotocraftApp, tab: &OpenTab, v: &Value) -> Result<(), String> {
+pub(crate) fn finish_open_tab(app: &mut SaryApp, tab: &OpenTab, v: &Value) -> Result<(), String> {
     let slot = tab.slot.or_else(|| tab.order.and_then(|o| batch_slot(&mut app.jobs, o)));
     let r = finish_open(app, &tab.name, tab.path.as_deref(), v, slot);
     end_batch(&mut app.jobs);
@@ -254,7 +254,7 @@ pub(crate) fn finish_open_tab(app: &mut PhotocraftApp, tab: &OpenTab, v: &Value)
 /// until the job ends, which [`tick`] records like a synchronous save. `Ok(None)`: started;
 /// `Ok(Some(..))`: it ran inline (wasm) and is already recorded.
 pub fn start_save(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     path: String,
     settings: ExportSettings,
     copy: bool,
@@ -286,7 +286,7 @@ pub fn start_save(
             let _done = WorkerDone(Arc::clone(&worker));
             let ctl = SaveCtl { job: ctx.clone(), state: worker };
             save(&snapshot, &target, &settings, &ctl)
-                .map_err(|e| if ctl.check().is_err() { photocraft_engine::EngineError::Cancelled } else { photocraft_engine::EngineError::Other(e) })
+                .map_err(|e| if ctl.check().is_err() { sary_engine::EngineError::Cancelled } else { sary_engine::EngineError::Other(e) })
         },
         move |_, warnings: Vec<String>| Ok(json!({"path": result_path, "warnings": warnings})),
     );
@@ -318,7 +318,7 @@ fn warnings_of(v: &Value) -> Vec<String> {
 
 /// A background save ended: record it, or report why not. The close prompt waiting on it moves
 /// on, or asks again.
-fn finish_save(app: &mut PhotocraftApp, ctx: &egui::Context, save: SaveJob, label: &str, outcome: JobOutcome) {
+fn finish_save(app: &mut SaryApp, ctx: &egui::Context, save: SaveJob, label: &str, outcome: JobOutcome) {
     match outcome {
         JobOutcome::Done(v) => {
             if save.automation {
@@ -346,7 +346,7 @@ fn finish_save(app: &mut PhotocraftApp, ctx: &egui::Context, save: SaveJob, labe
 
 /// Forget saves whose job ended and whose worker has returned; repeat a held window close once
 /// no save worker is left.
-fn close_after_saves(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn close_after_saves(app: &mut SaryApp, ctx: &egui::Context) {
     app.jobs.saves.retain(|s| !(s.ended && s.state.finished()));
     if !app.saving() && !app.printing() && std::mem::take(&mut app.jobs.close_after_saves) {
         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -355,7 +355,7 @@ fn close_after_saves(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// Per frame: apply finished jobs and react to them; keep frames coming while jobs run; Esc
 /// cancels the job in view.
-pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SaryApp, ctx: &egui::Context) {
     for e in app.session.poll_jobs() {
         on_event(app, ctx, e);
     }
@@ -385,7 +385,7 @@ pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
 /// [`tick`] has already run. Calling this from the shell after drawing avoids leaving such a job
 /// unapplied on an otherwise idle event loop (notably Wayland): its document would remain locked,
 /// making Undo and Redo appear unavailable.
-pub fn keep_polling(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn keep_polling(app: &SaryApp, ctx: &egui::Context) -> bool {
     if !app.session.has_jobs() {
         return false;
     }
@@ -396,7 +396,7 @@ pub fn keep_polling(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
 
 /// The job the user is looking at: the open tab in view, the active document's job, or (for
 /// the status bar) the newest running job.
-pub fn job_in_view(app: &PhotocraftApp) -> Option<JobInfo> {
+pub fn job_in_view(app: &SaryApp) -> Option<JobInfo> {
     if let Some(j) = app.jobs.focus.and_then(|j| app.session.job(j)) {
         return Some(j);
     }
@@ -404,7 +404,7 @@ pub fn job_in_view(app: &PhotocraftApp) -> Option<JobInfo> {
 }
 
 /// Cancel job `id` (the status bar's ×, the dialog's Cancel, Esc, closing an opening tab).
-pub fn cancel(app: &mut PhotocraftApp, id: JobId) -> bool {
+pub fn cancel(app: &mut SaryApp, id: JobId) -> bool {
     let label = app.session.job(id).map(|j| j.label);
     // A save that has started replacing the file runs to the end: cancelling it now would leave
     // the file written but the document marked unsaved.
@@ -426,7 +426,7 @@ pub fn cancel(app: &mut PhotocraftApp, id: JobId) -> bool {
     cancelled
 }
 
-fn on_event(app: &mut PhotocraftApp, ctx: &egui::Context, e: JobEvent) {
+fn on_event(app: &mut SaryApp, ctx: &egui::Context, e: JobEvent) {
     // Preferences ▸ General ▸ Beep When Done (off by default): a finished operation beeps, like
     // Photoshop's cue. Cancelling is the user's own action and stays silent.
     if matches!(e.outcome, JobOutcome::Done(_))
@@ -524,9 +524,9 @@ fn on_event(app: &mut PhotocraftApp, ctx: &egui::Context, e: JobEvent) {
     }
 }
 
-/// What [`crate::PhotocraftApp::open_bytes`] does after decoding, for a background open's result
+/// What [`crate::SaryApp::open_bytes`] does after decoding, for a background open's result
 /// (`{document, warnings, color}`).
-fn finish_open(app: &mut PhotocraftApp, name: &str, path: Option<&str>, v: &Value, slot: Option<usize>) -> Result<(), String> {
+fn finish_open(app: &mut SaryApp, name: &str, path: Option<&str>, v: &Value, slot: Option<usize>) -> Result<(), String> {
     let warnings: Vec<String> =
         v.get("warnings").and_then(Value::as_array).map(|a| a.iter().filter_map(|w| w.as_str().map(str::to_string)).collect()).unwrap_or_default();
     let held = |doc, read_only, question, policy_applied| crate::open_prompt::Held {
@@ -569,7 +569,7 @@ fn finish_open(app: &mut PhotocraftApp, name: &str, path: Option<&str>, v: &Valu
 /// What every open does once its document is the active one: remember where it came from, say
 /// so, show the import warnings (a raw opens in Camera Raw first, developed from `path` or
 /// `bytes`) and fire the "Open Document" script events.
-pub(crate) fn after_open(app: &mut PhotocraftApp, name: &str, path: Option<&str>, warnings: &[String], bytes: Option<&[u8]>) {
+pub(crate) fn after_open(app: &mut SaryApp, name: &str, path: Option<&str>, warnings: &[String], bytes: Option<&[u8]>) {
     if let Some(p) = path {
         app.opened_from(p);
     }
@@ -588,7 +588,7 @@ pub(crate) fn after_open(app: &mut PhotocraftApp, name: &str, path: Option<&str>
         notices::io_warnings(app, &opened, warnings);
     }
     // Script events bound to "Open Document".
-    photocraft_engine::automate_cmds::document_opened(&mut app.session);
+    sary_engine::automate_cmds::document_opened(&mut app.session);
     app.sync_views();
 }
 
@@ -616,7 +616,7 @@ pub fn bar(ui: &egui::Ui, rect: Rect, frac: Option<f32>, t: &Tokens) {
 }
 
 /// A print job has already reached the spool worker; cancellation belongs to the system queue.
-fn print_status_progress(app: &PhotocraftApp, ui: &mut egui::Ui, j: &JobInfo) {
+fn print_status_progress(app: &SaryApp, ui: &mut egui::Ui, j: &JobInfo) {
     let t = Tokens::get(ui.ctx());
     let (bar_w, bar_h) = if t.pro { (120.0, 6.0) } else { (140.0, 6.0) };
     let more = app.session.jobs().len().saturating_sub(1);
@@ -655,14 +655,14 @@ fn saving_percent(j: &JobInfo) -> String {
 }
 
 /// "Saving 45%" while a save of document `doc` runs, for its tab title; `None` otherwise.
-pub fn save_progress(app: &PhotocraftApp, doc: DocId) -> Option<String> {
+pub fn save_progress(app: &SaryApp, doc: DocId) -> Option<String> {
     let save = app.jobs.saves.iter().find(|s| s.doc == doc && !s.ended)?;
     app.session.job(save.job).map(|j| saving_percent(&j))
 }
 
 /// The status bar's job readout: "Gaussian Blur ▬▬▬▭▭ 45 %  ×", and for a save "Saving 45% ▬▬▬▭▭  ×"
 /// (the file name on hover). Draws nothing when no job runs.
-pub fn status_progress(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn status_progress(app: &mut SaryApp, ui: &mut egui::Ui) {
     let Some(j) = job_in_view(app) else { return };
     let saving = app.jobs.saves.iter().any(|s| s.job == j.id);
     let t = Tokens::get(ui.ctx());
@@ -698,7 +698,7 @@ pub fn status_progress(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
 /// The modal progress window for a job locking the active document (Photoshop shows one for
 /// long filters): title, status, bar, percentage and elapsed time, Cancel. Appears after
 /// [`DIALOG_DELAY_MS`]; Esc cancels (see [`tick`]).
-pub fn dialog(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn dialog(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(j) = app.session.active_job() else { return };
     if j.elapsed_ms < DIALOG_DELAY_MS {
         return;
@@ -767,7 +767,7 @@ const OPEN_CARD_MIN_HEIGHT: f32 = 132.0;
 /// The canvas area of an opening tab: the file name, a bar and Cancel, centred on the
 /// workspace backdrop. The name and the message stay on one line (truncated with "…", the full
 /// text on hover) and the card grows to fit its rows, so nothing lands outside it (#2423).
-pub fn open_card(app: &mut PhotocraftApp, ui: &mut egui::Ui, job: JobId) {
+pub fn open_card(app: &mut SaryApp, ui: &mut egui::Ui, job: JobId) {
     let Some(tab) = app.jobs.opens.iter().find(|o| o.job == job).cloned() else { return };
     let Some(j) = app.session.job(job) else { return };
     let t = Tokens::get(ui.ctx());
@@ -817,7 +817,7 @@ pub fn open_card(app: &mut PhotocraftApp, ui: &mut egui::Ui, job: JobId) {
 }
 
 /// Open tabs for the tab strips: (job, title, progress).
-pub fn open_tabs(app: &PhotocraftApp) -> Vec<(JobId, String, f32)> {
+pub fn open_tabs(app: &SaryApp) -> Vec<(JobId, String, f32)> {
     app.jobs.opens.iter().map(|o| (o.job, o.name.clone(), app.session.job(o.job).map_or(0.0, |j| j.progress))).collect()
 }
 
@@ -830,7 +830,7 @@ pub fn tab_underline(ui: &egui::Ui, r: Rect, frac: f32, t: &Tokens) {
 }
 
 /// Jobs for `ui.inspect`.
-pub fn inspect(app: &PhotocraftApp) -> Value {
+pub fn inspect(app: &SaryApp) -> Value {
     json!({
         "running": app.session.jobs(),
         "opening": app.jobs.opens.iter().map(|o| json!({"job": o.job.0, "name": o.name, "path": o.path})).collect::<Vec<_>>(),

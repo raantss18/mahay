@@ -3,8 +3,8 @@
 
 use std::path::{Path, PathBuf};
 
-use photocraft_doc::{LayerContent, LayerId, SmartSource};
-use photocraft_geom::Rect;
+use sary_doc::{LayerContent, LayerId, SmartSource};
+use sary_geom::Rect;
 use serde_json::json;
 
 use crate::Session;
@@ -14,7 +14,7 @@ const REMOTE: &str = r"\\192.0.2.1\share\x.png";
 
 /// An empty folder of its own (tests run in parallel).
 fn dir(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join(format!("photocraft-doc-path-{name}-{}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("sary-doc-path-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -28,8 +28,8 @@ fn png(path: &Path, rgb: impl Fn(u32) -> [u8; 3]) {
             px.extend(rgb(x));
         }
     }
-    let image = photocraft_codecs::Image::from_u8(32, 32, photocraft_codecs::ChannelLayout::Rgb, px).unwrap();
-    std::fs::write(path, photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap()).unwrap();
+    let image = sary_codecs::Image::from_u8(32, 32, sary_codecs::ChannelLayout::Rgb, px).unwrap();
+    std::fs::write(path, sary_codecs::encode(&image, sary_codecs::Format::Png, &Default::default()).unwrap()).unwrap();
 }
 
 /// On Unix `//` followed by an absolute path names that same local file, while the resolver sees a
@@ -39,12 +39,12 @@ fn network_alias(p: &Path) -> String {
     format!("/{}", p.display())
 }
 
-/// A 32×32 white document saved (as far as its links know) at `d/doc.pcraft`, with `file` placed
+/// A 32×32 white document saved (as far as its links know) at `d/doc.sary`, with `file` placed
 /// linked → (session, layer id).
 fn document(d: &Path, file: &Path) -> (Session, LayerId) {
     let mut s = Session::new();
     s.execute("file.new", json!({"width": 32, "height": 32})).unwrap();
-    s.active_mut().unwrap().path = Some(d.join("doc.pcraft").to_string_lossy().into_owned());
+    s.active_mut().unwrap().path = Some(d.join("doc.sary").to_string_lossy().into_owned());
     s.execute("file.placeLinked", json!({"path": file.to_string_lossy()})).unwrap();
     let id = s.active().unwrap().active_layer.unwrap();
     (s, id)
@@ -62,7 +62,7 @@ fn relink(s: &mut Session, id: LayerId, path: &str) {
 }
 
 fn centre(s: &Session) -> [f32; 3] {
-    let p = photocraft_compose::render(&s.active().unwrap().doc, Rect::new(16, 16, 17, 17)).px[0];
+    let p = sary_compose::render(&s.active().unwrap().doc, Rect::new(16, 16, 17, 17)).px[0];
     [p[0], p[1], p[2]]
 }
 
@@ -157,7 +157,7 @@ fn replayed(s: &mut Session, id: LayerId, params: serde_json::Value) -> Vec<[f32
     })
     .unwrap();
     let doc = &s.active().unwrap().doc;
-    photocraft_compose::render(doc, doc.bounds()).px
+    sary_compose::render(doc, doc.bounds()).px
 }
 
 #[test]
@@ -197,7 +197,7 @@ fn data_sets_and_footage_read_only_followed_files() {
     png(&d.join("blue.png"), |_| [0, 0, 255]);
     let mut s = Session::new();
     s.execute("file.new", json!({"width": 32, "height": 32, "background": "#ff0000"})).unwrap();
-    s.active_mut().unwrap().path = Some(d.join("doc.pcraft").to_string_lossy().into_owned());
+    s.active_mut().unwrap().path = Some(d.join("doc.sary").to_string_lossy().into_owned());
     let layer = s.active().unwrap().active_layer.unwrap();
     s.execute("image.variables.define", json!({"defs": [{"name": "img", "layer": layer.0, "type": "pixelReplacement", "method": "conform"}]})).unwrap();
     let set = |name: &str, path: &str| json!({"name": name, "values": [{"variable": "img", "kind": "pixels", "value": path}]});
@@ -214,7 +214,7 @@ fn data_sets_and_footage_read_only_followed_files() {
         let id = s.active().unwrap().active_layer.unwrap();
         s.edit("Footage", |doc, _| {
             if let Some(v) = doc.layer_mut(id).and_then(|l| l.video.as_mut()) {
-                v.source = photocraft_doc::VideoSource::File { path: path.into() };
+                v.source = sary_doc::VideoSource::File { path: path.into() };
             }
             Ok(())
         })

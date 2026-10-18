@@ -1,7 +1,7 @@
 //! Delete Layer never leaves a document without layers (#1107): the single-layer path refuses
 //! like the multi-select path does, and changes nothing.
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 fn one_layer_doc() -> Session {

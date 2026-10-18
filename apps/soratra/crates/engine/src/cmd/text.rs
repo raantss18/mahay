@@ -1,9 +1,9 @@
 //! Typing and deleting.
 
 use serde_json::Value;
-use wordcraft_doc::para::{COLUMN_BREAK, NB_HYPHEN, NBSP, OBJ, PAGE_BREAK, SOFT_HYPHEN};
-use wordcraft_doc::props::{Border, BorderStyle, NumRef};
-use wordcraft_doc::{Block, ListKind, Path, Pos, StoryRef, Table};
+use soratra_doc::para::{COLUMN_BREAK, NB_HYPHEN, NBSP, OBJ, PAGE_BREAK, SOFT_HYPHEN};
+use soratra_doc::props::{Border, BorderStyle, NumRef};
+use soratra_doc::{Block, ListKind, Path, Pos, StoryRef, Table};
 
 use super::{delete_selection, non_mac, sel_result, split_para, type_text};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -268,7 +268,7 @@ fn table_line(s: &Session, at: &Pos) -> Option<Vec<usize>> {
     let inner = text.strip_prefix('+')?.strip_suffix('+')?;
     let mut cols = Vec::new();
     for run in inner.split('+') {
-        if run.is_empty() || !run.bytes().all(|b| b == b'-') || cols.len() >= wordcraft_doc::table::MAX_COLS {
+        if run.is_empty() || !run.bytes().all(|b| b == b'-') || cols.len() >= soratra_doc::table::MAX_COLS {
             return None;
         }
         cols.push(run.len());
@@ -279,7 +279,7 @@ fn table_line(s: &Session, at: &Pos) -> Option<Vec<usize>> {
 /// Turn the border-line characters into a bottom border on the paragraph above (or this one
 /// at the top of a story).
 fn apply_border_line(s: &mut Session, at: &Pos, line: Border) -> Result<(), CmdError> {
-    let set_bottom = |p: &mut wordcraft_doc::Paragraph| {
+    let set_bottom = |p: &mut soratra_doc::Paragraph| {
         let mut b = p.props.borders.unwrap_or_default();
         b.bottom = Some(line);
         p.props.borders = Some(b);
@@ -385,7 +385,7 @@ fn toggle_unicode(s: &mut Session, _: &Value) -> CmdResult {
 /// undo step, AutoFormat as for a typed character). `ansi` and `oem` are the system's code pages
 /// (Windows-1252 and the locale's OEM page by default). The result's `char` is the character.
 fn insert_code(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_doc::encoding::{OEM_CODE_PAGES, SINGLE_BYTE_CODE_PAGES};
+    use soratra_doc::encoding::{OEM_CODE_PAGES, SINGLE_BYTE_CODE_PAGES};
     let code = p::req_str(v, "code")?;
     let page = |key: &str, known: &[u16], default: u16| match p::u64(v, key) {
         Some(cp) => u16::try_from(cp).ok().filter(|cp| known.contains(cp)).ok_or_else(|| CmdError::Params(format!("{key} must be one of {known:?}"))),
@@ -403,10 +403,10 @@ fn insert_code(s: &mut Session, v: &Value) -> CmdResult {
 
 /// The character Word on Windows types for an Alt+numpad code (decimal digits, as typed):
 /// - with a leading 0 and a value up to 255, the ANSI code page's character (`ansi`, one of
-///   [`wordcraft_doc::encoding::SINGLE_BYTE_CODE_PAGES`]): `0233` → é and `0128` → € in
+///   [`soratra_doc::encoding::SINGLE_BYTE_CODE_PAGES`]): `0233` → é and `0128` → € in
 ///   Windows-1252, `0185` → ą in 1250;
 /// - without one, 1–255 is the OEM code page's character (`oem`, one of
-///   [`wordcraft_doc::encoding::OEM_CODE_PAGES`]): `233` → Θ in 437, Ú in 850 (é is `130` in
+///   [`soratra_doc::encoding::OEM_CODE_PAGES`]): `233` → Θ in 437, Ú in 850 (é is `130` in
 ///   both), `165` → ą in 852; 1–31 and 127 are the code page's glyphs (`1` → ☺, `7` → •);
 /// - above 255, with or without the 0, the Unicode character with that decimal value
 ///   (`8364` → €), as Word inserts it.
@@ -425,8 +425,8 @@ pub fn alt_code_char(code: &str, ansi: u16, oem: u16) -> Option<char> {
     let value: u32 = if digits.is_empty() { 0 } else { digits.parse().ok()? };
     let c = match u8::try_from(value) {
         Ok(0) => return None,
-        Ok(b) if code.starts_with('0') => wordcraft_doc::encoding::windows_byte(ansi, b),
-        Ok(b) => wordcraft_doc::encoding::oem_byte(oem, b),
+        Ok(b) if code.starts_with('0') => soratra_doc::encoding::windows_byte(ansi, b),
+        Ok(b) => soratra_doc::encoding::oem_byte(oem, b),
         Err(_) => char::from_u32(value)?,
     };
     Some(c).filter(|c| codeable(*c) && *c != '\u{FFFD}')
@@ -497,7 +497,7 @@ fn hex_char(code: &str) -> Option<char> {
 
 /// Characters Alt+X converts (not control characters, breaks or object placeholders).
 fn codeable(c: char) -> bool {
-    !c.is_control() && c != wordcraft_doc::para::OBJ
+    !c.is_control() && c != soratra_doc::para::OBJ
 }
 
 /// A character's code as Word writes it: at least four upper-case hex digits.
@@ -618,7 +618,7 @@ fn tab(s: &mut Session, _: &Value) -> CmdResult {
         }
         let mut path = tpath.0.clone();
         path.extend([nr as u32, nc as u32, 0]);
-        let start = Pos { story, path: wordcraft_doc::Path(path), off: 0 };
+        let start = Pos { story, path: soratra_doc::Path(path), off: 0 };
         // Select the cell's content like Word.
         let end_path = s.doc.para_paths(story).into_iter().rfind(|q| q.0.starts_with(&start.path.0[..start.path.0.len() - 1]));
         let end = end_path.map(|q| {
@@ -658,7 +658,7 @@ fn back_tab(s: &mut Session, _: &Value) -> CmdResult {
         };
         let mut path = tpath.0.clone();
         path.extend([nr as u32, nc as u32, 0]);
-        s.sel = Selection::caret(Pos { story, path: wordcraft_doc::Path(path), off: 0 });
+        s.sel = Selection::caret(Pos { story, path: soratra_doc::Path(path), off: 0 });
         return sel_result(s);
     }
     let f = s.sel.focus.clone();
@@ -808,7 +808,7 @@ fn delete_inner(s: &mut Session, _: &Value) -> CmdResult {
                 *l -= 1;
             }
             path.extend([0, 0, 0]);
-            s.sel = Selection::caret(Pos { story: f.story, path: wordcraft_doc::Path(path), off: 0 });
+            s.sel = Selection::caret(Pos { story: f.story, path: soratra_doc::Path(path), off: 0 });
         }
     } else if f.story == StoryRef::Body && f.path.0.len() == 1 && !s.doc.settings.track_changes {
         // The last paragraph: no paragraph to join, but a section break on its mark (the last

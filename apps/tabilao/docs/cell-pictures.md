@@ -5,7 +5,7 @@ active cell. The picture replaces that cell's contents while keeping its formatt
 restores the previous contents.
 
 The picture fits inside the cell without stretching. It follows row and column resizing,
-sorting, filtering, insertion/deletion and GridCraft's internal copy/cut/paste. Clearing
+sorting, filtering, insertion/deletion and Tabilao's internal copy/cut/paste. Clearing
 contents removes it; clearing or pasting only formats keeps it. Save as XLSX to preserve the
 embedded image and its alt text, or export to PDF for a rendered copy.
 
@@ -25,7 +25,7 @@ Text-only exports also use that fallback. The picture cell still counts as occup
 blocks a formula's spill range.
 
 XLSX stores these pictures as rich values. Readers without support for that format may show
-`#VALUE!` instead of the image. GridCraft reads embedded PNG/JPEG rich-value images; unsupported
+`#VALUE!` instead of the image. Tabilao reads embedded PNG/JPEG rich-value images; unsupported
 rich content, oversized or damaged picture metadata, and broken image references produce import
 warnings while the workbook opens with scalar fallbacks. It does not fetch linked
 images from the internet.

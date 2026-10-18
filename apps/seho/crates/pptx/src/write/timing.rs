@@ -1,7 +1,7 @@
 //! Transitions and the animation timing tree.
 
-use deckcraft_model::anim::{AnimClass, AnimStart, Animation, TextBuild, Transition};
-use deckcraft_model::{Shape, ShapeKind, find_shape};
+use seho_model::anim::{AnimClass, AnimStart, Animation, TextBuild, Transition};
+use seho_model::{Shape, ShapeKind, find_shape};
 
 use super::shapes::IdMap;
 use super::{Exp, Out};
@@ -367,7 +367,7 @@ fn behaviors(w: &mut W, x: &mut Exp, ids: &mut Ids, e: &Eff) {
             "colorPulse" => {
                 // As PowerPoint writes it: text and fill go to the colour and back (autoRev). The behaviour
                 // duration is the one import reads as the effect duration.
-                let c = a.color.clone().unwrap_or(deckcraft_model::ColorRef::rgb(deckcraft_color::Rgba::rgb(0xC0, 0x00, 0x00)));
+                let c = a.color.clone().unwrap_or(seho_model::ColorRef::rgb(seho_color::Rgba::rgb(0xC0, 0x00, 0x00)));
                 for (attr, child) in [("style.color", true), ("fillcolor", false)] {
                     w.open("p:animClr", A::new().a("clrSpc", "rgb").a("dir", "cw"));
                     w.open("p:cBhvr", A::new().o("override", child.then_some("childStyle")));
@@ -389,7 +389,7 @@ fn behaviors(w: &mut W, x: &mut Exp, ids: &mut Ids, e: &Eff) {
                     "lineColor" => "stroke.color",
                     _ => "fillcolor",
                 };
-                let c = a.color.clone().unwrap_or(deckcraft_model::ColorRef::scheme(deckcraft_color::SchemeSlot::Accent2));
+                let c = a.color.clone().unwrap_or(seho_model::ColorRef::scheme(seho_color::SchemeSlot::Accent2));
                 w.open("p:animClr", A::new().a("clrSpc", "rgb").a("dir", "cw"));
                 cbhvr(w, ids, e, dur, None, &[attr], None);
                 w.open0("p:to");

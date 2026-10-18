@@ -1,12 +1,12 @@
 //! Preferences › File Handling › Image Previews: PSD/PSB saves embed Photoshop's thumbnail
 //! resource (1036: 28-byte header + JFIF, ≤ 160 px) unless the previews are turned off.
 
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::{Document, Layer};
-use photocraft_geom::Size;
-use photocraft_io::{ExportOptions, export, import};
-use photocraft_psd::PsdFile;
-use photocraft_psd::resources::ids;
+use sary_color::{ColorMode, SampleType};
+use sary_doc::{Document, Layer};
+use sary_geom::Size;
+use sary_io::{ExportOptions, export, import};
+use sary_psd::PsdFile;
+use sary_psd::resources::ids;
 
 /// A `w`×`h` document of `mode`/`depth` holding one layer of `rgba` (given as straight sRGB-ish
 /// RGBA and converted to the document's model), covering the left `cover` fraction.
@@ -14,10 +14,10 @@ fn doc(mode: ColorMode, depth: SampleType, w: u32, h: u32, rgba: [f32; 4], cover
     let mut d = Document::new("thumb", Size::new(w, h), mode, depth);
     let fmt = d.pixel_format();
     let mut px = vec![0.0; fmt.channels()];
-    photocraft_raster::from_rgba_into(&fmt, rgba, &mut px);
+    sary_raster::from_rgba_into(&fmt, rgba, &mut px);
     let mut layer = Layer::raster("pixels", fmt);
     let right = ((w as f32 * cover).round() as i32).max(1);
-    layer.surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(0, 0, right, h as i32), &px);
+    layer.surface_mut().unwrap().fill_rect(sary_geom::Rect::new(0, 0, right, h as i32), &px);
     d.layers.push(layer);
     d
 }
@@ -40,7 +40,7 @@ fn thumbnail(bytes: &[u8]) -> Option<(u32, u32, Vec<[f32; 3]>)> {
     assert_eq!(&d[24..28], &[0, 24, 0, 1], "24 bits per pixel, 1 plane");
     let jfif = &d[28..];
     assert!(jfif.starts_with(&[0xFF, 0xD8, 0xFF, 0xE0]) && &jfif[6..11] == b"JFIF\0", "a JFIF stream");
-    let img = photocraft_codecs::decode(jfif).expect("decodes");
+    let img = sary_codecs::decode(jfif).expect("decodes");
     assert_eq!(img.dimensions(), (w, h));
     let n = img.layout().channels();
     assert_eq!(n, 3, "RGB JPEG");
@@ -146,7 +146,7 @@ fn the_document_profile_is_honoured() {
     // Mid gray in a linear-sRGB document is sRGB ≈ 0.735, not 0.5: the thumbnail goes through
     // the embedded profile rather than assuming sRGB.
     let mut d = doc(ColorMode::Rgb, SampleType::U16, 50, 50, [0.5, 0.5, 0.5, 1.0], 1.0);
-    d.icc_profile = Some(std::sync::Arc::new(photocraft_cms::Builtin::LinearSrgb.profile().to_bytes().to_vec()));
+    d.icc_profile = Some(std::sync::Arc::new(sary_cms::Builtin::LinearSrgb.profile().to_bytes().to_vec()));
     let (_, _, px) = thumbnail(&export(&d, "x.psd", &ExportOptions::default()).unwrap().bytes).unwrap();
     let mid = px[25 * 50 + 25];
     assert!(near(mid, [0.735; 3], 0.03), "{mid:?}");

@@ -1,9 +1,9 @@
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::{Document, LabelColor, Layer, Size};
+use sary_color::{ColorMode, SampleType};
+use sary_doc::{Document, LabelColor, Layer, Size};
 
 #[test]
 fn layer_labels_keep_the_psd_indices() {
-    use photocraft_io::blocks::{label_from_index, label_index};
+    use sary_io::blocks::{label_from_index, label_index};
     let labels = [
         LabelColor::None,
         LabelColor::Red,
@@ -38,8 +38,8 @@ fn layer_labels_psd_roundtrip_all_colors_and_depths() {
             group.label = color;
             doc.layers.push(group);
         }
-        let bytes = photocraft_io::export(&doc, "labels.psd", &Default::default()).unwrap().bytes;
-        let back = photocraft_io::import("labels.psd", &bytes).unwrap().document;
+        let bytes = sary_io::export(&doc, "labels.psd", &Default::default()).unwrap().bytes;
+        let back = sary_io::import("labels.psd", &bytes).unwrap().document;
         let labels = |d: &Document| d.walk().into_iter().map(|(_, _, l)| (l.name.clone(), l.label)).collect::<Vec<_>>();
         assert_eq!(labels(&back), labels(&doc), "{depth:?}");
         assert_eq!(back.depth, depth);
@@ -48,6 +48,6 @@ fn layer_labels_psd_roundtrip_all_colors_and_depths() {
 
 #[test]
 fn layer_labels_truncated_sheet_color_is_not_a_label() {
-    let block = photocraft_psd::TaggedBlock::new(*b"lclr", vec![0]);
+    let block = sary_psd::TaggedBlock::new(*b"lclr", vec![0]);
     assert!(matches!(block.parsed(), Some(Err(_))));
 }

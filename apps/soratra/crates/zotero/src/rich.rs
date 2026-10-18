@@ -2,9 +2,9 @@
 //! only character formatting that belongs to a citation style is kept (italic, bold, small
 //! caps, super/subscript, underline, links), on top of the formatting where the field sits.
 
-use wordcraft_doc::edit::Fragment;
-use wordcraft_doc::para::OBJ;
-use wordcraft_doc::{Block, CharProps, Document, Paragraph};
+use soratra_doc::edit::Fragment;
+use soratra_doc::para::OBJ;
+use soratra_doc::{Block, CharProps, Document, Paragraph};
 
 /// Most paragraphs taken from one text (a bibliography of thousands of entries is fine).
 const MAX_PARAS: usize = 100_000;
@@ -70,7 +70,7 @@ fn plain(text: &str, base: &CharProps) -> Vec<Paragraph> {
 pub fn fragment(text: &str, rich: bool, base: &CharProps) -> Fragment {
     let t = text.trim_start();
     let mut paras = if rich && t.starts_with("{\\rtf") {
-        match wordcraft_formats::rtf::import(t.as_bytes()) {
+        match soratra_formats::rtf::import(t.as_bytes()) {
             Ok(d) => from_doc(&d, base),
             Err(e) => {
                 log::warn!("Zotero sent RTF we could not read ({e}); inserting it as text");
@@ -78,7 +78,7 @@ pub fn fragment(text: &str, rich: bool, base: &CharProps) -> Fragment {
             }
         }
     } else if rich && t.contains('<') {
-        from_doc(&wordcraft_formats::html::import(text), base)
+        from_doc(&soratra_formats::html::import(text), base)
     } else {
         plain(text, base)
     };

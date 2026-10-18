@@ -1,7 +1,7 @@
 //! Signing identities in the Windows Current User Personal ("My") certificate store.
 //! Private keys remain in CNG; Windows may ask permission to use a key.
 //!
-//! Certificates that can't sign through PdfCraft (no usable private key, a key type it doesn't
+//! Certificates that can't sign through Taratasy (no usable private key, a key type it doesn't
 //! sign with) are reported in [`Listing::unusable`] with the reason rather than left out
 //! silently, so a missing identity can be explained (issue #179).
 
@@ -41,7 +41,7 @@ impl ExternalKey for WindowsKey {
     }
 }
 
-/// A Personal store certificate PdfCraft can't sign with, and why.
+/// A Personal store certificate Taratasy can't sign with, and why.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Unusable {
     /// The subject's common name (else organization, else the DN), or a placeholder when
@@ -135,7 +135,7 @@ fn entries() -> Result<Entries, SignError> {
         // P-521, brainpool and Ed25519 certificates parse (to verify with) but aren't signed with.
         let Some(want) = certificate.public_key.store_signing_key() else {
             let what = certificate.public_key.describe();
-            skip(certificate.display_name(), format!("its {what} key can't sign through PdfCraft yet (RSA, P-256 and P-384 only)"), false);
+            skip(certificate.display_name(), format!("its {what} key can't sign through Taratasy yet (RSA, P-256 and P-384 only)"), false);
             continue;
         };
         // Enumeration must not open permission or PIN dialogs. Signing may prompt later.

@@ -22,8 +22,8 @@ use std::any::Any;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex, PoisonError, Weak};
 
-use photocraft_doc::{DocId, Document, LayerId};
-use photocraft_raster::Interrupt;
+use sary_doc::{DocId, Document, LayerId};
+use sary_raster::Interrupt;
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -298,7 +298,7 @@ fn independent_of_document(id: &str) -> bool {
 #[cfg(not(target_arch = "wasm32"))]
 fn read_path(path: &str) -> Result<Vec<u8>> {
     // Bounded reads, and a clear error for a file larger than memory (#375).
-    photocraft_format::read_file(std::path::Path::new(path)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
+    sary_format::read_file(std::path::Path::new(path)).map_err(|e| EngineError::Other(format!("{path}: {e}")))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -355,7 +355,7 @@ pub fn run<T: Send + 'static>(
         let label_w = label.to_string();
         // The work closure is moved into the thread. If spawning fails (thread limits), there is
         // no way to get it back, so the error is reported instead.
-        let spawned = std::thread::Builder::new().name(format!("photocraft-job-{}", id.0)).spawn(move || {
+        let spawned = std::thread::Builder::new().name(format!("sary-job-{}", id.0)).spawn(move || {
             let _authorization = AuthorizationScope::enter(authorization);
             let _document = crate::doc_path::scope(document.as_deref());
             let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work(&wctx).map(|t| Box::new(t) as Payload)))
@@ -434,14 +434,14 @@ pub fn edit_job<R: Send + 'static>(
 /// asks each layer for its bounds, a multi-second scan on a multi-gigabyte PSB (#4024).
 /// `check` runs between layers (cancellation).
 pub fn warm_layer_bounds(doc: &Document, mut check: impl FnMut() -> Result<()>) -> Result<()> {
-    let mut pending: Vec<&photocraft_doc::Layer> = doc.layers.iter().collect();
+    let mut pending: Vec<&sary_doc::Layer> = doc.layers.iter().collect();
     while let Some(layer) = pending.pop() {
         check()?;
         if let Some(children) = layer.children() {
             pending.extend(children);
         }
         if let Some(surface) = layer.surface() {
-            photocraft_compose::bounds::content_bounds(surface);
+            sary_compose::bounds::content_bounds(surface);
         }
     }
     Ok(())
@@ -500,21 +500,21 @@ impl Session {
                 ctx.check()?;
                 ctx.progress(0.02, "Decoding");
                 let imported = ctx
-                    .stage(0.02, 0.95, "Decoding", |ctl| photocraft_io::import_with_svg_group_depth_and_interrupt(&name_w, &bytes, max_svg_group_depth, ctl))
+                    .stage(0.02, 0.95, "Decoding", |ctl| sary_io::import_with_svg_group_depth_and_interrupt(&name_w, &bytes, max_svg_group_depth, ctl))
                     .map_err(|e| match e {
-                        photocraft_io::IoError::Cancelled => EngineError::Cancelled,
+                        sary_io::IoError::Cancelled => EngineError::Cancelled,
                         e => EngineError::Other(e.to_string()),
                     })?;
                 ctx.progress(0.95, "Preparing layers");
                 warm_layer_bounds(&imported.document, || ctx.check())?;
                 Ok(imported)
             },
-            move |s, mut r: photocraft_io::ImportResult| {
+            move |s, mut r: sary_io::ImportResult| {
                 // File Handling's ACEScg option, before the colour prompt looks at the profile.
                 crate::file_cmds::tag_exr_colorspace(s, &name_a, &mut r.document);
                 // Ask When Opening: held back until the prompt is answered (`take_held_open`). A
                 // developed raw has no embedded profile to ask about.
-                let raw = r.warnings.iter().any(|w| w.contains(photocraft_io::raw::DEVELOPED_NOTE));
+                let raw = r.warnings.iter().any(|w| w.contains(sary_io::raw::DEVELOPED_NOTE));
                 if let Some(question) = s.color.open_question(&r.document).filter(|_| !raw) {
                     let held = s.hold_open(r.document, r.source_read_only);
                     return Ok(json!({"held": held, "name": name_a, "warnings": r.warnings, "color": question}));

@@ -1,7 +1,7 @@
 //! 3-D cameras (`a:scene3d/a:camera`) turning a flat shape, approximated in 2-D.
 //!
 //! A shape seen through a 3-D camera preset (isometric, perspective…) or rotated with
-//! `a:camera/a:rot` is drawn by PowerPoint as its plane turned in space and projected. DeckCraft
+//! `a:camera/a:rot` is drawn by PowerPoint as its plane turned in space and projected. Seho
 //! turns the shape's corners the same way and draws the shape under the affine transform that best
 //! fits them: exact for orthographic cameras, within about 2% of the shape's size for the
 //! perspective ones (whose foreshortening an affine transform can't show). Depth, bevels' sides and

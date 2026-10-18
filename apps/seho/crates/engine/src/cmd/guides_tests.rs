@@ -68,9 +68,9 @@ fn guides_round_trip_through_pptx() {
     let mut s = Session::with_new();
     s.execute("guide.add", &json!({"vertical": true, "pos": 123.5})).unwrap();
     s.execute("guide.add", &json!({"vertical": false, "pos": 400})).unwrap();
-    let bytes = deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap();
-    let back = deckcraft_pptx::import(&bytes).unwrap();
+    let bytes = seho_pptx::export(&s.doc().unwrap().doc).unwrap();
+    let back = seho_pptx::import(&bytes).unwrap();
     assert_eq!(back.guides, s.doc().unwrap().doc.guides);
-    let none = deckcraft_pptx::import(&deckcraft_pptx::export(&deckcraft_model::Presentation::default()).unwrap()).unwrap();
+    let none = seho_pptx::import(&seho_pptx::export(&seho_model::Presentation::default()).unwrap()).unwrap();
     assert!(none.guides.is_empty());
 }

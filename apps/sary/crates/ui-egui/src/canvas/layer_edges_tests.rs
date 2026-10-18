@@ -5,8 +5,8 @@ use serde_json::json;
 
 const ORIGINAL: DRect = DRect::new(100, 100, 300, 260);
 
-fn app(depth: u32) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(depth: u32) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 600, "height": 400, "depth": depth, "background": "transparent"})).unwrap();
     app.run("select.rect", json!({"x": 100, "y": 100, "width": 200, "height": 160})).unwrap();
     app.run("edit.fill", json!({"color": "#e05030"})).unwrap();
@@ -22,7 +22,7 @@ fn app(depth: u32) -> PhotocraftApp {
 }
 
 /// Inspect the actual painted Layer Edges rectangle, distinct from the snap/transform box.
-fn assert_edges(app: &mut PhotocraftApp, ctx: &egui::Context, idx: usize, primary: bool, expected: DRect) {
+fn assert_edges(app: &mut SaryApp, ctx: &egui::Context, idx: usize, primary: bool, expected: DRect) {
     let rect = Rect::from_min_size(Pos2::ZERO, vec2(600.0, 400.0));
     let view = View { zoom: 0.75, center: [300.0, 200.0], doc_size: [600, 400], fit_pending: false, ..Default::default() };
     let mut output = ctx.run_ui(egui::RawInput { screen_rect: Some(rect), ..Default::default() }, |ui| {
@@ -43,7 +43,7 @@ fn assert_edges(app: &mut PhotocraftApp, ctx: &egui::Context, idx: usize, primar
 
 fn context(ppp: f32) -> egui::Context {
     let ctx = egui::Context::default();
-    PhotocraftApp::setup_context(&ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&ctx, crate::theme::ThemeKind::ALL[0]);
     ctx.set_pixels_per_point(ppp);
     ctx
 }

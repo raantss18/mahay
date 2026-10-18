@@ -7,7 +7,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use deckcraft_model::{Fill, MediaId, Presentation, Shape, ShapeId, ShapeKind, Slide, SlideId};
+use seho_model::{Fill, MediaId, Presentation, Shape, ShapeId, ShapeKind, Slide, SlideId};
 use serde::Serialize;
 
 /// The revised presentation a document is being compared with.
@@ -93,7 +93,7 @@ fn slide_title(s: &Slide) -> String {
     let t = s
         .shapes
         .iter()
-        .find(|x| x.ph.as_ref().is_some_and(|p| matches!(p.kind, deckcraft_model::PhType::Title | deckcraft_model::PhType::CtrTitle)))
+        .find(|x| x.ph.as_ref().is_some_and(|p| matches!(p.kind, seho_model::PhType::Title | seho_model::PhType::CtrTitle)))
         .and_then(|x| x.text.as_ref())
         .map(|b| b.text())
         .unwrap_or_default();
@@ -223,7 +223,7 @@ fn slide_details(cp: &Presentation, a: &Slide, rp: &Presentation, b: &Slide) -> 
 }
 
 fn max_shape_id(shapes: &[Shape], m: &mut u32) {
-    deckcraft_model::walk(shapes, &mut |s, _| *m = (*m).max(s.id.0));
+    seho_model::walk(shapes, &mut |s, _| *m = (*m).max(s.id.0));
 }
 
 /// The revised slide made to live in `doc`: its media copied over (remapped on an id clash), shape
@@ -252,7 +252,7 @@ pub fn adopt(doc: &mut Presentation, rev: &Presentation, slide: &Slide, replacin
     // Shape ids used elsewhere in the open deck.
     let mut taken: HashSet<u32> = HashSet::new();
     for s in doc.slides.iter().filter(|s| Some(s.id) != replacing) {
-        deckcraft_model::walk(&s.shapes, &mut |x, _| {
+        seho_model::walk(&s.shapes, &mut |x, _| {
             taken.insert(x.id.0);
         });
     }
@@ -365,7 +365,7 @@ mod tests {
 
     use crate::Session;
 
-    /// The sample deck, and a revised copy of it as base64 `.deckcraft` bytes: slide 1's title
+    /// The sample deck, and a revised copy of it as base64 `.seho` bytes: slide 1's title
     /// retyped, slide 2 deleted, a new slide at the end, a shape moved on slide 3.
     fn decks() -> (Session, String, usize) {
         let mut s = Session::new();
@@ -373,7 +373,7 @@ mod tests {
         let n = s.doc().unwrap().doc.slides.len();
         let orig = s.execute("file.saveBytes", &json!({})).unwrap()["data"].as_str().unwrap().to_string();
         // Make the revision in a second document.
-        s.execute("file.openBytes", &json!({"name": "rev.deckcraft", "data": orig})).unwrap();
+        s.execute("file.openBytes", &json!({"name": "rev.seho", "data": orig})).unwrap();
         let first = s.doc().unwrap().doc.slides[0].shapes.iter().find(|x| x.text.is_some()).unwrap().id.0;
         s.execute("edit.select", &json!({"ids": [first]})).unwrap();
         s.execute("text.edit", &json!({"id": first})).unwrap();
@@ -399,7 +399,7 @@ mod tests {
     #[test]
     fn lists_inserted_deleted_and_changed_slides() {
         let (mut s, rev, n) = decks();
-        let v = s.execute("review.compare", &json!({"name": "rev.deckcraft", "data": rev})).unwrap();
+        let v = s.execute("review.compare", &json!({"name": "rev.seho", "data": rev})).unwrap();
         let k = kinds(&v);
         assert!(k.contains(&"deleted".into()) && k.contains(&"inserted".into()) && k.contains(&"changed".into()), "{v}");
         let ch = &v["changes"].as_array().unwrap()[0];
@@ -415,7 +415,7 @@ mod tests {
     #[test]
     fn accept_one_then_all_makes_the_decks_equal_and_undoes() {
         let (mut s, rev, n) = decks();
-        s.execute("review.compare", &json!({"name": "rev.deckcraft", "data": rev})).unwrap();
+        s.execute("review.compare", &json!({"name": "rev.seho", "data": rev})).unwrap();
         let before = s.execute("review.revisions", &json!({})).unwrap()["changes"].as_array().unwrap().len();
         s.execute("review.accept", &json!({"index": 0})).unwrap();
         let after = s.execute("review.revisions", &json!({})).unwrap()["changes"].as_array().unwrap().len();

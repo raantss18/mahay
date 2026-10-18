@@ -2,8 +2,8 @@
 //! linked to the previous section), endnotes continuing over pages, and the caret in a footnote
 //! continued on the next page.
 use super::*;
-use wordcraft_doc::para::{InlineObject, NoteKind};
-use wordcraft_doc::{PartKind, Pos, para_block};
+use soratra_doc::para::{InlineObject, NoteKind};
+use soratra_doc::{PartKind, Pos, para_block};
 
 fn lay(doc: &Document) -> DocLayout {
     let mut c = LayoutCache::new();
@@ -59,7 +59,7 @@ fn inside_and_outside_floats_swap_sides_on_even_pages() {
     // in the right margin. Inside 108 plus a 10pt gutter, outside 36; the paragraph on page 2
     // carries the same six shapes as page 1's, told apart by their widths.
     use super::tests::{rect_shape, shapes};
-    use wordcraft_doc::para::{Anchor, Float, FloatAlign, Wrap};
+    use soratra_doc::para::{Anchor, Float, FloatAlign, Wrap};
     let mut d = Document::from_text("Odd page\nEven page");
     d.last_section.margin_left = 108.0;
     d.last_section.margin_right = 36.0;
@@ -126,8 +126,8 @@ fn inside_and_outside_floats_swap_sides_on_even_pages() {
 fn outside_floating_tables_swap_sides_on_even_pages() {
     // #1181, for a floating table (`w:tblpXSpec="outside"`): on page 2 of a book the outside is
     // the left. One positioned from the page edge stays there on both pages.
-    use wordcraft_doc::para::{Anchor, FloatAlign};
-    use wordcraft_doc::props::TableFloat;
+    use soratra_doc::para::{Anchor, FloatAlign};
+    use soratra_doc::props::TableFloat;
     let table_x = |page_two: bool, float: TableFloat| {
         let mut d = Document::from_text("First\nSecond\nAfter");
         d.last_section.margin_left = 108.0;
@@ -137,7 +137,7 @@ fn outside_floating_tables_swap_sides_on_even_pages() {
         if let Some(Block::Para(p)) = d.body.get_mut(1).map(Arc::make_mut) {
             p.props.page_break_before = Some(page_two);
         }
-        let mut t = wordcraft_doc::Table::new(1, 1, 100.0);
+        let mut t = soratra_doc::Table::new(1, 1, 100.0);
         t.props.float = Some(float);
         d.insert_block(StoryRef::Body, &Path::top(2), Block::Table(t)).unwrap();
         let l = lay(&d);
@@ -177,7 +177,7 @@ fn a_tall_footer_pushes_the_body_up() {
     let placed: usize = l.pages.iter().flat_map(|p| &p.items).filter(|it| matches!(it, Placed::Lines { story: StoryRef::Body, l0: 0, .. })).count();
     assert_eq!(placed, d.body.len());
     // A one-line footer fits in the margin: the body keeps its full height.
-    d.parts.insert(id, wordcraft_doc::Part { kind: PartKind::Footer, blocks: paras("Footer", 1), body: Default::default() });
+    d.parts.insert(id, soratra_doc::Part { kind: PartKind::Footer, blocks: paras("Footer", 1), body: Default::default() });
     let l = lay(&d);
     assert!((l.pages[0].body.bottom() - (792.0 - 72.0)).abs() < 0.01, "{:?}", l.pages[0].body);
 }
@@ -187,7 +187,7 @@ fn a_linked_tall_header_pushes_the_next_sections_body_down() {
     // #454: section 2 has no header of its own and shows section 1's (link to previous).
     let mut d = Document::from_text("First section\nSecond section");
     let id = d.add_part(PartKind::Header, paras("Header line", 8));
-    let first = SectionProps { headers: wordcraft_doc::section::HeaderSet { default: Some(id), ..Default::default() }, ..d.last_section.clone() };
+    let first = SectionProps { headers: soratra_doc::section::HeaderSet { default: Some(id), ..Default::default() }, ..d.last_section.clone() };
     d.para_mut(StoryRef::Body, &Path::top(0)).unwrap().section = Some(Box::new(first));
     let l = lay(&d);
     assert_eq!(l.pages.len(), 2);
@@ -285,7 +285,7 @@ fn page_references_in_footers_show_their_bookmarks_page() {
     }
     let restart = |id| SectionProps {
         page_num_start: Some(1),
-        footers: wordcraft_doc::section::HeaderSet { default: Some(id), ..Default::default() },
+        footers: soratra_doc::section::HeaderSet { default: Some(id), ..Default::default() },
         ..d.last_section.clone()
     };
     let (a, b) = (restart(fa), restart(fb));
@@ -392,7 +392,7 @@ fn page_references_find_bookmarks_in_split_paragraphs_tables_and_roman_sections(
     // A table cell on the second page.
     let mut d = Document::from_text("First\nSecond");
     d.para_mut(StoryRef::Body, &Path::top(1)).unwrap().props.page_break_before = Some(true);
-    d.insert_block(StoryRef::Body, &Path::top(2), Block::Table(wordcraft_doc::Table::new(1, 1, 300.0))).unwrap();
+    d.insert_block(StoryRef::Body, &Path::top(2), Block::Table(soratra_doc::Table::new(1, 1, 300.0))).unwrap();
     let cell = Path(vec![2, 0, 0, 0]);
     d.para_mut(StoryRef::Body, &cell).unwrap().insert_text(0, "In a cell", &Default::default()).unwrap();
     mark(&mut d, &cell, 0, "Cell");
@@ -407,7 +407,7 @@ fn page_references_find_bookmarks_in_split_paragraphs_tables_and_roman_sections(
     let first = d.last_section.clone();
     d.para_mut(StoryRef::Body, &Path::top(0)).unwrap().section = Some(Box::new(first));
     d.last_section.page_num_start = Some(1);
-    d.last_section.page_num_format = wordcraft_doc::section::NumFormat::LowerRoman;
+    d.last_section.page_num_format = soratra_doc::section::NumFormat::LowerRoman;
     page_ref_footer(&mut d, &["End"]);
     assert_eq!(footer_shown(&lay(&d)), ["", "ii", "ii"], "the first section has no footer of its own");
 
@@ -423,7 +423,7 @@ fn page_references_find_bookmarks_in_split_paragraphs_tables_and_roman_sections(
 /// A text box in a footer resolves its page references; one in the body keeps its result.
 #[test]
 fn page_references_in_footer_text_boxes_are_resolved() {
-    use wordcraft_doc::para::{Float, ShapeKind, Wrap};
+    use soratra_doc::para::{Float, ShapeKind, Wrap};
     let text_box = |d: &mut Document| {
         let mut p = Paragraph::new();
         let field =

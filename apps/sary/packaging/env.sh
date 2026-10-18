@@ -3,10 +3,10 @@
 #
 # Exports:
 #   ROOT                    workspace root
-#   VERSION                 [workspace.package] version from Cargo.toml (override: PHOTOCRAFT_VERSION)
+#   VERSION                 [workspace.package] version from Cargo.toml (override: SARY_VERSION)
 #   DIST                    output directory for release artifacts (default: $ROOT/dist/release)
-#   PHOTOCRAFT_BUILD_SHA    git commit baked into the binaries (see crates/engine/src/build_info.rs)
-#   PHOTOCRAFT_BUILD_DATE   UTC build date, YYYY-MM-DD
+#   SARY_BUILD_SHA    git commit baked into the binaries (see crates/engine/src/build_info.rs)
+#   SARY_BUILD_DATE   UTC build date, YYYY-MM-DD
 #   CARGO_TARGET_DIR        cargo's target dir (default: $ROOT/target)
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -21,7 +21,7 @@ workspace_version() {
   ' "$ROOT/Cargo.toml"
 }
 
-VERSION="${PHOTOCRAFT_VERSION:-$(workspace_version)}"
+VERSION="${SARY_VERSION:-$(workspace_version)}"
 if [ -z "$VERSION" ]; then
   echo "error: could not read [workspace.package] version from $ROOT/Cargo.toml" >&2
   exit 1
@@ -32,11 +32,11 @@ DIST="${DIST:-$ROOT/dist/release}"
 mkdir -p "$DIST"
 export DIST
 
-if [ -z "${PHOTOCRAFT_BUILD_SHA:-}" ]; then
-  PHOTOCRAFT_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
+if [ -z "${SARY_BUILD_SHA:-}" ]; then
+  SARY_BUILD_SHA="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || true)"
 fi
-export PHOTOCRAFT_BUILD_SHA
-export PHOTOCRAFT_BUILD_DATE="${PHOTOCRAFT_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
+export SARY_BUILD_SHA
+export SARY_BUILD_DATE="${SARY_BUILD_DATE:-$(date -u +%Y-%m-%d)}"
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 
 # Emit a GitHub Actions warning (plain stderr outside Actions).
@@ -53,12 +53,12 @@ copy_docs() {
   copy_font_licences "$dest"
 }
 
-# Builds made with craft-fonts (CRAFT_FONTS_DIR, all official releases) embed its fonts, which
-# are OFL-1.1: ship each font's licence as OFL-<family-dir>.txt. No-op without CRAFT_FONTS_DIR.
+# Builds made with mahay-fonts (MAHAY_FONTS_DIR, all official releases) embed its fonts, which
+# are OFL-1.1: ship each font's licence as OFL-<family-dir>.txt. No-op without MAHAY_FONTS_DIR.
 copy_font_licences() {
   local dest="$1" lic fam
-  [ -n "${CRAFT_FONTS_DIR:-}" ] || return 0
-  for lic in "$CRAFT_FONTS_DIR"/fonts/*/OFL.txt; do
+  [ -n "${MAHAY_FONTS_DIR:-}" ] || return 0
+  for lic in "$MAHAY_FONTS_DIR"/fonts/*/OFL.txt; do
     [ -f "$lic" ] || continue
     fam="$(basename "$(dirname "$lic")")"
     cp "$lic" "$dest/OFL-$fam.txt"

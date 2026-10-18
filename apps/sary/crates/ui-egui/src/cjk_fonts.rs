@@ -8,26 +8,26 @@
 //! appended at the lowest priority to every family, so Latin text keeps Inter.
 //!
 //! Other scripts the bundled fonts lack (Thai, Arabic, Hebrew, Devanagari and the other Indic
-//! scripts, ...: [`photocraft_text::scripts`]) work the same way, each with its own attempt state,
+//! scripts, ...: [`sary_text::scripts`]) work the same way, each with its own attempt state,
 //! independent of the CJK order: the first installed candidate file whose character map really
 //! has the missing character is registered, once per script. egui shapes each font run with
 //! HarfRust, so Thai marks and Arabic joining come from the font; it has no bidi reordering yet.
 //!
-//! Script order follows the UI locale ([`photocraft_text::cjk::script_order`]): Kana prefers a
+//! Script order follows the UI locale ([`sary_text::cjk::script_order`]): Kana prefers a
 //! Japanese font, Hangul a Korean one, Bopomofo a Traditional Chinese one, and Han the
 //! locale's script (Japanese forms only for a Japanese locale). At most one font is read per
 //! frame, each file at most once, and once every script has been tried the scan stops.
 //!
-//! Builds made with the optional craft-fonts input (`CRAFT_FONTS_DIR`,
-//! [`photocraft_text::craft_fonts`]) carry Japanese fonts (BIZ UDPGothic first): they are tried
+//! Builds made with the optional mahay-fonts input (`MAHAY_FONTS_DIR`,
+//! [`sary_text::mahay_fonts`]) carry Japanese fonts (BIZ UDPGothic first): they are tried
 //! before the system Japanese fonts, in the Japanese slot of the same locale order. Without
-//! craft-fonts (and on the web, which never embeds them) nothing changes.
+//! mahay-fonts (and on the web, which never embeds them) nothing changes.
 
 use egui::epaint::text::{FontInsert, FontPriority, InsertFontFamily};
 use egui::{FontData, FontFamily, FontId, Shape};
-use photocraft_text::cjk::{self, CjkChar, CjkScript, FontFile};
-use photocraft_text::craft_fonts::{self, CraftFont};
-use photocraft_text::scripts::{self, Script};
+use sary_text::cjk::{self, CjkChar, CjkScript, FontFile};
+use sary_text::mahay_fonts::{self, MahayFont};
+use sary_text::scripts::{self, Script};
 use std::path::PathBuf;
 
 /// Skip absurdly large files (a corrupt or non-font path must not eat memory).
@@ -48,17 +48,17 @@ pub struct Sources {
     pub scripts: fn(Script) -> Vec<PathBuf>,
     /// The face of a font file whose character map has the character (`None`: not this file).
     pub covers: fn(&[u8], char) -> Option<u32>,
-    /// Embedded fonts tried before `files` for a script (craft-fonts' Japanese fonts).
-    pub embedded: fn(CjkScript) -> Vec<&'static CraftFont>,
+    /// Embedded fonts tried before `files` for a script (mahay-fonts' Japanese fonts).
+    pub embedded: fn(CjkScript) -> Vec<&'static MahayFont>,
 }
 
-/// craft-fonts' Japanese fonts for the Japanese script, UI face first (empty without craft-fonts).
-pub fn craft_embedded(script: CjkScript) -> Vec<&'static CraftFont> {
-    if script == CjkScript::Japanese { craft_fonts::japanese_for_ui() } else { Vec::new() }
+/// mahay-fonts' Japanese fonts for the Japanese script, UI face first (empty without mahay-fonts).
+pub fn mahay_embedded(script: CjkScript) -> Vec<&'static MahayFont> {
+    if script == CjkScript::Japanese { mahay_fonts::japanese_for_ui() } else { Vec::new() }
 }
 
 /// No embedded fonts (tests that pin the system-font behaviour).
-pub fn no_embedded(_: CjkScript) -> Vec<&'static CraftFont> {
+pub fn no_embedded(_: CjkScript) -> Vec<&'static MahayFont> {
     Vec::new()
 }
 
@@ -75,7 +75,7 @@ impl Sources {
             last_resort: cjk::last_resort_files,
             scripts: scripts::system_candidates,
             covers: scripts::covering_face,
-            embedded: craft_embedded,
+            embedded: mahay_embedded,
         }
     }
     #[cfg(target_arch = "wasm32")]
@@ -86,7 +86,7 @@ impl Sources {
             last_resort: Vec::new,
             scripts: |_| Vec::new(),
             covers: scripts::covering_face,
-            embedded: craft_embedded,
+            embedded: mahay_embedded,
         }
     }
 }
@@ -210,10 +210,10 @@ impl CjkFallback {
         None
     }
 
-    /// The first embedded (craft-fonts) font for `s`, registered from its static bytes.
+    /// The first embedded (mahay-fonts) font for `s`, registered from its static bytes.
     fn load_embedded(&mut self, s: CjkScript) -> Option<(String, FontData)> {
         let f = (self.sources.embedded)(s).into_iter().find(|f| !f.bytes.is_empty())?;
-        let path = PathBuf::from(format!("craft-fonts/{} {}", f.family, f.style));
+        let path = PathBuf::from(format!("mahay-fonts/{} {}", f.family, f.style));
         if self.loaded.contains(&path) {
             return None;
         }
@@ -374,7 +374,7 @@ pub struct CjkFontPlugin(pub CjkFallback);
 
 impl egui::Plugin for CjkFontPlugin {
     fn debug_name(&self) -> &'static str {
-        "photocraft-cjk-fonts"
+        "sary-cjk-fonts"
     }
 
     fn output_hook(&mut self, ctx: &egui::Context, output: &mut egui::FullOutput) {
@@ -430,13 +430,13 @@ mod tests {
 
     #[test]
     fn lazy_fallbacks_follow_ui_font_size_and_survive_size_changes() {
-        use photocraft_engine::prefs::UiFontSize;
+        use sary_engine::prefs::UiFontSize;
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         ctx.run_ui(Default::default(), |_| {}).textures_delta.clear();
         crate::theme::set_ui_font_size(&ctx, UiFontSize::Large);
         let name = "test-lazy-fallback".to_string();
-        add_to_all_families(&ctx, name.clone(), FontData::from_static(photocraft_text::fonts::INTER_REGULAR.as_slice()));
+        add_to_all_families(&ctx, name.clone(), FontData::from_static(sary_text::fonts::INTER_REGULAR.as_slice()));
         for (size, scale) in [(UiFontSize::Large, 16.0 / 12.0), (UiFontSize::Tiny, 10.0 / 12.0), (UiFontSize::Small, 1.0)] {
             crate::theme::set_ui_font_size(&ctx, size);
             for _ in 0..2 {
@@ -501,7 +501,7 @@ mod tests {
         assert_eq!(regular_weight(&fvar_font(&[(b"wght", 500.0, 600.0, 900.0)], false), 0), Some(500.0), "Regular clamped into the axis");
         assert_eq!(regular_weight(&fvar_font(&[(b"wght", 100.0, 400.0, 900.0)], false), 0), None, "already Regular");
         assert_eq!(regular_weight(&fvar_font(&[(b"wdth", 75.0, 100.0, 100.0)], false), 0), None, "no weight axis");
-        assert_eq!(regular_weight(photocraft_text::fonts::INTER_REGULAR.as_slice(), 0), None, "static font");
+        assert_eq!(regular_weight(sary_text::fonts::INTER_REGULAR.as_slice(), 0), None, "static font");
         for bad in [&thin[..thin.len() - 9], &thin[..30], &b"ttcf"[..], &[][..]] {
             assert_eq!(regular_weight(bad, 1), None);
         }
@@ -509,7 +509,7 @@ mod tests {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         ctx.run_ui(Default::default(), |_| {}).textures_delta.clear();
-        add_to_all_families(&ctx, "test-static".into(), FontData::from_static(photocraft_text::fonts::INTER_REGULAR.as_slice()));
+        add_to_all_families(&ctx, "test-static".into(), FontData::from_static(sary_text::fonts::INTER_REGULAR.as_slice()));
         ctx.run_ui(Default::default(), |_| {}).textures_delta.clear();
         let fonts = ctx.fonts(|f| f.definitions().clone());
         assert_eq!(fonts.font_data.get("test-static").map(|d| d.tweak.coords.clone()), Some(Default::default()));
@@ -542,7 +542,7 @@ mod tests {
     fn fake_dir() -> PathBuf {
         let mut g = DIR.lock().unwrap();
         g.get_or_insert_with(|| {
-            let dir = std::env::temp_dir().join(format!("photocraft-cjk-{}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("sary-cjk-{}", std::process::id()));
             std::fs::create_dir_all(&dir).unwrap();
             std::fs::write(dir.join("font.ttf"), include_bytes!("../../../assets/fonts/Inter-Regular.ttf")).unwrap();
             std::fs::write(dir.join("empty.ttf"), b"").unwrap();
@@ -857,21 +857,21 @@ mod tests {
         }
     }
 
-    /// No system fonts at all: craft-fonts alone draws Japanese.
-    fn craft_only(locale: fn() -> Option<String>) -> Sources {
-        Sources { locale, files: |_| vec![], last_resort: Vec::new, scripts: |_| Vec::new(), covers: scripts::covering_face, embedded: craft_embedded }
+    /// No system fonts at all: mahay-fonts alone draws Japanese.
+    fn mahay_only(locale: fn() -> Option<String>) -> Sources {
+        Sources { locale, files: |_| vec![], last_resort: Vec::new, scripts: |_| Vec::new(), covers: scripts::covering_face, embedded: mahay_embedded }
     }
 
     #[test]
-    fn craft_fonts_render_japanese_without_system_fonts() {
-        let Some(ui_font) = craft_fonts::japanese_for_ui().first().copied() else {
-            eprintln!("skipping: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout)");
+    fn mahay_fonts_render_japanese_without_system_fonts() {
+        let Some(ui_font) = mahay_fonts::japanese_for_ui().first().copied() else {
+            eprintln!("skipping: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout)");
             return;
         };
         // An English locale tries Chinese first (none here), then Japanese: the craft font.
         for locale in [(|| Some("en_US".into())) as fn() -> Option<String>, || Some("ja_JP".into()), || None] {
             let ctx = egui::Context::default();
-            crate::theme::install_fonts_with(&ctx, craft_only(locale));
+            crate::theme::install_fonts_with(&ctx, mahay_only(locale));
             assert!(render(&ctx, "日本語の文字"), "tofu in 日本語の文字");
             assert!(render(&ctx, "レイヤー 1"), "tofu in kana");
             let fonts = ctx.fonts(|f| f.definitions().clone());
@@ -885,8 +885,8 @@ mod tests {
     }
 
     #[test]
-    fn ui_works_without_craft_fonts() {
-        // The pre-craft-fonts behaviour: no embedded fonts, no system fonts. Latin renders,
+    fn ui_works_without_mahay_fonts() {
+        // The pre-mahay-fonts behaviour: no embedded fonts, no system fonts. Latin renders,
         // Japanese is tried (and stays missing) without panicking, and the loader exhausts.
         let ctx = egui::Context::default();
         crate::theme::install_fonts_with(
@@ -904,8 +904,8 @@ mod tests {
         assert!(!render(&ctx, "日本語の文字"));
         let n = ctx.fonts(|f| f.definitions().font_data.keys().filter(|k| k.starts_with(FONT_PREFIX)).count());
         assert_eq!(n, 0);
-        if craft_fonts::CRAFT_FONTS.is_empty() {
-            assert!(craft_embedded(CjkScript::Japanese).is_empty());
+        if mahay_fonts::MAHAY_FONTS.is_empty() {
+            assert!(mahay_embedded(CjkScript::Japanese).is_empty());
         }
     }
 

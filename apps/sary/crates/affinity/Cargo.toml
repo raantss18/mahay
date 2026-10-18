@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-affinity"
+name = "sary-affinity"
 description = "Bounded reader for native Affinity documents: archive, object stream and document model"
 version.workspace = true
 edition.workspace = true

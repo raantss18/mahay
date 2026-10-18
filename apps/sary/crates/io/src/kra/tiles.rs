@@ -1,8 +1,8 @@
 //! Krita's tiled pixel files and the LZF compression inside them.
 
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_geom::Rect;
-use photocraft_raster::{Interrupt, Surface};
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_geom::Rect;
+use sary_raster::{Interrupt, Surface};
 
 use super::{Result, invalid};
 use crate::IoError;
@@ -79,7 +79,7 @@ impl Space {
     /// RGBA samples from [`Self::normalised`] as `fmt`'s channels.
     pub(crate) fn to_format(self, rgba: &[f32], fmt: PixelFormat) -> Vec<f32> {
         let p = [0, 1, 2, 3].map(|i| rgba.get(i).copied().unwrap_or(0.0));
-        photocraft_raster::from_rgba(&fmt, p)
+        sary_raster::from_rgba(&fmt, p)
     }
     /// Interleaved Krita pixels as encoded `fmt` bytes.
     fn convert(self, src: &[u8], fmt: PixelFormat, out: &mut Vec<u8>) {
@@ -108,8 +108,8 @@ impl Space {
         }
         let mut enc = vec![0; fmt.bytes_per_pixel()];
         for px in src.chunks_exact(ps) {
-            let v = photocraft_raster::from_rgba(&fmt, self.rgba(px));
-            photocraft_raster::encode_pixel(&fmt, &v, &mut enc);
+            let v = sary_raster::from_rgba(&fmt, self.rgba(px));
+            sary_raster::encode_pixel(&fmt, &v, &mut enc);
             out.extend_from_slice(&enc);
         }
     }

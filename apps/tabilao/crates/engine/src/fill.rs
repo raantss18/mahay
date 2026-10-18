@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, days_in_month, serial_from_ymd};
-use gridcraft_core::{CellRef, RangeRef, Value};
-use gridcraft_model::{Cell, Formula};
-use gridcraft_numfmt::{FormatKind, NumberFormat};
+use tabilao_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, days_in_month, serial_from_ymd};
+use tabilao_core::{CellRef, RangeRef, Value};
+use tabilao_model::{Cell, Formula};
+use tabilao_numfmt::{FormatKind, NumberFormat};
 
 use crate::Result;
 use crate::cmd::Ctx;
@@ -97,7 +97,7 @@ pub fn fill(cx: &mut Ctx, sheet: usize, src: RangeRef, target: RangeRef, mode: F
                     let style = if mode == FillMode::ValuesOnly { sh.cell(*t).map(|c| c.style).unwrap_or_default() } else { cell.style };
                     if let Some(f) = &cell.formula {
                         if let Some(e) = f.expr() {
-                            let shifted = gridcraft_formula::adjust::shift_relative(e, t.row as i64 - sc.row as i64, t.col as i64 - sc.col as i64);
+                            let shifted = tabilao_formula::adjust::shift_relative(e, t.row as i64 - sc.row as i64, t.col as i64 - sc.col as i64);
                             cell.formula = Some(Arc::new(Formula::from_expr(shifted)));
                             cell.value = Value::Empty;
                         }
@@ -169,7 +169,7 @@ enum Pattern {
 }
 
 impl Pattern {
-    fn detect(cells: &[(CellRef, Option<Cell>)], custom: &[Vec<String>], sys: gridcraft_core::DateSystem, fmt: &str) -> Pattern {
+    fn detect(cells: &[(CellRef, Option<Cell>)], custom: &[Vec<String>], sys: tabilao_core::DateSystem, fmt: &str) -> Pattern {
         let vals: Vec<Value> = cells.iter().map(|(_, c)| c.as_ref().map(|c| c.value.clone()).unwrap_or_default()).collect();
         if cells.iter().any(|(_, c)| c.as_ref().is_some_and(|c| c.formula.is_some())) {
             return Pattern::Copy;
@@ -299,7 +299,7 @@ impl Pattern {
             }
             Pattern::Months { last, first, months } => {
                 let base = if forward { *last } else { *first };
-                let s = add_months_clamped(gridcraft_core::DateSystem::D1900, base, months.checked_mul(k * sign)?)?;
+                let s = add_months_clamped(tabilao_core::DateSystem::D1900, base, months.checked_mul(k * sign)?)?;
                 Some(Value::number(s))
             }
         }
@@ -309,7 +309,7 @@ impl Pattern {
 /// `serial` shifted by `months` calendar months, keeping the day of month but clamping it to the
 /// target month's last day (Jan 31 + 1 month = Feb 28/29). Always measured from the original date,
 /// so a series does not drift: Jan 31, Feb 28, Mar 31, Apr 30.
-fn add_months_clamped(sys: gridcraft_core::DateSystem, serial: f64, months: i64) -> Option<f64> {
+fn add_months_clamped(sys: tabilao_core::DateSystem, serial: f64, months: i64) -> Option<f64> {
     let d = datetime_from_serial(sys, serial)?;
     let total = (d.year as i64).checked_mul(12)?.checked_add(d.month as i64 - 1)?.checked_add(months)?;
     let year = total.div_euclid(12);
@@ -436,7 +436,7 @@ pub fn flash_fill(cx: &mut Ctx, sheet: usize, at: CellRef) -> Result<usize> {
         top -= 1;
     }
     let mut bottom = at.row;
-    while bottom + 1 < gridcraft_core::MAX_ROWS && !sh.value(CellRef::new(bottom + 1, src_col)).is_empty() && bottom - top < 1_000_000 {
+    while bottom + 1 < tabilao_core::MAX_ROWS && !sh.value(CellRef::new(bottom + 1, src_col)).is_empty() && bottom - top < 1_000_000 {
         bottom += 1;
     }
     // Header row: skip a first row whose target is text and source looks like a header? Keep simple.

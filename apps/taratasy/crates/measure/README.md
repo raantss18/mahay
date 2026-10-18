@@ -1,4 +1,4 @@
-# pdfcraft-measure
+# taratasy-measure
 
 Layer L4 implements distance, connected-line perimeter and simple polygon area measurements in PDF user space. It uses the public measurement model in ISO 32000-2 §12.9 (measurement properties: viewports, rectilinear measure and number format dictionaries) and the measurement intents of line, polyline and polygon annotations (§12.5.6).
 

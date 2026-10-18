@@ -1,4 +1,4 @@
-# photocraft-raw
+# sary-raw
 
 A clean-room, pure-Rust camera raw decoder and developer. The crate is standalone (no workspace
 dependencies; its decoding dependencies are `flate2` for Deflate DNG and `jxl-oxide`, a pure-Rust
@@ -7,14 +7,14 @@ JPEG XL decoder, for DNG 1.7, native builds only), has no `unsafe`, does no I/O 
 bounds-checked and sizes are checked against `Limits` before allocating.
 
 ```rust
-use photocraft_raw::{develop, DevelopOptions, Demosaic};
+use sary_raw::{develop, DevelopOptions, Demosaic};
 
 let dev = develop(&bytes, &DevelopOptions { demosaic: Demosaic::Ahd, ..Default::default() })?;
 // dev.rgb: interleaved 16-bit RGB in ProPhoto RGB (ROMM primaries, D50, gamma 1.8)
 // dev.warnings: anything approximated or not applied
 ```
 
-`photocraft-io` uses it so opening a raw file yields a normal 16-bit RGB document tagged with the
+`sary-io` uses it so opening a raw file yields a normal 16-bit RGB document tagged with the
 built-in ProPhoto-compatible profile.
 
 ## Sources (clean-room)
@@ -36,7 +36,7 @@ Implemented only from public specifications, papers and observation of files:
   (prose: the `0x0096` table layout, a lossy curve followed by a fixed-table Huffman stage),
   ExifTool's Nikon tag-name documentation and ITU-T T.81 Annex F / H. The Huffman tables are not
   stored in the files; they were recovered by black-box analysis of CC0 raw.pixls.us samples (the
-  same scenes shot compressed and uncompressed) for LightCraft (storytold/lightcraft#86) and
+  same scenes shot compressed and uncompressed) for Hazavana (raantss18/hazavana#86) and
   verified there on ~45 files from ~35 bodies.
 * Sony cRAW (ARW 2): H. Dietz, "Sony ARW2 Compression: Artifacts And Credible Repair"
   (Electronic Imaging 2016) and the RawDigger / diglloyd write-ups of the 11 + 7-bit scheme;
@@ -55,8 +55,8 @@ Implemented only from public specifications, papers and observation of files:
   and performance measures", IEEE TIP 2003) with edge-aware colour differences.
 * McCamy's CCT approximation (1992); the Bradford chromatic adaptation transform.
 * Per-file colour from the camera's embedded JPEG (`fit_look`, `src/look.rs`): the method follows
-  the prose description in LightCraft's `docs/camera-preview-colour.md` (storytold/lightcraft#165,
-  Apache-2.0, same organisation); no LightCraft code was used. Pool-adjacent-violators isotonic
+  the prose description in Hazavana's `docs/camera-preview-colour.md` (raantss18/hazavana#165,
+  Apache-2.0, same organisation); no Hazavana code was used. Pool-adjacent-violators isotonic
   regression (Ayer et al., 1955), Tukey's biweight (Beaton & Tukey, 1974), ridge regression
   (Hoerl & Kennard, 1970) and the CIE 1976 L\*a\*b\* colour difference.
 
@@ -77,7 +77,7 @@ camera colour tables were copied.
 | Panasonic / Leica RW2, RawFormat 5 (12- and 14-bit packed) | Decoded, with PanasonicRaw black / white / WB / sensor borders |
 | Panasonic / Leica RW2, RawFormat 3 and 4 (vendor-compressed, 12-bit) | Decoded; the black level is read 15 counts above the recorded tag; PanasonicRaw white / WB / sensor borders |
 | Olympus ORF, uncompressed 16-bit (E-1, E-400…) | Decoded, with ImageProcessing black / WB / ValidBits / crop |
-| Nikon "lossy after split" NEF, Sony "Compressed RAW 2", Pentax compressed PEF, RW2 RawFormat 6 and newer, Olympus compressed ORF | Unsupported: no public description of these codes was found apart from GPL decoder source, which this crate may not use (clean-room). `photocraft-io` opens the embedded JPEG preview instead |
+| Nikon "lossy after split" NEF, Sony "Compressed RAW 2", Pentax compressed PEF, RW2 RawFormat 6 and newer, Olympus compressed ORF | Unsupported: no public description of these codes was found apart from GPL decoder source, which this crate may not use (clean-room). `sary-io` opens the embedded JPEG preview instead |
 | Fujifilm RAF, uncompressed (X-Trans I–V, GFX and Bayer bodies since about 2010) | Decoded: 16-bit containers (either byte order), 12-bit LSB-first packing, 14-bit packing in 32-bit words; X-Trans 6×6 or Bayer 2×2 layout, black, as-shot WB, crop, RawExposureBias, orientation from the preview's EXIF |
 | Fujifilm compressed RAF, early FinePix / SuperCCD RAF (no CFA TIFF) | Unsupported (no public description of the compression); preview fallback |
 | CR3 | Native CRX unsupported; bounded JPEG-track/PRVW preview fallback with CMT1 orientation. I/O labels the result as an 8-bit camera preview |
@@ -118,7 +118,7 @@ Tukey biweights against misaligned edges and local tone mapping; clipped and nea
 out). One cell in three is held out: the look is used only when it shows the same picture in colour,
 the matrix is plausible and the held-out mean CIE76 ΔE drops to at most 85 % of the fallback's.
 Pass it as `DevelopOptions::camera_look`; `develop` then notes "colour fitted to the camera's
-embedded JPEG (mean ΔE …)". The crate cannot decode JPEG itself: `photocraft-io` decodes the
+embedded JPEG (mean ΔE …)". The crate cannot decode JPEG itself: `sary-io` decodes the
 smallest preview at least 512 pixels long, fits and develops in one go.
 Camera Raw's tuned import fits at the default exposure and as-shot white balance first,
 then applies the user's Exposure, Temperature and Tint to that same rendering.
@@ -148,16 +148,16 @@ a calibration, so no look is fitted for them. On 6 D4 NEFs against Photoshop 25.
 Raw rendering (quarter size, medians over the frames) the measured profile is 0.048 stop from its
 luminance with a mean CIE76 ΔE of 1.8; the look fitted to the embedded JPEG would be 0.30 stop and
 ΔE 6.4, as it follows the camera's picture style instead. The open-time re-develop
-(`photocraft-io`'s `import_raw_tuned`) and the tone curve its previews use (`tone_curve`) take the
+(`sary-io`'s `import_raw_tuned`) and the tone curve its previews use (`tone_curve`) take the
 same look as the default open, so changing a slider does not change the colour rendering.
 
 ## Tools
 
-`cargo run --release -p photocraft-raw --example rawinfo -- [--dump] [--demosaic ahd] [--png DIR] FILE...`
+`cargo run --release -p sary-raw --example rawinfo -- [--dump] [--demosaic ahd] [--png DIR] FILE...`
 prints what was decoded, times decode and develop, and can write sRGB PNG previews and the
 embedded JPEG previews.
 
-`cargo run --release -p photocraft-io --example rawlook -- [--png DIR] FILE...` times the
+`cargo run --release -p sary-io --example rawlook -- [--png DIR] FILE...` times the
 camera-JPEG colour fit, reports ΔE against the embedded JPEG with the neutral fallback and with the
 fit, and can write 1200-pixel sRGB PNGs of both and of the JPEG; `--synthetic` times it on a
 generated 24 MP file.

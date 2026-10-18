@@ -1,4 +1,4 @@
-use craft_ai_core::{CapabilityId, InputRole, Role, RoleId, StoreFile};
+use mahay_ai_core::{CapabilityId, InputRole, Role, RoleId, StoreFile};
 
 fn tool(id: &str) -> Role {
     Role {
@@ -45,8 +45,8 @@ fn hostile_tool_declarations_are_refused_on_load() {
 
 #[test]
 fn an_app_cannot_reinterpret_the_inputs_of_a_shared_custom_tool() {
-    use craft_ai_core::role::ResolveError;
-    use craft_ai_core::{AppId, Binding, CapabilitySpec, Connection, ConnectionId, ModelId, ModelInfo};
+    use mahay_ai_core::role::ResolveError;
+    use mahay_ai_core::{AppId, Binding, CapabilitySpec, Connection, ConnectionId, ModelId, ModelInfo};
     let shared = tool("describe-photo");
     let model = ModelInfo::new(ModelId::new("m").unwrap(), "M").with(CapabilitySpec::new(shared.capability.clone()).accepting(InputRole::Source, 1));
     let connection: Connection = serde_json::from_value(serde_json::json!({
@@ -61,7 +61,7 @@ fn an_app_cannot_reinterpret_the_inputs_of_a_shared_custom_tool() {
         custom_tools: vec![shared.clone()],
         ..StoreFile::default()
     };
-    let app = AppId::new("photocraft").unwrap();
+    let app = AppId::new("sary").unwrap();
     assert!(store.resolve(&app, &shared).is_ok());
     let mut redefined = shared;
     redefined.inputs.clear();

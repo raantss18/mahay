@@ -5,11 +5,11 @@
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use photocraft_color::Color;
-use photocraft_doc::{DocId, Document, Fill, LayerContent, LayerId};
+use sary_color::Color;
+use sary_doc::{DocId, Document, Fill, LayerContent, LayerId};
 use serde_json::{Map, Value, json};
 
-use crate::{PhotocraftApp, color_picker_ui};
+use crate::{SaryApp, color_picker_ui};
 
 const COMMAND: &str = "shape.edit";
 const MARKER: &str = "__shapeFill";
@@ -36,7 +36,7 @@ fn solid_fill(doc: &Document, layer: LayerId) -> Option<Color> {
 }
 
 /// Opens the picker for the active layer when it is a shape filled with a solid colour.
-pub(crate) fn open(app: &mut PhotocraftApp) -> Option<u64> {
+pub(crate) fn open(app: &mut SaryApp) -> Option<u64> {
     let st = app.session.active()?;
     let layer = st.active_layer?;
     let color = solid_fill(&st.doc, layer)?;
@@ -60,7 +60,7 @@ fn picked(f: &Map<String, Value>, original: Color) -> Option<Color> {
 
 /// The target layer and its current fill, unless the dialog is stale (another document is
 /// active, or the layer is gone or no longer a solid-colour shape).
-fn target(app: &PhotocraftApp, f: &Map<String, Value>, idx: usize) -> Result<(LayerId, Color), String> {
+fn target(app: &SaryApp, f: &Map<String, Value>, idx: usize) -> Result<(LayerId, Color), String> {
     let params = f.get("__params").ok_or("missing shape fill target")?;
     let st = app.session.documents().get(idx).ok_or("no document open")?;
     if params.get("document").and_then(Value::as_u64) != Some(st.doc.id.0) {
@@ -72,7 +72,7 @@ fn target(app: &PhotocraftApp, f: &Map<String, Value>, idx: usize) -> Result<(La
 }
 
 /// OK: one `shape.edit` with the new fill; an unchanged colour keeps the stored one as it is.
-pub(crate) fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub(crate) fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     let idx = app.session.active_index().ok_or("no document open")?;
     let (layer, original) = target(app, f, idx)?;
     if f.get("color") == f.get("__orig") {
@@ -84,7 +84,7 @@ pub(crate) fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result
 
 /// The canvas preview while the picker is open: the document with the shape re-rendered in the
 /// picked colour, cached per dialog, revision and colour.
-pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Document>, u64)> {
+pub(crate) fn display_doc(app: &mut SaryApp, idx: usize) -> Option<(Arc<Document>, u64)> {
     let Some(d) = app.ui.dialogs.iter().rev().find(|d| owns(&d.fields)) else {
         app.shape_fill_preview = None;
         return None;
@@ -107,7 +107,7 @@ pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Do
     let mut doc = (*st.doc).clone();
     if let LayerContent::Shape(sh) = &mut doc.layer_mut(layer)?.content {
         sh.fill = Some(Fill::Solid(color));
-        photocraft_engine::vector_cmds::refresh_shape(&st.doc, sh);
+        sary_engine::vector_cmds::refresh_shape(&st.doc, sh);
     }
     let mut hash = std::collections::hash_map::DefaultHasher::new();
     (st.doc.id.0, st.revision, d.id, layer.0).hash(&mut hash);
@@ -115,7 +115,7 @@ pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Do
         component.to_bits().hash(&mut hash);
     }
     let key = (1 << 46) | (hash.finish() & ((1 << 40) - 1));
-    let shown = Arc::new(photocraft_engine::mode_cmds::display_document(&doc).unwrap_or(doc));
+    let shown = Arc::new(sary_engine::mode_cmds::display_document(&doc).unwrap_or(doc));
     app.shape_fill_preview = Some(Preview { document: st.doc.id, revision: st.revision, dialog: d.id, layer, color, shown: shown.clone(), key });
     Some((shown, key))
 }

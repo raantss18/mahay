@@ -1,6 +1,6 @@
 [package]
-name = "pdfcraft-automation"
-description = "Agent control for PdfCraft: a headless tool set over the engine and an MCP server"
+name = "taratasy-automation"
+description = "Agent control for Taratasy: a headless tool set over the engine and an MCP server"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,11 +9,11 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-engine = { workspace = true }
-pdfcraft-cos = { workspace = true }
-pdfcraft-render = { workspace = true }
-pdfcraft-organize = { workspace = true }
-pdfcraft-platform = { workspace = true }
+taratasy-engine = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-render = { workspace = true }
+taratasy-organize = { workspace = true }
+taratasy-platform = { workspace = true }
 serde_json = { workspace = true }
 sha2 = "0.11"
 tempfile = "3.27"
@@ -27,8 +27,8 @@ default = ["mcp"]
 mcp = ["dep:base64"]
 
 [dev-dependencies]
-pdfcraft-fonts = { workspace = true }
+taratasy-fonts = { workspace = true }
 flate2.workspace = true
-pdfcraft-model = { workspace = true }
-pdfcraft-xfa = { workspace = true }
+taratasy-model = { workspace = true }
+taratasy-xfa = { workspace = true }
 image = { version = "0.25", default-features = false, features = ["jpeg"] }

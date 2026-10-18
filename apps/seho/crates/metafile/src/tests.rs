@@ -1934,7 +1934,7 @@ fn emfplus_nested_metafile_image_draws_its_items_into_the_destination() {
     assert!(segs.contains(&Seg::Line(40.0, 20.0)), "{segs:?}");
 }
 
-/// Curves and a region fill, as an EMF+ only file (also written to `$DECKCRAFT_EMF_OUT` to look at).
+/// Curves and a region fill, as an EMF+ only file (also written to `$SEHO_EMF_OUT` to look at).
 fn curves_file() -> Vec<u8> {
     let pen = prec(0x4008, 0x0200 | 1, &solid_pen(0xFF20_60C0, 3.0));
     // A closed curve through a diamond's corners, filled orange.
@@ -1957,7 +1957,7 @@ fn curves_file() -> Vec<u8> {
 #[test]
 fn emfplus_cardinal_curves_and_region_fill() {
     let bytes = curves_file();
-    if let Ok(path) = std::env::var("DECKCRAFT_EMF_OUT") {
+    if let Ok(path) = std::env::var("SEHO_EMF_OUT") {
         let _ = std::fs::write(path, &bytes);
     }
     let p = parse(&bytes).unwrap();

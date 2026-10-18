@@ -5,9 +5,9 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_engine::render::place_slide;
-use deckcraft_geom::{Point, Rect};
-use deckcraft_model::{Presentation, ShapeKind, defaults};
+use seho_engine::render::place_slide;
+use seho_geom::{Point, Rect};
+use seho_model::{Presentation, ShapeKind, defaults};
 
 const EMU: f64 = 12_700.0;
 
@@ -65,7 +65,7 @@ fn replace(files: &mut [(String, Vec<u8>)], name: &str, from: &str, to: &str) {
 
 /// A deck whose first slide holds a SmartArt frame drawn by `shapes`.
 fn smartart_deck(shapes: &[String]) -> Vec<u8> {
-    let mut files = entries(&deckcraft_pptx::export(&defaults::new_presentation(None)).expect("export"));
+    let mut files = entries(&seho_pptx::export(&defaults::new_presentation(None)).expect("export"));
     let (fx, fy, fw, fh) = FRAME;
     let frame = format!(
         r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="90" name="Diagram 1"/><p:cNvGraphicFramePr/><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="{}" y="{}"/><a:ext cx="{}" cy="{}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/diagram"><dgm:relIds xmlns:dgm="http://schemas.openxmlformats.org/drawingml/2006/diagram" r:dm="rIdDm" r:lo="rIdLo" r:qs="rIdQs" r:cs="rIdCs"/></a:graphicData></a:graphic></p:graphicFrame></p:spTree>"#,
@@ -147,7 +147,7 @@ fn smartart_text_follows_tx_xfrm() {
         ("inside its shape", on_slide(24.0, 204.0, 168.0, 48.0)),
     ];
 
-    let p = deckcraft_pptx::import(&deck).expect("import");
+    let p = seho_pptx::import(&deck).expect("import");
     assert!(p.validate().is_empty(), "{:?}", p.validate());
     check(&p, &expected);
     // The diagram is one group; text that left its shape is in a frameless shape of the group.
@@ -155,13 +155,13 @@ fn smartart_text_follows_tx_xfrm() {
     let ShapeKind::Group { children, .. } = &group.kind else { panic!("diagram is not a group") };
     assert_eq!(children.len(), 5);
     let inside = children.iter().find(|s| s.text.as_ref().is_some_and(|t| t.text() == "inside its shape")).expect("inside");
-    assert!(matches!(inside.geom, deckcraft_model::Geom::Preset { ref name, .. } if name == "roundRect"));
+    assert!(matches!(inside.geom, seho_model::Geom::Preset { ref name, .. } if name == "roundRect"));
     for moved in children.iter().filter(|s| s.text.as_ref().is_some_and(|t| t.text() != "inside its shape")) {
-        assert_eq!(moved.fill, Some(deckcraft_model::style::Fill::None));
-        assert_eq!(moved.line.as_ref().and_then(|l| l.fill.clone()), Some(deckcraft_model::style::Fill::None));
+        assert_eq!(moved.fill, Some(seho_model::style::Fill::None));
+        assert_eq!(moved.line.as_ref().and_then(|l| l.fill.clone()), Some(seho_model::style::Fill::None));
     }
 
     // The exported deck lays the text out in the same places.
-    let q = deckcraft_pptx::import(&deckcraft_pptx::export(&p).expect("export")).expect("re-import");
+    let q = seho_pptx::import(&seho_pptx::export(&p).expect("export")).expect("re-import");
     check(&q, &expected);
 }

@@ -4,7 +4,7 @@ use crate::reader::Reader;
 use crate::trivia::is_white_space_character;
 use alloc::vec::Vec;
 
-/// PdfCraft patch: `limit` is the most bytes produced (see `filter::decode_limit`); each `z`
+/// Taratasy patch: `limit` is the most bytes produced (see `filter::decode_limit`); each `z`
 /// expands one input byte to four.
 pub(crate) fn decode(data: &[u8], limit: usize) -> Option<Vec<u8>> {
     const POW_85: [u32; 5] = [52200625, 614125, 7225, 85, 1];
@@ -62,7 +62,7 @@ pub(crate) fn decode(data: &[u8], limit: usize) -> Option<Vec<u8>> {
     let mut group = Vec::with_capacity(5);
 
     loop {
-        // PdfCraft patch: output cut at the limit is reported, never dropped silently.
+        // Taratasy patch: output cut at the limit is reported, never dropped silently.
         if decoded.len() >= limit {
             warn!("ASCII85 stream stopped at its decode limit of {limit} bytes");
             return Some(decoded);

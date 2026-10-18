@@ -274,7 +274,7 @@ pub const WARP_PRESETS: [&str; 41] = [
     "textCascadeDown",
 ];
 
-/// The warps WordCraft draws bent (the others round-trip and draw flat), with menu labels.
+/// The warps Soratra draws bent (the others round-trip and draw flat), with menu labels.
 pub const DRAWN_WARPS: [(&str, &str); 12] = [
     ("textArchUp", "Arch Up"),
     ("textArchDown", "Arch Down"),

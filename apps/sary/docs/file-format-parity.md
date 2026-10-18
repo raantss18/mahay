@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-13 · **Change:** minor (earlier: PDF write one flattened page via Save As / Save a Copy / CLI, #3401; CMYK Invert, Posterize and Threshold on the inks; smart filter masks on PSD open and save; Photoshop-oracle floor 188/258; lossy DNG, compression 34892, decodes with its levels and LinearizationTable applied to the stored 8-bit samples, FILE-215-11; CMYK Hue/Saturation and Color Balance keep the black ink; CMYK Posterize on the stored values, psd-tools oracle floor 242/309; CMYK adjustment layers composite on the document's inks; Photoshop-oracle floor 165/258; CMYK Brightness/Contrast on the inks, CMYK Threshold's luma; modern Brightness/Contrast's brightness curve; Photoshop-oracle floor 151/258; Lab documents composite on their stored L, a, b; Photoshop-oracle floor 152/258; Levels on whole levels at every step with Photoshop's shadow toe; Photoshop-oracle floor 146/258, psd-tools 238/309; 32-bit adjustments unclipped; Photoshop-oracle floor 149/258; mask feathers blur with their exact variance; Threshold splits on Photoshop's luminosity; a pass-through clipping base with an adjustment renders isolated; psd-tools oracle floor 240/309; 16-bit Posterize as Photoshop bins it; psd-tools oracle floor 241/309; Gradient Map luminosity; Photoshop-oracle floor 147/258; PSD: `Mt16`/`Mt32` merged transparency read; palette PNGs open in Indexed Color mode, #4804; earlier: CMYK Invert, Posterize and Threshold on the inks; 16-bit Lab Invert; Photoshop-oracle floor 145/258; `.atn` import maps 112 events; DDS textures open, #1327; DPX read and write, #1049; #2465 fixed: CS2 placed layers with only a `PlLd` block open their contents; Photoshop Actions `.atn` read and write; `.shc` contour files read and write; earlier the same day: indexed BMP palette mode; Save keeps a JPEG's quality and a WebP's encoding) · **Target:** Adobe Photoshop 2026
 
-Every format Photoshop 2026 (27.11.0) reads or writes, with PhotoCraft's support, fidelity and
+Every format Photoshop 2026 (27.11.0) reads or writes, with Sary's support, fidelity and
 tests. Photoshop's list comes from its `Info.plist` `CFBundleDocumentTypes`, the PiPL read/write
 flags of `Contents/PlugIns/Required/File Formats`, and format names in the main binary (Open/Save
 As behaviour from Adobe's documentation where the bundle doesn't say). Ours comes from
@@ -19,7 +19,7 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 
 ## Photoshop's formats
 
-| Format | Photoshop | PhotoCraft read | PhotoCraft write | Fidelity and tests |
+| Format | Photoshop | Sary read | Sary write | Fidelity and tests |
 |---|---|---|---|---|
 | PSD | R/W | yes | yes | 1/8/16/32-bit; Bitmap, Gray, Indexed, RGB, CMYK, Multichannel, Lab, Duotone; layers, groups, masks, vector masks, adjustment and fill layers, effects, text, shapes, smart objects (SoLd/lnk2; CS2 PlLd/lnkD read with their warp, kept as is or re-saved as SoLd once edited), smart filters (14 mapped plus Filter Gallery with Chrome, rest verbatim), slices, comps, Advanced Blending. Oracle floors: Photoshop-authored 188/258, io 148/170, psd-tools 249/309; round trip ≥ 169/170, 308/309, 258/256. Known failures: #1281, #2469 (#2374, text layers, closed 2026-10-10; #2465, CS2 `PlLd`-only smart objects, fixed 2026-10-12) |
 | PSB | R/W | yes | yes | Auto-switches above 2 GB (REL-212-2); 4–5 GB fixtures generated (FILE-216-2); > 4 GB fails on Windows (#375) |
@@ -27,7 +27,7 @@ XL are missing (gap G10). Remaining: 300–500 h including PSD fidelity.
 | TIFF | R/W | yes | yes | 8/16/32f, Gray/RGB/CMYK, BigTIFF, every IFD, banded parallel decode; layered TIFF both byte orders (FILE-215-7: extra alpha channels not written) |
 | JPEG | R/W | yes | yes | 8-bit Gray/RGB/CMYK, ICC/EXIF/XMP; Save keeps the opened file's quality (estimated from its quantisation tables, #2399); no JPEG Options dialog (quality 0–12, baseline/progressive) (FILE-215-19) |
 | PNG | R/W | yes | yes | 8/16-bit, ICC/text; APNG first frame only; alpha channels on open (#2225); palette PNGs open in Indexed Color mode with their transparent entry (#4804) |
-| GIF | R/W | yes | yes | File › Open keeps the first frame; New Video Layer from File and Video Frames to Layers take every frame, with the timeline rate from the delays (#572). Per-frame delays and keeping the frames in `.pcraft` are not done |
+| GIF | R/W | yes | yes | File › Open keeps the first frame; New Video Layer from File and Video Frames to Layers take every frame, with the timeline rate from the delays (#572). Per-frame delays and keeping the frames in `.sary` are not done |
 | BMP | R/W | yes | yes | 8-bit; palette BMPs open in Indexed Color mode |
 | WebP | R/W | yes | yes | Lossless and our own lossy VP8 encoder; ICC/EXIF/XMP; Save keeps an opened file lossy (at its quality) or lossless (#2399) |
 | AVIF | R/W | no (#463) | optional feature, off by default | |
@@ -61,7 +61,7 @@ Photoshop opens raws through Camera Raw 18.7 (the bundle registers cr2, crw, dcr
 fff, 3fr, mef, mfw, iiq, nrw, rwl, srw, mrw, nef, orf, pef, raf, srf, x3f; Camera Raw itself
 supports many more, including CR3).
 
-| Camera format | PhotoCraft | Evidence |
+| Camera format | Sary | Evidence |
 |---|---|---|
 | DNG (incl. LJPEG, lossy JPEG and JPEG XL tiles) | yes | 2026-10-13: lossy DNG (DNG 1.4 compression 34892: 8-bit baseline JPEG tiles or strips, CFA and LinearRaw, partial edge tiles) decodes to the stored samples, which go through LinearizationTable / BlackLevel / WhiteLevel (default 255) like every other depth; `crates/raw/tests/dng.rs` `lossy_jpeg_*` (FILE-215-11, lossy DNG part; no lossy file in the raw corpus yet) |
 | Canon CR2 | yes | |
@@ -85,7 +85,7 @@ D5100 colour profile. Counts and the G14 estimate are unchanged.
 
 | Format | Read | Write | Notes |
 |---|---|---|---|
-| `.pcraft` (native) | yes | yes | Incremental, autosave, crash recovery, atomic save |
+| `.sary` (native) | yes | yes | Incremental, autosave, crash recovery, atomic save |
 | Affinity `.af`, `.afphoto`, `.afdesign`, `.afpub` | yes | no | See below |
 | Paint.NET `.pdn` | yes | no | [pdn.md](pdn.md) |
 | OpenRaster `.ora` | yes | yes | [ora.md](ora.md) |
@@ -108,7 +108,7 @@ written files, so `.af` export stays unsupported.
 
 2026-10-10: current `.af` artboard properties (`phrp`/`aprp`) are recognized alongside the
 legacy flag, including converted curve boards. Synthetic two-board regressions check separate
-bounds, overflow clipping, `.pcraft`/PSD board and pixel round trips, and moving one board with its
+bounds, overflow clipping, `.sary`/PSD board and pixel round trips, and moving one board with its
 children through undo/redo. Nested boards remain masked groups; rotated/curved board outlines
 still import at their bounding rectangle.
 
@@ -122,7 +122,7 @@ remaining gaps in #1606 stay tracked with per-sample corpus ceilings.
 
 ## Presets and data files
 
-| Format | Photoshop | PhotoCraft | Notes |
+| Format | Photoshop | Sary | Notes |
 |---|---|---|---|
 | Brushes `.abr` | R/W | R/W | `psd/src/abr.rs` (v6/v12) |
 | Gradients `.grd` | R/W | R/W | |

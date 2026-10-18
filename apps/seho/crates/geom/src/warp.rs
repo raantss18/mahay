@@ -229,7 +229,7 @@ pub fn adjust_count(name: &str) -> usize {
     adjust_defaults(name).len()
 }
 
-/// Whether `name` is a warp preset DeckCraft draws.
+/// Whether `name` is a warp preset Seho draws.
 pub fn is_supported(name: &str) -> bool {
     !adjust_defaults(name).is_empty()
 }
@@ -242,7 +242,7 @@ pub struct Preset {
     pub label: &'static str,
 }
 
-/// The 40 presets DeckCraft draws, Follow Path first, then Warp.
+/// The 40 presets Seho draws, Follow Path first, then Warp.
 pub const CATALOG: &[Preset] = &[
     Preset { id: "textArchUp", label: "Arch Up" },
     Preset { id: "textArchDown", label: "Arch Down" },

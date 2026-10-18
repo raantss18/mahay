@@ -1,4 +1,4 @@
-//! WordCraft's icon set, drawn in code (original artwork; no external icon assets).
+//! Soratra's icon set, drawn in code (original artwork; no external icon assets).
 //!
 //! Icons are designed on a 20×20 grid in two colours: line work (`c`) and an accent (`a`).
 
@@ -1454,9 +1454,9 @@ impl ThenLines for () {
 }
 
 /// Draw an Insert › Icons library icon into `r` in `c`, from the same path data the inserted
-/// picture is rendered from (`wordcraft_render::icon_lib`).
-pub fn library(p: &Painter, r: Rect, icon: &wordcraft_render::icon_lib::Icon, c: Color32) {
-    use wordcraft_render::icon_lib::{GRID, STROKE};
+/// picture is rendered from (`soratra_render::icon_lib`).
+pub fn library(p: &Painter, r: Rect, icon: &soratra_render::icon_lib::Icon, c: Color32) {
+    use soratra_render::icon_lib::{GRID, STROKE};
     let s = r.width().min(r.height()) / GRID;
     let o = r.center() - vec2(GRID / 2.0 * s, GRID / 2.0 * s);
     let stroke = Stroke::new(STROKE * s, c);

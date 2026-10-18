@@ -1,6 +1,6 @@
 //! Painting symmetry menu, guides and an isolated, cancellable transform preview.
 use crate::{
-    PhotocraftApp,
+    SaryApp,
     canvas::{ToolEvent, ViewXform},
     icons,
     state::Tool,
@@ -8,9 +8,9 @@ use crate::{
     widgets,
 };
 use egui::{Atom, Key, Stroke, vec2};
-use photocraft_doc::Document;
-use photocraft_engine::symmetry_cmds::PaintingSymmetry;
-use photocraft_paint::symmetry::{PresetSymmetry, SymmetryMode};
+use sary_doc::Document;
+use sary_engine::symmetry_cmds::PaintingSymmetry;
+use sary_paint::symmetry::{PresetSymmetry, SymmetryMode};
 use serde::Serialize;
 use serde_json::json;
 use std::sync::Arc;
@@ -51,11 +51,11 @@ fn label(mode: SymmetryMode) -> &'static str {
         SymmetryMode::Diagonal => tl!("Diagonal"),
     }
 }
-fn preset(app: &PhotocraftApp) -> Option<PresetSymmetry> {
+fn preset(app: &SaryApp) -> Option<PresetSymmetry> {
     app.session.active()?.symmetry.as_ref()?.preset()
 }
 
-pub fn can_transform(app: &PhotocraftApp) -> bool {
+pub fn can_transform(app: &SaryApp) -> bool {
     matches!(app.ui.tool, Tool::Brush | Tool::Pencil | Tool::Eraser)
         && app.drag.is_none()
         && preset(app).is_some()
@@ -68,7 +68,7 @@ pub fn can_transform(app: &PhotocraftApp) -> bool {
         && app.distort.perspective.is_none()
         && crate::jobs_ui::job_in_view(app).is_none()
 }
-pub fn begin(app: &mut PhotocraftApp) -> Result<(), String> {
+pub fn begin(app: &mut SaryApp) -> Result<(), String> {
     if !can_transform(app) {
         return Err("no preset symmetry available to transform".into());
     }
@@ -78,7 +78,7 @@ pub fn begin(app: &mut PhotocraftApp) -> Result<(), String> {
     app.ui.symmetry_transform = Some(Transform { original, preview: original, document, source, tool: app.ui.tool, gesture: None });
     Ok(())
 }
-pub fn commit(app: &mut PhotocraftApp) {
+pub fn commit(app: &mut SaryApp) {
     if let Some(t) = app.ui.symmetry_transform.take() {
         let _ = app.run("paint.setSymmetry", json!({"mode":t.preview.mode.id(), "center":t.preview.center,"rotation":t.preview.rotation}));
     }
@@ -86,7 +86,7 @@ pub fn commit(app: &mut PhotocraftApp) {
 /// While the symmetry is being transformed, the options bar names the edit and gives it ✓ and ⊘
 /// buttons, as Free Transform's bar does: Enter and Esc aren't the only ways out, which a pen or
 /// touch user may have no key for (#4495). False (nothing drawn) when no transform is open.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui) -> bool {
     if app.ui.symmetry_transform.is_none() {
         return false;
     }
@@ -108,7 +108,7 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
 /// The canvas cursor while the symmetry is being transformed: the move cursor over the centre,
 /// the rotate cursor over the rotation handle and the arrow elsewhere, never the brush outline,
 /// since a press there doesn't paint (#4495). `None` when no transform is open on this document.
-pub fn cursor(app: &PhotocraftApp, xf: &ViewXform, p: [f64; 2]) -> Option<egui::CursorIcon> {
+pub fn cursor(app: &SaryApp, xf: &ViewXform, p: [f64; 2]) -> Option<egui::CursorIcon> {
     let t = app.ui.symmetry_transform.as_ref().filter(|t| app.session.active_index() == Some(t.document))?;
     let size = app.session.active().map(|s| [f64::from(s.doc.size.width), f64::from(s.doc.size.height)]).unwrap_or([1.0, 1.0]);
     let tol = 8.0 / f64::from(xf.zoom.max(0.001));
@@ -121,14 +121,14 @@ pub fn cursor(app: &PhotocraftApp, xf: &ViewXform, p: [f64; 2]) -> Option<egui::
         None => egui::CursorIcon::Default,
     })
 }
-fn valid(app: &PhotocraftApp, t: &Transform) -> bool {
+fn valid(app: &SaryApp, t: &Transform) -> bool {
     app.session.active_index() == Some(t.document)
         && app.ui.tool == t.tool
         && can_transform(app)
         && preset(app) == Some(t.original)
         && app.session.active().is_some_and(|s| Arc::ptr_eq(&s.doc, &t.source))
 }
-pub fn track(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn track(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(t) = &app.ui.symmetry_transform else {
         return;
     };
@@ -165,7 +165,7 @@ fn mode_button(ui: &mut egui::Ui, mode: SymmetryMode, checked: bool) -> egui::Re
     b.response.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, ui.is_enabled(), checked, name));
     b.response
 }
-pub fn menu(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn menu(app: &mut SaryApp, ui: &mut egui::Ui) {
     let current = app.session.active().and_then(|s| s.symmetry.clone());
     let resp = icons::button_with_icon_size(ui, "painting-symmetry", 24.0, 14.0, current.is_some(), tl!("Set painting symmetry options"));
     let resp = crate::brush_picker::named(resp, "Set painting symmetry options");
@@ -230,7 +230,7 @@ fn rotation_handle(p: PresetSymmetry, size: [f64; 2]) -> [f64; 2] {
     [p.center[0] + r * d[0], p.center[1] + r * d[1]]
 }
 /// True throughout transform editing, including clicks outside a handle: never paint by accident.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
     if app.ui.symmetry_transform.as_ref().is_some_and(|t| !valid(app, t)) {
         app.ui.symmetry_transform = None;
     }
@@ -277,7 +277,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) ->
     }
     true
 }
-pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     if !matches!(app.ui.tool, Tool::Brush | Tool::Pencil | Tool::Eraser) && app.ui.symmetry_transform.is_none() {
         return;
     }

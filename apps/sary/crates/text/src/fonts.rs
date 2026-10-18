@@ -1,5 +1,5 @@
-//! Font database: bundled fonts (always available, also on the web), the optional craft-fonts
-//! Japanese fonts ([`crate::craft_fonts`], when built with `CRAFT_FONTS_DIR`), optional system
+//! Font database: bundled fonts (always available, also on the web), the optional mahay-fonts
+//! Japanese fonts ([`crate::mahay_fonts`], when built with `MAHAY_FONTS_DIR`), optional system
 //! fonts found by scanning platform directories (plus Fontconfig's file list on Linux),
 //! user-registered font data, and PostScript-name lookup for PSD import.
 
@@ -35,7 +35,7 @@ pub static INTER_MEDIUM: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundl
 pub static INTER_SEMIBOLD: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("Inter-SemiBold.ttf")));
 pub static JETBRAINS_MONO_REGULAR: LazyLock<Vec<u8>> = LazyLock::new(|| inflate_font(bundled_font!("JetBrainsMono-Regular.ttf")));
 
-/// Fonts shipped with PhotoCraft (OFL; licences in `assets/fonts`).
+/// Fonts shipped with Sary (OFL; licences in `assets/fonts`).
 pub static BUNDLED: [(&str, &LazyLock<Vec<u8>>); 4] = [
     ("Inter-Regular.ttf", &INTER_REGULAR),
     ("Inter-Medium.ttf", &INTER_MEDIUM),
@@ -128,10 +128,10 @@ pub fn fallback_candidates(order: &[crate::cjk::CjkScript; 4]) -> Vec<&'static s
         }
     }
     for s in order {
-        // craft-fonts' Japanese fonts (if built in) go ahead of the installed Japanese fonts, in
+        // mahay-fonts' Japanese fonts (if built in) go ahead of the installed Japanese fonts, in
         // the Japanese slot of the locale order, so shared Han keeps the locale's forms.
         if *s == crate::cjk::CjkScript::Japanese {
-            v.extend(crate::craft_fonts::japanese_families());
+            v.extend(crate::mahay_fonts::japanese_families());
         }
         v.extend_from_slice(crate::cjk::families(*s));
     }
@@ -222,9 +222,9 @@ impl FontDb {
         for (_, bytes) in BUNDLED {
             db.register_static_font(bytes.as_slice());
         }
-        // The optional craft-fonts (empty unless built with CRAFT_FONTS_DIR; always empty on
+        // The optional mahay-fonts (empty unless built with MAHAY_FONTS_DIR; always empty on
         // wasm32), before any system font.
-        for f in crate::craft_fonts::CRAFT_FONTS.iter().filter(|f| f.is_japanese()) {
+        for f in crate::mahay_fonts::MAHAY_FONTS.iter().filter(|f| f.is_japanese()) {
             db.register_static_font(f.bytes);
         }
         db.refresh_generics();
@@ -464,7 +464,7 @@ impl FontDb {
     /// Select an exact face for shaping. Private aliases are runtime-only: the document keeps
     /// its public family and PostScript name. CSS matching alone cannot distinguish e.g. the
     /// numeric subfamilies of Yoon fonts, all of which declare weight 400 / normal.
-    pub(crate) fn select_named_face(&mut self, style: &mut photocraft_doc::text::CharStyle) {
+    pub(crate) fn select_named_face(&mut self, style: &mut sary_doc::text::CharStyle) {
         let family = style.font_family.clone();
         let faces = self.faces(&family);
         let index = style.postscript_name.as_ref().and_then(|ps| faces.iter().position(|f| f.postscript_name.as_ref() == Some(ps))).or_else(|| {
@@ -485,7 +485,7 @@ impl FontDb {
             let Some(font) = info.fonts().get(index) else { return };
             let Some(blob) = font.load(Some(&mut self.fcx.source_cache)) else { return };
             let Some(blob) = isolated_face(blob, font.index()) else { return };
-            let alias = format!(".PhotoCraft-face-{}-{index}", info.id().to_u64());
+            let alias = format!(".Sary-face-{}-{index}", info.id().to_u64());
             self.fcx.collection.register_fonts(blob, Some(FontInfoOverride { family_name: Some(&alias), ..Default::default() }));
             self.face_aliases.insert(key, alias.clone());
             alias
@@ -906,7 +906,7 @@ mod tests {
     #[test]
     fn missing_font_dirs_are_skipped() {
         let mut files = Vec::new();
-        super::collect_font_files(std::path::Path::new("/nonexistent/photocraft/fonts"), 0, &mut files);
+        super::collect_font_files(std::path::Path::new("/nonexistent/sary/fonts"), 0, &mut files);
         assert!(files.is_empty());
     }
 }

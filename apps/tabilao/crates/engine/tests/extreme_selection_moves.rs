@@ -1,5 +1,5 @@
-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS};
-use gridcraft_engine::Session;
+use tabilao_core::{CellRef, MAX_COLS, MAX_ROWS};
+use tabilao_engine::Session;
 use serde_json::json;
 
 #[test]

@@ -9,13 +9,13 @@
 //! OK runs `filter.liquify` with the same strokes and gets the same field.
 
 use egui::{Align2, Color32, FontId, Pos2, Rect as ERect, Sense, Stroke, TextureHandle, pos2, vec2};
-use photocraft_algo::liquify::{LiquifyField, LiquifyStroke, LiquifyTool, ProxyImage, auto_cell};
-use photocraft_doc::LayerId;
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_algo::liquify::{LiquifyField, LiquifyStroke, LiquifyTool, ProxyImage, auto_cell};
+use sary_doc::LayerId;
+use sary_geom::Rect;
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ToolEvent;
 use crate::theme::Tokens;
 use crate::widgets;
@@ -448,7 +448,7 @@ impl LiquifyDialog {
 }
 
 /// Opens the dialog on the active layer.
-pub fn open(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
+pub fn open(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
     let (layer, surf, _) = crate::distort_ui::active_pixels(app)?;
     let st = app.session.active().ok_or("no document")?;
     let canvas = st.doc.bounds();
@@ -501,21 +501,21 @@ pub fn open(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> 
 }
 
 /// Keeps the brush settings for the next time Liquify opens, also after a restart.
-fn remember(app: &mut PhotocraftApp, opts: &LiquifyOpts) {
+fn remember(app: &mut SaryApp, opts: &LiquifyOpts) {
     let v = opts.to_json();
     app.session.prefs.edit(|p| p.dialogs.insert(REMEMBERED.into(), v));
 }
 
 /// Cancel (button, Esc or the control channel): the document is untouched; the brush settings
 /// are kept.
-pub fn cancel(app: &mut PhotocraftApp) {
+pub fn cancel(app: &mut SaryApp) {
     if let Some(d) = app.distort.liquify.take() {
         remember(app, &d.opts);
     }
 }
 
 /// OK: runs `filter.liquify` with the recorded strokes (one history step).
-pub fn commit(app: &mut PhotocraftApp) {
+pub fn commit(app: &mut SaryApp) {
     let Some(mut d) = app.distort.liquify.take() else { return };
     remember(app, &d.opts);
     d.end();
@@ -527,7 +527,7 @@ pub fn commit(app: &mut PhotocraftApp) {
 }
 
 /// Control channel: `filter.liquify {"ui": {...}}` while the dialog is open.
-pub fn control(app: &mut PhotocraftApp, ui: &Value) -> Result<Value, String> {
+pub fn control(app: &mut SaryApp, ui: &Value) -> Result<Value, String> {
     if ui.get("commit").and_then(Value::as_bool) == Some(true) {
         commit(app);
         return Ok(json!({"committed": true}));
@@ -590,7 +590,7 @@ fn resized_brush(start_size: f32, start_density: f32, dx: f32, dy: f32) -> (f32,
 /// Pointer in document coordinates (from the preview or the control channel). Alt at
 /// pointer-down subtracts from the freeze mask (lasso), reverses a twirl and swaps Pucker/Bloat;
 /// Shift adds to the mask, same as no modifier.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) {
     let now = crate::gpu_canvas::now_ms();
     let Some(d) = app.distort.liquify.as_mut() else { return };
     match ev {
@@ -627,7 +627,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) {
 }
 
 /// Ctrl+Z / Ctrl+Shift+Z inside Liquify, including while a slider's text field is focused.
-pub fn history_keys(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn history_keys(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(d) = app.distort.liquify.as_mut() else { return };
     let cmd_shift = egui::Modifiers::COMMAND | egui::Modifiers::SHIFT;
     if ctx.input_mut(|i| i.consume_key(cmd_shift, egui::Key::Z)) {
@@ -637,7 +637,7 @@ pub fn history_keys(app: &mut PhotocraftApp, ctx: &egui::Context) {
     }
 }
 
-pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn keys(app: &mut SaryApp, ctx: &egui::Context) {
     history_keys(app, ctx);
     let Some(d) = app.distort.liquify.as_mut() else { return };
     // Ctrl+H (Hide Extras) toggles the red freeze-mask overlay; the mask itself stays active.
@@ -710,18 +710,18 @@ fn shortcut(t: LiquifyTool) -> &'static str {
     }
 }
 
-fn load_backdrop(app: &PhotocraftApp, ctx: &egui::Context, layer: LayerId, canvas: Rect) -> Option<TextureHandle> {
+fn load_backdrop(app: &SaryApp, ctx: &egui::Context, layer: LayerId, canvas: Rect) -> Option<TextureHandle> {
     let st = app.session.active()?;
     let doc = crate::distort_ui::without_layer(&st.doc, layer);
-    let buf = photocraft_compose::render(&doc, canvas);
-    let mut s = photocraft_raster::Surface::new(photocraft_color::PixelFormat::RGBA8);
+    let buf = sary_compose::render(&doc, canvas);
+    let mut s = sary_raster::Surface::new(sary_color::PixelFormat::RGBA8);
     let flat: Vec<f32> = buf.px.iter().flat_map(|p| *p).collect();
     s.write_region(canvas, &flat);
     Some(ctx.load_texture("liquify-backdrop", crate::distort_ui::surface_image(&s, canvas, PROXY_SIDE), egui::TextureOptions::LINEAR))
 }
 
 /// Draws the dialog (a full-window layer over the app).
-pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
     let t = Tokens::get(ctx);
     let screen = ctx.content_rect();
     if app.distort.liquify.as_ref().is_some_and(|d| d.opts.show_backdrop && d.backdrop.is_none()) {
@@ -1067,8 +1067,8 @@ mod tests {
         assert_eq!((size, density), (1.0, 50.0));
     }
 
-    fn app_with_layer() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    fn app_with_layer() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.session.execute("file.new", json!({"width": 120, "height": 80, "depth": 8})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -1287,7 +1287,7 @@ mod tests {
         let mut app = app_with_layer();
         open(&mut app, &ctx).unwrap();
         control(&mut app, &json!({"tool": "forwardWarp", "size": 40})).unwrap();
-        let draw = |app: &mut PhotocraftApp, x: f64| {
+        let draw = |app: &mut SaryApp, x: f64| {
             for ev in
                 [ToolEvent::Down { x, y: 40.0, pressure: 1.0 }, ToolEvent::Move { x: x + 14.0, y: 40.0, pressure: 1.0 }, ToolEvent::Up { x: x + 14.0, y: 40.0 }]
             {
@@ -1322,7 +1322,7 @@ mod tests {
         let mut app = app_with_layer();
         open(&mut app, &ctx).unwrap();
         control(&mut app, &json!({"tool": "lassoMask"})).unwrap();
-        let lasso = |app: &mut PhotocraftApp, m: egui::Modifiers, r: [f64; 4]| {
+        let lasso = |app: &mut SaryApp, m: egui::Modifiers, r: [f64; 4]| {
             pointer(app, ToolEvent::Down { x: r[0], y: r[1], pressure: 1.0 }, m);
             for (x, y) in [(r[2], r[1]), (r[2], r[3]), (r[0], r[3])] {
                 pointer(app, ToolEvent::Move { x, y, pressure: 1.0 }, m);
@@ -1350,7 +1350,7 @@ mod tests {
         let ctx = egui::Context::default();
         let mut app = app_with_layer();
         open(&mut app, &ctx).unwrap();
-        let dab = |app: &mut PhotocraftApp, m: egui::Modifiers| {
+        let dab = |app: &mut SaryApp, m: egui::Modifiers| {
             pointer(app, ToolEvent::Down { x: 50.0, y: 40.0, pressure: 1.0 }, m);
             pointer(app, ToolEvent::Up { x: 50.0, y: 40.0 }, m);
             app.distort.liquify.as_ref().unwrap().strokes.last().unwrap().tool

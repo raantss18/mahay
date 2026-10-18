@@ -4,7 +4,7 @@
 //! winit's event handler. An event that arrives while it spins re-enters the handler, winit
 //! panics, and because the panic can't unwind out of the AppKit callback the app aborts.
 //! `rfd::AsyncFileDialog` returns at once instead, and the app uses the choice on a later frame
-//! ([`PdfCraftApp::process_picked`]); a worker thread waits for it.
+//! ([`TaratasyApp::process_picked`]); a worker thread waits for it.
 //!
 //! How rfd 0.17 shows the panel (checked against its source):
 //! - macOS: creating the future shows the panel, so it must be created on the main thread. With
@@ -16,7 +16,7 @@
 //! - Linux and the BSDs: the XDG portal backend (with a Zenity fallback) also works off the UI
 //!   thread; the optional GTK3 backend shows the panel on rfd's own GTK thread.
 //!
-//! Every native picker goes through [`PdfCraftApp::ask`]: open, save, folder and multi-file
+//! Every native picker goes through [`TaratasyApp::ask`]: open, save, folder and multi-file
 //! panels alike. What happens with the choice is a closure that runs on that later frame, so
 //! work that depends on the file being written (closing the tab after Save, deleting extracted
 //! pages) happens there and nowhere else. One picker shows at a time, and it keeps that claim
@@ -28,9 +28,9 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use pdfcraft_engine::DocId;
+use taratasy_engine::DocId;
 
-use crate::PdfCraftApp;
+use crate::TaratasyApp;
 use crate::files::{FilePurpose, PickTarget};
 
 /// What the chosen files are for.
@@ -55,7 +55,7 @@ pub(crate) enum Ask {
 }
 
 /// What to do with the chosen paths, on a later frame.
-type Then = Box<dyn FnOnce(&mut PdfCraftApp, Vec<PathBuf>) + Send>;
+type Then = Box<dyn FnOnce(&mut TaratasyApp, Vec<PathBuf>) + Send>;
 
 /// A finished pick, waiting for the next frame.
 struct Picked {
@@ -152,7 +152,7 @@ impl Pickers {
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// Show a native picker for `pick_for` without blocking the frame. The choice is used on a
     /// later frame by [`Self::process_picked`].
     pub(crate) fn pick(&mut self, pick_for: PickFor, dialog: rfd::AsyncFileDialog, multiple: bool) {
@@ -179,7 +179,7 @@ impl PdfCraftApp {
     ///
     /// `pick_override` answers instead of a native panel (tests and automation); the answer
     /// still arrives on a later frame, like a real pick.
-    pub(crate) fn ask(&mut self, ask: Ask, target: Option<DocId>, then: impl FnOnce(&mut PdfCraftApp, Vec<PathBuf>) + Send + 'static) -> bool {
+    pub(crate) fn ask(&mut self, ask: Ask, target: Option<DocId>, then: impl FnOnce(&mut TaratasyApp, Vec<PathBuf>) + Send + 'static) -> bool {
         if self.pickers.showing.swap(true, Ordering::SeqCst) {
             self.notify_tr("Another file dialog is still open. Finish with it first.");
             return false;
@@ -224,7 +224,7 @@ impl PdfCraftApp {
     }
 
     /// [`Self::ask`] for one path: `then` gets the first chosen path.
-    pub(crate) fn ask_one(&mut self, ask: Ask, target: Option<DocId>, then: impl FnOnce(&mut PdfCraftApp, PathBuf) + Send + 'static) -> bool {
+    pub(crate) fn ask_one(&mut self, ask: Ask, target: Option<DocId>, then: impl FnOnce(&mut TaratasyApp, PathBuf) + Send + 'static) -> bool {
         self.ask(ask, target, move |app, paths| {
             if let Some(path) = paths.into_iter().next() {
                 then(app, path);
@@ -252,7 +252,7 @@ impl PdfCraftApp {
             }
             // Last-resort guard (AGENTS.md §4), as for commands: this work used to run inside
             // the command that asked, and a panic in it must not take the app down.
-            if let Err(m) = pdfcraft_engine::guard(|| then(self, paths)) {
+            if let Err(m) = taratasy_engine::guard(|| then(self, paths)) {
                 self.notify_fmt("That didn't work: an internal error stopped it ({m}).", &[("m", m.as_str())]);
             }
         }
@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn worker_queues_the_pick_and_keeps_the_flag_until_the_frame_uses_it() {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.pickers.showing.store(true, Ordering::SeqCst);
         let got = Arc::new(Mutex::new(Vec::new()));
         let worker = app.pickers.spawn_worker(None, None, async { vec![PathBuf::from("a.pdf")] }, record(&got)).expect("worker starts");
@@ -312,7 +312,7 @@ mod tests {
 
     #[test]
     fn the_follow_up_runs_on_a_later_frame_and_not_when_cancelled() {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         let got = Arc::new(Mutex::new(Vec::new()));
         app.pickers.deliver(None, vec![], record(&got));
         app.pickers.deliver(None, vec![PathBuf::from("b.pdf")], record(&got));
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn cancellation_requests_a_frame_for_a_retained_open_reply() {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         let ctx = egui::Context::default();
         app.ctx = Some(ctx.clone());
         for _ in 0..2 {
@@ -360,7 +360,7 @@ mod tests {
 
     #[test]
     fn a_second_picker_is_refused_while_one_is_showing() {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.pick_override = Some(vec!["c.pdf".into()]);
         app.pickers.showing.store(true, Ordering::SeqCst);
         let got = Arc::new(Mutex::new(Vec::new()));
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn a_follow_up_that_asks_again_gets_its_picker_even_if_another_request_came_first() {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.pick_override = Some(vec!["first.fdf".into()]);
         let got = Arc::new(Mutex::new(Vec::new()));
         let into = got.clone();
@@ -391,7 +391,7 @@ mod tests {
 
     #[test]
     fn a_panicking_follow_up_is_reported_and_the_next_pick_still_runs() {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         let got = Arc::new(Mutex::new(Vec::new()));
         app.pickers.deliver(None, vec![PathBuf::from("x.pdf")], Box::new(|_, _| panic!("follow-up failed")));
         app.pickers.deliver(None, vec![PathBuf::from("y.pdf")], record(&got));

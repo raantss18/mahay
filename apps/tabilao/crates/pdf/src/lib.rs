@@ -1,4 +1,4 @@
-//! A tiny, self-contained PDF 1.7 writer for GridCraft's print and PDF export.
+//! A tiny, self-contained PDF 1.7 writer for Tabilao's print and PDF export.
 //!
 //! - The 14 standard fonts (no embedding) with WinAnsiEncoding, plus approximate width tables
 //!   ([`text_width`]) so callers can measure, align and wrap text.
@@ -695,8 +695,8 @@ impl PdfDoc {
         objects.push((1, b"<< /Type /Catalog /Pages 2 0 R >>".to_vec()));
         let kids_s: Vec<String> = kids.iter().map(|k| format!("{k} 0 R")).collect();
         objects.push((2, format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids_s.join(" "), kids.len()).into_bytes()));
-        let creator = if self.info.creator.is_empty() { "GridCraft" } else { &self.info.creator };
-        let mut info = format!("<< /Producer {} /Creator {}", pdf_text_string("GridCraft PDF"), pdf_text_string(creator));
+        let creator = if self.info.creator.is_empty() { "Tabilao" } else { &self.info.creator };
+        let mut info = format!("<< /Producer {} /Creator {}", pdf_text_string("Tabilao PDF"), pdf_text_string(creator));
         if !self.info.title.is_empty() {
             let _ = write!(info, " /Title {}", pdf_text_string(&self.info.title));
         }

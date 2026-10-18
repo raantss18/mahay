@@ -1,4 +1,4 @@
-//! `deckcraft-cli mcp --automation-read-root <dir> --automation-write-root <dir>`: through the MCP
+//! `seho-cli mcp --automation-read-root <dir> --automation-write-root <dir>`: through the MCP
 //! protocol, files open and load only from inside the read root and are saved and exported only
 //! inside the write root. Paths that leave a root (`..`, another folder, a sibling with the same
 //! prefix, a link) are refused, and nothing is written outside.
@@ -7,8 +7,8 @@
 
 use std::path::{Path, PathBuf};
 
-use deckcraft_engine::file_access::AutomationRoots;
-use deckcraft_mcp::{Headless, Server};
+use seho_engine::file_access::AutomationRoots;
+use seho_mcp::{Headless, Server};
 use serde_json::{Value, json};
 
 /// A 1x1 PNG, so `insert_picture` has something real to read.
@@ -128,42 +128,42 @@ fn every_writing_command_is_refused_outside_the_write_root() {
     let inside = |name: &str| s(&base.join("out").join(name));
     ok(&mut server, "add_slide", json!({"title": "Second"}));
 
-    refused(&mut server, "save_presentation", json!({"path": outside("x.deckcraft")}), "outside the write root");
+    refused(&mut server, "save_presentation", json!({"path": outside("x.seho")}), "outside the write root");
     refused(&mut server, "export", json!({"path": outside("x.pptx")}), "outside the write root");
     refused(&mut server, "export", json!({"path": outside("x.pdf")}), "outside the write root");
     refused(&mut server, "export", json!({"path": outside("x.png")}), "outside the write root");
     refused(&mut server, "export", json!({"path": outside("x.txt")}), "outside the write root");
     refused(&mut server, "export", json!({"path": outside("all.png"), "all": true}), "outside the write root");
     refused(&mut server, "call_app", json!({"method": "ui.render", "params": {"path": outside("r.png")}}), "outside the write root");
-    refused(&mut server, "call_app", json!({"method": "app.save", "params": {"path": outside("y.deckcraft")}}), "outside the write root");
+    refused(&mut server, "call_app", json!({"method": "app.save", "params": {"path": outside("y.seho")}}), "outside the write root");
     refused(&mut server, "call_app", json!({"method": "app.export", "params": {"path": outside("y.pdf")}}), "outside the write root");
     for command in ["file.save", "file.saveAs", "file.export"] {
-        let (error, text) = run(&mut server, command, json!({"path": outside("z.deckcraft")}));
+        let (error, text) = run(&mut server, command, json!({"path": outside("z.seho")}));
         assert!(error && text.contains("outside the write root"), "{command}: {text}");
     }
     // A sibling folder with the same prefix, and `..` out of the root.
-    refused(&mut server, "save_presentation", json!({"path": s(&base.join("out2/x.deckcraft"))}), "outside the write root");
+    refused(&mut server, "save_presentation", json!({"path": s(&base.join("out2/x.seho"))}), "outside the write root");
     let sep = std::path::MAIN_SEPARATOR;
     refused(
         &mut server,
         "save_presentation",
-        json!({"path": format!("{}{sep}..{sep}outside{sep}x.deckcraft", s(&base.join("out")))}),
+        json!({"path": format!("{}{sep}..{sep}outside{sep}x.seho", s(&base.join("out")))}),
         "outside the write root",
     );
     // The read root isn't writable.
-    refused(&mut server, "save_presentation", json!({"path": s(&base.join("in/x.deckcraft"))}), "outside the write root");
+    refused(&mut server, "save_presentation", json!({"path": s(&base.join("in/x.seho"))}), "outside the write root");
 
     let leftovers: Vec<_> = std::fs::read_dir(base.join("outside")).unwrap().map(|e| e.unwrap().file_name()).collect();
     assert_eq!(leftovers.len(), 2, "nothing was written beside secret.txt and pic.png: {leftovers:?}");
-    assert!(!base.join("out2").exists() && !base.join("in/x.deckcraft").exists());
+    assert!(!base.join("out2").exists() && !base.join("in/x.seho").exists());
 
     // Inside the write root all of it works.
-    ok(&mut server, "save_presentation", json!({"path": inside("x.deckcraft")}));
+    ok(&mut server, "save_presentation", json!({"path": inside("x.seho")}));
     ok(&mut server, "export", json!({"path": inside("x.pptx")}));
     ok(&mut server, "export", json!({"path": inside("x.pdf")}));
     ok(&mut server, "export", json!({"path": inside("all.png"), "all": true}));
     ok(&mut server, "call_app", json!({"method": "ui.render", "params": {"path": inside("r.png")}}));
-    for f in ["x.deckcraft", "x.pptx", "x.pdf", "all1.png", "all2.png", "r.png"] {
+    for f in ["x.seho", "x.pptx", "x.pdf", "all1.png", "all2.png", "r.png"] {
         assert!(base.join("out").join(f).exists(), "{f}");
     }
     let temporaries: Vec<_> = std::fs::read_dir(base.join("out"))
@@ -179,7 +179,7 @@ fn every_writing_command_is_refused_outside_the_write_root() {
 fn one_root_grants_only_its_own_access() {
     let (mut read_only, base) = confined("read-only", true, false);
     ok(&mut read_only, "open_presentation", json!({"path": s(&base.join("in/a.txt"))}));
-    refused(&mut read_only, "save_presentation", json!({"path": s(&base.join("out/x.deckcraft"))}), "write authority is absent");
+    refused(&mut read_only, "save_presentation", json!({"path": s(&base.join("out/x.seho"))}), "write authority is absent");
     refused(&mut read_only, "export", json!({"path": s(&base.join("out/x.pdf"))}), "write authority is absent");
     refused(&mut read_only, "call_app", json!({"method": "ui.render", "params": {"path": s(&base.join("out/r.png"))}}), "write authority is absent");
     // Calls that return bytes instead of writing a path keep working.
@@ -191,8 +191,8 @@ fn one_root_grants_only_its_own_access() {
     let (mut write_only, base) = confined("write-only", false, true);
     refused(&mut write_only, "open_presentation", json!({"path": s(&base.join("in/a.txt"))}), "read authority is absent");
     refused(&mut write_only, "insert_picture", json!({"path": s(&base.join("in/pic.png"))}), "read authority is absent");
-    ok(&mut write_only, "save_presentation", json!({"path": s(&base.join("out/x.deckcraft"))}));
-    assert!(base.join("out/x.deckcraft").exists());
+    ok(&mut write_only, "save_presentation", json!({"path": s(&base.join("out/x.seho"))}));
+    assert!(base.join("out/x.seho").exists());
     let _ = std::fs::remove_dir_all(base);
 }
 
@@ -202,11 +202,11 @@ fn links_out_of_a_root_are_refused() {
     let (mut server, base) = confined("links", true, true);
     std::os::unix::fs::symlink(base.join("outside/secret.txt"), base.join("in/leak.txt")).unwrap();
     std::os::unix::fs::symlink(base.join("outside"), base.join("out/away")).unwrap();
-    std::os::unix::fs::symlink(base.join("outside/gone.deckcraft"), base.join("out/dangling.deckcraft")).unwrap();
+    std::os::unix::fs::symlink(base.join("outside/gone.seho"), base.join("out/dangling.seho")).unwrap();
     refused(&mut server, "open_presentation", json!({"path": s(&base.join("in/leak.txt"))}), "outside the read root");
-    refused(&mut server, "save_presentation", json!({"path": s(&base.join("out/away/x.deckcraft"))}), "outside the write root");
-    refused(&mut server, "save_presentation", json!({"path": s(&base.join("out/dangling.deckcraft"))}), "a link that leads nowhere");
-    assert!(!base.join("outside/x.deckcraft").exists() && !base.join("outside/gone.deckcraft").exists());
+    refused(&mut server, "save_presentation", json!({"path": s(&base.join("out/away/x.seho"))}), "outside the write root");
+    refused(&mut server, "save_presentation", json!({"path": s(&base.join("out/dangling.seho"))}), "a link that leads nowhere");
+    assert!(!base.join("outside/x.seho").exists() && !base.join("outside/gone.seho").exists());
     assert!(!deck_text(&mut server).contains("TOP SECRET"));
     let _ = std::fs::remove_dir_all(base);
 }
@@ -219,7 +219,7 @@ fn without_roots_nothing_is_confined() {
     std::fs::write(base.join("a.txt"), "Anywhere").unwrap();
     let mut server = Server::new(Box::new(Headless::with_document().with_automation_roots(AutomationRoots::new(None, None).unwrap())));
     ok(&mut server, "open_presentation", json!({"path": s(&base.join("a.txt"))}));
-    ok(&mut server, "save_presentation", json!({"path": s(&base.join("b.deckcraft"))}));
-    assert!(base.join("b.deckcraft").exists());
+    ok(&mut server, "save_presentation", json!({"path": s(&base.join("b.seho"))}));
+    assert!(base.join("b.seho").exists());
     let _ = std::fs::remove_dir_all(base);
 }

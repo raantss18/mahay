@@ -2,7 +2,7 @@
 //! hides every effect of that layer; the eye on one effect's row shows or hides that effect. The
 //! effects keep their settings either way, and each toggle is one history step.
 
-use photocraft_doc::LayerId;
+use sary_doc::LayerId;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -102,8 +102,8 @@ mod tests {
         s.active().unwrap().history.past_len()
     }
 
-    fn flat(s: &Session) -> photocraft_compose::Buffer {
-        photocraft_compose::flatten(&s.active().unwrap().doc)
+    fn flat(s: &Session) -> sary_compose::Buffer {
+        sary_compose::flatten(&s.active().unwrap().doc)
     }
 
     #[test]

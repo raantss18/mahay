@@ -1,6 +1,6 @@
 //! Regression oracles for Mosaic's cell-once traversal.
 use super::*;
-use photocraft_color::{PixelFormat, SampleType};
+use sary_color::{PixelFormat, SampleType};
 
 // Retain the previous traversal as a value oracle, including its alpha math.
 fn legacy_mosaic(src: &Image, out: Rect, ctx: &Ctx, cell: f32) -> Vec<f32> {

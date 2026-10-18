@@ -112,7 +112,7 @@ impl DesktopTheme {
         let shared = Arc::new(Shared::new(wake));
         let thread_shared = Arc::clone(&shared);
         let (stop, stopped) = async_channel::bounded::<()>(1);
-        let worker = std::thread::Builder::new().name("pdfcraft-desktop-theme".into()).spawn(move || {
+        let worker = std::thread::Builder::new().name("taratasy-desktop-theme".into()).spawn(move || {
             futures_lite::future::block_on(futures_lite::future::race(
                 async {
                     let _ = stopped.recv().await;
@@ -390,7 +390,7 @@ mod portal {
             let child = Command::new("dbus-daemon")
                 .args(["--session", "--nofork", "--print-address=1"])
                 // Abstract sockets disappear with the daemon, even if a test fails.
-                .arg(format!("--address=unix:abstract=pdfcraft-theme-test-{}", std::process::id()))
+                .arg(format!("--address=unix:abstract=taratasy-theme-test-{}", std::process::id()))
                 .stdout(Stdio::piped())
                 .stderr(Stdio::null())
                 .spawn()

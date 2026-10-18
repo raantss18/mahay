@@ -12,18 +12,18 @@
 
 use egui::{Key, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::kittest::Queryable;
-use photocraft_ui_egui::PhotocraftApp;
-use photocraft_ui_egui::canvas::ViewXform;
-use photocraft_ui_egui::control::{ControlRequest, handle};
+use sary_ui_egui::SaryApp;
+use sary_ui_egui::canvas::ViewXform;
+use sary_ui_egui::control::{ControlRequest, handle};
 use serde_json::{Value, json};
 
-type Harness = egui_kittest::Harness<'static, PhotocraftApp>;
+type Harness = egui_kittest::Harness<'static, SaryApp>;
 
 fn harness() -> Option<Harness> {
     let built = std::panic::catch_unwind(|| {
         egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 640.0)).with_max_steps(64).wgpu().build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
             // The queries below use English labels; don't follow the system locale.
             app.session.prefs.edit(|p| p.interface.language = "en".into());
             if let Some(rs) = cc.wgpu_render_state.as_ref() {
@@ -57,7 +57,7 @@ fn screen_box(h: &Harness) -> [Pos2; 4] {
     let app = h.state();
     let r = app.ui.crop_rect.expect("a frame");
     let x = xf(h);
-    photocraft_ui_egui::crop_ui::corners(r, photocraft_ui_egui::crop_ui::angle(app)).map(|p| x.to_screen(p[0] as f32, p[1] as f32))
+    sary_ui_egui::crop_ui::corners(r, sary_ui_egui::crop_ui::angle(app)).map(|p| x.to_screen(p[0] as f32, p[1] as f32))
 }
 
 fn mid(q: [Pos2; 4]) -> Pos2 {
@@ -108,28 +108,28 @@ fn setup() -> Option<Harness> {
 fn a_ratio_dropdown_updates_the_preview_and_enter_without_touching_a_handle() {
     // Windows WARP can access-violate when GPU harnesses initialize or tear down concurrently:
     // hold the GPU lock for the whole test, harness included.
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = setup() else { return };
     h.get_by_value("Ratio").click();
     h.run_steps(3);
     h.get_by_label("1 : 1 (Square)").click();
     h.run_steps(3);
     assert_eq!(h.state().ui.crop_rect, Some([50.0, 0.0, 250.0, 200.0]));
-    if let Some(dir) = std::env::var_os("CRAFT_UI_VISUAL_FIXTURES") {
+    if let Some(dir) = std::env::var_os("MAHAY_UI_VISUAL_FIXTURES") {
         let dir = std::path::PathBuf::from(dir);
         std::fs::create_dir_all(&dir).unwrap();
-        h.render().unwrap().save(dir.join("photocraft-crop-square.png")).unwrap();
+        h.render().unwrap().save(dir.join("sary-crop-square.png")).unwrap();
     }
     h.key_press(Key::Enter);
     h.run_steps(3);
-    assert_eq!(h.state().session.active().unwrap().doc.size, photocraft_doc::Size::new(200, 200));
+    assert_eq!(h.state().session.active().unwrap().doc.size, sary_doc::Size::new(200, 200));
 }
 
 #[test]
 fn the_swap_button_and_x_apply_the_same_inscribed_ratio() {
     // Windows WARP can access-violate when GPU harnesses initialize or tear down concurrently:
     // hold the GPU lock for the whole test, harness included.
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = setup() else { return };
     let original = [30.0, 20.0, 270.0, 180.0];
     h.state_mut().ui.crop_rect = Some(original);
@@ -156,7 +156,7 @@ fn the_swap_button_and_x_apply_the_same_inscribed_ratio() {
 fn a_resize_renders_the_frame_and_image_with_the_same_camera() {
     // Windows WARP can access-violate when GPU harnesses initialize or tear down concurrently:
     // hold the GPU lock for the whole test, harness included.
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = setup() else { return };
     let box0 = screen_box(&h);
     let c = mid(box0);
@@ -180,13 +180,13 @@ fn a_resize_renders_the_frame_and_image_with_the_same_camera() {
 
 #[test]
 fn dragging_inside_moves_the_image_and_the_box_stays_centred() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = setup() else { return };
-    assert!(!photocraft_ui_egui::crop_ui::pending(h.state()), "the untouched frame");
+    assert!(!sary_ui_egui::crop_ui::pending(h.state()), "the untouched frame");
     let c = h.state().last_canvas_rect.center();
     // Inside the untouched frame a drag draws a new box; Auto Center Preview centres it.
     drag(&mut h, c + vec2(-100.0, -60.0), c + vec2(60.0, 40.0), 6, |_, _| {});
-    assert!(photocraft_ui_egui::crop_ui::pending(h.state()), "a real frame now");
+    assert!(sary_ui_egui::crop_ui::pending(h.state()), "a real frame now");
     let box0 = screen_box(&h);
     assert!(mid(box0).distance(c) < 1.0, "the drawn box is centred: {:?} vs {c:?}", mid(box0));
     let r0 = h.state().ui.crop_rect.expect("frame");
@@ -211,7 +211,7 @@ fn dragging_inside_moves_the_image_and_the_box_stays_centred() {
 
 #[test]
 fn a_resize_keeps_the_box_centre_after_a_space_pan() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = setup() else { return };
     // Space held: the temporary Hand pans the view 80, 40.
     let c = h.state().last_canvas_rect.center();

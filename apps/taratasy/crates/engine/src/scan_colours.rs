@@ -1,11 +1,11 @@
 //! Edit text on a scanned page: an OCR word is invisible text over the scan, so rewriting it must
 //! also hide the scanned word. The paper colour around the word becomes the cover drawn over it
-//! ([`pdfcraft_edit::BlockStyle::cover`]) and the colour of its ink becomes the new text's.
+//! ([`taratasy_edit::BlockStyle::cover`]) and the colour of its ink becomes the new text's.
 
 use std::sync::Arc;
 
-use pdfcraft_edit::TextBlock;
-use pdfcraft_render::{PageInfo, PageRenderer, RenderConfig, RenderRequest, Tile};
+use taratasy_edit::TextBlock;
+use taratasy_render::{PageInfo, PageRenderer, RenderConfig, RenderRequest, Tile};
 
 /// Device pixels per point the word's surroundings are read at.
 const SCALE: f32 = 3.0;
@@ -16,7 +16,7 @@ const RING: f32 = 4.0;
 
 /// The paper and ink colours (RGB 0–1) of invisible paragraph `b` on `page`, or `None` when the
 /// paragraph is visible text or the page can't be read.
-pub(crate) fn sample(cos: &pdfcraft_cos::Document, info: &PageInfo, page: usize, b: &TextBlock) -> Option<([f64; 3], [f64; 3])> {
+pub(crate) fn sample(cos: &taratasy_cos::Document, info: &PageInfo, page: usize, b: &TextBlock) -> Option<([f64; 3], [f64; 3])> {
     if !b.invisible {
         return None;
     }
@@ -43,7 +43,7 @@ pub(crate) fn sample(cos: &pdfcraft_cos::Document, info: &PageInfo, page: usize,
     // The working file as it is: written out only if the document holds unsaved changes, which
     // it doesn't between edits (each one reopens the file it wrote).
     let bytes = if cos.is_modified() {
-        Arc::new(pdfcraft_cos::write_incremental(cos, &pdfcraft_cos::SaveOptions::default()).ok()?)
+        Arc::new(taratasy_cos::write_incremental(cos, &taratasy_cos::SaveOptions::default()).ok()?)
     } else {
         cos.bytes().clone()
     };

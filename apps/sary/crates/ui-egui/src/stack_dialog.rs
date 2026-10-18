@@ -7,7 +7,7 @@ use egui::{RichText, vec2};
 use serde_json::{Map, Value, json};
 
 use crate::file_dialog::{FileDialogAnswer, FileDialogRequest};
-use crate::{PhotocraftApp, state::DialogKind, theme::Tokens, widgets};
+use crate::{SaryApp, state::DialogKind, theme::Tokens, widgets};
 
 const MARK: &str = "__loadStack";
 pub const COMMAND: &str = "file.scripts.loadFilesIntoStack";
@@ -18,11 +18,11 @@ pub fn owns(fields: &Map<String, Value>) -> bool {
 }
 
 /// Open the dialog with an empty Files list. Returns its id.
-pub fn open(app: &mut PhotocraftApp) -> u64 {
+pub fn open(app: &mut SaryApp) -> u64 {
     open_for(app, COMMAND, "Load Files into Stack…")
 }
 
-pub fn open_statistics(app: &mut PhotocraftApp) -> u64 {
+pub fn open_statistics(app: &mut SaryApp) -> u64 {
     open_for(app, STATISTICS, "Image Statistics")
 }
 
@@ -30,7 +30,7 @@ fn statistics(f: &Map<String, Value>) -> bool {
     f.get("__command").and_then(Value::as_str) == Some(STATISTICS)
 }
 
-fn open_for(app: &mut PhotocraftApp, command: &str, label: &str) -> u64 {
+fn open_for(app: &mut SaryApp, command: &str, label: &str) -> u64 {
     let mut f = Map::new();
     f.insert(MARK.into(), json!(true));
     f.insert("__command".into(), json!(command));
@@ -78,7 +78,7 @@ fn file_name(p: &str) -> &str {
 }
 
 /// The open documents that have a file, in tab order (what Add Open Files adds).
-fn open_files(app: &PhotocraftApp) -> Vec<String> {
+fn open_files(app: &SaryApp) -> Vec<String> {
     app.session.documents().iter().filter_map(|d| d.path.clone()).collect()
 }
 
@@ -89,7 +89,7 @@ pub fn can_confirm(f: &Map<String, Value>) -> bool {
 
 /// Browse…: files to add (Files) or the folder to load (Folder), into dialog `id` once the file
 /// dialog answers.
-fn browse(app: &mut PhotocraftApp, id: u64, folder: bool) {
+fn browse(app: &mut SaryApp, id: u64, folder: bool) {
     let r = if folder {
         app.ask_folder(move |app, path| {
             let d = app.ui.dialog_mut(id).ok_or("the dialog was closed")?;
@@ -111,13 +111,13 @@ fn browse(app: &mut PhotocraftApp, id: u64, folder: bool) {
 }
 
 /// The dialog's body (dialog `id`); OK and Cancel are the standard ones below it.
-pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, id: u64) {
+pub fn body(app: &mut SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, id: u64) {
     let t = Tokens::get(ui.ctx());
     if statistics(f) {
         ui.horizontal(|ui| {
             ui.label(tl!("Choose Stack Mode:"));
             let mut mode = f.get("mode").and_then(Value::as_str).unwrap_or("median").to_string();
-            let options: Vec<_> = photocraft_doc::StackMode::ALL.iter().map(|m| (m.id().to_string(), m.label())).collect();
+            let options: Vec<_> = sary_doc::StackMode::ALL.iter().map(|m| (m.id().to_string(), m.label())).collect();
             if widgets::dropdown(ui, "statistics-stack-mode", &mut mode, &options, 180.0) {
                 f.insert("mode".into(), json!(mode));
             }
@@ -141,7 +141,7 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
     ui.horizontal_top(|ui| {
         // The list: the chosen files, or the images in the chosen folder.
         let shown: Vec<String> = if folder_mode {
-            if folder(f).is_empty() { Vec::new() } else { photocraft_engine::file_cmds::list_images(folder(f)).unwrap_or_default() }
+            if folder(f).is_empty() { Vec::new() } else { sary_engine::file_cmds::list_images(folder(f)).unwrap_or_default() }
         } else {
             files(f)
         };
@@ -210,7 +210,7 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
 }
 
 /// OK: load the list (or the folder) into a new document.
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     let paths = if folder_mode(f) {
         let dir = folder(f);
         if dir.is_empty() {

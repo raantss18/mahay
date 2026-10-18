@@ -1,6 +1,6 @@
 //! Non-destructive pixel-mask properties: density and feather leave the mask pixels intact.
 
-use photocraft_doc::LayerId;
+use sary_doc::LayerId;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;

@@ -1,33 +1,33 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
-default-members = ["crates/*", "apps/wordcraft", "apps/wordcraft-cli", "xtask"]
+default-members = ["crates/*", "apps/soratra", "apps/soratra-cli", "xtask"]
 
 [workspace.package]
 version = "0.8.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/wordcraft"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
 # internal
-wordcraft-geom = { path = "crates/geom" }
-wordcraft-doc = { path = "crates/doc" }
-wordcraft-fonts = { path = "crates/fonts" }
-wordcraft-layout = { path = "crates/layout" }
-wordcraft-docx = { path = "crates/docx" }
-wordcraft-docbin = { path = "crates/docbin" }
-wordcraft-formats = { path = "crates/formats" }
-wordcraft-render = { path = "crates/render" }
-wordcraft-pdf = { path = "crates/pdf" }
-wordcraft-proof = { path = "crates/proof" }
-wordcraft-engine = { path = "crates/engine" }
-wordcraft-mcp = { path = "crates/mcp" }
-wordcraft-zotero = { path = "crates/zotero" }
-wordcraft-control-key = { path = "crates/control-key" }
-wordcraft-ui-egui = { path = "crates/ui-egui" }
-wordcraft-metafile = { path = "crates/metafile" }
+soratra-geom = { path = "crates/geom" }
+soratra-doc = { path = "crates/doc" }
+soratra-fonts = { path = "crates/fonts" }
+soratra-layout = { path = "crates/layout" }
+soratra-docx = { path = "crates/docx" }
+soratra-docbin = { path = "crates/docbin" }
+soratra-formats = { path = "crates/formats" }
+soratra-render = { path = "crates/render" }
+soratra-pdf = { path = "crates/pdf" }
+soratra-proof = { path = "crates/proof" }
+soratra-engine = { path = "crates/engine" }
+soratra-mcp = { path = "crates/mcp" }
+soratra-zotero = { path = "crates/zotero" }
+soratra-control-key = { path = "crates/control-key" }
+soratra-ui-egui = { path = "crates/ui-egui" }
+soratra-metafile = { path = "crates/metafile" }
 
 # foundation
 kurbo = { version = "0.13", features = ["serde"] }
@@ -52,7 +52,7 @@ harfrust = "0.13"
 wuff = "0.2.9"
 vello_cpu = "0.2"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif", "bmp", "tiff"] }
-craft-pdf = { git = "https://github.com/storytold/craft-libs", rev = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8", version = "=0.1.0", default-features = false, features = ["write"] }
+mahay-pdf = { path = "../../libs/core/crates/pdf", version = "=0.1.0", default-features = false, features = ["write"] }
 quick-xml = "0.41"
 zip = { version = "3", default-features = false, features = ["deflate"] }
 # zlib streams (compressed metafile pictures in `.doc` drawings); already in the lock as a dependency of other crates.
@@ -101,6 +101,17 @@ lto = "thin"
 codegen-units = 16
 debug = 0
 
-# Required by craft-pdf: the backend rejects writers that failed during unwinding.
+# Required by mahay-pdf: the backend rejects writers that failed during unwinding.
 [patch.crates-io]
-krilla = { git = "https://github.com/storytold/craft-libs", rev = "c3487320b2d1de657b860b3c8abb44e1f2b32bd8" }
+# Adds an Android backend (Storage Access Framework through mahay-android); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+# Adds an Android text backend through mahay-android; desktop unchanged.
+arboard = { path = "../../libs/core/vendor/arboard" }
+krilla = { path = "../../libs/core/vendor/krilla" }
+
+# Android release: whole-program LTO and no symbols, for the smallest .so.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true

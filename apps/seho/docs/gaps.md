@@ -1,4 +1,4 @@
-# Where DeckCraft falls short of PowerPoint
+# Where Seho falls short of PowerPoint
 
 > **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** major (community PR wave 2026-10-14: soak tests, PPTX corpus, comment threads (#70), embedded fonts, SmartArt Text Pane, Animation Pane timeline, Hunspell spelling, thesaurus, AutoCorrect, 14 new dialogs, pen pressure and trackpad gestures; duplicated entries and headers folded; previous: minor, 3-D bevel, camera and face lighting rendered) · **Target:** Microsoft PowerPoint for Mac 16.113 (Microsoft 365)
 
@@ -42,7 +42,7 @@ revision history.
 
 ### Startup crashes on some Windows GPUs (#40, #59)
 - **Evidence:** #59 (Intel UHD, access violation in `igvk64.dll` during Vulkan enumeration), #40
-  (WordCraft, GridCraft and DeckCraft all fail on one Windows 11 PC). The DX12 default (#16) fixed
+  (Soratra, Tabilao and Seho all fail on one Windows 11 PC). The DX12 default (#16) fixed
   AMD's `atio6axx.dll` crash only.
 - **Impact:** the app never opens for those users.
 - **Estimate:** 4–8 h (backend probing outside the process or a safe-mode fallback, a software
@@ -51,11 +51,11 @@ revision history.
 ### Soak testing has no memory or timing budgets
 - **Evidence:** `crates/engine/src/soak_tests.rs` runs seeded random command sequences over a
   ~100-slide deck (validity, selection, undo/redo exactness, bounded undo, save/reopen in both
-  formats every 100 steps); `DECKCRAFT_SOAK_STEPS` runs it long. It found a chart `clamp` panic
+  formats every 100 steps); `SEHO_SOAK_STEPS` runs it long. It found a chart `clamp` panic
   that blanked whole slides. `crates/ui-egui/src/ui_soak_tests.rs` drives the whole window with
   seeded random clicks, drags, keys (plain, Ctrl, Shift), typing and scrolling over the sample
   deck, checking document validity, bounded undo/journal/thumbnail/texture caches, zero caught
-  command and render panics (`Session::panics_caught`, `deckcraft_render::panics_caught`) and a
+  command and render panics (`Session::panics_caught`, `seho_render::panics_caught`) and a
   mean frame under 250 ms; 4 × 3000-action runs are clean.
 - **Impact:** long-session crash rate is sampled in CI; RSS is not measured directly.
 - **Estimate:** 1–2 h (RSS sampling per platform).
@@ -87,7 +87,7 @@ Detail in [file-format-parity.md](file-format-parity.md).
   outside this repo.
 - **Impact:** the main reason to switch is "open my PowerPoint decks". Fidelity on real decks
   (corporate templates, SmartArt, `chartex` charts, embedded fonts, EMF) is still mostly unknown.
-- **Estimate:** 20–35 h: grow the owned corpus in `storytold/photocraft-corpus` style (craftrules
+- **Estimate:** 20–35 h: grow the owned corpus in `raantss18/sary-corpus` style (mahay-rules
   `standards/test-corpora.md`), add render checks, have the owner open outputs in PowerPoint, fix
   what breaks. **Beta blocker.**
 
@@ -100,7 +100,7 @@ Detail in [file-format-parity.md](file-format-parity.md).
 
 ### SVG pictures don't render
 - **Evidence:** `crates/render/src/images.rs` decodes through `image` 0.25 (PNG, JPEG, WebP, GIF,
-  TIFF, BMP), and EMF/WMF through `deckcraft-metafile` (ported from WordCraft: paths, fills, pens,
+  TIFF, BMP), and EMF/WMF through `seho-metafile` (ported from Soratra: paths, fills, pens,
   pattern and hatch brushes, bitmaps and text; rectangle clip regions are applied, EMF+ only
   pictures play their EMF+ records).
   Nothing reads SVG; PowerPoint's Insert Icons stores SVG with a PNG fallback.
@@ -117,7 +117,7 @@ Detail in [file-format-parity.md](file-format-parity.md).
 
 ### No legacy `.ppt`/`.pot`/`.pps` import
 - **Evidence:** PowerPoint for Mac still opens and saves the 97–2003 binary formats
-  (`CFBundleDocumentTypes`); DeckCraft doesn't read them.
+  (`CFBundleDocumentTypes`); Seho doesn't read them.
 - **Impact:** archives of older decks don't open.
 - **Estimate:** 20–35 h (import only, from the public [MS-PPT] spec). Owner decision whether it's
   worth it.
@@ -144,7 +144,7 @@ Detail in [file-format-parity.md](file-format-parity.md).
   doesn't animate transitions or build animations.
 - **Impact:** sharing a talk as a video is a common request.
 - **Estimate:** 10–16 h (render the timeline frame by frame, which the GIF can then reuse for
-  transitions and builds; an H.264 encoder is the hard part, FilmCraft has one to copy).
+  transitions and builds; an H.264 encoder is the hard part, Hetsika has one to copy).
 
 ### Embedded MicroType Express font subsets aren't drawn
 - **Evidence:** `p:embeddedFontLst` is read and written. A raw TrueType/OpenType face, or one inside an Embedded OpenType wrapper, is loaded and used to draw. A MicroType Express subset (`application/x-fontdata` with neither form) is kept and written back, and the text still uses a stand-in.
@@ -172,7 +172,7 @@ Detail in [file-format-parity.md](file-format-parity.md).
   have their own layouts, histograms and Paretos bin their data (count, width or Scott's rule),
   and box & whisker charts use exclusive or inclusive quartiles with 1.5 IQR whiskers. Region maps are kept
   (their cached geography too, also through edits) and drawn as value-coloured tiles with a
-  colour scale, since DeckCraft ships no map boundaries. Radar charts are drawn polar (filled
+  colour scale, since Seho ships no map boundaries. Radar charts are drawn polar (filled
   or lines), stock charts as high-low lines with close dashes or up/down bars and saved as
   `c:stockChart`, and combo charts start as columns with a line. Trendlines round-trip
   (`corpus_charts.rs`) and are drawn: linear, exponential, logarithmic, polynomial, power and
@@ -191,11 +191,11 @@ Detail in [file-format-parity.md](file-format-parity.md).
   cached drawing; `crates/pptx/src/dgm.rs`), and PowerPoint diagrams read their outline from the
   data model, so they get the Text Pane too. 15 layouts (bullet and block lists, five process, two cycle and
   a radial, hierarchy, two pyramids, two matrices), four SmartArt Styles and Change Colors
-  (colourful or one accent). Still missing: DeckCraft's own layout definitions are simple (not yet
+  (colourful or one accent). Still missing: Seho's own layout definitions are simple (not yet
   checked in PowerPoint itself); PowerPoint has ~200 layouts, picture layouts and 3-D styles; editing an
-  imported diagram's outline redraws it with DeckCraft's layout; a diagram with no cached drawing
+  imported diagram's outline redraws it with Seho's layout; a diagram with no cached drawing
   isn't drawn.
-- **Impact:** a PowerPoint diagram edited in DeckCraft changes look.
+- **Impact:** a PowerPoint diagram edited in Seho changes look.
 - **Estimate:** 6–10 h.
 
 ### Animation Pane, effect count and preview
@@ -253,7 +253,7 @@ of the effect gallery. Detail in [animation-parity.md](animation-parity.md). 8�
   with a right-click menu; repeated words (`the the`) are flagged with Delete Repeated Word;
   Review › Language marks the selection's proofing language or Do Not Check Spelling
   (`lang`/`noProof` round-trip in PPTX). No grammar checking. The web build checks on the UI
-  thread a few milliseconds per frame. No dictionaries ship with DeckCraft, so without one
+  thread a few milliseconds per frame. No dictionaries ship with Seho, so without one
   installed (always on Windows and the web) only a short list of common misspellings is found.
   `review.thesaurus` looks up the selected word (checklist row partial). AutoCorrect has
   PowerPoint's options (two initial capitals, sentence and day capitals, caps lock, fractions, an
@@ -288,7 +288,7 @@ Detail in [ui-parity.md](ui-parity.md).
   choice, video/GIF/CD exports or document protection. 4–8 h for the parts that need no cloud.
 - **Window chrome** (#71 macOS controls misaligned, #26 GNOME title bar, #41 system light/dark).
   2–4 h.
-- **Icon consistency across Craft apps** (#73, #56). 2–4 h; coordinate in craftrules.
+- **Icon consistency across Mahay apps** (#73, #56). 2–4 h; coordinate in mahay-rules.
 - **Dialogs**: 41 dialogs vs PowerPoint's ~60. In since the d556ff9 count of 27: Font, Paragraph
   and Tabs, Bullets and Numbering, Find and Replace, Replace Fonts, Action Settings, Size and
   Position, Date and Time, Photo Album (Edit Photo Album reopens it), Create New Theme Colors and
@@ -306,7 +306,7 @@ Detail in [hardware-parity.md](hardware-parity.md).
 - **CPU slide rasterization** (`vello_cpu`); PowerPoint renders on the GPU. 12–20 h (vello hybrid
   or wgpu path).
 - **Software-only video decode**; PowerPoint uses VideoToolbox/Media Foundation. 8–14 h (copy
-  FilmCraft's hardware decode).
+  Hetsika's hardware decode).
 - **No pen tilt and no pinch-zoom** (it does not keep the point under the pointer). Pen pressure
   scales ink width when the pointer reports it (a mouse or a missing reading stays at the pen
   width; a stroke saved as a flat `0.5` still draws at the pen width). A two-finger twist rotates
@@ -320,16 +320,16 @@ Detail in [localization-parity.md](localization-parity.md).
 - **English only, no string catalog** (#15, #30; Ukrainian PR #34 open). PowerPoint for Mac ships
   26 languages. Infrastructure 8–14 h, then 3–16 h per language plus native review. Beta needs the
   infrastructure and at least Simplified Chinese, Spanish, French, German and Japanese (~30–45 h).
-- **Hangul in the interface needs an installed Korean font** (#101). craft-fonts has no Korean face
+- **Hangul in the interface needs an installed Korean font** (#101). mahay-fonts has no Korean face
   (Noto CJK is excluded by the asset policy), so the web build draws Korean file names, notes and
   outline text as boxes; desktop borrows Malgun Gothic, Apple SD Gothic Neo or Noto Sans CJK.
-  Adding an openly licensed Korean face (e.g. Nanum Gothic, OFL) to craft-fonts: 1–2 h.
+  Adding an openly licensed Korean face (e.g. Nanum Gothic, OFL) to mahay-fonts: 1–2 h.
 - **UI isn't mirrored for right-to-left languages.** 6–10 h.
 - **Browser build draws Arabic and Hebrew as missing-glyph boxes in exports** (#81). 1–2 h.
 
 ## Performance
 
-- **Baseline measured, not compared.** `cargo xtask bench` (and `deckcraft-cli bench FILE`) times
+- **Baseline measured, not compared.** `cargo xtask bench` (and `seho-cli bench FILE`) times
   open, per-slide render, save, PPTX round trip and PDF export, and peak memory, against a saved
   baseline; show frame rate isn't measured and there are no PowerPoint numbers to set beside it.
   2–4 h.
@@ -365,7 +365,7 @@ Detail in [localization-parity.md](localization-parity.md).
 | 2026-10-13 | minor | Owned PPTX corpus round-trip (parts and text). Notes-master header and footer text is kept; the corpus gap is now a larger set and PowerPoint reference renders |
 | 2026-10-13 | minor | Owned PPTX corpus for comments, links and actions, custom shows, rotated groups and inherited placeholders. Paragraph `defRPr` and action sounds kept. Embedded fonts and #70/#74/#77 stay open |
 | 2026-10-13 | minor | Owned PPTX corpus for text effects, body layout, theme effects, fills, bevels and connectors. A run's inner shadow, reflection and soft edge, and a bevel preset with no kept 3-D XML, are kept. #70, #74, #77 and embedded fonts stay open |
-| 2026-10-13 | minor | Benchmark suite (`cargo xtask bench`, `deckcraft-cli bench`): the performance gap is now frame rate and a PowerPoint comparison |
+| 2026-10-13 | minor | Benchmark suite (`cargo xtask bench`, `seho-cli bench`): the performance gap is now frame rate and a PowerPoint comparison |
 | 2026-10-14 | minor | Owned corpus `corpus_media.rs`: 3-D model parts and animation bounce end now round-trip. The real-deck corpus and #70/#74/#77 stay open |
 | 2026-10-14 | trivial | Corpus slice: themes, masters, effects and links; text Mouse Over actions round-trip |
 | 2026-10-14 | trivial | A moving average trendline is drawn without an equation or an R² label |

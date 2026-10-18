@@ -1,4 +1,4 @@
-//! pdfcraft-render — page rasterization and document inspection.
+//! taratasy-render — page rasterization and document inspection.
 //!
 //! **Bootstrap status (see ADR-0004):** rasterization goes straight through the `hayro` crate
 //! (hayro-interpret + vello_cpu). Inspection uses the lazy `cos` reader with a read-only lopdf

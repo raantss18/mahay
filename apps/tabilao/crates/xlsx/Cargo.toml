@@ -1,9 +1,9 @@
 [package]
-name = "gridcraft-xlsx"
+name = "tabilao-xlsx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "GridCraft file formats: XLSX (SpreadsheetML) and CSV import/export"
+description = "Tabilao file formats: XLSX (SpreadsheetML) and CSV import/export"
 
 [lints]
 workspace = true
@@ -14,9 +14,9 @@ workspace = true
 test-support = []
 
 [dependencies]
-gridcraft-core = { workspace = true }
-gridcraft-formula = { workspace = true }
-gridcraft-model = { workspace = true }
+tabilao-core = { workspace = true }
+tabilao-formula = { workspace = true }
+tabilao-model = { workspace = true }
 thiserror = { workspace = true }
 quick-xml = { workspace = true }
 zip = { workspace = true }

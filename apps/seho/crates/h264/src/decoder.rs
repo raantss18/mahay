@@ -14,7 +14,7 @@ use crate::slice::{NalHeader, Poc, PocState, SliceHeader, SliceType, nal_type};
 use crate::slicedec::{PicState, SliceDecoder};
 use crate::transform::LevelScale;
 use crate::{ColorInfo, Picture};
-use deckcraft_bitstream::{BitReader, annexb_nals, length_prefixed_nals, unescape_rbsp};
+use seho_bitstream::{BitReader, annexb_nals, length_prefixed_nals, unescape_rbsp};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
@@ -95,7 +95,7 @@ pub struct Decoder {
     pool: Option<rayon::ThreadPool>,
     in_flight: VecDeque<FrameRef>,
     max_in_flight: usize,
-    /// Bytes the picture store may take ([`deckcraft_bitstream::budget`]).
+    /// Bytes the picture store may take ([`seho_bitstream::budget`]).
     memory_budget: u64,
     threads: usize,
     /// Draft mode: skip deblocking of non-reference pictures ([`Decoder::set_draft`]).
@@ -180,7 +180,7 @@ impl Decoder {
             pool,
             in_flight: VecDeque::new(),
             max_in_flight: threads.max(1) + 2,
-            memory_budget: deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET,
+            memory_budget: seho_bitstream::budget::DECODE_MEMORY_BUDGET,
             threads: workers,
             draft: false,
         }
@@ -432,7 +432,7 @@ impl Decoder {
     /// Refuse an SPS whose pictures would not fit the memory budget, before anything is allocated.
     fn check_budget(&self, sps: &Sps) -> Result<()> {
         let chroma = sps.chroma_array_type();
-        let shape = deckcraft_bitstream::budget::PictureShape {
+        let shape = seho_bitstream::budget::PictureShape {
             width: u64::from(sps.width()),
             height: u64::from(sps.height()),
             shift_x: u32::from(chroma != 3),

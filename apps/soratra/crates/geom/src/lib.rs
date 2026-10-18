@@ -1,4 +1,4 @@
-//! WordCraft geometry and units.
+//! Soratra geometry and units.
 //!
 //! Layout works in **points** (1/72 inch, `f32`). File formats use other units: OOXML uses
 //! twentieths of a point (twips) for most lengths, half-points for font sizes, eighths of a point

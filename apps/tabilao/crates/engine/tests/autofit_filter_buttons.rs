@@ -1,5 +1,5 @@
-use gridcraft_core::CellRef;
-use gridcraft_engine::Session;
+use tabilao_core::CellRef;
+use tabilao_engine::Session;
 use serde_json::json;
 
 fn table() -> Session {
@@ -27,7 +27,7 @@ fn autofit_reserves_room_for_table_filter_button() {
     assert_eq!(s.doc().unwrap().wb.active().unwrap().value(CellRef::new(0, 0)).display(), "Quarterly Revenue");
 }
 
-fn sheet_mut(s: &mut Session) -> &mut gridcraft_engine::model::Sheet {
+fn sheet_mut(s: &mut Session) -> &mut tabilao_engine::model::Sheet {
     std::sync::Arc::make_mut(&mut s.active_mut().unwrap().wb).sheet_mut(0).unwrap()
 }
 
@@ -64,7 +64,7 @@ fn autofit_supports_ordinary_autofilters_without_double_counting_table_buttons()
     let mut s = table();
     let table_width = fit(&mut s);
     sheet_mut(&mut s).autofilter =
-        Some(gridcraft_engine::model::AutoFilter { range: gridcraft_engine::core::RangeRef::parse("A1:A2").unwrap(), criteria: vec![] });
+        Some(tabilao_engine::model::AutoFilter { range: tabilao_engine::core::RangeRef::parse("A1:A2").unwrap(), criteria: vec![] });
     assert_eq!(fit(&mut s), table_width, "overlapping filters occupy one button slot");
     sheet_mut(&mut s).tables.clear();
     assert_eq!(fit(&mut s), table_width, "ordinary filter headers reserve the same space");

@@ -1,6 +1,6 @@
-//! The GridCraft document model: workbooks, sheets, a copy-on-write cell store, interned
+//! The Tabilao document model: workbooks, sheets, a copy-on-write cell store, interned
 //! styles, defined names, tables, conditional formats, validation, comments, charts and print
-//! settings. Pure data; calculation lives in `gridcraft-calc`.
+//! settings. Pure data; calculation lives in `tabilao-calc`.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 

@@ -4,9 +4,9 @@
 
 use std::fmt::Write as _;
 
-use gridcraft_core::RangeRef;
-use gridcraft_formula::{Expr, SheetSel};
-use gridcraft_model::{Chart, ChartKind, LegendPos, Series, Workbook};
+use tabilao_core::RangeRef;
+use tabilao_formula::{Expr, SheetSel};
+use tabilao_model::{Chart, ChartKind, LegendPos, Series, Workbook};
 
 use crate::drawing::{dml_color, srgb};
 use crate::xml::{El, esc, esc_attr};
@@ -106,7 +106,7 @@ pub fn read_chartex(root: &El) -> Option<Chart> {
             color: s
                 .path(&["spPr", "solidFill"])
                 .and_then(dml_color)
-                .filter(|c| *c != gridcraft_model::Color::Theme(4 + (series.len() % 6) as u8, 0)),
+                .filter(|c| *c != tabilao_model::Color::Theme(4 + (series.len() % 6) as u8, 0)),
             ..Default::default()
         });
     }
@@ -155,7 +155,7 @@ fn f_xml(wb: &Workbook, si: usize, f: &str, names: &mut Vec<String>) -> String {
 
 /// A reference's sheet and range (for the row/column direction).
 fn ref_range(wb: &Workbook, si: usize, f: &str) -> Option<(usize, RangeRef)> {
-    let Ok(Expr::Ref(r)) = gridcraft_formula::parse(f) else { return None };
+    let Ok(Expr::Ref(r)) = tabilao_formula::parse(f) else { return None };
     let sheet = match &r.sheet {
         SheetSel::Current => si,
         SheetSel::Named(n) => wb.sheet_index(n)?,

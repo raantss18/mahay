@@ -1,9 +1,9 @@
 [package]
-name = "gridcraft-core"
+name = "tabilao-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "GridCraft core types: cell addresses, values, errors, date serials"
+description = "Tabilao core types: cell addresses, values, errors, date serials"
 
 [lints]
 workspace = true

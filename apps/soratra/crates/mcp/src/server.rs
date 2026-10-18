@@ -18,15 +18,15 @@ const INVALID_PARAMS: i64 = -32602;
 const INTERNAL_ERROR: i64 = -32603;
 const RESOURCE_NOT_FOUND: i64 = -32002;
 
-const INSTRUCTIONS: &str = "WordCraft is a word processor (a Microsoft Word clone). Every action is a command: find ids and \
+const INSTRUCTIONS: &str = "Soratra is a word processor (a Microsoft Word clone). Every action is a command: find ids and \
 parameters with list_commands and run them with execute (or several with batch). Positions are \
 {story:\"body\", path:[block,(row,cell,block)...], off:byteOffset}. Typical flow: new_document → type_text \
 \"Hello\" → execute text.newParagraph → execute para.style {style:\"Heading 1\"} → select_text {text:\"Hello\"} → \
 execute format.bold → inspect_document to verify → render_page to look at the result → save {path:\"out.docx\"}.";
 
 /// Resource URIs.
-pub const DOC_URI: &str = "wordcraft://document";
-pub const COMMANDS_URI: &str = "wordcraft://commands";
+pub const DOC_URI: &str = "soratra://document";
+pub const COMMANDS_URI: &str = "soratra://commands";
 
 /// An MCP server bound to one backend.
 pub struct Server {
@@ -133,9 +133,9 @@ impl Server {
                 Ok(json!({
                     "protocolVersion": version,
                     "capabilities": {"tools": {}, "resources": {}},
-                    "serverInfo": {"name": "wordcraft", "title": "WordCraft", "version": env!("CARGO_PKG_VERSION"), "websiteUrl": "https://getartcraft.com/apps/wordcraft"},
+                    "serverInfo": {"name": "soratra", "title": "Soratra", "version": env!("CARGO_PKG_VERSION"), "websiteUrl": "https://github.com/raantss18/mahay"},
                     "instructions": format!(
-                        "{INSTRUCTIONS} Backend: {}. Community: https://discord.gg/artcraft · https://getartcraft.com/apps/wordcraft · https://github.com/storytold/wordcraft",
+                        "{INSTRUCTIONS} Backend: {}. Community: https://discord.gg/mahay · https://github.com/raantss18/mahay · https://github.com/raantss18/mahay",
                         self.backend.describe()
                     ),
                 }))

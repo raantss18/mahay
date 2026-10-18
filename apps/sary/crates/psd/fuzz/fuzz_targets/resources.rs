@@ -5,7 +5,7 @@
 //! reachable; the rest is the resource data.
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::resources::{ImageResource, ResolutionInfo, VersionInfo};
+use sary_psd::resources::{ImageResource, ResolutionInfo, VersionInfo};
 fuzz_target!(|data: &[u8]| {
     let (id, body) = match data.split_first_chunk::<2>() {
         Some((p, rest)) => (u16::from_be_bytes(*p), rest.to_vec()),

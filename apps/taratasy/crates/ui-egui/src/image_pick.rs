@@ -5,9 +5,9 @@
 
 use egui::{Color32, CornerRadius, Pos2, Stroke};
 
-use crate::PdfCraftApp;
+use crate::TaratasyApp;
 use crate::canvas::{DocView, PageXform};
-use pdfcraft_render::DocInfo;
+use taratasy_render::DocInfo;
 
 /// The selected picture: page, index in `page_images` and its box in user space.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -27,7 +27,7 @@ pub(crate) fn page_input(
     xf: &PageXform,
     page: usize,
     info: &DocInfo,
-    doc: &pdfcraft_engine::Document,
+    doc: &taratasy_engine::Document,
     pointer: Option<Pos2>,
     view: &mut DocView,
 ) {
@@ -62,14 +62,14 @@ pub(crate) fn paint(painter: &egui::Painter, xf: &PageXform, page: usize, info: 
 fn safe_name(s: &str) -> String {
     let cleaned: String = s.chars().map(|c| if c.is_control() || r#"/\:*?"<>|"#.contains(c) { '_' } else { c }).take(80).collect();
     let cleaned = cleaned.trim().trim_matches('.').to_string();
-    if cleaned.is_empty() { "PdfCraft".into() } else { cleaned }
+    if cleaned.is_empty() { "Taratasy".into() } else { cleaned }
 }
 
 /// The per-user folder that holds the file of the last Copy Image in Original Format: `Clipboard`
 /// in the portable data folder in portable mode ([`crate::portable`]), otherwise the platform's
-/// per-user cache folder: `~/Library/Caches/PdfCraft/Clipboard` (macOS),
-/// `%LOCALAPPDATA%\PdfCraft\Clipboard` (Windows), or `$XDG_CACHE_HOME/pdfcraft/clipboard` /
-/// `~/.cache/pdfcraft/clipboard` (others). Never the shared temporary folder, where another user
+/// per-user cache folder: `~/Library/Caches/Taratasy/Clipboard` (macOS),
+/// `%LOCALAPPDATA%\Taratasy\Clipboard` (Windows), or `$XDG_CACHE_HOME/taratasy/clipboard` /
+/// `~/.cache/taratasy/clipboard` (others). Never the shared temporary folder, where another user
 /// could plant a link or a folder of their own.
 #[cfg(not(target_arch = "wasm32"))]
 fn clipboard_dir() -> Option<std::path::PathBuf> {
@@ -79,11 +79,11 @@ fn clipboard_dir() -> Option<std::path::PathBuf> {
     }
     let env = |k: &str| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from).filter(|p| p.is_absolute());
     if cfg!(target_os = "macos") {
-        env("HOME").map(|h| h.join("Library/Caches/PdfCraft/Clipboard"))
+        env("HOME").map(|h| h.join("Library/Caches/Taratasy/Clipboard"))
     } else if cfg!(windows) {
-        env("LOCALAPPDATA").map(|d| d.join("PdfCraft").join("Clipboard"))
+        env("LOCALAPPDATA").map(|d| d.join("Taratasy").join("Clipboard"))
     } else {
-        env("XDG_CACHE_HOME").or_else(|| env("HOME").map(|h| h.join(".cache"))).map(|d| d.join("pdfcraft/clipboard"))
+        env("XDG_CACHE_HOME").or_else(|| env("HOME").map(|h| h.join(".cache"))).map(|d| d.join("taratasy/clipboard"))
     }
 }
 
@@ -102,7 +102,7 @@ fn is_copied_image_name(name: &str) -> bool {
 }
 
 /// Makes `dir` (a real folder, not a link, owned by us and private to us on Unix), removes the
-/// earlier copies PdfCraft wrote there, and writes `bytes` as a new file `name`. Links are never
+/// earlier copies Taratasy wrote there, and writes `bytes` as a new file `name`. Links are never
 /// followed and nothing else in the folder is touched.
 #[cfg(not(target_arch = "wasm32"))]
 fn write_clipboard_file(dir: &std::path::Path, name: &str, bytes: &[u8]) -> Result<std::path::PathBuf, String> {
@@ -143,7 +143,7 @@ fn write_clipboard_file(dir: &std::path::Path, name: &str, bytes: &[u8]) -> Resu
     Ok(path)
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// ⌘C / Ctrl+C copies the selected picture in its original format; Escape deselects it.
     pub(crate) fn image_pick_keys(&mut self, i: usize, ctx: &egui::Context) {
         let Some(picked) = self.views.get(i).and_then(|v| v.picked_image) else { return };
@@ -190,7 +190,7 @@ impl PdfCraftApp {
         }
     }
 
-    /// Writes `bytes` to PdfCraft's private clipboard folder ([`clipboard_dir`]), replacing the
+    /// Writes `bytes` to Taratasy's private clipboard folder ([`clipboard_dir`]), replacing the
     /// previous copy, and puts that file on the system clipboard.
     #[cfg(not(target_arch = "wasm32"))]
     fn put_file_on_clipboard(&self, name: &str, bytes: &[u8]) -> Result<(), String> {
@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn file_names_are_safe() {
         assert_eq!(safe_name("a/b:c"), "a_b_c");
-        assert_eq!(safe_name("  ..  "), "PdfCraft");
+        assert_eq!(safe_name("  ..  "), "Taratasy");
         assert_eq!(safe_name("Relazione 2026"), "Relazione 2026");
     }
 
@@ -238,14 +238,14 @@ mod tests {
     #[test]
     #[cfg(not(target_arch = "wasm32"))]
     fn clipboard_folder_only_replaces_our_own_copies() {
-        let dir = std::env::temp_dir().join(format!("pdfcraft-clipboard-test-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-clipboard-test-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join("keep.txt"), b"other").unwrap();
         std::fs::write(dir.join("Old p1 img1.png"), b"old").unwrap();
         let path = write_clipboard_file(&dir, "New p2 img1.jpg", b"new").unwrap();
         assert_eq!(std::fs::read(&path).unwrap(), b"new");
-        assert!(dir.join("keep.txt").exists(), "files PdfCraft didn't write are kept");
+        assert!(dir.join("keep.txt").exists(), "files Taratasy didn't write are kept");
         assert!(!dir.join("Old p1 img1.png").exists(), "the previous copy is removed");
         assert!(write_clipboard_file(&dir, "../escape p1 img1.png", b"x").is_err());
         #[cfg(unix)]
@@ -262,7 +262,7 @@ mod tests {
             assert!(write_clipboard_file(&dir, "Link p1 img1.png", b"x").is_err(), "writing never follows a link");
             assert_eq!(std::fs::read(&target).unwrap(), b"other");
             // A link in place of the folder is refused.
-            let linked = std::env::temp_dir().join(format!("pdfcraft-clipboard-test-link-{}", std::process::id()));
+            let linked = std::env::temp_dir().join(format!("taratasy-clipboard-test-link-{}", std::process::id()));
             let _ = std::fs::remove_file(&linked);
             std::os::unix::fs::symlink(&dir, &linked).unwrap();
             assert!(write_clipboard_file(&linked, "X p1 img1.png", b"x").is_err());

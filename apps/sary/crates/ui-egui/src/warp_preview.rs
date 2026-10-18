@@ -5,7 +5,7 @@
 //! grid cell gets as many samples as its control points are spread wide, so every triangle stays
 //! a few screen pixels across wherever the surface is stretched.
 
-use photocraft_geom::warp::BezierMesh;
+use sary_geom::warp::BezierMesh;
 
 /// Target screen pixels per preview segment.
 const SEGMENT_PX: f64 = 6.0;

@@ -1,8 +1,8 @@
-# PdfCraft architecture
+# Taratasy architecture
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (shared print spooler; Windows CI passes) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
-How PdfCraft is built today. The design rationale and the planned crates live in
+How Taratasy is built today. The design rationale and the planned crates live in
 `plan/architecture.md` and `plan/adr/` (local-only); this file describes what is on `main`. Each
 crate's `README.md` has the detail.
 
@@ -15,9 +15,9 @@ handwritten JS/TS, in the product or the build.
 
 | Binary | What it is |
 |---|---|
-| `apps/pdfcraft` | The desktop app (macOS, Windows, Linux, FreeBSD): eframe/egui on wgpu, single instance, Apple events, update check on request |
-| `apps/pdfcraft-cli` | `inspect`, `edit`, `combine`, `extract`, `split`, `run` (any automation tool or a JSON script), `tools`, `ui` (drive the running app), and the opt-in `mcp` server |
-| `apps/pdfcraft-web` | The same egui shell compiled to WebAssembly |
+| `apps/taratasy` | The desktop app (macOS, Windows, Linux, FreeBSD): eframe/egui on wgpu, single instance, Apple events, update check on request |
+| `apps/taratasy-cli` | `inspect`, `edit`, `combine`, `extract`, `split`, `run` (any automation tool or a JSON script), `tools`, `ui` (drive the running app), and the opt-in `mcp` server |
+| `apps/taratasy-web` | The same egui shell compiled to WebAssembly |
 
 ## Layers
 
@@ -42,7 +42,7 @@ Planned crates that the layer table already reserves (`arlington`, `color`, `ops
 
 The PDF object graph *is* the model (`crates/engine/README.md` §The editing model):
 
-1. Each open document holds a `pdfcraft_cos::Document`: the parsed objects plus a copy-on-write
+1. Each open document holds a `taratasy_cos::Document`: the parsed objects plus a copy-on-write
    overlay. Unknown data is preserved because nothing is rebuilt that wasn't understood.
 2. An edit runs on a clone; on success the previous state goes onto the undo stack. Clones share
    unchanged data, so snapshots are cheap.
@@ -85,9 +85,9 @@ Every user-facing feature is reachable headlessly (`AGENTS.md` §3):
 
 - the **command registry** (`crates/engine/src/commands.rs`, 184 commands) generates menus,
   shortcuts and the command palette;
-- the **automation tool table** (`crates/automation`, 141 tools) is shared by `pdfcraft-cli run`
-  and the opt-in **MCP server** (stdio only; `pdfcraft-cli mcp`), confined to `--root`;
-- the opt-in **UI control channel** (`pdfcraft --control FILE`; loopback, per-launch token) lets an
+- the **automation tool table** (`crates/automation`, 141 tools) is shared by `taratasy-cli run`
+  and the opt-in **MCP server** (stdio only; `taratasy-cli mcp`), confined to `--root`;
+- the opt-in **UI control channel** (`taratasy --control FILE`; loopback, per-launch token) lets an
   agent inspect, click, type, run commands and take screenshots of the real interface.
 
 ## Safety

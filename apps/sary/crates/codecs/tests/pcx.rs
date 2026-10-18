@@ -1,4 +1,4 @@
-use photocraft_codecs::{ChannelLayout, CodecError, Format, SampleType, caps, decode, decode_as, detect, encode, from_extension};
+use sary_codecs::{ChannelLayout, CodecError, Format, SampleType, caps, decode, decode_as, detect, encode, from_extension};
 
 fn header(bits: u8, planes: u8, width: u16, height: u16, stride: u16) -> Vec<u8> {
     let mut b = vec![0u8; 128];
@@ -30,7 +30,7 @@ fn rle_row(out: &mut Vec<u8>, row: &[u8]) {
 fn pcx_is_readable_but_not_writable() {
     assert_eq!(from_extension("archive.PCX"), Some(Format::Pcx));
     assert!(caps(Format::Pcx).read && !caps(Format::Pcx).write);
-    let img = photocraft_codecs::Image::from_u8(1, 1, ChannelLayout::Rgb, vec![0, 0, 0]).unwrap();
+    let img = sary_codecs::Image::from_u8(1, 1, ChannelLayout::Rgb, vec![0, 0, 0]).unwrap();
     assert!(matches!(encode(&img, Format::Pcx, &Default::default()), Err(CodecError::Unsupported { .. })));
 }
 
@@ -93,8 +93,8 @@ fn rejects_truncated_and_overshooting_rle_without_panicking() {
 fn refuses_headers_that_exceed_allocation_budget() {
     let mut b = header(8, 3, 3000, 3000, 3000);
     // The default decoder rejects the allocation before reading any scanline.
-    let opts = photocraft_codecs::DecodeOptions { limits: photocraft_codecs::Limits { max_alloc: 1024, ..Default::default() }, ..Default::default() };
-    assert!(matches!(photocraft_codecs::decode_as_with(Format::Pcx, &b, &opts), Err(CodecError::LimitExceeded(_))));
+    let opts = sary_codecs::DecodeOptions { limits: sary_codecs::Limits { max_alloc: 1024, ..Default::default() }, ..Default::default() };
+    assert!(matches!(sary_codecs::decode_as_with(Format::Pcx, &b, &opts), Err(CodecError::LimitExceeded(_))));
     b[2] = 0;
     assert_eq!(detect(&b), None, "unsupported uncompressed encoding");
 }

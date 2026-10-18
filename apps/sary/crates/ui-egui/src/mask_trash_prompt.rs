@@ -8,10 +8,10 @@
 //! applies (or deletes the vector mask), `ui.dialog.set` with `"choice": "delete"` then
 //! `ui.dialog.confirm` deletes a layer mask, and `ui.dialog.cancel` keeps the mask.
 
-use photocraft_doc::LayerId;
+use sary_doc::LayerId;
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::mask_thumbs_ui::MaskKind;
 use crate::state::DialogKind;
 
@@ -35,7 +35,7 @@ pub fn drop_action(layer: u64, kind: MaskKind) -> (String, Value) {
 }
 
 /// Opens the prompt for a [`drop_action`]; `None` for every other command.
-pub fn intercept(app: &mut PhotocraftApp, command: &str, params: &Value) -> Option<Result<Value, String>> {
+pub fn intercept(app: &mut SaryApp, command: &str, params: &Value) -> Option<Result<Value, String>> {
     let vector = match command {
         LAYER_MASK_DELETE => false,
         VECTOR_MASK_DELETE => true,
@@ -75,12 +75,12 @@ pub fn can_apply(fields: &Map<String, Value>) -> bool {
 
 /// Runs the answer: the vector mask is deleted; for a layer mask `choice` "delete" deletes it and
 /// anything else applies it.
-pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, fields: &Map<String, Value>) -> Result<Value, String> {
     let state = app.session.active().ok_or(tl!("The document is closed"))?;
     let vector = is_vector(fields);
     let layer = fields.get("layer").and_then(Value::as_u64);
     let same = fields.get("document").and_then(Value::as_u64) == Some(state.doc.id.0);
-    let has_mask = |l: &photocraft_doc::Layer| if vector { l.vector_mask.is_some() } else { l.mask.is_some() };
+    let has_mask = |l: &sary_doc::Layer| if vector { l.vector_mask.is_some() } else { l.mask.is_some() };
     let Some(layer) = layer.filter(|id| same && state.doc.layer(LayerId(*id)).is_some_and(has_mask)) else {
         return Err(tl!("The layer or its mask changed. Drag the mask onto the Trash again.").into());
     };

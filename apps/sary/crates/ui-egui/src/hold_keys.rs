@@ -23,12 +23,12 @@
 //! temporary tool that started a drag lasts until the button is released, as in Photoshop.
 //!
 //! The keys are bindings, not commands: they come from
-//! [`photocraft_engine::prefs::TEMPORARY_TOOLS`] with Edit › Keyboard Shortcuts overrides on top
+//! [`sary_engine::prefs::TEMPORARY_TOOLS`] with Edit › Keyboard Shortcuts overrides on top
 //! (Tools › Temporary), and the reposition key is whatever the Hand key is.
 
 use egui::{InputState, KeyboardShortcut};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::shortcuts::parse;
 use crate::state::Tool;
 
@@ -104,7 +104,7 @@ pub fn cmd_moves(t: Tool) -> bool {
 /// Photoshop their ⌘ is the Move tool too, so ⌘-arrows move the selected pixels (or the layer)
 /// while the plain arrows move the outline. Not while a polygon or Magnetic Lasso border is in
 /// progress, during Free Transform or while editing text.
-pub fn cmd_nudges(app: &PhotocraftApp) -> bool {
+pub fn cmd_nudges(app: &SaryApp) -> bool {
     let t = app.ui.tool;
     let selecting = crate::tool_feedback::is_selection_tool(t);
     app.ui.transform.is_none()
@@ -114,23 +114,23 @@ pub fn cmd_nudges(app: &PhotocraftApp) -> bool {
 }
 
 /// Is ⌘ alone (no other temporary key) making the Move tool now?
-fn cmd_move_held(app: &PhotocraftApp, i: &InputState) -> bool {
+fn cmd_move_held(app: &SaryApp, i: &InputState) -> bool {
     i.modifiers.command && cmd_moves(app.ui.tool) && app.ui.transform.is_none() && app.ui.text_edit.is_none()
 }
 
 /// Is `id` a held temporary tool rather than a command?
 pub fn is_temporary(id: &str) -> bool {
-    photocraft_engine::prefs::TEMPORARY_TOOLS.iter().any(|t| t.0 == id)
+    sary_engine::prefs::TEMPORARY_TOOLS.iter().any(|t| t.0 == id)
 }
 
 /// The key binding of a temporary tool in effect (`None` when removed or unparsable).
-pub fn binding(app: &PhotocraftApp, t: Temporary) -> Option<KeyboardShortcut> {
+pub fn binding(app: &SaryApp, t: Temporary) -> Option<KeyboardShortcut> {
     binding_of(app, t.id())
 }
 
 /// [`binding`] by id.
-fn binding_of(app: &PhotocraftApp, id: &str) -> Option<KeyboardShortcut> {
-    let def = photocraft_engine::prefs::TEMPORARY_TOOLS.iter().find(|x| x.0 == id).map(|x| x.2);
+fn binding_of(app: &SaryApp, id: &str) -> Option<KeyboardShortcut> {
+    let def = sary_engine::prefs::TEMPORARY_TOOLS.iter().find(|x| x.0 == id).map(|x| x.2);
     parse(app.session.prefs().shortcut(id, def)?)
 }
 
@@ -149,7 +149,7 @@ fn held(i: &InputState, sc: &KeyboardShortcut) -> bool {
 /// The temporary tool whose key is held now, the most specific binding first (⌘Space before
 /// Space). Never while a text field has the keyboard, or while editing type on the canvas
 /// (Space must insert a space, not grab the Hand tool).
-pub fn held_tool(app: &PhotocraftApp, ctx: &egui::Context) -> Option<Temporary> {
+pub fn held_tool(app: &SaryApp, ctx: &egui::Context) -> Option<Temporary> {
     if ctx.text_edit_focused() || app.ui.text_edit.is_some() {
         return None;
     }
@@ -189,12 +189,12 @@ pub fn erases_while_held(t: Tool) -> bool {
 
 /// Is the erase key (`~` by default) held with a tool that [`erases_while_held`]? Never while a
 /// text field has the keyboard.
-pub fn erase_held(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn erase_held(app: &SaryApp, ctx: &egui::Context) -> bool {
     erases_while_held(app.ui.tool) && !ctx.text_edit_focused() && binding_of(app, ERASE).is_some_and(|sc| ctx.input(|i| held(i, &sc)))
 }
 
 /// Is the reposition key (the Hand key, any modifiers) down?
-pub fn reposition_held(app: &PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn reposition_held(app: &SaryApp, ctx: &egui::Context) -> bool {
     !ctx.text_edit_focused() && app.ui.text_edit.is_none() && binding(app, Temporary::Hand).is_some_and(|sc| ctx.input(|i| i.key_down(sc.logical_key)))
 }
 
@@ -211,7 +211,7 @@ fn latch_id() -> egui::Id {
 /// drawn (the key repositions it instead); a temporary tool that was in effect when the button
 /// went down stays until the button comes up, release included (the Move tool's release is
 /// what commits the move).
-pub fn for_frame(app: &PhotocraftApp, ctx: &egui::Context, drawing: bool) -> Option<Temporary> {
+pub fn for_frame(app: &SaryApp, ctx: &egui::Context, drawing: bool) -> Option<Temporary> {
     let (down, released) = ctx.input(|i| (i.pointer.primary_down(), i.pointer.primary_released()));
     let latched = ctx.data(|d| d.get_temp::<Option<Temporary>>(latch_id())).flatten();
     let t = if (down || released) && latched.is_some() {

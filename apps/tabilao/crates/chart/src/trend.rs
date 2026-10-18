@@ -5,7 +5,7 @@
 //! points where the transform is undefined (non-positive values) are skipped and R² is reported
 //! for the transformed fit. Polynomials solve the normal equations on centred, scaled x.
 
-use gridcraft_model::{Trendline, TrendlineKind};
+use tabilao_model::{Trendline, TrendlineKind};
 
 /// A fitted regression trendline.
 #[derive(Clone, Debug, PartialEq)]

@@ -17,7 +17,7 @@
 
 use std::sync::mpsc::Sender;
 
-use deckcraft_engine::{Mods, PointerEvent};
+use seho_engine::{Mods, PointerEvent};
 use serde_json::{Value, json};
 
 use crate::SlideApp;
@@ -150,7 +150,7 @@ pub fn handle(app: &mut SlideApp, ctx: &egui::Context, req: &ControlRequest) -> 
             let mut last = Value::Null;
             for e in events {
                 let kind = e.get("kind").and_then(Value::as_str).unwrap_or("");
-                let Some(kind) = deckcraft_mcp_kind(kind) else { return err(format!("unknown pointer kind `{kind}`")) };
+                let Some(kind) = seho_mcp_kind(kind) else { return err(format!("unknown pointer kind `{kind}`")) };
                 let (Some(x), Some(y)) = (e.get("x").and_then(Value::as_f64), e.get("y").and_then(Value::as_f64)) else {
                     return err("pointer events need x and y");
                 };
@@ -307,7 +307,7 @@ pub fn handle(app: &mut SlideApp, ctx: &egui::Context, req: &ControlRequest) -> 
             if i >= d.doc.slides.len() {
                 return err(format!("no slide {i}"));
             }
-            let (png, w, h) = deckcraft_engine::cmd::file::render_png(
+            let (png, w, h) = seho_engine::cmd::file::render_png(
                 &d.doc,
                 i,
                 p.get("scale").and_then(Value::as_f64).unwrap_or(1.0),
@@ -319,7 +319,7 @@ pub fn handle(app: &mut SlideApp, ctx: &egui::Context, req: &ControlRequest) -> 
                     Some(Err(e)) => err(e),
                     None => err("no writer"),
                 },
-                None => ok(json!({"png": deckcraft_engine::cmd::base64_encode(&png), "width": w, "height": h, "slide": i})),
+                None => ok(json!({"png": seho_engine::cmd::base64_encode(&png), "width": w, "height": h, "slide": i})),
             }
         }
         "ui.resize" => {
@@ -379,8 +379,8 @@ fn mods_from(p: &Value) -> Mods {
     Mods { shift: b("shift"), alt: b("alt"), cmd: b("cmd") || b("ctrl") }
 }
 
-fn deckcraft_mcp_kind(k: &str) -> Option<deckcraft_engine::PointerKind> {
-    use deckcraft_engine::PointerKind::*;
+fn seho_mcp_kind(k: &str) -> Option<seho_engine::PointerKind> {
+    use seho_engine::PointerKind::*;
     Some(match k {
         "down" => Down,
         "drag" => Drag,
@@ -393,17 +393,17 @@ fn deckcraft_mcp_kind(k: &str) -> Option<deckcraft_engine::PointerKind> {
     })
 }
 
-pub fn tool_kind(name: &str, preset: Option<&str>) -> Option<deckcraft_engine::ToolKind> {
-    use deckcraft_engine::ToolKind;
+pub fn tool_kind(name: &str, preset: Option<&str>) -> Option<seho_engine::ToolKind> {
+    use seho_engine::ToolKind;
     Some(match name {
         "select" | "selection" => ToolKind::Select,
         "textBox" | "text" => ToolKind::TextBox,
         "shape" => ToolKind::Shape { preset: preset.unwrap_or("rect").into() },
-        "pen" => ToolKind::Ink { mode: "pen".into(), color: deckcraft_color::Rgba::BLACK, width: 2.0 },
-        "highlighter" => ToolKind::Ink { mode: "highlighter".into(), color: deckcraft_color::Rgba::rgb(255, 230, 0), width: 10.0 },
-        "eraser" => ToolKind::Ink { mode: "eraser".into(), color: deckcraft_color::Rgba::BLACK, width: 2.0 },
-        other if deckcraft_geom::preset::info(other).is_some() => ToolKind::Shape { preset: other.into() },
-        other if deckcraft_engine::tools::is_freeform_tool(other) => ToolKind::Shape { preset: other.into() },
+        "pen" => ToolKind::Ink { mode: "pen".into(), color: seho_color::Rgba::BLACK, width: 2.0 },
+        "highlighter" => ToolKind::Ink { mode: "highlighter".into(), color: seho_color::Rgba::rgb(255, 230, 0), width: 10.0 },
+        "eraser" => ToolKind::Ink { mode: "eraser".into(), color: seho_color::Rgba::BLACK, width: 2.0 },
+        other if seho_geom::preset::info(other).is_some() => ToolKind::Shape { preset: other.into() },
+        other if seho_engine::tools::is_freeform_tool(other) => ToolKind::Shape { preset: other.into() },
         _ => return None,
     })
 }
@@ -411,10 +411,10 @@ pub fn tool_kind(name: &str, preset: Option<&str>) -> Option<deckcraft_engine::T
 pub fn save_screenshot(app: &mut SlideApp, image: &egui::ColorImage, path: Option<&str>) -> Value {
     let [w, h] = image.size;
     let rgba: Vec<u8> = image.pixels.iter().flat_map(|c| c.to_array()).collect();
-    let img = deckcraft_render::Image { width: w as u32, height: h as u32, pixels: rgba };
+    let img = seho_render::Image { width: w as u32, height: h as u32, pixels: rgba };
     let png = img.to_png();
     let Some(path) = path else {
-        return json!({"ok": true, "result": {"width": w, "height": h, "png": deckcraft_engine::cmd::base64_encode(&png)}});
+        return json!({"ok": true, "result": {"width": w, "height": h, "png": seho_engine::cmd::base64_encode(&png)}});
     };
     match app.services.write.as_mut() {
         Some(wr) => match wr(path, &png) {

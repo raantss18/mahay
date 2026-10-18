@@ -1,17 +1,17 @@
 //! TOOL-214-12: a live rectangle's corner radius widgets, as in Photoshop.
 
 use egui::Modifiers;
-use photocraft_doc::LayerContent;
-use photocraft_doc::vector::LiveShape;
+use sary_doc::LayerContent;
+use sary_doc::vector::LiveShape;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, tool_event};
 use crate::state::Tool;
 
 /// A 200 × 200 document at 100 % with a live rectangle at (40, 40), 120 × 80, radii 10.
-fn app(tool: Tool) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(tool: Tool) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.session.execute("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.sync_views();
     app.run("shape.create", json!({"kind": "roundedRect", "rect": [40, 40, 120, 80], "radii": 10})).unwrap();
@@ -19,7 +19,7 @@ fn app(tool: Tool) -> PhotocraftApp {
     app
 }
 
-fn radii(app: &PhotocraftApp) -> Option<[f64; 4]> {
+fn radii(app: &SaryApp) -> Option<[f64; 4]> {
     let st = app.session.active()?;
     let l = st.active_layer.and_then(|id| st.doc.layer(id))?;
     match &l.content {
@@ -31,11 +31,11 @@ fn radii(app: &PhotocraftApp) -> Option<[f64; 4]> {
     }
 }
 
-fn steps(app: &PhotocraftApp) -> usize {
+fn steps(app: &SaryApp) -> usize {
     app.session.active().unwrap().history.entries().len()
 }
 
-fn drag(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2], mods: Modifiers) {
+fn drag(app: &mut SaryApp, from: [f64; 2], to: [f64; 2], mods: Modifiers) {
     tool_event(app, ToolEvent::Down { x: from[0], y: from[1], pressure: 1.0 }, mods);
     tool_event(app, ToolEvent::Move { x: to[0], y: to[1], pressure: 1.0 }, mods);
     tool_event(app, ToolEvent::Up { x: to[0], y: to[1] }, mods);
@@ -98,8 +98,8 @@ fn only_live_rectangles_with_the_right_tools_take_the_press() {
     assert!(!super::pointer(&mut a, ToolEvent::Down { x: 100.0, y: 80.0, pressure: 1.0 }, Modifiers::NONE));
 }
 
-fn app_with(shape: serde_json::Value) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app_with(shape: serde_json::Value) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.session.execute("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.sync_views();
     app.run("shape.create", shape).unwrap();
@@ -109,8 +109,8 @@ fn app_with(shape: serde_json::Value) -> PhotocraftApp {
 
 /// Three live rectangles: (20, 20) 60 × 40 radii 5, (110, 20) 70 × 50 radii 0, and (20, 120)
 /// 80 × 60 radii 0, the last one left unselected. Returns the ids, bottom first.
-fn three(tool: Tool) -> (PhotocraftApp, Vec<photocraft_doc::LayerId>) {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn three(tool: Tool) -> (SaryApp, Vec<sary_doc::LayerId>) {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.session.execute("file.new", json!({"width": 200, "height": 200})).unwrap();
     app.sync_views();
     let mut ids = Vec::new();
@@ -124,7 +124,7 @@ fn three(tool: Tool) -> (PhotocraftApp, Vec<photocraft_doc::LayerId>) {
     (app, ids)
 }
 
-fn radii_of(app: &PhotocraftApp, id: photocraft_doc::LayerId) -> [f64; 4] {
+fn radii_of(app: &SaryApp, id: sary_doc::LayerId) -> [f64; 4] {
     match &app.session.active().unwrap().doc.layer(id).unwrap().content {
         LayerContent::Shape(sh) => match sh.live {
             Some(LiveShape::Rect { radii, .. }) => radii,

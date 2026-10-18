@@ -3,8 +3,8 @@
 //! The writer refuses mixed content and existing tags. Each text object becomes a paragraph,
 //! which can then be retagged with the existing tag-property tool after human review.
 
-use pdfcraft_content::{Op, parse, serialize_ops};
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, Stream};
+use taratasy_content::{Op, parse, serialize_ops};
+use taratasy_cos::{Dict, Document, ObjRef, Object, Stream};
 
 const MAX_PAGES: usize = 1_000;
 const MAX_PAGE_BYTES: usize = 16 * 1024 * 1024;
@@ -30,7 +30,7 @@ pub enum AutoTagError {
     #[error("the PDF has no document catalog")]
     NoCatalog,
     #[error(transparent)]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
 }
 
 struct Plan {
@@ -43,7 +43,7 @@ fn unsupported(page: usize, reason: impl Into<String>) -> AutoTagError {
     AutoTagError::Unsupported { page: page + 1, reason: reason.into() }
 }
 
-fn content_bytes(doc: &Document, page: &pdfcraft_model::Page, index: usize) -> Result<Vec<u8>, AutoTagError> {
+fn content_bytes(doc: &Document, page: &taratasy_model::Page, index: usize) -> Result<Vec<u8>, AutoTagError> {
     let Some(contents) = page.dict.get(b"Contents") else { return Ok(Vec::new()) };
     let resolved = doc.resolve(contents);
     let pieces: Vec<Object> = match &*resolved {
@@ -66,7 +66,7 @@ fn content_bytes(doc: &Document, page: &pdfcraft_model::Page, index: usize) -> R
             }
             stream.raw.to_vec()
         } else {
-            pdfcraft_filters::decode(&chain, &stream.raw, remaining)
+            taratasy_filters::decode(&chain, &stream.raw, remaining)
                 .map_err(|e| unsupported(index, format!("content cannot be decoded strictly: {e}")))?
         };
         all.extend_from_slice(&decoded);
@@ -142,7 +142,7 @@ fn plan(doc: &Document) -> Result<Vec<Plan>, AutoTagError> {
     if catalog.contains(b"AcroForm") {
         return Err(unsupported(0, "form fields need their own tags; this text-only action cannot tag them"));
     }
-    let pages = pdfcraft_model::pages(doc);
+    let pages = taratasy_model::pages(doc);
     if pages.len() > MAX_PAGES {
         return Err(AutoTagError::TooManyPages);
     }

@@ -9,9 +9,9 @@
 //! - Cut with a colour channel targeted copies that channel and fills the cut area of that channel
 //!   only with the background colour (#2698).
 
-use photocraft_color::{ColorMode, PixelFormat};
-use photocraft_doc::{Layer, LayerId};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat};
+use sary_doc::{Layer, LayerId};
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::channel_cmds::ChannelTarget;
@@ -105,7 +105,7 @@ pub(crate) fn paste(s: &mut Session, p: &Value, k: usize, in_place: bool, limit:
             let mut px = crate::allocation::read_region(surf, area, "pasting into a channel")?;
             for (i, (dst, s)) in px.chunks_exact_mut(n).zip(&rgba).enumerate() {
                 let w = s[3] * weight.as_ref().map_or(1.0, |(m, mk)| m.get(i * mk).copied().unwrap_or(0.0));
-                let v = photocraft_color::convert::rgb_to_gray([s[0], s[1], s[2]]);
+                let v = sary_color::convert::rgb_to_gray([s[0], s[1], s[2]]);
                 if let Some(c) = dst.get_mut(k) {
                     *c += (v - *c) * w.clamp(0.0, 1.0);
                 }

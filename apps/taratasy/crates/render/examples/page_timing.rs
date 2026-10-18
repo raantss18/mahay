@@ -1,5 +1,5 @@
 //! Times and hashes the renders the desktop canvas asks for on page 1 of a PDF, for before and after
-//! comparisons (storytold/pdfcraft#623, item 8).
+//! comparisons (raantss18/taratasy#623, item 8).
 //!
 //! Each round queues one scenario's requests on a render pool with the engine's worker count and
 //! prints the time to the first answer, the wall time, the slowest request, the text glyph count,
@@ -22,7 +22,7 @@ use std::error::Error;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use pdfcraft_render::{PageText, RenderConfig, RenderPool, RenderRequest, RenderedPage, RequestKind, Tile};
+use taratasy_render::{PageText, RenderConfig, RenderPool, RenderRequest, RenderedPage, RequestKind, Tile};
 
 /// The canvas's tile side in device pixels.
 const TILE: u32 = 1024;

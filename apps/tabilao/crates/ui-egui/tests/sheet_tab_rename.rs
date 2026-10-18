@@ -1,9 +1,9 @@
 //! Renaming a sheet tab: the name field must let go of the keyboard when the user is done (#145).
 
 use egui::{Event, Key, Modifiers, PointerButton};
-use gridcraft_engine::Session;
-use gridcraft_engine::core::CellRef;
-use gridcraft_ui_egui::{SheetApp, grid::Geo};
+use tabilao_engine::Session;
+use tabilao_engine::core::CellRef;
+use tabilao_ui_egui::{SheetApp, grid::Geo};
 
 fn harness() -> egui_kittest::Harness<'static, SheetApp> {
     let mut s = Session::new();

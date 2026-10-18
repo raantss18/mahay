@@ -13,8 +13,8 @@ use egui::{Ui, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
 
-use wordcraft_doc::section::LineNumberRestart;
-use wordcraft_engine::cmd::mailings::{ENVELOPE_SIZES, LABEL_PRODUCTS};
+use soratra_doc::section::LineNumberRestart;
+use soratra_engine::cmd::mailings::{ENVELOPE_SIZES, LABEL_PRODUCTS};
 
 use crate::WordApp;
 use crate::options::MeasureExt;
@@ -136,7 +136,7 @@ fn run(app: &mut WordApp, id: &str, params: Value) -> bool {
     }
 }
 
-fn unit() -> wordcraft_geom::Unit {
+fn unit() -> soratra_geom::Unit {
     crate::options::unit()
 }
 
@@ -159,7 +159,7 @@ pub struct LineNumbersForm {
 
 impl LineNumbersForm {
     pub fn read(app: &WordApp) -> LineNumbersForm {
-        let sp = wordcraft_engine::cmd::page::sect(&app.session);
+        let sp = soratra_engine::cmd::page::sect(&app.session);
         let l = sp.line_numbers.clone();
         let cur = l.clone().unwrap_or_default();
         LineNumbersForm {
@@ -296,7 +296,7 @@ pub struct ManualForm {
 impl ManualForm {
     /// From the selection, or from the start of the document.
     pub fn start(app: &mut WordApp) -> ManualForm {
-        let from = if app.session.sel.is_collapsed() { Value::Null } else { wordcraft_engine::cmd::pos_json(&app.session.sel.ordered().0) };
+        let from = if app.session.sel.is_collapsed() { Value::Null } else { soratra_engine::cmd::pos_json(&app.session.sel.ordered().0) };
         let from = if from.is_null() { json!({"block": 0, "off": 0}) } else { from };
         Self::next(app, from)
     }
@@ -695,11 +695,11 @@ impl FormulaForm {
         let s = &app.session;
         let (tp, r, c) = s.sel.focus.path.cell()?;
         let t = s.doc.table(s.sel.focus.story, &tp)?;
-        let lang = wordcraft_engine::cmd::default_lang(s);
+        let lang = soratra_engine::cmd::default_lang(s);
         let number = |row: Option<usize>, col: Option<usize>| {
             let cell = t.rows.get(row?)?.cells.get(col?)?;
             let text = cell.blocks.iter().filter_map(|b| b.as_para()).map(|p| p.plain_text()).collect::<Vec<_>>().join(" ");
-            wordcraft_doc::locale_number::parse_number(text.trim(), lang.as_deref())
+            soratra_doc::locale_number::parse_number(text.trim(), lang.as_deref())
         };
         let formula = if number(r.checked_sub(1), Some(c)).is_some() {
             "=SUM(ABOVE)"
@@ -852,14 +852,14 @@ impl SplitCellsForm {
     pub fn read(app: &WordApp) -> Option<SplitCellsForm> {
         let s = &app.session;
         let (tp, _, _) = s.sel.focus.path.cell()?;
-        let mut cells = wordcraft_engine::cmd::table::selected_cells(s);
+        let mut cells = soratra_engine::cmd::table::selected_cells(s);
         cells.sort_unstable();
         cells.dedup();
         let mut rows: Vec<usize> = cells.iter().map(|&(r, _)| r).collect();
         rows.dedup();
         let per_row = rows.iter().map(|&r| cells.iter().filter(|c| c.0 == r).count()).max().unwrap_or(1);
         // A vertically merged cell is one cell, however many rows it covers.
-        let targets = wordcraft_engine::cmd::table::split_targets(s);
+        let targets = soratra_engine::cmd::table::split_targets(s);
         let t = s.doc.table(s.sel.focus.story, &tp);
         let (span, height) = match (targets.as_slice(), t) {
             ([(top, g)], Some(t)) => t
@@ -973,7 +973,7 @@ pub struct TextToTableForm {
 impl TextToTableForm {
     /// The selected paragraphs; none when the selection can't be converted (a table inside it).
     pub fn read(app: &WordApp) -> Option<TextToTableForm> {
-        let lines = wordcraft_engine::cmd::table::text_table_lines(&app.session).ok()?;
+        let lines = soratra_engine::cmd::table::text_table_lines(&app.session).ok()?;
         // Tabs when the text has them, else paragraphs (Word doesn't guess commas).
         let separator = if lines.iter().any(|l| l.contains('\t')) { "tab" } else { "paragraph" };
         let mut f = TextToTableForm {
@@ -1001,14 +1001,14 @@ impl TextToTableForm {
 
     /// The column count the text gives with the chosen separator.
     pub fn guess_columns(&mut self) {
-        let cols = wordcraft_engine::cmd::table::text_table_cells(&self.lines, self.sep(), None).1;
+        let cols = soratra_engine::cmd::table::text_table_cells(&self.lines, self.sep(), None).1;
         self.columns = cols.clamp(1, 63) as u32;
         self.count_rows();
     }
 
     /// The row count for the chosen separator and columns.
     pub fn count_rows(&mut self) {
-        self.rows = wordcraft_engine::cmd::table::text_table_cells(&self.lines, self.sep(), Some(self.columns as usize)).0.len();
+        self.rows = soratra_engine::cmd::table::text_table_cells(&self.lines, self.sep(), Some(self.columns as usize)).0.len();
     }
 
     /// The initial column width in points: 0 for Auto, `None` when it isn't a measurement from
@@ -1018,7 +1018,7 @@ impl TextToTableForm {
         if text.is_empty() || text.eq_ignore_ascii_case("auto") || text == tl!("Auto") {
             return Some(0.0);
         }
-        wordcraft_geom::parse_measure(text, unit()).filter(|pt| (0.0..=22.0 * 72.0).contains(pt))
+        soratra_geom::parse_measure(text, unit()).filter(|pt| (0.0..=22.0 * 72.0).contains(pt))
     }
 
     /// Word's message when the initial column width is out of range (only with that option).
@@ -1098,14 +1098,14 @@ fn text_to_table_ui(app: &mut WordApp, ui: &mut Ui, f: &mut TextToTableForm) -> 
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_engine::Session;
+    use soratra_engine::Session;
 
     use super::*;
     use crate::dialogs::Dialog;
     use crate::{Services, WordApp};
 
     fn app() -> WordApp {
-        WordApp::new(Session::new(wordcraft_doc::Document::from_text("Dear Jo,\nThanks.")), Services::default())
+        WordApp::new(Session::new(soratra_doc::Document::from_text("Dear Jo,\nThanks.")), Services::default())
     }
 
     fn form(a: &mut WordApp) -> LayoutDialog {
@@ -1151,7 +1151,7 @@ mod tests {
         a.run("ui.dialog", json!({"name": "lineNumbers"})).unwrap();
         let LayoutDialog::LineNumbers(f) = form(&mut a) else { panic!("line numbers") };
         assert!(!f.auto_distance);
-        let cm = 18.0 / wordcraft_geom::PT_PER_CM;
+        let cm = 18.0 / soratra_geom::PT_PER_CM;
         assert!((f.distance - cm).abs() < 0.01, "distance was {} cm", f.distance);
         let sent = f.params()["distance"].as_f64().unwrap_or_default();
         assert!((sent - 18.0).abs() < 0.05, "params sent {sent} pt");
@@ -1159,7 +1159,7 @@ mod tests {
         a.run("layout.hyphenation", json!({"value": true, "zone": 36.0})).unwrap();
         a.run("ui.dialog", json!({"name": "hyphenation"})).unwrap();
         let LayoutDialog::Hyphenation(h) = form(&mut a) else { panic!("hyphenation") };
-        assert!((h.zone - 36.0 / wordcraft_geom::PT_PER_CM).abs() < 0.01, "zone was {} cm", h.zone);
+        assert!((h.zone - 36.0 / soratra_geom::PT_PER_CM).abs() < 0.01, "zone was {} cm", h.zone);
         let sent = h.params()["zone"].as_f64().unwrap_or_default();
         assert!((sent - 36.0).abs() < 0.05, "params sent {sent} pt");
     }
@@ -1190,14 +1190,14 @@ mod tests {
         for source in ["default", "paragraph", "character"] {
             let mut a = app();
             a.run("select.all", json!({})).unwrap();
-            let proofing = wordcraft_doc::CharProps { lang: Some("en-GB".into()), no_proof: Some(true), ..Default::default() };
+            let proofing = soratra_doc::CharProps { lang: Some("en-GB".into()), no_proof: Some(true), ..Default::default() };
             match source {
                 "default" => a.session.doc.styles.default_chr.overlay(&proofing),
                 "paragraph" => a.session.doc.styles.styles.iter_mut().find(|s| s.id == "Normal").unwrap().chr.overlay(&proofing),
                 _ => {
-                    a.session.doc.styles.styles.push(wordcraft_doc::Style {
+                    a.session.doc.styles.styles.push(soratra_doc::Style {
                         id: "ProofingCharacter".into(),
-                        kind: wordcraft_doc::StyleKind::Character,
+                        kind: soratra_doc::StyleKind::Character,
                         chr: proofing,
                         ..Default::default()
                     });
@@ -1270,7 +1270,7 @@ mod tests {
         let secs = a.session.doc.sections();
         assert_eq!(secs.len(), 2);
         assert!((secs[0].1.page_w - 623.6).abs() < 0.1);
-        assert!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).contains("Thanks."));
+        assert!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).contains("Thanks."));
     }
 
     /// A table `cols` wide, typed cell by cell (empty cells are skipped over); the caret ends in
@@ -1292,7 +1292,7 @@ mod tests {
     fn fields(a: &WordApp) -> Vec<(String, String)> {
         let mut out = Vec::new();
         a.session.doc.objects_in_reading_order(&mut |o| {
-            if let wordcraft_doc::InlineObject::Field { instr, result, .. } = o {
+            if let soratra_doc::InlineObject::Field { instr, result, .. } = o {
                 out.push((instr.clone(), result.clone()));
             }
         });
@@ -1382,7 +1382,7 @@ mod tests {
         // The merged cell spans both rows; its two parts do too.
         assert_eq!(table_shape(&a), [2, 2], "merged into one cell, then split in two");
         let t = a.session.doc.body.iter().find_map(|b| b.as_table()).unwrap();
-        assert!(t.rows[1].cells.iter().all(|c| c.props.vmerge == wordcraft_doc::props::VMerge::Continue));
+        assert!(t.rows[1].cells.iter().all(|c| c.props.vmerge == soratra_doc::props::VMerge::Continue));
 
         let mut a = app();
         a.run("ui.dialog", json!({"name": "splitCells"})).unwrap();
@@ -1453,7 +1453,7 @@ mod tests {
     /// from the text, the row count follows the columns, and OK converts with the settings.
     #[test]
     fn text_to_table_opens_its_dialog() {
-        let mut a = WordApp::new(Session::new(wordcraft_doc::Document::from_text("a\tb\tc\nd")), Services::default());
+        let mut a = WordApp::new(Session::new(soratra_doc::Document::from_text("a\tb\tc\nd")), Services::default());
         a.run("select.all", json!({})).unwrap();
         assert_eq!(a.run("table.fromText", json!({})).unwrap(), json!({"pending": "textToTable"}));
         assert!(a.session.doc.body.iter().all(|b| b.as_table().is_none()), "nothing converted yet");
@@ -1487,7 +1487,7 @@ mod tests {
         assert_eq!((f.separator.as_str(), f.columns, f.rows), ("paragraph", 1, 2), "a comma in one paragraph only");
 
         // Word opens comma text on Paragraphs too; Commas counts the columns, short lines pad.
-        let mut a = WordApp::new(Session::new(wordcraft_doc::Document::from_text("a,b,c\nd,e,f\ng,h\ni")), Services::default());
+        let mut a = WordApp::new(Session::new(soratra_doc::Document::from_text("a,b,c\nd,e,f\ng,h\ni")), Services::default());
         a.run("select.all", json!({})).unwrap();
         a.run("table.fromText", json!({})).unwrap();
         let LayoutDialog::TextToTable(mut f) = form(&mut a) else { panic!("text to table") };
@@ -1528,7 +1528,7 @@ mod tests {
         f.product = LABEL_PRODUCTS.iter().position(|p| p.id == "a4-3x8").unwrap();
         let r = a.session.run("mailings.labels", &f.params()).unwrap();
         assert_eq!(r["labels"], 24);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).matches("Ada Lovelace").count(), 24);
+        assert_eq!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).matches("Ada Lovelace").count(), 24);
         f.single = true;
         (f.row, f.col) = (3, 2);
         assert_eq!(a.session.run("mailings.labels", &f.params()).unwrap()["filled"], 1);

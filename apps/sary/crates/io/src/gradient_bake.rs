@@ -12,7 +12,7 @@
 //! pairs: the same curve for each pair, and Smoothness doesn't change it). The curve fits no simple
 //! formula, so it is kept as the measured table [`SMOOTH_EASE`].
 
-use photocraft_color::{Color, ColorMode};
+use sary_color::{Color, ColorMode};
 
 /// Photoshop's gradient interpolation methods.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -1,5 +1,5 @@
 //! Confirmation for a Layers-panel trash-button click; other deletion routes stay immediate.
-use crate::{PhotocraftApp, state::DialogKind};
+use crate::{SaryApp, state::DialogKind};
 use serde_json::{Map, Value, json};
 const MARK: &str = "__deleteLayer";
 const PREF: &str = "layer.delete.confirmation";
@@ -8,7 +8,7 @@ pub fn owns(fields: &Map<String, Value>) -> bool {
     fields.contains_key(MARK)
 }
 
-pub fn intercept(app: &mut PhotocraftApp, command: &str, params: &Value) -> Option<Result<Value, String>> {
+pub fn intercept(app: &mut SaryApp, command: &str, params: &Value) -> Option<Result<Value, String>> {
     if app.automation_input
         || command != "layer.delete"
         || params.get("__trash").and_then(Value::as_bool) != Some(true)
@@ -18,7 +18,7 @@ pub fn intercept(app: &mut PhotocraftApp, command: &str, params: &Value) -> Opti
     }
     let state = app.session.active()?;
     let selected = state.selected_layers();
-    let ids = if let Some(id) = params.get("layer").and_then(Value::as_u64) { vec![photocraft_doc::LayerId(id)] } else { selected.clone() };
+    let ids = if let Some(id) = params.get("layer").and_then(Value::as_u64) { vec![sary_doc::LayerId(id)] } else { selected.clone() };
     if ids.is_empty() {
         return None;
     }
@@ -45,7 +45,7 @@ pub fn body(ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
     fields.insert("skip".into(), json!(skip));
 }
 
-pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, fields: &Map<String, Value>) -> Result<Value, String> {
     let state = app.session.active().ok_or(tl!("The document is closed"))?;
     if fields.get("document").and_then(Value::as_u64) != Some(state.doc.id.0)
         || fields.get("selected") != Some(&json!(state.selected_layers().iter().map(|id| id.0).collect::<Vec<_>>()))
@@ -73,11 +73,11 @@ pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<V
 mod tests {
     use super::*;
     use egui_kittest::kittest::Queryable;
-    fn make_app() -> PhotocraftApp {
-        let mut s = photocraft_engine::Session::new();
+    fn make_app() -> SaryApp {
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width":8,"height":8})).unwrap();
         s.execute("layer.new.layer", json!({"name":"Ink"})).unwrap();
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::new(s, crate::Services::default())
     }
     #[test]
     fn cancel_keeps_layer_and_confirmation_preference() {
@@ -114,10 +114,10 @@ mod tests {
         assert!(app.session.active().unwrap().doc.layer(target).is_some());
         let text = saved.borrow().clone();
         assert!(text.contains(PREF));
-        let mut session = photocraft_engine::Session::new();
+        let mut session = sary_engine::Session::new();
         session.execute("file.new", json!({"width":8,"height":8})).unwrap();
         session.execute("layer.new.layer", json!({"name":"Fresh"})).unwrap();
-        let mut fresh = PhotocraftApp::new(session, crate::Services { load_prefs: Some(Box::new(move || Some(text.clone()))), ..Default::default() });
+        let mut fresh = SaryApp::new(session, crate::Services { load_prefs: Some(Box::new(move || Some(text.clone()))), ..Default::default() });
         fresh.run("layer.delete", json!({"__trash":true})).unwrap();
         assert!(fresh.ui.dialogs.is_empty());
     }
@@ -135,7 +135,7 @@ mod tests {
     #[test]
     fn only_trash_click_prompts_and_default_delete_binding_is_unchanged() {
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             make_app()
         });
         h.run_steps(4);
@@ -149,8 +149,8 @@ mod tests {
         h.state_mut().run("layer.delete", json!({})).unwrap();
         assert!(h.state().ui.dialogs.is_empty());
         assert!(h.state().session.active().unwrap().doc.layer(id).is_none());
-        let clear = photocraft_engine::commands::find("edit.clear").unwrap();
-        let delete = photocraft_engine::commands::find("layer.delete").unwrap();
+        let clear = sary_engine::commands::find("edit.clear").unwrap();
+        let delete = sary_engine::commands::find("layer.delete").unwrap();
         assert_eq!(clear.shortcut, Some("Delete"));
         assert_eq!(delete.shortcut, None);
     }

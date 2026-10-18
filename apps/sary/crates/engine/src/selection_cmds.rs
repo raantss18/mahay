@@ -2,10 +2,10 @@
 //! (expand/contract/border/smooth/feather), Grow, Similar, Lasso.
 //! Selections are grayscale coverage surfaces clipped to the canvas.
 
-use photocraft_algo::selection::{self as sel, SelectionMode};
-use photocraft_doc::Document;
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_algo::selection::{self as sel, SelectionMode};
+use sary_doc::Document;
+use sary_geom::Rect;
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -60,7 +60,7 @@ fn sample_pixels(s: &Session, all_layers: bool) -> Result<(Rect, Vec<[f32; 4]>)>
             surf.read_rgba_into(area, &mut px);
             Ok((area, px))
         }
-        _ => Ok((area, photocraft_compose::render(&d.doc, area).px)),
+        _ => Ok((area, sary_compose::render(&d.doc, area).px)),
     }
 }
 
@@ -114,7 +114,7 @@ pub(crate) fn sample_rgba8(s: &Session, all_layers: bool) -> Result<(Rect, Vec<[
         (false, Some(surf)) => Ok((area, sel::rgba8_image(surf, area))),
         _ => {
             let q = |v: f32| (v.clamp(0.0, 1.0) * 255.0 + 0.5) as u8;
-            Ok((area, photocraft_compose::render(&d.doc, area).px.iter().map(|p| p.map(q)).collect()))
+            Ok((area, sary_compose::render(&d.doc, area).px.iter().map(|p| p.map(q)).collect()))
         }
     }
 }
@@ -173,10 +173,10 @@ fn eyedropper_samples(p: &Value, key: &str, area: Rect, px: &[[f32; 4]], bad: &i
 }
 
 /// Composite RGB (the compositor's output profile for the document) → CIE Lab D50.
-fn lab_transform(s: &Session) -> Result<std::sync::Arc<photocraft_cms::Transform>> {
+fn lab_transform(s: &Session) -> Result<std::sync::Arc<sary_cms::Transform>> {
     let d = s.active().ok_or(EngineError::NoDocument)?;
     let src = crate::color_cmds::composite_profile(&d.doc);
-    photocraft_cms::cached(&src, photocraft_cms::Builtin::LabD50.profile(), photocraft_cms::TransformOptions::default())
+    sary_cms::cached(&src, sary_cms::Builtin::LabD50.profile(), sary_cms::TransformOptions::default())
         .map_err(|e| EngineError::Other(format!("colour management: {e}")))
 }
 
@@ -185,14 +185,14 @@ fn decode_lab(v: [f32; 3]) -> [f32; 3] {
     [v[0] * 100.0, v[1] * 255.0 - 128.0, v[2] * 255.0 - 128.0]
 }
 
-fn colour_to_lab(t: &photocraft_cms::Transform, rgb: [f32; 3]) -> [f32; 3] {
+fn colour_to_lab(t: &sary_cms::Transform, rgb: [f32; 3]) -> [f32; 3] {
     let mut out = [0.0f32; 3];
     t.eval(&rgb.map(|v| v.clamp(0.0, 1.0)), &mut out);
     decode_lab(out)
 }
 
 /// RGBA pixels → Lab + alpha (L, a, b, alpha).
-fn pixels_to_lab(t: &photocraft_cms::Transform, px: &[[f32; 4]]) -> Vec<[f32; 4]> {
+fn pixels_to_lab(t: &sary_cms::Transform, px: &[[f32; 4]]) -> Vec<[f32; 4]> {
     let src: Vec<[f32; 4]> = px.iter().map(|p| [p[0].clamp(0.0, 1.0), p[1].clamp(0.0, 1.0), p[2].clamp(0.0, 1.0), p[3]]).collect();
     let mut out = vec![[0.0f32; 4]; px.len()];
     t.convert_f32(src.as_flattened(), 4, out.as_flattened_mut(), 4, true);
@@ -206,7 +206,7 @@ fn pixels_to_lab(t: &photocraft_cms::Transform, px: &[[f32; 4]]) -> Vec<[f32; 4]
 /// Prepared Sampled Colors query shared by the command and its interactive preview.
 /// Samples always come from the original document; reducing an image must not change them.
 pub struct ColorRangeSamples {
-    to_lab: std::sync::Arc<photocraft_cms::Transform>,
+    to_lab: std::sync::Arc<sary_cms::Transform>,
     range: sel::LabRange,
     grid: bool,
     fuzziness: f32,
@@ -249,7 +249,7 @@ impl ColorRangeSamples {
                 };
                 let px = match pixel {
                     Some(px) => px,
-                    None => photocraft_compose::render(doc, r).px.first().copied().unwrap_or([0.0; 4]),
+                    None => sary_compose::render(doc, r).px.first().copied().unwrap_or([0.0; 4]),
                 };
                 samples.push(sel::RangeSample { color: [px[0], px[1], px[2]], at: Some(((x - area.x0) as f32, (y - area.y0) as f32)) });
             }
@@ -304,9 +304,9 @@ impl ColorRangeSamples {
         // "Subtract from Sample" reshapes it (sel::LabRange::subtract).
         let to_lab = lab_transform(s)?;
         // 8-bit documents are compared on the 8-bit Lab grid, samples and pixels alike.
-        let grid = s.active().is_some_and(|d| d.doc.depth == photocraft_doc::SampleType::U8);
+        let grid = s.active().is_some_and(|d| d.doc.depth == sary_doc::SampleType::U8);
         let q = |c: [f32; 3]| if grid { sel::quantize_lab8(c) } else { c };
-        let colour_to_lab = |t: &photocraft_cms::Transform, c: [f32; 3]| q(colour_to_lab(t, c));
+        let colour_to_lab = |t: &sary_cms::Transform, c: [f32; 3]| q(colour_to_lab(t, c));
         let foreground = || {
             let [r, g, b, _] = s.tools.foreground;
             sel::LabRange::point(colour_to_lab(&to_lab, [r, g, b]))
@@ -764,11 +764,11 @@ mod tests {
     fn selection_sampling_refuses_oversized_canvases_before_reading_pixels() {
         let mut s = Session::new();
         s.add_document(
-            photocraft_doc::Document::new(
+            sary_doc::Document::new(
                 "large",
-                photocraft_geom::Size::new(300_000, 300_000),
-                photocraft_color::ColorMode::Rgb,
-                photocraft_color::SampleType::U8,
+                sary_geom::Size::new(300_000, 300_000),
+                sary_color::ColorMode::Rgb,
+                sary_color::SampleType::U8,
             ),
             None,
         );
@@ -795,13 +795,13 @@ mod tests {
     #[test]
     fn modify_rejects_oversized_canvases_before_reading_the_mask() {
         let mut s = Session::new();
-        let mut doc = photocraft_doc::Document::new(
+        let mut doc = sary_doc::Document::new(
             "large",
-            photocraft_geom::Size::new(300_000, 300_000),
-            photocraft_color::ColorMode::Rgb,
-            photocraft_color::SampleType::U8,
+            sary_geom::Size::new(300_000, 300_000),
+            sary_color::ColorMode::Rgb,
+            sary_color::SampleType::U8,
         );
-        let mut selection = photocraft_raster::Surface::new(photocraft_color::PixelFormat::GRAY8);
+        let mut selection = sary_raster::Surface::new(sary_color::PixelFormat::GRAY8);
         selection.write_pixel(0, 0, &[1.0]);
         doc.selection = Some(selection);
         s.add_document(doc, None);
@@ -937,9 +937,9 @@ mod tests {
 
     #[test]
     fn color_range_prepared_query_matches_the_command_at_all_depths() {
-        use photocraft_doc::{Color, ColorMode, SampleType, Size};
+        use sary_doc::{Color, ColorMode, SampleType, Size};
         for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
-            for profile in [None, Some(photocraft_cms::Builtin::DisplayP3.profile().to_bytes())] {
+            for profile in [None, Some(sary_cms::Builtin::DisplayP3.profile().to_bytes())] {
                 let mut doc = Document::with_background("samples", Size::new(24, 12), ColorMode::Rgb, depth, Color::WHITE);
                 doc.icc_profile = profile;
                 let layer = doc.layers[0].surface_mut().unwrap();
@@ -955,7 +955,7 @@ mod tests {
                     clear_selection(&mut s);
                     let q = ColorRangeSamples::new(&s, &p).unwrap();
                     let doc = s.active().unwrap().doc.clone();
-                    let pixels = photocraft_compose::render(&doc, doc.bounds());
+                    let pixels = sary_compose::render(&doc, doc.bounds());
                     let preview = q.coverage(&pixels.px, 24, 1.0, [0.0, 0.0]);
                     s.execute("select.colorRange", p).unwrap();
                     let actual = current_mask(&s.active().unwrap().doc).1;
@@ -970,7 +970,7 @@ mod tests {
 
     #[test]
     fn color_range_prepared_query_samples_visible_layers_not_the_active_layer() {
-        use photocraft_doc::{Layer, LayerContent};
+        use sary_doc::{Layer, LayerContent};
         let mut s = session_colours();
         let doc = s.active().unwrap().doc.clone();
         let mut top = Layer::new("blue foreground", LayerContent::Raster(doc.layers[0].surface().unwrap().clone()));

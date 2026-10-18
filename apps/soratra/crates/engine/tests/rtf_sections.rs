@@ -6,7 +6,7 @@
 
 use std::io::Read;
 
-use wordcraft_engine::io;
+use soratra_engine::io;
 
 const RTF: &str = r"{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0 Times New Roman;}}
 \paperw11906\paperh16838\margl1134\margr1134\margt1417\margb1134

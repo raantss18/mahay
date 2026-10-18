@@ -14,10 +14,10 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use egui::{Color32, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
-use photocraft_doc::{DocId, Document};
+use sary_doc::{DocId, Document};
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 use crate::theme::Tokens;
 use crate::widgets;
@@ -87,8 +87,8 @@ pub fn controls(f: &Map<String, Value>) -> Controls {
 
 /// Open the dialog with Photoshop's defaults (Sampled Colors, Fuzziness 40, the foreground colour
 /// as the sample until the eyedropper picks one).
-pub fn open(app: &mut PhotocraftApp) -> u64 {
-    let label = photocraft_engine::commands::find(COMMAND).map_or(tl!("Color Range…"), |c| c.label);
+pub fn open(app: &mut SaryApp) -> u64 {
+    let label = sary_engine::commands::find(COMMAND).map_or(tl!("Color Range…"), |c| c.label);
     let mut f = Map::new();
     f.insert("__colorRange".into(), json!(true));
     f.insert("__label".into(), json!(label));
@@ -159,7 +159,7 @@ pub fn params(f: &Map<String, Value>) -> Value {
 }
 
 /// OK: run the command on the document (one history step).
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     app.color_range = None;
     app.run(COMMAND, params(f))
 }
@@ -186,7 +186,7 @@ fn hash(text: &str) -> u64 {
     text.bytes().fold(0xcbf2_9ce4_8422_2325u64, |h, b| (h ^ u64::from(b)).wrapping_mul(0x100_0000_01b3))
 }
 
-fn query_key(app: &PhotocraftApp, params: &Value) -> u64 {
+fn query_key(app: &SaryApp, params: &Value) -> u64 {
     let mut key = std::collections::hash_map::DefaultHasher::new();
     params.to_string().hash(&mut key);
     let foreground = app.session.tools.foreground;
@@ -211,7 +211,7 @@ fn scope_preview(proxy: &Document, params: &Value, mask: &mut [f32]) {
         return;
     }
     if let Some(selection) = proxy.selection.as_ref() {
-        let prior = photocraft_algo::selection::mask_from_surface(Some(selection), proxy.bounds());
+        let prior = sary_algo::selection::mask_from_surface(Some(selection), proxy.bounds());
         for (value, bound) in mask.iter_mut().zip(prior) {
             *value = value.min(bound);
         }
@@ -220,12 +220,12 @@ fn scope_preview(proxy: &Document, params: &Value, mask: &mut [f32]) {
 
 /// The selection mask `params` would make, on the proxy: the engine command run on a scratch
 /// session (Out Of Gamut uses the document's own proof setup).
-fn proxy_mask(app: &PhotocraftApp, proxy: &Document, k: u32, params: &Value) -> Result<Vec<f32>, String> {
+fn proxy_mask(app: &SaryApp, proxy: &Document, k: u32, params: &Value) -> Result<Vec<f32>, String> {
     let area = proxy.bounds();
     if params.get("select").and_then(Value::as_str).unwrap_or("sampledColors") == "sampledColors" {
         // Pick on the original document, not the thumbnail's nearest retained pixel. The
         // prepared Lab query is the same one the command uses at full resolution.
-        let query = photocraft_engine::selection_cmds::ColorRangeSamples::new(&app.session, params).map_err(|e| e.to_string())?;
+        let query = sary_engine::selection_cmds::ColorRangeSamples::new(&app.session, params).map_err(|e| e.to_string())?;
         // Like the command (and OK): `sampleAllLayers: false` judges the active layer's own
         // pixels, otherwise the composite.
         let all_layers = params.get("sampleAllLayers").and_then(Value::as_bool).unwrap_or(true);
@@ -236,7 +236,7 @@ fn proxy_mask(app: &PhotocraftApp, proxy: &Document, k: u32, params: &Value) -> 
                 surf.read_rgba_into(area, &mut px);
                 px
             }
-            _ => photocraft_compose::render(proxy, area).px,
+            _ => sary_compose::render(proxy, area).px,
         };
         let invert = params.get("invert").and_then(Value::as_bool).unwrap_or(false);
         let mut mask: Vec<f32> = query
@@ -253,7 +253,7 @@ fn proxy_mask(app: &PhotocraftApp, proxy: &Document, k: u32, params: &Value) -> 
     }
     if params.get("select").and_then(Value::as_str) == Some("outOfGamut") {
         let pv = app.session.color.proof(proxy.id);
-        let (m, _) = photocraft_engine::color_cmds::gamut_mask(proxy, &pv.setup, pv.gamut_threshold).map_err(|e| e.to_string())?;
+        let (m, _) = sary_engine::color_cmds::gamut_mask(proxy, &pv.setup, pv.gamut_threshold).map_err(|e| e.to_string())?;
         let invert = params.get("invert").and_then(Value::as_bool).unwrap_or(false);
         let mut mask: Vec<f32> = m.iter().map(|v| f32::from(*v) / 255.0).map(|v| if invert { 1.0 - v } else { v }).collect();
         scope_preview(proxy, params, &mut mask);
@@ -276,7 +276,7 @@ fn proxy_mask(app: &PhotocraftApp, proxy: &Document, k: u32, params: &Value) -> 
             }
         }
     }
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.tools = app.session.tools.clone();
     // Preserve the proxy's pre-existing selection so preview and OK use the same scope.
     s.add_document(proxy.clone(), None);
@@ -285,11 +285,11 @@ fn proxy_mask(app: &PhotocraftApp, proxy: &Document, k: u32, params: &Value) -> 
     }
     s.execute(COMMAND, p).map_err(|e| e.to_string())?;
     let d = s.active().ok_or("no preview document")?;
-    Ok(photocraft_algo::selection::mask_from_surface(d.doc.selection.as_ref(), area))
+    Ok(sary_algo::selection::mask_from_surface(d.doc.selection.as_ref(), area))
 }
 
 /// Record why the preview failed (logged once per new reason), or clear it.
-fn report(app: &mut PhotocraftApp, error: Option<String>) {
+fn report(app: &mut SaryApp, error: Option<String>) {
     let Some(p) = app.color_range.as_mut() else { return };
     if p.error != error {
         if let Some(e) = &error {
@@ -301,7 +301,7 @@ fn report(app: &mut PhotocraftApp, error: Option<String>) {
 
 /// Refresh the cached proxy / textures for the active document and the dialog's params. Returns
 /// (texture to show, its size in proxy pixels, k).
-fn preview(app: &mut PhotocraftApp, ctx: &egui::Context, f: &Map<String, Value>) -> Option<(egui::TextureId, [usize; 2], u32)> {
+fn preview(app: &mut SaryApp, ctx: &egui::Context, f: &Map<String, Value>) -> Option<(egui::TextureId, [usize; 2], u32)> {
     let (doc_id, revision, doc) = {
         let st = app.session.active()?;
         (st.doc.id, st.revision, st.doc.clone())
@@ -334,7 +334,7 @@ fn preview(app: &mut PhotocraftApp, ctx: &egui::Context, f: &Map<String, Value>)
     let (w, h) = (proxy.size.width as usize, proxy.size.height as usize);
     if image_view {
         if app.color_range.as_ref().is_some_and(|p| p.image.is_none()) {
-            let buf = photocraft_compose::thumbnail_buffer(&proxy, proxy.size.width.max(proxy.size.height));
+            let buf = sary_compose::thumbnail_buffer(&proxy, proxy.size.width.max(proxy.size.height));
             let thumb = match app.session.color.canvas_display(&proxy) {
                 Ok(display) => display.to_rgba8(&buf),
                 Err(e) => {
@@ -417,7 +417,7 @@ fn set_points(f: &mut Map<String, Value>, k: &str, pts: &[[f64; 2]]) {
 }
 
 /// Dialog body.
-pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+pub fn body(app: &mut SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     let t = Tokens::get(ui.ctx());
     let c = controls(f);
     let select = s(f, "select", "sampledColors").to_string();
@@ -591,7 +591,7 @@ fn overlay_pixel(mode: &str, coverage: f32) -> Color32 {
 
 /// Photoshop's Selection Preview on the image, shared by CPU/GPU canvases and all platforms.
 /// This never edits the real selection, image, channels or history; closing the dialog removes it.
-pub(crate) fn paint_selection_preview(app: &mut PhotocraftApp, ctx: &egui::Context, painter: &egui::Painter, doc: DocId, image: Rect, flip: bool) {
+pub(crate) fn paint_selection_preview(app: &mut SaryApp, ctx: &egui::Context, painter: &egui::Painter, doc: DocId, image: Rect, flip: bool) {
     let Some(fields) = app.ui.dialogs.last().filter(|d| owns(&d.fields)).map(|d| d.fields.clone()) else { return };
     let mode = s(&fields, "__selectionPreview", "none");
     if mode == "none" || !app.session.active().is_some_and(|st| st.doc.id == doc) {
@@ -636,14 +636,14 @@ pub(crate) fn paint_selection_preview(app: &mut PhotocraftApp, ctx: &egui::Conte
 }
 
 /// The top dialog's fields when it is Color Range in a mode that takes eyedropper samples.
-fn sampling_top(app: &PhotocraftApp) -> Option<Map<String, Value>> {
+fn sampling_top(app: &SaryApp) -> Option<Map<String, Value>> {
     app.ui.dialogs.last().map(|d| &d.fields).filter(|f| owns(f) && controls(f).sampling).cloned()
 }
 
 /// The dialog's eyedropper on the canvas: with Color Range › Sampled Colors as the top dialog,
 /// picks the colour at document point `at` (Shift adds to the sample, Alt subtracts), as a click
 /// on the image does in Photoshop. Returns whether it picked.
-pub fn pick_top(app: &mut PhotocraftApp, at: [f64; 2], mods: egui::Modifiers) -> bool {
+pub fn pick_top(app: &mut SaryApp, at: [f64; 2], mods: egui::Modifiers) -> bool {
     let Some(mut f) = sampling_top(app) else { return false };
     let Some(doc) = app.session.active().map(|st| &st.doc) else { return false };
     if !at[0].is_finite() || !at[1].is_finite() || at[0] < 0.0 || at[1] < 0.0 || at[0] >= f64::from(doc.size.width) || at[1] >= f64::from(doc.size.height) {
@@ -662,7 +662,7 @@ pub fn pick_top(app: &mut PhotocraftApp, at: [f64; 2], mods: egui::Modifiers) ->
 /// The canvas under an open Color Range dialog is its eyedropper (Photoshop): the pointer `over`
 /// shows the dialog's eyedropper (+ / − while Shift / Alt add or subtract), and a press at document
 /// point `press` takes a sample. False when Color Range isn't the top dialog.
-pub fn canvas_eyedropper(app: &mut PhotocraftApp, ctx: &egui::Context, over: egui::Pos2, press: Option<[f64; 2]>) -> bool {
+pub fn canvas_eyedropper(app: &mut SaryApp, ctx: &egui::Context, over: egui::Pos2, press: Option<[f64; 2]>) -> bool {
     let Some(f) = sampling_top(app) else { return false };
     let mods = ctx.input(|i| i.modifiers);
     let tool = if mods.shift {
@@ -672,7 +672,7 @@ pub fn canvas_eyedropper(app: &mut PhotocraftApp, ctx: &egui::Context, over: egu
     } else {
         s(&f, "__tool", "sample")
     };
-    if app.session.prefs().cursors.other == photocraft_engine::prefs::OtherCursor::Precise {
+    if app.session.prefs().cursors.other == sary_engine::prefs::OtherCursor::Precise {
         ctx.set_cursor_icon(egui::CursorIcon::Crosshair);
     } else {
         // The tip of the icon's pipette is at (2, 22) of its 24-unit box (as the Color Picker's).
@@ -700,7 +700,7 @@ pub fn canvas_eyedropper(app: &mut PhotocraftApp, ctx: &egui::Context, over: egu
 
 /// An eyedropper click at document pixel `at`: the plain eyedropper replaces the samples, the
 /// + one (or Shift) adds one, the − one (or Alt) subtracts one.
-pub fn pick(app: &PhotocraftApp, f: &mut Map<String, Value>, at: [f64; 2], mods: egui::Modifiers) {
+pub fn pick(app: &SaryApp, f: &mut Map<String, Value>, at: [f64; 2], mods: egui::Modifiers) {
     let Some(st) = app.session.active() else { return };
     let (w, h) = (f64::from(st.doc.size.width.max(1)), f64::from(st.doc.size.height.max(1)));
     let [x, y] = at;
@@ -751,26 +751,26 @@ mod tests {
         Harness,
         kittest::{NodeT, Queryable},
     };
-    use photocraft_doc::{Color, ColorMode, SampleType, Size};
-    use photocraft_geom::Rect as GRect;
+    use sary_doc::{Color, ColorMode, SampleType, Size};
+    use sary_geom::Rect as GRect;
 
     /// 40 × 30: red block (0..20, 0..15), blue block (20..40, 0..15), black and white below.
-    fn app_with_doc() -> PhotocraftApp {
+    fn app_with_doc() -> SaryApp {
         let mut doc = Document::with_background("cr", Size::new(40, 30), ColorMode::Rgb, SampleType::U8, Color::WHITE);
         let bg = doc.layers[0].surface_mut().unwrap();
         bg.fill_rect(GRect::new(0, 0, 20, 15), &[1.0, 0.0, 0.0, 1.0]);
         bg.fill_rect(GRect::new(20, 0, 40, 15), &[0.0, 0.0, 1.0, 1.0]);
         bg.fill_rect(GRect::new(0, 15, 20, 30), &[0.0, 0.0, 0.0, 1.0]);
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.add_document(doc, None);
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::new(s, crate::Services::default())
     }
 
-    fn coverage(app: &PhotocraftApp, x: i32, y: i32) -> f32 {
+    fn coverage(app: &SaryApp, x: i32, y: i32) -> f32 {
         app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |s| s.sample_channel(x, y, 0))
     }
 
-    fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+    fn harness(app: SaryApp) -> Harness<'static, SaryApp> {
         let mut h = Harness::builder().with_size(egui::vec2(1200.0, 900.0)).build_ui_state(
             |ui, app| {
                 crate::menus::menu_bar(app, ui);
@@ -778,27 +778,27 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(2);
         h
     }
 
-    fn dialog_id(app: &PhotocraftApp) -> u64 {
+    fn dialog_id(app: &SaryApp) -> u64 {
         app.ui.dialogs.iter().find(|d| owns(&d.fields)).map(|d| d.id).expect("Color Range dialog open")
     }
 
-    fn set(h: &mut Harness<'static, PhotocraftApp>, key: &str, v: Value) {
+    fn set(h: &mut Harness<'static, SaryApp>, key: &str, v: Value) {
         let id = dialog_id(h.state());
         h.state_mut().ui.dialog_mut(id).unwrap().fields.insert(key.into(), v);
         h.run_steps(3);
     }
 
     /// OK / Cancel are painted buttons without accessibility labels; the dialog's keys do the same.
-    fn ok(h: &mut Harness<'static, PhotocraftApp>) {
+    fn ok(h: &mut Harness<'static, SaryApp>) {
         h.key_press(egui::Key::Enter);
     }
 
-    fn click(h: &mut Harness<'static, PhotocraftApp>, at: egui::Pos2) {
+    fn click(h: &mut Harness<'static, SaryApp>, at: egui::Pos2) {
         h.hover_at(at);
         h.run_steps(1);
         h.drag_at(at);
@@ -806,7 +806,7 @@ mod tests {
         h.drop_at(at);
     }
 
-    fn disabled(h: &Harness<'static, PhotocraftApp>, label: &str) -> bool {
+    fn disabled(h: &Harness<'static, SaryApp>, label: &str) -> bool {
         h.get_by_label(label).accesskit_node().is_disabled()
     }
 
@@ -868,7 +868,7 @@ mod tests {
     #[test]
     fn eyedropper_hover_reuses_preview_textures_without_sampling() {
         let mut h = Harness::builder().with_size(vec2(1200.0, 900.0)).build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             app_with_doc()
         });
         h.state_mut().ui.views[0].zoom = 20.0;
@@ -878,7 +878,7 @@ mod tests {
         let id = open(h.state_mut());
         set(&mut h, "__selectionPreview", json!("quickMask"));
         let fields = h.state().ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.clone();
-        let cached = |app: &PhotocraftApp| {
+        let cached = |app: &SaryApp| {
             let p = app.color_range.as_ref().unwrap();
             (p.mask_key, p.overlay_key, p.mask.as_ref().unwrap().id(), p.overlay.as_ref().unwrap().id(), Arc::as_ptr(&p.proxy))
         };
@@ -957,7 +957,7 @@ mod tests {
         open(h.state_mut());
         h.run_steps(4);
         let area = egui::Id::new(("dialog", dialog_id(h.state())));
-        let rect = |h: &Harness<'static, PhotocraftApp>| h.ctx.memory(|m| m.area_rect(area)).unwrap_or(egui::Rect::NOTHING);
+        let rect = |h: &Harness<'static, SaryApp>| h.ctx.memory(|m| m.area_rect(area)).unwrap_or(egui::Rect::NOTHING);
         set(&mut h, "select", json!("outOfGamut"));
         let short = rect(&h);
         set(&mut h, "select", json!("midtones"));
@@ -1035,13 +1035,13 @@ mod tests {
         open(h.state_mut());
         h.run_steps(4);
         // 40 × 30 at 200 pt: 5 pt per pixel; the image is centred vertically (150 pt tall).
-        let at = |h: &Harness<'static, PhotocraftApp>, x: f32, y: f32| {
+        let at = |h: &Harness<'static, SaryApp>, x: f32, y: f32| {
             h.get_by_label("Color Range preview").rect().left_top() + egui::vec2(x * 5.0 + 2.5, 25.0 + y * 5.0 + 2.5)
         };
         let p = at(&h, 30.0, 5.0);
         click(&mut h, p);
         h.run_steps(2);
-        let f = |h: &Harness<'static, PhotocraftApp>| h.state().ui.dialogs.iter().find(|d| owns(&d.fields)).unwrap().fields.clone();
+        let f = |h: &Harness<'static, SaryApp>| h.state().ui.dialogs.iter().find(|d| owns(&d.fields)).unwrap().fields.clone();
         assert_eq!(points(&f(&h), "points"), vec![[30.0, 5.0]]);
         // Add to Sample: the red block too; the selection then covers both.
         h.get_by_label("Add to Sample").click();
@@ -1178,16 +1178,16 @@ mod tests {
         let surface = doc.layers[0].surface_mut().unwrap();
         surface.fill_rect(GRect::new(200, 0, 400, 4), &[0.0, 0.0, 1.0, 1.0]);
         surface.fill_rect(GRect::new(101, 0, 102, 4), &[0.0, 0.0, 1.0, 1.0]);
-        let mut session = photocraft_engine::Session::new();
+        let mut session = sary_engine::Session::new();
         session.add_document(doc, None);
-        let mut app = PhotocraftApp::new(session, crate::Services::default());
+        let mut app = SaryApp::new(session, crate::Services::default());
         let id = open(&mut app);
         let mut fields = app.ui.dialog_mut(id).unwrap().fields.clone();
         pick(&app, &mut fields, [101.0, 1.0], egui::Modifiers::NONE);
         fields.insert("fuzziness".into(), json!(0.0));
         let original = app.session.active().unwrap().doc.clone();
         let proxy = crate::proxy::proxy_document(&original, 2);
-        let mut old = photocraft_engine::Session::new();
+        let mut old = sary_engine::Session::new();
         old.add_document(proxy.clone(), None);
         old.execute(COMMAND, json!({"points": [[50, 0]], "fuzziness": 0})).unwrap();
         assert_eq!(
@@ -1207,7 +1207,7 @@ mod tests {
     fn preview_honours_sample_all_layers_like_ok() {
         let mut app = app_with_doc();
         let doc = app.session.active().unwrap().doc.clone();
-        let mut top = photocraft_doc::Layer::new("blue cover", photocraft_doc::LayerContent::Raster(doc.layers[0].surface().unwrap().clone()));
+        let mut top = sary_doc::Layer::new("blue cover", sary_doc::LayerContent::Raster(doc.layers[0].surface().unwrap().clone()));
         top.surface_mut().unwrap().fill_rect(GRect::new(0, 0, 40, 30), &[0.0, 0.0, 1.0, 1.0]);
         app.session
             .edit("layers", |doc, _| {
@@ -1262,7 +1262,7 @@ mod tests {
     #[test]
     fn opens_and_previews_in_the_full_app_without_a_gpu() {
         let mut h = Harness::builder().with_size(egui::vec2(1024.0, 600.0)).build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             assert!(cc.wgpu_render_state.is_none(), "this test covers the no-GPU path");
             app_with_doc()
         });

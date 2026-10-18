@@ -1,13 +1,13 @@
 //! Window › Shapes and the Custom Shape tool: vector shape presets in groups, placed as shape
 //! layers through `shape.create`.
 //!
-//! Built-in shapes were drawn from scratch for PhotoCraft in a 100 × 100 box with a small path
+//! Built-in shapes were drawn from scratch for Sary in a 100 × 100 box with a small path
 //! language ([`parse`]): `M x y`, `L x y…`, `C x1 y1 x2 y2 x y…`, `Q x1 y1 x y…`, `Z`, plus `O cx cy r`
 //! (a circle) and `!` before `M`/`O` to subtract that subpath (holes). Shapes defined with Edit ›
 //! Define Custom Shape appear in a trailing "Custom Shapes" group.
 
-use photocraft_doc::vector::{Knot, Path, PathOp, Subpath};
-use photocraft_geom::{Affine, Point, Rect};
+use sary_doc::vector::{Knot, Path, PathOp, Subpath};
+use sary_geom::{Affine, Point, Rect};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -295,7 +295,7 @@ pub fn thumbnail(path: &Path, size: u32) -> Vec<f32> {
     let size = size.clamp(4, 512);
     let m = (size as f64 * 0.08).max(1.0);
     let fitted = fit(path, [m, m, size as f64 - 2.0 * m, size as f64 - 2.0 * m], true);
-    photocraft_vector::path_coverage(&fitted, Rect::new(0, 0, size as i32, size as i32))
+    sary_vector::path_coverage(&fitted, Rect::new(0, 0, size as i32, size as i32))
 }
 
 /// Map `path` (its control bounds) onto `rect` = [x, y, w, h]; `keep` preserves the aspect ratio

@@ -1,8 +1,8 @@
 //! Design tab: themes, style sets, colours, fonts, paragraph spacing, watermark, page colour, borders.
 
 use serde_json::{Value, json};
-use wordcraft_doc::props::{Border, BorderStyle, Borders, LineSpacing, Rgb, TextColor};
-use wordcraft_doc::{Watermark, styles};
+use soratra_doc::props::{Border, BorderStyle, Borders, LineSpacing, Rgb, TextColor};
+use soratra_doc::{Watermark, styles};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};
@@ -10,7 +10,7 @@ use crate::{CmdError, CmdResult, CommandSpec, Session, p};
 /// Our own themes: (name, heading font, body font, accent colours).
 pub const THEMES: &[(&str, &str, &str, [Rgb; 6])] = &[
     (
-        "Craft",
+        "Mahay",
         styles::HEADING_FONT,
         styles::BODY_FONT,
         [Rgb(0x15, 0x60, 0x82), Rgb(0xE9, 0x71, 0x32), Rgb(0x19, 0x6B, 0x24), Rgb(0x0F, 0x9E, 0xD5), Rgb(0xA0, 0x2B, 0x93), Rgb(0x4E, 0xA7, 0x2E)],
@@ -144,7 +144,7 @@ fn theme(s: &mut Session, v: &Value) -> CmdResult {
 fn style_set(s: &mut Session, v: &Value) -> CmdResult {
     let name = p::req_str(v, "name")?;
     let accent = s.doc.settings.theme_colors.get(4).copied().unwrap_or(styles::HEADING_BLUE);
-    let mut fresh = wordcraft_doc::StyleSheet::builtin();
+    let mut fresh = soratra_doc::StyleSheet::builtin();
     let line = Border { style: BorderStyle::Single, width: 0.75, color: Some(accent), space: 1.0 };
     for st in &mut fresh.styles {
         let heading = st.id.starts_with("Heading") || st.id == "Title";
@@ -159,7 +159,7 @@ fn style_set(s: &mut Session, v: &Value) -> CmdResult {
                 st.chr.color = Some(TextColor::Rgb(Rgb::WHITE));
             }
             "casual" if heading => st.chr.italic = Some(true),
-            "centered" if heading => st.para.align = Some(wordcraft_doc::Align::Center),
+            "centered" if heading => st.para.align = Some(soratra_doc::Align::Center),
             "minimalist" if heading => {
                 st.chr.caps = Some(true);
                 st.chr.spacing = Some(1.0);

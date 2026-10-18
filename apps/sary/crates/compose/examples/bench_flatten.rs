@@ -1,9 +1,9 @@
 //! Timing: flatten a 6016² document with 5 layers (mask, adjustment, blend modes).
-//! `cargo run --release -p photocraft-compose --example bench_flatten [size]`
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Adjustment, Document, Layer, LayerContent, LayerMask, Size};
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+//! `cargo run --release -p sary-compose --example bench_flatten [size]`
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{Adjustment, Document, Layer, LayerContent, LayerMask, Size};
+use sary_geom::Rect;
+use sary_raster::Surface;
 
 pub fn bench_doc(n: u32) -> Document {
     let mut d = Document::with_background("bench", Size::new(n, n), ColorMode::Rgb, SampleType::U8, Color::WHITE);
@@ -36,6 +36,6 @@ fn main() {
     let n: u32 = std::env::args().nth(1).and_then(|v| v.parse().ok()).unwrap_or(6016);
     let d = bench_doc(n);
     let t = std::time::Instant::now();
-    let out = photocraft_compose::flatten(&d);
+    let out = sary_compose::flatten(&d);
     println!("flatten {n}x{n}, {} layers: {:.2?} (px0 {:?})", d.layers.len(), t.elapsed(), out.px[0]);
 }

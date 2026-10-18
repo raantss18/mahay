@@ -10,14 +10,14 @@
 # Clean room: every entry was written from the plain meaning of the English label in ordinary
 # computing vocabulary. No Microsoft Word (or other product) localisation, string table or
 # translated UI was consulted or copied; add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
+# Product, format and technology names (Soratra, PDF, Markdown, MCP …) stay in Latin letters.
 
 	(no style)	（无样式）
 	(no suggestions)	（无建议）
 	1.5 Line Spacing	1.5 倍行距
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	一款用 Rust 从零编写的免费开源文字处理软件。\n属于 ArtCraft 团队的 Crafting Apps 系列。
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	一款用 Rust 从零编写的免费开源文字处理软件。\n属于 Mahay 团队的 Mahay apps 系列。
 	About	关于
-	About WordCraft	关于 WordCraft
+	About Soratra	关于 Soratra
 	Accept	接受
 	Accept All Changes	接受所有修订
 	Accept This Change	接受此修订
@@ -75,7 +75,7 @@
 	Automatic Table 1 (3 levels)	自动目录 1（3 级）
 	Automatic Table 2 (2 levels)	自动目录 2（2 级）
 	AutoSave	自动保存
-	AutoSave documents you have saved in WordCraft	自动保存在 WordCraft 中保存过的文档
+	AutoSave documents you have saved in Soratra	自动保存在 Soratra 中保存过的文档
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	自动保存失败：{error}。重新保存文档后将恢复自动保存。
 	Balloons	批注框
 	Bottom Margin	下边距
@@ -89,7 +89,7 @@
 	Click to switch back to inserting	单击以切换回插入模式
 	Color only	仅颜色
 	Compress punctuation at the start of a line	压缩行首标点
-	Couldn't make WordCraft the default: {error}	无法将 WordCraft 设为默认应用：{error}
+	Couldn't make Soratra the default: {error}	无法将 Soratra 设为默认应用：{error}
 	Custom dictionary	自定义词典
 	Dark page (white text on black)	深色页面（黑底白字）
 	Drag a rectangle to draw a table, or a line across cells to split them. Esc stops.	拖出矩形以绘制表格，或拖出穿过单元格的线条以拆分单元格。按 Esc 结束。
@@ -119,7 +119,7 @@
 	Inside:	内侧：
 	Latin text font:	拉丁文字字体：
 	Left border	左框线
-	In Default apps, choose WordCraft for the document types you want it to open.	请在“默认应用”中，为希望由 WordCraft 打开的文档类型选择 WordCraft。
+	In Default apps, choose Soratra for the document types you want it to open.	请在“默认应用”中，为希望由 Soratra 打开的文档类型选择 Soratra。
 	Left Margin	左边距
 	Indents and Spacing	缩进和间距
 	Legal style numbering	正规形式编号
@@ -142,9 +142,9 @@
 	Number style for this level:	此级别的编号样式：
 	Only for the selected text	仅针对所选文字
 	Outside border	外侧框线
-	Make WordCraft the default for Word documents…	将 WordCraft 设为 Word 文档的默认应用…
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	今后用 WordCraft 打开 .docx、.doc、.rtf、.odt 文件和 Word 模板。
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	打开“设置 › 默认应用”，在其中为 .docx 及其他文档类型选择 WordCraft。
+	Make Soratra the default for Word documents…	将 Soratra 设为 Word 文档的默认应用…
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	今后用 Soratra 打开 .docx、.doc、.rtf、.odt 文件和 Word 模板。
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	打开“设置 › 默认应用”，在其中为 .docx 及其他文档类型选择 Soratra。
 	Overtype	改写
 	Overtype (typing replaces the characters after the caret)	改写（键入的内容替换插入点后的字符）
 	Show alignment guides when moving pictures and shapes	移动图片和形状时显示对齐参考线
@@ -347,8 +347,8 @@
 	Delete Style	删除样式
 	Delete Table	删除表格
 	Design	设计
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	要默认用 WordCraft 打开 Word 文档：在访达中选中一个文档，选择“文件 › 显示简介”，在“打开方式”中选择 WordCraft，然后点按“全部更改”。
-	WordCraft is now the default app for Word documents.	WordCraft 现在是 Word 文档的默认应用。
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	要默认用 Soratra 打开 Word 文档：在访达中选中一个文档，选择“文件 › 显示简介”，在“打开方式”中选择 Soratra，然后点按“全部更改”。
+	Soratra is now the default app for Word documents.	Soratra 现在是 Word 文档的默认应用。
 	development build	开发版本
 	Diagonal	斜式
 	Diamond	菱形
@@ -403,7 +403,7 @@
 	Equation	公式
 	Eraser	橡皮擦
 	Even Page	偶数页
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	每个命令都可供脚本和 AI 智能体使用：运行 `wordcraft-cli mcp` 启动 MCP 服务器，或使用 `--control <port>` 启动应用以打开 JSON 控制通道。
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	每个命令都可供脚本和 AI 智能体使用：运行 `soratra-cli mcp` 启动 MCP 服务器，或使用 `--control <port>` 启动应用以打开 JSON 控制通道。
 	Export	导出
 	Export a copy to share (PDF, Word document)	导出副本以共享（PDF、Word 文档）
 	Export Page as PNG	将页面导出为 PNG
@@ -515,8 +515,8 @@
 	Inspect Document	检查文档
 	Interface language:	界面语言：
 	Italic	倾斜
-	Join the ArtCraft community on Discord	加入 Discord 上的 ArtCraft 社区
-	Join us on Discord: discord.gg/artcraft	在 Discord 上加入我们：discord.gg/artcraft
+	Join the Mahay community on Discord	加入 Discord 上的 Mahay 社区
+	Join us on Discord: discord.gg/mahay	在 Discord 上加入我们：discord.gg/mahay
 	Justify	两端对齐
 	Keep Lines Together	段中不分页
 	Keep lines together	段中不分页
@@ -527,7 +527,7 @@
 	Landscape	横向
 	Language	语言
 	{language} (no dictionary)	{language}（无词典）
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	未安装{language}的拼写词典，因此不会检查该语言。WordCraft 会在 WORDCRAFT_DICTIONARIES 文件夹和常见的系统位置查找 Hunspell 词典 {name}。
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	未安装{language}的拼写词典，因此不会检查该语言。Soratra 会在 SORATRA_DICTIONARIES 文件夹和常见的系统位置查找 Hunspell 词典 {name}。
 	Lasso	套索
 	Last Column	最后一列
 	Last commit	最近提交
@@ -574,7 +574,7 @@
 	Merge Formatting	合并格式
 	Merged PRs	已合并的 PR
 	Mirrored	对称
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0。版权所有 (c) 2026 ArtCraft 团队及 WordCraft 贡献者。
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0。版权所有 (c) 2026 Mahay 团队及 Soratra 贡献者。
 	Moderate	适中
 	Modify Style	修改样式
 	Modify…	修改…
@@ -842,7 +842,7 @@
 	Small caps	小型大写字母
 	SmartArt	SmartArt
 	Sort	排序
-	Source code: github.com/storytold/wordcraft	源代码：github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	源代码：github.com/raantss18/soratra
 	Space	空格
 	Space before/after:	段前/段后间距：
 	Spacing	间距
@@ -981,7 +981,7 @@
 	Word Left	左移一个单词
 	Word Right	右移一个单词
 	WordArt	艺术字
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	字数
 	Words only	仅字词
 	Wrap Text	环绕文字
@@ -1230,7 +1230,7 @@
 	Insert a new equation (Alt+=)	插入新公式 (Alt+=)
 	Leave the equation (Esc)	退出公式 (Esc)
 	Preview	预览
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	绘制墨迹
 	Erase Ink	擦除墨迹
 	Hide Ink	隐藏墨迹
@@ -1368,7 +1368,7 @@
 	The document will be saved with a password. Save it to protect it.	文档将使用密码保存。保存文档以保护它。
 	The password is removed. Save the document to keep the change.	密码已删除。保存文档以保留此更改。
 	The passwords don't match.	两次输入的密码不一致。
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	请妥善保管密码：没有密码，任何人（包括 WordCraft）都无法打开文档。两个框都留空可删除密码。
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	请妥善保管密码：没有密码，任何人（包括 Soratra）都无法打开文档。两个框都留空可删除密码。
 
 # Interface text routed through translation (#313)
 	Align Top Left	靠上左对齐
@@ -1397,7 +1397,7 @@
 	Version	版本
 	% of all commits	占全部提交的百分比
 	Lines +/−	行数 +/−
-	Craft	工艺
+	Mahay	工艺
 	Studio	工作室
 	Atelier	画室
 	Darkroom	暗房
@@ -1766,7 +1766,7 @@
 	Word document	Word 文档
 	All files	所有文件
 	Recipient lists	收件人列表
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	系统文件对话框不可用，因此 WordCraft 显示自己的对话框。要使用系统对话框，请安装文件选择器门户（例如 xdg-desktop-portal-gtk）或 zenity。
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	系统文件对话框不可用，因此 Soratra 显示自己的对话框。要使用系统对话框，请安装文件选择器门户（例如 xdg-desktop-portal-gtk）或 zenity。
 	Up one level	向上一级
 	Home folder	主文件夹
 	{name} wasn't found.	未找到 {name}。
@@ -1774,8 +1774,8 @@
 	This folder can't be read: {error}	无法读取此文件夹：{error}
 	Showing the first {count} items.	仅显示前 {count} 项。
 	File name:	文件名:
-	Browse in WordCraft…	在 WordCraft 中浏览…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	当系统文件对话框没有出现时，使用 WordCraft 自带的浏览器打开文件。
+	Browse in Soratra…	在 Soratra 中浏览…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	当系统文件对话框没有出现时，使用 Soratra 自带的浏览器打开文件。
 	Hide White Space	隐藏空白
 	All pages	所有页面
 	Current page	当前页
@@ -2155,8 +2155,8 @@
 	Number only, without the label's words	只要编号，不要标签中的文字
 	Add whether it is above or below	注明位于上方还是下方
 	Start-up	启动
-	Show the Start screen when WordCraft starts	启动 WordCraft 时显示开始屏幕
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	开：WordCraft 打开时显示“文件 › 开始”，其中有空白文档、模板和最近使用的文档。关：直接打开空白文档。
+	Show the Start screen when Soratra starts	启动 Soratra 时显示开始屏幕
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	开：Soratra 打开时显示“文件 › 开始”，其中有空白文档、模板和最近使用的文档。关：直接打开空白文档。
 	Copy to	复制到
 
 # Document naming and account controls.
@@ -2187,7 +2187,7 @@
 	{name}   {height} × {width} mm	{name}   {height} × {width} 毫米
 	{width} × {height} mm	{width} × {height} 毫米
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}，{columns} × {rows}，{size}（{paper}）
-	Researcher needs an online service; WordCraft keeps your documents offline.	研究工具需要在线服务；WordCraft 会将你的文档保留在本地。
+	Researcher needs an online service; Soratra keeps your documents offline.	研究工具需要在线服务；Soratra 会将你的文档保留在本地。
 	These settings will be used for new documents.	这些设置将用于新文档。
 	can't split at the first row	无法在第一行处拆分表格
 	select two or more cells to merge	请选择两个或更多单元格进行合并

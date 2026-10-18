@@ -1,5 +1,5 @@
 //! Writes a synthetic A1 engineering sheet, for timing large vector pages without the proprietary
-//! sample from storytold/pdfcraft#623 (item 8). It follows the sample's content layout: 1684 × 2384
+//! sample from raantss18/taratasy#623 (item 8). It follows the sample's content layout: 1684 × 2384
 //! pt with `/Rotate 90`, one Flate stream of unit-length polyline strokes, each in its own `q … Q`
 //! block with `0.12 0 0 0.12 0 0 cm` and integer coordinates. Almost every stroke starts where the
 //! previous one ended, and most run vertically, as hatching does. Strokes are 2 units wide. A colour

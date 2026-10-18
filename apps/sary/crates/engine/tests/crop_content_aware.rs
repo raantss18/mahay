@@ -2,7 +2,7 @@
 //! canvas, fills the area the image doesn't cover from its surroundings instead of the background
 //! colour, in the crop's one undo step; an unrotated crop inside the canvas is unaffected.
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 const MODES: [(&str, u32); 5] = [("rgb", 8), ("rgb", 16), ("rgb", 32), ("grayscale", 16), ("cmyk", 8)];
@@ -17,7 +17,7 @@ fn doc(mode: &str, depth: u32, background: &str) -> Session {
     s
 }
 
-fn layer(s: &Session) -> &photocraft_raster::Surface {
+fn layer(s: &Session) -> &sary_raster::Surface {
     let d = &s.active().unwrap().doc;
     d.layers[0].surface().unwrap()
 }
@@ -43,7 +43,7 @@ fn assert_all_image(s: &Session, want: [f32; 4], what: &str) {
     }
 }
 
-fn crop(s: &mut Session, mut p: Value, content_aware: bool) -> photocraft_engine::Result<Value> {
+fn crop(s: &mut Session, mut p: Value, content_aware: bool) -> sary_engine::Result<Value> {
     p["contentAware"] = json!(content_aware);
     s.execute("image.crop", p)
 }

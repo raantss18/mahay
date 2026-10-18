@@ -1,9 +1,9 @@
-//! `photocraft-heif`: the optional HEIF / HEIC (iPhone and Mac photo) decoder.
+//! `sary-heif`: the optional HEIF / HEIC (iPhone and Mac photo) decoder.
 //!
 //! A thin wrapper around `heic-rs`, a pure-Rust HEVC still-picture decoder: single pictures and
 //! grid-tiled photos, 8- and 10-bit (10-bit decodes to 16-bit), alpha auxiliary images, ICC,
 //! EXIF and XMP. Its API is plain data ([`Info`], [`Decoded`], [`Error`]) so the crate knows
-//! nothing about the rest of PhotoCraft; `photocraft-codecs` adapts it behind its `heif` feature.
+//! nothing about the rest of Sary; `sary-codecs` adapts it behind its `heif` feature.
 //!
 //! A grid's ICC profile is inherited from its tiles when the grid item itself carries no `colr`,
 //! which is how phone cameras write it: see [`icc_for_item`].

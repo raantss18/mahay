@@ -1,0 +1,24 @@
+[package]
+name = "seho-android"
+description = "Seho on Android (phone and tablet): the eframe app inside MahayActivity."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+# No `[lints] workspace = true`: `android_main` must be `#[unsafe(no_mangle)]`.
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[target.'cfg(target_os = "android")'.dependencies]
+seho-engine = { workspace = true }
+seho-ui-egui = { workspace = true }
+seho-media = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "android-game-activity"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+cpal = "0.16"
+mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }

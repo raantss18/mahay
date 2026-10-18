@@ -3,7 +3,7 @@
 //! direction with `direction_scope`.
 
 use super::*;
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::i18n::{self, Lang};
 use egui_kittest::{Harness, kittest::Queryable};
 use serde_json::json;
@@ -60,10 +60,10 @@ fn env_values_parse_strictly() {
     assert_eq!(parse_dir("ar"), None);
 }
 
-fn harness() -> Harness<'static, PhotocraftApp> {
+fn harness() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, crate::theme::ThemeKind::ProMedium);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, crate::theme::ThemeKind::ProMedium);
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 64})).expect("new document");
         app
     });
@@ -72,12 +72,12 @@ fn harness() -> Harness<'static, PhotocraftApp> {
 }
 
 /// Centre x of the widget labelled `label` (the first, when several are).
-fn x_of(h: &Harness<'static, PhotocraftApp>, label: &str) -> f32 {
+fn x_of(h: &Harness<'static, SaryApp>, label: &str) -> f32 {
     h.query_all_by_label(label).next().unwrap_or_else(|| panic!("`{label}` drawn")).rect().center().x
 }
 
 /// Left x of the text `text` where it is painted (for widgets without an accessible label).
-fn text_x(h: &Harness<'static, PhotocraftApp>, text: &str) -> f32 {
+fn text_x(h: &Harness<'static, SaryApp>, text: &str) -> f32 {
     fn find(shape: &egui::Shape, text: &str) -> Option<f32> {
         match shape {
             egui::Shape::Text(t) if t.galley.job.text == text => Some(t.pos.x),
@@ -88,7 +88,7 @@ fn text_x(h: &Harness<'static, PhotocraftApp>, text: &str) -> f32 {
     h.output().shapes.iter().find_map(|s| find(&s.shape, text)).unwrap_or_else(|| panic!("`{text}` painted"))
 }
 
-fn dock_x(h: &Harness<'static, PhotocraftApp>) -> f32 {
+fn dock_x(h: &Harness<'static, SaryApp>) -> f32 {
     let rects = crate::dock::last_rects(&h.ctx);
     let (_, layers) = rects.iter().find(|(g, _)| *g == crate::dock::Group::Layers).expect("Layers docked");
     layers.center().x

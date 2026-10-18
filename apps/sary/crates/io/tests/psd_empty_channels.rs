@@ -1,8 +1,8 @@
 mod common;
 use common::Features;
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_io::{ExportOptions, export};
-use photocraft_psd::{Compression, PsdFile};
+use sary_color::{ColorMode, SampleType};
+use sary_io::{ExportOptions, export};
+use sary_psd::{Compression, PsdFile};
 
 #[test]
 fn empty_layer_and_mask_channels_use_raw_without_a_payload() {
@@ -10,9 +10,9 @@ fn empty_layer_and_mask_channels_use_raw_without_a_payload() {
         for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
             for ext in ["out.psd", "out.psb"] {
                 let mut doc = common::gen_doc(mode, depth, Features::ALL);
-                let mut masked = common::raster("Uniform mask", doc.pixel_format(), photocraft_geom::Rect::new(0, 0, 3, 3), 1, true);
-                masked.mask = Some(photocraft_doc::LayerMask {
-                    surface: photocraft_raster::Surface::new(photocraft_color::PixelFormat::new(ColorMode::Grayscale, depth, false)),
+                let mut masked = common::raster("Uniform mask", doc.pixel_format(), sary_geom::Rect::new(0, 0, 3, 3), 1, true);
+                masked.mask = Some(sary_doc::LayerMask {
+                    surface: sary_raster::Surface::new(sary_color::PixelFormat::new(ColorMode::Grayscale, depth, false)),
                     enabled: true,
                     linked: true,
                     density: 1.0,

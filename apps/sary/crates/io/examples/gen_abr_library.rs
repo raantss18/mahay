@@ -3,20 +3,20 @@
 //! Real painting packs are commercial or "personal use only", so we can't test against them. This
 //! writes a deterministic stand-in with the same shape: hundreds of presets with big 16-bit sampled
 //! tips (RLE-compressed, like Photoshop CC), full dynamics descriptors, split over several files.
-//! Every tip comes from `photocraft_paint::procedural` (original, seeded generators), so the output
+//! Every tip comes from `sary_paint::procedural` (original, seeded generators), so the output
 //! carries no third-party rights. Nothing it writes is committed; regenerate it when needed.
 //!
-//! `cargo run --release -p photocraft-io --example gen_abr_library -- --out <dir>`
+//! `cargo run --release -p sary-io --example gen_abr_library -- --out <dir>`
 //!
 //! Options (defaults in brackets): `--brushes N` [600], `--edge PX` largest tip edge [2000],
 //! `--min-edge PX` smallest tip edge [800], `--depth 8|16` [16], `--per-file N` presets per file [100],
 //! `--raw` store tips uncompressed (bigger files). Each file stays under the reader's 512 MB decoded cap.
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use photocraft_paint::procedural::*;
-use photocraft_paint::tile::GrayTile;
-use photocraft_psd::abr::{AbrSample, MAX_TOTAL_BYTES, write_v6};
-use photocraft_psd::descriptor::{Descriptor, UnicodeString, Value};
+use sary_paint::procedural::*;
+use sary_paint::tile::GrayTile;
+use sary_psd::abr::{AbrSample, MAX_TOTAL_BYTES, write_v6};
+use sary_psd::descriptor::{Descriptor, UnicodeString, Value};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -90,7 +90,7 @@ fn main() {
     let num = |name: &str, default: u32| arg(name).map_or(default, |v| v.parse().expect("numeric option"));
     let out = PathBuf::from(arg("--out").unwrap_or_else(|| "target/abr-library".into()));
     let brushes = num("--brushes", 600);
-    let max_edge = num("--edge", 2000).clamp(16, photocraft_psd::abr::MAX_EDGE);
+    let max_edge = num("--edge", 2000).clamp(16, sary_psd::abr::MAX_EDGE);
     let min_edge = num("--min-edge", 800).clamp(16, max_edge);
     let depth = num("--depth", 16) as u16;
     assert!(matches!(depth, 8 | 16), "--depth must be 8 or 16");
@@ -144,10 +144,10 @@ fn main() {
             .collect();
         let bytes = write_v6(2, &samples, &[], &presets, rle).unwrap();
         // Sanity: our own importer must accept every preset.
-        let imported = photocraft_io::abr_map::read_abr(&bytes, "Generated").unwrap();
+        let imported = sary_io::abr_map::read_abr(&bytes, "Generated").unwrap();
         assert_eq!(imported.presets.len(), ids.len(), "every generated preset imports");
         file_no += 1;
-        let path = out.join(format!("photocraft-test-brushes-{file_no:02}.abr"));
+        let path = out.join(format!("sary-test-brushes-{file_no:02}.abr"));
         std::fs::write(&path, &bytes).unwrap();
         println!("{}: {} brushes, {:.1} MB on disk, {:.1} MB decoded", path.display(), ids.len(), bytes.len() as f64 / 1e6, decoded as f64 / 1e6);
         total_bytes += bytes.len() as u64;

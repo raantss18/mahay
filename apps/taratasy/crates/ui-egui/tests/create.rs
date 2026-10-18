@@ -1,6 +1,6 @@
 //! Create a PDF and Reduce File Size in the real shell.
 
-use pdfcraft_ui_egui::PdfCraftApp;
+use taratasy_ui_egui::TaratasyApp;
 
 fn png() -> Vec<u8> {
     let mut out = Vec::new();
@@ -18,13 +18,13 @@ fn png() -> Vec<u8> {
 fn image_import_dialog_chooses_dpi_and_cancels() {
     use egui_kittest::{Harness, kittest::Queryable};
     let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.begin_image_import(vec![("scan.png".into(), png())]);
         app
     });
     h.run_steps(3);
-    if let Ok(path) = std::env::var("PDFCRAFT_IMAGE_IMPORT_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_IMAGE_IMPORT_SHOT") {
         h.render().unwrap().save(path).unwrap();
     }
     h.get_by_label("Use 72 DPI (one point per pixel)").click();
@@ -53,7 +53,7 @@ fn image_import_dialog_chooses_dpi_and_cancels() {
 
 #[test]
 fn opening_images_and_text_converts_them_to_new_pdfs() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.open_bytes("photo.png", Some("/tmp/photo.png".into()), png()).unwrap();
     app.open_bytes("notes.txt", None, b"first line\nsecond line".to_vec()).unwrap();
@@ -75,7 +75,7 @@ impl ReduceDir {
         use std::sync::atomic::{AtomicU64, Ordering};
         static NEXT: AtomicU64 = AtomicU64::new(0);
         for _ in 0..128 {
-            let path = std::env::temp_dir().join(format!("pdfcraft-reduce-test-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+            let path = std::env::temp_dir().join(format!("taratasy-reduce-test-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
             match std::fs::create_dir(&path) {
                 Ok(()) => return Self(path),
                 Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
@@ -92,10 +92,10 @@ impl Drop for ReduceDir {
 }
 
 /// Open `name` and run Reduce File Size on it, saving to `out` without a dialog.
-fn reduce(name: &'static str, bytes: Vec<u8>, out: &std::path::Path) -> egui_kittest::Harness<'static, PdfCraftApp> {
+fn reduce(name: &'static str, bytes: Vec<u8>, out: &std::path::Path) -> egui_kittest::Harness<'static, TaratasyApp> {
     let out2 = out.to_path_buf();
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         // Keep metadata identical: changing ModDate can make a compact PDF one byte smaller.
         app.session = std::mem::take(&mut app.session).with_clock(|| 1_700_000_000);
@@ -152,8 +152,8 @@ fn reduce_file_size_saves_nothing_when_the_file_is_already_small() {
 
 #[test]
 fn clipboard_images_and_text_become_new_pdfs() {
-    use pdfcraft_ui_egui::Clip;
-    let mut app = PdfCraftApp::new();
+    use taratasy_ui_egui::Clip;
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.create_from_clip(Clip::Image { width: 40, height: 20, rgba: [10u8, 20, 30, 255].repeat(40 * 20) }).unwrap();
     app.create_from_clip(Clip::Text("Pasted\nlines".into())).unwrap();
@@ -170,12 +170,12 @@ fn clipboard_images_and_text_become_new_pdfs() {
 fn the_pdf_optimizer_dialog_saves_an_optimized_copy() {
     use egui_kittest::Harness;
     use egui_kittest::kittest::Queryable;
-    let dir = std::env::temp_dir().join(format!("pdfcraft-optimizer-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-optimizer-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let out = dir.join("optimized.pdf");
     let out2 = out.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.txt", None, "lorem ipsum ".repeat(500).into_bytes()).unwrap();
         app.save_override = Some(out2.to_string_lossy().into_owned());
@@ -195,7 +195,7 @@ fn the_pdf_optimizer_dialog_saves_an_optimized_copy() {
     h.run_steps(1);
     {
         let d = &h.state().optimize_draft;
-        assert!(d.settings.discard_tags && d.discard == vec![pdfcraft_engine::Hidden::Metadata]);
+        assert!(d.settings.discard_tags && d.discard == vec![taratasy_engine::Hidden::Metadata]);
     }
     h.get_by_label("OK").click();
     // The click is handled next frame. The optimization then runs on a worker thread and the
@@ -216,9 +216,9 @@ fn the_pdf_optimizer_dialog_saves_an_optimized_copy() {
 fn the_pdf_optimizer_dialog_picks_a_preset() {
     use egui_kittest::Harness;
     use egui_kittest::kittest::Queryable;
-    use pdfcraft_engine::optimize::Preset;
+    use taratasy_engine::optimize::Preset;
     let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.txt", None, b"lorem ipsum".to_vec()).unwrap();
         app
@@ -240,7 +240,7 @@ fn the_pdf_optimizer_dialog_picks_a_preset() {
     h.get_by_value("Custom");
 }
 
-fn mixed_files(app: &PdfCraftApp) -> Vec<(String, Vec<u8>)> {
+fn mixed_files(app: &TaratasyApp) -> Vec<(String, Vec<u8>)> {
     let pdf = app.session.create_from_text("a", "from a pdf").unwrap();
     vec![
         ("notes.txt".into(), b"from text".to_vec()),
@@ -252,13 +252,13 @@ fn mixed_files(app: &PdfCraftApp) -> Vec<(String, Vec<u8>)> {
 
 #[test]
 fn separate_batch_creates_one_pdf_per_source_without_replacing_existing_files() {
-    use pdfcraft_ui_egui::FilePurpose;
-    let dir = std::env::temp_dir().join(format!("pdfcraft-separate-batch-{}", std::process::id()));
+    use taratasy_ui_egui::FilePurpose;
+    let dir = std::env::temp_dir().join(format!("taratasy-separate-batch-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("notes.pdf"), b"keep this file").unwrap();
 
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     app.export_dir_override = Some(dir.to_string_lossy().into_owned());
     let mut files = mixed_files(&app);
@@ -278,13 +278,13 @@ fn separate_batch_creates_one_pdf_per_source_without_replacing_existing_files() 
 #[test]
 fn separate_batch_command_picks_files_and_writes_to_the_chosen_folder() {
     use egui_kittest::Harness;
-    let dir = std::env::temp_dir().join(format!("pdfcraft-separate-command-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-separate-command-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let source = dir.join("letter.txt");
     std::fs::write(&source, b"A separate PDF").unwrap();
     let mut h = Harness::builder().with_size(egui::vec2(1000.0, 720.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.pick_override = Some(vec![source.to_string_lossy().into_owned()]);
         app.export_dir_override = Some(dir.to_string_lossy().into_owned());
@@ -300,12 +300,12 @@ fn separate_batch_command_picks_files_and_writes_to_the_chosen_folder() {
 #[test]
 fn multiple_files_open_as_one_document_in_the_page_grid() {
     use egui_kittest::{Harness, kittest::Queryable};
-    let path = std::env::temp_dir().join(format!("pdfcraft-create-multiple-{}.pdf", std::process::id()));
+    let path = std::env::temp_dir().join(format!("taratasy-create-multiple-{}.pdf", std::process::id()));
     let mut h = Harness::builder().with_size(egui::vec2(1000.0, 720.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         let files = mixed_files(&app);
-        app.use_files(pdfcraft_ui_egui::FilePurpose::CreateMultiple, files);
+        app.use_files(taratasy_ui_egui::FilePurpose::CreateMultiple, files);
         app
     });
     h.run_steps(4);
@@ -321,7 +321,7 @@ fn multiple_files_open_as_one_document_in_the_page_grid() {
     }
     h.get_by_label_contains("left out: report.docx");
     h.get_by_label("Insert a file before page 2");
-    if let Ok(path) = std::env::var("PDFCRAFT_CREATE_MULTIPLE_SHOT") {
+    if let Ok(path) = std::env::var("TARATASY_CREATE_MULTIPLE_SHOT") {
         h.run_steps(20);
         h.render().unwrap().save(path).unwrap();
     }
@@ -341,20 +341,20 @@ fn multiple_files_open_as_one_document_in_the_page_grid() {
 
 #[test]
 fn multiple_files_that_cannot_be_converted_open_nothing() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
-    app.use_files(pdfcraft_ui_egui::FilePurpose::CreateMultiple, vec![("report.docx".into(), b"PK\x03\x04".to_vec())]);
+    app.use_files(taratasy_ui_egui::FilePurpose::CreateMultiple, vec![("report.docx".into(), b"PK\x03\x04".to_vec())]);
     assert!(app.views.is_empty());
     assert!(app.toast.is_some());
 }
 
 #[test]
 fn multiple_files_past_a_thousand_are_all_used() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     let pdf = app.session.create_from_text("a", "from a pdf").unwrap();
     let files: Vec<(String, Vec<u8>)> = (0..1001).map(|i| (format!("f{i}.pdf"), pdf.to_vec())).collect();
-    app.use_files(pdfcraft_ui_egui::FilePurpose::CreateMultiple, files);
+    app.use_files(taratasy_ui_egui::FilePurpose::CreateMultiple, files);
     assert_eq!(app.views.len(), 1);
     let doc = app.session.get(app.views[0].id).unwrap();
     assert_eq!(doc.info.pages.len(), 1001, "every picked file is used, in order");

@@ -1,7 +1,7 @@
 //! Formula helpers must stay in the worksheet while its editor scrolls.
 use egui::{Context, Id, LayerId, Order, RawInput, Rect, pos2, vec2};
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::SheetApp;
+use tabilao_engine::Session;
+use tabilao_ui_egui::SheetApp;
 
 fn frame(ctx: &Context, app: &mut SheetApp) -> egui::FullOutput {
     let mut output =
@@ -37,14 +37,14 @@ fn cell_formula_helpers_hide_when_scrolled_out_and_return_with_the_editor() {
             app.editor.as_mut().unwrap().update_autocomplete(&["SUM".into(), "SUMIF".into()]);
         }
         frames(&ctx, &mut app);
-        assert!(visible(&ctx, "gridcraft.cell_editor"), "visible cell shows {text} help");
+        assert!(visible(&ctx, "tabilao.cell_editor"), "visible cell shows {text} help");
         app.view_mut().unwrap().scroll.y = 400.0;
         frames(&ctx, &mut app);
-        assert!(!visible(&ctx, "gridcraft.cell_editor"), "scrolled-out cell must hide {text} help");
+        assert!(!visible(&ctx, "tabilao.cell_editor"), "scrolled-out cell must hide {text} help");
         assert_eq!(app.editor.as_ref().unwrap().text, text, "scrolling preserves the edit");
         app.view_mut().unwrap().scroll.y = 0.0;
         frames(&ctx, &mut app);
-        assert!(visible(&ctx, "gridcraft.cell_editor"), "scrolling back restores {text} help");
+        assert!(visible(&ctx, "tabilao.cell_editor"), "scrolling back restores {text} help");
     }
 }
 
@@ -57,10 +57,10 @@ fn formula_bar_hint_remains_visible_when_the_worksheet_scrolls() {
     frames(&ctx, &mut app);
     app.begin_edit(Some("=SUM(".into()), true);
     frames(&ctx, &mut app);
-    assert!(visible(&ctx, "gridcraft.formula_bar"));
+    assert!(visible(&ctx, "tabilao.formula_bar"));
     app.view_mut().unwrap().scroll.y = 400.0;
     frames(&ctx, &mut app);
-    assert!(visible(&ctx, "gridcraft.formula_bar"));
+    assert!(visible(&ctx, "tabilao.formula_bar"));
 }
 
 #[test]
@@ -123,11 +123,11 @@ fn cell_editor_and_helper_stay_below_the_frozen_top_row() {
     let scroll = sh.row_top(4) as f32;
     app.begin_edit(Some("=SUM(".into()), false);
     frames(&ctx, &mut app);
-    assert!(visible(&ctx, "gridcraft.cell_editor"));
+    assert!(visible(&ctx, "tabilao.cell_editor"));
     app.view_mut().unwrap().scroll.y = scroll - frozen_h / 2.0;
     frames(&ctx, &mut app);
     let output = frame(&ctx, &mut app);
-    let frozen_bottom = app.grid.cells_rect.unwrap().top() + frozen_h * gridcraft_ui_egui::grid::DISPLAY_SCALE;
+    let frozen_bottom = app.grid.cells_rect.unwrap().top() + frozen_h * tabilao_ui_egui::grid::DISPLAY_SCALE;
     let editor = output
         .shapes
         .iter()
@@ -136,11 +136,11 @@ fn cell_editor_and_helper_stay_below_the_frozen_top_row() {
     assert!(editor.clip_rect.top() >= frozen_bottom, "editor must be clipped below the frozen row: {:?}", editor.clip_rect);
     app.view_mut().unwrap().scroll.y = scroll;
     frames(&ctx, &mut app);
-    assert!(!visible(&ctx, "gridcraft.cell_editor"), "cell hidden under the frozen row must hide its helper");
+    assert!(!visible(&ctx, "tabilao.cell_editor"), "cell hidden under the frozen row must hide its helper");
     assert_eq!(app.editor.as_ref().unwrap().text, "=SUM(");
     app.view_mut().unwrap().scroll.y = 0.0;
     frames(&ctx, &mut app);
-    assert!(visible(&ctx, "gridcraft.cell_editor"), "scrolling back restores the helper");
+    assert!(visible(&ctx, "tabilao.cell_editor"), "scrolling back restores the helper");
 }
 
 #[test]

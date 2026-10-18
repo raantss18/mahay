@@ -222,8 +222,8 @@ fn home_end_and_ctrl_home_end() {
         let st = s.doc().unwrap();
         let ts = st.selection.text.clone().unwrap();
         let l = crate::cmd::text::layout_for(st, &ts).unwrap();
-        let aff = if ts.at_line_end() { deckcraft_text::Affinity::Upstream } else { deckcraft_text::Affinity::Downstream };
-        l.caret_drawn(deckcraft_text::Pos { para: ts.caret.0, ch: ts.caret.1 }, aff).unwrap()
+        let aff = if ts.at_line_end() { seho_text::Affinity::Upstream } else { seho_text::Affinity::Downstream };
+        l.caret_drawn(seho_text::Pos { para: ts.caret.0, ch: ts.caret.1 }, aff).unwrap()
     };
     let line1_top = layout.lines.iter().filter(|l| l.para == 0).nth(1).unwrap().top;
     assert_eq!(drawn(&s).1, line1_top);
@@ -321,7 +321,7 @@ fn bold_italic_underline_and_clear_on_a_caret_in_a_word() {
     let (mut s, id) = editing("hello wOrld. foo bar", (0, 8));
     let r = press(&mut s, "b", CTRL);
     assert_eq!(r["command"], "format.bold");
-    let body = |s: &Session| s.doc().unwrap().shape(deckcraft_model::ShapeId(id)).unwrap().text.clone().unwrap();
+    let body = |s: &Session| s.doc().unwrap().shape(seho_model::ShapeId(id)).unwrap().text.clone().unwrap();
     let runs: Vec<(String, Option<bool>)> = body(&s).paragraphs[0].runs.iter().map(|r| (r.text.clone(), r.props.bold)).collect();
     assert_eq!(runs.iter().find(|r| r.1 == Some(true)).map(|r| r.0.as_str()), Some("wOrld"));
     // At a word boundary nothing visible changes.
@@ -380,7 +380,7 @@ fn shift_enter_and_word_and_paragraph_selection() {
     assert_eq!(sel(&s), ((1, 0), (1, 4)));
     s.execute("text.edit", &json!({"id": id, "at": [1, 2]})).unwrap();
     press(&mut s, "Enter", SHIFT);
-    let b = s.doc().unwrap().shape(deckcraft_model::ShapeId(id)).unwrap().text.clone().unwrap();
+    let b = s.doc().unwrap().shape(seho_model::ShapeId(id)).unwrap().text.clone().unwrap();
     assert_eq!(b.paragraphs.len(), 2);
     assert_eq!(b.paragraphs[1].text(), "ne\u{b}xt");
 }
@@ -412,7 +412,7 @@ fn select_into_another_body_settles_the_composition() {
     s.execute("text.edit", &json!({"id": a, "at": [0, 0]})).unwrap();
     s.compose_text("ab", None).unwrap();
     s.select(|_, sel| {
-        sel.text = Some(crate::TextSel { shape: deckcraft_model::ShapeId(b), ..Default::default() });
+        sel.text = Some(crate::TextSel { shape: seho_model::ShapeId(b), ..Default::default() });
     })
     .unwrap();
     assert!(s.doc().unwrap().composition.is_none());
@@ -426,14 +426,14 @@ fn select_into_another_table_cell_settles_the_composition() {
     let (mut s, _) = editing("x", (0, 0));
     let data = json!([["hello", "0123456789"]]);
     let r = s.execute("insert.table", &json!({"rows": 1, "cols": 2, "rect": [60.0, 400.0, 600.0, 60.0], "data": data})).unwrap();
-    let id = deckcraft_model::ShapeId(r["id"].as_u64().unwrap() as u32);
+    let id = seho_model::ShapeId(r["id"].as_u64().unwrap() as u32);
     s.select(|_, sel| sel.text = Some(crate::TextSel { shape: id, cell: Some((0, 0)), ..Default::default() })).unwrap();
     s.compose_text("ab", None).unwrap();
     s.select(|_, sel| sel.text = Some(crate::TextSel { shape: id, cell: Some((0, 1)), ..Default::default() })).unwrap();
     assert!(s.doc().unwrap().composition.is_none());
     s.commit_text("X").unwrap();
     let st = s.doc().unwrap();
-    let Some(deckcraft_model::ShapeKind::Table(t)) = st.shape(id).map(|sh| &sh.kind) else { panic!("not a table") };
+    let Some(seho_model::ShapeKind::Table(t)) = st.shape(id).map(|sh| &sh.kind) else { panic!("not a table") };
     let cell = |c| t.cell(0, c).map(|x| x.text.text()).unwrap_or_default();
     assert_eq!((cell(0), cell(1)), ("abhello".to_string(), "X0123456789".to_string()));
 }

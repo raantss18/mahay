@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pdfcraft_cos::{SaveOptions, write_full};
+use taratasy_cos::{SaveOptions, write_full};
 
 use super::*;
 
@@ -125,7 +125,7 @@ fn text_is_wrapped_and_paginated() {
 }
 
 /// Text Helvetica can't draw is refused with its line and character, never set as `?`; text
-/// PdfCraft generates writes such characters as [U+XXXX] and says so.
+/// Taratasy generates writes such characters as [U+XXXX] and says so.
 #[test]
 fn text_helvetica_cannot_draw_is_refused_or_escaped() {
     let err = from_text("notes", "Café —\tok\r\n\u{c}第二页 notes", LETTER, 11.0).unwrap_err();
@@ -308,7 +308,7 @@ fn images_export_as_jpeg_unchanged_and_others_as_png() {
 fn indexed_and_one_bit_images_decode() {
     let mut doc = from_images(&[("flat.png".into(), png_bytes(false))]).unwrap();
     // Replace the page's image with a 4×1 indexed image (two colours) and add a 1-bit mask.
-    let page = pdfcraft_model::pages(&doc)[0].clone();
+    let page = taratasy_model::pages(&doc)[0].clone();
     let res = doc.resolve(page.dict.get(b"Resources").unwrap()).as_dict().cloned().unwrap();
     let xo = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
     let (_, r) = xo.iter().next().map(|(k, v)| (k.clone(), v.as_ref().unwrap())).unwrap();
@@ -592,7 +592,7 @@ fn embedded_icc_profiles_tag_the_image_colour_space() {
 
 /// Replaces page 0's image with the stream `image` builds (it can add objects, e.g. a mask).
 fn with_image(doc: &mut Document, image: impl FnOnce(&mut Document) -> Stream) {
-    let page = pdfcraft_model::pages(doc)[0].clone();
+    let page = taratasy_model::pages(doc)[0].clone();
     let res = doc.resolve(page.dict.get(b"Resources").unwrap()).as_dict().cloned().unwrap();
     let xo = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
     let r = xo.iter().next().map(|(_, v)| v.as_ref().unwrap()).unwrap();
@@ -735,7 +735,7 @@ fn damaged_masks_and_sizes_never_panic() {
             d.set(b"Mask".to_vec(), Object::Array(vec![Object::Real(f64::NAN), Object::Int(-5)]));
             Stream::from_raw(d, vec![10; 24])
         });
-        let page = pdfcraft_model::pages(&doc)[0].clone();
+        let page = taratasy_model::pages(&doc)[0].clone();
         let res = doc.resolve(page.dict.get(b"Resources").unwrap()).as_dict().cloned().unwrap();
         let xo = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
         let r = xo.iter().next().map(|(_, v)| v.as_ref().unwrap()).unwrap();
@@ -748,7 +748,7 @@ fn damaged_masks_and_sizes_never_panic() {
 fn indexed_image_export_clamps_samples_to_hival() {
     for palette in [vec![255, 0, 0, 0, 0, 255], vec![255, 0, 0, 0, 0, 255, 0, 255, 0, 255, 255, 255]] {
         let mut doc = from_images(&[("flat.png".into(), png_bytes(false))]).unwrap();
-        let page = pdfcraft_model::pages(&doc)[0].clone();
+        let page = taratasy_model::pages(&doc)[0].clone();
         let res = doc.resolve(page.dict.get(b"Resources").unwrap()).as_dict().cloned().unwrap();
         let xo = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
         let image = xo.iter().next().unwrap().1.as_ref().unwrap();
@@ -787,9 +787,9 @@ fn indexed_export_fixture(
     indirect_hival: bool,
     bpc: i64,
     samples: Vec<u8>,
-) -> (Document, pdfcraft_cos::ObjRef) {
+) -> (Document, taratasy_cos::ObjRef) {
     let mut doc = from_images(&[("flat.png".into(), png_bytes(false))]).unwrap();
-    let page = pdfcraft_model::pages(&doc)[0].clone();
+    let page = taratasy_model::pages(&doc)[0].clone();
     let res = doc.resolve(page.dict.get(b"Resources").unwrap()).as_dict().cloned().unwrap();
     let xo = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
     let image = xo.iter().next().unwrap().1.as_ref().unwrap();

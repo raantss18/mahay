@@ -15,7 +15,7 @@
 //!    the layers it left are released (`B, C1*, C2*` + Bring Forward on B → `C1, B*, C2`).
 //! 4. A clipped layer left with nothing below it to clip to is released.
 
-use photocraft_doc::{Document, Layer, LayerId};
+use sary_doc::{Document, Layer, LayerId};
 
 /// The sibling list holding the layer at `path`, and the layer's index in it.
 fn siblings<'a>(doc: &'a Document, path: &[usize]) -> Option<(&'a [Layer], usize)> {

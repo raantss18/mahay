@@ -3,11 +3,11 @@
 //! them. The Layers panel's New Layer button makes a layer without asking, and ⌥-click opens the
 //! dialog, as in Photoshop.
 
-use photocraft_doc::{BlendMode, LabelColor};
-use photocraft_engine::new_layer::neutral_color;
+use sary_doc::{BlendMode, LabelColor};
+use sary_engine::new_layer::neutral_color;
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 
 const MARK: &str = "__newLayer";
@@ -18,7 +18,7 @@ pub fn owns(fields: &Map<String, Value>) -> bool {
 }
 
 /// Open the dialog for the active document, with the name the layer would get.
-pub fn open(app: &mut PhotocraftApp) -> Result<u64, String> {
+pub fn open(app: &mut SaryApp) -> Result<u64, String> {
     let name = app.session.active().ok_or("no document open")?.doc.next_layer_name("Layer");
     let fields = json!({
         MARK: true, "__command": COMMAND, "__label": "New Layer",
@@ -30,7 +30,7 @@ pub fn open(app: &mut PhotocraftApp) -> Result<u64, String> {
 fn mode(f: &Map<String, Value>) -> BlendMode {
     f.get("mode")
         .and_then(Value::as_str)
-        .and_then(photocraft_engine::commands::blend_from_str)
+        .and_then(sary_engine::commands::blend_from_str)
         .filter(|m| *m != BlendMode::PassThrough)
         .unwrap_or(BlendMode::Normal)
 }
@@ -128,7 +128,7 @@ pub fn body(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     });
 }
 
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     app.run(COMMAND, params(f))
 }
 
@@ -137,13 +137,13 @@ mod tests {
     use super::*;
     use egui_kittest::kittest::{NodeT, Queryable};
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 16, "height": 16})).unwrap();
         app
     }
 
-    fn top(app: &PhotocraftApp) -> &photocraft_doc::Layer {
+    fn top(app: &SaryApp) -> &sary_doc::Layer {
         app.session.active().unwrap().doc.layers.last().unwrap()
     }
 
@@ -192,7 +192,7 @@ mod tests {
         let mut app = app();
         open(&mut app).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 600.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     crate::dialogs::show(app, &ctx);
@@ -200,7 +200,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(4);
         assert!(h.query_by_label("New Layer").is_some());
         assert!(h.query_by_label("Use Previous Layer to Create Clipping Mask").is_some());

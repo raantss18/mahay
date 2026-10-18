@@ -22,12 +22,12 @@
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 
-use pdfcraft_automation::{Automation, ToolError, tools};
+use taratasy_automation::{Automation, ToolError, tools};
 use serde_json::{Value, json};
 
 /// A fresh empty directory for one test.
 fn tmp(name: &str) -> PathBuf {
-    let d = std::env::temp_dir().join(format!("pdfcraft-hostile-{}-{name}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("taratasy-hostile-{}-{name}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).expect("temp dir");
     d
@@ -122,7 +122,7 @@ fn dir_symlink(target: &std::path::Path, link: &std::path::Path) -> std::io::Res
 }
 
 /// The properties of `def` whose values are paths, by name and whether they are a list.
-fn path_props(def: &pdfcraft_automation::ToolDef) -> Vec<(String, bool)> {
+fn path_props(def: &taratasy_automation::ToolDef) -> Vec<(String, bool)> {
     let Some(props) = def.input_schema["properties"].as_object() else { return Vec::new() };
     props
         .iter()
@@ -144,7 +144,7 @@ fn path_props(def: &pdfcraft_automation::ToolDef) -> Vec<(String, bool)> {
 /// `doc` gets a **real** open document when one is given. Without that, almost every tool fails at
 /// `self.doc()` before it ever looks at a path, and a confinement test would pass vacuously — as
 /// an earlier version of this file did, even with `resolve` disabled entirely.
-fn plausible_with(def: &pdfcraft_automation::ToolDef, doc: Option<u64>) -> serde_json::Map<String, Value> {
+fn plausible_with(def: &taratasy_automation::ToolDef, doc: Option<u64>) -> serde_json::Map<String, Value> {
     let mut obj = plausible(def);
     if let Some(id) = doc
         && def.input_schema["properties"].as_object().is_some_and(|p| p.contains_key("doc"))
@@ -154,7 +154,7 @@ fn plausible_with(def: &pdfcraft_automation::ToolDef, doc: Option<u64>) -> serde
     obj
 }
 
-fn plausible(def: &pdfcraft_automation::ToolDef) -> serde_json::Map<String, Value> {
+fn plausible(def: &taratasy_automation::ToolDef) -> serde_json::Map<String, Value> {
     let mut obj = serde_json::Map::new();
     let props = def.input_schema["properties"].as_object().cloned().unwrap_or_default();
     for req in def.input_schema["required"].as_array().into_iter().flatten().filter_map(Value::as_str) {
@@ -260,8 +260,8 @@ fn no_tool_escapes_the_root() {
     let doc = created
         .into_iter()
         .find_map(|c| match c {
-            pdfcraft_automation::Content::Json(v) => v["doc"].as_u64(),
-            pdfcraft_automation::Content::Png { .. } => None,
+            taratasy_automation::Content::Json(v) => v["doc"].as_u64(),
+            taratasy_automation::Content::Png { .. } => None,
         })
         .expect("the new document has an id");
 

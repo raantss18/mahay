@@ -7,13 +7,13 @@
 
 use std::collections::{HashMap, HashSet};
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object};
+use taratasy_cos::{Dict, Document, ObjRef, Object};
 
 /// Each MCID's operators (serialized), and whether anything is still drawn inside it.
 fn by_mcid(doc: &Document, resources: &Dict, data: &[u8]) -> HashMap<i64, (Vec<u8>, bool)> {
     let mut out: HashMap<i64, (Vec<u8>, bool)> = HashMap::new();
     let mut stack: Vec<Option<i64>> = Vec::new();
-    for op in pdfcraft_content::parse(data).ops {
+    for op in taratasy_content::parse(data).ops {
         match op.op.as_slice() {
             b"BDC" => {
                 let id = match op.operands.get(1) {
@@ -50,7 +50,7 @@ fn by_mcid(doc: &Document, resources: &Dict, data: &[u8]) -> HashMap<i64, (Vec<u
             _ => false,
         };
         let mut bytes = Vec::new();
-        pdfcraft_content::write_op(&op, &mut bytes);
+        taratasy_content::write_op(&op, &mut bytes);
         for id in stack.iter().flatten() {
             let e = out.entry(*id).or_default();
             e.0.extend_from_slice(&bytes);
@@ -103,7 +103,7 @@ pub(crate) fn clean(
     stream: Option<(ObjRef, ObjRef)>,
     changed: &HashSet<i64>,
     empty: &HashSet<i64>,
-) -> Result<usize, pdfcraft_cos::CosError> {
+) -> Result<usize, taratasy_cos::CosError> {
     if changed.is_empty() && stream.is_none() {
         return Ok(0);
     }

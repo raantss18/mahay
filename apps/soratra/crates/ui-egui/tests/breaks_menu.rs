@@ -1,12 +1,12 @@
 //! The ribbon's Breaks menu: its controls carry a name, and each item inserts the break it says.
 
 use serde_json::json;
-use wordcraft_engine::Session;
-use wordcraft_ui_egui::{Services, WordApp};
+use soratra_engine::Session;
+use soratra_ui_egui::{Services, WordApp};
 
-/// A WordCraft window on the Layout tab, ready for ribbon clicks.
+/// A Soratra window on the Layout tab, ready for ribbon clicks.
 fn layout_tab() -> egui_kittest::Harness<'static, WordApp> {
-    let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("one\ntwo")), Services::default());
+    let app = WordApp::new(Session::new(soratra_doc::Document::from_text("one\ntwo")), Services::default());
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1440.0, 900.0)).build_ui_state(
         |ui, app: &mut WordApp| {
             let ctx = ui.ctx().clone();

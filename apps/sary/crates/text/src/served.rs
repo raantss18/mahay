@@ -1,8 +1,8 @@
 //! Fonts a host serves next to the app, fetched on demand (the web build: no system fonts, and
 //! the wasm has no room for more embedded ones, see `build.rs`).
 //!
-//! The host lists them in `fonts/manifest.txt` next to `index.html`, in craft-fonts' manifest
-//! format (`family | style | file | …`, the file relative to the site root), so a craft-fonts
+//! The host lists them in `fonts/manifest.txt` next to `index.html`, in mahay-fonts' manifest
+//! format (`family | style | file | …`, the file relative to the site root), so a mahay-fonts
 //! checkout's `fonts/` folder works as it is and any other font needs one line. This module is
 //! the part that doesn't depend on the platform: reading the manifest, the catalog of families
 //! the host can serve, and the queue of families to fetch (picked in a font menu, or needed by a
@@ -33,7 +33,7 @@ pub struct ServedFont {
     pub integrity: Option<String>,
 }
 
-/// Reads a manifest in craft-fonts' format: one font file per line, fields separated by ` | `
+/// Reads a manifest in mahay-fonts' format: one font file per line, fields separated by ` | `
 /// (`family | style | file | scripts | licence | licence file | sha256 | source`); `#` comments
 /// and blank lines are ignored. Only family and file are needed here, so a line needs at least
 /// `family | style | file`. Returns the fonts and, for each line that was skipped, why.
@@ -280,8 +280,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn reads_craft_fonts_manifest_lines() {
-        let text = "# Font manifest for the Crafting Apps.\n\
+    fn reads_mahay_fonts_manifest_lines() {
+        let text = "# Font manifest for the Mahay apps.\n\
             \n\
             BIZ UDPGothic | Regular | fonts/biz-ud-pgothic/BIZUDPGothic-Regular.ttf | Jpan,Latn | OFL-1.1 | fonts/biz-ud-pgothic/OFL.txt | 258d | https://example.org\n\
             Open Sans | Regular | fonts/open-sans/OpenSans[wdth,wght].ttf\n";
@@ -340,7 +340,7 @@ mod tests {
 
         // A layout that needs a served family the database lacks asks for it (and is drawn with
         // the fallback meanwhile).
-        let t = photocraft_doc::TextLayer { text: "Hi".into(), font_family: served.into(), size_pt: 12.0, ..Default::default() };
+        let t = sary_doc::TextLayer { text: "Hi".into(), font_family: served.into(), size_pt: 12.0, ..Default::default() };
         let l = crate::TextEngine::new().layout(&t, 72.0);
         assert_eq!(l.glyphs.len(), 2);
         assert!(take_requests().iter().any(|f| f == served));
@@ -368,7 +368,7 @@ mod tests {
         request_for_languages(["en-US", "fr"]);
         assert!(!take_requests().iter().any(|f| f == hebrew));
         // A layout of Hebrew text in the default family asks for it too.
-        let t = photocraft_doc::TextLayer { text: "שלום".into(), size_pt: 12.0, ..Default::default() };
+        let t = sary_doc::TextLayer { text: "שלום".into(), size_pt: 12.0, ..Default::default() };
         let _ = crate::TextEngine::new().layout(&t, 72.0);
         assert!(take_requests().iter().any(|f| f == hebrew), "layout asks for the script fallback");
     }

@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-measure"
+name = "taratasy-measure"
 description = "Calibrated 2D PDF measurements, viewports and snapping"
 version.workspace = true
 edition.workspace = true
@@ -9,12 +9,12 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-model = { workspace = true }
-pdfcraft-content = { workspace = true }
-pdfcraft-annot = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-model = { workspace = true }
+taratasy-content = { workspace = true }
+taratasy-annot = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-pdfcraft-testkit = { workspace = true }
+taratasy-testkit = { workspace = true }

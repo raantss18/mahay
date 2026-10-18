@@ -8,7 +8,7 @@
 //!
 //! The rules and stems come from a Hunspell `.aff`/`.dic` pair ([`AffixDict::from_hunspell`]),
 //! read at runtime from the dictionaries installed on the system ([`crate::hunspell`]). They can
-//! also be stored in WordCraft's compact format ([`AffixDict::to_bytes`]): the rules as text
+//! also be stored in Soratra's compact format ([`AffixDict::to_bytes`]): the rules as text
 //! lines and the stems front-coded, raw-deflated together (the Polish dictionary is under 1 MB).
 //!
 //! Supported: one-character flags (at most 128 distinct, any Unicode character — `FLAG UTF-8`),
@@ -782,7 +782,7 @@ impl AffixDict {
         &self.comments
     }
 
-    /// Serialize to WordCraft's compact format: raw-deflate of `WCAFF1`, the comments, the
+    /// Serialize to Soratra's compact format: raw-deflate of `WCAFF1`, the comments, the
     /// tables and rules as text lines, a `WORDS` line, then one line per stem, front-coded
     /// against the previous one (a byte with the shared prefix length in bytes, the rest of the
     /// word, `/` and its flags if any).

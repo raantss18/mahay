@@ -16,7 +16,7 @@ image = { workspace = true, features = ["png"] }
 bytemuck = { workspace = true, features = ["bytemuck_derive"] }
 vello_cpu = { workspace = true }
 pic-scale = { workspace = true }
-# PdfCraft patch: report image resampling fallbacks through the application's logger.
+# Taratasy patch: report image resampling fallbacks through the application's logger.
 log = { workspace = true }
 
 [dev-dependencies]

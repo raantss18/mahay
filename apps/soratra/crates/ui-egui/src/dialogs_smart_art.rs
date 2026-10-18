@@ -7,8 +7,8 @@
 use egui::{Color32, Painter, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
-use wordcraft_doc::props::Rgb;
-use wordcraft_doc::smart_art::{MAX_ITEMS, SmartArtColors, SmartArtLayout, SmartArtSpec};
+use soratra_doc::props::Rgb;
+use soratra_doc::smart_art::{MAX_ITEMS, SmartArtColors, SmartArtLayout, SmartArtSpec};
 
 use crate::WordApp;
 use crate::theme::{Tokens, c32, regular, semibold};
@@ -267,7 +267,7 @@ pub fn items_without(g: &SmartArtSpec, i: usize) -> Value {
 /// The Text Pane: a row per item, indented by level. Typing changes the graphic as you go (one
 /// undo step per item typed in); Enter adds an item after the current one.
 pub fn text_pane(app: &mut WordApp, ui: &mut Ui) {
-    let Some(g) = wordcraft_engine::cmd::smart_art::selected_smart_art(&app.session) else { return };
+    let Some(g) = soratra_engine::cmd::smart_art::selected_smart_art(&app.session) else { return };
     let t = Tokens::get(ui.ctx());
     ui.label(egui::RichText::new(tl!("One line per item. Enter adds an item.")).color(t.text_dim));
     ui.add_space(4.0);

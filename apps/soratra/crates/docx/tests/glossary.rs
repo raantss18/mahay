@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 use std::io::{Read, Write};
 
-use wordcraft_doc::{Block, BuildingBlock, CharProps, Document, Paragraph, para_block};
+use soratra_doc::{Block, BuildingBlock, CharProps, Document, Paragraph, para_block};
 
 const W: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const R_NS: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
@@ -114,7 +114,7 @@ fn with_glossary() -> Vec<u8> {
 }
 
 fn save(doc: &Document) -> BTreeMap<String, Vec<u8>> {
-    unzip(&wordcraft_docx::write(doc).expect("write"))
+    unzip(&soratra_docx::write(doc).expect("write"))
 }
 
 fn block_text(b: &Block) -> String {
@@ -144,7 +144,7 @@ fn glossary_target(files: &BTreeMap<String, Vec<u8>>) -> Option<String> {
 #[test]
 fn unchanged_glossary_is_carried_byte_for_byte() {
     let bytes = with_glossary();
-    let mut doc = wordcraft_docx::read(&bytes).unwrap();
+    let mut doc = soratra_docx::read(&bytes).unwrap();
     doc.body.push(para_block(Paragraph::with_text("Added after opening", CharProps::default())));
     let files = save(&doc);
     let input = unzip(&bytes);
@@ -157,14 +157,14 @@ fn unchanged_glossary_is_carried_byte_for_byte() {
     let ct = text(&files, "[Content_Types].xml");
     assert!(ct.contains(&format!(r#"PartName="/word/glossary/document.xml" ContentType="{GLOSSARY_CT}""#)), "{ct}");
     assert!(ct.contains(r#"PartName="/word/glossary/styles.xml""#), "{ct}");
-    let again = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
+    let again = soratra_docx::read(&soratra_docx::write(&doc).unwrap()).unwrap();
     assert_eq!(again.glossary.len(), 2);
-    assert!(again.plain_text(wordcraft_doc::StoryRef::Body).contains("Added after opening"));
+    assert!(again.plain_text(soratra_doc::StoryRef::Body).contains("Added after opening"));
 }
 
 #[test]
 fn glossary_entries_are_read_into_the_model() {
-    let doc = wordcraft_docx::read(&with_glossary()).unwrap();
+    let doc = soratra_docx::read(&with_glossary()).unwrap();
     let g = &doc.glossary;
     assert_eq!(g.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(), ["Signature", "Price table"]);
     let sig = &g[0];
@@ -184,16 +184,16 @@ fn glossary_entries_are_read_into_the_model() {
     assert!(matches!(&*prices.blocks[0], Block::Table(_)), "{:?}", prices.blocks);
     assert_eq!(entry_text(prices), "Item|Price\nPrices exclude tax.");
     // The glossary's text isn't the document's.
-    assert!(!doc.plain_text(wordcraft_doc::StoryRef::Body).contains("Kind regards"));
+    assert!(!doc.plain_text(soratra_doc::StoryRef::Body).contains("Kind regards"));
 }
 
 #[test]
 fn edited_glossary_is_written_from_the_model() {
-    let mut doc = wordcraft_docx::read(&with_glossary()).unwrap();
+    let mut doc = soratra_docx::read(&with_glossary()).unwrap();
     doc.glossary[0].name = "Sign-off".into();
-    let num = doc.numbering.add_list(wordcraft_doc::ListKind::Bullet);
+    let num = doc.numbering.add_list(soratra_doc::ListKind::Bullet);
     let mut listed = Paragraph::with_text("Second line", CharProps::default());
-    listed.props.numbering = Some(wordcraft_doc::props::NumRef { num, level: 0 });
+    listed.props.numbering = Some(soratra_doc::props::NumRef { num, level: 0 });
     doc.glossary.push(BuildingBlock {
         name: "Address".into(),
         gallery: "docParts".into(),
@@ -208,7 +208,7 @@ fn edited_glossary_is_written_from_the_model() {
     assert!(!files.values().any(|b| String::from_utf8_lossy(b).contains(r#"w:val="Signature""#)), "the old glossary is gone");
     let ct = text(&files, "[Content_Types].xml");
     assert!(ct.contains(&format!(r#"PartName="/{target}" ContentType="{GLOSSARY_CT}""#)), "{ct}");
-    let again = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
+    let again = soratra_docx::read(&soratra_docx::write(&doc).unwrap()).unwrap();
     assert_eq!(again.glossary.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(), ["Sign-off", "Price table", "Address"]);
     assert_eq!(entry_text(&again.glossary[1]), "Item|Price\nPrices exclude tax.");
     assert_eq!(again.glossary[1].gallery, "autoTxt");
@@ -242,13 +242,13 @@ fn glossary_rels(part: &str) -> String {
 
 #[test]
 fn an_unchanged_glossary_whose_bytes_werent_kept_is_written_from_the_model() {
-    let mut doc = wordcraft_docx::read(&with_glossary()).unwrap();
+    let mut doc = soratra_docx::read(&with_glossary()).unwrap();
     // The verbatim copy is gone (over the kept-part caps, say): the model is all there is.
     doc.passthrough.remove("word/glossary/document.xml");
     let files = save(&doc);
     let target = glossary_target(&files).expect("a glossary relationship");
     assert!(text(&files, &target).contains("Kind regards, Ann"));
-    let again = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
+    let again = soratra_docx::read(&soratra_docx::write(&doc).unwrap()).unwrap();
     assert_eq!(again.glossary.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(), ["Signature", "Price table"]);
 }
 
@@ -267,7 +267,7 @@ fn an_external_glossary_relationship_is_passed_over() {
         ("word/_rels/document.xml.rels", doc_rels.into_bytes()),
         ("word/glossary/document.xml", glossary_xml(SIGNATURE).into_bytes()),
     ]);
-    let doc = wordcraft_docx::read(&bytes).unwrap();
+    let doc = soratra_docx::read(&bytes).unwrap();
     assert_eq!(doc.glossary.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(), ["Signature"]);
     // The same glossary is the one kept: saved unchanged, it's written back as it was.
     let files = save(&doc);
@@ -280,13 +280,13 @@ fn a_document_without_glossary_writes_none() {
     assert_eq!(glossary_target(&files), None);
     assert!(!text(&files, "[Content_Types].xml").contains("glossary"));
     // Removing every entry removes the glossary.
-    let mut doc = wordcraft_docx::read(&with_glossary()).unwrap();
+    let mut doc = soratra_docx::read(&with_glossary()).unwrap();
     doc.glossary.clear();
     let files = save(&doc);
     assert_eq!(glossary_target(&files), None);
     assert!(!files.keys().any(|k| k.contains("glossary")), "{:?}", files.keys());
     assert!(!text(&files, "[Content_Types].xml").contains("glossary"));
-    assert!(wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap().glossary.is_empty());
+    assert!(soratra_docx::read(&soratra_docx::write(&doc).unwrap()).unwrap().glossary.is_empty());
 }
 
 #[test]
@@ -299,11 +299,11 @@ fn a_new_entry_in_a_new_document_makes_a_glossary() {
         blocks: vec![para_block(Paragraph::with_text("Hello there", CharProps::default()))],
         ..Default::default()
     });
-    let again = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
+    let again = soratra_docx::read(&soratra_docx::write(&doc).unwrap()).unwrap();
     assert_eq!(again.glossary.len(), 1);
     assert_eq!(again.glossary[0].name, "Greeting");
     assert_eq!(entry_text(&again.glossary[0]), "Hello there");
-    assert!(again.plain_text(wordcraft_doc::StoryRef::Body).trim().is_empty());
+    assert!(again.plain_text(soratra_doc::StoryRef::Body).trim().is_empty());
 }
 
 /// Hostile glossaries open without a panic; entries that can't be read are skipped.
@@ -314,9 +314,9 @@ fn hostile_glossaries_never_panic() {
         package(&[("rId7", GLOSSARY_REL, "glossary/document.xml")], &[("[Content_Types].xml", ct.clone()), ("word/glossary/document.xml", g)])
     };
     let read = |bytes: Vec<u8>| -> Document {
-        let doc = wordcraft_docx::read(&bytes).unwrap();
+        let doc = soratra_docx::read(&bytes).unwrap();
         // Saving and reopening must not panic either.
-        let _ = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
+        let _ = soratra_docx::read(&soratra_docx::write(&doc).unwrap()).unwrap();
         doc
     };
     // No body, an empty body, no name, no properties: skipped.
@@ -358,7 +358,7 @@ fn hostile_glossaries_never_panic() {
     for target in ["document.xml", "missing.xml", "../../../../etc/passwd"] {
         let doc = read(package(&[("rId7", GLOSSARY_REL, target)], &[("[Content_Types].xml", ct.clone())]));
         assert!(doc.glossary.is_empty(), "{target}");
-        assert!(!doc.plain_text(wordcraft_doc::StoryRef::Body).contains("Kind regards"));
+        assert!(!doc.plain_text(soratra_doc::StoryRef::Body).contains("Kind regards"));
     }
     // A glossary relating to itself, or with a glossary of its own.
     for own in

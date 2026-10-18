@@ -23,8 +23,8 @@
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use pdfcraft_cos::{Dict, Document};
-use pdfcraft_edit::TextLine;
+use taratasy_cos::{Dict, Document};
+use taratasy_edit::TextLine;
 
 mod cover;
 
@@ -79,9 +79,9 @@ pub enum AuditError {
     #[error("page has a malformed /Annots entry")]
     BadAnnots,
     #[error(transparent)]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
     #[error(transparent)]
-    Edit(#[from] pdfcraft_edit::EditError),
+    Edit(#[from] taratasy_edit::EditError),
 }
 
 /// Fraction of a text line's ink (the area of its words), or of its box, that must lie under a
@@ -97,8 +97,8 @@ const COVER_CONTRAST: f64 = 3.0;
 /// content that cannot be decoded is returned as an error, never as an empty finding list.
 pub fn audit_redactions(doc: &Document) -> Result<Vec<AuditFinding>, AuditError> {
     let mut out = Vec::new();
-    for (n, page) in pdfcraft_model::pages(doc).iter().enumerate() {
-        let lines = pdfcraft_edit::text_lines(doc, n).map_err(|e| AuditError::Text(n, e.to_string()))?;
+    for (n, page) in taratasy_model::pages(doc).iter().enumerate() {
+        let lines = taratasy_edit::text_lines(doc, n).map_err(|e| AuditError::Text(n, e.to_string()))?;
         // 1. Opaque filled rectangles over extractable text.
         for r in cover::filled_rects(doc, &page.dict)? {
             let mut covered = String::new();
@@ -196,15 +196,15 @@ fn contrast(a: [f64; 3], b: [f64; 3]) -> f64 {
 fn annots(doc: &Document, page: &Dict) -> Result<Vec<[f64; 4]>, AuditError> {
     let Some(a) = page.get(b"Annots") else { return Ok(Vec::new()) };
     let resolved = doc.resolve(a);
-    let items: Vec<pdfcraft_cos::Object> = match &*resolved {
-        pdfcraft_cos::Object::Array(items) => items.clone(),
+    let items: Vec<taratasy_cos::Object> = match &*resolved {
+        taratasy_cos::Object::Array(items) => items.clone(),
         // A missing /Annots means no marks; a malformed one fails the audit.
         _ => return Err(AuditError::BadAnnots),
     };
     let mut out = Vec::new();
     for a in &items {
         let dict = match &*doc.resolve(a) {
-            pdfcraft_cos::Object::Dict(d) => d.clone(),
+            taratasy_cos::Object::Dict(d) => d.clone(),
             _ => continue,
         };
         if dict.name(b"Subtype") != Some(b"Redact") {

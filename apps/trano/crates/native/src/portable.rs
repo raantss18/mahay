@@ -4,7 +4,7 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::manifest::Record;
 use crate::paths::Paths;
-use artcraft_launcher_core::{CraftApp, PackageKind};
+use trano_core::{MahayApp, PackageKind};
 
 const MAX_FILES: usize = 10_000;
 const MAX_BYTES: u64 = 4 * 1024 * 1024 * 1024;
@@ -143,7 +143,7 @@ fn extract(file: &Path, destination: &Path) -> Result<Vec<PathBuf>, String> {
     Ok(files)
 }
 
-fn recorded_files<'a>(app: &CraftApp, record: &'a Record) -> Result<(&'a Path, Vec<PathBuf>), String> {
+fn recorded_files<'a>(app: &MahayApp, record: &'a Record) -> Result<(&'a Path, Vec<PathBuf>), String> {
     let root = record.path.parent().ok_or("The portable installation has no parent folder.")?;
     if record.kind != PackageKind::PortableZip || root.file_name().is_none_or(|n| n != app.id) {
         return Err("The launcher has no valid ownership record for this portable folder.".into());
@@ -174,7 +174,7 @@ fn recorded_files<'a>(app: &CraftApp, record: &'a Record) -> Result<(&'a Path, V
 /// unless `replace` allows writing over them.
 #[allow(clippy::too_many_arguments)]
 pub fn install(
-    app: &CraftApp,
+    app: &MahayApp,
     file: &Path,
     version: &str,
     previous: Option<&Record>,
@@ -284,7 +284,7 @@ pub fn install(
 }
 
 /// Removes only recorded program files. Personal settings and documents remain.
-pub fn remove(app: &CraftApp, record: &Record) -> Result<(), String> {
+pub fn remove(app: &MahayApp, record: &Record) -> Result<(), String> {
     let (root, files) = recorded_files(app, record)?;
     for relative in &files {
         let file = root.join(relative);
@@ -330,13 +330,13 @@ mod tests {
         std::fs::create_dir(&host).unwrap();
         let home = dir.path().join("home");
         symlink(&host, &home).unwrap();
-        let root = home.join("photocraft");
+        let root = home.join("sary");
         assert!(validate_directory(&root).is_ok());
         assert!(validate_owned_directory(&root, &root).is_ok());
 
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = MahayApp::by_id("sary").unwrap();
         let paths = Paths::under(&home);
-        let zip = archive(dir.path(), "app.zip", &[("photocraft.exe", b"program"), ("lib/runtime.dll", b"library")]);
+        let zip = archive(dir.path(), "app.zip", &[("sary.exe", b"program"), ("lib/runtime.dll", b"library")]);
         let record = install(app, &zip, "0.5.0", None, &paths, Some(&home), false, &mut |_| Ok(())).unwrap();
         assert_eq!(std::fs::read(&record.path).unwrap(), b"program");
 
@@ -373,50 +373,50 @@ mod tests {
         std::fs::create_dir(&first).unwrap();
         std::fs::create_dir(&second).unwrap();
         junction(&link, &first);
-        let alias_root = link.join("photocraft");
+        let alias_root = link.join("sary");
         std::fs::create_dir(&alias_root).unwrap();
-        std::fs::write(alias_root.join("photocraft.exe"), b"old program").unwrap();
+        std::fs::write(alias_root.join("sary.exe"), b"old program").unwrap();
         let record = Record {
             version: "0.5.0".into(),
             kind: PackageKind::PortableZip,
-            path: alias_root.join("photocraft.exe"),
+            path: alias_root.join("sary.exe"),
             installed_at: 0,
-            files: vec![alias_root.join("photocraft.exe")],
+            files: vec![alias_root.join("sary.exe")],
             needs_root: false,
         };
         std::process::Command::new("cmd.exe").args(["/C", "rmdir"]).arg(&link).status().unwrap();
         junction(&link, &second);
-        let foreign_root = link.join("photocraft");
+        let foreign_root = link.join("sary");
         std::fs::create_dir(&foreign_root).unwrap();
-        std::fs::write(foreign_root.join("photocraft.exe"), b"foreign program").unwrap();
-        assert!(remove(CraftApp::by_id("photocraft").unwrap(), &record).is_err());
-        assert_eq!(std::fs::read(foreign_root.join("photocraft.exe")).unwrap(), b"foreign program");
+        std::fs::write(foreign_root.join("sary.exe"), b"foreign program").unwrap();
+        assert!(remove(MahayApp::by_id("sary").unwrap(), &record).is_err());
+        assert_eq!(std::fs::read(foreign_root.join("sary.exe")).unwrap(), b"foreign program");
     }
 
     #[test]
     fn upgrade_downgrade_and_uninstall_preserve_personal_files_and_location() {
         let dir = tempfile::tempdir().unwrap();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = MahayApp::by_id("sary").unwrap();
         let paths = Paths::under(dir.path());
         let parent = dir.path().join("My Tools");
-        let first = archive(dir.path(), "first.zip", &[("photocraft.exe", b"first"), ("obsolete.dll", b"old")]);
+        let first = archive(dir.path(), "first.zip", &[("sary.exe", b"first"), ("obsolete.dll", b"old")]);
         let mut record = install(app, &first, "0.5.0", None, &paths, Some(&parent), false, &mut |_| Ok(())).unwrap();
-        let personal = parent.join("photocraft").join("settings.json");
+        let personal = parent.join("sary").join("settings.json");
         std::fs::write(&personal, b"personal").unwrap();
         for (version, exe) in [("0.6.0", b"new".as_slice()), ("0.4.0", b"older".as_slice())] {
-            let executable = if version == "0.4.0" { "PhotoCraft.exe" } else { "photocraft.exe" };
+            let executable = if version == "0.4.0" { "Sary.exe" } else { "sary.exe" };
             let package = archive(dir.path(), "next.zip", &[(executable, exe), ("lib/runtime.dll", b"dll")]);
             record = install(app, &package, version, Some(&record), &paths, Some(&dir.path().join("Ignored")), false, &mut |_| Ok(())).unwrap();
             assert_eq!(std::fs::read(&record.path).unwrap(), exe);
             assert_eq!(record.path.parent().unwrap(), std::fs::canonicalize(personal.parent().unwrap()).unwrap());
-            assert!(!parent.join("photocraft/obsolete.dll").exists());
+            assert!(!parent.join("sary/obsolete.dll").exists());
             assert_eq!(std::fs::read(&personal).unwrap(), b"personal");
             let mut manifest = crate::manifest::Manifest::default();
             manifest.apps.insert(app.id.into(), record.clone());
             manifest.save(&paths.manifest()).unwrap();
             let restored = crate::manifest::Manifest::load(&paths.manifest());
             let detected = crate::detect::detect(app, &restored, &crate::detect::Snapshot::take()).unwrap();
-            assert_eq!(detected.version, artcraft_launcher_core::version::parse(version));
+            assert_eq!(detected.version, trano_core::version::parse(version));
             assert_eq!(detected.location, record.path.to_string_lossy());
         }
         remove(app, &record).unwrap();
@@ -427,28 +427,28 @@ mod tests {
     #[test]
     fn a_failed_manifest_commit_restores_the_previous_program() {
         let dir = tempfile::tempdir().unwrap();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = MahayApp::by_id("sary").unwrap();
         let paths = Paths::under(dir.path());
-        let old = archive(dir.path(), "old.zip", &[("photocraft.exe", b"old"), ("lib.dll", b"library")]);
+        let old = archive(dir.path(), "old.zip", &[("sary.exe", b"old"), ("lib.dll", b"library")]);
         let record = install(app, &old, "0.5.0", None, &paths, None, false, &mut |_| Ok(())).unwrap();
-        let next = archive(dir.path(), "next.zip", &[("photocraft.exe", b"new"), ("new.dll", b"new")]);
+        let next = archive(dir.path(), "next.zip", &[("sary.exe", b"new"), ("new.dll", b"new")]);
         let result = install(app, &next, "0.6.0", Some(&record), &paths, None, false, &mut |_| Err("manifest disk full".into()));
         assert_eq!(result.unwrap_err(), "manifest disk full");
         assert_eq!(std::fs::read(record.path).unwrap(), b"old");
-        assert_eq!(std::fs::read(paths.apps().join("photocraft/lib.dll")).unwrap(), b"library");
-        assert!(!paths.apps().join("photocraft/new.dll").exists());
+        assert_eq!(std::fs::read(paths.apps().join("sary/lib.dll")).unwrap(), b"library");
+        assert!(!paths.apps().join("sary/new.dll").exists());
     }
 
     #[test]
     fn collision_is_rejected_before_replacing_any_old_file() {
         let dir = tempfile::tempdir().unwrap();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = MahayApp::by_id("sary").unwrap();
         let paths = Paths::under(dir.path());
-        let old = archive(dir.path(), "old.zip", &[("photocraft.exe", b"old")]);
+        let old = archive(dir.path(), "old.zip", &[("sary.exe", b"old")]);
         let record = install(app, &old, "0.5.0", None, &paths, None, false, &mut |_| Ok(())).unwrap();
-        let personal = paths.apps().join("photocraft/settings.json");
+        let personal = paths.apps().join("sary/settings.json");
         std::fs::write(&personal, b"keep").unwrap();
-        let next = archive(dir.path(), "next.zip", &[("photocraft.exe", b"new"), ("settings.json", b"overwrite")]);
+        let next = archive(dir.path(), "next.zip", &[("sary.exe", b"new"), ("settings.json", b"overwrite")]);
         assert!(install(app, &next, "0.6.0", Some(&record), &paths, None, false, &mut |_| Ok(())).is_err());
         assert_eq!(std::fs::read(record.path).unwrap(), b"old");
         assert_eq!(std::fs::read(personal).unwrap(), b"keep");
@@ -457,17 +457,17 @@ mod tests {
     #[test]
     fn a_new_install_writes_over_unrecorded_files_only_when_asked_to() {
         let dir = tempfile::tempdir().unwrap();
-        let app = CraftApp::by_id("photocraft").unwrap();
+        let app = MahayApp::by_id("sary").unwrap();
         let paths = Paths::under(dir.path());
-        let folder = paths.apps().join("photocraft");
+        let folder = paths.apps().join("sary");
         std::fs::create_dir_all(&folder).unwrap();
-        std::fs::write(folder.join("photocraft.exe"), b"theirs").unwrap();
+        std::fs::write(folder.join("sary.exe"), b"theirs").unwrap();
         std::fs::write(folder.join("notes.txt"), b"keep").unwrap();
-        let zip = archive(dir.path(), "new.zip", &[("photocraft.exe", b"new")]);
+        let zip = archive(dir.path(), "new.zip", &[("sary.exe", b"new")]);
         assert!(install(app, &zip, "0.5.0", None, &paths, None, false, &mut |_| Ok(())).is_err());
-        assert_eq!(std::fs::read(folder.join("photocraft.exe")).unwrap(), b"theirs");
+        assert_eq!(std::fs::read(folder.join("sary.exe")).unwrap(), b"theirs");
         install(app, &zip, "0.5.0", None, &paths, None, true, &mut |_| Ok(())).unwrap();
-        assert_eq!(std::fs::read(folder.join("photocraft.exe")).unwrap(), b"new");
+        assert_eq!(std::fs::read(folder.join("sary.exe")).unwrap(), b"new");
         assert_eq!(std::fs::read(folder.join("notes.txt")).unwrap(), b"keep");
     }
 
@@ -477,7 +477,7 @@ mod tests {
         for (name, files) in [
             ("traversal.zip", vec![("../escape.exe", b"bad".as_slice())]),
             ("colon.zip", vec![("data:stream", b"bad".as_slice())]),
-            ("duplicate.zip", vec![("PhotoCraft.exe", b"one".as_slice()), ("photocraft.exe", b"two".as_slice())]),
+            ("duplicate.zip", vec![("Sary.exe", b"one".as_slice()), ("sary.exe", b"two".as_slice())]),
         ] {
             let zip = archive(dir.path(), name, &files);
             let output = dir.path().join(name.replace('.', "-"));

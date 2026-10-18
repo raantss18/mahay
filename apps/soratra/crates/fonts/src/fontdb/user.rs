@@ -7,7 +7,7 @@
 //!
 //! Desktop: [`FontDb::load_user_fonts`] names a folder (the app's `fonts` folder); the fonts there
 //! load at start-up and each font added later is copied there (unwrapped from WOFF/WOFF2). Without
-//! a folder (the web, tests, `WORDCRAFT_NO_PREFS`) added fonts last for the session; the web
+//! a folder (the web, tests, `SORATRA_NO_PREFS`) added fonts last for the session; the web
 //! shell keeps them in the browser itself.
 
 use std::path::{Path, PathBuf};

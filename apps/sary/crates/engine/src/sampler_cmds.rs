@@ -2,12 +2,12 @@
 //! the Info panel, so a fixed position can be compared instead of chasing the live pointer.
 //!
 //! Points are per-document view state ([`crate::DocState::color_samplers`]): they belong to their
-//! document, are discarded when it closes, and are not saved to `.pcraft` or PSD. Placing, moving
+//! document, are discarded when it closes, and are not saved to `.sary` or PSD. Placing, moving
 //! and removing them changes no pixels and adds no History step, so they are not journaled. Each
 //! point reads one composite pixel (no averaging); its values match the Info panel's pointer
 //! readout (RGB 0–255 and the naive device CMYK percentages, without an ICC profile).
 
-use photocraft_doc::Document;
+use sary_doc::Document;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -83,7 +83,7 @@ fn change<R>(s: &mut Session, f: impl FnOnce(&mut DocState) -> Result<R>) -> Res
     if clean {
         st.saved_revision = st.revision;
     }
-    st.last_damage = Some(photocraft_geom::Rect::EMPTY);
+    st.last_damage = Some(sary_geom::Rect::EMPTY);
     Ok(r)
 }
 
@@ -202,9 +202,9 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::{ColorMode, SampleType};
-    use photocraft_doc::{Layer, Size};
-    use photocraft_geom::Rect;
+    use sary_color::{ColorMode, SampleType};
+    use sary_doc::{Layer, Size};
+    use sary_geom::Rect;
 
     /// A 100×80 white document.
     fn session() -> Session {
@@ -250,7 +250,7 @@ mod tests {
         let mut s = session();
         s.edit("paint", |doc, _| {
             let surf = doc.layers[0].surface_mut().unwrap();
-            let black = photocraft_raster::from_rgba(&surf.format(), [0.0, 0.0, 0.0, 1.0]);
+            let black = sary_raster::from_rgba(&surf.format(), [0.0, 0.0, 0.0, 1.0]);
             surf.fill_rect(Rect::new(3, 3, 4, 4), &black);
             Ok(())
         })
@@ -261,7 +261,7 @@ mod tests {
         // Painting over the point changes its readout (the list is computed live).
         s.edit("paint", |doc, _| {
             let surf = doc.layers[0].surface_mut().unwrap();
-            let red = photocraft_raster::from_rgba(&surf.format(), [1.0, 0.0, 0.0, 1.0]);
+            let red = sary_raster::from_rgba(&surf.format(), [1.0, 0.0, 0.0, 1.0]);
             surf.fill_rect(Rect::new(3, 3, 4, 4), &red);
             Ok(())
         })
@@ -391,7 +391,7 @@ mod tests {
             let mut s = session();
             s.edit("paint", |doc, _| {
                 let surf = doc.layers[0].surface_mut().unwrap();
-                let black = photocraft_raster::from_rgba(&surf.format(), [0.0, 0.0, 0.0, 1.0]);
+                let black = sary_raster::from_rgba(&surf.format(), [0.0, 0.0, 0.0, 1.0]);
                 surf.fill_rect(Rect::new(3, 3, 4, 4), &black);
                 Ok(())
             })
@@ -470,7 +470,7 @@ mod tests {
         s.execute("file.new", json!({"width": 8, "height": 8, "depth": 32, "background": "white"})).unwrap();
         s.edit("paint", |doc, _| {
             let surf = doc.layers[0].surface_mut().unwrap();
-            let hdr = photocraft_raster::from_rgba(&surf.format(), [2.0, 2.0, 2.0, 1.0]);
+            let hdr = sary_raster::from_rgba(&surf.format(), [2.0, 2.0, 2.0, 1.0]);
             surf.fill_rect(Rect::new(3, 3, 4, 4), &hdr);
             Ok(())
         })

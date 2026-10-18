@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use gridcraft_model::{Sheet, Workbook};
+use tabilao_model::{Sheet, Workbook};
 use serde_json::json;
 
 use crate::{DocState, Session};
@@ -39,7 +39,7 @@ pub fn build(name: &str) -> Option<Workbook> {
     let mut wb = (*s.doc().ok()?.wb).clone();
     wb.active_sheet = 0;
     if let Some(sh) = wb.sheet_mut(0) {
-        sh.view_active = gridcraft_core::CellRef::default();
+        sh.view_active = tabilao_core::CellRef::default();
     }
     Some(wb)
 }
@@ -100,7 +100,7 @@ fn sales(s: &mut Session) -> bool {
         if let Some(sh) = wb.sheet_mut(0)
             && let Some(c) = sh.charts.last_mut()
         {
-            c.series = vec![gridcraft_model::Series {
+            c.series = vec![tabilao_model::Series {
                 name: Some("Sales!$G$4".into()),
                 categories: Some("Sales!$B$5:$B$10".into()),
                 values: "Sales!$G$5:$G$10".into(),

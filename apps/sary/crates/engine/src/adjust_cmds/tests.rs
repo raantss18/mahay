@@ -18,7 +18,7 @@ fn paint(s: &mut Session, f: impl Fn(i32, i32) -> [f32; 4]) {
         let mut data = Vec::new();
         for y in b.y0..b.y1 {
             for x in b.x0..b.x1 {
-                data.extend(photocraft_raster::from_rgba(&fmt, f(x, y)));
+                data.extend(sary_raster::from_rgba(&fmt, f(x, y)));
             }
         }
         surf.write_region(b, &data);
@@ -73,7 +73,7 @@ fn destructive_adjustments_respect_selection() {
     let mut s = session(8, "rgb");
     s.execute("select.all", json!({})).ok();
     s.edit("sel", |doc, _| {
-        let mut sel = Surface::new(photocraft_color::PixelFormat::GRAY8);
+        let mut sel = Surface::new(sary_color::PixelFormat::GRAY8);
         sel.write_region(Rect::new(0, 0, 10, 32), &vec![1.0; 320]);
         doc.selection = Some(sel);
         Ok(())
@@ -143,7 +143,7 @@ fn selective_color_layer_and_destructive() {
     }
     let mut s = session(8, "rgb");
     let r = s.execute("layer.newAdjustmentLayer.selectiveColor", json!({"colors": "blues", "yellow": 40})).unwrap();
-    let id = photocraft_doc::LayerId(r["layer"].as_u64().unwrap());
+    let id = sary_doc::LayerId(r["layer"].as_u64().unwrap());
     let get = |s: &Session| match &doc(s).layer(id).unwrap().content {
         LayerContent::Adjustment(Adjustment::SelectiveColor { relative, adjustments }) => (*relative, *adjustments),
         other => panic!("{other:?}"),
@@ -164,8 +164,8 @@ fn selective_color_layer_and_destructive() {
 fn color_lookup_builtin_data_and_errors() {
     let mut s = session(8, "rgb");
     let r = s.execute("layer.newAdjustmentLayer.colorLookup", json!({"lut": "dayForNight"})).unwrap();
-    let id = photocraft_doc::LayerId(r["layer"].as_u64().unwrap());
-    let px = photocraft_compose::render(doc(&s), Rect::from_xywh(40, 30, 1, 1)).px[0];
+    let id = sary_doc::LayerId(r["layer"].as_u64().unwrap());
+    let px = sary_compose::render(doc(&s), Rect::from_xywh(40, 30, 1, 1)).px[0];
     assert!(px[2] > px[0], "night is blue: {px:?}");
     // Switching interpolation keeps the table.
     s.execute("layer.setAdjustment", json!({"layer": id.0, "interpolation": "tetrahedral", "dither": true})).unwrap();
@@ -216,11 +216,11 @@ LUT_3D_SIZE 2
     assert!(s.execute("image.adjustments.colorLookup", json!({"data": "LUT_3D_SIZE 3\n0 0 0\n"})).is_err());
     assert!(s.execute("layer.newAdjustmentLayer.colorLookup", json!({"file": "/nonexistent/x.cube"})).is_err());
     let looks = s.execute("image.adjustments.colorLookup.list", json!({})).unwrap();
-    assert_eq!(looks.as_array().unwrap().len(), photocraft_cms::lutfile::BUILTIN.len());
+    assert_eq!(looks.as_array().unwrap().len(), sary_cms::lutfile::BUILTIN.len());
 }
 
 /// The kind's parameters, read back from the model (Color Lookup with its table name and size).
-fn adjustment_of(s: &Session, id: photocraft_doc::LayerId) -> Adjustment {
+fn adjustment_of(s: &Session, id: sary_doc::LayerId) -> Adjustment {
     match &doc(s).layer(id).unwrap().content {
         LayerContent::Adjustment(a) => a.clone(),
         other => panic!("{other:?}"),
@@ -276,7 +276,7 @@ fn selective_color_and_color_lookup_reject_wrong_typed_params() {
         ("colorLookup", json!({"lut": "warm", "interpolation": "tetrahedral", "dither": true})),
     ];
     for (kind, p) in made {
-        let id = photocraft_doc::LayerId(s.execute(&format!("layer.newAdjustmentLayer.{kind}"), p).unwrap()["layer"].as_u64().unwrap());
+        let id = sary_doc::LayerId(s.execute(&format!("layer.newAdjustmentLayer.{kind}"), p).unwrap()["layer"].as_u64().unwrap());
         let before = adjustment_of(&s, id);
         for (k, p, key) in cases.iter().filter(|c| c.0 == kind) {
             let mut p = p.clone();
@@ -301,13 +301,13 @@ fn selective_color_and_color_lookup_reject_wrong_typed_params() {
 }
 
 #[test]
-fn new_kinds_round_trip_through_psd_and_pcraft() {
+fn new_kinds_round_trip_through_psd_and_sary() {
     let mut s = session(8, "rgb");
     s.execute("layer.newAdjustmentLayer.selectiveColor", json!({"reds": [10, -20, 30, -40], "method": "absolute"})).unwrap();
     s.execute("layer.newAdjustmentLayer.colorLookup", json!({"lut": "warm", "dither": true})).unwrap();
     let d = doc(&s).clone();
-    let bytes = photocraft_io::export(&d, "x.psd", &Default::default()).unwrap().bytes;
-    let back = photocraft_io::import("x.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&d, "x.psd", &Default::default()).unwrap().bytes;
+    let back = sary_io::import("x.psd", &bytes).unwrap().document;
     let kinds: Vec<&str> = back
         .layers
         .iter()
@@ -317,8 +317,8 @@ fn new_kinds_round_trip_through_psd_and_pcraft() {
         })
         .collect();
     assert_eq!(kinds, ["selectiveColor", "colorLookup"]);
-    let pc = photocraft_format::save_to_bytes(&d, &Default::default()).unwrap();
-    let again = photocraft_format::load_from_bytes(&pc).unwrap();
+    let pc = sary_format::save_to_bytes(&d, &Default::default()).unwrap();
+    let again = sary_format::load_from_bytes(&pc).unwrap();
     for (a, b) in d.layers.iter().zip(&again.layers) {
         assert_eq!(a.content, b.content);
     }
@@ -408,14 +408,14 @@ fn smart_session() -> Session {
 }
 
 fn flatten(s: &Session) -> Vec<[f32; 4]> {
-    photocraft_compose::flatten(doc(s)).px
+    sary_compose::flatten(doc(s)).px
 }
 
 fn max_diff(a: &[[f32; 4]], b: &[[f32; 4]]) -> f32 {
     a.iter().zip(b).flat_map(|(p, q)| (0..4).map(move |c| (p[c] - q[c]).abs())).fold(0.0, f32::max)
 }
 
-fn smart_filters_of(s: &Session) -> Vec<photocraft_doc::SmartFilter> {
+fn smart_filters_of(s: &Session) -> Vec<sary_doc::SmartFilter> {
     let d = s.active().unwrap();
     match &d.doc.layer(d.active_layer.unwrap()).unwrap().content {
         LayerContent::Smart(sm) => sm.smart_filters.clone(),
@@ -442,7 +442,7 @@ fn adjustments_on_a_smart_object_record_a_smart_filter() {
     let sf = smart_filters_of(&s);
     assert_eq!(sf.len(), 1);
     assert_eq!(sf[0].command, "image.adjustments.invert");
-    assert!(sf[0].visible && sf[0].opacity == 1.0 && sf[0].blend == photocraft_color::BlendMode::Normal);
+    assert!(sf[0].visible && sf[0].opacity == 1.0 && sf[0].blend == sary_color::BlendMode::Normal);
     assert!(sf[0].params.get("__kind").is_none(), "the engine's private key is not recorded");
     assert_eq!(max_diff(&flatten(&s), &baked), 0.0, "the smart filter renders the destructive result");
     // Hiding the filter shows the original exactly.
@@ -530,7 +530,7 @@ fn a_targeted_mask_enables_editing_it_on_any_layer() {
 /// #5335: Curves (⌘M) edits the targeted layer mask, saved channel or Quick Mask at every depth.
 #[test]
 fn curves_apply_to_non_colour_targets_at_every_depth() {
-    let area = photocraft_geom::Rect::from_xywh(0, 0, 48, 32);
+    let area = sary_geom::Rect::from_xywh(0, 0, 48, 32);
     for depth in DEPTHS {
         for target in ["mask", "alpha", "quickMask"] {
             let mut s = session(depth, "rgb");
@@ -584,7 +584,7 @@ fn curves_apply_to_non_colour_targets_at_every_depth() {
 /// ignores the composite) or an ink-separated result (CMYK curves the inks).
 #[test]
 fn curves_on_grey_targets_ignore_the_document_colour_mode() {
-    let area = photocraft_geom::Rect::from_xywh(0, 0, 48, 32);
+    let area = sary_geom::Rect::from_xywh(0, 0, 48, 32);
     for mode in ["lab", "cmyk"] {
         for depth in [8u64, 16] {
             for target in ["mask", "alpha", "quickMask"] {

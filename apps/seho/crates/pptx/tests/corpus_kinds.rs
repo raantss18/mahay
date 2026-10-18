@@ -7,12 +7,12 @@ use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
 
-use deckcraft_model::anim::{AnimStart, Animation, TextBuild};
-use deckcraft_model::chart::{Chart, ChartType};
-use deckcraft_model::style::PictureFill;
-use deckcraft_model::table::Table;
-use deckcraft_model::text::{Action, Hyperlink, Run, RunProps, TextBody};
-use deckcraft_model::{Geom, LayoutId, LayoutType, MasterId, MediaClip, PhType, Presentation, ShapeKind, Slide, defaults};
+use seho_model::anim::{AnimStart, Animation, TextBuild};
+use seho_model::chart::{Chart, ChartType};
+use seho_model::style::PictureFill;
+use seho_model::table::Table;
+use seho_model::text::{Action, Hyperlink, Run, RunProps, TextBody};
+use seho_model::{Geom, LayoutId, LayoutType, MasterId, MediaClip, PhType, Presentation, ShapeKind, Slide, defaults};
 
 fn png(w: u32, h: u32, rgb: [u8; 3]) -> Vec<u8> {
     let img = image::RgbImage::from_pixel(w, h, image::Rgb(rgb));
@@ -21,11 +21,11 @@ fn png(w: u32, h: u32, rgb: [u8; 3]) -> Vec<u8> {
     out.into_inner()
 }
 
-fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> deckcraft_model::Shape {
-    deckcraft_model::Shape {
-        id: deckcraft_model::ShapeId(p.alloc_id().expect("id")),
+fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> seho_model::Shape {
+    seho_model::Shape {
+        id: seho_model::ShapeId(p.alloc_id().expect("id")),
         name: name.into(),
-        xfrm: Some(deckcraft_geom::Xfrm::new(x, y, w, h)),
+        xfrm: Some(seho_geom::Xfrm::new(x, y, w, h)),
         ..Default::default()
     }
 }
@@ -67,7 +67,7 @@ fn tables() -> Presentation {
     p
 }
 
-fn chart_of(p: &mut Presentation, name: &str, kind: ChartType, title: &str, x: f64) -> deckcraft_model::Shape {
+fn chart_of(p: &mut Presentation, name: &str, kind: ChartType, title: &str, x: f64) -> seho_model::Shape {
     let mut chart = Chart::sample(kind);
     chart.title = Some(title.into());
     chart.categories = vec!["Jan".into(), "Feb".into()];
@@ -118,7 +118,7 @@ fn animations() -> Presentation {
             ..Default::default()
         },
     ];
-    s.transition = Some(deckcraft_model::anim::Transition { kind: "wipe".into(), option: "l".into(), duration_ms: 800, ..Default::default() });
+    s.transition = Some(seho_model::anim::Transition { kind: "wipe".into(), option: "l".into(), duration_ms: 800, ..Default::default() });
     p.slides = vec![Arc::new(s)];
     p
 }
@@ -146,7 +146,7 @@ fn sections() -> Presentation {
     let mut first = slide_with(&mut p, LayoutType::Title, "Opening remarks");
     if let Some(t) = first.shapes.get_mut(1) {
         t.text = Some(TextBody {
-            paragraphs: vec![deckcraft_model::text::Paragraph {
+            paragraphs: vec![seho_model::text::Paragraph {
                 runs: vec![Run::with(
                     "Brief",
                     RunProps {
@@ -170,10 +170,10 @@ fn sections() -> Presentation {
     let ids = [first.id, second.id];
     p.slides = vec![Arc::new(first), Arc::new(second)];
     p.sections = vec![
-        deckcraft_model::Section { name: "Opening".into(), slides: vec![ids[0]] },
-        deckcraft_model::Section { name: "Figures".into(), slides: vec![ids[1]] },
+        seho_model::Section { name: "Opening".into(), slides: vec![ids[0]] },
+        seho_model::Section { name: "Figures".into(), slides: vec![ids[1]] },
     ];
-    p.custom_shows = vec![deckcraft_model::CustomShow { name: "Short show".into(), slides: vec![ids[0]] }];
+    p.custom_shows = vec![seho_model::CustomShow { name: "Short show".into(), slides: vec![ids[0]] }];
     p
 }
 
@@ -404,14 +404,14 @@ fn lost<'a>(origin: &'a BTreeMap<String, usize>, saved: &BTreeMap<String, usize>
 
 fn round_trip(label: &str, bytes: &[u8]) -> (Pkg, Pkg) {
     let origin = Pkg::open(bytes);
-    let once = deckcraft_pptx::export(&deckcraft_pptx::import(bytes).unwrap_or_else(|e| panic!("{label}: import: {e}")))
+    let once = seho_pptx::export(&seho_pptx::import(bytes).unwrap_or_else(|e| panic!("{label}: import: {e}")))
         .unwrap_or_else(|e| panic!("{label}: save: {e}"));
     let saved = Pkg::open(&once);
     let origin_text = xml_text(&origin.parts);
     let missing = lost(&origin_text, &xml_text(&saved.parts));
     assert!(missing.is_empty(), "{label}: text lost on save: {missing:?}");
     assert_eq!(content_counts(&origin.parts), content_counts(&saved.parts), "{label}: content parts changed");
-    let again = deckcraft_pptx::export(&deckcraft_pptx::import(&once).unwrap_or_else(|e| panic!("{label}: reopen: {e}")))
+    let again = seho_pptx::export(&seho_pptx::import(&once).unwrap_or_else(|e| panic!("{label}: reopen: {e}")))
         .unwrap_or_else(|e| panic!("{label}: second save: {e}"));
     let saved2 = Pkg::open(&again);
     assert_eq!(saved.parts.keys().collect::<Vec<_>>(), saved2.parts.keys().collect::<Vec<_>>(), "{label}: part names changed on the second save");
@@ -451,7 +451,7 @@ fn handout_deck() -> Vec<u8> {
     let mut p = defaults::new_presentation(None);
     let s = slide_with(&mut p, LayoutType::TitleOnly, "Leave-behind");
     p.slides = vec![Arc::new(s)];
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     let mut pkg = Pkg::open(&bytes);
     let master = format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\
@@ -521,26 +521,26 @@ fn placeholder_text(p: &Presentation, kind: PhType) -> String {
 
 #[test]
 fn authored_kinds_round_trip_parts_and_text() {
-    let tables_bytes = deckcraft_pptx::export(&tables()).expect("tables");
+    let tables_bytes = seho_pptx::export(&tables()).expect("tables");
     let (origin, _) = round_trip("tables", &tables_bytes);
     require(&xml_text(&origin.parts), "tables", &["Quarter", "North", "12", "Total", "Regions"]);
     assert_eq!(content_counts(&origin.parts), [1, 0, 0, 0, 0]);
 
-    let charts_bytes = deckcraft_pptx::export(&charts()).expect("charts");
+    let charts_bytes = seho_pptx::export(&charts()).expect("charts");
     let (origin, _) = round_trip("charts", &charts_bytes);
     require(&xml_text(&origin.parts), "charts", &["Revenue", "Trend", "Share", "Actual", "Jan", "Feb", "Month", "Amount due"]);
     assert_eq!(content_counts(&origin.parts), [1, 3, 0, 0, 0]);
 
-    let anim_bytes = deckcraft_pptx::export(&animations()).expect("animations");
+    let anim_bytes = seho_pptx::export(&animations()).expect("animations");
     let (origin, saved) = round_trip("animations", &anim_bytes);
     require(&xml_text(&origin.parts), "animations", &["Motion", "Fly in", "One", "Two", "Three"]);
-    let anim = deckcraft_pptx::import(&saved.bytes()).expect("animations import");
+    let anim = seho_pptx::import(&saved.bytes()).expect("animations import");
     assert_eq!(anim.slides[0].animations.len(), 2);
     assert_eq!(anim.slides[0].animations[0].effect, "fly");
     assert_eq!(anim.slides[0].animations[1].text_build, TextBuild::ByParagraph);
     assert_eq!(anim.slides[0].transition.as_ref().map(|t| t.kind.as_str()), Some("wipe"));
 
-    let media_bytes = deckcraft_pptx::export(&media()).expect("media");
+    let media_bytes = seho_pptx::export(&media()).expect("media");
     let (origin, saved) = round_trip("media", &media_bytes);
     require(&xml_text(&origin.parts), "media", &["Media"]);
     let mark = png(4, 4, [20, 90, 160]);
@@ -548,24 +548,24 @@ fn authored_kinds_round_trip_parts_and_text() {
     assert!(saved.parts.values().any(|b| b == b"owned-wav-tone"), "the audio bytes did not survive the save");
     assert!(saved.parts.values().any(|b| b == b"owned-mp4-clip"), "the video bytes did not survive the save");
     assert!(content_counts(&origin.parts)[2] >= 3, "picture, audio and video");
-    let media = deckcraft_pptx::import(&saved.bytes()).expect("media import");
+    let media = seho_pptx::import(&saved.bytes()).expect("media import");
     let tone = media.slides[0].shapes.iter().find(|s| s.name == "Tone").expect("tone");
     let ShapeKind::Media(clip) = &tone.kind else { panic!("not media") };
     assert_eq!(clip.bookmarks, vec![("Cue the demo".into(), 400)]);
     assert!(!clip.video);
 
-    let section_bytes = deckcraft_pptx::export(&sections()).expect("sections");
+    let section_bytes = seho_pptx::export(&sections()).expect("sections");
     let (origin, saved) = round_trip("sections", &section_bytes);
     require(
         &xml_text(&origin.parts),
         "sections",
         &["Opening remarks", "Brief", "Figures", "Opening", "Short show", "https://example.org/brief?q=1&x=2", "Open the brief"],
     );
-    let sections = deckcraft_pptx::import(&saved.bytes()).expect("sections import");
+    let sections = seho_pptx::import(&saved.bytes()).expect("sections import");
     assert_eq!(sections.sections.iter().map(|s| s.name.as_str()).collect::<Vec<_>>(), vec!["Opening", "Figures"]);
     assert_eq!(sections.custom_shows[0].name, "Short show");
 
-    let master_bytes = deckcraft_pptx::export(&masters()).expect("masters");
+    let master_bytes = seho_pptx::export(&masters()).expect("masters");
     let (origin, saved) = round_trip("masters", &master_bytes);
     require(
         &xml_text(&origin.parts),
@@ -583,7 +583,7 @@ fn authored_kinds_round_trip_parts_and_text() {
             "Section Header",
         ],
     );
-    let masters = deckcraft_pptx::import(&saved.bytes()).expect("masters import");
+    let masters = seho_pptx::import(&saved.bytes()).expect("masters import");
     assert_eq!(masters.masters.len(), 2);
     assert!(masters.masters.iter().any(|m| m.name == "Evening"));
     assert!(masters.masters.iter().flat_map(|m| &m.layouts).any(|l| l.name == "Quote" && l.kind == LayoutType::Custom));
@@ -592,14 +592,14 @@ fn authored_kinds_round_trip_parts_and_text() {
     let (origin, _) = round_trip("handout master", &handout);
     require(&xml_text(&origin.parts), "handout", &["Leave-behind", "Board pack", "Not for circulation", "1 March 2026", "Handouts"]);
     assert_eq!(content_counts(&origin.parts)[4], 1, "handout master part");
-    let opened = deckcraft_pptx::import(&handout).expect("import handout");
+    let opened = seho_pptx::import(&handout).expect("import handout");
     assert_eq!(opened.handout_master.as_ref().map(|m| m.name.as_str()), Some("Handouts"));
     assert_eq!(placeholder_text(&opened, PhType::Header), "Board pack");
     assert_eq!(placeholder_text(&opened, PhType::Footer), "Not for circulation");
     assert_eq!(placeholder_text(&opened, PhType::Date), "1 March 2026");
     assert_eq!(placeholder_text(&opened, PhType::SlideNum), "3");
-    let saved = deckcraft_pptx::export(&opened).expect("save handout");
-    let reopened = deckcraft_pptx::import(&saved).expect("reopen handout");
+    let saved = seho_pptx::export(&opened).expect("save handout");
+    let reopened = seho_pptx::import(&saved).expect("reopen handout");
     assert_eq!(placeholder_text(&reopened, PhType::Header), "Board pack");
     assert_eq!(placeholder_text(&reopened, PhType::Footer), "Not for circulation");
     assert_eq!(placeholder_text(&reopened, PhType::Date), "1 March 2026");

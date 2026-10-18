@@ -1,4 +1,4 @@
-# photocraft-codecs
+# sary-codecs
 
 Codecs for flat raster image formats, written in pure Rust. The crate is standalone: it depends on no other
 workspace crate and defines its own `Image` type. It also builds for `wasm32-unknown-unknown` and
@@ -19,7 +19,7 @@ It follows the "Avoiding GIMP's hole" rules in `docs/architecture.md` §1.1:
   pages left out, or data that ended early.
 
 ```rust
-use photocraft_codecs::*;
+use sary_codecs::*;
 
 let img = decode(&bytes)?;                               // detect + decode (default Limits)
 for w in fidelity_warnings(&img, Format::Jpeg) {         // e.g. "16-bit will be reduced to 8-bit"
@@ -65,7 +65,7 @@ the encode plan, and `fidelity_warnings` reports the conversion when it loses in
 the same.
 
 Palette BMP and PNG pixels decode as RGB(A) in `Image`; `bmp_palette` and `png_palette` expose the
-embedded table (and a PNG's transparent entry) so `photocraft-io` can open them in Indexed Color mode.
+embedded table (and a PNG's transparent entry) so `sary-io` can open them in Indexed Color mode.
 
 ## Documented asymmetries and limitations
 
@@ -105,11 +105,11 @@ embedded table (and a PNG's transparent entry) so `photocraft-io` can open them 
   panicking. There is no Cineon writer (`ASYMMETRIC_EXCEPTIONS`); save as DPX, TIFF or EXR.
 
 * **Camera raw files** (DNG, CR2, NEF, ARW… which are TIFF-structured) are recognised and refused
-  with `CodecError::Unsupported`: they are sensor data, not flat images. `photocraft-raw` decodes
-  and develops them, and `photocraft-io` routes them there.
+  with `CodecError::Unsupported`: they are sensor data, not flat images. `sary-raw` decodes
+  and develops them, and `sary-io` routes them there.
 
-* **HEIF/HEIC (read-only, feature `heif`).** Decoding lives in the optional `photocraft-heif` crate
-  behind the non-default `heif` feature (official PhotoCraft builds enable it; distributors choose).
+* **HEIF/HEIC (read-only, feature `heif`).** Decoding lives in the optional `sary-heif` crate
+  behind the non-default `heif` feature (official Sary builds enable it; distributors choose).
   Without it, HEIF is still detected and decoding returns `CodecError::Unsupported` ("HEIC/HEIF
   support isn't included in this build"). iPhone and Mac photos decode with `heic-rs` (pure Rust, no `unsafe`):
   single pictures and grid-tiled photos, 8 to 12 bits, auxiliary alpha, ICC, EXIF and XMP. The
@@ -134,10 +134,10 @@ embedded table (and a PNG's transparent entry) so `photocraft-io` can open them 
   `DecodeWarning::MoreFrames` / `MorePages` in `Image::warnings`, with the total when the file
   states it (frames and TIFF directories are counted without decoding them; reduced-resolution
   TIFF directories and transparency masks are not pages). Any TIFF page can still be opened
-  with `decode_tiff_page` (and `photocraft_io::import_tiff_page`). Every frame of a GIF comes
+  with `decode_tiff_page` (and `sary_io::import_tiff_page`). Every frame of a GIF comes
   from `decode_gif_frames`: each frame composited onto the logical screen with the disposal
   methods applied, as RGBA8 with its delay in milliseconds, within `Limits` and
-  `MAX_GIF_FRAMES`. The video-layer commands use it (`photocraft_io::import_gif_frames`).
+  `MAX_GIF_FRAMES`. The video-layer commands use it (`sary_io::import_gif_frames`).
 * **EXIF in TIFF** is stored as a sub-IFD rather than a blob, so it is not preserved yet.
   `caps.exif = false` for TIFF, and a warning is raised.
 * **Orientation** (EXIF tag 274 in JPEG, PNG `eXIf` and WebP; the decoded page's tag in TIFF and
@@ -220,7 +220,7 @@ embedded table (and a PNG's transparent entry) so `photocraft-io` can open them 
   P6, and anything with alpha or CMYK gives P7 (PAM). Writing a `.pbm` file therefore produces
   whichever of these fits the data.
 * **Colour conversions** (CMYK↔RGB, RGB→gray) are naive. Colour-managed conversion belongs in
-  `photocraft-color`.
+  `sary-color`.
 
 ## Limits (decompression bombs)
 
@@ -233,7 +233,7 @@ including chunks after IDAT. This budget is separate from pixels, not a total pr
 
 ## Tests
 
-`cargo test -p photocraft-codecs` covers:
+`cargo test -p sary-codecs` covers:
 
 * the full round-trip matrix (every writable format × 4 sample types × 6 layouts), exact for
   lossless formats and above a PSNR threshold for lossy ones;

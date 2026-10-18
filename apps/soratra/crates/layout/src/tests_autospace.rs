@@ -5,8 +5,8 @@
 
 use super::*;
 use crate::para::ClKind;
-use wordcraft_doc::props::Align;
-use wordcraft_doc::section::{DocGrid, DocGridType};
+use soratra_doc::props::Align;
+use soratra_doc::section::{DocGrid, DocGridType};
 
 fn lay(doc: &Document) -> DocLayout {
     layout(doc, &mut LayoutCache::new(), &LayoutOptions::default())

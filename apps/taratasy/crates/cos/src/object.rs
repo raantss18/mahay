@@ -3,7 +3,7 @@
 //! Dictionaries keep their key order so rewritten objects stay recognisable in diffs and
 //! byte-stable when re-serialized. Streams keep their *encoded* bytes; decoding is on demand.
 
-use pdfcraft_filters::{Filter, Params};
+use taratasy_filters::{Filter, Params};
 
 use crate::{Bytes, CosError};
 
@@ -66,7 +66,7 @@ impl PdfString {
             b => match std::str::from_utf8(b) {
                 // Pure ASCII is identical either way; only non-ASCII UTF-8 needs the switch.
                 Ok(utf8) if !b.is_ascii() => utf8.to_owned(),
-                _ => b.iter().map(|&c| pdfcraft_crypt::pdfdoc_char(c)).collect(),
+                _ => b.iter().map(|&c| taratasy_crypt::pdfdoc_char(c)).collect(),
             },
         };
         if s.starts_with('\u{FEFF}') { s.trim_start_matches('\u{FEFF}').to_owned() } else { s }
@@ -169,7 +169,7 @@ impl Stream {
     pub fn flate(mut dict: Dict, data: &[u8]) -> Self {
         dict.set(b"Filter".to_vec(), Object::Name(b"FlateDecode".to_vec()));
         dict.remove(b"DecodeParms");
-        Self { dict, raw: pdfcraft_filters::encode_flate(data).into() }
+        Self { dict, raw: taratasy_filters::encode_flate(data).into() }
     }
 
     /// The filter chain declared in the dictionary.
@@ -218,7 +218,7 @@ impl Stream {
         if chain.is_empty() {
             return self.raw_within(max);
         }
-        pdfcraft_filters::decode_tolerant(&chain, &self.raw, max.min(MAX_DECODED)).map(|(v, _)| v).map_err(|e| CosError::Filter(e.to_string()))
+        taratasy_filters::decode_tolerant(&chain, &self.raw, max.min(MAX_DECODED)).map(|(v, _)| v).map_err(|e| CosError::Filter(e.to_string()))
     }
 
     /// Decoded data, bounded by [`MAX_DECODED`]; any corruption is an error.
@@ -227,7 +227,7 @@ impl Stream {
         if chain.is_empty() {
             return self.raw_within(MAX_DECODED);
         }
-        pdfcraft_filters::decode(&chain, &self.raw, MAX_DECODED).map_err(|e| CosError::Filter(e.to_string()))
+        taratasy_filters::decode(&chain, &self.raw, MAX_DECODED).map_err(|e| CosError::Filter(e.to_string()))
     }
 
     /// Data after the first filter alone, bounded by `max`: the rest of the chain stays encoded.
@@ -238,7 +238,7 @@ impl Stream {
         if chain.is_empty() {
             return self.raw_within(max);
         }
-        pdfcraft_filters::decode(&chain, &self.raw, max.min(MAX_DECODED)).map_err(|e| CosError::Filter(e.to_string()))
+        taratasy_filters::decode(&chain, &self.raw, max.min(MAX_DECODED)).map_err(|e| CosError::Filter(e.to_string()))
     }
 
     fn raw_within(&self, max: usize) -> Result<Vec<u8>, CosError> {
@@ -246,7 +246,7 @@ impl Stream {
         // An empty decoder chain still produces an owned output buffer: check its limit
         // before cloning, including streams whose /Crypt filter was applied on load.
         if self.raw.len() > max {
-            return Err(CosError::Filter(pdfcraft_filters::FilterError::LimitExceeded(max).to_string()));
+            return Err(CosError::Filter(taratasy_filters::FilterError::LimitExceeded(max).to_string()));
         }
         Ok(self.raw.to_vec())
     }
@@ -500,7 +500,7 @@ mod tests {
         let data = "0 0 m 100 100 l S\n".repeat(64).into_bytes();
         let inner = Stream::flate(Dict::new(), &data).raw.to_vec();
         for (outer, name, corrupt) in [(Filter::Ascii85, "ASCII85Decode", &b"{~>"[..]), (Filter::AsciiHex, "ASCIIHexDecode", &b"G0>"[..])] {
-            let encoded = pdfcraft_filters::encode(&outer, &Params::default(), &inner).unwrap();
+            let encoded = taratasy_filters::encode(&outer, &Params::default(), &inner).unwrap();
             let mut dict = Dict::new();
             dict.set(b"Filter".to_vec(), Object::Array(vec![Object::name(name), Object::name("FlateDecode")]));
             let stream = Stream::from_raw(dict.clone(), encoded);

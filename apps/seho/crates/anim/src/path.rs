@@ -288,7 +288,7 @@ pub fn default_path(effect: &str, option: &str) -> String {
             }
         },
         "loops" => "M 0 0 C 0.08 -0.1 0.16 0 0.08 0.05 C 0 0.1 -0.08 0.1 -0.08 0 C -0.08 -0.1 0 -0.05 0 0 E".into(),
-        other => deckcraft_model::anim::preset_path(other).unwrap_or_default(),
+        other => seho_model::anim::preset_path(other).unwrap_or_default(),
     }
 }
 
@@ -298,7 +298,7 @@ mod preset_path_tests {
 
     #[test]
     fn every_extra_motion_path_preset_starts_at_its_shape_and_moves() {
-        use deckcraft_model::anim::{ANIMATIONS, AnimClass, preset_path};
+        use seho_model::anim::{ANIMATIONS, AnimClass, preset_path};
         let extra: Vec<_> = ANIMATIONS.iter().filter(|a| a.2 == AnimClass::Path && preset_path(a.0).is_some()).collect();
         assert!(extra.len() >= 30);
         for a in extra {

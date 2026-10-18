@@ -4,16 +4,16 @@
 
 use egui::vec2;
 use egui_kittest::Harness;
-use photocraft_doc::LayerId;
-use photocraft_raster::Surface;
+use sary_doc::LayerId;
+use sary_raster::Surface;
 use serde_json::json;
 
 use crate::mask_thumbs_ui::THUMB_MASK;
-use crate::{PhotocraftApp, surface_fingerprint};
+use crate::{SaryApp, surface_fingerprint};
 
 #[test]
 fn fingerprint_sees_the_default_pixel() {
-    let fmt = photocraft_color::PixelFormat::GRAY8;
+    let fmt = sary_color::PixelFormat::GRAY8;
     let white = Surface::with_default(fmt, &[1.0]);
     let black = Surface::with_default(fmt, &[0.0]);
     assert_eq!(white.tile_count(), 0);
@@ -23,13 +23,13 @@ fn fingerprint_sees_the_default_pixel() {
 
 #[test]
 fn inverting_a_tileless_mask_refreshes_its_thumbnail() {
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
     let id = s.execute("layer.new.layer", json!({"name": "Masked"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.layerMask.revealAll", json!({"layer": id})).unwrap();
     let mut h = Harness::builder().with_size(vec2(1440.0, 1000.0)).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(s, crate::Services::default())
     });
     let ctx = h.ctx.clone();
     let (req, _rx) = crate::control::ControlRequest::new("ui.set", json!({"dockTabs": {"layers": 0}}));

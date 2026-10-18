@@ -8,11 +8,11 @@ type Open = Rc<RefCell<Vec<(FileDialogRequest, FileDialogReply)>>>;
 
 /// An app with an untitled document, whose file dialogs stay open until the test answers them, and
 /// whose writer records the paths it wrote.
-fn app() -> (PhotocraftApp, Open, Rc<RefCell<Vec<String>>>) {
+fn app() -> (SaryApp, Open, Rc<RefCell<Vec<String>>>) {
     let (open, written): (Open, Rc<RefCell<Vec<String>>>) = Default::default();
     let (held, w) = (open.clone(), written.clone());
     let services = Services {
-        export: Some(Box::new(|_: &photocraft_doc::Document, _: &str, _: &crate::ExportSettings| Ok((b"out".to_vec(), Vec::new())))),
+        export: Some(Box::new(|_: &sary_doc::Document, _: &str, _: &crate::ExportSettings| Ok((b"out".to_vec(), Vec::new())))),
         write: Some(Box::new(move |path: &str, _: &[u8]| {
             w.borrow_mut().push(path.to_string());
             Ok(())
@@ -20,7 +20,7 @@ fn app() -> (PhotocraftApp, Open, Rc<RefCell<Vec<String>>>) {
         file_dialog: Some(Box::new(move |request, _parent, reply| held.borrow_mut().push((request, reply)))),
         ..Default::default()
     };
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+    let mut app = SaryApp::new(sary_engine::Session::new(), services);
     app.run("file.new", json!({"width": 4, "height": 4})).unwrap();
     (app, open, written)
 }
@@ -33,19 +33,19 @@ fn pdn_save_requests_a_native_copy_without_overwriting_the_source() {
     let ctx = egui::Context::default();
     menus::invoke(&mut app, &ctx, "file.save", json!({})).unwrap();
     app.poll_file_dialog(&ctx, None);
-    assert!(matches!(open.borrow().as_slice(), [(FileDialogRequest::Save { suggested }, _)] if suggested == "/pics/layers.pcraft"));
-    answer(&open, Some(FileDialogAnswer::SaveTo("/pics/layers.pcraft".into())));
+    assert!(matches!(open.borrow().as_slice(), [(FileDialogRequest::Save { suggested }, _)] if suggested == "/pics/layers.sary"));
+    answer(&open, Some(FileDialogAnswer::SaveTo("/pics/layers.sary".into())));
     app.poll_file_dialog(&ctx, None);
-    assert_eq!(*written.borrow(), ["/pics/layers.pcraft"]);
-    assert_eq!(app.session.active().unwrap().path.as_deref(), Some("/pics/layers.pcraft"));
+    assert_eq!(*written.borrow(), ["/pics/layers.sary"]);
+    assert_eq!(app.session.active().unwrap().path.as_deref(), Some("/pics/layers.sary"));
 }
 
 /// A real flat JPEG import, optionally edited to contain another layer. A filename without a
 /// path is the web/download case; desktop opens also retain their source location.
-fn jpeg_app(path: Option<&str>, layered: bool) -> (PhotocraftApp, Open, Rc<RefCell<Vec<String>>>) {
+fn jpeg_app(path: Option<&str>, layered: bool) -> (SaryApp, Open, Rc<RefCell<Vec<String>>>) {
     let (mut app, open, written) = app();
-    let bytes = photocraft_io::export(&app.session.active().unwrap().doc, "My image.JPEG", &Default::default()).unwrap().bytes;
-    let doc = photocraft_io::import("My image.JPEG", &bytes).unwrap().document;
+    let bytes = sary_io::export(&app.session.active().unwrap().doc, "My image.JPEG", &Default::default()).unwrap().bytes;
+    let doc = sary_io::import("My image.JPEG", &bytes).unwrap().document;
     app.session.add_document(doc, path.map(str::to_string));
     if layered {
         app.run("layer.new.layer", json!({})).unwrap();
@@ -94,7 +94,7 @@ fn save_dialog_preserves_flat_and_existing_layered_format_defaults() {
         ("/pics/My image.JPEG", false),
         ("/pics/My image.PSD", true),
         ("/pics/My image.psb", true),
-        ("/pics/My image.pcraft", true),
+        ("/pics/My image.sary", true),
         ("/pics/My image.TIF", true),
         ("/pics/My image.tiff", true),
     ] {
@@ -112,8 +112,8 @@ fn save_dialog_preserves_flat_and_existing_layered_format_defaults() {
 fn transparent_png_keeps_its_format_until_its_lone_layer_becomes_smart() {
     let (mut app, open, written) = app();
     std::sync::Arc::make_mut(&mut app.session.active_mut().unwrap().doc).layers[0].surface_mut().unwrap().write_pixel(0, 0, &[1.0, 0.0, 0.0, 0.0]);
-    let bytes = photocraft_io::export(&app.session.active().unwrap().doc, "transparent.PNG", &Default::default()).unwrap().bytes;
-    let doc = photocraft_io::import("transparent.PNG", &bytes).unwrap().document;
+    let bytes = sary_io::export(&app.session.active().unwrap().doc, "transparent.PNG", &Default::default()).unwrap().bytes;
+    let doc = sary_io::import("transparent.PNG", &bytes).unwrap().document;
     assert_eq!(doc.layers.len(), 1);
     assert!(!doc.layers[0].locks.transparency, "transparent PNG imports as an unlocked raster layer");
     assert_eq!(doc.layers[0].surface().unwrap().pixel(0, 0)[3], 0.0);
@@ -126,7 +126,7 @@ fn transparent_png_keeps_its_format_until_its_lone_layer_becomes_smart() {
     app.poll_file_dialog(&ctx, None);
     app.run("layer.smartObjects.convertToSmartObject", json!({})).unwrap();
     assert_eq!(app.session.active().unwrap().doc.layers.len(), 1);
-    assert!(matches!(app.session.active().unwrap().doc.layers[0].content, photocraft_doc::LayerContent::Smart(_)));
+    assert!(matches!(app.session.active().unwrap().doc.layers[0].content, sary_doc::LayerContent::Smart(_)));
     menus::invoke(&mut app, &ctx, "file.saveAs", json!({})).unwrap();
     app.poll_file_dialog(&ctx, None);
     assert!(matches!(open.borrow().as_slice(), [(FileDialogRequest::Save { suggested }, _)] if suggested == "/pics/transparent.psd"));
@@ -166,13 +166,13 @@ fn menu_place_starts_transform_for_each_chosen_image() {
     for command in ["file.placeEmbedded", "file.placeLinked"] {
         let (mut app, open, _) = app();
         app.run("edit.fill", json!({"color": "#ff0000"})).unwrap();
-        let bytes = photocraft_io::export(&app.session.active().unwrap().doc, "source.png", &Default::default()).unwrap().bytes;
+        let bytes = sary_io::export(&app.session.active().unwrap().doc, "source.png", &Default::default()).unwrap().bytes;
         let ctx = egui::Context::default();
         let initial_layers = app.session.active().unwrap().doc.layer_count();
         let initial_history = app.session.active().unwrap().history.past_len();
         let linked_dir = (command == "file.placeLinked").then(|| {
             let unique = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-            let dir = std::env::temp_dir().join(format!("photocraft-menu-place-{}-{unique}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("sary-menu-place-{}-{unique}", std::process::id()));
             std::fs::create_dir(&dir).unwrap();
             dir
         });
@@ -195,7 +195,7 @@ fn menu_place_starts_transform_for_each_chosen_image() {
             assert_eq!(transform.made, Some(crate::state::MadeLayer::Place));
             if index == 0 {
                 let layer = st.active_layer.unwrap();
-                let photocraft_doc::LayerContent::Smart(smart) = &st.doc.layer(layer).unwrap().content else { panic!("placed Smart Object") };
+                let sary_doc::LayerContent::Smart(smart) = &st.doc.layer(layer).unwrap().content else { panic!("placed Smart Object") };
                 let original_scale = smart.transform.m[0];
                 let transform = app.ui.transform.as_mut().unwrap();
                 let left = transform.quad[0][0];
@@ -205,7 +205,7 @@ fn menu_place_starts_transform_for_each_chosen_image() {
                 crate::transform_tool::commit(&mut app);
                 assert!(app.ui.transform.is_none(), "resizing the placed image must commit");
                 let st = app.session.active().unwrap();
-                let photocraft_doc::LayerContent::Smart(smart) = &st.doc.layer(layer).unwrap().content else { panic!("placed Smart Object") };
+                let sary_doc::LayerContent::Smart(smart) = &st.doc.layer(layer).unwrap().content else { panic!("placed Smart Object") };
                 assert!((smart.transform.m[0] - original_scale * 2.0).abs() < 1e-8, "placement width must double");
                 assert_eq!(app.session.active().unwrap().history.past_len(), initial_history + 1);
             } else {
@@ -248,7 +248,7 @@ fn menu_place_preserves_an_unfinished_transform() {
         let (mut app, open, _) = app();
         app.run("edit.fill", json!({"color": "#ff0000"})).unwrap();
         app.run("layer.new.layerFromBackground", json!({})).unwrap();
-        let bytes = photocraft_io::export(&app.session.active().unwrap().doc, "source.png", &Default::default()).unwrap().bytes;
+        let bytes = sary_io::export(&app.session.active().unwrap().doc, "source.png", &Default::default()).unwrap().bytes;
         let ctx = egui::Context::default();
         if !start_before_picker {
             menus::invoke(&mut app, &ctx, "file.placeEmbedded", json!({})).unwrap();
@@ -437,7 +437,7 @@ fn save_paths_without_an_extension_get_the_suggested_one() {
 fn save_and_export_dialogs_start_beside_the_document() {
     let (mut app, open, _) = app();
     let ctx = egui::Context::default();
-    let dir = std::env::temp_dir().join("PhotoCraft projects").join("图像");
+    let dir = std::env::temp_dir().join("Sary projects").join("图像");
     let source = dir.join("original.psd");
     app.session.active_mut().unwrap().path = Some(source.to_string_lossy().into_owned());
     for command in ["file.saveAs", "file.export.exportAs", "file.export.saveForWebLegacy"] {
@@ -665,24 +665,24 @@ fn an_answer_of_the_wrong_kind_is_an_error_not_a_crash() {
 }
 
 /// The app with a painted layer converted to a smart object and a duplicate instance of it.
-fn smart_app() -> (PhotocraftApp, Open, Rc<RefCell<Vec<String>>>, [u64; 2]) {
+fn smart_app() -> (SaryApp, Open, Rc<RefCell<Vec<String>>>, [u64; 2]) {
     let (mut app, open, written) = app();
     app.run("layer.new.layer", json!({})).unwrap();
     app.session
         .edit("paint", |doc, active| {
-            doc.layer_mut(active.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(0, 0, 4, 4), &[0.0, 0.0, 1.0, 1.0]);
+            doc.layer_mut(active.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(0, 0, 4, 4), &[0.0, 0.0, 1.0, 1.0]);
             Ok(())
         })
         .unwrap();
     let a = app.run("layer.smartObjects.convertToSmartObject", json!({})).unwrap()["layer"].as_u64().unwrap();
     let b = app.run("layer.duplicate", json!({"layer": a})).unwrap()["layer"].as_u64().unwrap();
-    app.session.select_layer(photocraft_doc::LayerId(a)).unwrap();
+    app.session.select_layer(sary_doc::LayerId(a)).unwrap();
     (app, open, written, [a, b])
 }
 
-fn smart_source(app: &PhotocraftApp, id: u64) -> photocraft_doc::SmartSource {
-    match &app.session.active().unwrap().doc.layer(photocraft_doc::LayerId(id)).unwrap().content {
-        photocraft_doc::LayerContent::Smart(sm) => sm.source.clone(),
+fn smart_source(app: &SaryApp, id: u64) -> sary_doc::SmartSource {
+    match &app.session.active().unwrap().doc.layer(sary_doc::LayerId(id)).unwrap().content {
+        sary_doc::LayerContent::Smart(sm) => sm.source.clone(),
         other => panic!("not a smart object: {}", other.kind_name()),
     }
 }
@@ -692,7 +692,7 @@ fn place_embedded_uses_the_single_file_picker_and_accepts_contents() {
     let (mut app, open, _) = app();
     let ctx = egui::Context::default();
     assert!(menus::is_enabled(&app, "file.placeEmbedded"));
-    let source = photocraft_io::export(&app.session.active().unwrap().doc, "source.png", &Default::default()).unwrap().bytes;
+    let source = sary_io::export(&app.session.active().unwrap().doc, "source.png", &Default::default()).unwrap().bytes;
     let layers_before = app.session.active().unwrap().doc.layers.len();
 
     // Cancel leaves the document alone and does not report an error.
@@ -717,8 +717,8 @@ fn place_embedded_uses_the_single_file_picker_and_accepts_contents() {
     assert_eq!(app.ui.transform.as_ref().and_then(|t| t.made), Some(crate::state::MadeLayer::Place));
     assert!(matches!(
         &layer.content,
-        photocraft_doc::LayerContent::Smart(sm)
-            if matches!(&sm.source, photocraft_doc::SmartSource::Embedded { file_name, .. } if file_name == "source.png")
+        sary_doc::LayerContent::Smart(sm)
+            if matches!(&sm.source, sary_doc::SmartSource::Embedded { file_name, .. } if file_name == "source.png")
     ));
 
     // Finish the successful placement before starting the next picker.
@@ -747,14 +747,14 @@ fn replace_contents_picks_a_file_for_every_instance() {
     app.poll_file_dialog(&ctx, None);
     assert_eq!(ids.map(|id| smart_source(&app, id)), before);
     // A picked file (by contents, as on the web) replaces the contents of both instances.
-    let png = photocraft_io::export(&app.session.active().unwrap().doc, "png", &Default::default()).unwrap().bytes;
+    let png = sary_io::export(&app.session.active().unwrap().doc, "png", &Default::default()).unwrap().bytes;
     menus::invoke(&mut app, &ctx, "layer.smartObjects.replaceContents", json!({})).unwrap();
     app.poll_file_dialog(&ctx, None);
     answer(&open, Some(FileDialogAnswer::Contents("art.png".into(), png)));
     app.poll_file_dialog(&ctx, None);
     assert!(!app.ui.status_error, "{}", app.ui.status);
     for id in ids {
-        assert!(matches!(smart_source(&app, id), photocraft_doc::SmartSource::Embedded { ref file_name, .. } if file_name == "art.png"));
+        assert!(matches!(smart_source(&app, id), sary_doc::SmartSource::Embedded { ref file_name, .. } if file_name == "art.png"));
     }
     // A file that isn't an image is an error, and the contents stay.
     menus::invoke(&mut app, &ctx, "layer.smartObjects.replaceContents", json!({})).unwrap();
@@ -762,7 +762,7 @@ fn replace_contents_picks_a_file_for_every_instance() {
     answer(&open, Some(FileDialogAnswer::Contents("notes.png".into(), b"not an image".to_vec())));
     app.poll_file_dialog(&ctx, None);
     assert!(app.ui.status_error);
-    assert!(matches!(smart_source(&app, ids[1]), photocraft_doc::SmartSource::Embedded { ref file_name, .. } if file_name == "art.png"));
+    assert!(matches!(smart_source(&app, ids[1]), sary_doc::SmartSource::Embedded { ref file_name, .. } if file_name == "art.png"));
 }
 
 #[test]
@@ -772,22 +772,22 @@ fn export_contents_suggests_the_contents_file_name() {
     menus::invoke(&mut app, &ctx, "layer.smartObjects.exportContents", json!({})).unwrap();
     app.poll_file_dialog(&ctx, None);
     assert!(
-        matches!(open.borrow().as_slice(), [(FileDialogRequest::Save { suggested }, _)] if suggested == "Layer 1.pcraft"),
+        matches!(open.borrow().as_slice(), [(FileDialogRequest::Save { suggested }, _)] if suggested == "Layer 1.sary"),
         "{:?}",
         open.borrow().first().map(|(r, _)| r.clone())
     );
-    answer(&open, Some(FileDialogAnswer::SaveTo("/out/contents.pcraft".into())));
+    answer(&open, Some(FileDialogAnswer::SaveTo("/out/contents.sary".into())));
     app.poll_file_dialog(&ctx, None);
-    assert_eq!(*written.borrow(), ["/out/contents.pcraft"]);
+    assert_eq!(*written.borrow(), ["/out/contents.sary"]);
 }
 
 #[test]
 fn convert_to_linked_asks_where_to_write_the_contents() {
     let (mut app, open, _, ids) = smart_app();
     let ctx = egui::Context::default();
-    let dir = std::env::temp_dir().join(format!("pcraft-convert-linked-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-convert-linked-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("linked.pcraft").to_string_lossy().into_owned();
+    let path = dir.join("linked.sary").to_string_lossy().into_owned();
     menus::invoke(&mut app, &ctx, "layer.smartObjects.convertToLinked", json!({})).unwrap();
     app.poll_file_dialog(&ctx, None);
     assert!(matches!(open.borrow().as_slice(), [(FileDialogRequest::Save { .. }, _)]));
@@ -797,7 +797,7 @@ fn convert_to_linked_asks_where_to_write_the_contents() {
     assert!(std::fs::metadata(&path).is_ok_and(|m| m.len() > 0));
     std::fs::remove_dir_all(&dir).ok();
     for id in ids {
-        assert_eq!(smart_source(&app, id), photocraft_doc::SmartSource::Linked { path: path.clone() });
+        assert_eq!(smart_source(&app, id), sary_doc::SmartSource::Linked { path: path.clone() });
     }
 }
 
@@ -815,7 +815,7 @@ fn quick_export_selected_layers_writes_separate_pngs_with_one_prompt() {
     let capture = sources.clone();
     app.services.export = Some(Box::new(move |doc, path, _| {
         assert_eq!(doc.layers.len(), 1, "each PNG must contain just its source layer");
-        let png = photocraft_io::export(doc, path, &Default::default()).unwrap();
+        let png = sary_io::export(doc, path, &Default::default()).unwrap();
         assert!(png.bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
         capture.borrow_mut().push(doc.name.clone());
         Ok((png.bytes, Vec::new()))
@@ -842,7 +842,7 @@ fn quick_export_selected_layers_writes_separate_pngs_with_one_prompt() {
 /// own file (a document opened from photo.png), and keeps writing beside a PSD without a prompt.
 #[test]
 fn same_folder_quick_export_asks_before_replacing_the_documents_own_file() {
-    let dir = std::env::temp_dir().join(format!("photocraft-quick-own-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-quick-own-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let own = dir.join("photo.png").to_string_lossy().into_owned();
@@ -919,7 +919,7 @@ fn export_as_with_several_artboards_selected_writes_one_file_each() {
     assert_eq!(app.session.active().unwrap().selected_layers().len(), 2);
     let sizes = Rc::new(RefCell::new(Vec::new()));
     let capture = sizes.clone();
-    app.services.export = Some(Box::new(move |doc: &photocraft_doc::Document, _: &str, _: &crate::ExportSettings| {
+    app.services.export = Some(Box::new(move |doc: &sary_doc::Document, _: &str, _: &crate::ExportSettings| {
         capture.borrow_mut().push((doc.name.clone(), doc.size.width, doc.size.height));
         Ok((b"out".to_vec(), Vec::new()))
     }));
@@ -1046,7 +1046,7 @@ fn render_video_menu_asks_for_directory_and_writes_frames_only_after_confirmatio
 type Disk = Rc<RefCell<std::collections::HashMap<String, u64>>>;
 
 /// Gives `app` file stamps from a fake disk that its own writes update too.
-fn on_disk(app: &mut PhotocraftApp) -> Disk {
+fn on_disk(app: &mut SaryApp) -> Disk {
     let disk = Disk::default();
     let (read, wrote) = (disk.clone(), disk.clone());
     app.services.file_stamp = Some(Box::new(move |path| read.borrow().get(path).map(|&n| crate::FileStamp { len: n, modified: None })));
@@ -1063,7 +1063,7 @@ fn changed_by_another_app(disk: &Disk, path: &str) {
     *disk.borrow_mut().entry(path.to_string()).or_default() += 1;
 }
 
-fn disk_prompt(app: &PhotocraftApp) -> Option<&crate::state::Dialog> {
+fn disk_prompt(app: &SaryApp) -> Option<&crate::state::Dialog> {
     app.ui.dialogs.iter().find(|d| crate::disk_change_prompt::owns(&d.fields))
 }
 

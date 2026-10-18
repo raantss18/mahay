@@ -2,8 +2,8 @@
 //! Setup, Undo and the output fingerprint are excluded from the timing.
 use std::time::Instant;
 
-use photocraft_engine::{EngineError, Session};
-use photocraft_geom::Rect;
+use sary_engine::{EngineError, Session};
+use sary_geom::Rect;
 use serde_json::json;
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {

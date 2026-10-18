@@ -278,7 +278,7 @@ impl Player {
             let _ = s.set(crate::audio::decode(&b).map(Arc::new).map_err(|e| e.to_string()));
         };
         if crate::THREADS {
-            if std::thread::Builder::new().name("deckcraft-audio-decode".into()).spawn(job).is_err() {
+            if std::thread::Builder::new().name("seho-audio-decode".into()).spawn(job).is_err() {
                 let _ = slot.set(Err("couldn't start the decoder".into()));
             }
         } else {

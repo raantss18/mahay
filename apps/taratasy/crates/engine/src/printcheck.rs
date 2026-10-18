@@ -6,9 +6,9 @@
 //! profile. A screen profile such as sRGB is reported as a screen profile, not accepted as a
 //! press condition.
 
-use pdfcraft_cos::Document;
-use pdfcraft_edit::PageImage;
-use pdfcraft_preflight::{Issue, Level};
+use taratasy_cos::Document;
+use taratasy_edit::PageImage;
+use taratasy_preflight::{Issue, Level};
 
 use crate::Document as OpenDocument;
 
@@ -155,14 +155,14 @@ impl OpenDocument {
 }
 
 fn inspect(doc: &Document) -> PrintReadiness {
-    let declared = pdfcraft_preflight::declared(doc);
-    let pdfa_issues = pdfcraft_preflight::verify(doc, Level::A2b);
+    let declared = taratasy_preflight::declared(doc);
+    let pdfa_issues = taratasy_preflight::verify(doc, Level::A2b);
     let fonts_not_embedded = pdfa_issues
         .iter()
         .filter(|issue| issue.pattern.contains("isn't embedded") || issue.pattern == "A font isn't embedded")
         .map(|issue| issue.value.clone().unwrap_or_else(|| "unnamed font".into()))
         .collect();
-    let model_pages = pdfcraft_model::pages(doc);
+    let model_pages = taratasy_model::pages(doc);
     let pages = page_reports(doc, &model_pages);
     let (images, resolution_unknown) = image_reports(doc, &model_pages);
     let mut findings = Vec::new();
@@ -247,8 +247,8 @@ fn inspect(doc: &Document) -> PrintReadiness {
     PrintReadiness { pages, images, output_intents: declared.output_intents, fonts_not_embedded, pdfa_issues, findings, resolution_unknown }
 }
 
-fn page_reports(doc: &Document, pages: &[pdfcraft_model::Page]) -> Vec<PageBoxes> {
-    let boxes = pdfcraft_organize::page_boxes(doc).unwrap_or_default();
+fn page_reports(doc: &Document, pages: &[taratasy_model::Page]) -> Vec<PageBoxes> {
+    let boxes = taratasy_organize::page_boxes(doc).unwrap_or_default();
     pages
         .iter()
         .enumerate()
@@ -271,13 +271,13 @@ fn page_reports(doc: &Document, pages: &[pdfcraft_model::Page]) -> Vec<PageBoxes
 }
 
 /// The images drawn on each page, and how many placements had no measurable resolution.
-fn image_reports(doc: &Document, pages: &[pdfcraft_model::Page]) -> (Vec<DrawnImage>, usize) {
+fn image_reports(doc: &Document, pages: &[taratasy_model::Page]) -> (Vec<DrawnImage>, usize) {
     let mut out = Vec::new();
     let mut unknown = 0usize;
     let mut seen = std::collections::HashSet::new();
     for (i, page) in pages.iter().enumerate() {
         let page_no = (i + 1) as u32;
-        if let Ok(placed) = pdfcraft_edit::page_images(doc, i) {
+        if let Ok(placed) = taratasy_edit::page_images(doc, i) {
             for image in placed {
                 if let Some(ppi) = placed_ppi(&image) {
                     if let Some(object) = image.object {
@@ -295,7 +295,7 @@ fn image_reports(doc: &Document, pages: &[pdfcraft_model::Page]) -> (Vec<DrawnIm
         }
         // Images drawn inside a form XObject are not listed above. Their resolution is the
         // smallest use on this page, which is what the optimizer already measures.
-        for (object, ppi) in pdfcraft_optimize::effective_resolutions(doc, &[page.obj]) {
+        for (object, ppi) in taratasy_optimize::effective_resolutions(doc, &[page.obj]) {
             if seen.contains(&(page_no, object)) {
                 continue;
             }
@@ -360,11 +360,11 @@ fn min_mm(sides: [f64; 4]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use pdfcraft_cos::{Dict, Document, Object, Stream};
+    use taratasy_cos::{Dict, Document, Object, Stream};
 
     use super::*;
 
-    fn image(doc: &mut Document, w: u32, h: u32) -> pdfcraft_cos::ObjRef {
+    fn image(doc: &mut Document, w: u32, h: u32) -> taratasy_cos::ObjRef {
         let mut d = Dict::new();
         d.set(b"Type".to_vec(), Object::name("XObject"));
         d.set(b"Subtype".to_vec(), Object::name("Image"));
@@ -375,7 +375,7 @@ mod tests {
         doc.add(Object::Stream(Stream::flate(d, &vec![0; (w as usize) * (h as usize)])))
     }
 
-    fn page(doc: &mut Document, name: &str, object: pdfcraft_cos::ObjRef, content: &str) -> pdfcraft_cos::ObjRef {
+    fn page(doc: &mut Document, name: &str, object: taratasy_cos::ObjRef, content: &str) -> taratasy_cos::ObjRef {
         let pages = doc.root().and_then(|r| doc.get(r).as_dict().and_then(|d| d.reference(b"Pages"))).unwrap();
         let mut x = Dict::new();
         x.set(name.as_bytes().to_vec(), Object::Ref(object));

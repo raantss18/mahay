@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-sign"
+name = "taratasy-sign"
 description = "Digital signatures (ISO 32000-2 §12.8, PAdES): X.509, CMS, PKCS #12, signing and validation"
 version.workspace = true
 edition.workspace = true
@@ -11,9 +11,9 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-annot = { workspace = true }
-pdfcraft-fonts = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-annot = { workspace = true }
+taratasy-fonts = { workspace = true }
 thiserror.workspace = true
 base64 = "0.22"
 sha1 = "0.11"

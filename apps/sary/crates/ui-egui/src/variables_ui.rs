@@ -8,7 +8,7 @@
 
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 use crate::theme::Tokens;
 
@@ -28,13 +28,13 @@ pub fn reset(fields: &mut Map<String, Value>) {
 }
 
 /// Layers available to bind, top to bottom: (id, display name, is-text).
-fn layer_options(app: &PhotocraftApp) -> Vec<(u64, String, bool)> {
+fn layer_options(app: &SaryApp) -> Vec<(u64, String, bool)> {
     let Some(st) = app.session.active() else { return Vec::new() };
-    st.doc.walk().iter().map(|(_, _, l)| (l.id.0, l.name.clone(), matches!(l.content, photocraft_doc::LayerContent::Text(_)))).collect()
+    st.doc.walk().iter().map(|(_, _, l)| (l.id.0, l.name.clone(), matches!(l.content, sary_doc::LayerContent::Text(_)))).collect()
 }
 
 /// Menu entry points. Returns None for ids this module doesn't own.
-pub fn menu(app: &mut PhotocraftApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
+pub fn menu(app: &mut SaryApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
     let has_params = params.as_object().is_some_and(|o| !o.is_empty());
     match id {
         "image.variables.define" | "image.variables.dataSets" if !has_params => {
@@ -63,13 +63,13 @@ pub fn menu(app: &mut PhotocraftApp, id: &str, params: &Value) -> Option<Result<
 }
 
 /// Serialise the document's variables into the dialog's editable JSON shape.
-pub fn to_state(v: &photocraft_doc::Variables) -> Value {
+pub fn to_state(v: &sary_doc::Variables) -> Value {
     json!({
         "defs": v.defs.iter().map(|d| {
             let (ty, method, align, clip) = match &d.kind {
-                photocraft_doc::VarKind::Visibility => ("visibility", "fit", "center", false),
-                photocraft_doc::VarKind::TextReplacement => ("textReplacement", "fit", "center", false),
-                photocraft_doc::VarKind::PixelReplacement { method, align, clip } => {
+                sary_doc::VarKind::Visibility => ("visibility", "fit", "center", false),
+                sary_doc::VarKind::TextReplacement => ("textReplacement", "fit", "center", false),
+                sary_doc::VarKind::PixelReplacement { method, align, clip } => {
                     (_pixel(), _m(method), _a(align), *clip)
                 }
             };
@@ -79,9 +79,9 @@ pub fn to_state(v: &photocraft_doc::Variables) -> Value {
             "name": s.name,
             "values": s.values.iter().map(|dv| {
                 let (kind, value) = match &dv.value {
-                    photocraft_doc::variables::Value::Visibility(b) => ("visibility", json!(b)),
-                    photocraft_doc::variables::Value::Text(t) => ("text", json!(t)),
-                    photocraft_doc::variables::Value::Pixels(p) => ("pixels", json!(p)),
+                    sary_doc::variables::Value::Visibility(b) => ("visibility", json!(b)),
+                    sary_doc::variables::Value::Text(t) => ("text", json!(t)),
+                    sary_doc::variables::Value::Pixels(p) => ("pixels", json!(p)),
                 };
                 json!({"variable": dv.variable, "kind": kind, "value": value})
             }).collect::<Vec<_>>(),
@@ -92,8 +92,8 @@ pub fn to_state(v: &photocraft_doc::Variables) -> Value {
 fn _pixel() -> &'static str {
     "pixelReplacement"
 }
-fn _m(m: &photocraft_doc::PixelMethod) -> &'static str {
-    use photocraft_doc::PixelMethod::*;
+fn _m(m: &sary_doc::PixelMethod) -> &'static str {
+    use sary_doc::PixelMethod::*;
     match m {
         Fit => "fit",
         Fill => "fill",
@@ -101,8 +101,8 @@ fn _m(m: &photocraft_doc::PixelMethod) -> &'static str {
         Conform => "conform",
     }
 }
-fn _a(a: &photocraft_doc::PixelAlign) -> &'static str {
-    use photocraft_doc::PixelAlign::*;
+fn _a(a: &sary_doc::PixelAlign) -> &'static str {
+    use sary_doc::PixelAlign::*;
     match a {
         TopLeft => "topLeft",
         TopCenter => "topCenter",
@@ -120,7 +120,7 @@ const TYPES: &[(&str, &str)] = &[("visibility", "Visibility"), ("textReplacement
 const METHODS: &[(&str, &str)] = &[("fit", "Fit"), ("fill", "Fill"), ("conform", "Conform"), ("asIs", "As Is")];
 
 /// Render the dialog. Mutates `fields["__variables"]` and `fields["__page"]`.
-pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
+pub fn body(app: &mut SaryApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
     let t = Tokens::get(ui.ctx());
     let layers = layer_options(app);
     let mut state = normalize(fields.get("__variables").unwrap_or(&Value::Null));
@@ -332,7 +332,7 @@ fn data_sets_page(ui: &mut egui::Ui, _t: &Tokens, state: &mut Value, fields: &mu
 }
 
 /// OK: save the definitions and data sets, and apply one if the Apply button set `__apply`.
-pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, fields: &Map<String, Value>) -> Result<Value, String> {
     let state = fields.get("__variables").cloned().unwrap_or_else(|| json!({}));
     let defs = state.get("defs").cloned().unwrap_or_else(|| json!([]));
     let sets = state.get("dataSets").cloned().unwrap_or_else(|| json!([]));
@@ -348,7 +348,7 @@ pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::{DataSet, DataValue, LayerId, VarKind, VariableDef, Variables, variables::Value as VV};
+    use sary_doc::{DataSet, DataValue, LayerId, VarKind, VariableDef, Variables, variables::Value as VV};
 
     #[test]
     fn to_state_mirrors_the_command_shape() {

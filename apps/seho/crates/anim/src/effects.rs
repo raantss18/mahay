@@ -2,7 +2,7 @@
 
 use std::f64::consts::PI;
 
-use deckcraft_model::{AnimClass, Rgba, Xfrm};
+use seho_model::{AnimClass, Rgba, Xfrm};
 
 use crate::AnimState;
 use crate::easing::{bounce_out, ease, smooth};
@@ -78,7 +78,7 @@ pub(crate) fn emphasis_persists(effect: &str) -> bool {
 
 fn uses_default_smoothing(effect: &str) -> bool {
     matches!(effect, "fly" | "float" | "rise" | "peek" | "lines" | "arcs" | "turns" | "shapes" | "loops" | "customPath")
-        || deckcraft_model::anim::preset_path(effect).is_some()
+        || seho_model::anim::preset_path(effect).is_some()
 }
 
 impl EffectSpec {

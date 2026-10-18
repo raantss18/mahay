@@ -3,7 +3,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use deckcraft_model::ShapeKind;
+use seho_model::ShapeKind;
 use serde_json::json;
 
 use super::{Inbox, InboxEvent, InboxFile, Services, SlideApp};
@@ -52,13 +52,13 @@ fn deliver(inbox: &Inbox, id: u64, name: &str, bytes: Vec<u8>) {
     inbox.lock().expect("inbox").push(InboxEvent::File(InboxFile { id, name: name.into(), bytes }));
 }
 
-fn pictures(app: &SlideApp, doc: u64, slide: deckcraft_model::SlideId) -> usize {
+fn pictures(app: &SlideApp, doc: u64, slide: seho_model::SlideId) -> usize {
     let st = app.session.documents().iter().find(|d| d.uid == doc).expect("document");
     let i = st.doc.slide_index(slide).expect("slide");
     st.doc.slides[i].shapes.iter().filter(|s| matches!(s.kind, ShapeKind::Picture { .. })).count()
 }
 
-fn audios(app: &SlideApp, doc: u64, slide: deckcraft_model::SlideId) -> usize {
+fn audios(app: &SlideApp, doc: u64, slide: seho_model::SlideId) -> usize {
     let st = app.session.documents().iter().find(|d| d.uid == doc).expect("document");
     let i = st.doc.slide_index(slide).expect("slide");
     st.doc.slides[i].shapes.iter().filter(|s| matches!(s.kind, ShapeKind::Media(ref m) if !m.video)).count()

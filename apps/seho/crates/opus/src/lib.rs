@@ -2,7 +2,7 @@
 //!
 //! Layer L0: no dependencies beyond `std`; no `unsafe`; builds for `wasm32-unknown-unknown`.
 
-// Spec-style indexed loops (FilmCraft allows this lint workspace-wide).
+// Spec-style indexed loops (Hetsika allows this lint workspace-wide).
 #![allow(clippy::needless_range_loop)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable))]
 // The fixed-point parts mirror the normative integer arithmetic; keep C-like shift expressions.

@@ -2,7 +2,7 @@
 //! positions (a freshly opened PNG's Background is layer 2), and an agent should be able to
 //! recover from the error alone. A name matches regardless of case as a fallback.
 
-use photocraft_engine::{EngineError, Session};
+use sary_engine::{EngineError, Session};
 use serde_json::json;
 
 fn session() -> (Session, u64) {
@@ -14,7 +14,7 @@ fn session() -> (Session, u64) {
 
 fn unused_id(s: &Session) -> u64 {
     let doc = &s.active().unwrap().doc;
-    (1..).find(|id| doc.layer(photocraft_doc::LayerId(*id)).is_none()).unwrap()
+    (1..).find(|id| doc.layer(sary_doc::LayerId(*id)).is_none()).unwrap()
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn a_layer_name_matches_regardless_of_case() {
     let (mut s, bg) = session();
     s.execute("layer.new.layer", json!({})).unwrap();
     s.execute("layer.setProps", json!({"layer": "background", "name": "Base"})).unwrap();
-    assert_eq!(s.active().unwrap().doc.layer(photocraft_doc::LayerId(bg)).unwrap().name, "Base");
+    assert_eq!(s.active().unwrap().doc.layer(sary_doc::LayerId(bg)).unwrap().name, "Base");
 }
 
 #[test]
@@ -52,8 +52,8 @@ fn an_exact_name_wins_over_a_case_insensitive_one() {
     let upper = s.execute("layer.new.layer", json!({"name": "Shadow"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("layer.setProps", json!({"layer": "shadow", "visible": false})).unwrap();
     let doc = &s.active().unwrap().doc;
-    assert!(!doc.layer(photocraft_doc::LayerId(lower)).unwrap().visible);
-    assert!(doc.layer(photocraft_doc::LayerId(upper)).unwrap().visible);
+    assert!(!doc.layer(sary_doc::LayerId(lower)).unwrap().visible);
+    assert!(doc.layer(sary_doc::LayerId(upper)).unwrap().visible);
 }
 
 #[test]

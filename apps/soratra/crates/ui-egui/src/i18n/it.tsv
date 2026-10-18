@@ -1,6 +1,6 @@
 # Italian (it) interface catalog. Columns, separated by a TAB:
 #   context <TAB> English source <TAB> translation
-#   context    empty (WordCraft uses no contexts yet)
+#   context    empty (Soratra uses no contexts yet)
 #   source     the English text exactly as in the code (tl!(...), ribbon labels, command labels)
 #   escapes    \n  \t  \\  inside a column. `{name}` placeholders must appear in both columns, and a
 #              trailing "…" in one needs one in the other.
@@ -8,7 +8,7 @@
 #
 # Standard Italian. Commands are second-person imperatives (Salva, Copia, Inserisci); second-person
 # text uses tu; labels use sentence case; decimals use a comma (1,5); product and format names stay
-# as they are (WordCraft, PDF, Markdown, MCP …).
+# as they are (Soratra, PDF, Markdown, MCP …).
 # Feature names (ribbon tabs, groups and command names) use the names Italian word-processor users
 # already know, as AGENTS.md allows for feature names. Every other entry (descriptions, tooltips,
 # messages, dialog text) was written from the plain meaning of the English text in ordinary
@@ -17,9 +17,9 @@
 	(no style)	(nessuno stile)
 	(no suggestions)	(nessun suggerimento)
 	1.5 Line Spacing	Interlinea 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Un elaboratore di testi gratuito e open source, scritto da zero in Rust.\nFa parte delle Crafting Apps del team ArtCraft.
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Un elaboratore di testi gratuito e open source, scritto da zero in Rust.\nFa parte delle Mahay apps del team Mahay.
 	About	Informazioni
-	About WordCraft	Informazioni su WordCraft
+	About Soratra	Informazioni su Soratra
 	Accept	Accetta
 	Accept All Changes	Accetta tutte le modifiche
 	Accept This Change	Accetta questa modifica
@@ -327,7 +327,7 @@
 	Envelopes	Buste
 	Eraser	Gomma
 	Even Page	Pagina pari
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Ogni comando è disponibile per script e agenti IA: esegui `wordcraft-cli mcp` per un server MCP, o avvia l'app con `--control <port>` per il canale di controllo JSON.
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Ogni comando è disponibile per script e agenti IA: esegui `soratra-cli mcp` per un server MCP, o avvia l'app con `--control <port>` per il canale di controllo JSON.
 	Export	Esporta
 	Export PDF	Esporta PDF
 	Export Page as PNG	Esporta pagina come PNG
@@ -443,8 +443,8 @@
 	Inspect Styles at Selection	Ispeziona stili nella selezione
 	Interface language:	Lingua dell'interfaccia:
 	Italic	Corsivo
-	Join the ArtCraft community on Discord	Unisciti alla community di ArtCraft su Discord
-	Join us on Discord: discord.gg/artcraft	Unisciti a noi su Discord: discord.gg/artcraft
+	Join the Mahay community on Discord	Unisciti alla community di Mahay su Discord
+	Join us on Discord: discord.gg/mahay	Unisciti a noi su Discord: discord.gg/mahay
 	Justify	Giustifica
 	Keep Lines Together	Mantieni righe insieme
 	Keep Text Only	Mantieni solo testo
@@ -456,7 +456,7 @@
 	Landscape	Orizzontale
 	Language	Lingua
 	{language} (no dictionary)	{language} (nessun dizionario)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Non è installato alcun dizionario ortografico per {language}, quindi non viene controllata. WordCraft cerca il dizionario Hunspell {name} nella cartella WORDCRAFT_DICTIONARIES e nelle posizioni di sistema abituali.
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	Non è installato alcun dizionario ortografico per {language}, quindi non viene controllata. Soratra cerca il dizionario Hunspell {name} nella cartella SORATRA_DICTIONARIES e nelle posizioni di sistema abituali.
 	Lasso	Lazo
 	Last Column	Ultima colonna
 	Last commit	Ultimo commit
@@ -486,7 +486,7 @@
 	Link to Previous	Collega al precedente
 	Links	Collegamenti
 	Location: {path}	Percorso: {path}
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team e i collaboratori di WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team e i collaboratori di Soratra.
 	Macros	Macro
 	Mailings	Mail
 	Manage Sources	Gestione fonti
@@ -773,7 +773,7 @@
 	Small caps	Maiuscoletto
 	SmartArt	SmartArt
 	Sort	Ordina
-	Source code: github.com/storytold/wordcraft	Codice sorgente: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	Codice sorgente: github.com/raantss18/soratra
 	Space	Spazio
 	Space before/after:	Spazio prima/dopo:
 	Spacing	Spaziatura
@@ -913,7 +913,7 @@
 	Word Right	Parola a destra
 	Word document (*.docx)	Documento Word (*.docx)
 	WordArt	WordArt
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	Parole
 	Words only	Solo parole
 	Wrap Text	Testo a capo
@@ -980,7 +980,7 @@
 	Stopped	Interrotto
 	Speed	Velocità
 	Normal speed	Velocità normale
-	AutoSave documents you have saved in WordCraft	Salva automaticamente i documenti che hai salvato in WordCraft
+	AutoSave documents you have saved in Soratra	Salva automaticamente i documenti che hai salvato in Soratra
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Salvataggio automatico non riuscito: {error}. Salva il documento per riattivare il salvataggio automatico.
 	Couldn't download {name}: {error}	Impossibile scaricare {name}: {error}
 	Do you want to save changes to {name}?	Vuoi salvare le modifiche a {name}?
@@ -1147,7 +1147,7 @@
 	Insert a new equation (Alt+=)	Inserisci una nuova equazione (Alt+=)
 	Leave the equation (Esc)	Esci dall'equazione (Esc)
 	Preview	Anteprima
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	Disegna a penna
 	Erase Ink	Cancella penna
 	Hide Ink	Nascondi penna
@@ -1285,7 +1285,7 @@
 	The document will be saved with a password. Save it to protect it.	Il documento verrà salvato con una password. Salvalo per proteggerlo.
 	The password is removed. Save the document to keep the change.	La password è stata rimossa. Salva il documento per mantenere la modifica.
 	The passwords don't match.	Le password non corrispondono.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Conserva la password in un luogo sicuro: senza di essa nessuno, nemmeno WordCraft, può aprire il documento. Lascia vuote entrambe le caselle per rimuovere la password.
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	Conserva la password in un luogo sicuro: senza di essa nessuno, nemmeno Soratra, può aprire il documento. Lascia vuote entrambe le caselle per rimuovere la password.
 	Align Top Left	Allinea in alto a sinistra
 	Align Top Center	Allinea in alto al centro
 	Align Top Right	Allinea in alto a destra
@@ -1312,7 +1312,7 @@
 	Version	Versione
 	% of all commits	% di tutti i commit
 	Lines +/−	Righe +/−
-	Craft	Artigianale
+	Mahay	Artigianale
 	Studio	Studio
 	Atelier	Atelier
 	Darkroom	Camera oscura
@@ -2152,7 +2152,7 @@
 	Brackets	Parentesi quadre
 	Brackets with Separators	Parentesi con separatori
 	Breve	Breve
-	Browse in WordCraft…	Sfoglia in WordCraft…
+	Browse in Soratra…	Sfoglia in Soratra…
 	CONFIDENTIAL	RISERVATO
 	Cases (Three Conditions)	Casi (tre condizioni)
 	Cases (Two Conditions)	Casi (due condizioni)
@@ -2321,7 +2321,7 @@
 	On	Attivato
 	On: the caret glides to its new place when you type or use the arrow keys, and its blink fades. Off: it jumps and blinks on and off.	Attivato: il cursore scorre nella nuova posizione quando scrivi o usi i tasti freccia, e il lampeggio sfuma. Disattivato: salta e lampeggia acceso e spento.
 	One half	Un mezzo
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Apri un file con il browser di WordCraft quando la finestra di dialogo dei file del sistema non compare.
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	Apri un file con il browser di Soratra quando la finestra di dialogo dei file del sistema non compare.
 	Operator Structures	Strutture di operatori
 	Operators	Operatori
 	Other Large Operators	Altri operatori grandi
@@ -2409,7 +2409,7 @@
 	Tangent formula	Formula della tangente
 	Text over Colon Equal	Testo sopra due punti uguale
 	Text over Equal	Testo sopra uguale
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	La finestra di dialogo dei file del sistema non è disponibile, quindi WordCraft mostra la sua. Per avere quella del sistema, installa un portale di selezione dei file (come xdg-desktop-portal-gtk) o zenity.
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	La finestra di dialogo dei file del sistema non è disponibile, quindi Soratra mostra la sua. Per avere quella del sistema, installa un portale di selezione dei file (come xdg-desktop-portal-gtk) o zenity.
 	This folder can't be read: {error}	Impossibile leggere questa cartella: {error}
 	Tilde	Tilde
 	Trigonometric Functions	Funzioni trigonometriche
@@ -2452,15 +2452,15 @@
 preview	Title	Esempio
 	Do Not Check Spelling or Grammar	Non controllare ortografia e grammatica
 	Start-up	Avvio
-	Show the Start screen when WordCraft starts	Mostra la schermata iniziale all'avvio di WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Attivo: WordCraft si apre su File › Home, con un documento vuoto, i modelli e i documenti recenti. Disattivo: apre un documento vuoto.
-	Couldn't make WordCraft the default: {error}	Impossibile rendere WordCraft l'app predefinita: {error}
-	In Default apps, choose WordCraft for the document types you want it to open.	In App predefinite, scegli WordCraft per i tipi di documento che deve aprire.
-	Make WordCraft the default for Word documents…	Rendi WordCraft l'app predefinita per i documenti Word…
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	D'ora in poi i file .docx, .doc, .rtf e .odt e i modelli di Word si aprono con WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Apre Impostazioni › App predefinite, dove scegli WordCraft per .docx e gli altri tipi di documento.
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Per aprire i documenti Word con WordCraft per impostazione predefinita: selezionane uno nel Finder, scegli Archivio › Ottieni informazioni, scegli WordCraft in «Apri con», quindi fai clic su «Modifica tutto».
-	WordCraft is now the default app for Word documents.	WordCraft è ora l'app predefinita per i documenti Word.
+	Show the Start screen when Soratra starts	Mostra la schermata iniziale all'avvio di Soratra
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Attivo: Soratra si apre su File › Home, con un documento vuoto, i modelli e i documenti recenti. Disattivo: apre un documento vuoto.
+	Couldn't make Soratra the default: {error}	Impossibile rendere Soratra l'app predefinita: {error}
+	In Default apps, choose Soratra for the document types you want it to open.	In App predefinite, scegli Soratra per i tipi di documento che deve aprire.
+	Make Soratra the default for Word documents…	Rendi Soratra l'app predefinita per i documenti Word…
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	D'ora in poi i file .docx, .doc, .rtf e .odt e i modelli di Word si aprono con Soratra.
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	Apre Impostazioni › App predefinite, dove scegli Soratra per .docx e gli altri tipi di documento.
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	Per aprire i documenti Word con Soratra per impostazione predefinita: selezionane uno nel Finder, scegli Archivio › Ottieni informazioni, scegli Soratra in «Apri con», quindi fai clic su «Modifica tutto».
+	Soratra is now the default app for Word documents.	Soratra è ora l'app predefinita per i documenti Word.
 	Numerals:	Cifre:
 	Numerals	Cifre
 	Hindi	Hindi
@@ -2550,7 +2550,7 @@ preview	Title	Esempio
 	{name}   {height} × {width} mm	{name}   {height} × {width} mm
 	{width} × {height} mm	{width} × {height} mm
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	Ricercatore richiede un servizio online; WordCraft mantiene i tuoi documenti offline.
+	Researcher needs an online service; Soratra keeps your documents offline.	Ricercatore richiede un servizio online; Soratra mantiene i tuoi documenti offline.
 	These settings will be used for new documents.	Queste impostazioni verranno usate per i nuovi documenti.
 	can't split at the first row	impossibile dividere la tabella alla prima riga
 	select two or more cells to merge	seleziona due o più celle da unire

@@ -9,7 +9,7 @@
   stroke-linecap="round"
   stroke-linejoin="round"
 >
-  <!-- PhotoCraft's own Single Column Marquee glyph: a dashed column from edge to edge. -->
+  <!-- Sary's own Single Column Marquee glyph: a dashed column from edge to edge. -->
   <path d="M8 3h8" />
   <path d="M8 21h8" />
   <path d="M12 6.5v1" />

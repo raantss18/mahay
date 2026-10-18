@@ -5,12 +5,12 @@ use egui::{Key, Modifiers, Pos2, Rect, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform, pencil_cursor_rect, pencil_tip_is_round, tool_event};
 use crate::state::Tool;
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
     app.run("file.new", json!({"width": 120, "height": 80, "background": "transparent"})).unwrap();
     app.run("tools.setColors", json!({"foreground": "#000000", "background": "#ffffff"})).unwrap();
     app.run("tools.setBrush", json!({"brush": {"size": 3, "hardness": 0.0}})).unwrap();
@@ -22,16 +22,16 @@ fn app() -> PhotocraftApp {
     app
 }
 
-fn layer(app: &PhotocraftApp) -> photocraft_engine::doc::Layer {
+fn layer(app: &SaryApp) -> sary_engine::doc::Layer {
     let st = app.session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().clone()
 }
 
-fn rgba(app: &PhotocraftApp, x: i32, y: i32) -> [f32; 4] {
+fn rgba(app: &SaryApp, x: i32, y: i32) -> [f32; 4] {
     layer(app).surface().unwrap().rgba(x, y)
 }
 
-fn drag(app: &mut PhotocraftApp, pts: &[(f64, f64)], mods: Modifiers) {
+fn drag(app: &mut SaryApp, pts: &[(f64, f64)], mods: Modifiers) {
     let (x, y) = pts[0];
     tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, mods);
     for &(x, y) in &pts[1..] {
@@ -41,7 +41,7 @@ fn drag(app: &mut PhotocraftApp, pts: &[(f64, f64)], mods: Modifiers) {
     tool_event(app, ToolEvent::Up { x, y }, mods);
 }
 
-fn last(app: &PhotocraftApp) -> (String, serde_json::Value) {
+fn last(app: &SaryApp) -> (String, serde_json::Value) {
     app.session.journal.last().cloned().unwrap()
 }
 
@@ -151,7 +151,7 @@ fn the_cursor_is_round_exactly_when_the_pencil_dab_is() {
     for n in 1..=12u32 {
         let (x, y) = (8.0 + f64::from((n - 1) % 6) * 18.0 + 0.3, 15.0 + f64::from((n - 1) / 6) * 30.0 + 0.6);
         app.run("paint.pencil", json!({"points": [[x, y]], "size": n})).unwrap();
-        let [x0, y0, ..] = photocraft_engine::paint::grid_square(x, y, n as f32);
+        let [x0, y0, ..] = sary_engine::paint::grid_square(x, y, n as f32);
         let corner = rgba(&app, x0 as i32, y0 as i32)[3] == 1.0;
         assert_eq!(pencil_tip_is_round(n as f32), !corner, "{n} px");
     }
@@ -217,15 +217,15 @@ fn the_eraser_in_block_mode_erases_a_16_screen_px_square() {
 #[test]
 fn b_cycles_brush_pencil_mixer_brush_and_color_replacement() {
     let mut h = Harness::builder().with_size(vec2(1280.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 120})).unwrap();
         app
     });
     h.state_mut().ui.tool = Tool::Move;
     h.state_mut().session.edit_prefs(|p| p.tools.use_shift_key_for_tool_switch = false);
     h.run_steps(4);
-    let press = |h: &mut Harness<'_, PhotocraftApp>, m: Modifiers| {
+    let press = |h: &mut Harness<'_, SaryApp>, m: Modifiers| {
         h.event(egui::Event::Key { key: Key::B, physical_key: None, pressed: true, repeat: false, modifiers: m });
         h.event(egui::Event::Key { key: Key::B, physical_key: None, pressed: false, repeat: false, modifiers: m });
         h.run_steps(2);

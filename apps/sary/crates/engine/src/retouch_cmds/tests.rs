@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_color::ColorMode;
+use sary_color::ColorMode;
 
 const DEPTHS: [u64; 3] = [8, 16, 32];
 
@@ -243,7 +243,7 @@ fn paint_layer(s: &mut Session, f: impl Fn(i32, i32) -> [f32; 4]) {
         let mut data = Vec::new();
         for y in b.y0..b.y1 {
             for x in b.x0..b.x1 {
-                data.extend(photocraft_raster::from_rgba(&fmt, f(x, y)));
+                data.extend(sary_raster::from_rgba(&fmt, f(x, y)));
             }
         }
         surf.write_region(b, &data);
@@ -446,7 +446,7 @@ fn sponge_reduces_and_increases_saturation() {
     for depth in DEPTHS {
         let mut s = session(40, 20, depth, "rgb");
         paint_layer(&mut s, |_, _| [0.8, 0.4, 0.3, 1.0]);
-        let sat = |p: [f32; 4]| photocraft_algo::retouch::saturation([p[0], p[1], p[2]]);
+        let sat = |p: [f32; 4]| sary_algo::retouch::saturation([p[0], p[1], p[2]]);
         let s0 = sat(rgba(&s, 10, 10));
         s.execute("paint.sponge", json!({"points": [[2, 10], [38, 10]], "size": 8, "hardness": 100})).unwrap();
         let s1 = sat(rgba(&s, 10, 10));
@@ -646,7 +646,7 @@ fn texture_surface(surf: &mut Surface, b: Rect) {
     surf.write_region(b, &data);
 }
 
-fn active_layer(s: &Session) -> &photocraft_doc::Layer {
+fn active_layer(s: &Session) -> &sary_doc::Layer {
     let d = s.active().unwrap();
     d.doc.layer(d.active_layer.unwrap()).unwrap()
 }
@@ -1441,10 +1441,10 @@ fn pattern_stamp_tile_seam_matches_an_untilled_reference() {
     let mut s = session(96, 96, 8, "rgb");
     stamp(&mut s, json!({"points": [[64, 48]], "size": 32, "hardness": 100, "phase": [0, 0]})).unwrap();
     let pat = s.patterns.items.iter().find(|p| p.name == "Checkerboard").cloned().expect("builtin");
-    let tile = photocraft_compose::pattern::Tile::new(&pat).expect("tile");
-    let place = photocraft_compose::pattern::Placement::new(photocraft_geom::Rect::EMPTY, false, (0.0, 0.0), 1.0, 0.0);
-    let col = photocraft_geom::Rect::new(64, 40, 65, 56);
-    let reference = photocraft_compose::pattern::render(&tile, &place, col);
+    let tile = sary_compose::pattern::Tile::new(&pat).expect("tile");
+    let place = sary_compose::pattern::Placement::new(sary_geom::Rect::EMPTY, false, (0.0, 0.0), 1.0, 0.0);
+    let col = sary_geom::Rect::new(64, 40, 65, 56);
+    let reference = sary_compose::pattern::render(&tile, &place, col);
     for (i, y) in (40..56).enumerate() {
         let got = rgba(&s, 64, y);
         let want = reference[i];
@@ -1464,13 +1464,13 @@ fn pattern_stamp_rejects_hostile_input() {
     assert!(s.execute("paint.patternStamp", json!({"points": [[1e7, 0]], "pattern": "Checkerboard", "size": 8})).is_err());
     assert!(s.execute("paint.patternStamp", json!({"points": [[f64::NAN, 0]], "pattern": "Checkerboard", "size": 8})).is_err());
     assert!(s.execute("paint.patternStamp", json!({"points": [[0, 0], [9000, 9000]], "pattern": "Checkerboard", "size": 5000, "hardness": 100})).is_err());
-    let fmt = photocraft_color::PixelFormat::new(photocraft_color::ColorMode::Rgb, photocraft_color::SampleType::U8, false);
-    s.patterns.items.push(photocraft_doc::Pattern {
+    let fmt = sary_color::PixelFormat::new(sary_color::ColorMode::Rgb, sary_color::SampleType::U8, false);
+    s.patterns.items.push(sary_doc::Pattern {
         id: "empty-pat".into(),
         name: "EmptyTile".into(),
         width: 0,
         height: 0,
-        surface: photocraft_raster::Surface::new(fmt),
+        surface: sary_raster::Surface::new(fmt),
     });
     assert!(s.execute("paint.patternStamp", json!({"points": [[8, 8]], "pattern": "EmptyTile", "size": 8})).is_err());
     s.execute("layer.setProps", json!({"locks": {"pixels": true}})).unwrap();
@@ -1589,7 +1589,7 @@ fn live_dodge_matches_the_commit_across_cells() {
             changed |= (want[0] - texture(x, y)[0]).abs() > 0.02;
             // The commit also lays the stroke's last dab, which the live stroke shows on release
             // (a soft tip reaches past its 20 px radius).
-            let reach = photocraft_paint::tip_reach(20.0, 0.3).ceil() as i32 + 2;
+            let reach = sary_paint::tip_reach(20.0, 0.3).ceil() as i32 + 2;
             if (x - 150).pow(2) + (y - 70).pow(2) > reach * reach {
                 worst = (0..4).map(|c| (got[c] - want[c]).abs()).fold(worst, f32::max);
             }

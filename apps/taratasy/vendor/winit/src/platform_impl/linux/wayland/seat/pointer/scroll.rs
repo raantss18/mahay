@@ -1,4 +1,4 @@
-//! PdfCraft patch (13): Wayland scroll-phase policy, shared with the desktop regression tests.
+//! Taratasy patch (13): Wayland scroll-phase policy, shared with the desktop regression tests.
 
 use wayland_client::protocol::wl_pointer::AxisSource;
 

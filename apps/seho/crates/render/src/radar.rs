@@ -1,10 +1,10 @@
 //! Radar charts: one spoke per category, the value axis running up the first spoke, a polygon
 //! of gridlines per major unit and each series a closed polygon (filled for a filled radar).
 
-use deckcraft_color::Rgba;
-use deckcraft_model::chart::{Chart, ChartType};
-use deckcraft_model::resolve::Ctx;
-use deckcraft_model::text::{Align, Anchor};
+use seho_color::Rgba;
+use seho_model::chart::{Chart, ChartType};
+use seho_model::resolve::Ctx;
+use seho_model::text::{Align, Anchor};
 use kurbo::{Affine, BezPath, Point, Rect, Shape as _};
 use vello_cpu::RenderContext;
 

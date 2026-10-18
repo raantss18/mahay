@@ -2,13 +2,13 @@
 
 use std::collections::HashMap;
 
-use wordcraft_doc::para::cap_alt;
-use wordcraft_doc::props::{
+use soratra_doc::para::cap_alt;
+use soratra_doc::props::{
     Align, Border, BorderStyle, Borders, CellProps, CharProps, CombineBrackets, EastAsianLayout, HeightRule, Highlight, LineSpacing, NumRef,
     ParaProps, Rgb, RowProps, TabAlign, TabLeader, TabStop, TableFloat, TableLook, TableProps, TextColor, TextDirection, Underline, VAlign, VMerge,
     VertAlign,
 };
-use wordcraft_doc::section::{
+use soratra_doc::section::{
     Columns, DocGrid, DocGridType, LineNumberRestart, LineNumbering, MAX_CHAR_SPACE, MAX_GRID_PITCH, NotePos, NoteProps, NoteRestart, NumFormat,
     PageVAlign, SectionProps, SectionStart,
 };
@@ -18,11 +18,11 @@ use crate::units::{int, measure, on_off, tw, u32_of};
 
 /// A text frame (`w:framePr` without a drop cap, ECMA-376 §17.3.1.11), sizes and offsets in
 /// points (clamped), names kept as OOXML writes them.
-fn text_frame(k: &El) -> wordcraft_doc::props::TextFrame {
+fn text_frame(k: &El) -> soratra_doc::props::TextFrame {
     let len = |name: &str| tw(k, name).filter(|v| v.is_finite()).map(|v| v.clamp(-1584.0, 1584.0));
     let word = |name: &str, allowed: &[&str], default: &str| k.attr(name).filter(|v| allowed.contains(v)).unwrap_or(default).to_string();
     let align = |name: &str, allowed: &[&str]| k.attr(name).filter(|v| allowed.contains(v)).map(str::to_string);
-    wordcraft_doc::props::TextFrame {
+    soratra_doc::props::TextFrame {
         w: len("w:w").filter(|v| *v > 0.0),
         h: len("w:h").map(f32::abs).filter(|v| *v > 0.0),
         h_exact: k.attr("w:hRule") == Some("exact"),
@@ -66,12 +66,12 @@ pub(crate) const LEVEL_ONLY: u32 = u32::MAX;
 
 /// The list a level-only `numPr` refers to: the nearest numbering in style `style`'s based-on chain
 /// (its own included) that names a list. `None` when no style in the chain has one.
-pub(crate) fn chain_list(sheet: &wordcraft_doc::styles::StyleSheet, style: &str) -> Option<u32> {
+pub(crate) fn chain_list(sheet: &soratra_doc::styles::StyleSheet, style: &str) -> Option<u32> {
     sheet.chain(style).iter().rev().filter_map(|s| s.para.numbering).map(|n| n.num).find(|n| *n != LEVEL_ONLY)
 }
 
 /// Resolve level-only numbering in `p` against its style chain (`style` when it has none).
-pub(crate) fn resolve_level_only(sheet: &wordcraft_doc::styles::StyleSheet, p: &mut ParaProps, style: &str) {
+pub(crate) fn resolve_level_only(sheet: &soratra_doc::styles::StyleSheet, p: &mut ParaProps, style: &str) {
     if let Some(n) = p.numbering.as_mut().filter(|n| n.num == LEVEL_ONLY) {
         match chain_list(sheet, p.style.as_deref().unwrap_or(style)) {
             Some(num) => n.num = num,
@@ -663,7 +663,7 @@ pub fn sectpr(e: &El) -> (SectionProps, Vec<HfRef>) {
             "w:titlePg" => s.title_page = on_off(k),
             "w:bidi" => s.rtl = on_off(k),
             "w:textDirection" => {
-                s.text_direction = wordcraft_doc::props::TextDirection::from_ooxml(k.attr("w:val").unwrap_or(""));
+                s.text_direction = soratra_doc::props::TextDirection::from_ooxml(k.attr("w:val").unwrap_or(""));
                 s.text_direction_set = k.attr("w:val") == Some("lrTb");
             }
             "w:pgNumType" => {
@@ -724,14 +724,14 @@ pub fn note_pr(e: &El, fmt: bool) -> NoteProps {
     NoteProps {
         pos: e.child_val("w:pos").and_then(NotePos::from_ooxml),
         num_fmt: if fmt { e.child_val("w:numFmt").map(NumFormat::from_ooxml) } else { None },
-        num_start: e.child_val("w:numStart").and_then(int).map(|v| v.clamp(1, wordcraft_doc::section::MAX_NOTE_START as i64) as u32),
+        num_start: e.child_val("w:numStart").and_then(int).map(|v| v.clamp(1, soratra_doc::section::MAX_NOTE_START as i64) as u32),
         num_restart: e.child_val("w:numRestart").and_then(NoteRestart::from_ooxml),
     }
 }
 
 /// `w:tblpPr`: a floating table's anchors, offsets or alignments and distances from text.
 fn table_float(e: &El) -> TableFloat {
-    use wordcraft_doc::para::{Anchor, FloatAlign};
+    use soratra_doc::para::{Anchor, FloatAlign};
     let pt = |n: &str| e.attr(n).and_then(|v| measure(v, 20.0)).map(|v| v.clamp(-31_680.0, 31_680.0)).unwrap_or(0.0);
     let dist = |n: &str| pt(n).clamp(0.0, 1584.0);
     let rel = |n: &str, text: Anchor| match e.attr(n) {

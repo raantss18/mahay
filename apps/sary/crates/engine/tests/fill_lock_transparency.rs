@@ -1,7 +1,7 @@
 //! Paint Bucket and Gradient keep alpha on a transparency-locked layer, as Edit › Fill and the
 //! brushes do (#1104).
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 /// A transparent layer with a red stroke across it, transparency locked.

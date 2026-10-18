@@ -1,6 +1,6 @@
 //! The commands the app's shell carries out itself (view, panels, windows: they change no
 //! document), and the tools, as data: what they're called and which keys they have by default.
-//! The shell implements them (`photocraft_ui_egui::menus::UI_COMMANDS`, its `Tool`); the engine
+//! The shell implements them (`sary_ui_egui::menus::UI_COMMANDS`, its `Tool`); the engine
 //! knows them so a headless session sees every bindable command: Edit › Keyboard Shortcuts'
 //! list, conflicts, `.kys` import and export all work without the UI (the UI is a layer on
 //! top). The app's tests keep these tables equal to its own.
@@ -83,13 +83,13 @@ pub const SHELL_COMMANDS: &[(&str, &str, &[&str], Option<&str>)] = &[
     ("window.theme.softDark", "Soft Dark Theme", &["Window", "Theme"], None),
     ("window.theme.system", "Sync with system", &["Window", "Theme"], None),
     ("edit.search", "Search…", &["Edit"], Some("Cmd+F")),
-    ("help.discord", "Join the ArtCraft Discord…", &["Help"], None),
-    ("help.website", "PhotoCraft Website", &["Help"], None),
-    ("help.artcraftWebsite", "ArtCraft Website", &["Help"], None),
-    ("help.github", "PhotoCraft on GitHub", &["Help"], None),
+    ("help.discord", "Join the Mahay Discord…", &["Help"], None),
+    ("help.website", "Sary Website", &["Help"], None),
+    ("help.mahayWebsite", "Mahay Website", &["Help"], None),
+    ("help.github", "Sary on GitHub", &["Help"], None),
     ("help.reportIssue", "Report an Issue…", &["Help"], None),
     ("help.systemInfo", "System Info…", &["Help"], None),
-    ("help.about", "About PhotoCraft", &["Help"], None),
+    ("help.about", "About Sary", &["Help"], None),
 ];
 
 /// The tools, in toolbar order: shortcut id (`tools.select.<tool>`), Photoshop's name for it

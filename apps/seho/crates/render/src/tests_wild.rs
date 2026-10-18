@@ -2,9 +2,9 @@
 //! of synthetic "wild" slides (observed black-box; see `plan/powerpoint/tools/gen_wild.py`).
 
 use super::*;
-use deckcraft_color::Rgba;
-use deckcraft_model::style::ColorRef;
-use deckcraft_model::{CustomPath, Geom, Presentation, Shape, ShapeId, Xfrm};
+use seho_color::Rgba;
+use seho_model::style::ColorRef;
+use seho_model::{CustomPath, Geom, Presentation, Shape, ShapeId, Xfrm};
 
 fn deck_with(shapes: Vec<Shape>) -> Presentation {
     let mut p = Presentation::default();
@@ -49,7 +49,7 @@ fn custom_geometry_sub_paths_cut_holes_whichever_way_they_wind() {
     assert!(close(img.pixel(200, 200), WHITE, 2), "inner square is a hole: {:?}", img.pixel(200, 200));
 }
 
-fn dotted_line(cap: deckcraft_model::style::LineCap, len: f64) -> Shape {
+fn dotted_line(cap: seho_model::style::LineCap, len: f64) -> Shape {
     Shape {
         id: ShapeId(11),
         xfrm: Some(Xfrm::new(100.0, 100.0, len, 0.0)),
@@ -57,7 +57,7 @@ fn dotted_line(cap: deckcraft_model::style::LineCap, len: f64) -> Shape {
         line: Some(Line {
             fill: solid(RED),
             width: Some(10.0),
-            dash: Some(deckcraft_model::style::Dash::Preset { name: "sysDot".into() }),
+            dash: Some(seho_model::style::Dash::Preset { name: "sysDot".into() }),
             cap: Some(cap),
             ..Default::default()
         }),
@@ -67,7 +67,7 @@ fn dotted_line(cap: deckcraft_model::style::LineCap, len: f64) -> Shape {
 
 #[test]
 fn round_dots_are_separate_circles_with_the_caps_inside_each_dash() {
-    use deckcraft_model::style::LineCap;
+    use seho_model::style::LineCap;
     // PowerPoint's "Round Dot": one width on, one off, round caps. The caps sit inside the dash, so
     // the dots stay apart (they used to grow into each other and draw a solid line).
     let img = render(vec![dotted_line(LineCap::Round, 200.0)]);
@@ -99,7 +99,7 @@ fn dash_lengths_make_room_for_round_and_square_caps() {
 }
 
 fn arrow_line(kind: &str, width: f64, c: Rgba) -> Shape {
-    let end = deckcraft_model::style::LineEnd { kind: kind.into(), w: "med".into(), len: "med".into() };
+    let end = seho_model::style::LineEnd { kind: kind.into(), w: "med".into(), len: "med".into() };
     Shape {
         id: ShapeId(12),
         xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 0.0)),
@@ -138,7 +138,7 @@ fn an_open_arrowheads_point_is_on_the_lines_end() {
 
 #[test]
 fn arrowheads_are_sized_for_at_least_a_two_point_line() {
-    let e = deckcraft_model::style::LineEnd { kind: "triangle".into(), w: "sm".into(), len: "lg".into() };
+    let e = seho_model::style::LineEnd { kind: "triangle".into(), w: "sm".into(), len: "lg".into() };
     assert_eq!(head_size(&e, 0.5), (4.0, 10.0));
     assert_eq!(head_size(&e, 4.0), (8.0, 20.0));
 }
@@ -163,7 +163,7 @@ fn trimming_a_path_leaves_its_ends_off_by_arc_length() {
 }
 
 fn radial(focus: [f64; 4]) -> Shape {
-    use deckcraft_model::style::{Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Gradient, GradientShape, GradientStop};
     let stops = vec![GradientStop { pos: 0.0, color: ColorRef::rgb(WHITE) }, GradientStop { pos: 1.0, color: ColorRef::rgb(Rgba::BLACK) }];
     Shape {
         id: ShapeId(13),
@@ -195,8 +195,8 @@ fn a_radial_gradient_off_centre_ends_on_the_circle_around_the_box() {
     assert!((img.pixel(110, 200)[0] as i32 - img.pixel(490, 200)[0] as i32).abs() <= 2);
 }
 
-fn shadow(sx: f64, sy: f64, kx: f64, align: &str) -> deckcraft_model::style::Shadow {
-    deckcraft_model::style::Shadow {
+fn shadow(sx: f64, sy: f64, kx: f64, align: &str) -> seho_model::style::Shadow {
+    seho_model::style::Shadow {
         color: ColorRef::rgb(Rgba::BLACK),
         blur: 0.0,
         dist: 0.0,
@@ -211,7 +211,7 @@ fn shadow(sx: f64, sy: f64, kx: f64, align: &str) -> deckcraft_model::style::Sha
     }
 }
 
-fn with_effects(fill: Option<Fill>, line: Option<Line>, effects: deckcraft_model::Effects) -> Shape {
+fn with_effects(fill: Option<Fill>, line: Option<Line>, effects: seho_model::Effects) -> Shape {
     Shape { id: ShapeId(14), xfrm: Some(Xfrm::new(100.0, 100.0, 100.0, 100.0)), fill, line, effects: Some(effects), ..Default::default() }
 }
 
@@ -219,23 +219,23 @@ fn with_effects(fill: Option<Fill>, line: Option<Line>, effects: deckcraft_model
 fn a_perspective_shadow_lies_along_the_edge_its_alignment_names() {
     // Half height, skewed 45° so its top leans right, anchored at the bottom middle: the shadow's
     // bottom edge is the shape's (y = 200) and its top (y = 150) is 50 pt to the right.
-    let fx = deckcraft_model::Effects { outer_shadow: Some(shadow(1.0, 0.5, -45.0, "b")), ..Default::default() };
+    let fx = seho_model::Effects { outer_shadow: Some(shadow(1.0, 0.5, -45.0, "b")), ..Default::default() };
     let img = render(vec![with_effects(solid(RED), no_line(), fx)]);
     assert!(close(img.pixel(210, 175), Rgba::BLACK, 30), "{:?}", img.pixel(210, 175));
     assert!(close(img.pixel(240, 155), Rgba::BLACK, 30), "{:?}", img.pixel(240, 155));
     assert!(close(img.pixel(240, 180), WHITE, 10), "{:?}", img.pixel(240, 180));
     assert!(close(img.pixel(205, 140), WHITE, 10), "nothing above the half height {:?}", img.pixel(205, 140));
     // Anchored bottom-right and half as big again: it grows up and to the left only.
-    let fx = deckcraft_model::Effects { outer_shadow: Some(shadow(1.5, 1.5, 0.0, "br")), ..Default::default() };
+    let fx = seho_model::Effects { outer_shadow: Some(shadow(1.5, 1.5, 0.0, "br")), ..Default::default() };
     let img = render(vec![with_effects(solid(RED), no_line(), fx)]);
     assert!(close(img.pixel(70, 70), Rgba::BLACK, 30) && close(img.pixel(210, 210), WHITE, 10));
 }
 
-fn offset_shadow() -> deckcraft_model::Effects {
+fn offset_shadow() -> seho_model::Effects {
     let mut sh = shadow(1.0, 1.0, 0.0, "b");
     sh.dist = 20.0;
     sh.dir = 0.0;
-    deckcraft_model::Effects { outer_shadow: Some(sh), ..Default::default() }
+    seho_model::Effects { outer_shadow: Some(sh), ..Default::default() }
 }
 
 #[test]
@@ -269,7 +269,7 @@ fn picture_deck(line: Option<Line>) -> Presentation {
     let sh = Shape {
         id: ShapeId(15),
         xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 100.0)),
-        kind: ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { media, ..Default::default() } },
+        kind: ShapeKind::Picture { fill: seho_model::style::PictureFill { media, ..Default::default() } },
         line,
         ..Default::default()
     };
@@ -288,14 +288,14 @@ fn a_pictures_border_lies_outside_the_picture() {
     assert!(close(img.pixel(90, 150), WHITE, 10), "border no wider than the line {:?}", img.pixel(90, 150));
     // A dashed border keeps its dash lengths (a dash is 4 widths: 32 pt), drawn from the corner.
     let mut line = Line::solid(ColorRef::rgb(RED), 8.0);
-    line.dash = Some(deckcraft_model::style::Dash::Preset { name: "dash".into() });
+    line.dash = Some(seho_model::style::Dash::Preset { name: "dash".into() });
     let img = render_slide(&picture_deck(Some(line)), 0, &RenderOpts { scale: 1.0, ..Default::default() });
     assert!(close(img.pixel(120, 96), RED, 30) && close(img.pixel(140, 96), WHITE, 10), "{:?}", img.pixel(140, 96));
 }
 
 #[test]
 fn children_filled_with_the_group_fill_show_one_fill_across_the_group() {
-    use deckcraft_model::style::{Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Gradient, GradientShape, GradientStop};
     let stops = vec![GradientStop { pos: 0.0, color: ColorRef::rgb(RED) }, GradientStop { pos: 1.0, color: ColorRef::rgb(Rgba::rgb(0, 0, 255)) }];
     let grad =
         Fill::Gradient(Gradient { tile: [0.0; 4], stops, shape: GradientShape::Linear { angle: 0.0, scaled: false }, rotate_with_shape: true });
@@ -323,7 +323,7 @@ fn children_filled_with_the_group_fill_show_one_fill_across_the_group() {
 #[test]
 fn open_freeforms_take_arrowheads_even_when_filled() {
     // An open custom path with a fill and a tail arrow: PowerPoint draws the arrow.
-    let end = deckcraft_model::style::LineEnd { kind: "triangle".into(), w: "med".into(), len: "med".into() };
+    let end = seho_model::style::LineEnd { kind: "triangle".into(), w: "med".into(), len: "med".into() };
     let sh = Shape {
         id: ShapeId(19),
         xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 100.0)),
@@ -356,7 +356,7 @@ fn a_corner_radial_centres_on_the_corner_through_its_tile() {
 
 #[test]
 fn a_linear_gradient_spans_its_tile_rect() {
-    use deckcraft_model::style::{Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Gradient, GradientShape, GradientStop};
     // Tile rect the left half of the box: the ramp ends half way and stays black after.
     let stops = vec![GradientStop { pos: 0.0, color: ColorRef::rgb(WHITE) }, GradientStop { pos: 1.0, color: ColorRef::rgb(Rgba::BLACK) }];
     let g = Gradient { stops, shape: GradientShape::Linear { angle: 0.0, scaled: false }, rotate_with_shape: true, tile: [0.0, 0.0, 0.5, 0.0] };
@@ -377,7 +377,7 @@ fn a_3d_pictures_border_stays_centred_on_its_edge() {
     let mut p = picture_deck(Some(Line::solid(ColorRef::rgb(RED), 8.0)));
     let s = std::sync::Arc::make_mut(&mut p.slides[0]);
     if let Some(sh) = s.shapes.first_mut() {
-        sh.effects = Some(deckcraft_model::Effects {
+        sh.effects = Some(seho_model::Effects {
             bevel: Some("circle".into()),
             raw3d: Some("<a:scene3d><a:camera prst=\"orthographicFront\"/></a:scene3d><a:sp3d><a:bevelT/></a:sp3d>".into()),
             ..Default::default()
@@ -397,7 +397,7 @@ fn half_red_half_blue() -> Vec<u8> {
 }
 
 fn tiled(sx: f64, flip: &str, align: &str) -> Image {
-    use deckcraft_model::style::{PictureFill, PictureMode};
+    use seho_model::style::{PictureFill, PictureMode};
     let mut p = Presentation::default();
     let media = p.add_media("t.png", "image/png", half_red_half_blue()).expect("media");
     let mode = PictureMode::Tile { tx: 0.0, ty: 0.0, sx, sy: 10.0, flip: flip.into(), align: align.into() };
@@ -481,7 +481,7 @@ fn picture_resolution_sizes_tiles() {
 
 #[test]
 fn gradient_lines_and_their_heads_take_the_gradient() {
-    use deckcraft_model::style::{Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Gradient, GradientShape, GradientStop};
     let blue = Rgba::rgb(0, 0, 255);
     let grad = |angle: f64| {
         Fill::Gradient(Gradient {
@@ -538,7 +538,7 @@ fn a_groups_shadow_is_cast_by_its_children() {
 
 #[test]
 fn patterns_between_whole_pixel_cells_blend_neighbouring_cells() {
-    use deckcraft_model::style::PatternFill;
+    use seho_model::style::PatternFill;
     // narVert (alternate cells) at 0.75 output pixels per cell: PowerPoint's export reads
     // 255, 128, 0 repeating across; drawing the nearest cell gave only black and white. Bilinear
     // sampling gives about 213, 128, 42 (closer on average over all presets, not exact).
@@ -566,7 +566,7 @@ fn a_bevelled_shape_is_lit_from_the_upper_left() {
         xfrm: Some(Xfrm::new(100.0, 100.0, 130.0, 130.0)),
         fill: solid(base),
         line: no_line(),
-        effects: Some(deckcraft_model::Effects { bevel: Some("circle".into()), raw3d: Some(raw.into()), ..Default::default() }),
+        effects: Some(seho_model::Effects { bevel: Some("circle".into()), raw3d: Some(raw.into()), ..Default::default() }),
         ..Default::default()
     };
     let raw = r#"<a:scene3d><a:camera prst="orthographicFront"/><a:lightRig rig="threePt" dir="t"/></a:scene3d><a:sp3d><a:bevelT w="152400" h="76200"/></a:sp3d>"#;
@@ -583,10 +583,10 @@ fn a_bevelled_shape_is_lit_from_the_upper_left() {
 
 #[test]
 fn table_borders_take_their_dashes_and_diagonals_are_drawn() {
-    let mut t = deckcraft_model::Table::new(1, 1, 200.0, 100.0);
+    let mut t = seho_model::Table::new(1, 1, 200.0, 100.0);
     t.style = "none".into();
     let mut dashed = Line::solid(ColorRef::rgb(RED), 4.0);
-    dashed.dash = Some(deckcraft_model::style::Dash::Preset { name: "dash".into() });
+    dashed.dash = Some(seho_model::style::Dash::Preset { name: "dash".into() });
     if let Some(c) = t.rows.first_mut().and_then(|r| r.cells.first_mut()) {
         c.borders[2] = Some(dashed);
         c.diag_down = Some(Line::solid(ColorRef::rgb(Rgba::rgb(0, 0, 255)), 4.0));
@@ -614,7 +614,7 @@ fn a_large_pictures_shadow_is_whole() {
         let sh = Shape {
             id: ShapeId(15),
             xfrm: Some(Xfrm { rot: 20.0, ..Xfrm::new(360.0, 300.0, 240.0, 160.0) }),
-            kind: ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { media, ..Default::default() } },
+            kind: ShapeKind::Picture { fill: seho_model::style::PictureFill { media, ..Default::default() } },
             effects: Some(fx),
             ..Default::default()
         };
@@ -635,7 +635,7 @@ fn a_large_pictures_shadow_is_whole() {
 
 #[test]
 fn a_gradient_not_rotating_with_its_shape_keeps_to_the_slide() {
-    use deckcraft_model::style::{Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Gradient, GradientShape, GradientStop};
     let blue = Rgba::rgb(0, 0, 255);
     for rotate_with_shape in [true, false] {
         let g = Gradient {
@@ -665,7 +665,7 @@ fn a_gradient_not_rotating_with_its_shape_keeps_to_the_slide() {
 
 #[test]
 fn stars_and_right_arrows_have_sharp_corners_by_default() {
-    let shape = |name: &str, join: Option<deckcraft_model::style::LineJoin>| Shape {
+    let shape = |name: &str, join: Option<seho_model::style::LineJoin>| Shape {
         id: ShapeId(29),
         xfrm: Some(Xfrm::new(100.0, 100.0, 100.0, 100.0)),
         geom: Geom::preset(name),
@@ -676,17 +676,17 @@ fn stars_and_right_arrows_have_sharp_corners_by_default() {
     // A star5's top point mitred reaches about 16 pt above the box; rounded only 5.
     let img = render(vec![shape("star5", None)]);
     assert!(close(img.pixel(150, 90), RED, 40), "mitred point {:?}", img.pixel(150, 90));
-    let img = render(vec![shape("star5", Some(deckcraft_model::style::LineJoin::Round))]);
+    let img = render(vec![shape("star5", Some(seho_model::style::LineJoin::Round))]);
     assert!(close(img.pixel(150, 90), WHITE, 10), "an explicit round join stays round");
     // A rectangle keeps PowerPoint's round default: its corner is cut round.
     let img = render(vec![shape("rect", None)]);
     assert!(close(img.pixel(95, 95), WHITE, 30), "{:?}", img.pixel(95, 95));
-    assert!(deckcraft_geom::preset::mitred_by_default("rightArrow") && !deckcraft_geom::preset::mitred_by_default("leftArrow"));
+    assert!(seho_geom::preset::mitred_by_default("rightArrow") && !seho_geom::preset::mitred_by_default("leftArrow"));
 }
 
 #[test]
 fn an_upright_picture_fill_stays_upright_in_a_turned_shape() {
-    use deckcraft_model::style::PictureFill;
+    use seho_model::style::PictureFill;
     let blue = Rgba::rgb(0, 0, 255);
     for upright in [false, true] {
         let mut p = Presentation::default();
@@ -716,8 +716,8 @@ fn a_picture_reflects_its_pixels() {
     let mut p = picture_deck(None);
     let s = std::sync::Arc::make_mut(&mut p.slides[0]);
     if let Some(sh) = s.shapes.first_mut() {
-        let rf = deckcraft_model::style::Reflection { blur: 0.0, start_alpha: 1.0, end_alpha: 0.0, end_pos: 0.5, dist: 0.0 };
-        sh.effects = Some(deckcraft_model::Effects { reflection: Some(rf), ..Default::default() });
+        let rf = seho_model::style::Reflection { blur: 0.0, start_alpha: 1.0, end_alpha: 0.0, end_pos: 0.5, dist: 0.0 };
+        sh.effects = Some(seho_model::Effects { reflection: Some(rf), ..Default::default() });
     }
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
     // The blue picture spans 100..200 down; just below it, its reflection tints the page blue.
@@ -734,7 +734,7 @@ fn a_3d_shapes_face_is_lit_even_without_a_bevel() {
         xfrm: Some(Xfrm::new(100.0, 100.0, 150.0, 100.0)),
         fill: solid(base),
         line: no_line(),
-        effects: Some(deckcraft_model::Effects { raw3d: Some(raw.into()), ..Default::default() }),
+        effects: Some(seho_model::Effects { raw3d: Some(raw.into()), ..Default::default() }),
         ..Default::default()
     };
     // PowerPoint shows this face as about (251, 135, 56).
@@ -756,7 +756,7 @@ fn a_tiny_dash_on_a_huge_shape_draws_without_running_out_of_memory() {
         line: Some(Line {
             fill: solid(RED),
             width: Some(0.0001),
-            dash: Some(deckcraft_model::style::Dash::Custom { pattern: vec![(1.0, 1.0)] }),
+            dash: Some(seho_model::style::Dash::Custom { pattern: vec![(1.0, 1.0)] }),
             ..Default::default()
         }),
         ..Default::default()

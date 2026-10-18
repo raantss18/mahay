@@ -628,7 +628,7 @@ fn text_uncached(v: &Value, code: &str, sys: DateSystem) -> Result<String, CellE
         Value::Empty => 0.0,
         Value::Number(n) => n,
         Value::Bool(b) => return Ok(fmt.format_text(if b { "TRUE" } else { "FALSE" }).text),
-        Value::Text(t) => match gridcraft_core::parse::parse_number_text(&t) {
+        Value::Text(t) => match tabilao_core::parse::parse_number_text(&t) {
             Some(n) => n,
             None => return Ok(fmt.format_text(&t).text),
         },

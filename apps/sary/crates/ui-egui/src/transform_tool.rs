@@ -12,13 +12,13 @@
 use std::sync::Arc;
 
 use egui::{Color32, CursorIcon, Pos2, Stroke, pos2, vec2};
-use photocraft_algo::transform::Homography;
-use photocraft_doc::{DocId, Document, LayerContent, LayerId};
-use photocraft_engine::jobs::{JobEvent, JobId, JobOutcome};
-use photocraft_geom::warp::{BezierMesh, Warp, WarpStyle};
+use sary_algo::transform::Homography;
+use sary_doc::{DocId, Document, LayerContent, LayerId};
+use sary_engine::jobs::{JobEvent, JobId, JobOutcome};
+use sary_geom::warp::{BezierMesh, Warp, WarpStyle};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::{MadeLayer, Tool, TransformMode, TransformSession};
 
@@ -82,7 +82,7 @@ pub struct TransformPreview {
     /// The tool the session began with: picking another one applies the transform.
     tool: Tool,
     /// Free Transform Path: the path as it was, drawn through the box instead of pixels.
-    path: Option<photocraft_doc::vector::Path>,
+    path: Option<sary_doc::vector::Path>,
     /// A layer's session keeps `doc` and `opacity` up to date with edits made while the box is
     /// open ([`follow_edits`]); `None` for a lone mask or channel and Transform Selection.
     follow: Option<Follow>,
@@ -114,7 +114,7 @@ pub const CAS_ONLY_SCALES: &str = "Content-Aware Scale only scales: commit or ca
 pub const HANDLE_PX: f64 = 12.0;
 
 /// [`HANDLE_PX`] in document pixels at the current zoom.
-pub fn handle_tolerance(app: &PhotocraftApp) -> f64 {
+pub fn handle_tolerance(app: &SaryApp) -> f64 {
     HANDLE_PX / app.point_zoom().max(0.01) as f64
 }
 
@@ -189,23 +189,23 @@ fn corners(r: [f64; 4]) -> [[f64; 2]; 4] {
 
 /// Start Free Transform on the active layer (or its selected pixels), or on the targeted unlinked
 /// layer mask, alpha channel or Quick Mask.
-pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
+pub fn begin(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
     if let Some((params, path)) = crate::vector_ui::free_transform_path(app) {
         return begin_path(app, ctx, params, path);
     }
-    if app.session.active().is_some_and(|st| photocraft_engine::float_cmds::floating(st).is_some()) {
+    if app.session.active().is_some_and(|st| sary_engine::float_cmds::floating(st).is_some()) {
         app.run("select.drop", json!({}))?;
     }
     let target = crate::canvas::paint_target(app);
     let st = app.session.active().ok_or("no document")?;
     let (doc, revision) = (st.doc.clone(), st.revision);
-    let lone = photocraft_engine::transform_cmds::lone_target(&doc, st.active_layer, &json!({ "target": target })).map_err(|e| e.to_string())?.cloned();
+    let lone = sary_engine::transform_cmds::lone_target(&doc, st.active_layer, &json!({ "target": target })).map_err(|e| e.to_string())?.cloned();
     if let Some(surf) = lone {
         return begin_lone(app, ctx, doc, surf, target);
     }
     let id = st.active_layer.ok_or("no active layer")?;
     let layer = doc.layer(id).ok_or("no layer")?;
-    if photocraft_engine::transform_cmds::locked_for_transform(&doc, id) {
+    if sary_engine::transform_cmds::locked_for_transform(&doc, id) {
         // Photoshop refuses before the box opens rather than when it is committed (#2585).
         app.ui.open_dialog(crate::state::DialogKind::Error, json!({"message": tl!(LOCKED)}).as_object().cloned().unwrap_or_default());
         return Err(LOCKED.into());
@@ -214,7 +214,7 @@ pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String>
         return Err("Adjustment layers have nothing to transform".into());
     }
     // With a selection the box is the selection's (#5297).
-    let b = photocraft_engine::transform_cmds::transform_frame(&doc, layer);
+    let b = sary_engine::transform_cmds::transform_frame(&doc, layer);
     if b.is_empty() {
         return Err("Could not transform: the layer is empty".into());
     }
@@ -225,9 +225,9 @@ pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String>
     let mut pd = (*doc).clone();
     let mut lifted = None;
     // Type, shapes and smart objects move whole, selection or not (#2630): only pixels are lifted.
-    if let Some(sel) = doc.selection.clone().filter(|_| !photocraft_engine::transform_cmds::moves_whole(layer) && layer.surface().is_some()) {
+    if let Some(sel) = doc.selection.clone().filter(|_| !sary_engine::transform_cmds::moves_whole(layer) && layer.surface().is_some()) {
         if let Some(surf) = pd.layer_mut(id).and_then(|l| l.surface_mut()) {
-            let (l, rest) = photocraft_engine::transform_cmds::split_selected(surf, &sel).map_err(|e| e.to_string())?;
+            let (l, rest) = sary_engine::transform_cmds::split_selected(surf, &sel).map_err(|e| e.to_string())?;
             *surf = rest;
             lifted = Some(l);
         }
@@ -241,7 +241,7 @@ pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String>
     above.hide_in(&mut pd.layers);
     // A style is drawn again from the pixels as the box moves them, so they are read without it.
     // Not for the selected part of a layer: its style belongs to that part and the rest together.
-    let styled = lifted.is_none() && photocraft_compose::effects::has_effects(layer);
+    let styled = lifted.is_none() && sary_compose::effects::has_effects(layer);
     let (image, uv) = preview_image(&doc, id, lifted.as_ref(), b, max_side, styled);
     let texture = crate::transform_tex::PreviewTextures::new(ctx, format!("transform-{session}"), image, uv);
     app.transform_preview = Some(TransformPreview {
@@ -286,7 +286,7 @@ pub fn begin(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String>
 
 /// Free Transform on a copy (⌥⌘T, no menu item): duplicates the active layer (with a selection,
 /// its selected pixels, as Layer via Copy) and transforms the copy (#352).
-pub fn begin_copy(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
+pub fn begin_copy(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
     let selection = app.session.active().is_some_and(|d| d.doc.selection.is_some());
     let params = if selection { json!({}) } else { json!({"inPlace": true}) };
     app.run(if selection { "layer.new.layerViaCopy" } else { "layer.duplicate" }, params)?;
@@ -305,7 +305,7 @@ pub fn begin_copy(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), St
 
 /// Free Transform on the layer a file dropped on the canvas just placed, like the reference app's
 /// Place: Esc takes the place back, ↩ makes the place and the transform one Place Embedded step.
-pub fn begin_placed(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
+pub fn begin_placed(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
     begin(app, ctx)?;
     if let Some(t) = app.ui.transform.as_mut() {
         t.made = Some(MadeLayer::Place);
@@ -317,9 +317,9 @@ pub fn begin_placed(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), 
 /// (the selection's bounds, else the layer's content), cleared under the box as the command
 /// clears it. OK runs `edit.contentAwareScale` (cas_transform.rs) instead of `edit.transform`.
 pub(crate) fn begin_content_aware(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     ctx: &egui::Context,
-    region: photocraft_geom::Rect,
+    region: sary_geom::Rect,
     live: crate::cas_transform::Live,
 ) -> Result<(), String> {
     let st = app.session.active().ok_or("no document")?;
@@ -387,7 +387,7 @@ pub(crate) fn begin_content_aware(
 
 /// Undoes the layer a cancelled or failed session made (⌥⌘T's copy, a placed file), leaving
 /// nothing to redo.
-fn take_back_made(app: &mut PhotocraftApp, document: DocId, layer: LayerId) {
+fn take_back_made(app: &mut SaryApp, document: DocId, layer: LayerId) {
     // Tabs can move or close while transforming. Only undo the creation in its own document,
     // and only while it is still the latest step (it may already have been undone).
     let Some(index) = app.session.documents().iter().position(|st| {
@@ -412,7 +412,7 @@ fn take_back_made(app: &mut PhotocraftApp, document: DocId, layer: LayerId) {
 
 /// After the transform: the step that made the layer and the transform become one history step,
 /// the transform's for a copy and Place Embedded for a placed file.
-fn fold_made(app: &mut PhotocraftApp, document: DocId, made: MadeLayer) {
+fn fold_made(app: &mut SaryApp, document: DocId, made: MadeLayer) {
     // A background commit lands in its own document, which need not be the active one by then.
     let Some(index) = app.session.documents().iter().position(|st| st.doc.id == document) else { return };
     let active = app.session.active_index();
@@ -420,7 +420,7 @@ fn fold_made(app: &mut PhotocraftApp, document: DocId, made: MadeLayer) {
     if let Some(st) = app.session.active_mut() {
         st.history.purge_last();
         if made == MadeLayer::Place {
-            st.history.set_current_label(photocraft_engine::file_cmds::PLACE_EMBEDDED);
+            st.history.set_current_label(sary_engine::file_cmds::PLACE_EMBEDDED);
         }
     }
     if let Some(active) = active {
@@ -432,13 +432,13 @@ fn fold_made(app: &mut PhotocraftApp, document: DocId, made: MadeLayer) {
 /// box frames its content (or the selection) and previews the moving values in grey over the
 /// document with them vacated.
 fn begin_lone(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     ctx: &egui::Context,
     doc: Arc<Document>,
-    surf: photocraft_raster::Surface,
+    surf: sary_raster::Surface,
     target: serde_json::Value,
 ) -> Result<(), String> {
-    use photocraft_engine::transform_cmds as tc;
+    use sary_engine::transform_cmds as tc;
     let b = tc::target_frame(&doc, &surf);
     if b.is_empty() {
         return Err("Could not transform: nothing is selected".into());
@@ -447,7 +447,7 @@ fn begin_lone(
     let sel = match &doc.selection {
         Some(s) => s,
         None => {
-            let mut s = photocraft_raster::Surface::new(photocraft_color::PixelFormat::GRAY8);
+            let mut s = sary_raster::Surface::new(sary_color::PixelFormat::GRAY8);
             s.fill_rect(b, &[1.0]);
             whole = s;
             &whole
@@ -508,7 +508,7 @@ fn begin_lone(
 
 /// Edit › Free Transform Path: the box frames the path's anchors and handles and draws the
 /// path through it; OK commits one `path.transform` step.
-fn begin_path(app: &mut PhotocraftApp, ctx: &egui::Context, params: serde_json::Value, path: photocraft_doc::vector::Path) -> Result<(), String> {
+fn begin_path(app: &mut SaryApp, ctx: &egui::Context, params: serde_json::Value, path: sary_doc::vector::Path) -> Result<(), String> {
     let (x0, y0, x1, y1) = path.control_bounds().ok_or("the path has no points to transform")?;
     let st = app.session.active().ok_or("no document")?;
     let doc = st.doc.clone();
@@ -561,7 +561,7 @@ fn begin_path(app: &mut PhotocraftApp, ctx: &egui::Context, params: serde_json::
 
 /// The affine map taking `rect`'s corners to `quad`'s; `None` when the box was distorted out of a
 /// parallelogram (Distort, Perspective): the path then goes as a `quad`.
-fn rect_to_quad_affine(r: [f64; 4], q: [[f64; 2]; 4]) -> Option<photocraft_geom::Affine> {
+fn rect_to_quad_affine(r: [f64; 4], q: [[f64; 2]; 4]) -> Option<sary_geom::Affine> {
     let (w, h) = (r[2] - r[0], r[3] - r[1]);
     if w <= 0.0 || h <= 0.0 {
         return None;
@@ -573,12 +573,12 @@ fn rect_to_quad_affine(r: [f64; 4], q: [[f64; 2]; 4]) -> Option<photocraft_geom:
     let (a, b) = ((q[1][0] - q[0][0]) / w, (q[1][1] - q[0][1]) / w);
     let (c, d) = ((q[3][0] - q[0][0]) / h, (q[3][1] - q[0][1]) / h);
     let m = [a, b, c, d, q[0][0] - a * r[0] - c * r[1], q[0][1] - b * r[0] - d * r[1]];
-    m.iter().all(|v| v.is_finite()).then_some(photocraft_geom::Affine { m })
+    m.iter().all(|v| v.is_finite()).then_some(sary_geom::Affine { m })
 }
 
 /// Start Select › Transform Selection: the same box over the selection's bounds, previewing the
 /// selection mask (the marching ants are hidden meanwhile); commits `select.transformSelection`.
-pub fn begin_selection(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
+pub fn begin_selection(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
     let st = app.session.active().ok_or("no document")?;
     let doc = st.doc.clone();
     let sel = doc.selection.clone().ok_or("no selection")?;
@@ -645,7 +645,7 @@ pub fn begin_selection(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(
 }
 
 /// Start (or switch an active Free Transform into) Warp mode.
-pub fn begin_warp(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
+pub fn begin_warp(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
     if app.ui.transform.as_ref().is_some_and(|t| t.content_aware.is_some()) {
         return Err(CAS_ONLY_SCALES.into());
     }
@@ -664,12 +664,12 @@ pub fn begin_warp(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), St
 /// Switch to Warp mode: a smart object's existing warp (when the box is untouched), else a
 /// custom mesh following the current box (so a transform made first carries over). Editable type
 /// gets its own Warp Text style instead ([`enter_type_warp`]).
-pub fn enter_warp(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn enter_warp(app: &mut SaryApp, ctx: &egui::Context) {
     if app.ui.transform.as_ref().is_some_and(|t| t.warp.is_none()) && warps_type(app) {
         return enter_type_warp(app, ctx);
     }
     let existing =
-        app.session.active().and_then(|d| d.doc.layer(LayerId(app.ui.transform.as_ref()?.layer)).and_then(photocraft_engine::warp_cmds::smart_warp_doc_space));
+        app.session.active().and_then(|d| d.doc.layer(LayerId(app.ui.transform.as_ref()?.layer)).and_then(sary_engine::warp_cmds::smart_warp_doc_space));
     let Some(t) = app.ui.transform.as_mut() else { return };
     // Warp moves layers and paths (#3027): a lone mask or channel keeps the box.
     if t.warp.is_some() || t.target.is_some() {
@@ -695,7 +695,7 @@ pub fn enter_warp(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// The open transform moves an editable type layer as a whole (not a lone mask, channel, path or
 /// the selection). Its Warp is Warp Text: only the styles, and the type stays editable (#3004).
-pub fn warps_type(app: &PhotocraftApp) -> bool {
+pub fn warps_type(app: &SaryApp) -> bool {
     let Some(t) = &app.ui.transform else { return false };
     if t.selection || t.target.is_some() || t.path.is_some() {
         return false;
@@ -706,7 +706,7 @@ pub fn warps_type(app: &PhotocraftApp) -> bool {
 /// Warp on editable type, as in Photoshop: no rasterizing, no mesh to drag, just the warp styles
 /// of the options bar (Warp Text's). A box scaled or rotated first is applied first (that keeps
 /// type editable). The preview shows the type without its current Warp Text, under that style.
-fn enter_type_warp(app: &mut PhotocraftApp, ctx: &egui::Context) {
+fn enter_type_warp(app: &mut SaryApp, ctx: &egui::Context) {
     if app.ui.transform.as_ref().is_some_and(|t| t.quad != corners(t.rect)) {
         commit(app);
         if app.ui.transform.is_some() {
@@ -727,9 +727,9 @@ fn enter_type_warp(app: &mut PhotocraftApp, ctx: &egui::Context) {
         && current.is_some()
     {
         tt.warp = None;
-        photocraft_engine::type_cmds::refresh(&doc, tt);
+        sary_engine::type_cmds::refresh(&doc, tt);
     }
-    let Some(b) = plain.layer(id).map(|l| photocraft_engine::transform_cmds::transform_bounds(&plain, l)).filter(|b| !b.is_empty()) else { return };
+    let Some(b) = plain.layer(id).map(|l| sary_engine::transform_cmds::transform_bounds(&plain, l)).filter(|b| !b.is_empty()) else { return };
     let rect = [b.x0 as f64, b.y0 as f64, b.x1 as f64, b.y1 as f64];
     if current.is_some()
         && let Some(pv) = app.transform_preview.as_mut()
@@ -758,7 +758,7 @@ fn enter_type_warp(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// Leave Warp mode (back to the box; warp edits are dropped, like Photoshop's mode toggle on an
 /// untouched warp).
-pub fn leave_warp(app: &mut PhotocraftApp) {
+pub fn leave_warp(app: &mut SaryApp) {
     if let Some(t) = app.ui.transform.as_mut() {
         t.warp = None;
     }
@@ -777,8 +777,8 @@ pub fn leave_warp(app: &mut PhotocraftApp) {
 fn preview_image(
     doc: &Document,
     id: LayerId,
-    lifted: Option<&photocraft_raster::Surface>,
-    b: photocraft_geom::Rect,
+    lifted: Option<&sary_raster::Surface>,
+    b: sary_geom::Rect,
     max_side: usize,
     bare: bool,
 ) -> (egui::ColorImage, [f32; 2]) {
@@ -787,7 +787,7 @@ fn preview_image(
     let mask = layer.and_then(|l| preview_mask(l, b));
     // Groups and type/fill layers preview from a flattened render of just that layer.
     let rendered;
-    let surf: Option<&photocraft_raster::Surface> = match (lifted, layer.and_then(|l| l.surface())) {
+    let surf: Option<&sary_raster::Surface> = match (lifted, layer.and_then(|l| l.surface())) {
         (Some(s), _) => Some(s),
         (None, Some(s)) if layer.is_some_and(|l| matches!(l.content, LayerContent::Raster(_))) => Some(s),
         _ => {
@@ -805,8 +805,8 @@ fn preview_image(
                 l.opacity = 1.0;
                 l.fill_opacity = 1.0;
             }
-            let buf = photocraft_compose::render(&solo, b);
-            let mut s = photocraft_raster::Surface::new(photocraft_color::PixelFormat::RGBA8);
+            let buf = sary_compose::render(&solo, b);
+            let mut s = sary_raster::Surface::new(sary_color::PixelFormat::RGBA8);
             let flat: Vec<f32> = buf.px.iter().flat_map(|p| *p).collect();
             s.write_region(b, &flat);
             rendered = s;
@@ -822,14 +822,14 @@ fn preview_image(
 /// The layer's masks as the moving texels carry them: the enabled masks when all of them are linked
 /// (the vector mask and feathering folded in as the compositor applies them), else the linked
 /// pixel mask alone. `None` when no enabled mask moves with the pixels.
-fn preview_mask(l: &photocraft_doc::Layer, b: photocraft_geom::Rect) -> Option<crate::transform_tex::PreviewMask> {
+fn preview_mask(l: &sary_doc::Layer, b: sary_geom::Rect) -> Option<crate::transform_tex::PreviewMask> {
     use crate::transform_tex::PreviewMask;
     let pixel = l.mask.as_ref().filter(|m| m.enabled);
     let vector = l.vector_mask.as_ref().filter(|v| v.enabled);
     let linked_pixel = pixel.filter(|m| m.linked);
     if pixel.is_none_or(|m| m.linked)
         && vector.is_none_or(|v| v.linked)
-        && let Some(surface) = photocraft_compose::masks::combined_mask(l, b)
+        && let Some(surface) = sary_compose::masks::combined_mask(l, b)
     {
         return Some(PreviewMask { surface, density: 1.0 });
     }
@@ -848,7 +848,7 @@ struct Above {
     /// The covering layers (whole layers or groups, at any depth).
     ids: Vec<LayerId>,
     /// Their composite and the canvas area it covers; `None` when nothing visible covers the layer.
-    shown: Option<(crate::transform_tex::PreviewTextures, photocraft_geom::Rect)>,
+    shown: Option<(crate::transform_tex::PreviewTextures, sary_geom::Rect)>,
 }
 
 impl Above {
@@ -869,7 +869,7 @@ impl Above {
             .layers
             .iter()
             .filter(|l| l.visible)
-            .fold(photocraft_geom::Rect::EMPTY, |r, l| r.union(&photocraft_compose::composite_bounds(l, canvas).unwrap_or(canvas)))
+            .fold(sary_geom::Rect::EMPTY, |r, l| r.union(&sary_compose::composite_bounds(l, canvas).unwrap_or(canvas)))
             .intersect(&canvas);
         self.shown = (!rect.is_empty()).then(|| {
             let (image, uv) = composite_image(&up, rect, self.max_side);
@@ -878,7 +878,7 @@ impl Above {
     }
 
     /// Leave the covering layers out of `layers` (the document under the box).
-    fn hide_in(&self, layers: &mut [photocraft_doc::Layer]) {
+    fn hide_in(&self, layers: &mut [sary_doc::Layer]) {
         for l in layers.iter_mut() {
             if self.ids.contains(&l.id) {
                 l.visible = false;
@@ -905,12 +905,12 @@ impl Above {
 
 /// `rect` of `doc`'s composite as premultiplied texels: full resolution when it fits in
 /// `max_side`, composited in bands (no full-size float copy), else area-averaged down to fit.
-fn composite_image(doc: &Document, rect: photocraft_geom::Rect, max_side: usize) -> (egui::ColorImage, [f32; 2]) {
+fn composite_image(doc: &Document, rect: sary_geom::Rect, max_side: usize) -> (egui::ColorImage, [f32; 2]) {
     let (w, h) = (rect.width() as usize, rect.height() as usize);
     let to_color = |p: &[u8; 4]| Color32::from_rgba_unmultiplied(p[0], p[1], p[2], p[3]);
     if w.max(h) <= max_side.max(1) {
         let mut px = Vec::with_capacity(w * h);
-        let _ = photocraft_compose::render_bands(doc, rect, 0, |band| {
+        let _ = sary_compose::render_bands(doc, rect, 0, |band| {
             px.extend(band.to_rgba8().pixels.as_chunks::<4>().0.iter().map(to_color));
             Ok::<(), ()>(())
         });
@@ -919,7 +919,7 @@ fn composite_image(doc: &Document, rect: photocraft_geom::Rect, max_side: usize)
     }
     let k = w.max(h).div_ceil(max_side.max(1));
     let (tw, th) = (w.div_ceil(k).max(1), h.div_ceil(k).max(1));
-    let buf = photocraft_compose::render_reduced_rect(doc, rect, tw as u32, th as u32);
+    let buf = sary_compose::render_reduced_rect(doc, rect, tw as u32, th as u32);
     let px: Vec<Color32> = buf.to_rgba8().pixels.as_chunks::<4>().0.iter().map(to_color).collect();
     let [bw, bh] = [buf.rect.width() as usize, buf.rect.height() as usize];
     if px.len() != bw * bh || bw == 0 || bh == 0 {
@@ -932,8 +932,8 @@ fn composite_image(doc: &Document, rect: photocraft_geom::Rect, max_side: usize)
 /// the moving pixels on its own: a Normal layer that isn't an adjustment, or a Normal or Pass
 /// Through group of such layers (hidden layers count, they draw nothing). Adjustment layers and
 /// the other blend modes depend on what is under them.
-fn plain(l: &photocraft_doc::Layer) -> bool {
-    use photocraft_color::BlendMode;
+fn plain(l: &sary_doc::Layer) -> bool {
+    use sary_color::BlendMode;
     !l.visible
         || match &l.content {
             LayerContent::Adjustment(_) => false,
@@ -947,7 +947,7 @@ fn plain(l: &photocraft_doc::Layer) -> bool {
 /// stops the search, so it and everything under it stay in the document under the box as before
 /// (an adjustment there keeps applying to the layers under it). A clipping group goes as a whole,
 /// and the layers clipped to `id` (or to the group holding it) stay with it.
-fn covering(layers: &[photocraft_doc::Layer], id: LayerId, out: &mut Vec<LayerId>) {
+fn covering(layers: &[sary_doc::Layer], id: LayerId, out: &mut Vec<LayerId>) {
     let mut end = layers.len();
     while end > 0 {
         // The clipping group ending at `end`: its base and the layers clipped to it.
@@ -961,7 +961,7 @@ fn covering(layers: &[photocraft_doc::Layer], id: LayerId, out: &mut Vec<LayerId
             if let [g] = unit
                 && g.id != id
                 && let LayerContent::Group(group) = &g.content
-                && matches!(g.blend, photocraft_color::BlendMode::Normal | photocraft_color::BlendMode::PassThrough)
+                && matches!(g.blend, sary_color::BlendMode::Normal | sary_color::BlendMode::PassThrough)
             {
                 covering(&group.children, id, out);
             }
@@ -976,7 +976,7 @@ fn covering(layers: &[photocraft_doc::Layer], id: LayerId, out: &mut Vec<LayerId
 }
 
 /// Hide everything in `layers` but the `keep` layers and the groups holding them.
-fn show_only(layers: &mut [photocraft_doc::Layer], keep: &[LayerId]) {
+fn show_only(layers: &mut [sary_doc::Layer], keep: &[LayerId]) {
     for l in layers.iter_mut() {
         if keep.contains(&l.id) {
             continue;
@@ -988,14 +988,14 @@ fn show_only(layers: &mut [photocraft_doc::Layer], keep: &[LayerId]) {
     }
 }
 
-fn contains(l: &photocraft_doc::Layer, id: LayerId) -> bool {
+fn contains(l: &sary_doc::Layer, id: LayerId) -> bool {
     l.id == id || matches!(&l.content, LayerContent::Group(g) if g.children.iter().any(|c| contains(c, id)))
 }
 
 /// Undo and Redo while the commit runs in the background.
 const STILL_APPLYING: &str = "Free Transform is still being applied";
 
-pub fn commit(app: &mut PhotocraftApp) {
+pub fn commit(app: &mut SaryApp) {
     if committing(app).is_some() {
         return;
     }
@@ -1079,7 +1079,7 @@ pub fn commit(app: &mut PhotocraftApp) {
 
 /// After the transform landed or not: fold the layer the session made into its step, or take it
 /// back.
-fn finish(app: &mut PhotocraftApp, document: Option<DocId>, layer: LayerId, made: Option<MadeLayer>, landed: bool) {
+fn finish(app: &mut SaryApp, document: Option<DocId>, layer: LayerId, made: Option<MadeLayer>, landed: bool) {
     let (Some(made), Some(document)) = (made, document) else { return };
     if landed {
         fold_made(app, document, made);
@@ -1089,13 +1089,13 @@ fn finish(app: &mut PhotocraftApp, document: Option<DocId>, layer: LayerId, made
 }
 
 /// The job applying the transform, while it runs.
-pub(crate) fn committing(app: &PhotocraftApp) -> Option<JobId> {
+pub(crate) fn committing(app: &SaryApp) -> Option<JobId> {
     app.transform_preview.as_ref().and_then(|pv| pv.committing)
 }
 
 /// A job ended (see [`crate::jobs_ui`]): when it was the commit, the session ends with it. Its
 /// status and errors are reported like any job's.
-pub fn on_job_event(app: &mut PhotocraftApp, e: &JobEvent) {
+pub fn on_job_event(app: &mut SaryApp, e: &JobEvent) {
     if committing(app) != Some(e.id) {
         return;
     }
@@ -1112,7 +1112,7 @@ pub fn on_job_event(app: &mut PhotocraftApp, e: &JobEvent) {
 /// A commit the engine refused (a result over the pixel budget, #3773): the box stays open as it
 /// was, with the reason in the status bar, so the transform can be changed or cancelled. A copy or
 /// a placed layer it made goes only when it is cancelled.
-fn keep_open(app: &mut PhotocraftApp, t: TransformSession, preview: Option<TransformPreview>, e: String) {
+fn keep_open(app: &mut SaryApp, t: TransformSession, preview: Option<TransformPreview>, e: String) {
     app.ui.transform = Some(t);
     app.transform_preview = preview;
     app.ui.status = e;
@@ -1123,7 +1123,7 @@ fn keep_open(app: &mut PhotocraftApp, t: TransformSession, preview: Option<Trans
 /// never stays on a layer that is no longer the active one (#1400). Checked every frame and before
 /// each pointer event, so a press with a tool chosen just before it (`ui.pointer`'s `tool`) goes to
 /// that tool.
-pub fn end_if_left(app: &mut PhotocraftApp) {
+pub fn end_if_left(app: &mut SaryApp) {
     let Some(t) = &app.ui.transform else { return };
     if committing(app).is_some() {
         return;
@@ -1162,7 +1162,7 @@ pub fn end_if_left(app: &mut PhotocraftApp) {
 /// document under them (other layers, and the part of the layer a selection leaves behind) is
 /// rebuilt from the current one. The moving pixels keep the session's. Called before the canvas
 /// reads the preview, so it never caches a revision with the old preview.
-pub fn follow_edits(app: &mut PhotocraftApp) {
+pub fn follow_edits(app: &mut SaryApp) {
     let (Some(t), Some(pv)) = (&app.ui.transform, app.transform_preview.as_mut()) else { return };
     let Some(follow) = pv.follow.as_mut() else { return };
     let Some(st) = app.session.active().filter(|st| st.doc.id == pv.doc.id && st.revision != follow.revision) else { return };
@@ -1182,7 +1182,7 @@ pub fn follow_edits(app: &mut PhotocraftApp) {
     pv.doc = Arc::new(pd);
 }
 
-pub fn cancel(app: &mut PhotocraftApp) {
+pub fn cancel(app: &mut SaryApp) {
     // Esc while the commit runs cancels the job; the session ends when it does.
     if let Some(job) = committing(app) {
         crate::jobs_ui::cancel(app, job);
@@ -1198,7 +1198,7 @@ pub fn cancel(app: &mut PhotocraftApp) {
 }
 
 /// The session's starting box: where Undo stops.
-fn start_steps(app: &mut PhotocraftApp) {
+fn start_steps(app: &mut SaryApp) {
     if let (Some(t), Some(pv)) = (&app.ui.transform, app.transform_preview.as_mut()) {
         pv.steps = Steps { settled: Some(Step::of(t)), ..Steps::default() };
     }
@@ -1206,7 +1206,7 @@ fn start_steps(app: &mut PhotocraftApp) {
 
 /// Record the box as an undo step whenever it comes to rest in a new state: once per drag (on
 /// release), nudge or option edit (once typing in its field ends). Call once per frame.
-pub fn track_steps(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn track_steps(app: &mut SaryApp, ctx: &egui::Context) {
     let (Some(t), Some(pv)) = (&app.ui.transform, app.transform_preview.as_mut()) else { return };
     if pv.gesture.is_some() || pv.warp_drag.is_some() || ctx.input(|i| i.pointer.any_down()) || ctx.text_edit_focused() {
         // Whatever comes to rest after this is more than the nudge.
@@ -1218,7 +1218,7 @@ pub fn track_steps(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// Arrow keys while Free Transform is active: move the box (and its pivot) by `(dx, dy)`.
 /// Nudges that follow each other closely are one Undo step of the session (`nudge_bundle`).
-pub(crate) fn nudge(app: &mut PhotocraftApp, dx: f64, dy: f64) {
+pub(crate) fn nudge(app: &mut SaryApp, dx: f64, dy: f64) {
     let (pause, now) = (crate::nudge_bundle::pause(app), app.nudge_bundle.now);
     let Some(t) = app.ui.transform.as_mut().filter(|t| t.warp.is_none()) else { return };
     let before = Step::of(t);
@@ -1231,7 +1231,7 @@ pub(crate) fn nudge(app: &mut PhotocraftApp, dx: f64, dy: f64) {
 
 /// While transforming, Undo and Redo apply to the box: `Some(enabled)` for those commands (and
 /// Toggle Last State, which would change the document under the box), `None` for the rest.
-pub fn is_enabled(app: &PhotocraftApp, id: &str) -> Option<bool> {
+pub fn is_enabled(app: &SaryApp, id: &str) -> Option<bool> {
     let t = app.ui.transform.as_ref()?;
     if committing(app).is_some() {
         return box_command(id).then_some(false);
@@ -1254,7 +1254,7 @@ pub fn is_enabled(app: &PhotocraftApp, id: &str) -> Option<bool> {
 }
 
 /// Does the box move an editable type layer (not its selection outline, a lone mask or a path)?
-fn moves_type(app: &PhotocraftApp, t: &TransformSession) -> bool {
+fn moves_type(app: &SaryApp, t: &TransformSession) -> bool {
     !t.selection
         && t.target.is_none()
         && t.path.is_none()
@@ -1287,7 +1287,7 @@ fn box_command(id: &str) -> bool {
     matches!(id, "edit.undo" | "edit.redo" | "edit.toggleLastState" | "edit.contentAwareScale" | "edit.puppetWarp") || box_preset(id).is_some()
 }
 
-pub fn intercept(app: &mut PhotocraftApp, id: &str) -> Option<Result<serde_json::Value, String>> {
+pub fn intercept(app: &mut SaryApp, id: &str) -> Option<Result<serde_json::Value, String>> {
     let warping = app.ui.transform.as_ref()?.warp.is_some();
     if committing(app).is_some() {
         return box_command(id).then(|| Err(STILL_APPLYING.into()));
@@ -1311,7 +1311,7 @@ pub fn intercept(app: &mut PhotocraftApp, id: &str) -> Option<Result<serde_json:
 }
 
 /// Undo (or redo) one step of the open session; nothing mid-drag or with no step to take.
-fn step(app: &mut PhotocraftApp, redo: bool) -> serde_json::Value {
+fn step(app: &mut SaryApp, redo: bool) -> serde_json::Value {
     let Some(t) = app.ui.transform.as_mut() else { return serde_json::Value::Null };
     let Some(pv) = app.transform_preview.as_mut().filter(|pv| pv.gesture.is_none() && pv.warp_drag.is_none()) else {
         return serde_json::Value::Null;
@@ -1381,7 +1381,7 @@ fn accepts_outside_click(g: Gesture, end: [f64; 2], tol: f64) -> bool {
 }
 
 /// Pointer input while transforming. Returns false when no transform is active.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
     let Some(t) = app.ui.transform.clone() else { return false };
     if committing(app).is_some() {
         return true;
@@ -1448,7 +1448,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) ->
 /// whole pixels, whatever the tool. Rounding the pointer alone left the edges off by the grab
 /// offset, and a proportional scale off by its ratio: a shape dragged to 540 px came out 539.6.
 /// Rotated, skewed and distorted boxes are left as dragged.
-fn round_to_pixel_grid(app: &mut PhotocraftApp) {
+fn round_to_pixel_grid(app: &mut SaryApp) {
     if !app.session.prefs().tools.snap_vector_tools_and_transforms_to_pixel_grid {
         return;
     }
@@ -1479,7 +1479,7 @@ fn upright(q: &[[f64; 2]; 4]) -> bool {
 
 /// The same effective modifiers drive the geometry and decide whether Ctrl is a distortion
 /// gesture rather than the ordinary snap override. Keep type and Content-Aware Scale refusals.
-fn drag_mods(app: &PhotocraftApp, t: &TransformSession, hit: Hit, mods: egui::Modifiers) -> (TransformMode, egui::Modifiers) {
+fn drag_mods(app: &SaryApp, t: &TransformSession, hit: Hit, mods: egui::Modifiers) -> (TransformMode, egui::Modifiers) {
     let (mode, mods) = if distort_refused(app, t) { scale_not_distort(t.mode, hit, mods) } else { (t.mode, mods) };
     let legacy = app.session.prefs().general.use_legacy_free_transform;
     (mode, legacy_mods(legacy, hit, unlinked_mods(app.ui.transform_unlinked, legacy, hit, mods)))
@@ -1487,7 +1487,7 @@ fn drag_mods(app: &PhotocraftApp, t: &TransformSession, hit: Hit, mods: egui::Mo
 
 /// Only a freely distorted corner can snap its proposed position. Perspective moves paired
 /// corners on one axis; Skew, Warp and Content-Aware Scale have their own constrained geometry.
-pub(crate) fn corner_distorts(app: &PhotocraftApp, index: usize, mods: egui::Modifiers) -> bool {
+pub(crate) fn corner_distorts(app: &SaryApp, index: usize, mods: egui::Modifiers) -> bool {
     let Some(t) = app.ui.transform.as_ref() else { return false };
     if t.quad.get(index).is_none() || t.warp.is_some() || t.content_aware.is_some() || t.mode == TransformMode::Skew {
         return false;
@@ -1500,7 +1500,7 @@ pub(crate) fn corner_distorts(app: &PhotocraftApp, index: usize, mods: egui::Mod
 /// Editable type can be scaled, rotated and skewed but not distorted (#2630): the rule that greys
 /// Distort and Perspective in `enable_rules::disabled`, for the box's own layer. A box on a path,
 /// on the selection outline or on a lone mask or channel moves no type.
-fn distort_refused(app: &PhotocraftApp, t: &TransformSession) -> bool {
+fn distort_refused(app: &SaryApp, t: &TransformSession) -> bool {
     t.path.is_none()
         && !t.selection
         && t.target.is_none()
@@ -1887,7 +1887,7 @@ fn split_cursor(m: &BezierMesh, tool: SplitTool, (s, t): (f64, f64), xf: &ViewXf
 
 /// Armed split tool, or Option held: the guide tracks the pointer and the split lands on release.
 /// Returns false when this event is an ordinary control-point drag.
-fn split_gesture(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
+fn split_gesture(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> bool {
     let armed = app.transform_preview.as_ref().and_then(|p| p.split_tool);
     let placing = app.transform_preview.as_ref().is_some_and(|p| p.split_placing);
     match ev {
@@ -1936,7 +1936,7 @@ fn split_gesture(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) 
 /// handles along); a press anywhere else inside the grid pulls the surface under the pointer.
 /// Preset warps turn into a custom mesh when the press grabs something. An armed split tool, or
 /// Ctrl / Option held, places a split where the pointer is released instead.
-fn warp_pointer(app: &mut PhotocraftApp, ev: ToolEvent, tol: f64, mods: egui::Modifiers) {
+fn warp_pointer(app: &mut SaryApp, ev: ToolEvent, tol: f64, mods: egui::Modifiers) {
     // Type takes only the warp styles: nothing on the canvas to drag or split (#3004).
     if warps_type(app) {
         return;
@@ -1973,7 +1973,7 @@ fn warp_pointer(app: &mut PhotocraftApp, ev: ToolEvent, tol: f64, mods: egui::Mo
 }
 
 /// Runs a warp-edit command against the mesh in the open Warp session and writes the mesh back.
-pub fn edit_session_warp(app: &mut PhotocraftApp, id: &str, params: &serde_json::Value) -> Result<(), String> {
+pub fn edit_session_warp(app: &mut SaryApp, id: &str, params: &serde_json::Value) -> Result<(), String> {
     let Some(w) = app.ui.transform.as_ref().and_then(|t| t.warp.clone()) else { return Err("not warping".into()) };
     if warps_type(app) {
         return Err("Warp on type takes only the warp styles".into());
@@ -1997,7 +1997,7 @@ pub fn edit_session_warp(app: &mut PhotocraftApp, id: &str, params: &serde_json:
 }
 
 /// Applies a split-warp command to the mesh being edited (at the box centre unless `at`).
-pub fn split(app: &mut PhotocraftApp, id: &str, at: Option<[f64; 2]>) -> Result<(), String> {
+pub fn split(app: &mut SaryApp, id: &str, at: Option<[f64; 2]>) -> Result<(), String> {
     let mut p = json!({});
     if let Some(a) = at {
         p["at"] = json!(a);
@@ -2027,7 +2027,7 @@ fn rotation_degrees(quad: [[f64; 2]; 4]) -> f64 {
 /// Where the rotate cursor's arc bends at document point `p`, or `None` outside the rotate zone:
 /// just outside a corner, or anywhere while a rotate drag is on. It points into the box along the
 /// bisector of the nearest corner, so each corner gets its own arrow and they turn with the box.
-pub(crate) fn rotate_cursor_dir(app: &PhotocraftApp, p: [f64; 2]) -> Option<[f64; 2]> {
+pub(crate) fn rotate_cursor_dir(app: &SaryApp, p: [f64; 2]) -> Option<[f64; 2]> {
     rotate_dir(app.ui.transform.as_ref()?, app.transform_preview.as_ref(), p, handle_tolerance(app))
 }
 
@@ -2059,7 +2059,7 @@ fn rotate_dir(t: &TransformSession, pv: Option<&TransformPreview>, p: [f64; 2], 
 
 /// Cursor for hovering a document point while transforming. `xf` is the canvas's view;
 /// `quick_split` is Ctrl or Option, which arms a quick split while a warp is active.
-pub fn cursor(app: &PhotocraftApp, xf: &ViewXform, p: [f64; 2], quick_split: bool) -> Option<CursorIcon> {
+pub fn cursor(app: &SaryApp, xf: &ViewXform, p: [f64; 2], quick_split: bool) -> Option<CursorIcon> {
     let t = app.ui.transform.as_ref()?;
     let tol = handle_tolerance(app);
     if let Some(w) = &t.warp {
@@ -2117,7 +2117,7 @@ fn front_vertices(h: &Homography, n: usize) -> Vec<bool> {
 /// them. This is image content: the canvas draws it right after the document, under the grid
 /// and guides, so a guide stays visible across a layer being transformed (#5086), as in
 /// Photoshop. The box, handles and reference point are [`draw_overlay`], drawn over the guides.
-pub fn draw_content(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_content(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let (Some(t), Some(pv)) = (&app.ui.transform, &app.transform_preview) else { return };
     if let Some(w) = &t.warp {
         draw_warp_content(painter, xf, t, w, pv);
@@ -2172,7 +2172,7 @@ pub fn draw_content(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform
 
 /// The box, handles, reference point and path outline over the preview that [`draw_content`]
 /// drew; the warp grid and its split guides for a warp.
-pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_overlay(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let (Some(t), Some(pv)) = (&app.ui.transform, &app.transform_preview) else { return };
     let scr = |q: [f64; 2]| xf.to_screen(q[0] as f32, q[1] as f32);
     if let Some(w) = &t.warp {
@@ -2239,13 +2239,13 @@ pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform
 /// Applying the open box moves the selection outline with it: `edit.transform` and
 /// `edit.transform.warp` map it like the pixels. Not Transform Selection (its ants are hidden), a
 /// path, Content-Aware Scale or a type layer's Warp Text, which leave the selection alone.
-fn carries_selection(app: &PhotocraftApp, t: &TransformSession) -> bool {
+fn carries_selection(app: &SaryApp, t: &TransformSession) -> bool {
     !t.selection && t.path.is_none() && t.content_aware.is_none() && !(t.warp.is_some() && warps_type(app))
 }
 
 /// A transform of `document` is open that carries its selection along (#5297): the canvas traces
 /// the whole outline, not only the part in view where it started, for [`draw_selection`].
-pub(crate) fn carries_selection_of(app: &PhotocraftApp, document: DocId) -> bool {
+pub(crate) fn carries_selection_of(app: &SaryApp, document: DocId) -> bool {
     matches!((&app.ui.transform, &app.transform_preview), (Some(t), Some(pv)) if pv.doc.id == document && carries_selection(app, t))
 }
 
@@ -2254,7 +2254,7 @@ pub(crate) fn carries_selection_of(app: &PhotocraftApp, document: DocId) -> bool
 /// `segs` is the outline of `document`'s selection at rest. False when no open transform carries
 /// that selection: the caller draws it where it is.
 pub(crate) fn draw_selection(
-    app: &PhotocraftApp,
+    app: &SaryApp,
     painter: &egui::Painter,
     xf: &ViewXform,
     document: DocId,
@@ -2306,11 +2306,11 @@ pub(crate) fn draw_selection(
 /// pixels per document pixel. `None` for a layer without a style (also once it is switched off
 /// while the box is open) or a hidden one: the bare pixels are drawn instead. The style, opacity
 /// and fill are the layer's as they are now, so edits made while the box is open show.
-pub(crate) fn styled_frame(app: &PhotocraftApp, zoom: f32, dragging: bool) -> Option<(&crate::transform_fx::StyledPreview, crate::transform_fx::Frame<'_>)> {
+pub(crate) fn styled_frame(app: &SaryApp, zoom: f32, dragging: bool) -> Option<(&crate::transform_fx::StyledPreview, crate::transform_fx::Frame<'_>)> {
     let (t, pv) = (app.ui.transform.as_ref()?, app.transform_preview.as_ref()?);
     let styled = pv.styled.as_ref().filter(|_| t.warp.is_none())?;
     let st = app.session.active().filter(|st| st.doc.id == pv.doc.id)?;
-    let layer = st.doc.layer(LayerId(t.layer)).filter(|l| l.visible && photocraft_compose::effects::has_effects(l))?;
+    let layer = st.doc.layer(LayerId(t.layer)).filter(|l| l.visible && sary_compose::effects::has_effects(l))?;
     let frame = crate::transform_fx::Frame {
         doc: &st.doc,
         layer,
@@ -2340,7 +2340,7 @@ pub(crate) enum Readout {
 
 /// The readout for the drag in progress, or `None` when nothing is dragged (or the drag is the
 /// reference point, a warp, or a distortion that has no single scale).
-pub(crate) fn live_readout(app: &PhotocraftApp) -> Option<Readout> {
+pub(crate) fn live_readout(app: &SaryApp) -> Option<Readout> {
     let t = app.ui.transform.as_ref().filter(|t| t.warp.is_none())?;
     let g = app.transform_preview.as_ref()?.gesture?;
     match g.hit {
@@ -2664,7 +2664,7 @@ fn unturn(c: [f64; 2], angle: f64) -> (f64, f64) {
 
 /// Sets the box's H and V skew (degrees), keeping its scale, angle and reference point: the
 /// options bar's skew fields.
-fn skew_about_pivot(app: &mut PhotocraftApp, skew_h: f64, skew_v: f64) {
+fn skew_about_pivot(app: &mut SaryApp, skew_h: f64, skew_v: f64) {
     let Some(s) = app.ui.transform.as_mut() else { return };
     let Some(m) = Parts::columns(s) else { return };
     let limit = f64::from(SKEW_LIMIT_DEG);
@@ -2718,13 +2718,13 @@ fn scale_limit_pct(side: f64) -> f32 {
 const SIZE_UNIT_KEY: &str = "edit.freeTransform";
 
 /// The W/H unit, with the document's resolution and the points per inch it converts with.
-fn size_unit(app: &PhotocraftApp) -> crate::layer_props_ui::LenUnit {
-    use photocraft_engine::prefs::Unit;
+fn size_unit(app: &SaryApp) -> crate::layer_props_ui::LenUnit {
+    use sary_engine::prefs::Unit;
     let unit = app.session.prefs().dialogs.get(SIZE_UNIT_KEY).and_then(|v| v.get("sizeUnit")).and_then(serde_json::Value::as_str).and_then(Unit::parse);
     crate::layer_props_ui::LenUnit { unit: unit.unwrap_or(Unit::Percent), ..crate::layer_props_ui::LenUnit::of(app) }
 }
 
-fn set_size_unit(app: &mut PhotocraftApp, name: &str) {
+fn set_size_unit(app: &mut SaryApp, name: &str) {
     app.session.prefs.edit(|p| {
         let entry = p.dialogs.entry(SIZE_UNIT_KEY.to_string()).or_insert_with(|| json!({}));
         if !entry.is_object() {
@@ -2750,7 +2750,7 @@ fn size_pct(u: &crate::layer_props_ui::LenUnit, v: f32, side: f64) -> f64 {
 /// or the warp controls), then the mode switch, cancel and commit right after them. A bar too
 /// narrow for both pins the buttons to the right edge and clips the fields, so Commit and Cancel
 /// are always reachable.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     let Some(t) = app.ui.transform.clone() else { return };
     let bar = ui.available_rect_before_wrap();
     let warping = t.warp.is_some();
@@ -2773,7 +2773,7 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     transform_actions(app, &mut btns, warping, t.content_aware.is_none());
 }
 
-fn transform_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, t: &TransformSession) {
+fn transform_fields(app: &mut SaryApp, ui: &mut egui::Ui, t: &TransformSession) {
     let tk = crate::theme::Tokens::get(ui.ctx());
     let (_, _, angle, skew_h) = readout(t);
     let lbl = |ui: &mut egui::Ui, s: &str| {
@@ -2810,7 +2810,7 @@ fn transform_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, t: &TransformSes
 }
 
 /// The reference point's X/Y and the W/H scale fields (with the aspect link) of the options bar.
-pub(crate) fn position_size_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, t: &TransformSession) {
+pub(crate) fn position_size_fields(app: &mut SaryApp, ui: &mut egui::Ui, t: &TransformSession) {
     let tk = crate::theme::Tokens::get(ui.ctx());
     let (sx, sy, _, _) = readout(t);
     let lbl = |ui: &mut egui::Ui, s: &str| {
@@ -2839,7 +2839,7 @@ pub(crate) fn position_size_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, t
     let (mut w, mut h) = (size_shown(&u, sx, side_w), size_shown(&u, sy, side_h));
     let (suffix, places) = (u.unit.suffix(), u.unit.decimals() as u32);
     // Lengths need more room than a percentage ("2116.67 mm").
-    let size_w = if u.unit == photocraft_engine::prefs::Unit::Percent { 66.0 } else { 84.0 };
+    let size_w = if u.unit == sary_engine::prefs::Unit::Percent { 66.0 } else { 84.0 };
     lbl(ui, "W:");
     let rw = crate::widgets::value_field_prec(ui, &mut w, -wlim_u..=wlim_u, suffix, size_w, places);
     let link = !app.ui.transform_unlinked;
@@ -2870,7 +2870,7 @@ pub(crate) fn position_size_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, t
 }
 
 /// Options bar fields in Warp mode: style, bend, the split icons and the grid menu.
-fn warp_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, w: &Warp) {
+fn warp_fields(app: &mut SaryApp, ui: &mut egui::Ui, w: &Warp) {
     let tk = crate::theme::Tokens::get(ui.ctx());
     let lbl = |ui: &mut egui::Ui, s: &str| {
         ui.label(egui::RichText::new(s).color(tk.text_dim).size(12.0));
@@ -2922,7 +2922,7 @@ fn warp_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, w: &Warp) {
 }
 
 /// The Split icons and the Grid menu of the Warp options bar.
-fn warp_mesh_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, w: &Warp) {
+fn warp_mesh_fields(app: &mut SaryApp, ui: &mut egui::Ui, w: &Warp) {
     let tk = crate::theme::Tokens::get(ui.ctx());
     let lbl = |ui: &mut egui::Ui, s: &str| {
         ui.label(egui::RichText::new(s).color(tk.text_dim).size(12.0));
@@ -2969,7 +2969,7 @@ fn warp_mesh_fields(app: &mut PhotocraftApp, ui: &mut egui::Ui, w: &Warp) {
 }
 
 /// Back to the untouched box: the default one-patch grid over the box, no bend.
-pub fn reset_warp(app: &mut PhotocraftApp) {
+pub fn reset_warp(app: &mut SaryApp) {
     let Some(t) = app.ui.transform.as_mut() else { return };
     if t.warp.is_none() {
         return;
@@ -3044,7 +3044,7 @@ fn split_icon(ui: &mut egui::Ui, kind: &str, tip: &str, on: bool) -> egui::Respo
 
 /// Warp switch, cancel and commit, kept on the right of the options bar.
 /// `mode_switch`: the Free Transform / Warp switch (not for Content-Aware Scale, which only scales).
-fn transform_actions(app: &mut PhotocraftApp, ui: &mut egui::Ui, warping: bool, mode_switch: bool) {
+fn transform_actions(app: &mut SaryApp, ui: &mut egui::Ui, warping: bool, mode_switch: bool) {
     ui.add_space(8.0);
     let commit_tip = if warping {
         crate::i18n::fmt(tl!("Commit warp ({key})"), &[("key", &crate::shortcuts::pretty("Enter"))])
@@ -3087,7 +3087,7 @@ fn transform_actions(app: &mut PhotocraftApp, ui: &mut egui::Ui, warping: bool, 
 }
 
 /// Scale the box along its own axes about the reference point.
-fn scale_about_pivot(app: &mut PhotocraftApp, kx: f64, ky: f64) {
+fn scale_about_pivot(app: &mut SaryApp, kx: f64, ky: f64) {
     let Some(s) = app.ui.transform.as_mut() else { return };
     let Some(h) = Homography::rect_to_quad([0.0, 0.0, 1.0, 1.0], s.quad) else { return };
     let Some(inv) = h.inverse() else { return };
@@ -3099,7 +3099,7 @@ fn scale_about_pivot(app: &mut PhotocraftApp, kx: f64, ky: f64) {
     s.quad = [m(0.0, 0.0), m(1.0, 0.0), m(1.0, 1.0), m(0.0, 1.0)];
 }
 
-fn rotate_about_pivot(app: &mut PhotocraftApp, da: f64) {
+fn rotate_about_pivot(app: &mut SaryApp, da: f64) {
     let Some(s) = app.ui.transform.as_mut() else { return };
     let (sn, cs) = da.sin_cos();
     let c = s.pivot;
@@ -3135,7 +3135,7 @@ mod tests {
     #[test]
     fn a_plain_click_far_outside_accepts_transform_but_a_rotation_drag_does_not() {
         let context = egui::Context::default();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         begin(&mut app, &context).unwrap();
         let before = app.session.active().unwrap().history.past_len();
         let t = app.ui.transform.as_mut().unwrap();
@@ -3149,10 +3149,10 @@ mod tests {
         assert_eq!(app.session.active().unwrap().history.past_len(), before + 1, "one undo step for the transform");
         let st = app.session.active().unwrap();
         let layer = st.doc.layer(st.active_layer.unwrap()).unwrap();
-        assert_eq!(layer.surface().unwrap().content_bounds(), photocraft_geom::Rect::new(14, 8, 30, 24));
+        assert_eq!(layer.surface().unwrap().content_bounds(), sary_geom::Rect::new(14, 8, 30, 24));
 
         // An outside drag remains a rotation gesture; releasing it does not commit.
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         begin(&mut app, &context).unwrap();
         let start = [44.0, 44.0];
         let end = [44.0, 54.0];
@@ -3176,7 +3176,7 @@ mod tests {
         let handle = Gesture { hit: Hit::Corner(0), ..near };
         assert!(!accepts_outside_click(handle, handle.start, tol), "resize handles stay interactive");
 
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         begin(&mut app, &egui::Context::default()).unwrap();
         let p = [44.0, 44.0];
         pointer(&mut app, ToolEvent::Down { x: p[0], y: p[1], pressure: 1.0 }, egui::Modifiers::ALT);
@@ -3211,11 +3211,11 @@ mod tests {
     fn transform_bar_pins_warp_cancel_and_commit() {
         use egui_kittest::Harness;
         use egui_kittest::kittest::Queryable;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.ui.transform = Some(session());
         let width = 720.0;
         let mut h = Harness::builder().with_size(vec2(width, 48.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -3223,7 +3223,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(6);
         let commit = h.get_by_label("Commit transform").rect();
         let cancel = h.get_by_label("Cancel transform").rect();
@@ -3246,11 +3246,11 @@ mod tests {
     fn free_transform_bar_buttons_follow_the_fields_on_a_wide_bar() {
         use egui_kittest::Harness;
         use egui_kittest::kittest::Queryable;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.ui.transform = Some(session());
         let width = 2400.0;
         let mut h = Harness::builder().with_size(vec2(width, 48.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -3258,7 +3258,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(6);
         let commit = h.get_by_label("Commit transform").rect();
         assert!(commit.right() < width * 0.7, "commit sits next to the fields, not at the far right: {commit:?}");
@@ -3268,11 +3268,11 @@ mod tests {
     fn warp_bar_buttons_follow_the_fields_on_a_wide_bar() {
         use egui_kittest::Harness;
         use egui_kittest::kittest::Queryable;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.ui.transform = Some(session());
         let width = 2000.0;
         let mut h = Harness::builder().with_size(vec2(width, 48.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -3280,7 +3280,7 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(6);
         h.get_by_label("Switch between free transform and warp modes").click();
         h.run_steps(4);
@@ -3353,13 +3353,13 @@ mod tests {
 
     /// The transform bar over the test box, after `setup` (e.g. picking the W/H unit). Tall enough
     /// for the fields' unit menu to open below the bar unscrolled.
-    fn bar_harness(setup: impl FnOnce(&mut PhotocraftApp)) -> egui_kittest::Harness<'static, PhotocraftApp> {
+    fn bar_harness(setup: impl FnOnce(&mut SaryApp)) -> egui_kittest::Harness<'static, SaryApp> {
         use egui_kittest::Harness;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.ui.transform = Some(session());
         setup(&mut app);
         let mut h = Harness::builder().with_size(vec2(900.0, 360.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -3367,13 +3367,13 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(6);
         h
     }
 
     /// [`type_into_bar_field`] after `setup`.
-    fn type_into_bar_field_with(setup: impl FnOnce(&mut PhotocraftApp), n: usize, text: &str) -> TransformSession {
+    fn type_into_bar_field_with(setup: impl FnOnce(&mut SaryApp), n: usize, text: &str) -> TransformSession {
         use egui_kittest::kittest::Queryable;
         let mut h = bar_harness(setup);
         h.get_all_by_role(egui::accesskit::Role::SpinButton).nth(n).unwrap().click();
@@ -3388,7 +3388,7 @@ mod tests {
     }
 
     /// The values the W and H fields show (the 3rd and 4th numeric fields).
-    fn shown_size(h: &egui_kittest::Harness<'static, PhotocraftApp>) -> Vec<String> {
+    fn shown_size(h: &egui_kittest::Harness<'static, SaryApp>) -> Vec<String> {
         use egui_kittest::kittest::{NodeT, Queryable};
         h.get_all_by_role(egui::accesskit::Role::SpinButton).skip(2).take(2).map(|n| n.accesskit_node().value().unwrap_or_default().to_string()).collect()
     }
@@ -3396,7 +3396,7 @@ mod tests {
     #[test]
     fn size_fields_convert_between_percent_and_lengths() {
         use crate::layer_props_ui::LenUnit;
-        use photocraft_engine::prefs::Unit;
+        use sary_engine::prefs::Unit;
         // A 300 px side at 300 ppi is one inch at 100 %.
         let at = |unit| LenUnit { unit, dpi: 300.0, ppi: 72.0 };
         for (unit, at_100) in [
@@ -3421,9 +3421,9 @@ mod tests {
 
     #[test]
     fn w_and_h_take_lengths_in_the_unit_picked_for_them() {
-        use photocraft_engine::prefs::Unit;
+        use sary_engine::prefs::Unit;
         // The test box is 100 × 50 px; with no document open, lengths convert at 72 ppi.
-        let cm = |app: &mut PhotocraftApp| set_size_unit(app, Unit::Centimeters.name());
+        let cm = |app: &mut SaryApp| set_size_unit(app, Unit::Centimeters.name());
         let h = bar_harness(cm);
         assert_eq!(shown_size(&h), ["3.53", "1.76"], "the box's size in cm, not 100 %");
         // 7.06 cm is twice the width; linked, the height follows.
@@ -3445,7 +3445,7 @@ mod tests {
         h.run_steps(2);
         h.get_by_label("Inches").click();
         h.run_steps(3);
-        assert_eq!(size_unit(h.state()).unit, photocraft_engine::prefs::Unit::Inches);
+        assert_eq!(size_unit(h.state()).unit, sary_engine::prefs::Unit::Inches);
         assert_eq!(h.state().session.prefs().dialogs[SIZE_UNIT_KEY]["sizeUnit"], "inches");
         assert_eq!(shown_size(&h), ["1.389", "0.694"], "100 × 50 px at 72 ppi");
         // H opens the same menu, with the current unit checked.
@@ -3459,18 +3459,18 @@ mod tests {
         h.state_mut().session.prefs.edit(|p| {
             p.dialogs.insert(SIZE_UNIT_KEY.into(), json!({"sizeUnit": "furlongs"}));
         });
-        assert_eq!(size_unit(h.state()).unit, photocraft_engine::prefs::Unit::Percent);
+        assert_eq!(size_unit(h.state()).unit, sary_engine::prefs::Unit::Percent);
         h.state_mut().session.prefs.edit(|p| {
             p.dialogs.insert(SIZE_UNIT_KEY.into(), json!("not an object"));
         });
-        assert_eq!(size_unit(h.state()).unit, photocraft_engine::prefs::Unit::Percent);
+        assert_eq!(size_unit(h.state()).unit, sary_engine::prefs::Unit::Percent);
         set_size_unit(h.state_mut(), "points");
-        assert_eq!(size_unit(h.state()).unit, photocraft_engine::prefs::Unit::Points, "a bad entry is replaced, not kept");
+        assert_eq!(size_unit(h.state()).unit, sary_engine::prefs::Unit::Points, "a bad entry is replaced, not kept");
     }
 
     #[test]
     fn editing_the_contents_of_a_dropped_file_keeps_the_layer() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
 
         app.session.execute("layer.smartObjects.convertToSmartObject", json!({})).unwrap();
         app.sync_views();
@@ -3630,19 +3630,19 @@ mod tests {
 
     #[test]
     fn split_tool_places_the_line_where_the_pointer_releases() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
         begin_warp(&mut app, &egui::Context::default()).unwrap();
         app.transform_preview.as_mut().unwrap().split_tool = Some(SplitTool::Vertical);
-        let knots = |app: &PhotocraftApp| app.ui.transform.as_ref().unwrap().warp.as_ref().unwrap().mesh.as_ref().unwrap().us.clone();
+        let knots = |app: &SaryApp| app.ui.transform.as_ref().unwrap().warp.as_ref().unwrap().mesh.as_ref().unwrap().us.clone();
         assert_eq!(knots(&app).len(), 2);
         let mods = egui::Modifiers::NONE;
         warp_pointer(&mut app, ToolEvent::Down { x: 20.0, y: 20.0, pressure: 1.0 }, 2.0, mods);
@@ -3667,13 +3667,13 @@ mod tests {
 
     #[test]
     fn split_of_a_grid_cuts_one_section_and_keeps_the_rest() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -3858,13 +3858,13 @@ mod tests {
 
     #[test]
     fn begin_and_commit_through_the_engine() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(8, 8, 24, 24), &[1.0, 0.0, 0.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(8, 8, 24, 24), &[1.0, 0.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -3885,7 +3885,7 @@ mod tests {
     #[test]
     fn a_refused_commit_keeps_the_box_open() {
         let ctx = egui::Context::default();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let (revision, steps) = (app.session.active().unwrap().revision, app.session.active().unwrap().history.past_len());
         begin(&mut app, &ctx).unwrap();
         if let Some(t) = app.ui.transform.as_mut() {
@@ -3909,8 +3909,8 @@ mod tests {
     #[test]
     fn free_transform_a_copy() {
         let ctx = egui::Context::default();
-        let bounds = |app: &PhotocraftApp, i: usize| app.session.active().unwrap().doc.layers[i].surface().unwrap().content_bounds();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let bounds = |app: &SaryApp, i: usize| app.session.active().unwrap().doc.layers[i].surface().unwrap().content_bounds();
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let (layers, steps) = (app.session.active().unwrap().doc.layers.len(), app.session.active().unwrap().history.past_len());
         crate::menus::invoke(&mut app, &ctx, "edit.freeTransformCopy", json!({})).unwrap();
         assert_eq!(app.ui.transform.as_ref().unwrap().made, Some(MadeLayer::Copy));
@@ -3928,8 +3928,8 @@ mod tests {
         commit(&mut app);
         let st = app.session.active().unwrap();
         assert_eq!((st.doc.layers.len(), st.history.past_len()), (layers + 1, steps + 1));
-        assert_eq!(bounds(&app, layers - 1), photocraft_geom::Rect::new(8, 8, 24, 24), "the original stays");
-        assert_eq!(bounds(&app, layers), photocraft_geom::Rect::new(28, 8, 44, 24), "the copy moved");
+        assert_eq!(bounds(&app, layers - 1), sary_geom::Rect::new(8, 8, 24, 24), "the original stays");
+        assert_eq!(bounds(&app, layers), sary_geom::Rect::new(28, 8, 44, 24), "the copy moved");
         app.session.undo();
         assert_eq!(app.session.active().unwrap().doc.layers.len(), layers, "one undo removes copy and move");
         // With a selection: Layer via Copy, so only the selected pixels are copied.
@@ -3946,7 +3946,7 @@ mod tests {
     fn cancelling_a_copy_after_switching_documents_preserves_the_active_document() {
         for reorder in [false, true] {
             for finish in [cancel, end_if_left, commit] {
-                let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+                let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
                 let original = app.session.active().unwrap().doc.clone();
                 let steps = app.session.active().unwrap().history.past_len();
                 begin_copy(&mut app, &egui::Context::default()).unwrap();
@@ -3979,7 +3979,7 @@ mod tests {
 
     #[test]
     fn cancelling_a_copy_after_its_document_closes_does_not_undo_another_document() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         begin_copy(&mut app, &egui::Context::default()).unwrap();
         app.run("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
@@ -3995,7 +3995,7 @@ mod tests {
 
     #[test]
     fn cancelling_an_already_undone_copy_preserves_history_and_redo() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         begin_copy(&mut app, &egui::Context::default()).unwrap();
         assert!(app.session.undo());
         let st = app.session.active().unwrap();
@@ -4010,7 +4010,7 @@ mod tests {
 
     #[test]
     fn cancelling_a_copy_does_not_undo_a_later_edit() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         begin_copy(&mut app, &egui::Context::default()).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         let st = app.session.active().unwrap();
@@ -4025,11 +4025,11 @@ mod tests {
     /// and to the others show while the box is open, and survive the commit.
     #[test]
     fn edits_during_a_transform_show_in_the_preview() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.tool = Tool::Move;
         let bg = app.session.active().unwrap().doc.layers[0].id;
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             app
         });
         h.run_steps(4);
@@ -4052,7 +4052,7 @@ mod tests {
         assert!(!pv.doc.layer(bg).unwrap().visible, "the document under the box follows");
         let moving = pv.doc.layer(LayerId(layer)).unwrap();
         assert!(!moving.visible, "the moving layer stays out of the document under the box");
-        assert_eq!(moving.blend, photocraft_color::BlendMode::Multiply);
+        assert_eq!(moving.blend, sary_color::BlendMode::Multiply);
 
         h.state_mut().run("layer.setProps", json!({"layer": layer, "visible": false})).unwrap();
         h.run_steps(2);
@@ -4062,19 +4062,19 @@ mod tests {
         commit(h.state_mut());
         let st = h.state().session.active().unwrap();
         let l = st.doc.layer(LayerId(layer)).unwrap();
-        assert_eq!((l.opacity, l.fill_opacity, l.blend), (0.5, 0.6, photocraft_color::BlendMode::Multiply));
-        assert_eq!(l.surface().unwrap().content_bounds(), photocraft_geom::Rect::new(28, 8, 44, 24));
+        assert_eq!((l.opacity, l.fill_opacity, l.blend), (0.5, 0.6, sary_color::BlendMode::Multiply));
+        assert_eq!(l.surface().unwrap().content_bounds(), sary_geom::Rect::new(28, 8, 44, 24));
     }
 
     /// #1384 with a selection: the pixels it leaves behind stay in the rebuilt preview without
     /// the lifted ones, and take the layer's new properties.
     #[test]
     fn edits_during_a_selection_transform_keep_the_lifted_pixels_out() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.tool = Tool::Move;
         app.session.execute("select.rect", json!({"x": 8, "y": 8, "width": 8, "height": 16})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             app
         });
         h.run_steps(4);
@@ -4083,7 +4083,7 @@ mod tests {
         h.run_steps(2);
         let layer = LayerId(h.state().ui.transform.as_ref().unwrap().layer);
         // Alpha in the preview's copy of the layer: in the lifted half (x 8..16) and the rest (16..24).
-        let left = |app: &PhotocraftApp| {
+        let left = |app: &SaryApp| {
             let s = app.transform_preview.as_ref().unwrap().doc.layer(layer).unwrap().surface().unwrap().clone();
             (s.sample_channel(10, 12, 3), s.sample_channel(20, 12, 3))
         };
@@ -4101,11 +4101,11 @@ mod tests {
     /// #670: picking another tool applies the open transform, as one history step.
     #[test]
     fn picking_another_tool_applies_the_transform() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.tool = Tool::Move;
         let steps = app.session.active().unwrap().history.past_len();
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
             app
         });
         h.run_steps(4);
@@ -4123,7 +4123,7 @@ mod tests {
         assert!(app.ui.transform.is_none() && app.transform_preview.is_none());
         let st = app.session.active().unwrap();
         assert_eq!(st.history.past_len(), steps + 1);
-        assert_eq!(st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().content_bounds(), photocraft_geom::Rect::new(28, 8, 44, 24));
+        assert_eq!(st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().content_bounds(), sary_geom::Rect::new(28, 8, 44, 24));
     }
 
     /// #1400: selecting another layer while transforming applies the box to the layer it was on,
@@ -4131,12 +4131,12 @@ mod tests {
     #[test]
     fn selecting_another_layer_applies_the_transform_and_the_next_one_follows() {
         let ctx = egui::Context::default();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let first = app.session.active().unwrap().active_layer.unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(40, 40, 56, 60), &[0.0, 0.0, 1.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(40, 40, 56, 60), &[0.0, 0.0, 1.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -4155,8 +4155,8 @@ mod tests {
         assert_eq!(st.active_layer, Some(second));
         assert_eq!(st.history.past_len(), steps + 1, "applied as one step");
         let bounds = |id: LayerId| st.doc.layer(id).unwrap().surface().unwrap().content_bounds();
-        assert_eq!(bounds(first), photocraft_geom::Rect::new(28, 8, 44, 24), "applied to the layer it was on");
-        assert_eq!(bounds(second), photocraft_geom::Rect::new(40, 40, 56, 60), "the new layer is untouched");
+        assert_eq!(bounds(first), sary_geom::Rect::new(28, 8, 44, 24), "applied to the layer it was on");
+        assert_eq!(bounds(second), sary_geom::Rect::new(40, 40, 56, 60), "the new layer is untouched");
         crate::menus::invoke(&mut app, &ctx, "edit.freeTransform", json!({})).unwrap();
         let t = app.ui.transform.as_ref().unwrap();
         assert_eq!((t.layer, t.rect), (second.0, [40.0, 40.0, 56.0, 60.0]), "the next box is on the selected layer");
@@ -4164,7 +4164,7 @@ mod tests {
 
     /// The screen rectangle the marching ants cover as [`draw_selection`] paints them over the
     /// active document's selection; `None` when it leaves them to the canvas.
-    fn ants_bounds(app: &PhotocraftApp, xf: &ViewXform) -> Option<egui::Rect> {
+    fn ants_bounds(app: &SaryApp, xf: &ViewXform) -> Option<egui::Rect> {
         let st = app.session.active().unwrap();
         let sel = st.doc.selection.as_ref().unwrap();
         let segs = crate::outline::outline(sel, sel.content_bounds());
@@ -4195,7 +4195,7 @@ mod tests {
     #[test]
     fn the_box_is_the_selection_and_the_ants_follow_it() {
         let ctx = gpu_ctx();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let xf = ViewXform {
             rect: egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 400.0)),
             zoom: 2.0,
@@ -4211,7 +4211,7 @@ mod tests {
         assert_eq!(app.ui.transform.as_ref().unwrap().quad, rest, "the box is the selection, not the 16 px square in it");
         assert!(rects_match(ants_bounds(&app, &xf).unwrap(), screen_bounds(&xf, &rest)), "untouched, the ants are where they were");
 
-        let on_the_box = |app: &PhotocraftApp, what: &str| {
+        let on_the_box = |app: &SaryApp, what: &str| {
             let quad = app.ui.transform.as_ref().unwrap().quad;
             let (ants, boxed) = (ants_bounds(app, &xf).unwrap(), screen_bounds(&xf, &quad));
             assert!(rects_match(ants, boxed), "{what}: ants {ants:?}, box {boxed:?}");
@@ -4238,8 +4238,8 @@ mod tests {
         commit(&mut app);
         assert!(app.ui.transform.is_none());
         let st = app.session.active().unwrap();
-        assert_eq!(st.doc.selection.as_ref().unwrap().content_bounds(), photocraft_geom::Rect::new(24, 14, 54, 40));
-        assert_eq!(st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().content_bounds(), photocraft_geom::Rect::new(28, 18, 44, 34));
+        assert_eq!(st.doc.selection.as_ref().unwrap().content_bounds(), sary_geom::Rect::new(24, 14, 54, 40));
+        assert_eq!(st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().content_bounds(), sary_geom::Rect::new(28, 18, 44, 34));
     }
 
     /// #5297: in Warp mode the ants bend with the mesh, and past a Distort's horizon they stop
@@ -4247,7 +4247,7 @@ mod tests {
     #[test]
     fn the_ants_follow_a_warp_and_stop_at_a_distorts_horizon() {
         let ctx = gpu_ctx();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 56, 56));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 56, 56));
         let xf = ViewXform {
             rect: egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(400.0, 400.0)),
             zoom: 2.0,
@@ -4283,7 +4283,7 @@ mod tests {
     #[test]
     fn selecting_another_layer_keeps_a_transform_selection_open() {
         let ctx = egui::Context::default();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let first = app.session.active().unwrap().active_layer.unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.run("select.all", json!({})).unwrap();
@@ -4297,7 +4297,7 @@ mod tests {
     #[test]
     fn a_pointer_request_with_another_tool_applies_the_transform_first() {
         let ctx = egui::Context::default();
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.tool = Tool::Move;
         crate::menus::invoke(&mut app, &ctx, "edit.freeTransform", json!({})).unwrap();
         if let Some(t) = app.ui.transform.as_mut() {
@@ -4316,14 +4316,14 @@ mod tests {
     }
 
     /// Drags with real pointer events (snapping off so the drops land exactly).
-    fn press_drag(app: &mut PhotocraftApp, from: [f64; 2], to: [f64; 2], m: egui::Modifiers) {
+    fn press_drag(app: &mut SaryApp, from: [f64; 2], to: [f64; 2], m: egui::Modifiers) {
         crate::canvas::tool_event(app, ToolEvent::Down { x: from[0], y: from[1], pressure: 1.0 }, m);
         crate::canvas::tool_event(app, ToolEvent::Up { x: to[0], y: to[1] }, m);
     }
 
     #[test]
     fn distort_mode_moves_one_corner_and_ignores_rotate_and_edges() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.extras.snap = false;
         let ctx = egui::Context::default();
         crate::menus::invoke(&mut app, &ctx, "edit.transform.distort", json!({})).unwrap();
@@ -4346,7 +4346,7 @@ mod tests {
     /// #3941: Edit › Transform › Rotate must rotate from a corner handle, not scale.
     #[test]
     fn rotate_mode_turns_the_box_from_a_corner_handle() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.extras.snap = false;
         let ctx = egui::Context::default();
         crate::menus::invoke(&mut app, &ctx, "edit.transform.rotate", json!({})).unwrap();
@@ -4384,7 +4384,7 @@ mod tests {
 
     #[test]
     fn hovering_just_outside_a_corner_asks_for_the_rotate_cursor() {
-        let mut app = app_with_square(256, photocraft_geom::Rect::new(32, 32, 160, 160));
+        let mut app = app_with_square(256, sary_geom::Rect::new(32, 32, 160, 160));
         crate::menus::invoke(&mut app, &egui::Context::default(), "edit.freeTransform", json!({})).unwrap();
         let tol = handle_tolerance(&app);
         let h = std::f64::consts::FRAC_1_SQRT_2;
@@ -4414,7 +4414,7 @@ mod tests {
             (0.0, 90.0, false, [NeSw, NwSe, H, V]),
         ];
         for (deg, view, flip, want) in cases {
-            let mut app = app_with_square(256, photocraft_geom::Rect::new(64, 96, 192, 160));
+            let mut app = app_with_square(256, sary_geom::Rect::new(64, 96, 192, 160));
             crate::menus::invoke(&mut app, &egui::Context::default(), "edit.freeTransform", json!({})).unwrap();
             let view_index = app.session.active_index().unwrap();
             app.ui.views[view_index].rotation = view;
@@ -4456,11 +4456,11 @@ mod tests {
     /// the angle while rotating, W/H while scaling, ΔX/ΔY while moving; nothing otherwise.
     #[test]
     fn the_live_readout_follows_the_drag() {
-        let mut app = app_with_square(256, photocraft_geom::Rect::new(32, 32, 160, 160));
+        let mut app = app_with_square(256, sary_geom::Rect::new(32, 32, 160, 160));
         app.ui.extras.snap = false;
         crate::menus::invoke(&mut app, &egui::Context::default(), "edit.freeTransform", json!({})).unwrap();
         assert_eq!(live_readout(&app), None, "not dragging");
-        let ev = |app: &mut PhotocraftApp, e| crate::canvas::tool_event(app, e, egui::Modifiers::NONE);
+        let ev = |app: &mut SaryApp, e| crate::canvas::tool_event(app, e, egui::Modifiers::NONE);
         // A quarter turn about the centre (96, 96): from right of the box to below it.
         ev(&mut app, ToolEvent::Down { x: 220.0, y: 96.0, pressure: 1.0 });
         ev(&mut app, ToolEvent::Move { x: 96.0, y: 220.0, pressure: 1.0 });
@@ -4468,7 +4468,7 @@ mod tests {
         assert!((a - 90.0).abs() < 1e-6, "{a}");
         ev(&mut app, ToolEvent::Up { x: 96.0, y: 220.0 });
         assert_eq!(live_readout(&app), None, "released");
-        let mut app = app_with_square(256, photocraft_geom::Rect::new(32, 32, 160, 160));
+        let mut app = app_with_square(256, sary_geom::Rect::new(32, 32, 160, 160));
         app.ui.extras.snap = false;
         crate::menus::invoke(&mut app, &egui::Context::default(), "edit.freeTransform", json!({})).unwrap();
         ev(&mut app, ToolEvent::Down { x: 60.0, y: 60.0, pressure: 1.0 });
@@ -4486,7 +4486,7 @@ mod tests {
     fn a_distort_corner_stops_before_the_box_folds_over() {
         // #1323: dragging a corner across the opposite diagonal stops short of it, so the box
         // stays convex instead of folding into a bow tie.
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.extras.snap = false;
         let ctx = egui::Context::default();
         crate::menus::invoke(&mut app, &ctx, "edit.transform.distort", json!({})).unwrap();
@@ -4532,7 +4532,7 @@ mod tests {
         // Through the box: a plain corner drag, then a plain right-edge drag, on a 16×16 square.
         for (legacy, proportional) in [(false, true), (true, false)] {
             for at_edge in [false, true] {
-                let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+                let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
                 app.ui.extras.snap = false;
                 app.session.prefs.edit(|p| p.general.use_legacy_free_transform = legacy);
                 begin(&mut app, &egui::Context::default()).unwrap();
@@ -4556,7 +4556,7 @@ mod tests {
             [(false, false, none, true), (true, false, none, false), (true, false, shift, true), (true, true, none, false)]
         {
             for at_edge in [false, true] {
-                let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+                let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
                 app.ui.extras.snap = false;
                 app.ui.transform_unlinked = unlinked;
                 app.session.prefs.edit(|p| p.general.use_legacy_free_transform = legacy);
@@ -4583,7 +4583,7 @@ mod tests {
 
     #[test]
     fn right_click_while_transforming_switches_the_mode() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let ctx = egui::Context::default();
         begin(&mut app, &ctx).unwrap();
         assert!(crate::canvas_tool_menu::open_transform(&mut app, &ctx, [10.0, 10.0]));
@@ -4596,7 +4596,7 @@ mod tests {
 
     #[test]
     fn right_click_menu_warp_row_enters_warp_mode() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let ctx = egui::Context::default();
         begin(&mut app, &ctx).unwrap();
         assert!(crate::canvas_tool_menu::open_transform(&mut app, &ctx, [10.0, 10.0]));
@@ -4616,7 +4616,7 @@ mod tests {
     #[test]
     fn right_click_menu_offers_warp_for_a_path() {
         // Photoshop's Transform Path menu has Warp too (#3027).
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let ctx = egui::Context::default();
         begin(&mut app, &ctx).unwrap();
         app.ui.transform.as_mut().unwrap().path = Some(json!({}));
@@ -4625,8 +4625,8 @@ mod tests {
         assert!(crate::canvas_tool_menu::available(&app, &menu, "edit.transform.warp"));
     }
 
-    fn app_with_square(size: u32, fill: photocraft_geom::Rect) -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app_with_square(size: u32, fill: sary_geom::Rect) -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": size, "height": size})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
@@ -4644,12 +4644,12 @@ mod tests {
     /// their own and drawn over the moving pixels.
     #[test]
     fn free_transform_keeps_the_layer_under_the_layers_over_it() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let red = app.session.active().unwrap().active_layer.unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(16, 16, 40, 40), &[0.0, 0.0, 1.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(16, 16, 40, 40), &[0.0, 0.0, 1.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -4662,7 +4662,7 @@ mod tests {
         assert!(pv.doc.layer(bg).unwrap().visible, "the layers below show under the box");
         assert!(!pv.doc.layer(blue).unwrap().visible, "the layer over it is drawn over the box instead");
         let (texture, rect) = pv.above.as_ref().and_then(|a| a.shown.as_ref()).expect("something covers the layer");
-        assert_eq!(*rect, photocraft_geom::Rect::new(16, 16, 40, 40));
+        assert_eq!(*rect, sary_geom::Rect::new(16, 16, 40, 40));
         assert_eq!(texture.size(), [24, 24]);
         cancel(&mut app);
 
@@ -4677,9 +4677,9 @@ mod tests {
 
     #[test]
     fn plain_layers_from_the_top_cover_the_moving_one() {
-        use photocraft_color::BlendMode;
-        use photocraft_doc::Layer;
-        let px = |name: &str| Layer::raster(name, photocraft_color::PixelFormat::RGBA8);
+        use sary_color::BlendMode;
+        use sary_doc::Layer;
+        let px = |name: &str| Layer::raster(name, sary_color::PixelFormat::RGBA8);
         let covers = |layers: &[Layer], id: LayerId| {
             let mut out = Vec::new();
             covering(layers, id, &mut out);
@@ -4737,7 +4737,7 @@ mod tests {
     #[test]
     fn preview_texture_is_full_resolution() {
         // #91: the preview used to be sampled down to 2048 px, so big layers looked blurry at 100%.
-        let mut app = app_with_square(3000, photocraft_geom::Rect::new(10, 20, 2810, 2420));
+        let mut app = app_with_square(3000, sary_geom::Rect::new(10, 20, 2810, 2420));
         let ctx = gpu_ctx();
         begin(&mut app, &ctx).unwrap();
         let pv = app.transform_preview.as_ref().unwrap();
@@ -4748,7 +4748,7 @@ mod tests {
     }
 
     /// The textured meshes `draw_content` paints for the moving pixels (not the box or handles).
-    fn preview_meshes(app: &PhotocraftApp, xf: &ViewXform) -> Vec<egui::Mesh> {
+    fn preview_meshes(app: &SaryApp, xf: &ViewXform) -> Vec<egui::Mesh> {
         let ctx = gpu_ctx();
         let mut out = ctx.run_ui(egui::RawInput { max_texture_side: Some(16384), ..Default::default() }, |ui| {
             let painter = ui.ctx().layer_painter(egui::LayerId::background());
@@ -4767,7 +4767,7 @@ mod tests {
     #[test]
     fn preview_pixels_past_the_canvas_are_hidden() {
         // #2027: a box scaled past the canvas drew its pixels over the pasteboard.
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 56, 56));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 56, 56));
         begin(&mut app, &gpu_ctx()).unwrap();
         scale_about_pivot(&mut app, 2.0, 2.0);
         let q = app.ui.transform.as_ref().unwrap().quad;
@@ -4822,7 +4822,7 @@ mod tests {
 
     #[test]
     fn alt_click_moves_the_reference_point_and_edges_skew() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         let ctx = egui::Context::default();
         begin(&mut app, &ctx).unwrap();
         assert!(pointer(&mut app, ToolEvent::Down { x: 40.0, y: 40.0, pressure: 1.0 }, egui::Modifiers::ALT));
@@ -4844,12 +4844,12 @@ mod tests {
         assert_eq!((s.quad[1], s.quad[2]), ([100.0, -10.0], [100.0, 60.0]));
     }
 
-    /// `cargo test --release -p photocraft-ui-egui transform_preview_bench -- --ignored --nocapture`
+    /// `cargo test --release -p sary-ui-egui transform_preview_bench -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn transform_preview_bench() {
         let (w, h) = (6000, 4000);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": w, "height": h})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
@@ -4895,11 +4895,11 @@ mod tests {
 
     #[test]
     fn transform_selection_moves_only_the_outline() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("select.rect", json!({"x": 8, "y": 8, "width": 16, "height": 16})).unwrap();
-        let px0 = app.session.active().unwrap().doc.layers[0].surface().unwrap().read_region(photocraft_geom::Rect::new(0, 0, 64, 64));
+        let px0 = app.session.active().unwrap().doc.layers[0].surface().unwrap().read_region(sary_geom::Rect::new(0, 0, 64, 64));
         let ctx = egui::Context::default();
         crate::menus::invoke(&mut app, &ctx, "select.transformSelection", json!({})).unwrap();
         let t = app.ui.transform.as_ref().unwrap();
@@ -4910,18 +4910,18 @@ mod tests {
         let st = app.session.active().unwrap();
         let b = st.doc.selection.as_ref().unwrap().content_bounds();
         assert!(b.width().abs_diff(32) <= 2 && b.x0.abs_diff(0) <= 1, "{b:?}");
-        assert_eq!(st.doc.layers[0].surface().unwrap().read_region(photocraft_geom::Rect::new(0, 0, 64, 64)), px0);
+        assert_eq!(st.doc.layers[0].surface().unwrap().read_region(sary_geom::Rect::new(0, 0, 64, 64)), px0);
     }
 
     #[test]
     fn warp_mode_drags_anchor_with_handles_splits_and_commits() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -4956,7 +4956,7 @@ mod tests {
     fn a_thin_layer_scaled_then_warped_commits_the_curve() {
         // #5793: a 3 px column stretched wide, switched to Warp and pulled down in the middle.
         // The commit came out straight: the warp's grid was one cell across the 3 source pixels.
-        let mut app = app_with_square(128, photocraft_geom::Rect::new(40, 20, 43, 60));
+        let mut app = app_with_square(128, sary_geom::Rect::new(40, 20, 43, 60));
         let ctx = egui::Context::default();
         begin(&mut app, &ctx).unwrap();
         scale_about_pivot(&mut app, 30.0, 1.0);
@@ -4978,13 +4978,13 @@ mod tests {
         assert!(alpha(15, 70) < 0.01 && alpha(15, 40) > 0.99, "end {} {}", alpha(15, 70), alpha(15, 40));
     }
 
-    fn warping_square() -> PhotocraftApp {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 32, 32));
+    fn warping_square() -> SaryApp {
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 32, 32));
         begin_warp(&mut app, &egui::Context::default()).unwrap();
         app
     }
 
-    fn warp_mesh(app: &PhotocraftApp) -> BezierMesh {
+    fn warp_mesh(app: &SaryApp) -> BezierMesh {
         app.ui.transform.as_ref().unwrap().warp.as_ref().unwrap().mesh.clone().unwrap()
     }
 
@@ -5058,7 +5058,7 @@ mod tests {
 
     #[test]
     fn replacing_the_warp_mesh_cancels_a_pending_point_drag() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 32, 32));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 32, 32));
         let ctx = egui::Context::default();
         begin_warp(&mut app, &ctx).unwrap();
         for _ in 0..3 {
@@ -5079,13 +5079,13 @@ mod tests {
     /// step); grabbing a point turns it into a custom mesh.
     #[test]
     fn a_press_on_a_preset_warp_converts_it_only_when_it_grabs_the_grid() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(8, 8, 32, 32), &[1.0, 0.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -5110,13 +5110,13 @@ mod tests {
     // ---- Layer masks (#205) ----
 
     /// `app_with_square` (red over 8..24) plus a reveal-all mask hiding x < 16.
-    fn masked_app(linked: bool) -> PhotocraftApp {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+    fn masked_app(linked: bool) -> SaryApp {
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.session.execute("layer.layerMask.revealAll", json!({})).unwrap();
         app.session
             .edit("mask", |doc, a| {
                 let m = doc.layer_mut(a.unwrap()).unwrap().mask.as_mut().unwrap();
-                m.surface.fill_rect(photocraft_geom::Rect::new(0, 0, 16, 64), &[0.0]);
+                m.surface.fill_rect(sary_geom::Rect::new(0, 0, 16, 64), &[0.0]);
                 m.linked = linked;
                 Ok(())
             })
@@ -5134,7 +5134,7 @@ mod tests {
             let app = masked_app(linked);
             let st = app.session.active().unwrap();
             let id = st.active_layer.unwrap();
-            let b = photocraft_geom::Rect::new(8, 8, 24, 24);
+            let b = sary_geom::Rect::new(8, 8, 24, 24);
             let (img, _) = preview_image(&st.doc, id, None, b, 4096, false);
             // Texel x = doc x − 8: x 10 is hidden by the mask, x 20 shows.
             assert_eq!(texel_alpha(&img, 12, 4), 255);
@@ -5148,8 +5148,8 @@ mod tests {
         let st = app.session.active().unwrap();
         let sel = st.doc.selection.clone().unwrap();
         let id = st.active_layer.unwrap();
-        let (lifted, _) = photocraft_engine::transform_cmds::split_selected(st.doc.layer(id).unwrap().surface().unwrap(), &sel).unwrap();
-        let b = photocraft_geom::Rect::new(8, 8, 20, 24);
+        let (lifted, _) = sary_engine::transform_cmds::split_selected(st.doc.layer(id).unwrap().surface().unwrap(), &sel).unwrap();
+        let b = sary_geom::Rect::new(8, 8, 20, 24);
         let (img, _) = preview_image(&st.doc, id, Some(&lifted), b, 4096, false);
         assert_eq!(texel_alpha(&img, 2, 4), 0, "masked");
         assert_eq!(texel_alpha(&img, 10, 4), 255, "revealed");
@@ -5168,13 +5168,13 @@ mod tests {
             .unwrap();
         let st = app.session.active().unwrap();
         let id = st.active_layer.unwrap();
-        let b = photocraft_geom::Rect::new(8, 8, 24, 24);
+        let b = sary_geom::Rect::new(8, 8, 24, 24);
         let (img, _) = preview_image(&st.doc, id, None, b, 4096, false);
         // Texel x 7 = doc x 15, just inside the hidden half; texel x 8 = doc x 16, just revealed.
         assert!(texel_alpha(&img, 7, 4) > 0, "the feather reaches into the hidden side");
         assert!(texel_alpha(&img, 8, 4) < 255, "the feather reaches into the revealed side");
         // The same values the compositor masks the committed layer with.
-        let m = photocraft_compose::masks::combined_mask(st.doc.layer(id).unwrap(), b).unwrap();
+        let m = sary_compose::masks::combined_mask(st.doc.layer(id).unwrap(), b).unwrap();
         for x in [6usize, 7, 8, 9, 15] {
             let want = (m.sample_channel(8 + x as i32, 12, 0) * 255.0).round() as i32;
             assert!((i32::from(texel_alpha(&img, x, 4)) - want).abs() <= 1, "texel {x}");
@@ -5185,11 +5185,11 @@ mod tests {
     /// was open (its flattened render hid the clipping base too).
     #[test]
     fn preview_of_a_clipped_smart_object_is_not_empty() {
-        let mut app = app_with_square(64, photocraft_geom::Rect::new(8, 8, 24, 24));
+        let mut app = app_with_square(64, sary_geom::Rect::new(8, 8, 24, 24));
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(0, 0, 64, 64), &[0.0, 0.0, 1.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(0, 0, 64, 64), &[0.0, 0.0, 1.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -5198,7 +5198,7 @@ mod tests {
         let st = app.session.active().unwrap();
         let id = st.active_layer.unwrap();
         assert!(st.doc.layer(id).unwrap().clipped);
-        let (img, _) = preview_image(&st.doc, id, None, photocraft_geom::Rect::new(0, 0, 64, 64), 4096, false);
+        let (img, _) = preview_image(&st.doc, id, None, sary_geom::Rect::new(0, 0, 64, 64), 4096, false);
         assert_eq!(texel_alpha(&img, 32, 32), 255, "the moving object shows");
     }
 
@@ -5223,7 +5223,7 @@ mod tests {
         let l = st.doc.layer(st.active_layer.unwrap()).unwrap();
         let m = &l.mask.as_ref().unwrap().surface;
         assert!(m.sample_channel(4, 30, 0) > 0.99 && m.sample_channel(30, 30, 0) < 0.01, "mask moved 20 px right");
-        assert_eq!(l.surface().unwrap().content_bounds(), photocraft_geom::Rect::new(8, 8, 24, 24), "pixels untouched");
+        assert_eq!(l.surface().unwrap().content_bounds(), sary_geom::Rect::new(8, 8, 24, 24), "pixels untouched");
         // Warp mode doesn't apply to a lone mask.
         app.ui.mask_target = true;
         begin(&mut app, &ctx).unwrap();
@@ -5246,7 +5246,7 @@ mod tests {
     #[test]
     fn free_transform_moves_the_selected_path_not_pixels() {
         let ctx = egui::Context::default();
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.run("path.set", json!({"name": "work", "path": {"subpaths": [{"closed": true, "knots": [[10, 10], [30, 10], [30, 20], [10, 20]]}]}})).unwrap();
@@ -5299,12 +5299,12 @@ mod tests {
     /// the layer stays type.
     #[test]
     fn warp_on_type_takes_a_style_and_keeps_the_type_editable() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.sync_views();
         app.run("type.create", json!({"x": 10, "y": 60, "text": "Hello"})).unwrap();
         let ctx = egui::Context::default();
-        let past = |app: &PhotocraftApp| app.session.active().unwrap().history.past_len();
+        let past = |app: &SaryApp| app.session.active().unwrap().history.past_len();
         let before = past(&app);
         crate::menus::invoke(&mut app, &ctx, "edit.transform.warp", json!({})).unwrap();
         assert!(app.ui.dialogs.is_empty(), "no prompt");

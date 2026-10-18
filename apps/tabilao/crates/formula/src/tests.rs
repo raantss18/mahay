@@ -175,7 +175,7 @@ fn insert_delete() {
 
 #[test]
 fn insert_delete_cells() {
-    let range = |a: &str| gridcraft_core::RangeRef::parse(a).unwrap();
+    let range = |a: &str| tabilao_core::RangeRef::parse(a).unwrap();
     let adj = |f: &str, e: &Edit| print(&adjust(parse(f).unwrap(), "S", "S", e));
     // Insert A3:A4, shifting down: column A moves, other columns and wider ranges don't.
     let ins = Edit::InsertCells { axis: Axis::Rows, range: range("A3:A4") };
@@ -193,10 +193,10 @@ fn insert_delete_cells() {
 
 #[test]
 fn moves_and_renames() {
-    let mv = Edit::Move { from: gridcraft_core::RangeRef::parse("A1:B2").unwrap(), to_row: 9, to_col: 3 };
+    let mv = Edit::Move { from: tabilao_core::RangeRef::parse("A1:B2").unwrap(), to_row: 9, to_col: 3 };
     let e = parse("A1+B2+C3+SUM(A1:B2)").unwrap();
     assert_eq!(print(&adjust(e, "S", "S", &mv)), "D10+E11+C3+SUM(D10:E11)");
-    let mv = Edit::Move { from: gridcraft_core::RangeRef::parse("B:C").unwrap(), to_row: 0, to_col: 4 };
+    let mv = Edit::Move { from: tabilao_core::RangeRef::parse("B:C").unwrap(), to_row: 0, to_col: 4 };
     assert_eq!(print(&adjust(parse("SUM(B:B)+SUM($C:$C)+D1").unwrap(), "S", "S", &mv)), "SUM(E:E)+SUM($F:$F)+D1");
     let e = parse("Old!A1+'Old'!B2").unwrap();
     assert_eq!(print(&rename_sheet(e, "Old", "New Name")), "'New Name'!A1+'New Name'!B2");
@@ -216,7 +216,7 @@ fn rename_sheet_updates_qualified_names() {
 
 #[test]
 fn moves_between_sheets() {
-    let mv = Edit::MoveToSheet { from: gridcraft_core::RangeRef::parse("A1:B2").unwrap(), to_sheet: "New Name".into(), to_row: 9, to_col: 3 };
+    let mv = Edit::MoveToSheet { from: tabilao_core::RangeRef::parse("A1:B2").unwrap(), to_sheet: "New Name".into(), to_row: 9, to_col: 3 };
     for (host, input, expected) in [
         ("Source", "A1+$B$2+C3+SUM(A1:B2)", "'New Name'!D10+'New Name'!$E$11+C3+SUM('New Name'!D10:E11)"),
         ("Other", "A1+sOuRcE!$B2+Other!B2", "A1+'New Name'!$E11+Other!B2"),
@@ -225,14 +225,14 @@ fn moves_between_sheets() {
         assert_eq!(print(&adjust(parse(input).unwrap(), host, "Source", &mv)), expected);
     }
     let edge = Edit::MoveToSheet {
-        from: gridcraft_core::RangeRef::parse("A1:B2").unwrap(),
+        from: tabilao_core::RangeRef::parse("A1:B2").unwrap(),
         to_sheet: "New Name".into(),
-        to_row: gridcraft_core::MAX_ROWS - 1,
+        to_row: tabilao_core::MAX_ROWS - 1,
         to_col: 3,
     };
     assert_eq!(print(&adjust(parse("B2").unwrap(), "Source", "Source", &edge)), "#REF!");
     for (from, input, row, col, expected) in [("A:A", "$A:$A", 0, 2, "Dest!$C:$C"), ("1:1", "$1:$1", 2, 0, "Dest!$3:$3")] {
-        let mv = Edit::MoveToSheet { from: gridcraft_core::RangeRef::parse(from).unwrap(), to_sheet: "Dest".into(), to_row: row, to_col: col };
+        let mv = Edit::MoveToSheet { from: tabilao_core::RangeRef::parse(from).unwrap(), to_sheet: "Dest".into(), to_row: row, to_col: col };
         assert_eq!(print(&adjust(parse(input).unwrap(), "Source", "Source", &mv)), expected);
     }
 }
@@ -240,7 +240,7 @@ fn moves_between_sheets() {
 #[test]
 fn r1c1() {
     let e = parse("A1+$B$2+SUM(C:C)").unwrap();
-    assert_eq!(print_r1c1(&e, gridcraft_core::CellRef::new(1, 1)), "R[-1]C[-1]+R2C2+SUM(C[1])");
+    assert_eq!(print_r1c1(&e, tabilao_core::CellRef::new(1, 1)), "R[-1]C[-1]+R2C2+SUM(C[1])");
 }
 
 #[test]
@@ -329,7 +329,7 @@ fn trim_references() {
         assert!(parse(bad).is_err(), "{bad} should fail");
     }
     // R1C1 keeps the operator.
-    assert_eq!(print_r1c1(&parse("SUM(A1:.B2)+ROWS(2.:2)").unwrap(), gridcraft_core::CellRef::new(0, 0)), "SUM(RC:.R[1]C[1])+ROWS(R[1].:R[1])");
+    assert_eq!(print_r1c1(&parse("SUM(A1:.B2)+ROWS(2.:2)").unwrap(), tabilao_core::CellRef::new(0, 0)), "SUM(RC:.R[1]C[1])+ROWS(R[1].:R[1])");
 }
 
 #[test]
@@ -356,7 +356,7 @@ fn prints_long_flat_chain_without_deep_recursion() {
                 e = Expr::Binary(BinOp::Add, Box::new(e), Box::new(Expr::Number(1.0)));
             }
             let text = print(&e);
-            let r1c1 = print_r1c1(&e, gridcraft_core::CellRef { row: 0, col: 0 });
+            let r1c1 = print_r1c1(&e, tabilao_core::CellRef { row: 0, col: 0 });
             // Dropping the deep tree recurses; leak it so only the printer is under test.
             std::mem::forget(e);
             (text, r1c1)

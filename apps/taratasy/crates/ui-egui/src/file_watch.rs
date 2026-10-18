@@ -6,7 +6,7 @@
 //! is read only once it has stopped changing ([`SETTLE`] apart) and ends like a whole PDF: its
 //! last KiB is read first, so a file still being written costs one small read. The new bytes go
 //! to the UI thread, which is woken for them: a clean document is reloaded in place, keeping its
-//! tab, page, zoom and scroll; one with unsaved changes gets a notice instead. PdfCraft's own
+//! tab, page, zoom and scroll; one with unsaved changes gets a notice instead. Taratasy's own
 //! saves are recognised by the file's stamp after writing, so they never reload.
 
 use std::collections::HashMap;
@@ -16,9 +16,9 @@ use std::sync::mpsc::{self, RecvTimeoutError};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, SystemTime};
 
-use pdfcraft_engine::DocId;
+use taratasy_engine::DocId;
 
-use crate::PdfCraftApp;
+use crate::TaratasyApp;
 
 /// How often an unchanged file is looked at.
 pub const IDLE: Duration = Duration::from_millis(250);
@@ -66,9 +66,9 @@ impl Stamp {
 pub struct Watched {
     pub doc: DocId,
     pub path: String,
-    /// The version PdfCraft last read or wrote (`None`: the first one the watcher sees).
+    /// The version Taratasy last read or wrote (`None`: the first one the watcher sees).
     pub known: Option<Stamp>,
-    /// Which reading or writing of the file by PdfCraft this is for (an open, a save, Save As):
+    /// Which reading or writing of the file by Taratasy this is for (an open, a save, Save As):
     /// a version the watcher found for an earlier one is older than the document is now.
     pub epoch: u64,
 }
@@ -243,15 +243,15 @@ pub struct FileWatch {
     found: Arc<Mutex<Vec<Changed>>>,
     /// What the watcher was last told.
     sent: Vec<Watched>,
-    /// In tests ([`PdfCraftApp::run_inline`]) there is no thread: each frame looks once.
+    /// In tests ([`TaratasyApp::run_inline`]) there is no thread: each frame looks once.
     inline: Watcher,
-    /// The version of each document's file that PdfCraft last read or wrote.
+    /// The version of each document's file that Taratasy last read or wrote.
     known: HashMap<DocId, Stamp>,
     /// The version each document came from (its open, reload or last save). Unlike `known`,
     /// a version found on disk and not applied (the document had unsaved changes) is not
     /// recorded here, so Save can tell that the file is not the one the document came from.
     basis: HashMap<DocId, Stamp>,
-    /// How many times PdfCraft has read or written each document's file: a version the watcher
+    /// How many times Taratasy has read or written each document's file: a version the watcher
     /// found before the latest one is older than the document in memory, and is not applied
     /// (#1802).
     epoch: HashMap<DocId, u64>,
@@ -260,7 +260,7 @@ pub struct FileWatch {
 }
 
 impl FileWatch {
-    /// PdfCraft read or wrote `path` for `doc`: that version is not a change, and anything the
+    /// Taratasy read or wrote `path` for `doc`: that version is not a change, and anything the
     /// watcher found before it is stale.
     pub fn known_now(&mut self, doc: DocId, path: &str) {
         self.known_as(doc, Stamp::at(path));
@@ -296,7 +296,7 @@ impl FileWatch {
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// The documents to watch: every open one with a file, while the preference is on.
     fn watched(&self) -> impl Iterator<Item = (DocId, &str, Option<Stamp>, u64)> {
         self.views.iter().filter(|_| self.reload_changed_files).filter_map(|v| {
@@ -350,7 +350,7 @@ impl PdfCraftApp {
             let Some(ctx) = self.ctx.clone() else { return false };
             let (tx, rx) = mpsc::channel();
             let out = self.watch.found.clone();
-            if std::thread::Builder::new().name("pdfcraft-watch".into()).spawn(move || run(rx, out, ctx)).is_err() {
+            if std::thread::Builder::new().name("taratasy-watch".into()).spawn(move || run(rx, out, ctx)).is_err() {
                 return false;
             }
             self.watch.inbox = Some(tx);
@@ -374,7 +374,7 @@ impl PdfCraftApp {
         if !same_file || self.watch.epoch(c.doc) != c.epoch {
             return;
         }
-        // PdfCraft wrote this version itself (a save), or it was handled already.
+        // Taratasy wrote this version itself (a save), or it was handled already.
         if self.watch.known.get(&c.doc) == Some(&c.stamp) {
             return;
         }
@@ -466,7 +466,7 @@ mod tests {
 
     impl TempDir {
         fn new(test: &str, bytes: &[u8]) -> (Self, String) {
-            let dir = std::env::temp_dir().join(format!("pdfcraft-watch-{test}-{}", std::process::id()));
+            let dir = std::env::temp_dir().join(format!("taratasy-watch-{test}-{}", std::process::id()));
             let _ = std::fs::remove_dir_all(&dir);
             std::fs::create_dir_all(&dir).unwrap();
             let path = dir.join("thesis.pdf").to_string_lossy().into_owned();
@@ -488,10 +488,10 @@ mod tests {
         file.set_modified(SystemTime::now() + Duration::from_secs(60)).unwrap();
     }
 
-    fn harness(path: &str) -> Harness<'static, PdfCraftApp> {
+    fn harness(path: &str) -> Harness<'static, TaratasyApp> {
         let path = path.to_owned();
         let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.run_inline = true;
             app.open_path(&path);
@@ -503,7 +503,7 @@ mod tests {
 
     /// Version B of the open file, found by the watcher but not yet applied: queued as the worker
     /// thread queues what it finds between frames.
-    fn find_new_version(app: &mut PdfCraftApp, path: &str, bytes: &[u8]) -> Vec<Changed> {
+    fn find_new_version(app: &mut TaratasyApp, path: &str, bytes: &[u8]) -> Vec<Changed> {
         rebuild(path, bytes);
         // One look sees the change, the next sees it settled and reads it.
         let (mut found, _) = app.watch.inline.tick();
@@ -512,7 +512,7 @@ mod tests {
         found
     }
 
-    fn doc<'a>(h: &'a Harness<'static, PdfCraftApp>) -> &'a pdfcraft_engine::Document {
+    fn doc<'a>(h: &'a Harness<'static, TaratasyApp>) -> &'a taratasy_engine::Document {
         let app = h.state();
         app.session.get(app.views[0].id).unwrap()
     }
@@ -527,7 +527,7 @@ mod tests {
         let stale = find_new_version(h.state_mut(), &path, &fixture(3));
         let app = h.state_mut();
         app.views[0].select_pages(&[0]);
-        app.apply_edit(pdfcraft_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
+        app.apply_edit(taratasy_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
         // B is on disk, not the A the document came from: Save asks first (#2166), and the
         // user saves C over it.
         assert!(!app.save_active(SaveTarget::InPlace), "asks before writing over B");
@@ -552,7 +552,7 @@ mod tests {
         let new_path = dir.0.join("copy.pdf").to_string_lossy().into_owned();
         let app = h.state_mut();
         app.views[0].select_pages(&[0]);
-        app.apply_edit(pdfcraft_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
+        app.apply_edit(taratasy_engine::Edit::RotatePages { pages: vec![0], degrees: 90 });
         app.save_override = Some(new_path.clone());
         assert!(app.save_active(SaveTarget::As), "saved as the new file");
         app.watch.found.lock().unwrap().extend(stale);

@@ -5,19 +5,19 @@
 //! `spacing`, `layer`), respects the active selection as a mask and the layer's transparency lock, and
 //! works at any depth (8/16/32f) and colour model. Like the Brush, each paints the targeted surface:
 //! the layer's pixels, its mask (`"target":"mask"`), an alpha channel or the Quick Mask (`"target"`,
-//! filled in from the Channels panel when absent). The pixel algorithms live in `photocraft-algo`
-//! (`poisson`, `inpaint`, `retouch`) and the dab machinery in `photocraft-paint::retouch`; this module
+//! filled in from the Channels panel when absent). The pixel algorithms live in `sary-algo`
+//! (`poisson`, `inpaint`, `retouch`) and the dab machinery in `sary-paint::retouch`; this module
 //! only parses parameters and wires them together.
 
-use photocraft_algo::inpaint::{self, CompleteParams};
-use photocraft_algo::poisson;
-use photocraft_algo::retouch::{ToneRange, dodge_burn, local_blur, local_sharpen, sponge};
-use photocraft_color::{BlendMode, PixelFormat, SampleType};
-use photocraft_doc::{Document, LayerContent, LayerId};
-use photocraft_geom::Rect;
-use photocraft_paint::retouch::{Footprint, Region, Smudge, alpha_index, apply_coverage, apply_dab_stroke, stroke_coverage};
-use photocraft_paint::{BrushSettings, Stroke, StrokePoint};
-use photocraft_raster::{Surface, from_rgba_into, to_rgba};
+use sary_algo::inpaint::{self, CompleteParams};
+use sary_algo::poisson;
+use sary_algo::retouch::{ToneRange, dodge_burn, local_blur, local_sharpen, sponge};
+use sary_color::{BlendMode, PixelFormat, SampleType};
+use sary_doc::{Document, LayerContent, LayerId};
+use sary_geom::Rect;
+use sary_paint::retouch::{Footprint, Region, Smudge, alpha_index, apply_coverage, apply_dab_stroke, stroke_coverage};
+use sary_paint::{BrushSettings, Stroke, StrokePoint};
+use sary_raster::{Surface, from_rgba_into, to_rgba};
 use serde_json::{Value, json};
 
 use crate::commands::{CommandSpec, blend_from_str};
@@ -179,7 +179,7 @@ pub(crate) fn composite_region(pre: &Document, id: Option<LayerId>, which: Sampl
             }
         }
     }
-    let buf = photocraft_compose::render(&doc, rect);
+    let buf = sary_compose::render(&doc, rect);
     let n = fmt.channels();
     let mut out = Region::new(rect, n);
     let mut enc = [0.0f32; 8];
@@ -239,7 +239,7 @@ fn clone_sample(
 
 /// Read-only clone overlay. Shares the stroke sampler without anchoring a source or editing history.
 /// Both destination and transformed source allocations are bounded for interactive use.
-pub fn clone_preview(s: &Session, rect: Rect, map: &crate::presets::clone_source::Mapping, sample_layer: &str) -> Result<photocraft_compose::Buffer> {
+pub fn clone_preview(s: &Session, rect: Rect, map: &crate::presets::clone_source::Mapping, sample_layer: &str) -> Result<sary_compose::Buffer> {
     clone_preview_periodic(s, rect, map, sample_layer, false)
 }
 
@@ -250,7 +250,7 @@ pub fn clone_preview_periodic(
     map: &crate::presets::clone_source::Mapping,
     sample_layer: &str,
     wrap: bool,
-) -> Result<photocraft_compose::Buffer> {
+) -> Result<sary_compose::Buffer> {
     if ![map.source.0, map.source.1, map.anchor.0, map.anchor.1].into_iter().chain(map.m).all(|v| v.is_finite() && v.abs() < 1_000_000.0) {
         return Err(bad("clone.preview", "invalid preview mapping"));
     }
@@ -272,7 +272,7 @@ pub fn clone_preview_periodic(
     let which = sample_layers(&json!({"sampleLayer": sample_layer}), "clone.preview")?;
     let region = clone_sample(&d.doc, Some(id), surf, which, rect, map, wrap, "clone.preview")?;
     let px = region.data.chunks_exact(surf.format().channels()).map(|p| to_rgba(&surf.format(), p)).collect();
-    Ok(photocraft_compose::Buffer { rect, px })
+    Ok(sary_compose::Buffer { rect, px })
 }
 
 /// Result JSON shared by Clone Stamp and Healing Brush: the offset used and where the next stroke
@@ -328,7 +328,7 @@ fn clone_stamp(s: &mut Session, p: &Value) -> Result<Value> {
                 return Ok(l.bounds);
             }
             if flag(p, "wrap", false) {
-                let mut renderer = photocraft_paint::StrokeRenderer::new(&stroke.brush, None, 1.0);
+                let mut renderer = sary_paint::StrokeRenderer::new(&stroke.brush, None, 1.0);
                 renderer.push(&stroke.points);
                 renderer.finish();
                 let before = surf.clone();
@@ -364,7 +364,7 @@ pub struct LiveRetouch {
     /// The active document with the stroke so far.
     pub doc: std::sync::Arc<Document>,
     cmd: String,
-    renderer: photocraft_paint::StrokeRenderer,
+    renderer: sary_paint::StrokeRenderer,
     pre: std::sync::Arc<Document>,
     pre_surf: Surface,
     id: Option<LayerId>,
@@ -378,7 +378,7 @@ pub struct LiveRetouch {
     /// smoothing catch-up), redrawn on every step as the Brush's live stroke does.
     tail: Rect,
     /// The document and revision the stroke started on.
-    base: (photocraft_doc::DocId, u64),
+    base: (sary_doc::DocId, u64),
     brush: Box<BrushSettings>,
     /// Every point rendered so far, in order.
     points: Vec<StrokePoint>,
@@ -410,7 +410,7 @@ impl LiveRetouch {
         let (surf, lock) = crate::channel_cmds::target_surface(&mut doc, id, p)?;
         let pre_surf = surf.clone();
         // As `stroke_coverage`, which the commit uses.
-        let renderer = photocraft_paint::StrokeRenderer::new(&stroke.brush, None, 1.0);
+        let renderer = sary_paint::StrokeRenderer::new(&stroke.brush, None, 1.0);
         let opacity = stroke.brush.opacity;
         let brush = Box::new(stroke.brush.clone());
         let paint = match paint {
@@ -993,7 +993,7 @@ impl DabTool {
                 })
             }
             Self::Smudge { strength, finger, max_size } => {
-                let finger_px = finger.map(|fg| photocraft_raster::from_rgba(&fmt, fg));
+                let finger_px = finger.map(|fg| sary_raster::from_rgba(&fmt, fg));
                 // Premultiplied mixing: transparent pixels carry no colour, so no dark fringes.
                 let mut sm = Smudge::new(strength, finger_px, max_size).with_alpha(alpha_index(&fmt));
                 Box::new(move |work, fp| sm.dab(work, fp))
@@ -1028,7 +1028,7 @@ pub struct LiveDab {
     /// The active document with the stroke so far.
     pub doc: std::sync::Arc<Document>,
     cmd: String,
-    renderer: photocraft_paint::StrokeRenderer,
+    renderer: sary_paint::StrokeRenderer,
     done: usize,
     effect: DabEffect,
     halo: i32,
@@ -1079,7 +1079,7 @@ impl LiveDab {
         let pre_surf = surf.clone();
         let effect = effect(&pre_surf);
         // `apply_dab_stroke` generates the same dabs (`dabs`: zoom 1, no smoothing scale).
-        let renderer = photocraft_paint::StrokeRenderer::new(&stroke.brush, None, 1.0).record_dabs();
+        let renderer = sary_paint::StrokeRenderer::new(&stroke.brush, None, 1.0).record_dabs();
         let mut live = Self {
             doc: std::sync::Arc::new(doc),
             cmd: cmd.into(),
@@ -1157,10 +1157,10 @@ impl LiveDab {
         let (surf, _) = crate::channel_cmds::target_surface(std::sync::Arc::make_mut(&mut self.doc), self.id, &self.params)?;
         if !shown.is_empty() {
             let (orig, work) = (Region::read(&self.pre_surf, shown), Region::read(&self.work, shown));
-            photocraft_paint::retouch::mix_back(surf, &orig, &work, shown, self.opacity, self.sel.as_ref(), self.lock);
+            sary_paint::retouch::mix_back(surf, &orig, &work, shown, self.opacity, self.sel.as_ref(), self.lock);
         }
         if let Some((r, work)) = tail {
-            photocraft_paint::retouch::mix_back(surf, &Region::read(&self.pre_surf, r), &work, r, self.opacity, self.sel.as_ref(), self.lock);
+            sary_paint::retouch::mix_back(surf, &Region::read(&self.pre_surf, r), &work, r, self.opacity, self.sel.as_ref(), self.lock);
             self.tail = r;
         }
         Ok(shown.union(&tail_rect))

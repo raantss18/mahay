@@ -1,0 +1,23 @@
+[package]
+name = "tabilao-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Tabilao command line: inspect, convert, evaluate, script and serve MCP without a window"
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "tabilao-cli"
+path = "src/main.rs"
+
+[dependencies]
+tabilao-engine = { workspace = true }
+tabilao-mcp = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+# `check`: validating the packages Tabilao writes (content types, relationships).
+zip = { workspace = true }
+quick-xml = { workspace = true }

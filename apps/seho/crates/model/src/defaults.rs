@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use deckcraft_color::SchemeSlot;
-use deckcraft_geom::{Size, Xfrm};
+use seho_color::SchemeSlot;
+use seho_geom::{Size, Xfrm};
 
 use crate::style::ColorRef;
 use crate::text::{Anchor, AutoFit, BodyProps, Bullet, LevelStyle, ListStyle, ParaProps, RunProps, Spacing, TextBody, TextDir};
@@ -175,7 +175,7 @@ pub fn build_master(size: Size, theme: Theme, first_id: u32) -> (Master, u32) {
                     para: ParaProps { align: Some(align), ..Default::default() },
                     run: RunProps {
                         size: Some(12.0),
-                        fill: Some(Fill::solid(ColorRef::scheme(SchemeSlot::Tx1).with(deckcraft_color::ColorTransform::Tint(75000)))),
+                        fill: Some(Fill::solid(ColorRef::scheme(SchemeSlot::Tx1).with(seho_color::ColorTransform::Tint(75000)))),
                         ..Default::default()
                     },
                 },
@@ -321,7 +321,7 @@ pub fn build_master(size: Size, theme: Theme, first_id: u32) -> (Master, u32) {
                 para: ParaProps { margin_left: Some(0.0), indent: Some(0.0), bullet: Some(Bullet::None), ..Default::default() },
                 run: RunProps {
                     size: Some(24.0),
-                    fill: Some(Fill::solid(ColorRef::scheme(SchemeSlot::Tx1).with(deckcraft_color::ColorTransform::Tint(82000)))),
+                    fill: Some(Fill::solid(ColorRef::scheme(SchemeSlot::Tx1).with(seho_color::ColorTransform::Tint(82000)))),
                     ..Default::default()
                 },
             },

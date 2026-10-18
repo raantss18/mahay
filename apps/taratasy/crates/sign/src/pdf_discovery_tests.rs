@@ -1,5 +1,5 @@
 use super::*;
-use pdfcraft_cos::{Algorithm, NewEncryption, XrefEntry, write_full, write_incremental};
+use taratasy_cos::{Algorithm, NewEncryption, XrefEntry, write_full, write_incremental};
 use std::sync::atomic::Ordering;
 
 const STAMP: &str = "<< /Type /Sig /SubFilter /ETSI.RFC3161 /ByteRange [0 1 2 1] >>";
@@ -23,7 +23,7 @@ fn fixture(extra: &[&str]) -> Document {
 }
 
 fn stamp() -> Dict {
-    pdfcraft_cos::Lexer::new(STAMP.as_bytes(), 0).object().unwrap().as_dict().unwrap().clone()
+    taratasy_cos::Lexer::new(STAMP.as_bytes(), 0).object().unwrap().as_dict().unwrap().clone()
 }
 
 fn scans(cache: &DigestCache) -> usize {
@@ -293,9 +293,9 @@ fn overlay_cache_is_bounded_and_new_documents_take_the_fallback() {
 /// Local, read-only corpus diagnostic; intentionally separate from ordinary timing.
 /// The source PDF is never copied into the repository or written by this probe.
 #[test]
-#[ignore = "set PDFCRAFT_SIGNATURE_PROBE_SOURCE to a local PDF; parent coordinates resource use"]
+#[ignore = "set TARATASY_SIGNATURE_PROBE_SOURCE to a local PDF; parent coordinates resource use"]
 fn real_file_discovery_cache_diagnostic() {
-    let path = std::env::var_os("PDFCRAFT_SIGNATURE_PROBE_SOURCE").expect("PDFCRAFT_SIGNATURE_PROBE_SOURCE");
+    let path = std::env::var_os("TARATASY_SIGNATURE_PROBE_SOURCE").expect("TARATASY_SIGNATURE_PROBE_SOURCE");
     let bytes = Arc::new(std::fs::read(path).unwrap());
     let doc = Document::open(bytes.clone()).unwrap();
     let mut objects = 0usize;
@@ -334,7 +334,7 @@ fn real_file_discovery_cache_diagnostic() {
     eprintln!("signature-discovery-unchanged\tfull_scans={}", scans(&cache));
     assert_eq!(scans(&cache), 1);
     let mut edited = doc.clone();
-    edited.update_dict(edited.root().unwrap(), |d| d.set(b"PdfcraftSignatureCacheProbe".to_vec(), Object::Int(1))).unwrap();
+    edited.update_dict(edited.root().unwrap(), |d| d.set(b"TaratasySignatureCacheProbe".to_vec(), Object::Int(1))).unwrap();
     assert_eq!(list_cached(&edited, &bytes, &trust, &cache).len(), first.len());
     assert_eq!(list_cached(&doc, &bytes, &trust, &cache).len(), first.len());
     assert_eq!(list_cached(&edited, &bytes, &trust, &cache).len(), first.len());

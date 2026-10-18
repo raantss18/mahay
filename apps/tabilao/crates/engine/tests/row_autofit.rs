@@ -2,13 +2,13 @@
 
 use serde_json::json;
 
-fn sheet_mut(s: &mut gridcraft_engine::Session) -> &mut gridcraft_engine::model::Sheet {
+fn sheet_mut(s: &mut tabilao_engine::Session) -> &mut tabilao_engine::model::Sheet {
     std::sync::Arc::make_mut(&mut s.active_mut().unwrap().wb).sheet_mut(0).unwrap()
 }
 
 #[test]
 fn whole_row_font_format_grows_row_height_and_undoes() {
-    let mut s = gridcraft_engine::Session::new();
+    let mut s = tabilao_engine::Session::new();
     s.new_workbook();
     s.execute("range.setValues", json!({"range": "A5", "values": [["plain big bold"]]})).unwrap();
     let before = s.doc().unwrap().wb.active().unwrap().row_height(4);
@@ -21,7 +21,7 @@ fn whole_row_font_format_grows_row_height_and_undoes() {
 
 #[test]
 fn whole_column_font_format_grows_only_rows_with_cells() {
-    let mut s = gridcraft_engine::Session::new();
+    let mut s = tabilao_engine::Session::new();
     s.new_workbook();
     s.execute("range.setValues", json!({"range": "A1", "values": [["a"]]})).unwrap();
     s.execute("range.setValues", json!({"range": "A50", "values": [["b"]]})).unwrap();
@@ -33,7 +33,7 @@ fn whole_column_font_format_grows_only_rows_with_cells() {
 
 #[test]
 fn whole_row_format_does_not_resize_custom_height_rows() {
-    let mut s = gridcraft_engine::Session::new();
+    let mut s = tabilao_engine::Session::new();
     s.new_workbook();
     s.execute("range.setValues", json!({"range": "A5", "values": [["plain big bold"]]})).unwrap();
     {
@@ -48,7 +48,7 @@ fn whole_row_format_does_not_resize_custom_height_rows() {
 
 #[test]
 fn whole_row_format_keeps_hidden_rows_hidden() {
-    let mut s = gridcraft_engine::Session::new();
+    let mut s = tabilao_engine::Session::new();
     s.new_workbook();
     s.execute("range.setValues", json!({"range": "A5", "values": [["plain big bold"]]})).unwrap();
     let before = s.doc().unwrap().wb.active().unwrap().row_height(4);

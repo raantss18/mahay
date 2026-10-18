@@ -129,7 +129,7 @@ pub(crate) fn layers(kind: &str, o: &str, t: f64, a: f64, depth: u32) -> Vec<Lay
         "random" if depth == 0 => {
             let h = o.bytes().fold(0x51ED_u64, |h, b| hash64(h ^ b as u64));
             let k = RANDOM_KINDS.get((h % RANDOM_KINDS.len() as u64) as usize).copied().unwrap_or("fade");
-            let opt = deckcraft_model::anim::TRANSITIONS.iter().find(|x| x.0 == k).and_then(|x| x.4.first().copied()).unwrap_or("");
+            let opt = seho_model::anim::TRANSITIONS.iter().find(|x| x.0 == k).and_then(|x| x.4.first().copied()).unwrap_or("");
             layers(k, opt, t, a, depth + 1)
         }
         _ => vec![Layer::full(Old, 1.0), Layer::full(New, ss(t))],

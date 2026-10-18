@@ -1,7 +1,7 @@
 //! Tile references owned by history snapshots. The snapshots keep these addresses alive;
 //! COW edits cannot change a retained tile in place. Count occurrences (including aliases
 //! within one document), so removing a state releases a tile only after its last reference.
-use photocraft_doc::{Document, LayerContent, Surface};
+use sary_doc::{Document, LayerContent, Surface};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

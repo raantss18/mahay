@@ -228,7 +228,7 @@ impl<'a> TilingPattern<'a> {
         initial_transform: Affine,
         is_stroke: bool,
     ) -> Option<()> {
-        // PdfCraft patch: a tiling pattern can paint itself (directly, or through resources it
+        // Taratasy patch: a tiling pattern can paint itself (directly, or through resources it
         // inherits when its own are missing), which recursed until the stack overflowed. Bound
         // the nesting like XObjects do, tighter because every level rasterizes a tile.
         if self.nesting_depth > crate::context::MAX_PAINT_NESTING || !crate::context::take_nested_paint(self.nesting_depth) {
@@ -248,7 +248,7 @@ impl<'a> TilingPattern<'a> {
             self.nesting_depth,
         );
 
-        // PdfCraft patch: see `context::MAX_PAGE_CONTENT`.
+        // Taratasy patch: see `context::MAX_PAGE_CONTENT`.
         let decoded = crate::context::decode_content(&self.stream)?;
         let resources = Resources::from_parent(
             self.stream.dict().get(RESOURCES).unwrap_or_default(),

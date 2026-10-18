@@ -2,9 +2,9 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::text::{Paragraph, Run, RunKind, RunProps, TextBody};
-use deckcraft_model::{Shape, ShapeId, defaults};
+use seho_geom::Xfrm;
+use seho_model::text::{Paragraph, Run, RunKind, RunProps, TextBody};
+use seho_model::{Shape, ShapeId, defaults};
 
 const NS_M: &str = r#"xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math""#;
 
@@ -52,7 +52,7 @@ fn moved_to(host: &str) -> String {
     if let Some(s) = p.slides.first_mut() {
         std::sync::Arc::make_mut(s).shapes = vec![eq];
     }
-    let mut es = entries(&deckcraft_pptx::export(&p).expect("export"));
+    let mut es = entries(&seho_pptx::export(&p).expect("export"));
     let slide = es.iter_mut().find(|(n, _)| n == "ppt/slides/slide1.xml").expect("slide1");
     let xml = String::from_utf8(slide.1.clone()).expect("utf8");
     assert!(xml.contains(host), "{xml}");
@@ -60,7 +60,7 @@ fn moved_to(host: &str) -> String {
     assert_eq!(xml.matches(NS_M).count(), 1);
     slide.1 = xml.into_bytes();
 
-    let q = deckcraft_pptx::import(&rezip(&es)).expect("import");
+    let q = seho_pptx::import(&rezip(&es)).expect("import");
     let shape = q.slides[0].shapes.iter().find(|s| s.name == "Equation").expect("shape");
     let run = shape.text.as_ref().and_then(|t| t.paragraphs.first()).and_then(|p| p.runs.first()).expect("run");
     match &run.kind {

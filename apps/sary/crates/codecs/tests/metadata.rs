@@ -2,7 +2,7 @@
 
 mod common;
 use common::*;
-use photocraft_codecs::*;
+use sary_codecs::*;
 
 fn rich_image(layout: ChannelLayout) -> Image {
     let mut img = test_image(layout, SampleType::U8);
@@ -11,7 +11,7 @@ fn rich_image(layout: ChannelLayout) -> Image {
         exif: Some(sample_exif()),
         xmp: Some(SAMPLE_XMP.to_owned()),
         dpi: Some((300.0, 150.0)),
-        text: vec![("Description".into(), "synthetic test image".into()), ("Software".into(), "photocraft".into())],
+        text: vec![("Description".into(), "synthetic test image".into()), ("Software".into(), "sary".into())],
         ..Default::default()
     };
     img

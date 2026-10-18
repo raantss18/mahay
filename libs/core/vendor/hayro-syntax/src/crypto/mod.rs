@@ -162,7 +162,7 @@ pub(crate) fn get(
     };
 
     let mut decryption_key = if revision <= 4 {
-        // PdfCraft patch: (see vendor/README.md hayro-syntax (14)) the password is tried as
+        // Taratasy patch: (see vendor/README.md hayro-syntax (14)) the password is tried as
         // given and then in PDFDocEncoding, which revisions 2–4 specify.
         let mut found = Err(DecryptionError::PasswordProtected);
         for candidate in legacy_passwords(password) {
@@ -184,7 +184,7 @@ pub(crate) fn get(
         }
         found?
     } else {
-        // PdfCraft patch: (see vendor/README.md hayro-syntax (16)) the password is tried in its
+        // Taratasy patch: (see vendor/README.md hayro-syntax (16)) the password is tried in its
         // SASLprep form, which revisions 5–6 specify, and then as given.
         let mut found = Err(DecryptionError::PasswordProtected);
         for candidate in aes256_passwords(password) {
@@ -466,7 +466,7 @@ fn compute_hash_rev56(
     Ok(result)
 }
 
-/// `PdfCraft` patch: the byte strings to try as a revision 2–4 password. Revisions 2–4 take the
+/// `Taratasy` patch: the byte strings to try as a revision 2–4 password. Revisions 2–4 take the
 /// password in `PDFDocEncoding` (ISO 32000-2 §7.6.4.3.2, Algorithm 2 a), but the password arrives
 /// as UTF-8 text: first the bytes as given (what earlier versions used, and what some writers
 /// store), then, for text with characters outside ASCII that `PDFDocEncoding` all has ("ılık€",
@@ -482,7 +482,7 @@ fn legacy_passwords(password: &[u8]) -> Vec<Vec<u8>> {
     out
 }
 
-/// `PdfCraft` patch: `PDFDocEncoding` (ISO 32000-2 Annex D) of `c`, `None` when it has none.
+/// `Taratasy` patch: `PDFDocEncoding` (ISO 32000-2 Annex D) of `c`, `None` when it has none.
 /// It differs from Latin-1 in 0x18–0x1F and 0x80–0xA0 (0x9F is undefined).
 fn pdf_doc_byte(c: char) -> Option<u8> {
     const LOW: [char; 8] = ['˘', 'ˇ', 'ˆ', '˙', '˝', '˛', '˚', '˜'];
@@ -505,10 +505,10 @@ fn pdf_doc_byte(c: char) -> Option<u8> {
         })
 }
 
-/// `PdfCraft` patch: the byte strings to try as a revision 5–6 password. Revisions 5–6 take the
+/// `Taratasy` patch: the byte strings to try as a revision 5–6 password. Revisions 5–6 take the
 /// password processed with `SASLprep` (RFC 4013) and in UTF-8, at most 127 bytes (ISO 32000-2
 /// §7.6.4.3.3, Algorithm 2.A a–b), but the password arrives as typed: first its `SASLprep`
-/// form, as pdfcraft-crypt writes it (a decomposed "café" composed, a fullwidth "ａｂ" narrowed,
+/// form, as taratasy-crypt writes it (a decomposed "café" composed, a fullwidth "ａｂ" narrowed,
 /// a no-break space made a space), then, when that differs, the bytes as given (what earlier
 /// versions used, and what writers that skip `SASLprep` store), each at most 127 bytes.
 fn aes256_passwords(password: &[u8]) -> Vec<Vec<u8>> {
@@ -519,8 +519,8 @@ fn aes256_passwords(password: &[u8]) -> Vec<Vec<u8>> {
     }
 }
 
-/// `PdfCraft` patch: `password` processed with `SASLprep`, in UTF-8 and truncated to 127 bytes,
-/// as pdfcraft-crypt does it: a password `SASLprep` refuses (one with prohibited or unassigned
+/// `Taratasy` patch: `password` processed with `SASLprep`, in UTF-8 and truncated to 127 bytes,
+/// as taratasy-crypt does it: a password `SASLprep` refuses (one with prohibited or unassigned
 /// characters) is taken as given. `None` when `password` isn't UTF-8.
 #[cfg(feature = "std")]
 fn sasl_prepared(password: &[u8]) -> Option<Vec<u8>> {
@@ -531,7 +531,7 @@ fn sasl_prepared(password: &[u8]) -> Option<Vec<u8>> {
     Some(bytes)
 }
 
-/// `PdfCraft` patch: without `std`, which stringprep needs, passwords are taken as given.
+/// `Taratasy` patch: without `std`, which stringprep needs, passwords are taken as given.
 #[cfg(not(feature = "std"))]
 fn sasl_prepared(_: &[u8]) -> Option<Vec<u8>> {
     None
@@ -549,7 +549,7 @@ fn decryption_key_rev1234(
 ) -> Result<Vec<u8>, DecryptionError> {
     let mut md5_input = vec![];
 
-    // (PDFDocEncoding: see `legacy_passwords`, PdfCraft patch.)
+    // (PDFDocEncoding: see `legacy_passwords`, Taratasy patch.)
     // a) Pad or truncate password to 32 bytes using PASSWORD_PADDING.
     let mut padded_password = [0_u8; 32];
     let copy_len = password.len().min(32);
@@ -689,7 +689,7 @@ fn decryption_key_rev56(
     // a) The UTF-8 password string shall be generated from Unicode input by processing the input string with
     // the SASLprep (Internet RFC 4013) profile of stringprep (Internet RFC 3454) using the Normalize and BiDi
     // options, and then converting to a UTF-8 representation.
-    // (SASLprep: see `aes256_passwords`, PdfCraft patch.)
+    // (SASLprep: see `aes256_passwords`, Taratasy patch.)
     // b) Truncate the UTF-8 representation to 127 bytes if it is longer than 127 bytes.
     let password = &password[..password.len().min(127)];
 
@@ -763,7 +763,7 @@ fn decryption_key_rev56(
 }
 
 #[cfg(test)]
-mod pdfcraft_password_tests {
+mod taratasy_password_tests {
     use super::*;
 
     #[test]
@@ -872,7 +872,7 @@ mod pdfcraft_password_tests {
     #[cfg(feature = "std")]
     fn aes256_passwords_open_as_typed_and_in_their_saslprep_form() {
         let key = [9; 32];
-        // As typed, and the SASLprep form that ISO 32000-2 keys the file on (and pdfcraft-crypt
+        // As typed, and the SASLprep form that ISO 32000-2 keys the file on (and taratasy-crypt
         // writes): a decomposed é (NFKC composes it), a no-break space (mapped to a space) and
         // fullwidth letters (what a Japanese IME types in full-width mode; NFKC narrows them).
         // Precomposed "café" is the control: SASLprep leaves it as it is.

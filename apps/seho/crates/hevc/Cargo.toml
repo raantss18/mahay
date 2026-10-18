@@ -1,5 +1,5 @@
 [package]
-name = "deckcraft-hevc"
+name = "seho-hevc"
 description = "Clean-room pure-Rust H.265/HEVC decoder (ITU-T H.265)"
 version.workspace = true
 edition.workspace = true
@@ -14,6 +14,6 @@ default = ["threads"]
 threads = ["dep:rayon"]
 
 [dependencies]
-deckcraft-bitstream = { workspace = true }
+seho-bitstream = { workspace = true }
 thiserror = { workspace = true }
 rayon = { workspace = true, optional = true }

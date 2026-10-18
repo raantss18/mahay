@@ -1,7 +1,7 @@
 //! Blurs: Gaussian, box, motion, radial, surface.
 
-use photocraft_geom::Rect;
-use photocraft_raster::Interrupt;
+use sary_geom::Rect;
+use sary_raster::Interrupt;
 
 use crate::image::{Edge, Image, premultiply, unpremultiply};
 use crate::photo_util::{par_map, par_rows};
@@ -313,7 +313,7 @@ fn strips(out: Rect) -> impl Iterator<Item = Rect> {
         .step_by(STRIP as usize)
         .map(move |x| Rect::new(x.max(out.x0), out.y0, x.saturating_add(STRIP).min(out.x1), out.y1))
 }
-const _: () = assert!(photocraft_geom::TILE_SIZE % STRIP == 0);
+const _: () = assert!(sary_geom::TILE_SIZE % STRIP == 0);
 
 /// [`box_blur`] of an image (edges repeated) into one interleaved buffer for `out`.
 fn box_passes(src: &Image, out: Rect, alpha: bool, boxes: &[usize]) -> Vec<f32> {
@@ -778,14 +778,14 @@ fn surface_direct(src: &Image, out: Rect, ctx: &Ctx, r: i32, t: f32) -> Vec<f32>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::{ColorMode, PixelFormat, SampleType};
-    use photocraft_raster::Surface;
+    use sary_color::{ColorMode, PixelFormat, SampleType};
+    use sary_raster::Surface;
 
     #[test]
     fn radial_blur_samples_large_arcs_beyond_64_intervals() {
         let bounds = Rect::new(0, 0, 1000, 1000);
         let out = Rect::new(999, 500, 1000, 501);
-        let ctx = Ctx { bounds, mode: photocraft_color::ColorMode::Grayscale, alpha: false };
+        let ctx = Ctx { bounds, mode: sary_color::ColorMode::Grayscale, alpha: false };
         let mut img = Image::new(bounds, 1);
         let (cx, cy) = (500.0f32, 500.0f32);
         let (x, y) = (999.5f32, 500.5f32);
@@ -1147,7 +1147,7 @@ mod tests {
     }
 
     /// Release-mode timings of the direct sum and the ranked path on one 256 px tile of
-    /// 16-bit-like and float noise (`cargo test -p photocraft-algo --release -- --ignored --nocapture surface_timing`).
+    /// 16-bit-like and float noise (`cargo test -p sary-algo --release -- --ignored --nocapture surface_timing`).
     #[test]
     #[ignore]
     fn surface_timing() {

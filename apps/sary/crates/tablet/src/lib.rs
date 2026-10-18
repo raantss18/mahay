@@ -5,7 +5,7 @@
 //!   each `NSEvent` (`pressure`, `tilt`, `rotation`, `subtype`, and `pointingDeviceType` from
 //!   proximity events) before winit sees the event, so every pointer event the UI handles already
 //!   has its pen sample. AppKit's block-based monitor API needs Objective-C interop, so
-//!   `macos.rs` is the only module in the workspace that allows `unsafe` (craftrules
+//!   `macos.rs` is the only module in the workspace that allows `unsafe` (mahay-rules
 //!   never-crash: an isolated, tested helper crate).
 //! - **Linux X11** ([`x11::spawn`]): a second, pure-Rust X connection (x11rb) selects XInput2
 //!   raw events on the root window and maps the tablet device's valuators ("Abs Pressure",

@@ -30,11 +30,11 @@ impl Class {
     }
 }
 
-/// The layering table. Names are package names without the `deckcraft-`
+/// The layering table. Names are package names without the `seho-`
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
-    // Codecs and containers (ported from FilmCraft): L0 standalone leaves, L1 codecs over
+    // Codecs and containers (ported from Hetsika): L0 standalone leaves, L1 codecs over
     // `bitstream`, and `media` (probe, decode, playback mixer) at L2.
     ("bitstream", Class::Standalone),
     ("matroska", Class::Standalone),
@@ -47,7 +47,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("isobmff", Class::Layer(1)),
     ("media", Class::Layer(2)),
     ("color", Class::Layer(0)),
-    // WMF/EMF reader (ported from WordCraft).
+    // WMF/EMF reader (ported from Soratra).
     ("metafile", Class::Layer(0)),
     ("model", Class::Layer(1)),
     ("fonts", Class::Layer(1)),
@@ -62,7 +62,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("mcp", Class::Layer(6)),
     ("testkit", Class::Testkit),
     // L7 apps and tooling
-    ("deckcraft", Class::Exempt),
+    ("seho", Class::Exempt),
     ("cli", Class::Exempt),
     ("web", Class::Exempt),
     ("xtask", Class::Exempt),
@@ -91,7 +91,7 @@ pub const UI_CRATES: &[&str] = &["egui", "eframe", "winit", "egui_kittest", "rfd
 pub const UI_MIN_LAYER: u8 = 6;
 
 pub fn short_name(pkg: &str) -> &str {
-    pkg.strip_prefix("deckcraft-").unwrap_or(pkg)
+    pkg.strip_prefix("seho-").unwrap_or(pkg)
 }
 
 pub fn classify(pkg: &str) -> Option<Class> {
@@ -149,7 +149,7 @@ impl std::fmt::Display for Violation {
                 write!(f, "{krate}: standalone crate must not depend on workspace crate {dep}")
             }
             Violation::TestkitAsNormalDep { krate } => {
-                write!(f, "{krate}: deckcraft-testkit may only be a dev-dependency")
+                write!(f, "{krate}: seho-testkit may only be a dev-dependency")
             }
             Violation::UiBelowL6 { krate, dep, layer } => {
                 write!(f, "{krate} (L{layer}) depends on UI crate `{dep}`; UI toolkits are only allowed in L6+")
@@ -258,75 +258,75 @@ mod tests {
     #[test]
     fn clean_downward_graph_passes() {
         let g = [
-            c("deckcraft-geom", &[("kurbo", Normal, false)]),
-            c("deckcraft-model", &[("deckcraft-geom", Normal, true)]),
-            c("deckcraft-engine", &[("deckcraft-model", Normal, true), ("deckcraft-testkit", Dev, true)]),
-            c("deckcraft-ui-egui", &[("deckcraft-engine", Normal, true), ("egui", Normal, false)]),
-            c("deckcraft-cli", &[("deckcraft-ui-egui", Normal, true)]),
+            c("seho-geom", &[("kurbo", Normal, false)]),
+            c("seho-model", &[("seho-geom", Normal, true)]),
+            c("seho-engine", &[("seho-model", Normal, true), ("seho-testkit", Dev, true)]),
+            c("seho-ui-egui", &[("seho-engine", Normal, true), ("egui", Normal, false)]),
+            c("seho-cli", &[("seho-ui-egui", Normal, true)]),
         ];
         assert!(check(&g).is_empty(), "{:?}", check(&g));
     }
 
     #[test]
     fn upward_dependency_flagged() {
-        let v = check(&[c("deckcraft-model", &[("deckcraft-engine", Normal, true)])]);
+        let v = check(&[c("seho-model", &[("seho-engine", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 1, to: 5, .. }]));
     }
 
     #[test]
     fn sideways_dependency_flagged() {
-        let v = check(&[c("deckcraft-text", &[("deckcraft-anim", Normal, true)])]);
+        let v = check(&[c("seho-text", &[("seho-anim", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 2, to: 2, .. }]));
     }
 
     #[test]
     fn l0_foundations_are_independent() {
-        let v = check(&[c("deckcraft-geom", &[("deckcraft-color", Normal, true)])]);
+        let v = check(&[c("seho-geom", &[("seho-color", Normal, true)])]);
         assert!(matches!(v[..], [Violation::Upward { from: 0, to: 0, .. }]));
     }
 
     #[test]
     fn self_dev_dependency_ignored() {
-        assert!(check(&[c("deckcraft-model", &[("deckcraft-model", Dev, true)])]).is_empty());
+        assert!(check(&[c("seho-model", &[("seho-model", Dev, true)])]).is_empty());
     }
 
     #[test]
     fn upward_dev_dependency_flagged() {
-        let v = check(&[c("deckcraft-geom", &[("deckcraft-model", Dev, true)])]);
+        let v = check(&[c("seho-geom", &[("seho-model", Dev, true)])]);
         assert!(matches!(v[..], [Violation::Upward { kind: Dev, .. }]));
     }
 
     #[test]
     fn ui_crates_below_l6_flagged() {
         for dep in ["egui", "eframe", "winit", "egui_kittest", "rfd", "bevy_ecs", "bevy"] {
-            let v = check(&[c("deckcraft-engine", &[(dep, Normal, false)])]);
+            let v = check(&[c("seho-engine", &[(dep, Normal, false)])]);
             assert!(matches!(v[..], [Violation::UiBelowL6 { layer: 5, .. }]), "{dep}");
         }
-        assert!(check(&[c("deckcraft-engine", &[("egui_extras_not", Normal, false)])]).is_empty());
-        assert!(check(&[c("deckcraft-mcp", &[("winit", Normal, false)])]).is_empty());
+        assert!(check(&[c("seho-engine", &[("egui_extras_not", Normal, false)])]).is_empty());
+        assert!(check(&[c("seho-mcp", &[("winit", Normal, false)])]).is_empty());
     }
 
     #[test]
     fn unregistered_crate_is_error() {
-        let v = check(&[c("deckcraft-mystery", &[])]);
-        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "deckcraft-mystery"));
+        let v = check(&[c("seho-mystery", &[])]);
+        assert!(matches!(&v[..], [Violation::Unregistered { krate }] if krate == "seho-mystery"));
         assert!(v[0].to_string().contains("register"));
     }
 
     #[test]
     fn testkit_only_as_dev_dependency() {
-        let v = check(&[c("deckcraft-render", &[("deckcraft-testkit", Normal, true)])]);
+        let v = check(&[c("seho-render", &[("seho-testkit", Normal, true)])]);
         assert!(matches!(v[..], [Violation::TestkitAsNormalDep { .. }]));
-        assert!(check(&[c("deckcraft-render", &[("deckcraft-testkit", Dev, true)])]).is_empty());
+        assert!(check(&[c("seho-render", &[("seho-testkit", Dev, true)])]).is_empty());
         // testkit itself may use anything up to L5 but not L6 crates.
-        assert!(check(&[c("deckcraft-testkit", &[("deckcraft-engine", Normal, true)])]).is_empty());
-        assert!(!check(&[c("deckcraft-testkit", &[("deckcraft-ui-egui", Normal, true)])]).is_empty());
+        assert!(check(&[c("seho-testkit", &[("seho-engine", Normal, true)])]).is_empty());
+        assert!(!check(&[c("seho-testkit", &[("seho-ui-egui", Normal, true)])]).is_empty());
     }
 
     #[test]
     fn apps_and_xtask_exempt() {
-        for app in ["deckcraft", "deckcraft-cli", "deckcraft-web", "xtask"] {
-            assert!(check(&[c(app, &[("egui", Normal, false), ("deckcraft-ui-egui", Normal, true)])]).is_empty());
+        for app in ["seho", "seho-cli", "seho-web", "xtask"] {
+            assert!(check(&[c(app, &[("egui", Normal, false), ("seho-ui-egui", Normal, true)])]).is_empty());
         }
     }
 
@@ -334,17 +334,17 @@ mod tests {
     fn metadata_parsing() {
         let meta: Value = serde_json::from_str(
             r#"{"packages":[
-                {"name":"deckcraft-model","dependencies":[
-                    {"name":"deckcraft-geom","kind":null,"path":"/x/crates/geom"},
+                {"name":"seho-model","dependencies":[
+                    {"name":"seho-geom","kind":null,"path":"/x/crates/geom"},
                     {"name":"serde","kind":null},
                     {"name":"proptest","kind":"dev"}]},
-                {"name":"deckcraft-geom","dependencies":[]}
+                {"name":"seho-geom","dependencies":[]}
             ]}"#,
         )
         .unwrap();
         let g = from_metadata(&meta).unwrap();
         assert_eq!(g.len(), 2);
-        let doc = g.iter().find(|c| c.name == "deckcraft-model").unwrap();
+        let doc = g.iter().find(|c| c.name == "seho-model").unwrap();
         assert!(doc.deps[0].workspace && !doc.deps[1].workspace);
         assert_eq!(doc.deps[2].kind, Dev);
         assert!(check(&g).is_empty());

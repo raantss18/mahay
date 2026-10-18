@@ -15,13 +15,13 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{Receiver, SyncSender, TryRecvError};
 
-use photocraft_doc::{DocId, Document};
-use photocraft_engine::display_color::CanvasDisplay;
-use photocraft_geom::Rect;
+use sary_doc::{DocId, Document};
+use sary_engine::display_color::CanvasDisplay;
+use sary_geom::Rect;
 #[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::gpu_canvas::GpuCanvas;
 
 /// Side of a block in document pixels: whole render tiles, and a power of two so each block's
@@ -65,7 +65,7 @@ impl Drop for Redraw {
 }
 
 /// Whether full CPU refreshes run in the background here.
-pub(crate) fn enabled(app: &PhotocraftApp) -> bool {
+pub(crate) fn enabled(app: &SaryApp) -> bool {
     cfg!(not(target_arch = "wasm32")) && app.background_jobs
 }
 
@@ -102,7 +102,7 @@ fn order(blocks: &[Rect], wanted: impl Iterator<Item = usize>, visible: Rect) ->
 /// `doc` with `region`'s blocks added.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn start(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     ctx: &egui::Context,
     gpu: &GpuCanvas,
     doc: Arc<Document>,
@@ -126,7 +126,7 @@ pub(crate) fn start(
 
 /// After an edit drew its own damage: continue document `doc.id`'s redraw, if one is running, on
 /// the edited document, so blocks still to come don't bring back what was there before it.
-pub(crate) fn restart(app: &mut PhotocraftApp, ctx: &egui::Context, gpu: &GpuCanvas, doc: Arc<Document>, display: Option<Arc<CanvasDisplay>>, visible: Rect) {
+pub(crate) fn restart(app: &mut SaryApp, ctx: &egui::Context, gpu: &GpuCanvas, doc: Arc<Document>, display: Option<Arc<CanvasDisplay>>, visible: Rect) {
     if app.redraws.contains_key(&doc.id) {
         start(app, ctx, gpu, doc, display, visible, Rect::EMPTY, None);
     }
@@ -135,7 +135,7 @@ pub(crate) fn restart(app: &mut PhotocraftApp, ctx: &egui::Context, gpu: &GpuCan
 /// Upload the blocks document `doc`'s redraw has finished since the last frame. When the last one
 /// lands, the redraw is recorded like the synchronous refresh it replaces (and explained once if
 /// it was slow).
-pub(crate) fn poll(app: &mut PhotocraftApp, gpu: &GpuCanvas, doc: DocId) {
+pub(crate) fn poll(app: &mut SaryApp, gpu: &GpuCanvas, doc: DocId) {
     let Some(r) = app.redraws.get_mut(&doc) else { return };
     loop {
         match r.rx.try_recv() {
@@ -162,7 +162,7 @@ pub(crate) fn poll(app: &mut PhotocraftApp, gpu: &GpuCanvas, doc: DocId) {
 }
 
 /// The active document's redraw in the status bar: "Redrawing" and how much is done.
-pub(crate) fn status(app: &PhotocraftApp, ui: &mut egui::Ui) {
+pub(crate) fn status(app: &SaryApp, ui: &mut egui::Ui) {
     let Some(r) = app.session.active().and_then(|st| app.redraws.get(&st.doc.id)) else { return };
     let t = crate::theme::Tokens::get(ui.ctx());
     ui.label(egui::RichText::new(format!("{:.0}%", r.fraction() * 100.0)).color(t.text_dim).size(11.5).monospace());
@@ -170,19 +170,19 @@ pub(crate) fn status(app: &PhotocraftApp, ui: &mut egui::Ui) {
 }
 
 /// Stop document `doc`'s redraw (its canvas was redrawn some other way, or is gone).
-pub(crate) fn cancel(app: &mut PhotocraftApp, doc: DocId) {
+pub(crate) fn cancel(app: &mut SaryApp, doc: DocId) {
     app.redraws.remove(&doc);
 }
 
 /// Stop redraws of documents that are no longer open.
-pub(crate) fn retain(app: &mut PhotocraftApp) {
+pub(crate) fn retain(app: &mut SaryApp) {
     let docs = app.session.documents();
     app.redraws.retain(|id, _| docs.iter().any(|st| st.doc.id == *id));
 }
 
 #[allow(clippy::too_many_arguments)]
 fn spawn(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     ctx: &egui::Context,
     gpu: &GpuCanvas,
     doc: Arc<Document>,
@@ -236,7 +236,7 @@ fn draw(
         #[cfg(target_arch = "wasm32")]
         let batch = batch.iter();
         let pieces: Vec<Piece> = batch
-            .map(|&block| Piece { block, texels: crate::gpu_canvas::display_texels(format, display, &photocraft_compose::render(doc, blocks[block])) })
+            .map(|&block| Piece { block, texels: crate::gpu_canvas::display_texels(format, display, &sary_compose::render(doc, blocks[block])) })
             .collect();
         for p in pieces {
             if stop.load(Ordering::Relaxed) || tx.send(p).is_err() {

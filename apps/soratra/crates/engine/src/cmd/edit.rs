@@ -1,8 +1,8 @@
 //! Undo, clipboard, find & replace, Go To, Format Painter.
 
 use serde_json::{Value, json};
-use wordcraft_doc::edit::Fragment;
-use wordcraft_doc::{Pos, StoryRef};
+use soratra_doc::edit::Fragment;
+use soratra_doc::{Pos, StoryRef};
 
 use super::{delete_selection, find_pattern, pos_json, sel_result};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -183,7 +183,7 @@ fn copy(s: &mut Session, _: &Value) -> CmdResult {
 /// and for a copy of one equation alone, its MathML (#1297).
 pub(crate) fn copy_result(s: &mut Session) -> Value {
     s.clipboard_html = match &s.clipboard {
-        Some(f) => wordcraft_formats::html::export_fragment(&f.to_document()),
+        Some(f) => soratra_formats::html::export_fragment(&f.to_document()),
         None => String::new(),
     };
     let mut r = json!({"text": s.clipboard_text});
@@ -195,7 +195,7 @@ pub(crate) fn copy_result(s: &mut Session) -> Value {
     // before anything else when it pastes; a copy with text around the equation doesn't offer
     // them, so pasting it keeps the text.
     if let Some((linear, display)) = s.clipboard.as_ref().and_then(|f| f.sole_equation()) {
-        r["mathml"] = json!(wordcraft_formats::mathml::linear_to_mathml(linear, display));
+        r["mathml"] = json!(soratra_formats::mathml::linear_to_mathml(linear, display));
     }
     r
 }
@@ -276,7 +276,7 @@ pub struct ClipItem {
 impl ClipItem {
     /// One line of the item's text for a list: whitespace runs become one space, objects drop out.
     pub fn preview(&self) -> String {
-        let words = self.text.split(|c: char| c.is_whitespace() || c == wordcraft_doc::para::OBJ).filter(|w| !w.is_empty());
+        let words = self.text.split(|c: char| c.is_whitespace() || c == soratra_doc::para::OBJ).filter(|w| !w.is_empty());
         let mut out = String::new();
         let mut n = 0;
         for w in words {
@@ -344,7 +344,7 @@ impl ClipHistory {
                         "index": i,
                         "preview": it.preview(),
                         "chars": it.text.chars().count(),
-                        "objects": it.text.matches(wordcraft_doc::para::OBJ).count(),
+                        "objects": it.text.matches(soratra_doc::para::OBJ).count(),
                     })
                 })
                 .collect(),
@@ -723,7 +723,7 @@ fn goto(s: &mut Session, v: &Value) -> CmdResult {
         let idx = (pg.max(1) as usize - 1).min(l.pages.len().saturating_sub(1));
         let target = l.pages.get(idx).and_then(|page| {
             page.items.iter().find_map(|it| match it {
-                wordcraft_layout::Placed::Lines { story, path, para, l0, .. } if *story == StoryRef::Body => {
+                soratra_layout::Placed::Lines { story, path, para, l0, .. } if *story == StoryRef::Body => {
                     para.lines.get(*l0).map(|ln| Pos { story: *story, path: path.clone(), off: ln.start })
                 }
                 _ => None,

@@ -2,12 +2,12 @@
 //! Synthetic blue pixels are measured outside the dialog, so its controls cannot pass the test.
 
 use egui_kittest::kittest::Queryable;
-use photocraft_ui_egui::PhotocraftApp;
-use photocraft_ui_egui::control::{ControlRequest, Outcome, handle};
+use sary_ui_egui::SaryApp;
+use sary_ui_egui::control::{ControlRequest, Outcome, handle};
 use serde_json::{Value, json};
 use std::sync::Arc;
 
-type Harness = egui_kittest::Harness<'static, PhotocraftApp>;
+type Harness = egui_kittest::Harness<'static, SaryApp>;
 
 fn harness() -> Option<Harness> {
     let built = std::panic::catch_unwind(|| {
@@ -15,10 +15,10 @@ fn harness() -> Option<Harness> {
             .with_size(egui::vec2(1280.0, 800.0))
             .with_pixels_per_point(1.0)
             .with_max_steps(64)
-            .wgpu_setup(photocraft_ui_egui::gpu_canvas::wgpu_setup())
+            .wgpu_setup(sary_ui_egui::gpu_canvas::wgpu_setup())
             .build_eframe(|cc| {
-                PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-                let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+                SaryApp::setup_context(&cc.egui_ctx, Default::default());
+                let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
                 if let Some(rs) = cc.wgpu_render_state.as_ref() {
                     app.set_wgpu(rs.clone());
                 }
@@ -69,7 +69,7 @@ fn blue(h: &mut Harness, name: &str) -> (usize, u32, u32) {
     let modals: Vec<_> =
         h.state().ui.dialogs.iter().map(|d| h.ctx.memory(|m| m.area_rect(egui::Id::new(("dialog", d.id)))).expect("laid-out dialog").expand(4.0)).collect();
     let img = h.render().expect("render");
-    if let Some(dir) = std::env::var_os("PHOTOCRAFT_ROTATION_EVIDENCE_DIR") {
+    if let Some(dir) = std::env::var_os("SARY_ROTATION_EVIDENCE_DIR") {
         std::fs::create_dir_all(&dir).expect("evidence directory");
         img.save(std::path::Path::new(&dir).join(format!("{name}.png"))).expect("save UI frame");
     }
@@ -92,7 +92,7 @@ fn blue(h: &mut Harness, name: &str) -> (usize, u32, u32) {
 
 #[test]
 fn size_changing_rotation_preview_is_visible_and_preserves_the_panned_center() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = harness() else { return };
     h.run_steps(4);
     for (width, height, zoom, center, degrees, factor) in [
@@ -102,7 +102,7 @@ fn size_changing_rotation_preview_is_visible_and_preserves_the_panned_center() {
         (3000, 1800, 0.12, [1350.0, 825.0], 45.0, 2),
     ] {
         setup(&mut h, width, height, zoom, center);
-        assert_eq!(photocraft_ui_egui::proxy::factor(&h.state().session.active().unwrap().doc), factor);
+        assert_eq!(sary_ui_egui::proxy::factor(&h.state().session.active().unwrap().doc), factor);
         let id = open(&mut h);
         let source = blue(&mut h, &format!("{width}x{height}-{degrees}-zero")).0;
         assert!(source > 5_000, "the unrotated blue image must be visible outside the dialog");
@@ -116,7 +116,7 @@ fn size_changing_rotation_preview_is_visible_and_preserves_the_panned_center() {
         assert_eq!(h.state().ui.dialogs[0].fields["__preview"], true);
         let (count, top, bottom) = blue(&mut h, &format!("{width}x{height}-{degrees}-on"));
         assert!(count > 5_000, "{width}x{height}, {degrees}°, factor {factor}: rotated blue pixels disappeared ({count} remain)");
-        let rect = photocraft_ui_egui::rulers::content_rect(h.state(), h.state().last_canvas_rect);
+        let rect = sary_ui_egui::rulers::content_rect(h.state(), h.state().last_canvas_rect);
         let expected_y = rect.center().y + (height as f32 / 2.0 - center[1]) * zoom;
         let actual_y = (top + bottom) as f32 / 2.0;
         assert!((actual_y - expected_y).abs() < 3.0, "{degrees}°: preview moved the panned image center from {expected_y} to {actual_y}");
@@ -127,7 +127,7 @@ fn size_changing_rotation_preview_is_visible_and_preserves_the_panned_center() {
 
 #[test]
 fn preview_toggle_and_cancel_keep_the_document_while_ok_applies_rotation() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let Some(mut h) = harness() else { return };
     h.run_steps(4);
     setup(&mut h, 400, 240, 1.0, [200.0, 120.0]);

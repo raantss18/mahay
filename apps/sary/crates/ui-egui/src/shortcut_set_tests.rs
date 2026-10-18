@@ -9,17 +9,17 @@ use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::file_dialog::FileDialogAnswer;
 
 type Written = Rc<RefCell<Vec<(String, Vec<u8>)>>>;
 
 /// The dialog, with the save picker answering `answers` and writes recorded.
-fn dialog(answers: Vec<&str>) -> (Harness<'static, PhotocraftApp>, u64, Written) {
+fn dialog(answers: Vec<&str>) -> (Harness<'static, SaryApp>, u64, Written) {
     let written: Written = Rc::default();
     let log = written.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1100.0, 760.0)).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
         let mut services = crate::Services::default();
         let (picker, _) = crate::file_dialog::fake(answers.iter().map(|a| Some(FileDialogAnswer::SaveTo((*a).into()))).collect());
         services.file_dialog = Some(picker);
@@ -27,7 +27,7 @@ fn dialog(answers: Vec<&str>) -> (Harness<'static, PhotocraftApp>, u64, Written)
             log.borrow_mut().push((path.to_string(), bytes.to_vec()));
             Ok(())
         }));
-        PhotocraftApp::new(photocraft_engine::Session::new(), services)
+        SaryApp::new(sary_engine::Session::new(), services)
     });
     let ctx = h.ctx.clone();
     let id = crate::menus::invoke(h.state_mut(), &ctx, "edit.keyboardShortcuts", json!({})).unwrap()["dialog"].as_u64().unwrap();
@@ -35,16 +35,16 @@ fn dialog(answers: Vec<&str>) -> (Harness<'static, PhotocraftApp>, u64, Written)
     (h, id, written)
 }
 
-fn field(h: &Harness<'_, PhotocraftApp>, id: u64, name: &str) -> Value {
+fn field(h: &Harness<'_, SaryApp>, id: u64, name: &str) -> Value {
     h.state().ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.get(name).cloned().unwrap_or(Value::Null)
 }
 
-fn set_field(h: &mut Harness<'_, PhotocraftApp>, id: u64, name: &str, v: Value) {
+fn set_field(h: &mut Harness<'_, SaryApp>, id: u64, name: &str, v: Value) {
     h.state_mut().ui.dialog_mut(id).unwrap().fields.insert(name.into(), v);
     h.run_steps(2);
 }
 
-fn click(h: &mut Harness<'_, PhotocraftApp>, label: &str) {
+fn click(h: &mut Harness<'_, SaryApp>, label: &str) {
     // The first match: the set row's buttons come before the dialog's own (its Cancel).
     h.get_all_by_role_and_label(egui::accesskit::Role::Button, label).next().expect("the button").click();
     h.run_steps(3);
@@ -63,7 +63,7 @@ fn a_new_set_saves_the_dialogs_bindings_and_ok_keeps_it() {
     assert!(field(&h, id, "newSetName").is_null());
     // A bad name is refused with a message.
     click(&mut h, "New Set…");
-    set_field(&mut h, id, "newSetName", json!("PhotoCraft Defaults"));
+    set_field(&mut h, id, "newSetName", json!("Sary Defaults"));
     click(&mut h, "Create");
     assert!(field(&h, id, "message").as_str().unwrap_or_default().contains("built-in"), "{:?}", field(&h, id, "message"));
     click(&mut h, "Cancel");
@@ -117,9 +117,9 @@ fn export_and_summarize_write_the_dialogs_bindings() {
     let kys = String::from_utf8(written[0].1.clone()).unwrap();
     assert!(kys.contains("pc-id=\"edit.copy\"><shortcut>F9</shortcut></command>"), "{kys}");
     assert!(kys.contains("pc-id=\"tools.select.pencil\">F6</tool>"), "tools as <tool> rows: {kys}");
-    assert!(kys.contains("KeyboardCustomization/PhotoCraft Defaults="), "{kys}");
+    assert!(kys.contains("KeyboardCustomization/Sary Defaults="), "{kys}");
     // The file reads back with the same bindings.
-    let set = photocraft_engine::kys::parse(&kys).unwrap();
+    let set = sary_engine::kys::parse(&kys).unwrap();
     assert!(set.commands.iter().any(|c| c.id.as_deref() == Some("edit.copy") && c.shortcuts == ["F9"]));
     let html = String::from_utf8(written[1].1.clone()).unwrap();
     assert!(html.contains("<td>Copy</td><td>F9</td>") && html.contains("<h2>Edit</h2>"), "{html}");

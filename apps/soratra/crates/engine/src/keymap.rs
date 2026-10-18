@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(m.resolve(&reg, "Mod+U").map(|s| s.id), Some("format.underline"));
 
         // The command does the same for agents, without opening the dialog.
-        let mut s = crate::Session::new(wordcraft_doc::Document::new());
+        let mut s = crate::Session::new(soratra_doc::Document::new());
         let r = s.run("tools.customizeKeyboard", &json!({"assign": {"command": "format.italic", "key": "Mod+B"}, "key": "Mod+B"})).unwrap();
         assert_eq!((r["replaced"].as_str(), r["assignedTo"].as_str()), (Some("format.bold"), Some("format.italic")));
         assert!(s.ui_requests.is_empty(), "programmatic calls never open dialogs");

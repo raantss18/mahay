@@ -23,7 +23,7 @@ mod windows;
 /// Callers perform ICC conversion and compose page pixels/vector strokes. Other platforms
 /// return `rgb::PrintError::Unsupported`; the PDF spooler remains independent of this API.
 pub mod rgb {
-    pub use craft_winprint_gdi::*;
+    pub use mahay_winprint_gdi::*;
 }
 
 /// A system spooler failure. Document permissions belong to the caller.
@@ -92,7 +92,7 @@ impl Default for Job {
             duplex: None,
             scaling: Scaling::Exact,
             grayscale: false,
-            title: "Craft".into(),
+            title: "Mahay".into(),
             options: Vec::new(),
         }
     }
@@ -167,7 +167,7 @@ pub struct PrinterOption {
     pub default: String,
 }
 
-/// Options Craft's Print dialog sets itself (paper, two-sided, collation), so the driver's
+/// Options Mahay's Print dialog sets itself (paper, two-sided, collation), so the driver's
 /// copies of them are neither shown nor sent.
 pub const HANDLED_OPTIONS: &[&str] = &["PageSize", "PageRegion", "Duplex", "Collate", "ImageableArea", "PaperDimension"];
 
@@ -190,7 +190,7 @@ fn name_label(s: &str) -> (&str, &str) {
 }
 
 /// The job options a PPD offers, in file order, without the installable-hardware group and the
-/// options Craft sets itself ([`HANDLED_OPTIONS`]). Lenient: malformed lines are skipped.
+/// options Mahay sets itself ([`HANDLED_OPTIONS`]). Lenient: malformed lines are skipped.
 pub fn parse_ppd(ppd: &str) -> Vec<PrinterOption> {
     let mut out: Vec<PrinterOption> = Vec::new();
     let (mut group, mut group_key) = (String::new(), String::new());
@@ -341,7 +341,7 @@ pub fn open_printer_preferences(printer: &str) -> Result<(), Error> {
 /// interface language (`AppleLanguages`) unless `SOFTWARE` is set, in which case it uses `LANG`.
 fn lpstat_with(args: &[&str]) -> std::process::Command {
     let mut c = std::process::Command::new("lpstat");
-    c.args(args).env("LC_ALL", "C").env("LANG", "C").env("SOFTWARE", "Craft");
+    c.args(args).env("LC_ALL", "C").env("LANG", "C").env("SOFTWARE", "Mahay");
     c
 }
 
@@ -412,7 +412,7 @@ pub(crate) fn printer_list(queues: impl IntoIterator<Item = (String, Option<bool
     queues.into_iter().map(|(name, two_sided)| Printer { default: default == Some(name.as_str()), name, two_sided }).collect()
 }
 
-/// A printer list in the text form craft-print's former PowerShell backend printed: one per line,
+/// A printer list in the text form mahay-print's former PowerShell backend printed: one per line,
 /// `*` before the system default, followed by a tab and 2/1 for duplex support. The first `*`
 /// wins when a broken spooler marks more than one. [`printers`] no longer uses it; it stays for
 /// callers that parse lists in this form.

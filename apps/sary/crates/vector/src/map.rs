@@ -8,8 +8,8 @@
 //!   points stray from the mapped curve by more than a tolerance, so the result adds anchors where
 //!   the warp bends it.
 
-use photocraft_doc::{Knot, Path, Subpath};
-use photocraft_geom::Point;
+use sary_doc::{Knot, Path, Subpath};
+use sary_geom::Point;
 
 /// Every anchor and control point of `path` through `f` (no subdivision).
 pub fn map_points(path: &Path, f: impl Fn(Point) -> Point) -> Path {

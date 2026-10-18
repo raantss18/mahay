@@ -32,7 +32,7 @@ pub static ICONS: &[(&str, &[u8])] = &[
     ("cloud", include_bytes!("../../../assets/icons/cloud.svg")),
     ("compass", include_bytes!("../../../assets/icons/compass.svg")),
     ("contrast", include_bytes!("../../../assets/icons/contrast.svg")),
-    // PhotoCraft original: the Convert Point tool glyph.
+    // Sary original: the Convert Point tool glyph.
     ("convert-point", include_bytes!("../../../assets/icons/convert-point.svg")),
     ("copy", include_bytes!("../../../assets/icons/copy.svg")),
     ("crop", include_bytes!("../../../assets/icons/crop.svg")),
@@ -56,7 +56,7 @@ pub static ICONS: &[(&str, &[u8])] = &[
     ("folder-plus", include_bytes!("../../../assets/icons/folder-plus.svg")),
     ("frame-placeholder", include_bytes!("../../../assets/icons/frame-placeholder.svg")),
     ("gauge", include_bytes!("../../../assets/icons/gauge.svg")),
-    // PhotoCraft original: the Gradient tool glyph (a rectangle filled with a linear ramp).
+    // Sary original: the Gradient tool glyph (a rectangle filled with a linear ramp).
     ("gradient", include_bytes!("../../../assets/icons/gradient.svg")),
     ("grid-2x2", include_bytes!("../../../assets/icons/grid-2x2.svg")),
     ("grid-3x3", include_bytes!("../../../assets/icons/grid-3x3.svg")),
@@ -74,7 +74,7 @@ pub static ICONS: &[(&str, &[u8])] = &[
     ("lock", include_bytes!("../../../assets/icons/lock.svg")),
     ("lock-open", include_bytes!("../../../assets/icons/lock-open.svg")),
     ("lollipop", include_bytes!("../../../assets/icons/lollipop.svg")),
-    // PhotoCraft originals: the Single Row / Single Column Marquee glyphs.
+    // Sary originals: the Single Row / Single Column Marquee glyphs.
     ("marquee-column", include_bytes!("../../../assets/icons/marquee-column.svg")),
     ("marquee-row", include_bytes!("../../../assets/icons/marquee-row.svg")),
     ("maximize-2", include_bytes!("../../../assets/icons/maximize-2.svg")),

@@ -1,7 +1,7 @@
 //! Photo Album dialog: the Insert ribbon opens it, and Create inserts the pictures in one step.
 
-use deckcraft_engine::Session;
-use deckcraft_model::ShapeKind;
+use seho_engine::Session;
+use seho_model::ShapeKind;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
@@ -78,7 +78,7 @@ fn create_inserts_the_album_in_one_step() {
 
 #[test]
 fn update_reflows_the_open_album() {
-    let data = deckcraft_engine::cmd::base64_encode(&png());
+    let data = seho_engine::cmd::base64_encode(&png());
     let mut app = SlideApp::new(Session::with_new(), Services::default());
     app.run("insert.photoAlbum", json!({"pictures": [{"name": "hill.png", "data": data}, {"name": "lake.png", "data": data}], "layout": "1"}))
         .expect("create");

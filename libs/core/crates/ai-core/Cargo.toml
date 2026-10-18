@@ -1,6 +1,6 @@
 [package]
-name = "craft-ai-core"
-description = "Shared data model for AI connections, roles, requests and jobs across the Craft apps"
+name = "mahay-ai-core"
+description = "Shared data model for AI connections, roles, requests and jobs across the Mahay apps"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -3,11 +3,11 @@
 
 use std::sync::Arc;
 
-use wordcraft_doc::Rgb;
-use wordcraft_doc::para::Paragraph;
-use wordcraft_doc::props::{Align, Border, BorderStyle, Borders, CellProps, HeightRule, RowProps, TableProps, VAlign, VMerge};
-use wordcraft_doc::table::{Cell, Row, Table};
-use wordcraft_doc::{Block, Blocks, para_block};
+use soratra_doc::Rgb;
+use soratra_doc::para::Paragraph;
+use soratra_doc::props::{Align, Border, BorderStyle, Borders, CellProps, HeightRule, RowProps, TableProps, VAlign, VMerge};
+use soratra_doc::table::{Cell, Row, Table};
+use soratra_doc::{Block, Blocks, para_block};
 
 use crate::fmt;
 use crate::sprm::{self, Prl};

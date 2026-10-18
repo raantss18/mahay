@@ -7,7 +7,7 @@
 
 use egui::{Pos2, Rect, vec2};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::paint_mouse::Buttons;
 use crate::state::View;
@@ -50,7 +50,7 @@ pub fn anchor_view(view: &mut View, xf: &ViewXform, screen: Pos2, doc: [f64; 2],
 
 /// Route the canvas buttons for the Zoom tool. Returns true when it consumed the drag (the
 /// canvas then handles only the click).
-pub fn drag(app: &PhotocraftApp, ctx: &egui::Context, view: &mut View, xf: &ViewXform, b: &Buttons, pointer: Option<Pos2>) -> bool {
+pub fn drag(app: &SaryApp, ctx: &egui::Context, view: &mut View, xf: &ViewXform, b: &Buttons, pointer: Option<Pos2>) -> bool {
     let scrubby = app.ui.tool_options.zoom_scrubby;
     if b.started {
         let anchor = ctx.input(|i| i.pointer.press_origin()).filter(|p| xf.rect.contains(*p)).or(pointer);
@@ -122,15 +122,15 @@ mod tests {
         assert_eq!(scrub_zoom(2.0, f32::NAN, DOC), 2.0);
     }
 
-    fn harness(scrubby: bool, ppp: f32) -> Harness<'static, PhotocraftApp> {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn harness(scrubby: bool, ppp: f32) -> Harness<'static, SaryApp> {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.sync_views();
         app.ui.extras.rulers = false;
         app.ui.tool = crate::state::Tool::Zoom;
         app.ui.tool_options.zoom_scrubby = scrubby;
         let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).with_pixels_per_point(ppp).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 // Fonts set up after the first frame only apply from the next one.
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -139,16 +139,16 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(4);
         h
     }
 
-    fn view_xf(h: &Harness<'static, PhotocraftApp>) -> ViewXform {
+    fn view_xf(h: &Harness<'static, SaryApp>) -> ViewXform {
         ViewXform::active(h.state()).unwrap()
     }
 
-    fn press(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, pressed: bool) {
+    fn press(h: &mut Harness<'static, SaryApp>, p: Pos2, pressed: bool) {
         h.event(Event::PointerButton { pos: p, button: PointerButton::Primary, pressed, modifiers: Default::default() });
         h.step();
     }

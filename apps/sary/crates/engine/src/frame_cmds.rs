@@ -6,8 +6,8 @@
 //! the canvas, empty or holding the layer it was drawn over. Headless and scriptable like
 //! every other command.
 
-use photocraft_doc::{Layer, LayerContent, LayerId, LayerMask, PixelFormat};
-use photocraft_geom::Rect;
+use sary_doc::{Layer, LayerContent, LayerId, LayerMask, PixelFormat};
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -186,8 +186,8 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::{Layer, LayerContent};
-    use photocraft_geom::Rect;
+    use sary_doc::{Layer, LayerContent};
+    use sary_geom::Rect;
 
     fn session() -> (Session, LayerId, LayerId) {
         let mut s = Session::new();
@@ -196,9 +196,9 @@ mod tests {
             .edit("setup", |doc, _| {
                 let fmt = doc.pixel_format();
                 let mut a = Layer::raster("A", fmt);
-                a.surface_mut().unwrap().fill_rect(Rect::new(4, 4, 24, 24), &photocraft_raster::from_rgba(&fmt, [1.0, 0.0, 0.0, 1.0]));
+                a.surface_mut().unwrap().fill_rect(Rect::new(4, 4, 24, 24), &sary_raster::from_rgba(&fmt, [1.0, 0.0, 0.0, 1.0]));
                 let mut b = Layer::raster("B", fmt);
-                b.surface_mut().unwrap().fill_rect(Rect::new(30, 20, 50, 40), &photocraft_raster::from_rgba(&fmt, [0.0, 0.0, 1.0, 1.0]));
+                b.surface_mut().unwrap().fill_rect(Rect::new(30, 20, 50, 40), &sary_raster::from_rgba(&fmt, [0.0, 0.0, 1.0, 1.0]));
                 let (ia, ib) = (a.id, b.id);
                 doc.layers.push(a);
                 doc.layers.push(b);
@@ -283,7 +283,7 @@ mod tests {
         let tid = s
             .edit("setup", |doc, _| {
                 let cache = doc.layer(a).and_then(|l| l.surface()).cloned();
-                let t = Layer::new("T", LayerContent::Text(photocraft_doc::TextLayer { cache, ..Default::default() }));
+                let t = Layer::new("T", LayerContent::Text(sary_doc::TextLayer { cache, ..Default::default() }));
                 let id = t.id;
                 doc.layers.push(t);
                 Ok(id)

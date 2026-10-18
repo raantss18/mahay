@@ -2,9 +2,9 @@
 //! hide effects) on small synthetic documents with hand-computed pixels, at 8, 16 and 32 bits.
 
 use super::*;
-use photocraft_color::{Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Effect, FxCommon, FxPaint, Knockout, LayerMask, StrokeFx, StrokePosition};
-use photocraft_geom::Size;
+use sary_color::{Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{Effect, FxCommon, FxPaint, Knockout, LayerMask, StrokeFx, StrokePosition};
+use sary_geom::Size;
 
 const E: f32 = 2.0 / 255.0;
 const DEPTHS: [SampleType; 3] = [SampleType::U8, SampleType::U16, SampleType::F32];
@@ -37,7 +37,7 @@ fn doc(depth: SampleType, background: bool) -> Document {
 
 fn solid(d: &Document, name: &str, r: Rect, c: [f32; 4]) -> Layer {
     let mut l = Layer::raster(name, d.pixel_format());
-    l.surface_mut().unwrap().fill_rect(r, &photocraft_raster::from_rgba(&d.pixel_format(), c));
+    l.surface_mut().unwrap().fill_rect(r, &sary_raster::from_rgba(&d.pixel_format(), c));
     l
 }
 
@@ -166,8 +166,8 @@ fn knockout_follows_masks_and_transparency_shapes() {
         d.layers.push(green);
         let mut k = knocker(&d, Knockout::Deep);
         // A mask hiding x >= 3: only x < 3 knocks out.
-        let mut m = photocraft_raster::Surface::new(PixelFormat::new(ColorMode::Grayscale, depth, false));
-        m.fill_rect(Rect::new(0, 0, 3, 8), &photocraft_raster::from_rgba(&m.format(), [1.0; 4]));
+        let mut m = sary_raster::Surface::new(PixelFormat::new(ColorMode::Grayscale, depth, false));
+        m.fill_rect(Rect::new(0, 0, 3, 8), &sary_raster::from_rgba(&m.format(), [1.0; 4]));
         k.mask = Some(LayerMask { surface: m, enabled: true, linked: true, density: 1.0, feather: 0.0 });
         d.layers.push(k);
         check(&d, 1, 2, WHITE, "inside the mask");
@@ -303,7 +303,7 @@ fn outside_stroke() -> Effect {
 
 #[test]
 fn shapeless_stroke_tile_skips_match_full_region_across_blending_settings() {
-    use photocraft_doc::BlendRange;
+    use sary_doc::BlendRange;
 
     let modes = [BlendMode::Normal, BlendMode::Multiply, BlendMode::Screen, BlendMode::Difference];
     for depth in DEPTHS {
@@ -352,7 +352,7 @@ fn shapeless_stroke_tile_skips_match_full_region_across_blending_settings() {
 
 #[test]
 fn shapeless_stroke_skip_rejects_advanced_blending_and_masks() {
-    use photocraft_doc::{BlendRange, Path, Subpath, VectorMask};
+    use sary_doc::{BlendRange, Path, Subpath, VectorMask};
 
     let d = doc(SampleType::U8, true);
     let mut l = solid(&d, "stroke", Rect::new(2, 2, 8, 8), BLUE);
@@ -387,8 +387,8 @@ fn layer_mask_hides_effects() {
         let mut l = solid(&d, "l", full(&d), BLUE);
         l.effects.items = vec![inside_stroke()];
         // The mask shows x < 8.
-        let mut m = photocraft_raster::Surface::new(PixelFormat::new(ColorMode::Grayscale, depth, false));
-        m.fill_rect(Rect::new(0, 0, 8, 8), &photocraft_raster::from_rgba(&m.format(), [1.0; 4]));
+        let mut m = sary_raster::Surface::new(PixelFormat::new(ColorMode::Grayscale, depth, false));
+        m.fill_rect(Rect::new(0, 0, 8, 8), &sary_raster::from_rgba(&m.format(), [1.0; 4]));
         l.mask = Some(LayerMask { surface: m, enabled: true, linked: true, density: 1.0, feather: 0.0 });
         d.layers.push(l);
         // Default: the stroke follows the masked shape, so it runs along the mask's edge.
@@ -411,7 +411,7 @@ fn layer_mask_hides_effects() {
 
 #[test]
 fn vector_mask_hides_effects() {
-    use photocraft_doc::{Path, Subpath, VectorMask};
+    use sary_doc::{Path, Subpath, VectorMask};
     for depth in DEPTHS {
         let mut d = doc(depth, true);
         let mut l = solid(&d, "l", full(&d), BLUE);
@@ -430,7 +430,7 @@ fn vector_mask_hides_effects() {
 /// `effects_source` hand it temporary clones whose addresses get reused (#4426).
 #[test]
 fn vector_mask_cache_does_not_mix_up_layers() {
-    use photocraft_doc::{Path, Subpath, VectorMask};
+    use sary_doc::{Path, Subpath, VectorMask};
     for depth in DEPTHS {
         let mut d = doc(depth, true);
         for (name, color, x0, x1) in [("a", BLUE, -4.0, 6.0), ("b", GREEN, 6.0, 16.0)] {

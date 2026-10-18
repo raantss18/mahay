@@ -3,12 +3,12 @@
 //! picks one blend mode. The criteria live in `UiState` (`layer_filter*`), so the control channel
 //! can read and set them.
 
-use photocraft_color::BlendMode;
-use photocraft_doc::{Layer, LayerContent};
+use sary_color::BlendMode;
+use sary_doc::{Layer, LayerContent};
 use serde::{Deserialize, Serialize};
 
 use crate::state::UiState;
-use crate::{PhotocraftApp, icons, widgets};
+use crate::{SaryApp, icons, widgets};
 
 /// What the Layers panel filters by.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -91,7 +91,7 @@ pub fn patched(current: &UiState, v: &serde_json::Value) -> Result<Filter, Strin
     }
     if let Some(mode) = o.get("mode") {
         let name = mode.as_str().ok_or("layerFilter.mode must be a blend mode name")?;
-        f.mode = photocraft_engine::commands::blend_from_str(name)
+        f.mode = sary_engine::commands::blend_from_str(name)
             .filter(|m| *m == BlendMode::PassThrough || BlendMode::LAYER_MODES.contains(m))
             .ok_or_else(|| format!("layerFilter.mode: unknown blend mode `{name}`"))?;
     }
@@ -119,7 +119,7 @@ fn kind(l: &Layer) -> &'static str {
 }
 
 /// Draw the filter row: the type dropdown, then that type's controls.
-pub fn bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 2.0;
         let by = [(FilterBy::Kind, tl!("Kind")), (FilterBy::Name, tl!("Name")), (FilterBy::Mode, tl!("Mode"))];

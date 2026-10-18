@@ -1,7 +1,7 @@
 //! Title bar, ribbon tabs and the ribbon card with every tab's groups.
 
-use deckcraft_engine::Target;
-use deckcraft_model::{ShapeKind, anim::AnimClass};
+use seho_engine::Target;
+use seho_model::{ShapeKind, anim::AnimClass};
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
@@ -37,11 +37,11 @@ fn title_geometry(integrated: bool) -> (f32, f32, f32) {
 /// Is engine command `id` enabled right now?
 /// Whether `id` names an engine or UI command.
 pub fn known(id: &str) -> bool {
-    deckcraft_engine::find_command(id).is_some() || crate::UI_COMMANDS.iter().any(|c| c.0 == id)
+    seho_engine::find_command(id).is_some() || crate::UI_COMMANDS.iter().any(|c| c.0 == id)
 }
 
 pub fn enabled(app: &SlideApp, id: &str) -> bool {
-    match deckcraft_engine::find_command(id) {
+    match seho_engine::find_command(id) {
         Some(c) => (c.enabled)(&app.session).is_ok(),
         None => crate::UI_COMMANDS.iter().any(|c| c.0 == id),
     }
@@ -76,7 +76,7 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         let dirty = app.session.active().is_some_and(|d| d.is_dirty());
         crate::qat::show(app, &mut child);
         let title =
-            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "DeckCraft".into());
+            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "Seho".into());
         ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
         // Right side.
         let mut right = ui.new_child(
@@ -139,7 +139,7 @@ fn contextual(app: &SlideApp) -> Vec<&'static str> {
         v.push("Table Design");
         v.push("Layout");
     }
-    if deckcraft_engine::cmd::smartart::selected(st).is_some() {
+    if seho_engine::cmd::smartart::selected(st).is_some() {
         v.push("SmartArt Design");
     }
     if shapes.iter().any(|s| matches!(s.kind, ShapeKind::Chart(_))) {
@@ -302,7 +302,7 @@ fn toggle(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, on
 }
 
 fn tip(id: &str, label: &str) -> String {
-    let sc = deckcraft_engine::find_command(id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.2));
+    let sc = seho_engine::find_command(id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.2));
     match sc {
         Some(s) => format!("{label} ({})", pretty_shortcut(s)),
         None => label.to_string(),
@@ -317,8 +317,8 @@ pub fn pretty_shortcut(s: &str) -> String {
     }
 }
 
-fn scheme(app: &SlideApp) -> deckcraft_color::ColorScheme {
-    app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.scheme())).unwrap_or_else(|| deckcraft_model::Theme::default().colors)
+fn scheme(app: &SlideApp) -> seho_color::ColorScheme {
+    app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.scheme())).unwrap_or_else(|| seho_model::Theme::default().colors)
 }
 
 /// The formatting state at the selection (bold, size…).
@@ -373,7 +373,7 @@ fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
 }
 
 fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
-    let layouts: Vec<(String, deckcraft_model::LayoutId)> = app
+    let layouts: Vec<(String, seho_model::LayoutId)> = app
         .session
         .active()
         .and_then(|d| d.doc.masters.first().map(|m| m.layouts.iter().map(|l| (l.name.clone(), l.id)).collect()))
@@ -384,11 +384,11 @@ fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
             let resp = ui.vertical(|ui| {
                 let (rect, resp) = ui.allocate_exact_size(vec2(96.0, 54.0), Sense::click());
                 if let (Some(d), Some(li)) = (app.session.active(), idx) {
-                    let img = deckcraft_render::render_layout(
+                    let img = seho_render::render_layout(
                         &d.doc,
                         0,
                         Some(li),
-                        &deckcraft_render::RenderOpts {
+                        &seho_render::RenderOpts {
                             scale: 192.0 / d.doc.slide_size.width.max(1.0),
                             edit: true,
                             size: Some((192, 108)),
@@ -469,7 +469,7 @@ pub fn font_families(app: &SlideApp) -> Vec<String> {
         v.push(m.theme.fonts.major.latin.clone());
         v.push(m.theme.fonts.minor.latin.clone());
     }
-    v.extend(deckcraft_fonts::FontDb::global().families());
+    v.extend(seho_fonts::FontDb::global().families());
     v.dedup();
     v
 }
@@ -502,7 +502,7 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                         }
                     }
                     ui.separator();
-                    // Fonts installed while DeckCraft runs (e.g. into ~/.local/share/fonts).
+                    // Fonts installed while Seho runs (e.g. into ~/.local/share/fonts).
                     if ui.button("Rescan Installed Fonts").clicked() {
                         run(app, "font.rescan", json!({}));
                         ui.close();
@@ -510,7 +510,7 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                 });
                 let size_text = size.map(|s| widgets::fmt_num(s, "")).unwrap_or_default();
                 dropdown(ui, "size", &size_text, 52.0, en, |ui| {
-                    for s in deckcraft_engine::cmd::format::SIZES.iter().chain([72.0, 80.0, 88.0, 96.0].iter()) {
+                    for s in seho_engine::cmd::format::SIZES.iter().chain([72.0, 80.0, 88.0, 96.0].iter()) {
                         if ui.button(widgets::fmt_num(*s, "")).clicked() {
                             run(app, "format.size", json!({"size": s}));
                             ui.close();
@@ -581,9 +581,9 @@ fn font_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
 }
 
 /// A ColorRef as a command colour parameter.
-pub fn cref_param(c: &deckcraft_model::ColorRef) -> Value {
+pub fn cref_param(c: &seho_model::ColorRef) -> Value {
     match &c.base {
-        deckcraft_model::ColorBase::Scheme { slot } => {
+        seho_model::ColorBase::Scheme { slot } => {
             let mut o = serde_json::Map::new();
             o.insert("scheme".into(), json!(slot.xml_name()));
             for m in &c.mods {
@@ -593,8 +593,8 @@ pub fn cref_param(c: &deckcraft_model::ColorRef) -> Value {
             }
             Value::Object(o)
         }
-        deckcraft_model::ColorBase::Rgb { rgb } if c.mods.is_empty() => json!(format!("#{}", rgb.hex())),
-        deckcraft_model::ColorBase::Rgb { rgb } => {
+        seho_model::ColorBase::Rgb { rgb } if c.mods.is_empty() => json!(format!("#{}", rgb.hex())),
+        seho_model::ColorBase::Rgb { rgb } => {
             let mut o = serde_json::Map::new();
             o.insert("rgb".into(), json!(format!("#{}", rgb.hex())));
             for m in &c.mods {
@@ -622,9 +622,9 @@ fn smartart_gallery(
     current: &str,
     style: &str,
     colors: &str,
-    nodes: Option<&[deckcraft_model::DiagramNode]>,
+    nodes: Option<&[seho_model::DiagramNode]>,
 ) {
-    use deckcraft_engine::cmd::smartart::{LAYOUTS, category};
+    use seho_engine::cmd::smartart::{LAYOUTS, category};
     ui.set_min_width(440.0);
     let slide = app.session.active().map(|d| d.selection.slide).unwrap_or(0);
     egui::ScrollArea::vertical().max_height(520.0).show(ui, |ui| {
@@ -814,11 +814,11 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
     let mut out = None;
     ui.set_max_width(330.0);
     egui::ScrollArea::vertical().max_height(420.0).show(ui, |ui| {
-        for cat in deckcraft_geom::preset::Category::ALL {
+        for cat in seho_geom::preset::Category::ALL {
             ui.label(egui::RichText::new(cat.label()).font(theme::bold(12.0)));
             ui.horizontal_wrapped(|ui| {
                 ui.spacing_mut().item_spacing = vec2(1.0, 1.0);
-                for p in deckcraft_geom::preset::CATALOG.iter().filter(|p| p.category == cat) {
+                for p in seho_geom::preset::CATALOG.iter().filter(|p| p.category == cat) {
                     let (r, resp) = ui.allocate_exact_size(vec2(26.0, 26.0), Sense::click());
                     if resp.hovered() {
                         ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
@@ -828,8 +828,8 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
                         out = Some(p.name);
                     }
                 }
-                if cat == deckcraft_geom::preset::Category::Lines {
-                    for (name, label) in deckcraft_engine::tools::FREEFORM_TOOLS {
+                if cat == seho_geom::preset::Category::Lines {
+                    for (name, label) in seho_engine::tools::FREEFORM_TOOLS {
                         let (r, resp) = ui.allocate_exact_size(vec2(26.0, 26.0), Sense::click());
                         if resp.hovered() {
                             ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
@@ -853,7 +853,7 @@ pub fn shapes_gallery(ui: &mut Ui) -> Option<&'static str> {
 /// Draw a preset's outline (gallery icons).
 pub fn paint_preset(p: &egui::Painter, r: Rect, name: &str, fill: Color32, stroke: Color32) {
     let (w, h) = (r.width() as f64, r.height() as f64);
-    let Some(g) = deckcraft_geom::preset::build(name, w, h, &[]) else { return };
+    let Some(g) = seho_geom::preset::build(name, w, h, &[]) else { return };
     for sp in &g.paths {
         let mut pts: Vec<egui::Pos2> = vec![];
         let mut polys: Vec<(Vec<egui::Pos2>, bool)> = vec![];
@@ -876,7 +876,7 @@ pub fn paint_preset(p: &egui::Painter, r: Rect, name: &str, fill: Color32, strok
             polys.push((pts, false));
         }
         for (poly, closed) in polys {
-            if closed && fill != Color32::TRANSPARENT && sp.fill != deckcraft_geom::preset::FillMode::None {
+            if closed && fill != Color32::TRANSPARENT && sp.fill != seho_geom::preset::FillMode::None {
                 p.add(egui::Shape::Path(egui::epaint::PathShape { points: poly.clone(), closed: true, fill, stroke: Stroke::NONE.into() }));
             }
             if sp.stroke {
@@ -897,11 +897,11 @@ enum Fl {
     Close,
 }
 
-fn kurbo_flatten(path: &deckcraft_geom::BezPath, mut f: impl FnMut(Fl)) {
-    deckcraft_geom::preset_flatten(path, &mut |el| match el {
-        deckcraft_geom::PathEl::MoveTo(p) => f(Fl::Move(p.x, p.y)),
-        deckcraft_geom::PathEl::LineTo(p) => f(Fl::Line(p.x, p.y)),
-        deckcraft_geom::PathEl::ClosePath => f(Fl::Close),
+fn kurbo_flatten(path: &seho_geom::BezPath, mut f: impl FnMut(Fl)) {
+    seho_geom::preset_flatten(path, &mut |el| match el {
+        seho_geom::PathEl::MoveTo(p) => f(Fl::Move(p.x, p.y)),
+        seho_geom::PathEl::LineTo(p) => f(Fl::Line(p.x, p.y)),
+        seho_geom::PathEl::ClosePath => f(Fl::Close),
         _ => {}
     });
 }
@@ -912,7 +912,7 @@ fn drawing_group(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Shapes, "Shapes", en).on_hover_text("Shapes");
         egui::Popup::menu(&r).show(|ui| {
             if let Some(p) = shapes_gallery(ui) {
-                app.session.set_tool(deckcraft_engine::ToolKind::Shape { preset: p.to_string() });
+                app.session.set_tool(seho_engine::ToolKind::Shape { preset: p.to_string() });
             }
         });
         big(app, ui, Icon::TextBox, "Text Box", "insert.textBox", json!({}));
@@ -952,7 +952,7 @@ fn drawing_group(app: &mut SlideApp, ui: &mut Ui) {
     });
 }
 
-pub fn outline_menu(app: &mut SlideApp, ui: &mut Ui, sc: &deckcraft_color::ColorScheme) {
+pub fn outline_menu(app: &mut SlideApp, ui: &mut Ui, sc: &seho_color::ColorScheme) {
     if let Some(c) = widgets::color_grid(ui, sc, Some("No Outline")) {
         match c {
             Some(c) => run(app, "shape.line", json!({"color": cref_param(&c)})),
@@ -1068,13 +1068,13 @@ pub fn effects_menu(app: &mut SlideApp, ui: &mut Ui) {
 fn quick_styles(app: &mut SlideApp, ui: &mut Ui) {
     let sc = scheme(app);
     let slots = [
-        deckcraft_color::SchemeSlot::Dk1,
-        deckcraft_color::SchemeSlot::Accent1,
-        deckcraft_color::SchemeSlot::Accent2,
-        deckcraft_color::SchemeSlot::Accent3,
-        deckcraft_color::SchemeSlot::Accent4,
-        deckcraft_color::SchemeSlot::Accent5,
-        deckcraft_color::SchemeSlot::Accent6,
+        seho_color::SchemeSlot::Dk1,
+        seho_color::SchemeSlot::Accent1,
+        seho_color::SchemeSlot::Accent2,
+        seho_color::SchemeSlot::Accent3,
+        seho_color::SchemeSlot::Accent4,
+        seho_color::SchemeSlot::Accent5,
+        seho_color::SchemeSlot::Accent6,
     ];
     egui::Grid::new("quickstyles").spacing(vec2(4.0, 4.0)).show(ui, |ui| {
         for row in 0..6 {
@@ -1210,7 +1210,7 @@ fn insert(app: &mut SlideApp, ui: &mut Ui) {
                 ui.close();
             }
             if ui.button("Draw Table").clicked() {
-                app.session.set_tool(deckcraft_engine::ToolKind::Shape { preset: deckcraft_engine::tools::DRAW_TABLE.into() });
+                app.session.set_tool(seho_engine::ToolKind::Shape { preset: seho_engine::tools::DRAW_TABLE.into() });
                 ui.close();
             }
         });
@@ -1225,7 +1225,7 @@ fn insert(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Shapes, "Shapes", enabled(app, "shape.insert"));
         egui::Popup::menu(&r).show(|ui| {
             if let Some(p) = shapes_gallery(ui) {
-                app.session.set_tool(deckcraft_engine::ToolKind::Shape { preset: p.to_string() });
+                app.session.set_tool(seho_engine::ToolKind::Shape { preset: p.to_string() });
             }
         });
         let r = big_button(ui, Icon::Icons, "Icons", enabled(app, "insert.icon"));
@@ -1330,7 +1330,7 @@ fn icon_library(app: &mut SlideApp, ui: &mut Ui) {
     ui.add(egui::TextEdit::singleline(&mut query).hint_text("Search icons").desired_width(ui.available_width()));
     let q = query.trim().to_lowercase();
     ui.data_mut(|d| d.insert_temp(id, query));
-    let icons = deckcraft_engine::icons::icons();
+    let icons = seho_engine::icons::icons();
     egui::ScrollArea::vertical().id_salt("icon-scroll").max_height(420.0).show(ui, |ui| {
         if q.is_empty() {
             let mut cats: Vec<&str> = Vec::new();
@@ -1364,7 +1364,7 @@ fn icon_library(app: &mut SlideApp, ui: &mut Ui) {
     });
 }
 
-fn icon_cell(app: &mut SlideApp, ui: &mut Ui, icon: &deckcraft_engine::icons::Icon, color: Color32, hover: Color32) {
+fn icon_cell(app: &mut SlideApp, ui: &mut Ui, icon: &seho_engine::icons::Icon, color: Color32, hover: Color32) {
     let (r, resp) = ui.allocate_exact_size(vec2(36.0, 36.0), Sense::click());
     if resp.hovered() {
         ui.painter().rect_filled(r, CornerRadius::same(4), hover);
@@ -1377,12 +1377,12 @@ fn icon_cell(app: &mut SlideApp, ui: &mut Ui, icon: &deckcraft_engine::icons::Ic
 }
 
 /// Stroke a Lucide outline into a gallery cell. The line is the design stroke scaled to the cell.
-fn paint_icon(p: &egui::Painter, r: Rect, icon: &deckcraft_engine::icons::Icon, color: Color32) {
-    let Some(src) = deckcraft_engine::icons::outline(icon.name) else { return };
+fn paint_icon(p: &egui::Painter, r: Rect, icon: &seho_engine::icons::Icon, color: Color32) {
+    let Some(src) = seho_engine::icons::outline(icon.name) else { return };
     let mut bp = src.clone();
     let (w, h) = (r.width().max(1.0) as f64, r.height().max(1.0) as f64);
-    bp.apply_affine(deckcraft_geom::Affine::scale_non_uniform(w / deckcraft_engine::icons::VIEW, h / deckcraft_engine::icons::VIEW));
-    let sw = ((r.width() * icon.stroke as f32) / deckcraft_engine::icons::VIEW as f32).clamp(1.0, 3.5);
+    bp.apply_affine(seho_geom::Affine::scale_non_uniform(w / seho_engine::icons::VIEW, h / seho_engine::icons::VIEW));
+    let sw = ((r.width() * icon.stroke as f32) / seho_engine::icons::VIEW as f32).clamp(1.0, 3.5);
     let mut pts: Vec<egui::Pos2> = vec![];
     let mut polys: Vec<(Vec<egui::Pos2>, bool)> = vec![];
     kurbo_flatten(&bp, |el| match el {
@@ -1416,7 +1416,7 @@ fn paint_icon(p: &egui::Painter, r: Rect, icon: &deckcraft_engine::icons::Icon, 
 // ---------- Draw ----------
 
 fn draw(app: &mut SlideApp, ui: &mut Ui) {
-    use deckcraft_engine::ToolKind;
+    use seho_engine::ToolKind;
     let cur = app.session.tool.kind.clone();
     group(ui, |ui| {
         let sel = matches!(cur, ToolKind::Select);
@@ -1425,16 +1425,16 @@ fn draw(app: &mut SlideApp, ui: &mut Ui) {
         }
         let er = matches!(&cur, ToolKind::Ink { mode, .. } if mode == "eraser");
         if big_button_ex(ui, Icon::Eraser, "Eraser", true, false, er).0.clicked() {
-            app.session.set_tool(ToolKind::Ink { mode: "eraser".into(), color: deckcraft_color::Rgba::BLACK, width: 2.0 });
+            app.session.set_tool(ToolKind::Ink { mode: "eraser".into(), color: seho_color::Rgba::BLACK, width: 2.0 });
         }
     });
     group(ui, |ui| {
-        let pens: [(Icon, &str, &str, deckcraft_color::Rgba, f64); 5] = [
-            (Icon::Pen, "Black Pen", "pen", deckcraft_color::Rgba::rgb(20, 20, 20), 1.5),
-            (Icon::Pen, "Red Pen", "pen", deckcraft_color::Rgba::rgb(0xD8, 0x3F, 0x3F), 1.5),
-            (Icon::Pen, "Blue Pen", "pen", deckcraft_color::Rgba::rgb(0x2E, 0x6F, 0xD8), 1.5),
-            (Icon::Pencil, "Pencil", "pen", deckcraft_color::Rgba::rgb(90, 90, 90), 1.0),
-            (Icon::HighlighterPen, "Highlighter", "highlighter", deckcraft_color::Rgba::rgb(255, 230, 0), 10.0),
+        let pens: [(Icon, &str, &str, seho_color::Rgba, f64); 5] = [
+            (Icon::Pen, "Black Pen", "pen", seho_color::Rgba::rgb(20, 20, 20), 1.5),
+            (Icon::Pen, "Red Pen", "pen", seho_color::Rgba::rgb(0xD8, 0x3F, 0x3F), 1.5),
+            (Icon::Pen, "Blue Pen", "pen", seho_color::Rgba::rgb(0x2E, 0x6F, 0xD8), 1.5),
+            (Icon::Pencil, "Pencil", "pen", seho_color::Rgba::rgb(90, 90, 90), 1.0),
+            (Icon::HighlighterPen, "Highlighter", "highlighter", seho_color::Rgba::rgb(255, 230, 0), 10.0),
         ];
         for (icon, label, mode, color, width) in pens {
             let on = matches!(&cur, ToolKind::Ink { mode: m, color: c, .. } if m == mode && *c == color);
@@ -1444,7 +1444,7 @@ fn draw(app: &mut SlideApp, ui: &mut Ui) {
         }
     });
     group(ui, |ui| {
-        let has_ink = app.session.doc().is_ok_and(|d| d.shapes().iter().any(|s| matches!(s.kind, deckcraft_model::ShapeKind::Ink { .. })));
+        let has_ink = app.session.doc().is_ok_and(|d| d.shapes().iter().any(|s| matches!(s.kind, seho_model::ShapeKind::Ink { .. })));
         let r = big_button(ui, Icon::InkToShape, "Ink to\nShape", has_ink);
         if r.on_hover_text("Ink to Shape: turn drawn lines, rectangles, ovals and triangles into shapes").clicked() {
             app.session.set_tool(ToolKind::Select);
@@ -1460,7 +1460,7 @@ fn draw(app: &mut SlideApp, ui: &mut Ui) {
 // ---------- Design ----------
 
 fn design(app: &mut SlideApp, ui: &mut Ui) {
-    let themes = deckcraft_model::theme::builtin_themes();
+    let themes = seho_model::theme::builtin_themes();
     let cur = app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.theme.name.clone())).unwrap_or_default();
     group(ui, |ui| {
         let sel = themes.iter().position(|th| th.name == cur);
@@ -1486,8 +1486,8 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
     });
     // Variants: the current theme in its four colour variations.
     if let Some(th) = app.session.active().and_then(|d| d.doc.masters.first().map(|m| m.theme.clone())) {
-        let variants = deckcraft_model::theme::theme_variants(&th);
-        let tiles: Vec<deckcraft_model::Theme> = variants.iter().map(|c| deckcraft_model::Theme { colors: c.clone(), ..th.clone() }).collect();
+        let variants = seho_model::theme::theme_variants(&th);
+        let tiles: Vec<seho_model::Theme> = variants.iter().map(|c| seho_model::Theme { colors: c.clone(), ..th.clone() }).collect();
         let names: Vec<String> = variants.iter().map(|c| c.name.clone()).collect();
         let sel = variants.iter().position(|c| c.colors == th.colors.colors);
         group(ui, |ui| {
@@ -1511,7 +1511,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Colors, "Colors", true);
         r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Colors"));
         egui::Popup::menu(&r).width(240.0).show(|ui| {
-            for cs in deckcraft_model::theme::builtin_color_schemes() {
+            for cs in seho_model::theme::builtin_color_schemes() {
                 ui.horizontal(|ui| {
                     let (rect, resp) = ui.allocate_exact_size(vec2(220.0, 20.0), Sense::click());
                     let p = ui.painter();
@@ -1538,7 +1538,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Fonts, "Fonts", true);
         r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Fonts"));
         egui::Popup::menu(&r).width(220.0).show(|ui| {
-            for fs in deckcraft_model::theme::builtin_font_schemes() {
+            for fs in seho_model::theme::builtin_font_schemes() {
                 if ui.button(format!("{}\n   {} / {}", fs.name, fs.major.latin, fs.minor.latin)).clicked() {
                     run(app, "design.fonts", json!({"name": fs.name}));
                 }
@@ -1552,7 +1552,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::ShapeEffects, "Effects", true);
         r.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "Effects"));
         egui::Popup::menu(&r).width(180.0).show(|ui| {
-            for fs in deckcraft_model::theme::builtin_format_schemes() {
+            for fs in seho_model::theme::builtin_format_schemes() {
                 if ui.button(&fs.name).clicked() {
                     run(app, "design.effects", json!({"name": fs.name}));
                     ui.close();
@@ -1565,10 +1565,10 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
                 let sc = scheme(app);
                 for i in 1..=12 {
                     let slots = [
-                        deckcraft_color::SchemeSlot::Lt1,
-                        deckcraft_color::SchemeSlot::Lt2,
-                        deckcraft_color::SchemeSlot::Dk2,
-                        deckcraft_color::SchemeSlot::Dk1,
+                        seho_color::SchemeSlot::Lt1,
+                        seho_color::SchemeSlot::Lt2,
+                        seho_color::SchemeSlot::Dk2,
+                        seho_color::SchemeSlot::Dk1,
                     ];
                     let base = theme::to_color32(sc.get(slots[(i - 1) % 4]));
                     let shade = match (i - 1) / 4 {
@@ -1612,14 +1612,14 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
     });
 }
 
-pub fn paint_theme_tile(p: &egui::Painter, r: Rect, th: &deckcraft_model::Theme) {
-    let bg = theme::to_color32(th.colors.get(deckcraft_color::SchemeSlot::Lt1));
-    let fg = theme::to_color32(th.colors.get(deckcraft_color::SchemeSlot::Dk1));
+pub fn paint_theme_tile(p: &egui::Painter, r: Rect, th: &seho_model::Theme) {
+    let bg = theme::to_color32(th.colors.get(seho_color::SchemeSlot::Lt1));
+    let fg = theme::to_color32(th.colors.get(seho_color::SchemeSlot::Dk1));
     p.rect(r, CornerRadius::same(2), bg, Stroke::new(1.0, Color32::from_gray(200)), egui::StrokeKind::Inside);
     p.text(r.min + vec2(8.0, r.height() * 0.42), Align2::LEFT_CENTER, "Aa", theme::font(r.height() * 0.38), fg);
     let w = (r.width() - 16.0) / 6.0;
     for k in 0..6 {
-        let c = theme::to_color32(th.colors.colors.get(4 + k).copied().unwrap_or(deckcraft_color::Rgba::BLACK));
+        let c = theme::to_color32(th.colors.colors.get(4 + k).copied().unwrap_or(seho_color::Rgba::BLACK));
         p.rect_filled(Rect::from_min_size(pos2(r.min.x + 8.0 + k as f32 * w, r.max.y - 11.0), vec2(w - 1.5, 5.0)), CornerRadius::ZERO, c);
     }
 }
@@ -1639,7 +1639,7 @@ fn transitions(app: &mut SlideApp, ui: &mut Ui) {
         }
     });
     group(ui, |ui| {
-        let list = deckcraft_model::anim::TRANSITIONS;
+        let list = seho_model::anim::TRANSITIONS;
         let shown: Vec<_> = list.iter().take(12).collect();
         let sel = shown.iter().position(|x| x.0 == kind);
         if let Some(i) = widgets::gallery(
@@ -1679,7 +1679,7 @@ fn transitions(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::EffectOptions, "Effect\nOptions", !rows.is_empty());
         egui::Popup::menu(&r).show(|ui| {
             for &(o, on) in &rows {
-                if ui.selectable_label(on, deckcraft_model::anim::transition_option_label(&kind, o)).clicked() {
+                if ui.selectable_label(on, seho_model::anim::transition_option_label(&kind, o)).clicked() {
                     run(app, "transition.options", json!({"option": o}));
                     ui.close();
                 }
@@ -1706,7 +1706,7 @@ fn transitions(app: &mut SlideApp, ui: &mut Ui) {
                         run(app, "transition.sound", json!({"stopPrevious": true}));
                     }
                     ui.separator();
-                    for (id, label) in deckcraft_engine::sounds::BUILTIN {
+                    for (id, label) in seho_engine::sounds::BUILTIN {
                         if ui.button(label).clicked() {
                             let lp = cur.as_ref().is_some_and(|t| t.sound_loop);
                             run(app, "transition.sound", json!({"builtin": id, "loop": lp}));
@@ -1856,7 +1856,7 @@ pub fn paint_transition_tile(p: &egui::Painter, r: Rect, (id, label): (&str, &st
 
 fn animations(app: &mut SlideApp, ui: &mut Ui) {
     let has_sel = app.session.active().is_some_and(|d| !d.selection.shapes.is_empty());
-    let cur: Option<deckcraft_model::Animation> = app.session.active().and_then(|d| {
+    let cur: Option<seho_model::Animation> = app.session.active().and_then(|d| {
         let s = d.current_slide()?;
         let id = d.selection.shapes.first()?;
         s.animations.iter().find(|a| a.shape == *id).cloned()
@@ -1869,7 +1869,7 @@ fn animations(app: &mut SlideApp, ui: &mut Ui) {
         }
     });
     group(ui, |ui| {
-        let quick: Vec<_> = deckcraft_model::anim::ANIMATIONS
+        let quick: Vec<_> = seho_model::anim::ANIMATIONS
             .iter()
             .filter(|a| {
                 matches!(
@@ -1913,7 +1913,7 @@ fn animations(app: &mut SlideApp, ui: &mut Ui) {
             {
                 ui.label(egui::RichText::new(label).font(theme::bold(12.0)));
                 ui.horizontal_wrapped(|ui| {
-                    for a in deckcraft_model::anim::ANIMATIONS.iter().filter(|a| a.2 == cls) {
+                    for a in seho_model::anim::ANIMATIONS.iter().filter(|a| a.2 == cls) {
                         let (r, resp) = ui.allocate_exact_size(vec2(56.0, 54.0), Sense::click());
                         if resp.hovered() {
                             ui.painter().rect_filled(r, CornerRadius::same(4), Tokens::get(ui.ctx()).hover);
@@ -1951,7 +1951,7 @@ fn animations(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let r = big_button(ui, Icon::AddAnimation, "Add\nAnimation", has_sel);
         egui::Popup::menu(&r).width(260.0).show(|ui| {
-            for a in deckcraft_model::anim::ANIMATIONS.iter().filter(|a| a.2 != AnimClass::Media) {
+            for a in seho_model::anim::ANIMATIONS.iter().filter(|a| a.2 != AnimClass::Media) {
                 if ui
                     .button(format!(
                         "{} — {}",
@@ -2002,9 +2002,9 @@ fn animations(app: &mut SlideApp, ui: &mut Ui) {
             ui.horizontal(|ui| {
                 ui.label("Start:");
                 let s = cur.as_ref().map(|c| match c.start {
-                    deckcraft_model::AnimStart::OnClick => "On Click",
-                    deckcraft_model::AnimStart::WithPrevious => "With Previous",
-                    deckcraft_model::AnimStart::AfterPrevious => "After Previous",
+                    seho_model::AnimStart::OnClick => "On Click",
+                    seho_model::AnimStart::WithPrevious => "With Previous",
+                    seho_model::AnimStart::AfterPrevious => "After Previous",
                 });
                 dropdown(ui, "astart", s.unwrap_or(""), 112.0, cur.is_some(), |ui| {
                     for (l, v) in [("On Click", "onClick"), ("With Previous", "withPrevious"), ("After Previous", "afterPrevious")] {
@@ -2115,7 +2115,7 @@ fn record(app: &mut SlideApp, ui: &mut Ui) {
     });
     group(ui, |ui| {
         if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
-            app.open_url(deckcraft_engine::links::APP_PAGE);
+            app.open_url(seho_engine::links::APP_PAGE);
         }
     });
 }
@@ -2283,7 +2283,7 @@ fn transform_gallery(app: &mut SlideApp, ui: &mut Ui) {
     let mut picked = false;
     ui.horizontal_wrapped(|ui| {
         ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
-        for p in deckcraft_geom::warp::CATALOG.iter().filter(|p| deckcraft_geom::warp::is_follow(p.id)) {
+        for p in seho_geom::warp::CATALOG.iter().filter(|p| seho_geom::warp::is_follow(p.id)) {
             if warp_tile(ui, p.id, p.label, current.as_deref() == Some(p.id)) {
                 run(app, "format.textWarp", json!({"preset": p.id}));
                 picked = true;
@@ -2298,7 +2298,7 @@ fn transform_gallery(app: &mut SlideApp, ui: &mut Ui) {
                 run(app, "format.textWarp", json!({"preset": "none"}));
                 picked = true;
             }
-            for p in deckcraft_geom::warp::CATALOG.iter().filter(|p| !deckcraft_geom::warp::is_follow(p.id)) {
+            for p in seho_geom::warp::CATALOG.iter().filter(|p| !seho_geom::warp::is_follow(p.id)) {
                 if warp_tile(ui, p.id, p.label, current.as_deref() == Some(p.id)) {
                     run(app, "format.textWarp", json!({"preset": p.id}));
                     picked = true;
@@ -2338,20 +2338,20 @@ fn paint_warp_icon(p: &egui::Painter, r: Rect, name: Option<&str>, color: Color3
         p.line_segment([pos2(r.min.x, y1), pos2(r.max.x, y1)], Stroke::new(1.0, color));
         return;
     };
-    let rect = deckcraft_geom::Rect::new((r.min.x + 1.0) as f64, (r.min.y + 1.0) as f64, (r.max.x - 1.0) as f64, (r.max.y - 1.0) as f64);
-    let Some(w) = deckcraft_geom::warp::warp(name, &[], rect) else { return };
+    let rect = seho_geom::Rect::new((r.min.x + 1.0) as f64, (r.min.y + 1.0) as f64, (r.max.x - 1.0) as f64, (r.max.y - 1.0) as f64);
+    let Some(w) = seho_geom::warp::warp(name, &[], rect) else { return };
     for band in &w.bands {
         match band {
-            deckcraft_geom::warp::Band::Fill { top, bottom } => {
+            seho_geom::warp::Band::Fill { top, bottom } => {
                 stroke_guide(p, top, color);
                 stroke_guide(p, bottom, color);
             }
-            deckcraft_geom::warp::Band::Follow { path, .. } => stroke_guide(p, path, color),
+            seho_geom::warp::Band::Follow { path, .. } => stroke_guide(p, path, color),
         }
     }
 }
 
-fn stroke_guide(p: &egui::Painter, g: &deckcraft_geom::warp::Guide, color: Color32) {
+fn stroke_guide(p: &egui::Painter, g: &seho_geom::warp::Guide, color: Color32) {
     let len = g.length();
     if !(len.is_finite() && len > 1.0) {
         return;
@@ -2381,7 +2381,7 @@ fn shape_format(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Shapes, "Shapes", true);
         egui::Popup::menu(&r).show(|ui| {
             if let Some(p) = shapes_gallery(ui) {
-                app.session.set_tool(deckcraft_engine::ToolKind::Shape { preset: p.to_string() });
+                app.session.set_tool(seho_engine::ToolKind::Shape { preset: p.to_string() });
             }
         });
         big(app, ui, Icon::TextBox, "Text\nBox", "insert.textBox", json!({}));
@@ -2402,7 +2402,7 @@ fn shape_format(app: &mut SlideApp, ui: &mut Ui) {
         let can_merge = enabled(app, "shape.merge");
         let r = big_button(ui, Icon::MergeShapes, "Merge\nShapes", can_merge).on_hover_text("Merge Shapes");
         egui::Popup::menu(&r).show(|ui| {
-            for (op, label) in deckcraft_engine::cmd::merge::OPS {
+            for (op, label) in seho_engine::cmd::merge::OPS {
                 if ui.button(label).clicked() {
                     run(app, "shape.merge", json!({"op": op}));
                     ui.close();
@@ -2537,7 +2537,7 @@ fn size_group(app: &mut SlideApp, ui: &mut Ui) {
     let bx = app
         .session
         .active()
-        .and_then(|d| d.selection.shapes.first().and_then(|id| d.shape(*id).map(|s| deckcraft_engine::cmd::xfrm_of(&d.doc, &d.selection, s))));
+        .and_then(|d| d.selection.shapes.first().and_then(|id| d.shape(*id).map(|s| seho_engine::cmd::xfrm_of(&d.doc, &d.selection, s))));
     group(ui, |ui| {
         rows(ui, |ui| {
             let Some(x) = bx else {
@@ -2598,7 +2598,7 @@ fn picture_format(app: &mut SlideApp, ui: &mut Ui) {
             ui.separator();
             ui.label("Recolor");
             let sc = scheme(app);
-            let presets = deckcraft_engine::cmd::recolor::presets();
+            let presets = seho_engine::cmd::recolor::presets();
             let names: Vec<String> = presets.iter().map(|(_, l)| l.clone()).collect();
             if let Some(i) = widgets::gallery(
                 ui,
@@ -2634,7 +2634,7 @@ fn picture_format(app: &mut SlideApp, ui: &mut Ui) {
             if ui.button("None").clicked() {
                 run(app, "picture.artisticEffect", json!({"effect": "none"}));
             }
-            for (e, l) in deckcraft_engine::cmd::artistic::EFFECTS {
+            for (e, l) in seho_engine::cmd::artistic::EFFECTS {
                 if ui.button(*l).clicked() {
                     run(app, "picture.artisticEffect", json!({"effect": e}));
                 }
@@ -2658,7 +2658,7 @@ fn picture_format(app: &mut SlideApp, ui: &mut Ui) {
         });
     });
     group(ui, |ui| {
-        use deckcraft_engine::cmd::picture_style::{STYLES, look};
+        use seho_engine::cmd::picture_style::{STYLES, look};
         let names: Vec<String> = STYLES.iter().map(|(_, l)| l.to_string()).collect();
         if let Some(i) = widgets::gallery(
             ui,
@@ -2773,7 +2773,7 @@ fn table_design(app: &mut SlideApp, ui: &mut Ui) {
         });
     });
     group(ui, |ui| {
-        let styles = deckcraft_model::table::table_styles();
+        let styles = seho_model::table::table_styles();
         let quick: Vec<_> = styles.iter().filter(|(id, _)| id.starts_with("medium2") || id == "none" || id == "grid").take(8).collect();
         let cur = tbl.as_ref().map(|t| t.style.clone()).unwrap_or_default();
         let sel = quick.iter().position(|(id, _)| *id == cur);
@@ -2871,8 +2871,8 @@ fn table_design(app: &mut SlideApp, ui: &mut Ui) {
     });
     // Draw Borders: the pencil splits cells along a line, the eraser merges across a border.
     group(ui, |ui| {
-        use deckcraft_engine::ToolKind;
-        use deckcraft_engine::tools::{DRAW_TABLE, TABLE_ERASER};
+        use seho_engine::ToolKind;
+        use seho_engine::tools::{DRAW_TABLE, TABLE_ERASER};
         let cur = app.session.tool.kind.clone();
         for (icon, label, preset) in [(Icon::Pencil, "Draw Table", DRAW_TABLE), (Icon::Eraser, "Table Eraser", TABLE_ERASER)] {
             let on = matches!(&cur, ToolKind::Shape { preset: p } if p == preset);
@@ -2884,7 +2884,7 @@ fn table_design(app: &mut SlideApp, ui: &mut Ui) {
 }
 
 /// A Picture Styles gallery tile: a landscape "picture" in the style's shape and frame.
-fn paint_picture_style(p: &egui::Painter, r: Rect, lk: Option<deckcraft_engine::cmd::picture_style::Look>) {
+fn paint_picture_style(p: &egui::Painter, r: Rect, lk: Option<seho_engine::cmd::picture_style::Look>) {
     let Some(lk) = lk else { return };
     let r = r.shrink(7.0);
     if lk.shadow.is_some() {
@@ -2924,9 +2924,9 @@ fn paint_picture_style(p: &egui::Painter, r: Rect, lk: Option<deckcraft_engine::
 }
 
 /// A Recolor gallery tile: a dark-to-light ramp as the preset would draw it.
-fn paint_recolor(p: &egui::Painter, r: Rect, id: &str, sc: &deckcraft_color::ColorScheme) {
-    let mut adj = deckcraft_model::style::PictureAdjust::default();
-    deckcraft_engine::cmd::recolor::apply(&mut adj, id);
+fn paint_recolor(p: &egui::Painter, r: Rect, id: &str, sc: &seho_color::ColorScheme) {
+    let mut adj = seho_model::style::PictureAdjust::default();
+    seho_engine::cmd::recolor::apply(&mut adj, id);
     let r = r.shrink(3.0);
     let n = 8;
     for k in 0..n {
@@ -2954,15 +2954,15 @@ fn paint_recolor(p: &egui::Painter, r: Rect, id: &str, sc: &deckcraft_color::Col
     p.rect_stroke(r, CornerRadius::ZERO, Stroke::new(0.5, Color32::from_gray(160)), egui::StrokeKind::Outside);
 }
 
-pub fn paint_table_style(p: &egui::Painter, r: Rect, id: &str, sc: &deckcraft_color::ColorScheme) {
+pub fn paint_table_style(p: &egui::Painter, r: Rect, id: &str, sc: &seho_color::ColorScheme) {
     let slot = match id.rsplit('-').next().unwrap_or("accent1") {
-        "accent2" => deckcraft_color::SchemeSlot::Accent2,
-        "accent3" => deckcraft_color::SchemeSlot::Accent3,
-        "accent4" => deckcraft_color::SchemeSlot::Accent4,
-        "accent5" => deckcraft_color::SchemeSlot::Accent5,
-        "accent6" => deckcraft_color::SchemeSlot::Accent6,
-        "tx1" => deckcraft_color::SchemeSlot::Dk1,
-        _ => deckcraft_color::SchemeSlot::Accent1,
+        "accent2" => seho_color::SchemeSlot::Accent2,
+        "accent3" => seho_color::SchemeSlot::Accent3,
+        "accent4" => seho_color::SchemeSlot::Accent4,
+        "accent5" => seho_color::SchemeSlot::Accent5,
+        "accent6" => seho_color::SchemeSlot::Accent6,
+        "tx1" => seho_color::SchemeSlot::Dk1,
+        _ => seho_color::SchemeSlot::Accent1,
     };
     let a = theme::to_color32(sc.get(slot));
     let kind = id.split('-').next().unwrap_or("");
@@ -3060,7 +3060,7 @@ fn chart_design(app: &mut SlideApp, ui: &mut Ui) {
 
 /// SmartArt Design: Create Graphic (Text Pane, Add Shape, Promote, Demote, Remove) and Layouts.
 fn smartart_design(app: &mut SlideApp, ui: &mut Ui) {
-    let sel = app.session.active().and_then(deckcraft_engine::cmd::smartart::selected);
+    let sel = app.session.active().and_then(seho_engine::cmd::smartart::selected);
     let row = app.ui.smartart_row;
     let (gid, n, kind, style, colors) = match &sel {
         Some((id, d)) => (Some(id.0), d.nodes.len(), d.kind.clone(), d.style.clone(), d.colors.clone()),
@@ -3121,7 +3121,7 @@ fn smartart_design(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let (r, _) = small_button_ex(ui, Icon::ChangeChartType, "Change Colors", gid.is_some(), false, true);
         egui::Popup::menu(&r).show(|ui| {
-            for (k, label) in deckcraft_engine::cmd::smartart::COLORS {
+            for (k, label) in seho_engine::cmd::smartart::COLORS {
                 if matches!(k, "range23" | "accent1" | "accent1Grad") {
                     ui.separator();
                 }
@@ -3133,7 +3133,7 @@ fn smartart_design(app: &mut SlideApp, ui: &mut Ui) {
         });
         let (r, _) = small_button_ex(ui, Icon::SmartArt, "SmartArt Styles", gid.is_some(), false, true);
         egui::Popup::menu(&r).show(|ui| {
-            for (k, label) in deckcraft_engine::cmd::smartart::STYLES {
+            for (k, label) in seho_engine::cmd::smartart::STYLES {
                 if k == "polished" {
                     ui.separator();
                     ui.label("3-D");
@@ -3253,7 +3253,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let r = big_button(ui, Icon::Themes, "Themes", true);
         egui::Popup::menu(&r).show(|ui| {
-            for th in deckcraft_model::theme::builtin_themes() {
+            for th in seho_model::theme::builtin_themes() {
                 if ui.button(&th.name).clicked() {
                     run(app, "design.theme", json!({"name": th.name}));
                 }
@@ -3274,7 +3274,7 @@ fn slide_master(app: &mut SlideApp, ui: &mut Ui) {
 
 fn notes_master(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
-        use deckcraft_model::PhType;
+        use seho_model::PhType;
         let shown = |app: &SlideApp, k: PhType| {
             app.session.active().and_then(|d| d.doc.notes_master.as_ref()).is_some_and(|m| m.shapes.iter().any(|s| s.ph_type() == Some(k)))
         };
@@ -3314,11 +3314,11 @@ fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
         });
     });
     group(ui, |ui| {
-        let shown = |app: &SlideApp, k: deckcraft_model::PhType| {
+        let shown = |app: &SlideApp, k: seho_model::PhType| {
             app.session.active().and_then(|d| d.doc.handout_master.as_ref()).is_some_and(|m| m.shapes.iter().any(|s| s.ph_type() == Some(k)))
         };
         rows(ui, |ui| {
-            use deckcraft_model::PhType;
+            use seho_model::PhType;
             for (label, key, k) in [
                 ("Header", "header", PhType::Header),
                 ("Date", "date", PhType::Date),
@@ -3349,22 +3349,22 @@ fn marked_options<'a>(options: &'a [&'a str], current: Option<&str>) -> Vec<(&'a
 
 /// One row of Transitions ▸ Effect Options: the stored option and whether it is the current one.
 fn transition_effect_rows(kind: &str, current: Option<&str>) -> Vec<(&'static str, bool)> {
-    let opts = deckcraft_model::anim::TRANSITIONS.iter().find(|x| x.0 == kind).map(|x| x.4).unwrap_or(&[]);
+    let opts = seho_model::anim::TRANSITIONS.iter().find(|x| x.0 == kind).map(|x| x.4).unwrap_or(&[]);
     marked_options(opts, current)
 }
 
 /// One row of Animations ▸ Effect Options for the selected effect.
 fn animation_effect_rows(effect: &str, class: AnimClass, current: Option<&str>) -> Vec<(&'static str, bool)> {
-    let opts = deckcraft_model::anim::animation_info(effect, class).map(|x| x.5).unwrap_or(&[]);
+    let opts = seho_model::anim::animation_info(effect, class).map(|x| x.5).unwrap_or(&[]);
     marked_options(opts, current)
 }
 
-fn text_build_id(build: deckcraft_model::anim::TextBuild) -> &'static str {
+fn text_build_id(build: seho_model::anim::TextBuild) -> &'static str {
     match build {
-        deckcraft_model::anim::TextBuild::ByParagraph => "byParagraph",
-        deckcraft_model::anim::TextBuild::ByWord => "byWord",
-        deckcraft_model::anim::TextBuild::ByLetter => "byLetter",
-        deckcraft_model::anim::TextBuild::AsOne => "asOne",
+        seho_model::anim::TextBuild::ByParagraph => "byParagraph",
+        seho_model::anim::TextBuild::ByWord => "byWord",
+        seho_model::anim::TextBuild::ByLetter => "byLetter",
+        seho_model::anim::TextBuild::AsOne => "asOne",
     }
 }
 
@@ -3383,8 +3383,8 @@ fn paint_freeform_icon(p: &egui::Painter, r: Rect, name: &str, ink: Color32) {
 
 /// The chart types in the Insert Chart and Change Chart Type menus: the main ones, a separator
 /// (`None`), then the Office 2016 types not already listed.
-fn chart_menu_types() -> Vec<Option<deckcraft_model::chart::ChartType>> {
-    use deckcraft_model::chart::ChartType;
+fn chart_menu_types() -> Vec<Option<seho_model::chart::ChartType>> {
+    use seho_model::chart::ChartType;
     let mut v: Vec<Option<ChartType>> = ChartType::MAIN.iter().copied().map(Some).collect();
     v.push(None);
     v.extend(ChartType::OFFICE_2016.iter().copied().filter(|k| !ChartType::MAIN.contains(k)).map(Some));
@@ -3394,7 +3394,7 @@ fn chart_menu_types() -> Vec<Option<deckcraft_model::chart::ChartType>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deckcraft_model::anim::TextBuild;
+    use seho_model::anim::TextBuild;
 
     /// Paints one transition tile and one animation tile and returns the colour of every label.
     fn tile_label_colours(dark: bool) -> Vec<Color32> {
@@ -3491,17 +3491,17 @@ fn smooth_corners_row(app: &mut SlideApp, ui: &mut egui::Ui) {
         let x = sh.xfrm?;
         let ss = x.w.min(x.h).max(0.0);
         let own = match &sh.geom {
-            deckcraft_model::Geom::Preset { name, adj } if name == "roundRect" => {
+            seho_model::Geom::Preset { name, adj } if name == "roundRect" => {
                 Some(ss * adj.first().copied().unwrap_or(16667.0).clamp(0.0, 50000.0) / 100000.0)
             }
-            deckcraft_model::Geom::Preset { name, .. } if name == "rect" => Some(ss * 16667.0 / 100000.0),
+            seho_model::Geom::Preset { name, .. } if name == "rect" => Some(ss * 16667.0 / 100000.0),
             _ => None,
         };
         Some((id, own))
     }) else {
         return;
     };
-    let key = egui::Id::new(("deckcraft-smooth-corners", id.0));
+    let key = egui::Id::new(("seho-smooth-corners", id.0));
     let mut state: (f64, f64) = ui.data(|d| d.get_temp(key)).unwrap_or((radius.unwrap_or(0.0), 0.0));
     if let Some(r) = radius {
         state.0 = r;

@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "photocraft-plugin-invert"
+name = "sary-plugin-invert"
 version = "1.0.0"

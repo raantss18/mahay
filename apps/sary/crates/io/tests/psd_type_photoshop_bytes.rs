@@ -9,9 +9,9 @@
 
 use std::path::{Path, PathBuf};
 
-use photocraft_psd::PsdFile;
-use photocraft_psd::descriptor::Value as D;
-use photocraft_text::engine_data::Value as E;
+use sary_psd::PsdFile;
+use sary_psd::descriptor::Value as D;
+use sary_text::engine_data::Value as E;
 
 fn corpus(rel: &str) -> PsdFile {
     let path: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus/photoshop").join(rel);
@@ -24,11 +24,11 @@ fn first_tysh(f: &PsdFile) -> Vec<u8> {
 }
 
 fn engine_antialias(tysh: &[u8]) -> Option<f64> {
-    let t = photocraft_text::psd::parse_tysh(tysh)?;
-    photocraft_text::psd::engine_data(&t.text)?.path(&["EngineDict", "AntiAlias"]).and_then(E::as_f64)
+    let t = sary_text::psd::parse_tysh(tysh)?;
+    sary_text::psd::engine_data(&t.text)?.path(&["EngineDict", "AntiAlias"]).and_then(E::as_f64)
 }
 
-fn rect(t: &photocraft_text::psd::TySh, key: &str) -> [f32; 4] {
+fn rect(t: &sary_text::psd::TySh, key: &str) -> [f32; 4] {
     let Some(D::Descriptor(d)) = t.text.get(key) else { panic!("no {key}") };
     ["Left", "Top ", "Rght", "Btom"].map(|k| match d.get(k) {
         Some(D::UnitFloat { value, .. }) => *value as f32,
@@ -40,9 +40,9 @@ fn rect(t: &photocraft_text::psd::TySh, key: &str) -> [f32; 4] {
 fn engine_data_antialias_matches_photoshop() {
     for name in ["none", "crisp", "strong", "smooth", "sharp"] {
         let raw = first_tysh(&corpus(&format!("text/antialias-{name}.psd")));
-        let mut layer = photocraft_text::psd::text_layer_from_tysh(&raw, 72.0).unwrap();
+        let mut layer = sary_text::psd::text_layer_from_tysh(&raw, 72.0).unwrap();
         layer.psd_raw = None;
-        let ours = photocraft_text::psd::build_tysh(&layer, 72.0, None);
+        let ours = sary_text::psd::build_tysh(&layer, 72.0, None);
         assert_eq!(engine_antialias(&ours), engine_antialias(&raw), "{name}");
     }
 }
@@ -51,11 +51,11 @@ fn engine_data_antialias_matches_photoshop() {
 fn tysh_trailing_bounds_match_photoshop() {
     for (file, warped) in [("text/warp-arc-50.psd", true), ("text/antialias-smooth.psd", false)] {
         let raw = first_tysh(&corpus(file));
-        let theirs = photocraft_text::psd::parse_tysh(&raw).unwrap();
-        let mut layer = photocraft_text::psd::text_layer_from_tysh(&raw, 72.0).unwrap();
+        let theirs = sary_text::psd::parse_tysh(&raw).unwrap();
+        let mut layer = sary_text::psd::text_layer_from_tysh(&raw, 72.0).unwrap();
         assert_eq!(layer.warp.is_some(), warped, "{file}");
         layer.psd_raw = None;
-        let ours = photocraft_text::psd::parse_tysh(&photocraft_text::psd::build_tysh(&layer, 72.0, Some(rect(&theirs, "bounds")))).unwrap();
+        let ours = sary_text::psd::parse_tysh(&sary_text::psd::build_tysh(&layer, 72.0, Some(rect(&theirs, "bounds")))).unwrap();
         assert_eq!(ours.bounds, theirs.bounds, "{file}");
         if warped {
             assert_eq!(theirs.bounds, rect(&theirs, "bounds"), "{file}");
@@ -69,6 +69,6 @@ fn tysh_trailing_bounds_match_photoshop() {
 fn version_info_matches_photoshop() {
     for file in ["text/antialias-smooth.psd", "text/warp-arc-50.psd"] {
         let theirs = corpus(file);
-        assert_eq!(photocraft_psd::resources::version_info_resource(true).data, theirs.resource(1057).unwrap().data, "{file}");
+        assert_eq!(sary_psd::resources::version_info_resource(true).data, theirs.resource(1057).unwrap().data, "{file}");
     }
 }

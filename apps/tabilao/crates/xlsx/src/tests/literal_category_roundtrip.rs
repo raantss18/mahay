@@ -1,6 +1,6 @@
 //! Literal chart categories that contain a comma, a semicolon or a quote stay one category on save.
 
-use gridcraft_model::{Anchor, Chart, ChartKind, LegendPos, Series, Sheet, Workbook};
+use tabilao_model::{Anchor, Chart, ChartKind, LegendPos, Series, Sheet, Workbook};
 use std::sync::Arc;
 
 use crate::{read_xlsx, write_xlsx};
@@ -35,7 +35,7 @@ fn literal_category_with_separators_survives_save() {
     s.charts.push(Chart {
         id: 1,
         kind: ChartKind::ColumnClustered,
-        anchor: Anchor { cell: gridcraft_core::CellRef::new(0, 3), width: 480.0, height: 300.0, ..Anchor::default() },
+        anchor: Anchor { cell: tabilao_core::CellRef::new(0, 3), width: 480.0, height: 300.0, ..Anchor::default() },
         title: None,
         series,
         legend: LegendPos::Bottom,

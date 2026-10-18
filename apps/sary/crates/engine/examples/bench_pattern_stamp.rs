@@ -1,7 +1,7 @@
 //! Timing: Pattern Stamp on a 24 MP (6016×4000) RGBA8 document.
 //!
 //! ```sh
-//! cargo run --release -p photocraft-engine --example bench_pattern_stamp
+//! cargo run --release -p sary-engine --example bench_pattern_stamp
 //! ```
 //!
 //! One aligned, hard 200 px stroke along y=2000 from x=100 to x=5900, impressionist off, then
@@ -9,7 +9,7 @@
 
 use std::time::Instant;
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 fn main() {

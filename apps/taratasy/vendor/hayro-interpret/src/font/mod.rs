@@ -165,7 +165,7 @@ impl OutlineGlyph {
         self.id
     }
 
-    /// PdfCraft patch: whether this glyph belongs to a vertical-writing Type0 font.
+    /// Taratasy patch: whether this glyph belongs to a vertical-writing Type0 font.
     /// The glyph outline stays upright; text extraction must follow the font's advance axis.
     pub fn is_vertical(&self) -> bool {
         matches!(&self.font, OutlineFont::Type0(font) if !font.is_horizontal())
@@ -223,7 +223,7 @@ impl<'a> Type3Glyph<'a> {
         self.font.char_code_to_unicode(self.char_code)
     }
 
-    /// PdfCraft patch: the advance width in glyph space (1000 units per em), from `/Widths`.
+    /// Taratasy patch: the advance width in glyph space (1000 units per em), from `/Widths`.
     pub fn advance_width(&self) -> Option<f32> {
         u8::try_from(self.char_code).ok().map(|c| self.font.glyph_width(c))
     }
@@ -445,7 +445,7 @@ impl Encoding {
         }
     }
 
-    /// PdfCraft patch: the glyph name an Annex D.2 *alias code* reads as when the glyph is taken
+    /// Taratasy patch: the glyph name an Annex D.2 *alias code* reads as when the glyph is taken
     /// as text rather than looked up in a font program; `None` for every other code.
     ///
     /// Annex D.2 gives WinAnsiEncoding codes 0xA0 and 0xAD the glyph names `space` and `hyphen`,

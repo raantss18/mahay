@@ -28,9 +28,9 @@ permissions:
 jobs:
   freebsd:
     # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/freebsd.yml@main
+    uses: raantss18/mahay-common-actions/.github/workflows/freebsd.yml@main
     with:
-      craft-fonts-ref: abb83316d96aa59c1cf64784289e378fe9fa5695
+      mahay-fonts-ref: abb83316d96aa59c1cf64784289e378fe9fa5695
       cargo-build-extra-args: "--features heif"
-      custom-test-command: "CARGO_PROFILE_DEV_DEBUG=0 cargo test --workspace --locked --features heif --exclude photocraft-ui-egui && CARGO_PROFILE_DEV_DEBUG=0 cargo test -p photocraft-ui-egui --locked --lib && CARGO_PROFILE_DEV_DEBUG=0 cargo test -p photocraft-ui-egui --locked --doc && CARGO_PROFILE_DEV_DEBUG=0 cargo test -p photocraft-ui-egui --locked --test '*' -- --test-threads=1"
+      custom-test-command: "CARGO_PROFILE_DEV_DEBUG=0 cargo test --workspace --locked --features heif --exclude sary-ui-egui && CARGO_PROFILE_DEV_DEBUG=0 cargo test -p sary-ui-egui --locked --lib && CARGO_PROFILE_DEV_DEBUG=0 cargo test -p sary-ui-egui --locked --doc && CARGO_PROFILE_DEV_DEBUG=0 cargo test -p sary-ui-egui --locked --test '*' -- --test-threads=1"
       run-package-check: true

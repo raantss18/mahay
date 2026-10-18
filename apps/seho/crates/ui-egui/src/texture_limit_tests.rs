@@ -6,7 +6,7 @@
 use serde_json::json;
 
 use crate::{Services, SlideApp};
-use deckcraft_engine::Session;
+use seho_engine::Session;
 
 fn harness(session: Session, size: egui::Vec2) -> egui_kittest::Harness<'static, SlideApp> {
     egui_kittest::Harness::builder().with_size(size).build_ui_state(

@@ -2,7 +2,7 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_model::{Geom, defaults};
+use seho_model::{Geom, defaults};
 
 /// `bytes` with `edit` applied to every slide part.
 fn edit_slides(bytes: &[u8], edit: impl Fn(String) -> String) -> Vec<u8> {
@@ -36,7 +36,7 @@ fn a_placeholder_without_geometry_takes_its_layouts() {
             s.geom = Geom::Preset { name: "ellipse".into(), adj: vec![] };
         }
     }
-    let bytes = deckcraft_pptx::export(&p).expect("export");
+    let bytes = seho_pptx::export(&p).expect("export");
     // Strip the slide's own geometry, as PowerPoint writes inheriting placeholders.
     let bare = edit_slides(&bytes, |s| {
         let mut s = s;
@@ -46,7 +46,7 @@ fn a_placeholder_without_geometry_takes_its_layouts() {
         }
         s
     });
-    let q = deckcraft_pptx::import(&bare).expect("import");
+    let q = seho_pptx::import(&bare).expect("import");
     let phs: Vec<_> = q.slides[0].shapes.iter().filter(|s| s.ph.is_some()).collect();
     assert!(!phs.is_empty());
     for s in phs {
@@ -59,6 +59,6 @@ fn a_placeholder_without_geometry_takes_its_layouts() {
             s.geom = Geom::Preset { name: "triangle".into(), adj: vec![] };
         }
     }
-    let q = deckcraft_pptx::import(&deckcraft_pptx::export(&p).expect("export")).expect("import");
+    let q = seho_pptx::import(&seho_pptx::export(&p).expect("export")).expect("import");
     assert!(q.slides[0].shapes.iter().filter(|s| s.ph.is_some()).all(|s| matches!(&s.geom, Geom::Preset { name, .. } if name == "triangle")));
 }

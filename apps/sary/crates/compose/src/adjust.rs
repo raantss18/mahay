@@ -3,10 +3,10 @@
 //! Formulas are documented approximations of Photoshop behaviour. Exact matching is tuned in
 //! milestone M7 against Photoshop-rendered PSD composites (the oracle in `testkit`).
 
-use photocraft_color::convert::{D50, SRGB_TO_XYZ_D50, XYZ_D50_TO_SRGB, lab_to_srgb, mat3_mul, rgb_to_gray, srgb_to_lab, srgb_to_linear};
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_doc::Adjustment;
-use photocraft_doc::adjust::{CurvePoint, HueRange, LevelsChannel, ToneSpace, lut3d_len};
+use sary_color::convert::{D50, SRGB_TO_XYZ_D50, XYZ_D50_TO_SRGB, lab_to_srgb, mat3_mul, rgb_to_gray, srgb_to_lab, srgb_to_linear};
+use sary_color::{ColorMode, SampleType};
+use sary_doc::Adjustment;
+use sary_doc::adjust::{CurvePoint, HueRange, LevelsChannel, ToneSpace, lut3d_len};
 
 use crate::Buffer;
 
@@ -27,12 +27,12 @@ impl Transfer {
     /// Default transfer for a document's colour mode and depth. 32-bit samples are linear, and
     /// Photoshop's Exposure works on them as stored (photoshop corpus rgb32 and gray32
     /// exposure.psd: within 0.5/255, against 69/255 through the 2.2 curve).
-    pub fn for_document(mode: photocraft_color::ColorMode, depth: photocraft_color::SampleType) -> Self {
-        if depth == photocraft_color::SampleType::F32 {
+    pub fn for_document(mode: sary_color::ColorMode, depth: sary_color::SampleType) -> Self {
+        if depth == sary_color::SampleType::F32 {
             return Transfer::Gamma(1.0);
         }
         match mode {
-            photocraft_color::ColorMode::Grayscale | photocraft_color::ColorMode::Duotone | photocraft_color::ColorMode::Bitmap => Transfer::Gamma(1.732),
+            sary_color::ColorMode::Grayscale | sary_color::ColorMode::Duotone | sary_color::ColorMode::Bitmap => Transfer::Gamma(1.732),
             _ => Transfer::Srgb,
         }
     }
@@ -48,7 +48,7 @@ impl Transfer {
     /// Tone-encoded value → linear light.
     pub fn decode(self, v: f32) -> f32 {
         match self {
-            Transfer::Srgb => photocraft_color::convert::srgb_to_linear(v.max(0.0)),
+            Transfer::Srgb => sary_color::convert::srgb_to_linear(v.max(0.0)),
             Transfer::Gamma(1.0) => v.max(0.0),
             Transfer::Gamma(g) => v.max(0.0).powf(g),
         }
@@ -56,7 +56,7 @@ impl Transfer {
     /// Linear light → tone-encoded value.
     pub fn encode(self, v: f32) -> f32 {
         match self {
-            Transfer::Srgb => photocraft_color::convert::linear_to_srgb(v.max(0.0)),
+            Transfer::Srgb => sary_color::convert::linear_to_srgb(v.max(0.0)),
             Transfer::Gamma(1.0) => v.max(0.0),
             Transfer::Gamma(g) => v.max(0.0).powf(1.0 / g),
         }
@@ -189,7 +189,7 @@ pub fn apply_depth(adj: &Adjustment, buf: &mut Buffer, transfer: Transfer, depth
             map_rgb(buf, |c| {
                 // 32-bit samples are linear already, and may go negative.
                 let f = if linear_doc { mat3_mul(&m, c) } else { mat3_mul(&m, c.map(|v| transfer.decode(v))).map(|v| transfer.encode(v)) };
-                let f = if set_lum { photocraft_color::blend::set_lum(f, photocraft_color::blend::lum(c)) } else { f };
+                let f = if set_lum { sary_color::blend::set_lum(f, sary_color::blend::lum(c)) } else { f };
                 // 32-bit results aren't clipped (photoshop corpus rgb32 photo-filter.psd: white
                 // filters to 1.19 red).
                 if linear_doc { f } else { f.map(|v| v.clamp(0.0, 1.0)) }
@@ -204,8 +204,8 @@ pub fn apply_depth(adj: &Adjustment, buf: &mut Buffer, transfer: Transfer, depth
                     // the grey's luminosity (SetLum + ClipColor), measured in Photoshop 27.11. In
                     // 32-bit documents nothing clips at 1, as with the blend mode there (photoshop
                     // corpus rgb32 black-white-tint.psd: white tints to 1.05, 1.00, 0.87).
-                    Some(t) if hdr => photocraft_color::blend::blend_rgb_within(photocraft_color::blend::BlendMode::Color, [g; 3], *t, f32::MAX),
-                    Some(t) => photocraft_color::blend::set_lum(*t, g).map(|v| v.clamp(0.0, 1.0)),
+                    Some(t) if hdr => sary_color::blend::blend_rgb_within(sary_color::blend::BlendMode::Color, [g; 3], *t, f32::MAX),
+                    Some(t) => sary_color::blend::set_lum(*t, g).map(|v| v.clamp(0.0, 1.0)),
                     None => [g; 3],
                 }
             })
@@ -219,7 +219,7 @@ pub fn apply_depth(adj: &Adjustment, buf: &mut Buffer, transfer: Transfer, depth
                 // Driven by the W3C luminosity (0.3, 0.59, 0.11), not the Rec. 601 grey: photoshop
                 // corpus rgb8 and rgb16 gradient-map.psd match within a level (2 levels off with
                 // 0.299, 0.587, 0.114).
-                let mut t = photocraft_color::blend::lum([p[0], p[1], p[2]]);
+                let mut t = sary_color::blend::lum([p[0], p[1], p[2]]);
                 if *reverse {
                     t = 1.0 - t;
                 }
@@ -312,7 +312,7 @@ pub fn apply_in(adj: &Adjustment, buf: &mut Buffer, transfer: Transfer, depth: O
     if mode == ColorMode::Lab && lab_channel_adjustment(adj) {
         apply_lab(adj, buf, depth);
     } else if mode == ColorMode::Cmyk && cmyk_channel_adjustment(adj) {
-        use photocraft_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
+        use sary_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
         if let Adjustment::BrightnessContrast { brightness, contrast, legacy } = adj {
             let table = ink_brightness_contrast_lut(*brightness, *contrast, *legacy);
             map_rgb(buf, |c| cmyk_to_rgb(rgb_to_cmyk(c).map(|v| ink_through(&table, v))));
@@ -566,7 +566,7 @@ fn apply_lab(adj: &Adjustment, buf: &mut Buffer, depth: Option<SampleType>) {
 pub fn float_tone_identity(adj: &Adjustment, depth: Option<SampleType>) -> [bool; 3] {
     match adj {
         Adjustment::Curves { master, per_channel, space: ToneSpace::Rgb, .. } if depth == Some(SampleType::F32) => {
-            std::array::from_fn(|i| photocraft_doc::adjust::is_identity_curve(master) && photocraft_doc::adjust::is_identity_curve(&per_channel[i]))
+            std::array::from_fn(|i| sary_doc::adjust::is_identity_curve(master) && sary_doc::adjust::is_identity_curve(&per_channel[i]))
         }
         _ => [false; 3],
     }
@@ -618,7 +618,7 @@ pub fn tone_luts_depth(adj: &Adjustment, depth: Option<SampleType>) -> [Vec<f32>
 /// through the conversions the document's surfaces use. The change is added as a difference of
 /// two round trips, so channels a curve leaves alone (and out-of-gamut colours) stay exact.
 fn tone_in_space(space: ToneSpace, luts: &[Vec<f32>; 4], c: [f32; 3]) -> [f32; 3] {
-    use photocraft_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
+    use sary_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
     let (before, after) = match space {
         ToneSpace::Cmyk => {
             let ink = rgb_to_cmyk(c);
@@ -1222,7 +1222,7 @@ pub fn curve_lut_mode(points: &[CurvePoint], pencil: bool) -> Vec<f32> {
     if pencil { curve_map_lut(points) } else { curve_lut(points) }
 }
 
-/// A pencil-drawn Curves map (see [`photocraft_doc::adjust::curve_map`]): straight segments
+/// A pencil-drawn Curves map (see [`sary_doc::adjust::curve_map`]): straight segments
 /// between its entries, constant outside the first/last, clamped to 0..=1, sampled into a LUT.
 pub fn curve_map_lut(points: &[CurvePoint]) -> Vec<f32> {
     let mut pts: Vec<(f32, f32)> = points.iter().filter(|p| p.input.is_finite() && p.output.is_finite()).map(|p| (p.input, p.output)).collect();
@@ -1474,7 +1474,7 @@ mod lookup_tests {
 #[cfg(test)]
 mod tone_tests {
     use super::*;
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
 
     fn ramp() -> Buffer {
         let rect = Rect::new(0, 0, 8, 8);
@@ -2054,7 +2054,7 @@ mod tone_tests {
 
     #[test]
     fn cmyk_invert_posterize_and_threshold_work_on_the_inks() {
-        use photocraft_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
+        use sary_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
         // Paper inverts to all four inks at 100%, not to RGB black (photoshop corpus cmyk8 invert.psd).
         assert!(near(in_cmyk(&Adjustment::Invert, [1.0; 3]), cmyk_to_rgb([1.0; 4]), 2e-3));
         let red = [0.9, 0.2, 0.1];
@@ -2095,7 +2095,7 @@ mod tone_tests {
 
     #[test]
     fn cmyk_brightness_contrast_curves_each_ink_from_paper() {
-        use photocraft_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
+        use sary_color::convert::{cmyk_to_rgb, rgb_to_cmyk};
         // The tone curve runs on each ink's stored value, 1 - ink (photoshop corpus cmyk8
         // brightness-contrast.psd and -legacy.psd): raising brightness takes ink away, and paper
         // and solid ink stay put.

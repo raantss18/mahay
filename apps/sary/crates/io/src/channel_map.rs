@@ -6,8 +6,8 @@
 //! areas, 2 = spot channel). Resource 1007 has the same records without the version and the spot
 //! kind, each followed by a padding byte (14 bytes).
 
-use photocraft_color::{Color, ColorMode};
-use photocraft_doc::{AlphaChannel, ColorIndicates};
+use sary_color::{Color, ColorMode};
+use sary_doc::{AlphaChannel, ColorIndicates};
 
 pub(crate) const DISPLAY_INFO: u16 = 1077;
 pub(crate) const DISPLAY_INFO_OLD: u16 = 1007;
@@ -79,7 +79,7 @@ pub(crate) fn decode_color(space: u16, c: [u16; 4]) -> Color {
 /// A PSD colour structure in one of the spaces Photoshop writes for plain colours (0 RGB,
 /// 1 HSB, 2 CMYK, 7 Lab, 8 Grayscale) as an RGB [`Color`], or `None` for any other space id.
 /// CMYK goes through the colour-managed conversion (the active document CMYK profile, see
-/// `photocraft_color::convert::with_cmyk_space`), Lab through the D50 Lab → sRGB conversion.
+/// `sary_color::convert::with_cmyk_space`), Lab through the D50 Lab → sRGB conversion.
 pub(crate) fn decode_known_color(space: u16, c: [u16; 4]) -> Option<Color> {
     let n = |v: u16| f32::from(v) / 65535.0;
     Some(match space {
@@ -129,8 +129,8 @@ fn hsb_to_rgb(h: f32, s: f32, v: f32) -> [f32; 3] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::PixelFormat;
-    use photocraft_raster::Surface;
+    use sary_color::PixelFormat;
+    use sary_raster::Surface;
 
     #[test]
     fn display_info_roundtrip() {

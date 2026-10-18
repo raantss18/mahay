@@ -6,9 +6,9 @@
 use std::sync::Arc;
 
 use egui::{Align2, Color32, CursorIcon, FontId, Painter, Pos2, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
-use gridcraft_engine::cf::{CfCache, CfLook};
-use gridcraft_engine::core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value, col_to_letters};
-use gridcraft_engine::model::{BorderLine, BorderStyle, Color, HAlign, LineIndex, PatternType, Sheet, Style, Underline, VAlign, Workbook};
+use tabilao_engine::cf::{CfCache, CfLook};
+use tabilao_engine::core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value, col_to_letters};
+use tabilao_engine::model::{BorderLine, BorderStyle, Color, HAlign, LineIndex, PatternType, Sheet, Style, Underline, VAlign, Workbook};
 use serde_json::json;
 
 use crate::SheetApp;
@@ -214,7 +214,7 @@ pub struct Geo {
     ri: std::sync::Arc<LineIndex>,
     ci: std::sync::Arc<LineIndex>,
     /// Page Layout view: cells sit on pages (`scroll` is then in page-layout units).
-    pub paper: Option<Arc<gridcraft_engine::paper::PageGrid>>,
+    pub paper: Option<Arc<tabilao_engine::paper::PageGrid>>,
 }
 
 impl Geo {
@@ -273,7 +273,7 @@ impl Geo {
     }
     /// Page Layout view geometry: `rect` excludes the rulers; cells are drawn at the print scale
     /// on pages laid out by `grid`; frozen panes don't apply (as in Excel).
-    pub fn paged(sh: &Sheet, rect: Rect, scroll: egui::Vec2, grid: Arc<gridcraft_engine::paper::PageGrid>) -> Geo {
+    pub fn paged(sh: &Sheet, rect: Rect, scroll: egui::Vec2, grid: Arc<tabilao_engine::paper::PageGrid>) -> Geo {
         let mut g = Geo::new(sh, rect, scroll);
         let zoom = (sh.zoom as f32 / 100.0).clamp(0.1, 4.0);
         g.z = zoom * DISPLAY_SCALE * grid.scale.clamp(0.1, 4.0);
@@ -431,8 +431,8 @@ fn col32(c: Color, wb: &Workbook, default: Color32) -> Color32 {
     c.resolve(&wb.theme).map(theme::color32).unwrap_or(default)
 }
 
-fn numfmt_color(c: gridcraft_engine::numfmt::FormatColor) -> Color32 {
-    use gridcraft_engine::numfmt::FormatColor as F;
+fn numfmt_color(c: tabilao_engine::numfmt::FormatColor) -> Color32 {
+    use tabilao_engine::numfmt::FormatColor as F;
     match c {
         F::Black => Color32::BLACK,
         F::Blue => Color32::from_rgb(0, 0, 255),
@@ -458,7 +458,7 @@ fn center_across_end(start: u32, limit: u32, continues: impl Fn(u32) -> bool) ->
 fn look(wb: &Workbook, si: usize, sh: &Sheet, c: CellRef, cf: &mut CfCache) -> (Look, Option<CfLook>) {
     let mut style = wb.styles.get(sh.style_id(c)).clone();
     if let Some(t) = sh.table_at(c) {
-        style = gridcraft_engine::tables::table_cell_style(wb, si, t, c);
+        style = tabilao_engine::tables::table_cell_style(wb, si, t, c);
     }
     let cfl = cf.look(wb, si, c);
     if let Some(l) = &cfl
@@ -547,12 +547,12 @@ fn display_text(
         && let Value::Number(n) = v
     {
         let max_chars = ((width_px - 4.0) / char_w).floor().max(1.0) as usize;
-        return match gridcraft_engine::numfmt::format_general_fit(*n, max_chars.min(11)) {
+        return match tabilao_engine::numfmt::format_general_fit(*n, max_chars.min(11)) {
             Some(t) => (t, None, true, None),
             None => ("#".repeat(max_chars.max(1)), None, true, None),
         };
     }
-    let f = gridcraft_engine::display::format(v, code, wb);
+    let f = tabilao_engine::display::format(v, code, wb);
     (f.text, f.color.map(numfmt_color), f.numeric, f.fill)
 }
 
@@ -577,7 +577,7 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
     let place = (d.uid, si);
     let mut view = app.view();
     // Page Layout view: pages on a desk, rulers above and left of the headings.
-    let paper = sh.view == gridcraft_engine::model::SheetViewMode::PageLayout;
+    let paper = sh.view == tabilao_engine::model::SheetViewMode::PageLayout;
     let ruler = if paper && !app.session.hide_ruler { crate::paper_view::RULER } else { 0.0 };
     // Right-to-left sheets carry the vertical ruler on the right, beside the row headings.
     let grid_rect = if rtl {
@@ -733,7 +733,7 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
     // Objects above cells.
     let objects = crate::chartview::paint_objects(app, &painter.with_clip_rect(geo.cells), &geo, &wb, si, sh);
     paint_overlays(app, ui, &painter.with_clip_rect(geo.cells), &geo, &wb, si, sh, &sel);
-    if sh.view == gridcraft_engine::model::SheetViewMode::PageBreakPreview {
+    if sh.view == tabilao_engine::model::SheetViewMode::PageBreakPreview {
         paint_pages(app, &painter.with_clip_rect(geo.cells), &geo, sh);
     }
     if geo.paper.is_some() {
@@ -782,7 +782,7 @@ fn paint_panes(
     wb: &Workbook,
     si: usize,
     sh: &Sheet,
-    sel: &gridcraft_engine::Selection,
+    sel: &tabilao_engine::Selection,
     outline: Rect,
     cf: &mut CfCache,
     t: &Tokens,
@@ -1364,12 +1364,12 @@ pub(crate) fn paint_quadrant(
             continue;
         }
         let rect = geo.cell_rect(sh, sp.cell).shrink(3.0);
-        let vals: Vec<Option<f64>> = match gridcraft_engine::calc::evaluate(wb, si, sp.cell, &sp.source) {
+        let vals: Vec<Option<f64>> = match tabilao_engine::calc::evaluate(wb, si, sp.cell, &sp.source) {
             Value::Array(a) => a.data.iter().map(Value::as_f64).collect(),
             v => vec![v.as_f64()],
         };
         let col = sp.color.resolve(&wb.theme).unwrap_or([0x2B, 0x7C, 0xD3]);
-        let prims = gridcraft_chart::render_sparkline(sp.kind, &vals, [col[0], col[1], col[2], 255], sp.markers, rect.width(), rect.height());
+        let prims = tabilao_chart::render_sparkline(sp.kind, &vals, [col[0], col[1], col[2], 255], sp.markers, rect.width(), rect.height());
         crate::chartview::paint_prims(p, rect.min, &prims, 1.0);
     }
     // Filter buttons.
@@ -1489,7 +1489,7 @@ pub(crate) fn paint_border(p: &Painter, pts: [Pos2; 2], style: BorderStyle, col:
 }
 
 fn paint_cf_icon(p: &Painter, r: Rect, set: &str, idx: usize) {
-    let n = gridcraft_engine::cf::icon_count(set);
+    let n = tabilao_engine::cf::icon_count(set);
     let palette3 = [Color32::from_rgb(0xD1, 0x3B, 0x2F), Color32::from_rgb(0xF2, 0xB8, 0x2E), Color32::from_rgb(0x2E, 0x9E, 0x4F)];
     let col = if n <= 3 {
         palette3.get(idx).copied().unwrap_or(Color32::GRAY)
@@ -1527,7 +1527,7 @@ fn paint_cf_icon(p: &Painter, r: Rect, set: &str, idx: usize) {
 }
 
 /// Where the active cell is on screen: the whole merged cell when it is part of one.
-fn active_rect(geo: &Geo, sh: &Sheet, sel: &gridcraft_engine::Selection) -> Rect {
+fn active_rect(geo: &Geo, sh: &Sheet, sel: &tabilao_engine::Selection) -> Rect {
     match sh.merge_at(sel.active) {
         Some(m) => geo.range_rect(sh, m),
         None => geo.cell_rect(sh, sel.active),
@@ -1537,12 +1537,12 @@ fn active_rect(geo: &Geo, sh: &Sheet, sel: &gridcraft_engine::Selection) -> Rect
 /// The rectangles shaded for a selection: every area except the active cell, which stays clear so
 /// it is plain where typing goes. A single selected cell has no fill. `outline` is where the
 /// current area is drawn this frame: it glides to a new selection, and its fill with it.
-pub fn selection_fill(geo: &Geo, sh: &Sheet, sel: &gridcraft_engine::Selection, outline: Rect) -> Vec<Rect> {
+pub fn selection_fill(geo: &Geo, sh: &Sheet, sel: &tabilao_engine::Selection, outline: Rect) -> Vec<Rect> {
     selection_fill_where(geo, sh, sel, outline, |_| true)
 }
 
 /// `selection_fill` for the areas `keep` accepts (a frozen pane draws only the areas it shows).
-fn selection_fill_where(geo: &Geo, sh: &Sheet, sel: &gridcraft_engine::Selection, outline: Rect, keep: impl Fn(&RangeRef) -> bool) -> Vec<Rect> {
+fn selection_fill_where(geo: &Geo, sh: &Sheet, sel: &tabilao_engine::Selection, outline: Rect, keep: impl Fn(&RangeRef) -> bool) -> Vec<Rect> {
     if sel.is_single_cell() {
         return vec![];
     }
@@ -1604,7 +1604,7 @@ pub(crate) fn paint_selection(
     p: &Painter,
     geo: &Geo,
     sh: &Sheet,
-    sel: &gridcraft_engine::Selection,
+    sel: &tabilao_engine::Selection,
     outline: Rect,
     t: &Tokens,
     app: &SheetApp,
@@ -1697,7 +1697,7 @@ pub(crate) fn paint_headers(
     p: &Painter,
     geo: &Geo,
     sh: &Sheet,
-    sel: &gridcraft_engine::Selection,
+    sel: &tabilao_engine::Selection,
     t: &Tokens,
     quads: &[((u32, u32), (u32, u32), Rect)],
 ) {
@@ -1888,7 +1888,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
         if app.session.draw_tool == "eraser" && (primary_clicked || resp.dragged()) {
             if let Some(p) = pos
                 && let Some(("shape", id, _)) = crate::chartview::hit(app, geo, sh, p)
-                && sh.shapes.iter().any(|s| s.id == id && s.kind == gridcraft_engine::model::ShapeKind::Ink)
+                && sh.shapes.iter().any(|s| s.id == id && s.kind == tabilao_engine::model::ShapeKind::Ink)
             {
                 let _ = app.run("object.delete", json!({"kind": "shape", "id": id}));
             }
@@ -1923,7 +1923,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
             app.selected_chart = Some(id);
             if kind == "shape"
                 && resp.double_clicked()
-                && sh.shapes.iter().any(|s| s.id == id && s.kind == gridcraft_engine::model::ShapeKind::TextBox)
+                && sh.shapes.iter().any(|s| s.id == id && s.kind == tabilao_engine::model::ShapeKind::TextBox)
             {
                 app.begin_text_box_edit(id);
                 return;
@@ -2073,7 +2073,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
         {
             let sheet_name = (ed.sheet != wb.active_sheet).then(|| sh.name.clone());
             let r = match sheet_name {
-                Some(n) => format!("{}!{}", gridcraft_engine::formula::quote_sheet(&n), c.a1()),
+                Some(n) => format!("{}!{}", tabilao_engine::formula::quote_sheet(&n), c.a1()),
                 None => c.a1(),
             };
             ed.insert_ref(&r);
@@ -2197,7 +2197,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
             Drag::ResizeCol { col, start, orig } => {
                 let w = (orig + (p.x - start) / geo.z).max(0.0);
                 app.toast =
-                    Some((format!("Width: {:.2} ({} pixels)", gridcraft_engine::cmd::format::points_to_chars(w as f64), w.round()), crate::now_ms()));
+                    Some((format!("Width: {:.2} ({} pixels)", tabilao_engine::cmd::format::points_to_chars(w as f64), w.round()), crate::now_ms()));
                 // Inside a selection of whole columns, every selected column takes the new width
                 // (Ctrl-selected areas included); otherwise only the dragged one.
                 let cols = if sel.ranges.iter().any(|r| r.is_full_cols() && col >= r.start.col && col <= r.end.col) {
@@ -2273,7 +2273,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
                     // Ctrl (Cmd on macOS) swaps copying and extending, as in Excel.
                     let mode = if mods.command { "alternate" } else { "series" };
                     if let Err(e) = app.run("edit.autoFill", json!({"source": src.a1(), "target": t.a1(), "mode": mode})) {
-                        app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+                        app.message = Some(("Tabilao".into(), crate::clean_error(&e)));
                     }
                 }
             }
@@ -2294,7 +2294,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
             }
             Drag::MoveCols { source, before: Some(before) } => {
                 if let Err(e) = app.run("sheet.moveColumns", json!({"cols": source.a1(), "before": before})) {
-                    app.message = Some(("GridCraft".into(), crate::clean_error(&e)));
+                    app.message = Some(("Tabilao".into(), crate::clean_error(&e)));
                 }
             }
             _ => {}
@@ -2338,7 +2338,7 @@ fn interact(app: &mut SheetApp, ui: &mut egui::Ui, resp: &egui::Response, geo: &
 fn point_header(app: &mut SheetApp, wb: &Workbook, sh: &Sheet, range: RangeRef) -> bool {
     let Some(ed) = app.editor.as_mut().filter(|ed| ed.can_point()) else { return false };
     let r = range.a1();
-    let r = if ed.sheet != wb.active_sheet { format!("{}!{r}", gridcraft_engine::formula::quote_sheet(&sh.name)) } else { r };
+    let r = if ed.sheet != wb.active_sheet { format!("{}!{r}", tabilao_engine::formula::quote_sheet(&sh.name)) } else { r };
     ed.insert_ref(&r);
     ed.request_focus = true;
     true
@@ -2355,7 +2355,7 @@ fn select_to_pointer(app: &mut SheetApp, geo: &Geo, sh: &Sheet, wb: &Workbook, p
         if let Some(start) = ed.point_cell {
             let range = RangeRef::new(start, cell);
             let text = if range.is_single() { range.start.a1() } else { range.a1() };
-            let text = if ed.sheet != wb.active_sheet { format!("{}!{text}", gridcraft_engine::formula::quote_sheet(&sh.name)) } else { text };
+            let text = if ed.sheet != wb.active_sheet { format!("{}!{text}", tabilao_engine::formula::quote_sheet(&sh.name)) } else { text };
             ed.insert_ref(&text);
             ed.point_cell = Some(start);
         }
@@ -2503,7 +2503,7 @@ fn is_filter_button(sh: &Sheet, geo: &Geo, p: Pos2) -> bool {
     sh.has_filter_button(c) && filter_button_rect(geo, sh, c).contains(p)
 }
 
-fn object_anchor(sh: &Sheet, kind: &str, id: u32) -> Option<gridcraft_engine::model::Anchor> {
+fn object_anchor(sh: &Sheet, kind: &str, id: u32) -> Option<tabilao_engine::model::Anchor> {
     match kind {
         "chart" => sh.charts.iter().find(|c| c.id == id).map(|c| c.anchor),
         "image" => sh.images.iter().find(|c| c.id == id).map(|c| c.anchor),
@@ -2530,9 +2530,9 @@ fn delete_selected_object(app: &mut SheetApp, sh: &Sheet) -> bool {
 
 /// A click on a hyperlink. References select; web and e-mail addresses ask first (the dialog's
 /// OK runs `link.open`); every other kind is refused with a message. The decision is the
-/// engine's ([`gridcraft_engine::links::classify`]), the same one `link.open` applies.
+/// engine's ([`tabilao_engine::links::classify`]), the same one `link.open` applies.
 pub fn follow_link(app: &mut SheetApp, target: &str) {
-    use gridcraft_engine::links::{LinkKind, classify};
+    use tabilao_engine::links::{LinkKind, classify};
     match classify(target) {
         LinkKind::Internal(r) => {
             let _ = app.session.run("edit.goTo", json!({"reference": r.trim_start_matches('#')}));
@@ -2571,7 +2571,7 @@ fn select_ranges(app: &mut SheetApp, r: RangeRef, add: bool, active: CellRef) {
 /// Grid keyboard handling when no text field has focus.
 fn keyboard(app: &mut SheetApp, ctx: &egui::Context, resp: &egui::Response, geo: &Geo, sh: &Sheet) {
     // Focus left on an editor that no longer exists goes back to the grid.
-    let stale = [egui::Id::new("gridcraft.cell_editor"), egui::Id::new("gridcraft.formula_bar"), crate::text_box::editor_id()];
+    let stale = [egui::Id::new("tabilao.cell_editor"), egui::Id::new("tabilao.formula_bar"), crate::text_box::editor_id()];
     let editing = app.editor.is_some() || app.text_box_editor.is_some();
     if !editing && ctx.memory(|m| m.focused()).is_some_and(|f| stale.contains(&f)) {
         resp.request_focus();
@@ -2726,7 +2726,7 @@ fn in_cell_editor(app: &mut SheetApp, ui: &mut egui::Ui, geo: &Geo, sh: &Sheet, 
     let painter = ui.painter().with_clip_rect(clip);
     painter.rect_filled(erect, 0.0, fill);
     painter.rect_stroke(erect.expand(1.0), 0.0, Stroke::new(2.0, Tokens::get(ui.ctx()).sel_border), StrokeKind::Middle);
-    let id = egui::Id::new("gridcraft.cell_editor");
+    let id = egui::Id::new("tabilao.cell_editor");
     let mut child = ui.new_child(egui::UiBuilder::new().max_rect(erect.shrink2(vec2(2.0, 1.0))));
     child.set_clip_rect(clip);
     crate::formula_bar::editor_widget(app, &mut child, id, font, false, erect.width() - 4.0);
@@ -2764,13 +2764,13 @@ fn filter_menu(app: &mut SheetApp, ui: &mut egui::Ui, geo: &Geo, was_open: bool)
             if let Some(d) = d {
                 let wbm = Arc::make_mut(&mut d.wb);
                 if let Some(s) = wbm.sheet_mut(si) {
-                    s.autofilter = Some(gridcraft_engine::model::AutoFilter { range: r, criteria: vec![] });
+                    s.autofilter = Some(tabilao_engine::model::AutoFilter { range: r, criteria: vec![] });
                 }
             }
         }
     }
     let wb = app.session.active().map(|d| d.wb.clone()).unwrap_or(wb);
-    let values = gridcraft_engine::cmd::data::filter_values(&wb, si, col);
+    let values = tabilao_engine::cmd::data::filter_values(&wb, si, col);
     let key = egui::Id::new(("filter_sel", col));
     let search_key = egui::Id::new(("filter_search", col));
     let buttons_key = egui::Id::new(("filter_buttons", col));
@@ -2914,7 +2914,7 @@ fn context_menu(app: &mut SheetApp, ui: &mut egui::Ui) {
                         "ui:filterValue" => {
                             if let Some(d) = app.session.active() {
                                 let a = d.selection.active;
-                                let text = d.wb.active().map(|sh| gridcraft_engine::display::cell_text(&d.wb, sh, a)).unwrap_or_default();
+                                let text = d.wb.active().map(|sh| tabilao_engine::display::cell_text(&d.wb, sh, a)).unwrap_or_default();
                                 let has = d.wb.active().is_some_and(|sh| sh.autofilter.is_some());
                                 if !has {
                                     let _ = app.run("data.filter", json!({}));
@@ -2973,7 +2973,7 @@ pub fn point_move(app: &mut SheetApp, ed: &mut EditState, dr: i64, dc: i64, exte
 /// The dropdown arrow beside a cell with an in-cell list validation.
 pub fn validation_arrow(sh: &Sheet, geo: &Geo, c: CellRef) -> Option<Rect> {
     let dv = sh.validations.iter().find(|d| d.ranges.iter().any(|r| r.contains(c)))?;
-    if dv.kind != gridcraft_engine::model::ValidationKind::List || !dv.in_cell_dropdown || geo.hidden_under_frozen(sh, c) {
+    if dv.kind != tabilao_engine::model::ValidationKind::List || !dv.in_cell_dropdown || geo.hidden_under_frozen(sh, c) {
         return None;
     }
     let r = geo.cell_rect(sh, c);
@@ -2990,7 +2990,7 @@ pub(crate) fn paint_overlays(
     wb: &Workbook,
     si: usize,
     sh: &Sheet,
-    sel: &gridcraft_engine::Selection,
+    sel: &tabilao_engine::Selection,
 ) {
     // Validation dropdown arrow for the active cell.
     if app.editor.is_none()
@@ -3098,7 +3098,7 @@ fn list_picker(app: &mut SheetApp, ui: &mut egui::Ui, geo: &Geo, was_open: bool)
         app.grid.list_picker = None;
         return;
     };
-    let items = gridcraft_engine::cmd::data::list_items(&wb, si, &dv);
+    let items = tabilao_engine::cmd::data::list_items(&wb, si, &dv);
     let r = geo.cell_rect(sh, c);
     let (at, pivot) = (geo.mirror_pos(r.left_bottom()), if geo.rtl { Align2::RIGHT_TOP } else { Align2::LEFT_TOP });
     let mut close = false;
@@ -3413,7 +3413,7 @@ mod tests {
     #[test]
     fn conditional_number_format_reaches_the_cell_text() {
         // #1163: a rule's number format replaces the cell's own; unmatched cells keep theirs.
-        let mut session = gridcraft_engine::Session::new();
+        let mut session = tabilao_engine::Session::new();
         session.new_workbook();
         session.execute("range.setValues", json!({"range": "A1", "values": [[1], [3], [4]]})).unwrap();
         session.execute("home.numberFormat", json!({"range": "A3", "code": "0.0"})).unwrap();
@@ -3434,7 +3434,7 @@ mod tests {
 
     #[test]
     fn filter_menu_uses_the_table_whose_header_was_clicked() {
-        use gridcraft_engine::model::Table;
+        use tabilao_engine::model::Table;
         let table = |id: u32, r0: u32, r1: u32| Table {
             id,
             name: format!("T{id}"),

@@ -1,4 +1,4 @@
-//! pdfcraft-crypt — the PDF standard security handler (ISO 32000-2 §7.6), standalone (L0).
+//! taratasy-crypt — the PDF standard security handler (ISO 32000-2 §7.6), standalone (L0).
 //!
 //! Supports every revision of the standard handler:
 //! - R2 (40-bit RC4), R3 (RC4 up to 128-bit), R4 (crypt filters: RC4 or AES-128);
@@ -317,7 +317,7 @@ impl SecurityHandler {
 // ── Passwords ──────────────────────────────────────────────────────────────────────────────────
 
 /// PDFDocEncoding (ISO 32000-2 Annex D) where it differs from Latin-1: bytes 0x18–0x1F and
-/// 0x80–0xA0 (0x9F is undefined). Here rather than in pdfcraft-cos, which decodes text strings
+/// 0x80–0xA0 (0x9F is undefined). Here rather than in taratasy-cos, which decodes text strings
 /// with it, because R2–R4 passwords need it too and cos depends on this crate.
 const PDFDOC_LOW: [char; 8] = ['˘', 'ˇ', 'ˆ', '˙', '˝', '˛', '˚', '˜'];
 const PDFDOC_HIGH: [char; 33] = [

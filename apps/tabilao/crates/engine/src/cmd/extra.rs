@@ -1,8 +1,8 @@
 //! More ribbon commands: Chart Design and Format, object arrangement, workbook views, table
 //! tools, Get Data, scripts (Automate), cell checkboxes, theme colours and fonts.
 
-use gridcraft_core::{CellRef, RangeRef, Value};
-use gridcraft_model::*;
+use tabilao_core::{CellRef, RangeRef, Value};
+use tabilao_model::*;
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -244,7 +244,7 @@ pub fn specs() -> Vec<CommandSpec> {
             has_doc,
             new_cell_style
         ),
-        cmd!(query "home.addIns", "Add-ins", ["Home", "Add-ins"], None, "{} → GridCraft extends through MCP and scripts instead of add-ins", always, |_, _| Ok(json!({"addIns": [], "hint": "Use gridcraft-cli mcp or Automate › scripts"}))),
+        cmd!(query "home.addIns", "Add-ins", ["Home", "Add-ins"], None, "{} → Tabilao extends through MCP and scripts instead of add-ins", always, |_, _| Ok(json!({"addIns": [], "hint": "Use tabilao-cli mcp or Automate › scripts"}))),
         cmd!(query "formulas.recentlyUsed", "Recently Used", ["Formulas", "Function Library"], None, "{} → recently used functions in this workbook", has_doc, recently_used),
         cmd!(query "formulas.financial", "Financial", ["Formulas", "Function Library"], None, "{}", always, |s, _| s.execute("formulas.functions", json!({"category": "Financial"}))),
         cmd!(query "formulas.logical", "Logical", ["Formulas", "Function Library"], None, "{}", always, |s, _| s.execute("formulas.functions", json!({"category": "Logical"}))),
@@ -332,7 +332,7 @@ fn add_element(s: &mut Session, p: &Json) -> Result<Json> {
                 }
                 let t = trendline_param(p)?;
                 let eligible: Vec<usize> =
-                    targets.into_iter().filter(|i| gridcraft_chart::supports_trendline(gridcraft_chart::series_plot_kind(c, *i))).collect();
+                    targets.into_iter().filter(|i| tabilao_chart::supports_trendline(tabilao_chart::series_plot_kind(c, *i))).collect();
                 if eligible.is_empty() {
                     return Err(bad("chart.addElement", "trendlines need a 2-D column, bar, line, area, scatter or bubble series"));
                 }
@@ -443,7 +443,7 @@ fn select_data(s: &mut Session, p: &Json) -> Result<Json> {
             let src = d.wb.sheet(src_si).ok_or(EngineError::NoDocument)?;
             let by_rows = bool_param(p, "byRows").unwrap_or(r.width() > r.height() + 1);
             let series = super::insert::series_from_range(src, r, by_rows);
-            Some((series, format!("{}!{}", gridcraft_formula::quote_sheet(&src.name), r.a1()), by_rows))
+            Some((series, format!("{}!{}", tabilao_formula::quote_sheet(&src.name), r.a1()), by_rows))
         }
         None => None,
     };
@@ -460,8 +460,8 @@ fn select_data(s: &mut Session, p: &Json) -> Result<Json> {
             };
             let r = RangeRef::parse(body).ok_or_else(|| bad("chart.selectData", "`categories` is not a range"))?;
             let name = d.wb.sheet(si).map(|sh| sh.name.clone()).ok_or(EngineError::NoDocument)?;
-            let abs = |c: CellRef| format!("${}${}", gridcraft_core::col_to_letters(c.col), c.row + 1);
-            Some(Some(format!("{}!{}:{}", gridcraft_formula::quote_sheet(&name), abs(r.start), abs(r.end))))
+            let abs = |c: CellRef| format!("${}${}", tabilao_core::col_to_letters(c.col), c.row + 1);
+            Some(Some(format!("{}!{}:{}", tabilao_formula::quote_sheet(&name), abs(r.start), abs(r.end))))
         }
     };
     let mut remove: Vec<usize> = p
@@ -887,8 +887,8 @@ fn from_csv(s: &mut Session, p: &Json) -> Result<Json> {
             let delim = str_param(p, "delimiter")
                 .and_then(|d| d.chars().next())
                 .unwrap_or(if text.lines().next().is_some_and(|l| l.contains('\t')) { '\t' } else { ',' });
-            let opts = gridcraft_xlsx::CsvOptions { delimiter: delim as u8, ..Default::default() };
-            let wb = gridcraft_xlsx::read_csv(&bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
+            let opts = tabilao_xlsx::CsvOptions { delimiter: delim as u8, ..Default::default() };
+            let wb = tabilao_xlsx::read_csv(&bytes, &opts).map_err(|e| EngineError::Other(e.to_string()))?;
             let sh = wb.sheet(0).ok_or(EngineError::NoDocument)?;
             let Some(u) = sh.used_range() else { return Err(EngineError::Other("The file is empty.".into())) };
             (u.start.row..=u.end.row)
@@ -974,7 +974,7 @@ fn all_scripts(s: &mut Session, _: &Json) -> Result<Json> {
     let all = stash_get(wb, SCRIPTS_NAME);
     let mut list: Vec<Json> =
         all.as_object().map(|o| o.iter().map(|(k, v)| json!({"name": k, "steps": v.as_array().map_or(0, Vec::len)})).collect()).unwrap_or_default();
-    // A preserved VBA project is reported alongside GridCraft's own scripts; it is carried on
+    // A preserved VBA project is reported alongside Tabilao's own scripts; it is carried on
     // save but never executed here, so it has no step count.
     if let Some(bytes) = &wb.vba_project {
         list.push(json!({"name": "(VBA)", "steps": 0, "kind": "vba", "size": bytes.len(), "executed": false}));
@@ -1014,7 +1014,7 @@ fn delete_script(s: &mut Session, p: &Json) -> Result<Json> {
 pub const CHECKBOX_FORMAT: &str = "\"☐\";\"☐\";\"☐\";[=1]\"☑\"";
 
 /// Whether `c` has checkbox formatting.
-pub(crate) fn is_checkbox_cell(wb: &gridcraft_model::Workbook, sh: &gridcraft_model::Sheet, c: CellRef) -> bool {
+pub(crate) fn is_checkbox_cell(wb: &tabilao_model::Workbook, sh: &tabilao_model::Sheet, c: CellRef) -> bool {
     wb.styles.get(sh.style_id(c)).num_fmt.as_str() == "checkbox"
 }
 
@@ -1144,7 +1144,7 @@ fn recently_used(s: &mut Session, _: &Json) -> Result<Json> {
             continue;
         }
         let input = p.get("input").and_then(Json::as_str).unwrap_or("");
-        if let Ok(e) = gridcraft_formula::parse(input.trim_start_matches('=')) {
+        if let Ok(e) = tabilao_formula::parse(input.trim_start_matches('=')) {
             for f in e.functions() {
                 if !seen.iter().any(|x| x == f) {
                     seen.push(f.to_string());

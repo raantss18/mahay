@@ -9,7 +9,7 @@
 //! into hard pie wedges fanning out across the canvas (#189), and translucent overlaps doubled up.
 
 use egui::{Color32, ColorImage, Rect, TextureHandle, TextureOptions, pos2};
-use photocraft_paint::{BrushSettings, StrokePoint, StrokeRenderer};
+use sary_paint::{BrushSettings, StrokePoint, StrokeRenderer};
 
 /// Longest side of the mask, in mask pixels (big documents are stamped at a reduced scale).
 const MAX_SIDE: u32 = 1024;
@@ -37,7 +37,7 @@ pub struct Trail {
 struct Dabs {
     renderer: StrokeRenderer,
     /// Document pixels the last "finish now" tail (a lone first dab, smoothing catch-up) covered.
-    tail: photocraft_geom::Rect,
+    tail: sary_geom::Rect,
 }
 
 impl Trail {
@@ -82,14 +82,14 @@ impl Trail {
     }
 
     /// Show the coverage the brush's own dabs leave along the drag, as the stroke commit renders
-    /// it (`photocraft_paint::retouch::stroke_coverage`): soft edges for a soft brush, the size and
+    /// it (`sary_paint::retouch::stroke_coverage`): soft edges for a soft brush, the size and
     /// shape each dab takes from pen pressure and dynamics. `brush` is asked for once, on the first
     /// call. What finishing the stroke now would add (the press's lone first dab) shows too.
     pub fn feed_dabs(&mut self, points: &[[f64; 3]], brush: impl FnOnce() -> BrushSettings) {
         if self.dabs.is_some() && self.fed >= points.len() {
             return;
         }
-        let mut dabs = self.dabs.take().unwrap_or_else(|| Dabs { renderer: StrokeRenderer::new(&brush(), None, 1.0), tail: photocraft_geom::Rect::EMPTY });
+        let mut dabs = self.dabs.take().unwrap_or_else(|| Dabs { renderer: StrokeRenderer::new(&brush(), None, 1.0), tail: sary_geom::Rect::EMPTY });
         let new: Vec<StrokePoint> = points
             .get(self.fed..)
             .unwrap_or(&[])
@@ -101,7 +101,7 @@ impl Trail {
         dabs.renderer.push(&new);
         let mut changed = dabs.renderer.take_dirty_rect().union(&dabs.tail);
         let tail = dabs.renderer.tail_preview().map(|mut t| (t.take_dirty_rect(), t));
-        dabs.tail = tail.as_ref().map_or(photocraft_geom::Rect::EMPTY, |(r, _)| *r);
+        dabs.tail = tail.as_ref().map_or(sary_geom::Rect::EMPTY, |(r, _)| *r);
         changed = changed.union(&dabs.tail);
         let tail = tail.map(|(_, t)| t);
         let renderer = &dabs.renderer;
@@ -111,7 +111,7 @@ impl Trail {
 
     /// Recompute the mask pixels over the document rectangle `r` from `cov` (document pixel →
     /// coverage 0..=1), sampled at each mask pixel's centre.
-    fn restamp(&mut self, r: photocraft_geom::Rect, cov: impl Fn(i32, i32) -> f32) {
+    fn restamp(&mut self, r: sary_geom::Rect, cov: impl Fn(i32, i32) -> f32) {
         if r.is_empty() {
             return;
         }

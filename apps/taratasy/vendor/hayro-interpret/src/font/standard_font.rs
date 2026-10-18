@@ -422,7 +422,7 @@ impl StandardKind {
                                 .unicode_to_glyph(c.chars().nth(0).unwrap() as u32)
                         })
                     })
-                    // PdfCraft patch: an accented letter the stand-in lacks is built from its
+                    // Taratasy patch: an accented letter the stand-in lacks is built from its
                     // parts (see `ACCENTED_LETTERS`).
                     .or_else(|| self.composite_glyph(code, c))
             })
@@ -432,7 +432,7 @@ impl StandardKind {
         result
     }
 
-    /// PdfCraft patch: the glyph id standing for the letter `name` built from its base letter and
+    /// Taratasy patch: the glyph id standing for the letter `name` built from its base letter and
     /// accent, when the stand-in has both. Ids from [`COMPOSITE_GLYPH_BASE`] up are one per
     /// character code, so the outline is found again from the code alone.
     fn composite_glyph(&self, code: u8, name: &str) -> Option<GlyphId> {
@@ -442,7 +442,7 @@ impl StandardKind {
         Some(GlyphId::new(COMPOSITE_GLYPH_BASE + u32::from(code)))
     }
 
-    /// PdfCraft patch: the outline of a glyph from [`Self::composite_glyph`] — the base letter,
+    /// Taratasy patch: the outline of a glyph from [`Self::composite_glyph`] — the base letter,
     /// then the accent centred on it. An accent above a letter taller than `x` is raised by the
     /// difference (the stand-in's accents sit on lowercase letters) and, in an italic font,
     /// moved along the slant; an ogonek hangs from the letter's right edge.
@@ -496,7 +496,7 @@ impl StandardKind {
         // If the font is not embedded, we might need to stretch it so that
         // it matches the metrics of the actual underlying font blob.
 
-        // PdfCraft patch: a composite id isn't a glyph of the blob, so its width comes from the
+        // Taratasy patch: a composite id isn't a glyph of the blob, so its width comes from the
         // standard metrics of its name.
         let blob_width = if is_composite {
             None
@@ -546,7 +546,7 @@ impl StandardKind {
     }
 
     pub(crate) fn char_code_to_unicode(&self, code: u8) -> Option<char> {
-        // PdfCraft patch: an Annex D.2 alias code reads as the ordinary character; see
+        // Taratasy patch: an Annex D.2 alias code reads as the ordinary character; see
         // `Encoding::text_alias`. `code_to_ps_name` is shared with glyph lookup and stays as it
         // is, so the alias is applied here, after `/Differences` has had its say.
         if !self.encodings.contains_key(&code)
@@ -574,11 +574,11 @@ impl StandardKind {
     }
 }
 
-/// PdfCraft patch: the first glyph id of the letters [`StandardKind`] builds from parts, far
+/// Taratasy patch: the first glyph id of the letters [`StandardKind`] builds from parts, far
 /// above the glyph count of any font (one id per character code from here).
 const COMPOSITE_GLYPH_BASE: u32 = 0x0100_0000;
 
-/// PdfCraft patch: how far an accent raised over a capital moves right per unit of height in
+/// Taratasy patch: how far an accent raised over a capital moves right per unit of height in
 /// an italic stand-in (tan 15°; the standard italics lean 12° to 16°).
 const ITALIC_ACCENT_SLANT: f64 = 0.27;
 
@@ -590,7 +590,7 @@ enum Place {
     Ogonek,
 }
 
-/// PdfCraft patch: the stand-ins for the standard fonts (PDFium's Foxit fonts) carry only the
+/// Taratasy patch: the stand-ins for the standard fonts (PDFium's Foxit fonts) carry only the
 /// glyphs of the Standard, WinAnsi and Mac Roman encodings, so a font that isn't embedded and
 /// names other Latin letters in its /Differences (`/Gbreve`, `/Idotaccent`, `/Scedilla`…, as
 /// iText 2 writes Turkish text with Times New Roman left unembedded) drew nothing for them. Each of
@@ -688,7 +688,7 @@ const ACCENTED_LETTERS: &[(&str, &str, &str, Place)] = &[
     ("zdotaccent", "z", "dotaccent", Place::Above),
 ];
 
-/// PdfCraft patch: the base letter, accent and placement of an accented letter in
+/// Taratasy patch: the base letter, accent and placement of an accented letter in
 /// [`ACCENTED_LETTERS`], by glyph name (`uni011E` and `u011E` forms too).
 fn accented_parts(name: &str) -> Option<(&'static str, &'static str, Place)> {
     let name = normalized_glyph_name(name);

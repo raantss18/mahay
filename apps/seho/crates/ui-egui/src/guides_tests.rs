@@ -1,7 +1,7 @@
 //! Drawing guides driven with the mouse: View › Guides adds the centre guides, dragging one
 //! moves it (with its distance from the centre shown), dropping it off the slide deletes it.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui::{Modifiers, PointerButton};
 use egui_kittest::Harness;
 use serde_json::json;

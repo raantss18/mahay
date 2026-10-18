@@ -1,7 +1,7 @@
 //! Conversions between PSD planar big-endian channel data and interleaved
 //! native-endian surface bytes.
 
-use photocraft_color::SampleType;
+use sary_color::SampleType;
 
 /// PSD depth (bits) for a sample type.
 pub fn psd_depth(s: SampleType) -> u16 {

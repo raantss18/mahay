@@ -1,5 +1,5 @@
 use super::*;
-use photocraft_doc::{ColorMode, LayerContent, LayerId};
+use sary_doc::{ColorMode, LayerContent, LayerId};
 
 fn session(w: u32, h: u32, depth: u32) -> Session {
     let mut s = Session::new();
@@ -367,7 +367,7 @@ fn place_scale_marker_lays_out_its_label_in_points_at_high_resolution() {
         let doc = d(&s);
         let Some(LayerContent::Text(t)) = doc.layer(LayerId(r["text"].as_u64().unwrap())).map(|l| &l.content) else { panic!("a type layer: {r}") };
         assert_eq!(t.size_pt, 12.0, "{res} ppi: type.create still gets points");
-        let layout = photocraft_text::shared().lock().unwrap().layout(t, doc.resolution_dpi);
+        let layout = sary_text::shared().lock().unwrap().layout(t, doc.resolution_dpi);
         let b = layout.bounds().expect("the label has a line");
         let ty = t.transform.m[5];
         let (top, bottom) = (f64::from(b[1]) + ty, f64::from(b[3]) + ty);

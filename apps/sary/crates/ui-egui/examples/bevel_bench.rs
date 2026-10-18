@@ -1,7 +1,7 @@
 //! Chisel bevel benchmark: the cost of changing the bevel size, the way a dragged slider does.
 //!
 //! ```sh
-//! cargo run --release -p photocraft-ui-egui --example bevel_bench -- [--size 4000x3000] [--reps 5] [--scene ellipse|text] [--no-cpu] [--json out.json]
+//! cargo run --release -p sary-ui-egui --example bevel_bench -- [--size 4000x3000] [--reps 5] [--scene ellipse|text] [--no-cpu] [--json out.json]
 //! ```
 //!
 //! Two synthetic scenes on a document of the given size: one big anti-aliased ellipse (a smooth
@@ -16,9 +16,9 @@
 use std::time::Instant;
 
 use eframe::wgpu;
-use photocraft_color::{BlendMode, Color};
-use photocraft_doc::{Bevel, BevelStyle, BevelTechnique, Contour, Document, Effect, FxCommon, LayerContent};
-use photocraft_geom::Rect;
+use sary_color::{BlendMode, Color};
+use sary_doc::{Bevel, BevelStyle, BevelTechnique, Contour, Document, Effect, FxCommon, LayerContent};
+use sary_geom::Rect;
 use serde_json::json;
 
 const SIZES: [u32; 3] = [8, 50, 250];
@@ -63,7 +63,7 @@ fn bevel(size: f32) -> Effect {
 
 /// The scene's document through the engine, so the shape and the glyphs are the real thing.
 fn scene(kind: &str, w: u32, h: u32) -> Result<Document, String> {
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": w, "height": h, "background": "#1E1813"})).map_err(|e| format!("file.new: {e}"))?;
     let (w, h) = (w as i64, h as i64);
     match kind {
@@ -95,7 +95,7 @@ fn set_bevel(doc: &mut Document, size: f32) {
 struct Gpu {
     device: wgpu::Device,
     queue: wgpu::Queue,
-    comp: photocraft_gpu::Compositor,
+    comp: sary_gpu::Compositor,
     adapter: String,
 }
 
@@ -106,9 +106,9 @@ fn gpu() -> Option<Gpu> {
             .ok()?;
     eprintln!("adapter: {:?}", adapter.get_info().name);
     // The limits the app requests (see `gpu_canvas::use_adapter_limits`).
-    let limits = photocraft_ui_egui::gpu_canvas::device_limits(&adapter);
+    let limits = sary_ui_egui::gpu_canvas::device_limits(&adapter);
     let (device, queue) = block_on(adapter.request_device(&wgpu::DeviceDescriptor { required_limits: limits, ..Default::default() })).ok()?;
-    let comp = photocraft_gpu::Compositor::new(&device);
+    let comp = sary_gpu::Compositor::new(&device);
     Some(Gpu { device, queue, comp, adapter: adapter.get_info().name })
 }
 
@@ -121,7 +121,7 @@ fn gpu_time(g: &mut Gpu, doc: &Document, region: Rect) -> Result<f64, String> {
 
 fn cpu_time(doc: &Document, region: Rect) -> f64 {
     let t = Instant::now();
-    let b = photocraft_compose::render(doc, region);
+    let b = sary_compose::render(doc, region);
     std::hint::black_box(&b);
     t.elapsed().as_secs_f64() * 1000.0
 }
@@ -143,7 +143,7 @@ fn main() {
     println!("{:<44} {:>18} {:>18}   (median ms)", "case", "GPU", "CPU");
 
     // `--json out.json` (`cargo xtask perf`): one row per case and compositor, with samples and the peak RSS.
-    let rss = photocraft_testkit::perf::RssSampler::start(std::time::Duration::from_millis(2));
+    let rss = sary_testkit::perf::RssSampler::start(std::time::Duration::from_millis(2));
     let mut json_rows: Vec<serde_json::Value> = Vec::new();
     let full = Rect::new(0, 0, w as i32, h as i32);
     for kind in ["ellipse", "text"] {
@@ -183,10 +183,10 @@ fn main() {
             }
             let peak = rss.peak();
             if !gs.is_empty() {
-                json_rows.push(photocraft_testkit::perf::row(&format!("{what} (GPU)"), &gs, peak, None));
+                json_rows.push(sary_testkit::perf::row(&format!("{what} (GPU)"), &gs, peak, None));
             }
             if !cs.is_empty() {
-                json_rows.push(photocraft_testkit::perf::row(&format!("{what} (CPU)"), &cs, peak, None));
+                json_rows.push(sary_testkit::perf::row(&format!("{what} (CPU)"), &cs, peak, None));
             }
             let show = |v: &mut Vec<f64>, err: Option<&String>| match (v.is_empty(), err) {
                 (false, _) => format!("{:.1}", median(v)),
@@ -198,8 +198,8 @@ fn main() {
     }
     if let Some(out) = arg(&args, "--json") {
         let context = json!({"width": w, "height": h, "gpu_adapter": adapter});
-        let report = photocraft_testkit::perf::report("bevel_bench", context, json_rows, Some(&rss));
-        if let Err(e) = photocraft_testkit::perf::write_report(&out, &report) {
+        let report = sary_testkit::perf::report("bevel_bench", context, json_rows, Some(&rss));
+        if let Err(e) = sary_testkit::perf::write_report(&out, &report) {
             eprintln!("{e}");
             std::process::exit(1);
         }

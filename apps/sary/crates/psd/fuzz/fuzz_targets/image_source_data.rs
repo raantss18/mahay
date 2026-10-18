@@ -3,7 +3,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::tiff::{ByteOrder, ImageSourceData, resources_from_bytes};
+use sary_psd::tiff::{ByteOrder, ImageSourceData, resources_from_bytes};
 
 fuzz_target!(|data: &[u8]| {
     let _ = resources_from_bytes(data);

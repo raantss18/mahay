@@ -5,18 +5,18 @@
 //! lossless), plus colour-book entries we cannot evaluate kept verbatim. Nothing assumes sRGB:
 //! RGB and HSB components are in the RGB working space, CMYK and gray in the CMYK and gray
 //! working spaces (Edit › Color Settings), Lab is D50. Turning a swatch into the RGB the
-//! foreground colour holds (and the panel shows) goes through `photocraft-cms`
+//! foreground colour holds (and the panel shows) goes through `sary-cms`
 //! ([`SwatchConv`]).
 //!
 //! The library persists with the preferences document (`presets.swatches`, see
 //! [`super::PresetState::to_json`]). The default set is our own (clean-room): grays, pastels,
 //! pure and dark hues. The commands live in `crate::swatch_cmds`; file formats in
-//! `photocraft_psd::{aco, ase}`.
+//! `sary_psd::{aco, ase}`.
 
 use std::sync::Arc;
 
-use photocraft_cms::{Builtin, Profile, Transform, TransformOptions};
-use photocraft_color::ColorMode;
+use sary_cms::{Builtin, Profile, Transform, TransformOptions};
+use sary_color::ColorMode;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -37,7 +37,7 @@ pub enum SwatchColor {
     Lab([f32; 3]),
     /// Black ink 0..1 (0 = white) in the gray working space, as Photoshop's K slider.
     Gray(f32),
-    /// A colour space PhotoCraft does not model (colour books and the like), kept verbatim from
+    /// A colour space Sary does not model (colour books and the like), kept verbatim from
     /// an `.aco` file so it survives a round trip.
     Book { space: u16, values: [u16; 4] },
 }
@@ -209,7 +209,7 @@ impl SwatchColor {
 
 // ------------------------------------------------------------------ colour management
 
-/// Converts swatch colours to the RGB working space through `photocraft-cms` (relative
+/// Converts swatch colours to the RGB working space through `sary-cms` (relative
 /// colorimetric + black point compensation, Photoshop's default). Build one per library or
 /// colour-settings change; evaluating is cheap.
 pub struct SwatchConv {
@@ -245,8 +245,8 @@ impl SwatchConv {
 
     fn with(s: Option<&Session>) -> Self {
         let rgb = working(s, ColorMode::Rgb);
-        let opts = TransformOptions { intent: photocraft_cms::Intent::RelativeColorimetric, bpc: true, ..Default::default() };
-        let link = |src: &Profile| photocraft_cms::cached(src, &rgb, opts).ok();
+        let opts = TransformOptions { intent: sary_cms::Intent::RelativeColorimetric, bpc: true, ..Default::default() };
+        let link = |src: &Profile| sary_cms::cached(src, &rgb, opts).ok();
         SwatchConv { cmyk: link(&working(s, ColorMode::Cmyk)), lab: link(Builtin::LabD50.profile()), gray: link(&working(s, ColorMode::Grayscale)) }
     }
 
@@ -264,12 +264,12 @@ impl SwatchConv {
             SwatchColor::Hsb(v) => hsb_to_rgb(v),
             SwatchColor::Cmyk(v) => {
                 let v = v.map(unit);
-                eval(&self.cmyk, &v).unwrap_or_else(|| photocraft_color::convert::cmyk_to_rgb(v))
+                eval(&self.cmyk, &v).unwrap_or_else(|| sary_color::convert::cmyk_to_rgb(v))
             }
             SwatchColor::Lab([l, a, b]) => {
                 // ICC v4 Lab encoding (the Lab D50 profile's device values).
                 let enc = [unit(finite(l) / 100.0), unit((finite(a) + 128.0) / 255.0), unit((finite(b) + 128.0) / 255.0)];
-                eval(&self.lab, &enc).unwrap_or_else(|| photocraft_color::convert::lab_to_srgb([finite(l), finite(a), finite(b)]))
+                eval(&self.lab, &enc).unwrap_or_else(|| sary_color::convert::lab_to_srgb([finite(l), finite(a), finite(b)]))
             }
             SwatchColor::Gray(k) => {
                 let level = 1.0 - unit(k);

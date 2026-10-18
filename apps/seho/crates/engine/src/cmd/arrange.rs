@@ -1,7 +1,7 @@
 //! Arrange: order, group, align, distribute, rotate and flip.
 
-use deckcraft_geom::{Point, Rect, Xfrm};
-use deckcraft_model::{Shape, ShapeId, ShapeKind};
+use seho_geom::{Point, Rect, Xfrm};
+use seho_model::{Shape, ShapeId, ShapeKind};
 use serde_json::{Value, json};
 
 use super::*;
@@ -87,7 +87,7 @@ fn order(s: &mut Session, p: &Value, how: i32) -> Result<Value> {
 /// Every shape id with its depth, in tree order.
 fn stacking(v: &[Shape]) -> Vec<(ShapeId, usize)> {
     let mut out = vec![];
-    deckcraft_model::walk(v, &mut |sh, d| out.push((sh.id, d)));
+    seho_model::walk(v, &mut |sh, d| out.push((sh.id, d)));
     out
 }
 
@@ -144,7 +144,7 @@ fn reorder(s: &mut Session, p: &Value) -> Result<Value> {
     let id = id_param(p, "id", "arrange.reorder")?.ok_or_else(|| bad("arrange.reorder", "missing `id`"))?;
     let to = usize_param(p, "index").ok_or_else(|| bad("arrange.reorder", "missing `index`"))?;
     let st = s.doc()?;
-    let siblings: &[Shape] = match deckcraft_model::parent_of(st.shapes(), id) {
+    let siblings: &[Shape] = match seho_model::parent_of(st.shapes(), id) {
         None => return Err(bad("arrange.reorder", "no such shape")),
         Some(None) => st.shapes(),
         Some(Some(g)) => st.shape(g).map(Shape::children).unwrap_or(&[]),
@@ -155,7 +155,7 @@ fn reorder(s: &mut Session, p: &Value) -> Result<Value> {
     }
     s.edit(|doc, sel| {
         let tree = crate::shapes_mut(doc, sel).ok_or_else(|| bad("arrange.reorder", "no slide"))?;
-        let list = deckcraft_model::sibling_list_mut(tree, id).ok_or_else(|| bad("arrange.reorder", "no such shape"))?;
+        let list = seho_model::sibling_list_mut(tree, id).ok_or_else(|| bad("arrange.reorder", "no such shape"))?;
         let i = list.iter().position(|x| x.id == id).ok_or_else(|| bad("arrange.reorder", "no such shape"))?;
         let sh = list.remove(i);
         let at = to.min(list.len());
@@ -211,7 +211,7 @@ fn group(s: &mut Session, p: &Value) -> Result<Value> {
 pub(crate) fn child_to_parent(group: &Xfrm, ch: &Xfrm, c: &Xfrm) -> Xfrm {
     let sx = if ch.w.abs() > 1e-9 { group.w / ch.w } else { 1.0 };
     let sy = if ch.h.abs() > 1e-9 { group.h / ch.h } else { 1.0 };
-    let a = deckcraft_geom::group_child_affine(group, Rect::new(ch.x, ch.y, ch.x + ch.w, ch.y + ch.h));
+    let a = seho_geom::group_child_affine(group, Rect::new(ch.x, ch.y, ch.x + ch.w, ch.y + ch.h));
     let center = a * Point::new(c.x + c.w / 2.0, c.y + c.h / 2.0);
     let (w, h) = (c.w * sx.abs(), c.h * sy.abs());
     let mut rot = c.rot + group.rot;
@@ -367,8 +367,8 @@ fn guide_add(s: &mut Session, p: &Value) -> Result<Value> {
         let size = s.doc()?.doc.slide_size;
         return s.edit(|doc, _| {
             doc.guides = vec![
-                deckcraft_model::DrawGuide { vertical: true, pos: size.width / 2.0 },
-                deckcraft_model::DrawGuide { vertical: false, pos: size.height / 2.0 },
+                seho_model::DrawGuide { vertical: true, pos: size.width / 2.0 },
+                seho_model::DrawGuide { vertical: false, pos: size.height / 2.0 },
             ];
             Ok(json!({"added": 2}))
         });
@@ -380,7 +380,7 @@ fn guide_add(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad("guide.add", "too many guides"));
     }
     s.edit(|doc, _| {
-        doc.guides.push(deckcraft_model::DrawGuide { vertical, pos });
+        doc.guides.push(seho_model::DrawGuide { vertical, pos });
         Ok(json!({"index": doc.guides.len() - 1}))
     })
 }

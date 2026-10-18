@@ -2,7 +2,7 @@
 //! the fx badge, #144). View state ([`crate::DocState::fx_collapsed`]): no history step, and a
 //! clean document stays clean.
 
-use photocraft_doc::LayerId;
+use sary_doc::LayerId;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;

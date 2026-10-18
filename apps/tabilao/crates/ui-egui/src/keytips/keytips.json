@@ -25,7 +25,7 @@
    "seq": "JI",
    "kind": "tab",
    "target": "Draw",
-   "note": "Two-letter unit. Deeper Draw letters differ between Excel and GridCraft; left blank for future contributors."
+   "note": "Two-letter unit. Deeper Draw letters differ between Excel and Tabilao; left blank for future contributors."
   },
   {
    "seq": "P",

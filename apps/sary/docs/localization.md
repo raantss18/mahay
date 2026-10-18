@@ -1,6 +1,6 @@
 # UI localisation and live language switching
 
-PhotoCraft uses the same Rust catalog implementation in the native egui shell and the
+Sary uses the same Rust catalog implementation in the native egui shell and the
 WebAssembly build. English source strings are lookup keys. UTF-8 TSV catalogs supply plain,
 contextual, command-ID and plural translations; missing entries fall back to English.
 
@@ -67,7 +67,7 @@ The native-only, pinned `sys-locale` dependency provides safe Rust access to the
   or depending on a particular `.plist` representation.
 - **Linux/BSD:** the platform's standard locale environment, including `LANGUAGE` lists.
 
-`PHOTOCRAFT_LOCALE` is an optional single-tag override for reproducible launches; an unsupported
+`SARY_LOCALE` is an optional single-tag override for reproducible launches; an unsupported
 override falls back to English. Empty overrides use the system. Unix locale variables do not
 override Windows/macOS UI-language preferences. Tags are read once per process (at most 64,
 128 bytes each) and matched against the supported language registry. Changes to the
@@ -107,11 +107,11 @@ so letters join, but lays a line's words out left to right, and its caret indexi
 right-to-left text (emilk/egui#8576, #8577). Document text is laid out by the text engine.
 
 No right-to-left catalog ships yet. To check the mirrored layout with any language, launch with
-`PHOTOCRAFT_UI_DIRECTION=rtl` (or `ltr` to force left-to-right); it is read once per process
+`SARY_UI_DIRECTION=rtl` (or `ltr` to force left-to-right); it is read once per process
 and has no effect on the web build:
 
 ```sh
-PHOTOCRAFT_UI_DIRECTION=rtl cargo run -p photocraft-ui-egui --example snapshot -- --out rtl.png
+SARY_UI_DIRECTION=rtl cargo run -p sary-ui-egui --example snapshot -- --out rtl.png
 ```
 
 ## Fonts
@@ -122,7 +122,7 @@ removed from the definitions can be registered again. Idle frames keep their fon
 Other languages retain the system's CJK fallback preference for document names and text.
 
 Font files are not added to this repository. Native rendering uses installed system fonts
-and the optional craft-fonts build input; see [Fonts](development.md#fonts-craft-fonts).
+and the optional mahay-fonts build input; see [Fonts](development.md#fonts-mahay-fonts).
 The web build can select every catalog, but CJK glyph delivery and automatic browser-locale
 detection remain separate outstanding work. Switching catalogs does not supply missing fonts.
 
@@ -132,13 +132,13 @@ detection remain separate outstanding work. Switching catalogs does not supply m
 2. Register its code, native name and plural rule in `i18n::LANGUAGES`.
 3. Translate the meaning of the English source keys. Preserve `{name}` placeholders, escaped
    characters and the trailing `…` on dialog commands. Use `@id` to disambiguate a command
-   label and `@plural` for count-sensitive text. Keep product names such as PhotoCraft.
+   label and `@plural` for count-sensitive text. Keep product names such as Sary.
 4. Set `complete_menus` when the catalog covers all enforced keys. Add source and license
    attribution for translation assets, then run the catalog and shell tests.
 
 ```sh
-cargo test -p photocraft-ui-egui --locked
-cargo clippy -p photocraft-ui-egui --all-targets --locked -- -D warnings
+cargo test -p sary-ui-egui --locked
+cargo clippy -p sary-ui-egui --all-targets --locked -- -D warnings
 cargo xtask i18n-coverage
 cargo xtask layers
 cargo xtask wasm
@@ -146,5 +146,5 @@ cargo xtask wasm
 
 Render representative dialogs with the offscreen `snapshot` example, including a sequence
 of language changes in one process. Inspect the PNGs for missing glyphs and truncated labels.
-Translations are original work or reuse the open PhotoCraft contributions credited in
+Translations are original work or reuse the open Sary contributions credited in
 [ATTRIBUTION.md](../ATTRIBUTION.md); no proprietary localisation resources are used.

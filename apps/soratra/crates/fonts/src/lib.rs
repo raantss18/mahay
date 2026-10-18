@@ -1,8 +1,8 @@
-//! WordCraft fonts: the font database (bundled OFL families + user/system fonts), vertical
+//! Soratra fonts: the font database (bundled OFL families + user/system fonts), vertical
 //! metrics, glyph outlines and OpenType shaping.
 //!
 //! Shaping here is style-agnostic: [`shape`] turns a string in one face into glyph ids, clusters
-//! and advances in font units. `wordcraft-compose` applies sizes, tracking, scaling and
+//! and advances in font units. `soratra-compose` applies sizes, tracking, scaling and
 //! justification on top.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
@@ -26,9 +26,9 @@ use skrifa::MetadataProvider;
 use skrifa::instance::Size;
 pub use ui_fallback::{SystemUiFont, is_cjk, system_cjk_ui_font, system_cjk_ui_font_for, ui_needs_system_cjk, ui_uncovered_cjk};
 
-/// A font from the optional craft-fonts build input (https://github.com/storytold/craft-fonts;
-/// empty unless built with `CRAFT_FONTS_DIR`, see `build.rs`).
-pub struct CraftFont {
+/// A font from the optional mahay-fonts build input (https://github.com/raantss18/mahay;
+/// empty unless built with `MAHAY_FONTS_DIR`, see `build.rs`).
+pub struct MahayFont {
     pub family: &'static str,
     pub style: &'static str,
     /// ISO 15924 scripts the font is for, e.g. `"Jpan"`.
@@ -36,16 +36,16 @@ pub struct CraftFont {
     pub bytes: &'static [u8],
 }
 
-include!(concat!(env!("OUT_DIR"), "/craft_fonts.rs"));
+include!(concat!(env!("OUT_DIR"), "/mahay_fonts.rs"));
 
-/// The craft-fonts faces for Japanese (`"Jpan"`), in manifest order. Empty without craft-fonts.
-pub fn japanese_fonts() -> impl Iterator<Item = &'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.scripts.contains(&"Jpan"))
+/// The mahay-fonts faces for Japanese (`"Jpan"`), in manifest order. Empty without mahay-fonts.
+pub fn japanese_fonts() -> impl Iterator<Item = &'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.scripts.contains(&"Jpan"))
 }
 
 /// Japanese faces in document-fallback order: Mincho (serif) families first, matching the
 /// serif default text font, then the others; Regular before other styles.
-pub fn japanese_document_fonts() -> Vec<&'static CraftFont> {
+pub fn japanese_document_fonts() -> Vec<&'static MahayFont> {
     let mut v: Vec<_> = japanese_fonts().collect();
     v.sort_by_key(|f| (!f.family.contains("Mincho"), f.style != "Regular"));
     v
@@ -53,34 +53,34 @@ pub fn japanese_document_fonts() -> Vec<&'static CraftFont> {
 
 /// Japanese faces in UI order: BIZ UDPGothic first (the UI face), then the others; `bold` puts
 /// bold styles before regular ones.
-pub fn japanese_ui_fonts(bold: bool) -> Vec<&'static CraftFont> {
+pub fn japanese_ui_fonts(bold: bool) -> Vec<&'static MahayFont> {
     let mut v: Vec<_> = japanese_fonts().collect();
     v.sort_by_key(|f| (f.family != "BIZ UDPGothic", (f.style == "Bold") != bold));
     v
 }
 
-/// The craft-fonts faces for Simplified Chinese (`"Hans"`), in manifest order. Empty without
-/// craft-fonts.
-pub fn chinese_fonts() -> impl Iterator<Item = &'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.scripts.contains(&"Hans"))
+/// The mahay-fonts faces for Simplified Chinese (`"Hans"`), in manifest order. Empty without
+/// mahay-fonts.
+pub fn chinese_fonts() -> impl Iterator<Item = &'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.scripts.contains(&"Hans"))
 }
 
-/// The craft-fonts faces for Korean (`"Kore"`), in manifest order. Empty without craft-fonts.
-pub fn korean_fonts() -> impl Iterator<Item = &'static CraftFont> {
-    CRAFT_FONTS.iter().filter(|f| f.scripts.contains(&"Kore"))
+/// The mahay-fonts faces for Korean (`"Kore"`), in manifest order. Empty without mahay-fonts.
+pub fn korean_fonts() -> impl Iterator<Item = &'static MahayFont> {
+    MAHAY_FONTS.iter().filter(|f| f.scripts.contains(&"Kore"))
 }
 
 /// The CJK interface faces, Regular styles only (the UI fakes no bold), with the Japanese UI,
 /// Chinese, and Korean faces ordered for the selected interface language. Mixing the faces within
 /// a line would mix glyph styles, so the first face should cover the interface language. Empty
-/// without craft-fonts.
-pub fn ui_cjk_fonts(prefer_hans: bool) -> Vec<&'static CraftFont> {
+/// without mahay-fonts.
+pub fn ui_cjk_fonts(prefer_hans: bool) -> Vec<&'static MahayFont> {
     ui_cjk_fonts_for(prefer_hans, false)
 }
 
 /// The CJK interface faces in the preferred writing system's order.
-pub fn ui_cjk_fonts_for(prefer_hans: bool, prefer_korean: bool) -> Vec<&'static CraftFont> {
-    let regular = |f: &&CraftFont| f.style == "Regular";
+pub fn ui_cjk_fonts_for(prefer_hans: bool, prefer_korean: bool) -> Vec<&'static MahayFont> {
+    let regular = |f: &&MahayFont| f.style == "Regular";
     let ja = japanese_ui_fonts(false).into_iter().filter(regular).take(1);
     let zh = chinese_fonts().filter(regular).take(1);
     let ko = korean_fonts().filter(regular).take(1);
@@ -347,13 +347,13 @@ mod tests {
     }
 
     #[test]
-    fn craft_fonts_japanese_faces_cover_japanese_and_have_vertical_forms() {
-        if CRAFT_FONTS.is_empty() {
-            eprintln!("skipped: built without craft-fonts (set CRAFT_FONTS_DIR to a checkout)");
+    fn mahay_fonts_japanese_faces_cover_japanese_and_have_vertical_forms() {
+        if MAHAY_FONTS.is_empty() {
+            eprintln!("skipped: built without mahay-fonts (set MAHAY_FONTS_DIR to a checkout)");
             return;
         }
         let fonts = japanese_document_fonts();
-        assert!(!fonts.is_empty(), "craft-fonts has Japanese fonts");
+        assert!(!fonts.is_empty(), "mahay-fonts has Japanese fonts");
         assert!(fonts[0].family.contains("Mincho"), "documents fall back to a Mincho first");
         assert_eq!(japanese_ui_fonts(false)[0].family, "BIZ UDPGothic");
         assert_eq!(japanese_ui_fonts(true)[0].style, "Bold");
@@ -372,7 +372,7 @@ mod tests {
             assert_eq!(horizontal.len(), vertical.len());
             assert!(horizontal.iter().zip(&vertical).any(|(h, v)| h.gid != v.gid), "{} has vertical forms", cf.family);
         }
-        // Japanese in a Latin face falls back to a craft-fonts Mincho, without system fonts.
+        // Japanese in a Latin face falls back to a mahay-fonts Mincho, without system fonts.
         let latin = db.face(DEFAULT_FAMILY, "Regular");
         let fb = db.fallback_for('語', latin.id()).unwrap();
         assert!(fb.family.contains("Mincho"), "{fb:?}");
@@ -383,7 +383,7 @@ mod tests {
         let db = FontDb::with_font_dirs(Vec::new());
         db.set_system_fallback(false);
         let latin = db.face(DEFAULT_FAMILY, "Regular");
-        if CRAFT_FONTS.is_empty() {
+        if MAHAY_FONTS.is_empty() {
             // No bundled CJK font and no system fallback: nothing can draw the run.
             assert!(db.fallback_for_run(&['分', '类'], latin.id(), false, false).is_none());
             return;
@@ -403,10 +403,10 @@ mod tests {
     }
 
     #[test]
-    fn arabic_and_persian_fall_back_to_the_craft_fonts_arabic_face() {
+    fn arabic_and_persian_fall_back_to_the_mahay_fonts_arabic_face() {
         // #1652: with no system fonts (a headless CLI), Arabic and Persian drew as empty boxes.
-        let Some(arabic) = CRAFT_FONTS.iter().find(|f| f.scripts.contains(&"Arab")) else {
-            eprintln!("skipped: no Arabic face in the optional craft-fonts input");
+        let Some(arabic) = MAHAY_FONTS.iter().find(|f| f.scripts.contains(&"Arab")) else {
+            eprintln!("skipped: no Arabic face in the optional mahay-fonts input");
             return;
         };
         let db = FontDb::with_font_dirs(Vec::new());
@@ -419,13 +419,13 @@ mod tests {
     }
 
     #[test]
-    fn works_without_craft_fonts() {
-        // Always true without CRAFT_FONTS_DIR; with it, the bundled fonts must still all load.
+    fn works_without_mahay_fonts() {
+        // Always true without MAHAY_FONTS_DIR; with it, the bundled fonts must still all load.
         let db = FontDb::with_font_dirs(Vec::new());
         db.set_system_fallback(false);
         assert_eq!(db.face(DEFAULT_FAMILY, "Regular").family, DEFAULT_FAMILY);
         assert!(!shape(&db.face(DEFAULT_FAMILY, "Regular"), "Hello", &[], |c| c).is_empty());
-        if CRAFT_FONTS.is_empty() {
+        if MAHAY_FONTS.is_empty() {
             assert!(japanese_fonts().next().is_none() && japanese_document_fonts().is_empty());
             let latin = db.face(DEFAULT_FAMILY, "Regular");
             assert!(db.fallback_for('語', latin.id()).is_none(), "no bundled Japanese font");

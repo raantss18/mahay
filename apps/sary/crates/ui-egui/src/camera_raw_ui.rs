@@ -1,7 +1,7 @@
 //! Filter › Camera Raw Filter…: a large dialog like Adobe Camera Raw's (preview on the left,
 //! edit panels on the right: Light, Color, Effects, Curve, Color Mixer, Color Grading, Detail).
 //!
-//! The preview runs [`photocraft_algo::camera_raw::develop`] on a CPU proxy of the layer
+//! The preview runs [`sary_algo::camera_raw::develop`] on a CPU proxy of the layer
 //! (≤ 900 px, `pixel_scale` keeps pixel radii true to the full image), recomputed when a
 //! control changes. OK runs `filter.cameraRaw` with the non-default settings, so the result is
 //! one history step (or a smart filter on a smart object) and exactly replayable.
@@ -9,18 +9,18 @@
 //! Control channel: `ui.menu.invoke {"id":"filter.cameraRaw","params":{"ui":{"set":{…},
 //! "commit":true | "cancel":true}}}`; the reply describes the dialog. `{"ui":{"saveSettings":true}}`
 //! and `{"ui":{"loadSettings":true}}` run Save Settings… / Load Settings… (Camera Raw `.xmp`
-//! settings files, see [`photocraft_io::camera_raw_xmp`]) through the file dialog.
+//! settings files, see [`sary_io::camera_raw_xmp`]) through the file dialog.
 
 use egui::{Align2, Color32, FontId, Pos2, Rect as ERect, Sense, Stroke, TextureHandle, pos2, vec2};
-use photocraft_algo::camera_raw::{CameraRaw, Wheel, curve_lut};
-use photocraft_algo::histogram::RgbHistogram;
+use sary_algo::camera_raw::{CameraRaw, Wheel, curve_lut};
+use sary_algo::histogram::RgbHistogram;
 
 use crate::camera_raw_scope_ui::{MAX_SAMPLERS, ToneZone};
-use photocraft_doc::LayerId;
-use photocraft_geom::Rect;
+use sary_doc::LayerId;
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 use crate::widgets;
 
@@ -46,7 +46,7 @@ pub struct CameraRawDialog {
     full_h: usize,
     preview_ppp: f32,
     pub(crate) detail: super::camera_raw_detail_ui::DetailPreview,
-    display: std::sync::Arc<photocraft_engine::display_color::CanvasDisplay>,
+    display: std::sync::Arc<sary_engine::display_color::CanvasDisplay>,
     pub(crate) viewport: Option<ERect>,
     pub(crate) float: bool,
     tex: Option<TextureHandle>,
@@ -54,8 +54,8 @@ pub struct CameraRawDialog {
     before_display_key: Option<u64>,
     pub(crate) before_histogram: RgbHistogram,
     pub(crate) processed: Vec<[f32; 4]>,
-    pub(crate) lab_transform: std::sync::Arc<photocraft_cms::Transform>,
-    pub(crate) scope_transform: std::sync::Arc<photocraft_cms::Transform>,
+    pub(crate) lab_transform: std::sync::Arc<sary_cms::Transform>,
+    pub(crate) scope_transform: std::sync::Arc<sary_cms::Transform>,
     pub(crate) scope: super::camera_raw_scope_ui::ScopeView,
     pub(crate) after_histogram: RgbHistogram,
     pub(crate) preview_revision: u64,
@@ -128,7 +128,7 @@ impl CameraRawDialog {
         non_defaults(&self.params)
     }
 
-    fn image(px: &[[f32; 4]], w: usize, h: usize, display: &photocraft_engine::display_color::CanvasDisplay) -> egui::ColorImage {
+    fn image(px: &[[f32; 4]], w: usize, h: usize, display: &sary_engine::display_color::CanvasDisplay) -> egui::ColorImage {
         // Bands copied straight from `px`, converted in parallel (#4682), not a whole copy of the
         // proxy converted on one thread.
         super::camera_raw_detail_ui::display_image(Rect::new(0, 0, w as i32, h as i32), display, |r, out| {
@@ -146,10 +146,10 @@ impl CameraRawDialog {
         p.pixel_scale = (self.pw as f32 / self.full_w.max(1) as f32).min(1.0);
         if let Some(curve) = &self.raw_curve {
             let tone = raw_stage(&p);
-            photocraft_io::raw::retone(&mut px, self.pw, self.ph, curve, tone);
+            sary_io::raw::retone(&mut px, self.pw, self.ph, curve, tone);
             (p.shadows, p.highlights, p.clarity, p.texture, p.dehaze) = (0.0, 0.0, 0.0, 0.0, 0.0);
         }
-        photocraft_algo::camera_raw::develop(&mut px, self.pw, self.ph, &p, self.float);
+        sary_algo::camera_raw::develop(&mut px, self.pw, self.ph, &p, self.float);
         if let Some(mask) = &self.selection {
             for ((out, original), coverage) in px.iter_mut().zip(&self.proxy).zip(mask) {
                 for (out, original) in out.iter_mut().zip(original) {
@@ -195,12 +195,12 @@ enum Target {
 /// A raw file opened interactively, shown in Camera Raw before it is kept (as Photoshop opens
 /// raws in Adobe Camera Raw first). The document is already developed with the defaults; Open
 /// re-develops it when Temperature, Tint, Exposure, Shadows, Highlights, Clarity, Texture or
-/// Dehaze changed (those act on the sensor data, see [`photocraft_io::raw::import_raw_tuned`])
+/// Dehaze changed (those act on the sensor data, see [`sary_io::raw::import_raw_tuned`])
 /// and applies the other settings as one Camera Raw step, then marks the document unmodified.
 /// Cancel closes it.
 #[derive(Clone, Debug)]
 pub struct RawOpen {
-    pub document: photocraft_doc::DocId,
+    pub document: sary_doc::DocId,
     pub name: String,
     pub path: Option<String>,
     /// The file, when it was opened from bytes (no path to read it again from).
@@ -209,18 +209,18 @@ pub struct RawOpen {
 
 /// Should an interactive open of `name` show the open-time Camera Raw dialog? `warnings` are
 /// the import's: only a raw developed from its sensor data qualifies (not a preview fallback).
-pub fn wants_open_dialog(app: &PhotocraftApp, warnings: &[String]) -> bool {
-    app.session.prefs().raw_defaults.open_in_camera_raw && warnings.iter().any(|w| w.contains(photocraft_io::raw::DEVELOPED_NOTE))
+pub fn wants_open_dialog(app: &SaryApp, warnings: &[String]) -> bool {
+    app.session.prefs().raw_defaults.open_in_camera_raw && warnings.iter().any(|w| w.contains(sary_io::raw::DEVELOPED_NOTE))
 }
 
 /// `warnings` without the "developed with default settings" note: the open-time dialog shows
 /// how the raw is developed.
 pub fn without_develop_note(warnings: &[String]) -> Vec<String> {
-    warnings.iter().filter(|w| !w.contains(photocraft_io::raw::DEVELOPED_NOTE)).cloned().collect()
+    warnings.iter().filter(|w| !w.contains(sary_io::raw::DEVELOPED_NOTE)).cloned().collect()
 }
 
 /// Queues the open-time dialog for the active document (shown on the next frame).
-pub fn queue_open_dialog(app: &mut PhotocraftApp, name: &str, path: Option<&str>, bytes: Option<&[u8]>) {
+pub fn queue_open_dialog(app: &mut SaryApp, name: &str, path: Option<&str>, bytes: Option<&[u8]>) {
     if let Some(st) = app.session.active() {
         app.pending_raw_open = Some(RawOpen {
             document: st.doc.id,
@@ -232,15 +232,15 @@ pub fn queue_open_dialog(app: &mut PhotocraftApp, name: &str, path: Option<&str>
 }
 
 /// Opens the queued open-time dialog on its document's (only) layer.
-fn open_raw(app: &mut PhotocraftApp, ctx: &egui::Context, raw: RawOpen) -> Result<(), String> {
+fn open_raw(app: &mut SaryApp, ctx: &egui::Context, raw: RawOpen) -> Result<(), String> {
     let index = document_index(app, raw.document).ok_or("the raw document was closed")?;
     app.session.set_active(index);
     let (layer, surf, _) = crate::distort_ui::active_pixels(app)?;
     open_pixels(app, ctx, layer, surf, CameraRaw::default(), Coverage::None, Target::OpenRaw)?;
     let curve = match (&raw.bytes, &raw.path) {
-        (Some(b), _) => Some(photocraft_io::raw::tone_curve(b)),
+        (Some(b), _) => Some(sary_io::raw::tone_curve(b)),
         #[cfg(not(target_arch = "wasm32"))]
-        (None, Some(p)) => std::fs::read(p).ok().map(|b| photocraft_io::raw::tone_curve(&b)),
+        (None, Some(p)) => std::fs::read(p).ok().map(|b| sary_io::raw::tone_curve(&b)),
         _ => None,
     };
     if let Some(d) = app.camera_raw.as_mut() {
@@ -251,7 +251,7 @@ fn open_raw(app: &mut PhotocraftApp, ctx: &egui::Context, raw: RawOpen) -> Resul
     Ok(())
 }
 
-fn document_index(app: &PhotocraftApp, id: photocraft_doc::DocId) -> Option<usize> {
+fn document_index(app: &SaryApp, id: sary_doc::DocId) -> Option<usize> {
     app.session.documents().iter().position(|st| st.doc.id == id)
 }
 
@@ -276,7 +276,7 @@ pub const REDEVELOP_JOB: &str = "cameraRaw.redevelop";
 /// An open-time re-develop running in the background: what to finish with when it lands.
 #[derive(Clone, Debug)]
 pub struct Redevelop {
-    pub job: photocraft_engine::jobs::JobId,
+    pub job: sary_engine::jobs::JobId,
     params: CameraRaw,
     raw: RawOpen,
     /// The job is the final Camera Raw step (`filter.cameraRaw`), not the re-develop: when it
@@ -285,8 +285,8 @@ pub struct Redevelop {
 }
 
 /// The sliders a raw open applies while developing, before the tone curve (as Camera Raw does).
-fn raw_stage(p: &CameraRaw) -> photocraft_io::raw::Tone {
-    photocraft_io::raw::Tone { shadows: p.shadows, highlights: p.highlights, clarity: p.clarity, texture: p.texture, dehaze: p.dehaze }
+fn raw_stage(p: &CameraRaw) -> sary_io::raw::Tone {
+    sary_io::raw::Tone { shadows: p.shadows, highlights: p.highlights, clarity: p.clarity, texture: p.texture, dehaze: p.dehaze }
 }
 
 /// Open: re-develop for raw-stage settings, apply the rest, keep the document unmodified.
@@ -295,9 +295,9 @@ fn raw_stage(p: &CameraRaw) -> photocraft_io::raw::Tone {
 /// on) it runs as a job like the open itself: the reply is `{"job", "pending": true}`, the
 /// document is locked meanwhile, and [`on_redevelop_event`] finishes when it lands. Elsewhere
 /// (tests, the web) it runs inline.
-fn commit_open_raw(app: &mut PhotocraftApp, params: &CameraRaw, raw: &RawOpen) -> Result<Value, String> {
+fn commit_open_raw(app: &mut SaryApp, params: &CameraRaw, raw: &RawOpen) -> Result<Value, String> {
     let index = document_index(app, raw.document).ok_or("the raw document was closed")?;
-    let tuning = photocraft_io::raw::RawTuning {
+    let tuning = sary_io::raw::RawTuning {
         temperature: params.temperature,
         tint: params.tint,
         exposure: params.exposure,
@@ -309,42 +309,42 @@ fn commit_open_raw(app: &mut PhotocraftApp, params: &CameraRaw, raw: &RawOpen) -
     };
     // Without the file the raw-stage settings stay RGB adjustments, like the filter's.
     let source = match (&raw.bytes, &raw.path) {
-        (Some(b), _) => Some(photocraft_engine::jobs::OpenSource::Bytes(b.clone())),
+        (Some(b), _) => Some(sary_engine::jobs::OpenSource::Bytes(b.clone())),
         #[cfg(not(target_arch = "wasm32"))]
-        (None, Some(p)) => Some(photocraft_engine::jobs::OpenSource::Path(p.clone())),
+        (None, Some(p)) => Some(sary_engine::jobs::OpenSource::Path(p.clone())),
         _ => None,
     };
-    let Some(source) = source.filter(|_| tuning != photocraft_io::raw::RawTuning::default()) else {
+    let Some(source) = source.filter(|_| tuning != sary_io::raw::RawTuning::default()) else {
         return finish_open_raw(app, index, params.clone(), None, Some(raw));
     };
     app.session.set_active(index);
     let (name, doc_id) = (raw.name.clone(), raw.document);
-    let work = move |ctx: &photocraft_engine::jobs::JobCtx| -> photocraft_engine::Result<(photocraft_io::ImportResult, bool)> {
+    let work = move |ctx: &sary_engine::jobs::JobCtx| -> sary_engine::Result<(sary_io::ImportResult, bool)> {
         ctx.progress(0.0, "Reading");
         let bytes = match source {
-            photocraft_engine::jobs::OpenSource::Bytes(b) => b,
+            sary_engine::jobs::OpenSource::Bytes(b) => b,
             #[cfg(not(target_arch = "wasm32"))]
-            photocraft_engine::jobs::OpenSource::Path(p) => {
-                std::sync::Arc::new(std::fs::read(&p).map_err(|e| photocraft_engine::EngineError::Other(format!("{p}: {e}")))?)
+            sary_engine::jobs::OpenSource::Path(p) => {
+                std::sync::Arc::new(std::fs::read(&p).map_err(|e| sary_engine::EngineError::Other(format!("{p}: {e}")))?)
             }
             #[cfg(target_arch = "wasm32")]
-            photocraft_engine::jobs::OpenSource::Path(p) => return Err(photocraft_engine::EngineError::Other(format!("{p}: cannot read files here"))),
+            sary_engine::jobs::OpenSource::Path(p) => return Err(sary_engine::EngineError::Other(format!("{p}: cannot read files here"))),
         };
         ctx.check()?;
         ctx.progress(0.05, "Developing");
-        photocraft_io::raw::import_raw_tuned(&name, &bytes, &tuning).map_err(|e| photocraft_engine::EngineError::Other(e.to_string()))
+        sary_io::raw::import_raw_tuned(&name, &bytes, &tuning).map_err(|e| sary_engine::EngineError::Other(e.to_string()))
     };
-    let apply = move |s: &mut photocraft_engine::Session, (r, wb): (photocraft_io::ImportResult, bool)| replace_raw_document(s, doc_id, r, wb);
+    let apply = move |s: &mut sary_engine::Session, (r, wb): (sary_io::ImportResult, bool)| replace_raw_document(s, doc_id, r, wb);
     let label = crate::i18n::fmt(tl!("Developing {name}"), &[("name", &raw.name)]);
     let started = if app.background_jobs {
         app.session.start_job(REDEVELOP_JOB, json!({"name": raw.name}), &label, true, work, apply).map_err(|e| e.to_string())?
     } else {
-        let v = work(&photocraft_engine::jobs::JobCtx::new()).and_then(|t| apply(&mut app.session, t)).map_err(|e| e.to_string())?;
-        photocraft_engine::jobs::Started::Done(v)
+        let v = work(&sary_engine::jobs::JobCtx::new()).and_then(|t| apply(&mut app.session, t)).map_err(|e| e.to_string())?;
+        sary_engine::jobs::Started::Done(v)
     };
     match started {
-        photocraft_engine::jobs::Started::Done(v) => finish_redevelop(app, params, raw, &v),
-        photocraft_engine::jobs::Started::Job(job) => {
+        sary_engine::jobs::Started::Done(v) => finish_redevelop(app, params, raw, &v),
+        sary_engine::jobs::Started::Job(job) => {
             app.raw_redevelop = Some(Redevelop { job, params: params.clone(), raw: raw.clone(), filter_step: false });
             app.ui.status = label;
             app.ui.status_error = false;
@@ -356,13 +356,13 @@ fn commit_open_raw(app: &mut PhotocraftApp, params: &CameraRaw, raw: &RawOpen) -
 /// Swap the default-developed document `doc_id` for the re-developed one, at the same tab
 /// position and with the same path. Returns `{document, previous, warnings, wb}`.
 fn replace_raw_document(
-    s: &mut photocraft_engine::Session,
-    doc_id: photocraft_doc::DocId,
-    r: photocraft_io::ImportResult,
+    s: &mut sary_engine::Session,
+    doc_id: sary_doc::DocId,
+    r: sary_io::ImportResult,
     wb: bool,
-) -> photocraft_engine::Result<Value> {
+) -> sary_engine::Result<Value> {
     let index =
-        s.documents().iter().position(|st| st.doc.id == doc_id).ok_or_else(|| photocraft_engine::EngineError::Other("the raw document was closed".into()))?;
+        s.documents().iter().position(|st| st.doc.id == doc_id).ok_or_else(|| sary_engine::EngineError::Other("the raw document was closed".into()))?;
     let path = s.documents().get(index).and_then(|st| st.path.clone());
     s.close(index);
     let (opened, _) = s.open_document(r.document, path);
@@ -376,7 +376,7 @@ fn replace_raw_document(
 
 /// After the re-develop: keep the old document's view (zoom, scroll) on the new one, report
 /// the import's notes, then apply the remaining settings.
-fn finish_redevelop(app: &mut PhotocraftApp, params: &CameraRaw, raw: &RawOpen, v: &Value) -> Result<Value, String> {
+fn finish_redevelop(app: &mut SaryApp, params: &CameraRaw, raw: &RawOpen, v: &Value) -> Result<Value, String> {
     let index = v.get("document").and_then(Value::as_u64).ok_or("the re-develop returned no document")? as usize;
     if let Some(new_id) = app.session.documents().get(index).map(|st| st.doc.id) {
         for id in app.view_docs.iter_mut().filter(|id| **id == raw.document) {
@@ -403,7 +403,7 @@ fn finish_redevelop(app: &mut PhotocraftApp, params: &CameraRaw, raw: &RawOpen, 
 /// The other settings as one Camera Raw step on document `index`, then the document is marked
 /// unmodified (developing is part of opening). The step runs like any filter (in the
 /// background in the desktop app); the document is marked unmodified when it lands.
-fn finish_open_raw(app: &mut PhotocraftApp, index: usize, rest: CameraRaw, redeveloped: Option<bool>, raw: Option<&RawOpen>) -> Result<Value, String> {
+fn finish_open_raw(app: &mut SaryApp, index: usize, rest: CameraRaw, redeveloped: Option<bool>, raw: Option<&RawOpen>) -> Result<Value, String> {
     app.session.set_active(index);
     app.sync_views();
     let mut result = json!({"document": index, "redeveloped": redeveloped.unwrap_or(false)});
@@ -415,7 +415,7 @@ fn finish_open_raw(app: &mut PhotocraftApp, index: usize, rest: CameraRaw, redev
         if r.get("pending").and_then(Value::as_bool) == Some(true)
             && let (Some(job), Some(raw)) = (r.get("job").and_then(Value::as_u64), raw)
         {
-            app.raw_redevelop = Some(Redevelop { job: photocraft_engine::jobs::JobId(job), params: rest.clone(), raw: raw.clone(), filter_step: true });
+            app.raw_redevelop = Some(Redevelop { job: sary_engine::jobs::JobId(job), params: rest.clone(), raw: raw.clone(), filter_step: true });
         }
         result["filter"] = r;
     }
@@ -423,7 +423,7 @@ fn finish_open_raw(app: &mut PhotocraftApp, index: usize, rest: CameraRaw, redev
     Ok(result)
 }
 
-fn mark_unmodified(app: &mut PhotocraftApp, index: usize) {
+fn mark_unmodified(app: &mut SaryApp, index: usize) {
     let active = app.session.active_index();
     app.session.set_active(index);
     if let Some(st) = app.session.active_mut() {
@@ -437,10 +437,10 @@ fn mark_unmodified(app: &mut PhotocraftApp, index: usize) {
 
 /// A finished background re-develop ([`REDEVELOP_JOB`]) or open-time Camera Raw step. `true`
 /// when the event was one of those (handled here).
-pub fn on_redevelop_event(app: &mut PhotocraftApp, e: &photocraft_engine::jobs::JobEvent) -> bool {
+pub fn on_redevelop_event(app: &mut SaryApp, e: &sary_engine::jobs::JobEvent) -> bool {
     let Some(pending) = app.raw_redevelop.take_if(|r| r.job == e.id) else { return false };
     if pending.filter_step {
-        if matches!(e.outcome, photocraft_engine::jobs::JobOutcome::Done(_))
+        if matches!(e.outcome, sary_engine::jobs::JobOutcome::Done(_))
             && let Some(index) = e.document.and_then(|id| document_index(app, id))
         {
             mark_unmodified(app, index);
@@ -449,19 +449,19 @@ pub fn on_redevelop_event(app: &mut PhotocraftApp, e: &photocraft_engine::jobs::
         return false;
     }
     match &e.outcome {
-        photocraft_engine::jobs::JobOutcome::Done(v) => match finish_redevelop(app, &pending.params, &pending.raw, v) {
+        sary_engine::jobs::JobOutcome::Done(v) => match finish_redevelop(app, &pending.params, &pending.raw, v) {
             Ok(_) => {
                 app.ui.status = crate::i18n::fmt(tl!("Opened {name}"), &[("name", &pending.raw.name)]);
                 app.ui.status_error = false;
             }
             Err(err) => crate::notices::error(app, format!("{}: {err}", e.label)),
         },
-        photocraft_engine::jobs::JobOutcome::Failed(err) => {
+        sary_engine::jobs::JobOutcome::Failed(err) => {
             // The document stays open, developed with the defaults.
             app.sync_views();
             crate::notices::error(app, format!("{}: {err}", e.label));
         }
-        photocraft_engine::jobs::JobOutcome::Cancelled => {
+        sary_engine::jobs::JobOutcome::Cancelled => {
             app.ui.status = crate::i18n::fmt(tl!("Cancelled {label}"), &[("label", &e.label)]);
             app.ui.status_error = false;
         }
@@ -470,7 +470,7 @@ pub fn on_redevelop_event(app: &mut PhotocraftApp, e: &photocraft_engine::jobs::
 }
 
 /// Cancel: closes the dialog; for the open-time dialog also the document it was opening.
-fn cancel(app: &mut PhotocraftApp) {
+fn cancel(app: &mut SaryApp) {
     let Some(d) = app.camera_raw.take() else { return };
     if let (Target::OpenRaw, Some(raw)) = (d.target, &d.raw_open)
         && let Some(index) = document_index(app, raw.document)
@@ -486,12 +486,12 @@ fn cancel(app: &mut PhotocraftApp) {
 /// engine does), a smart object's filter mask, or nothing.
 enum Coverage {
     Selection,
-    Mask(photocraft_doc::LayerMask),
+    Mask(sary_doc::LayerMask),
     None,
 }
 
-pub fn open(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> {
-    photocraft_engine::commands::find("filter.cameraRaw").map(|c| (c.enabled)(&app.session)).unwrap_or(Err("unknown command".into()))?;
+pub fn open(app: &mut SaryApp, ctx: &egui::Context) -> Result<(), String> {
+    sary_engine::commands::find("filter.cameraRaw").map(|c| (c.enabled)(&app.session)).unwrap_or(Err("unknown command".into()))?;
     let (layer, surf, _) = crate::distort_ui::active_pixels(app)?;
     open_pixels(app, ctx, layer, surf, CameraRaw::default(), Coverage::Selection, Target::NewFilter)
 }
@@ -499,10 +499,10 @@ pub fn open(app: &mut PhotocraftApp, ctx: &egui::Context) -> Result<(), String> 
 /// Opens Camera Raw on smart filter `index` of smart layer `layer`, with its stored settings and
 /// the pixels below it; OK updates that filter (`layer.smartFilter.setParams`), as double-clicking
 /// a Camera Raw smart filter does in Photoshop.
-pub fn open_smart_filter(app: &mut PhotocraftApp, ctx: &egui::Context, layer: LayerId, index: usize) -> Result<(), String> {
-    use photocraft_engine::lens_cmds::{RAW, raw_params};
+pub fn open_smart_filter(app: &mut SaryApp, ctx: &egui::Context, layer: LayerId, index: usize) -> Result<(), String> {
+    use sary_engine::lens_cmds::{RAW, raw_params};
     let st = app.session.active().ok_or("no document")?;
-    let Some(photocraft_doc::LayerContent::Smart(sm)) = st.doc.layer(layer).map(|l| &l.content) else {
+    let Some(sary_doc::LayerContent::Smart(sm)) = st.doc.layer(layer).map(|l| &l.content) else {
         return Err("the layer is not a smart object".into());
     };
     let filter = sm.smart_filters.get(index).ok_or("no such smart filter")?;
@@ -510,7 +510,7 @@ pub fn open_smart_filter(app: &mut PhotocraftApp, ctx: &egui::Context, layer: La
         return Err("the smart filter is not a Camera Raw filter".into());
     }
     let params = raw_params(RAW, &filter.params).map_err(|e| e.to_string())?;
-    let surf = photocraft_engine::smart_cmds::render_below_filter(&st.doc, sm, index)
+    let surf = sary_engine::smart_cmds::render_below_filter(&st.doc, sm, index)
         .map_err(|e| e.to_string())?
         .ok_or("the smart object's contents are unavailable (missing linked file?)")?;
     let coverage = sm.filter_mask.clone().filter(|m| m.enabled).map_or(Coverage::None, Coverage::Mask);
@@ -518,10 +518,10 @@ pub fn open_smart_filter(app: &mut PhotocraftApp, ctx: &egui::Context, layer: La
 }
 
 fn open_pixels(
-    app: &mut PhotocraftApp,
+    app: &mut SaryApp,
     ctx: &egui::Context,
     layer: LayerId,
-    surf: photocraft_raster::Surface,
+    surf: sary_raster::Surface,
     params: CameraRaw,
     coverage: Coverage,
     target: Target,
@@ -531,7 +531,7 @@ fn open_pixels(
     let name = st.doc.layer(layer).map(|l| l.name.clone()).unwrap_or_default();
     let mut params = params;
     if params.encoding_gamma == 0.0 {
-        params.encoding_gamma = photocraft_engine::lens_cmds::encoding_gamma(&st.doc);
+        params.encoding_gamma = sary_engine::lens_cmds::encoding_gamma(&st.doc);
     }
     // Use the engine filter domain, including pixels outside the canvas: spatial Camera Raw
     // stages (vignette, grain, local contrast) must agree with the committed result.
@@ -579,10 +579,10 @@ fn open_pixels(
         Coverage::Mask(mask) => Some(sample(&|x, y| mask.value(x, y))),
         Coverage::None => None,
     };
-    let source = photocraft_engine::color_cmds::composite_profile(&st.doc);
+    let source = sary_engine::color_cmds::composite_profile(&st.doc);
     let display = app.session.color.canvas_display(&st.doc).map_err(|e| e.to_string())?;
-    let lab_transform = photocraft_cms::cached(&source, photocraft_cms::Builtin::LabD50.profile(), Default::default()).map_err(|e| e.to_string())?;
-    let scope_transform = photocraft_cms::cached(&source, photocraft_cms::Builtin::Srgb.profile(), Default::default()).map_err(|e| e.to_string())?;
+    let lab_transform = sary_cms::cached(&source, sary_cms::Builtin::LabD50.profile(), Default::default()).map_err(|e| e.to_string())?;
+    let scope_transform = sary_cms::cached(&source, sary_cms::Builtin::Srgb.profile(), Default::default()).map_err(|e| e.to_string())?;
     if let Some(saved) = app.session.prefs().dialogs.get("filter.cameraRaw.scope")
         && saved.get("samplers").and_then(Value::as_array).is_none_or(|a| a.len() <= MAX_SAMPLERS)
         && let Ok(view) = serde_json::from_value(saved.clone())
@@ -596,7 +596,7 @@ fn open_pixels(
     if selection.is_none() {
         app.ui.camera_raw_scope.selected_region = false;
     }
-    let float = surf.format().sample == photocraft_color::SampleType::F32;
+    let float = surf.format().sample == sary_color::SampleType::F32;
     let mut d = CameraRawDialog {
         layer,
         layer_name: name,
@@ -653,7 +653,7 @@ fn open_pixels(
 }
 
 /// Menu / control-channel entry point. `None` when the call isn't for this dialog.
-pub fn menu(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
+pub fn menu(app: &mut SaryApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
     if id != "filter.cameraRaw" {
         return None;
     }
@@ -694,7 +694,7 @@ pub fn menu(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Val
     if ui.get("commit").and_then(Value::as_bool) == Some(true) && ui.get("cancel").and_then(Value::as_bool) == Some(true) {
         return Some(Err("Camera Raw cannot commit and cancel together".into()));
     }
-    for (key, run) in [("saveSettings", save_settings as fn(&mut PhotocraftApp) -> Result<Value, String>), ("loadSettings", load_settings)] {
+    for (key, run) in [("saveSettings", save_settings as fn(&mut SaryApp) -> Result<Value, String>), ("loadSettings", load_settings)] {
         if ui.get(key).and_then(Value::as_bool) == Some(true) {
             if fields.len() > 1 {
                 return Some(Err(format!("Camera Raw {key} must be sent on its own")));
@@ -717,7 +717,7 @@ pub fn menu(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Val
     result
 }
 
-fn menu_update(app: &mut PhotocraftApp, ctx: &egui::Context, ui: &Value) -> Option<Result<Value, String>> {
+fn menu_update(app: &mut SaryApp, ctx: &egui::Context, ui: &Value) -> Option<Result<Value, String>> {
     // Stage both filter and presentation updates. No texture, preference or dialog mutation
     // occurs until every part of the request has passed validation.
     let d = app.camera_raw.as_ref()?;
@@ -801,9 +801,9 @@ fn menu_update(app: &mut PhotocraftApp, ctx: &egui::Context, ui: &Value) -> Opti
 }
 
 /// Save Settings…: the dialog's settings as a Camera Raw `.xmp` settings file.
-fn save_settings(app: &mut PhotocraftApp) -> Result<Value, String> {
+fn save_settings(app: &mut SaryApp) -> Result<Value, String> {
     let d = app.camera_raw.as_ref().ok_or(tl!("Camera Raw isn't open"))?;
-    let bytes = photocraft_io::camera_raw_xmp::save(&d.params).into_bytes();
+    let bytes = sary_io::camera_raw_xmp::save(&d.params).into_bytes();
     app.pick_save("Camera Raw Settings.xmp", move |app, path| {
         let write = app.services.write.as_mut().ok_or("no writer configured")?;
         write(&path, &bytes)?;
@@ -813,13 +813,13 @@ fn save_settings(app: &mut PhotocraftApp) -> Result<Value, String> {
 
 /// Load Settings…: applies a Camera Raw `.xmp` settings file's supported settings over the
 /// dialog's; the status bar names how many were not supported.
-fn load_settings(app: &mut PhotocraftApp) -> Result<Value, String> {
+fn load_settings(app: &mut SaryApp) -> Result<Value, String> {
     app.camera_raw.as_ref().ok_or(tl!("Camera Raw isn't open"))?;
     app.pick_file_bytes_filtered(&["xmp"], |app, name, bytes| {
         let file = crate::file_open::display_name(&name);
         let d = app.camera_raw.as_mut().ok_or(tl!("Camera Raw isn't open"))?;
         let mut next = d.params.clone();
-        let report = photocraft_io::camera_raw_xmp::load(&mut next, &bytes).map_err(|e| format!("{file}: {e}"))?;
+        let report = sary_io::camera_raw_xmp::load(&mut next, &bytes).map_err(|e| format!("{file}: {e}"))?;
         next.validate_changes(&d.original).map_err(|e| format!("{file}: {e}"))?;
         if d.params.point_curve != next.point_curve {
             d.curve_state = Default::default();
@@ -840,7 +840,7 @@ fn load_settings(app: &mut PhotocraftApp) -> Result<Value, String> {
     })
 }
 
-fn report_file_error(app: &mut PhotocraftApp, r: Result<Value, String>) {
+fn report_file_error(app: &mut SaryApp, r: Result<Value, String>) {
     if let Err(e) = r
         && e != crate::file_dialog::CANCELLED
     {
@@ -892,7 +892,7 @@ fn history_keys(d: &mut CameraRawDialog, ctx: &egui::Context) {
     }
 }
 
-fn commit(app: &mut PhotocraftApp) -> Result<Value, String> {
+fn commit(app: &mut SaryApp) -> Result<Value, String> {
     let d = app.camera_raw.as_ref().ok_or(tl!("Camera Raw isn't open"))?;
     let result = match d.target {
         Target::NewFilter => {
@@ -968,7 +968,7 @@ fn wheel(ui: &mut egui::Ui, dirty: &mut bool, title: &str, w: &mut Wheel) {
 }
 
 // The shared Curve editor must never produce a curve `CameraRaw::validate` rejects.
-const _: () = assert!(crate::point_curve::MAX_POINTS == photocraft_algo::camera_raw::MAX_CURVE_POINTS && crate::point_curve::MIN_GAP >= 1.0);
+const _: () = assert!(crate::point_curve::MAX_POINTS == sary_algo::camera_raw::MAX_CURVE_POINTS && crate::point_curve::MIN_GAP >= 1.0);
 
 /// Small point-curve editor (master channel): click to add, drag to move, right-click to delete.
 fn curve_editor(ui: &mut egui::Ui, p: &mut CameraRaw, dirty: &mut bool, state: &mut crate::state::PointCurveState) -> ERect {
@@ -1003,7 +1003,7 @@ fn curve_editor(ui: &mut egui::Ui, p: &mut CameraRaw, dirty: &mut bool, state: &
     rect
 }
 
-pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
     if app.camera_raw.is_none()
         && let Some(raw) = app.pending_raw_open.take()
         && let Err(e) = open_raw(app, ctx, raw)
@@ -1053,7 +1053,7 @@ impl CameraRawDialog {
 
 /// The dialog's contents over the whole of `ctx`'s window. `own_window`: the OS window already
 /// shows the title, so none is painted.
-fn draw(app: &mut PhotocraftApp, ctx: &egui::Context, own_window: bool) {
+fn draw(app: &mut SaryApp, ctx: &egui::Context, own_window: bool) {
     let t = Tokens::get(ctx);
     let screen = ctx.content_rect();
     let current_display = app.session.active().and_then(|st| app.session.color.canvas_display(&st.doc).ok());
@@ -1214,7 +1214,7 @@ fn draw(app: &mut PhotocraftApp, ctx: &egui::Context, own_window: bool) {
                     _ => &mut p.hsl_lum,
                 };
                 for (k, name) in BANDS.iter().enumerate() {
-                    let c = photocraft_algo::camera_raw::HSL_BANDS[k];
+                    let c = sary_algo::camera_raw::HSL_BANDS[k];
                     let base = hue_color(c);
                     let grad = [Color32::from_gray(128), base];
                     row(ui, &mut dirty, name, &mut arr[k], -100.0..=100.0, Some(&grad));
@@ -1328,21 +1328,21 @@ mod tests {
 
     #[test]
     fn preview_texture_uses_linear_document_display_encoding() {
-        let mut doc = photocraft_doc::Document::new("test", photocraft_geom::Size::new(1, 1), photocraft_doc::ColorMode::Rgb, photocraft_doc::SampleType::F32);
-        doc.icc_profile = Some(photocraft_cms::Builtin::LinearSrgb.profile().to_bytes());
-        let mut color = photocraft_engine::color_cmds::ColorState::default();
+        let mut doc = sary_doc::Document::new("test", sary_geom::Size::new(1, 1), sary_doc::ColorMode::Rgb, sary_doc::SampleType::F32);
+        doc.icc_profile = Some(sary_cms::Builtin::LinearSrgb.profile().to_bytes());
+        let mut color = sary_engine::color_cmds::ColorState::default();
         color.settings.monitor_profile = "srgb".into();
         let display = color.canvas_display(&doc).unwrap();
         let px = [[0.25, 0.25, 0.25, 1.0]];
         let preview = CameraRawDialog::image(&px, 1, 1, &display);
-        let expected = display.to_rgba8(&photocraft_compose::Buffer::filled(Rect::new(0, 0, 1, 1), px[0]));
+        let expected = display.to_rgba8(&sary_compose::Buffer::filled(Rect::new(0, 0, 1, 1), px[0]));
         assert_eq!(preview.pixels[0].to_array(), expected.pixels[..4]);
         assert_ne!(preview.pixels[0].r(), 64, "linear light must be encoded before display");
     }
 
     #[test]
     fn histogram_follows_preview_and_view_changes_do_not_render_or_edit() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
@@ -1372,14 +1372,14 @@ mod tests {
     /// it is drawn in; the overlay fallback (`embed_viewports`) keeps the dialog open.
     #[test]
     fn closing_the_camera_raw_window_cancels() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
-        PhotocraftApp::setup_context(&ctx, crate::theme::ThemeKind::Pro);
+        SaryApp::setup_context(&ctx, crate::theme::ThemeKind::Pro);
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.run("edit.fill", json!({"color": "#808080"})).unwrap();
         let steps = app.session.active().unwrap().history.past_len();
-        let frame = |app: &mut PhotocraftApp, close: bool| {
+        let frame = |app: &mut SaryApp, close: bool| {
             let mut input = egui::RawInput::default();
             if close {
                 let info = input.viewports.entry(egui::ViewportId::ROOT).or_default();
@@ -1400,7 +1400,7 @@ mod tests {
 
     #[test]
     fn smart_filter_double_click_edits_the_stored_camera_raw_filter_in_its_own_dialog() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
@@ -1411,8 +1411,8 @@ mod tests {
         app.run("filter.cameraRaw", json!({"exposure": 1.0, "contrast": 20})).unwrap();
         app.run("layer.smartFilter.setParams", json!({"index": 0, "params": {"pointCurve": legacy}})).unwrap();
         let layer = app.session.active().unwrap().active_layer.unwrap();
-        let smart = |app: &PhotocraftApp| match &app.session.active().unwrap().doc.layer(layer).unwrap().content {
-            photocraft_doc::LayerContent::Smart(sm) => sm.clone(),
+        let smart = |app: &SaryApp| match &app.session.active().unwrap().doc.layer(layer).unwrap().content {
+            sary_doc::LayerContent::Smart(sm) => sm.clone(),
             _ => panic!("not a smart object"),
         };
         let steps = app.session.active().unwrap().history.past_len();
@@ -1450,12 +1450,12 @@ mod tests {
 
     #[test]
     fn distant_sparse_pixels_cannot_trigger_an_unbounded_proxy_scan() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         app.run("file.new", json!({"width":64,"height":48})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         let layer = app.session.active().unwrap().active_layer.unwrap();
-        let mut source = photocraft_raster::Surface::new(photocraft_color::PixelFormat::RGBA8);
+        let mut source = sary_raster::Surface::new(sary_color::PixelFormat::RGBA8);
         source.write_region(Rect::new(30_000, 30_000, 30_001, 30_001), &[0.5, 0.5, 0.5, 1.0]);
         let result = open_pixels(&mut app, &ctx, layer, source, CameraRaw::default(), Coverage::None, Target::NewFilter);
         assert!(result.unwrap_err().contains("bounds are too large"));
@@ -1464,7 +1464,7 @@ mod tests {
 
     #[test]
     fn dialog_drives_the_engine() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let ctx = egui::Context::default();
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
@@ -1487,21 +1487,21 @@ mod tests {
     }
 
     /// An app whose importer is the real one, opening a synthetic DNG.
-    fn raw_app() -> (PhotocraftApp, Vec<u8>) {
-        use photocraft_raw::testgen::{DngSpec, mosaic, scene};
+    fn raw_app() -> (SaryApp, Vec<u8>) {
+        use sary_raw::testgen::{DngSpec, mosaic, scene};
         let services = crate::Services {
             import: Some(Box::new(|name: &str, b: &[u8], depth: usize| {
-                photocraft_io::import_with_svg_group_depth(name, b, depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())
+                sary_io::import_with_svg_group_depth(name, b, depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())
             })),
             ..Default::default()
         };
         let (w, h) = (48, 32);
         let mut spec = DngSpec::cfa(w, h, mosaic(&scene(w, h), w, [0, 1, 1, 2], 0, 30000));
         spec.as_shot_neutral = Some([0.5, 1.0, 0.7]);
-        (PhotocraftApp::new(photocraft_engine::Session::new(), services), spec.build())
+        (SaryApp::new(sary_engine::Session::new(), services), spec.build())
     }
 
-    fn mean_red(app: &PhotocraftApp) -> f32 {
+    fn mean_red(app: &SaryApp) -> f32 {
         let st = app.session.active().unwrap();
         let s = st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap();
         (0..8).map(|i| s.rgba(4 + i * 4, 16)[0]).sum::<f32>() / 8.0
@@ -1512,7 +1512,7 @@ mod tests {
         let (mut app, dng) = raw_app();
         let ctx = egui::Context::default();
         let warnings = app.open_bytes("IMG_0001.dng", &dng).unwrap();
-        assert!(warnings.iter().any(|w| w.contains(photocraft_io::raw::DEVELOPED_NOTE)), "{warnings:?}");
+        assert!(warnings.iter().any(|w| w.contains(sary_io::raw::DEVELOPED_NOTE)), "{warnings:?}");
         // A raw has no embedded profile (ProPhoto RGB is the space it is developed into), so Ask
         // When Opening (on by default) has nothing to ask about.
         assert!(app.ui.dialogs.is_empty(), "no profile prompt for a raw");
@@ -1530,7 +1530,7 @@ mod tests {
         assert_eq!(app.session.documents().len(), 1);
         let st = app.session.active().unwrap();
         assert_eq!(st.saved_revision, st.revision, "Open leaves the document unmodified");
-        assert_eq!(st.doc.depth, photocraft_color::SampleType::U16);
+        assert_eq!(st.doc.depth, sary_color::SampleType::U16);
         assert!(mean_red(&app) > before + 0.05, "{before} → {}", mean_red(&app));
     }
 
@@ -1606,7 +1606,7 @@ mod tests {
         assert_eq!(docs.len(), 3);
         assert_eq!((docs[0].doc.size.width, docs[2].doc.size.width), (10, 12), "the other tabs keep their places");
         assert_ne!(docs[1].doc.id, old_id, "re-developed");
-        assert_eq!(docs[1].doc.depth, photocraft_color::SampleType::U16);
+        assert_eq!(docs[1].doc.depth, sary_color::SampleType::U16);
         assert_eq!(docs[1].saved_revision, docs[1].revision, "Open leaves the document unmodified");
         assert_eq!(app.session.active_index(), Some(1));
         assert_eq!(app.ui.views[1].zoom, 3.0, "the view carries over to the re-developed document");
@@ -1634,7 +1634,7 @@ mod tests {
         app.open_bytes("c.dng", &dng).unwrap();
         assert!(app.pending_raw_open.is_none());
         // A non-raw never queues the dialog; a closed document is an error, not a panic.
-        assert!(open_raw(&mut app, &ctx, RawOpen { document: photocraft_doc::DocId(u64::MAX), name: "x".into(), path: None, bytes: None }).is_err());
+        assert!(open_raw(&mut app, &ctx, RawOpen { document: sary_doc::DocId(u64::MAX), name: "x".into(), path: None, bytes: None }).is_err());
     }
 
     #[test]
@@ -1661,9 +1661,9 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+        let mut app = SaryApp::new(sary_engine::Session::new(), services);
         let ctx = egui::Context::default();
-        let frame = |app: &mut PhotocraftApp| app.poll_file_dialog(&egui::Context::default(), None);
+        let frame = |app: &mut SaryApp| app.poll_file_dialog(&egui::Context::default(), None);
         app.run("file.new", json!({"width": 16, "height": 16})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.run("edit.fill", json!({"color": "#808080"})).unwrap();

@@ -5,7 +5,7 @@ What Finder shows when the DMG opens: a 660 × 400 pt background with the app ic
 generated at build time, so the DMG builds with a plain `hdiutil create -srcfolder` (no Finder
 scripting on CI, nothing extra installed in the signing job).
 
-Nothing in this step may touch `WordCraft.app`: `codesign --verify --deep --strict` rejects any
+Nothing in this step may touch `Soratra.app`: `codesign --verify --deep --strict` rejects any
 `com.apple.FinderInfo` or resource fork on the bundle. `hdiutil makehybrid -hfs`, which built the
 image before, put a FinderInfo on every file in it, so the released app failed that check (#525).
 `package.sh` clears extended attributes before signing and, after building the DMG, mounts it
@@ -13,17 +13,17 @@ read-only and checks the app inside it, and a `ditto` copy of it, with `--strict
 
 | File | What |
 |---|---|
-| `background.svg` | Source of the background: the app icon (`assets/app-icon/wordcraft.svg`, linked, not copied) cropped as a cover on the WordCraft colour field (`#3b5bdb`), Ink and Paper. Its text (Inter, JetBrains Mono) is outlined, so rendering it needs no fonts. No paper grain: noise doesn't compress, and this keeps `background.tiff` small. |
+| `background.svg` | Source of the background: the app icon (`assets/app-icon/soratra.svg`, linked, not copied) cropped as a cover on the Soratra colour field (`#3b5bdb`), Ink and Paper. Its text (Inter, JetBrains Mono) is outlined, so rendering it needs no fonts. No paper grain: noise doesn't compress, and this keeps `background.tiff` small. |
 | `background.tiff` | The background at 1x (660 × 400 px, 72 dpi) and 2x (1320 × 800 px, 144 dpi) in one HiDPI TIFF (16-colour palette, Deflate, sRGB). Goes to `.background/background.tiff`. |
-| `dmg-layout.DS_Store` | Finder's view settings for the volume: window size, icon size 128, WordCraft.app at (326, 205), `Applications` at (574, 205), and the background. Goes to `.DS_Store` in the image; named so it isn't mistaken for (or ignored like) a Finder-generated `.DS_Store`. |
+| `dmg-layout.DS_Store` | Finder's view settings for the volume: window size, icon size 128, Soratra.app at (326, 205), `Applications` at (574, 205), and the background. Goes to `.DS_Store` in the image; named so it isn't mistaken for (or ignored like) a Finder-generated `.DS_Store`. |
 | `generate.py` | Writes `background.tiff` and `dmg-layout.DS_Store` from the SVG and the layout above. |
 
 ## The volume name has no version
 
-The mounted volume is called `WordCraft`, not `WordCraft <version>`. The layout points at the background
+The mounted volume is called `Soratra`, not `Soratra <version>`. The layout points at the background
 through an alias that includes the volume name, and Finder resolves it by that name: with a
 versioned name the window keeps its size and icon positions but shows no background (tested).
-The DMG file name (`wordcraft-<version>-macos-<arch>.dmg`) still carries the version.
+The DMG file name (`soratra-<version>-macos-<arch>.dmg`) still carries the version.
 
 ## Rules
 
@@ -47,4 +47,4 @@ alias holding only the volume name and `/.background/background.tiff`. If you ad
 outline it (`usvg` from resvg converts text to paths). The window is 660 × 432 with Finder's 32 pt
 title bar; the content area is 660 × 400.
 
-This follows VectorCraft's `packaging/macos/dmg/` (storytold/vectorcraft#493).
+This follows Tsipika's `packaging/macos/dmg/` (raantss18/tsipika#493).

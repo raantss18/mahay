@@ -1,8 +1,8 @@
 use super::*;
-use deckcraft_model::chart::{ChartType, Trendline, TrendlineType};
-use deckcraft_model::style::ColorRef;
-use deckcraft_model::text::TextBody;
-use deckcraft_model::{Chart, Geom, Presentation, Shape, ShapeId, ShapeKind, ShapeStyle, Table, Xfrm};
+use seho_model::chart::{ChartType, Trendline, TrendlineType};
+use seho_model::style::ColorRef;
+use seho_model::text::TextBody;
+use seho_model::{Chart, Geom, Presentation, Shape, ShapeId, ShapeKind, ShapeStyle, Table, Xfrm};
 
 fn deck_with(shapes: Vec<Shape>) -> Presentation {
     let mut p = Presentation::default();
@@ -24,12 +24,12 @@ fn shape_fill_uses_theme_accent() {
     let sh = Shape {
         id: ShapeId(500),
         xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 100.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
     let p = deck_with(vec![sh]);
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
-    let accent = p.masters[0].theme.colors.get(deckcraft_color::SchemeSlot::Accent1);
+    let accent = p.masters[0].theme.colors.get(seho_color::SchemeSlot::Accent1);
     let px = img.pixel(200, 150);
     assert!((px[0] as i32 - accent.r as i32).abs() <= 2 && (px[2] as i32 - accent.b as i32).abs() <= 2, "{px:?} vs {accent:?}");
     assert_eq!(img.pixel(50, 50), [255, 255, 255, 255]);
@@ -40,8 +40,8 @@ fn render_shapes_draws_the_selection_on_a_transparent_canvas() {
     let sh = Shape {
         id: ShapeId(880),
         xfrm: Some(Xfrm::new(100.0, 80.0, 60.0, 40.0)),
-        fill: Some(deckcraft_model::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 0, 0)))),
-        line: Some(deckcraft_model::Line::none()),
+        fill: Some(seho_model::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 0, 0)))),
+        line: Some(seho_model::Line::none()),
         ..Default::default()
     };
     let p = deck_with(vec![sh]);
@@ -75,7 +75,7 @@ fn ink_line(left: f32, right: f32) -> Presentation {
         id: ShapeId(7),
         xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)),
         kind: ShapeKind::Ink {
-            strokes: vec![deckcraft_model::InkStroke { points, color: deckcraft_color::Rgba::rgb(0, 0, 0), width: 24.0, highlighter: false }],
+            strokes: vec![seho_model::InkStroke { points, color: seho_color::Rgba::rgb(0, 0, 0), width: 24.0, highlighter: false }],
         },
         ..Default::default()
     };
@@ -108,14 +108,14 @@ fn text_draws_ink() {
 
 #[test]
 fn every_preset_renders_without_panic() {
-    let shapes: Vec<Shape> = deckcraft_geom::preset::CATALOG
+    let shapes: Vec<Shape> = seho_geom::preset::CATALOG
         .iter()
         .enumerate()
         .map(|(i, pr)| Shape {
             id: ShapeId(1000 + i as u32),
             xfrm: Some(Xfrm::new((i % 16) as f64 * 60.0, (i / 16) as f64 * 55.0, 50.0, 45.0)),
             geom: Geom::preset(pr.name),
-            style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent2)),
+            style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent2)),
             ..Default::default()
         })
         .collect();
@@ -129,12 +129,12 @@ fn effects_tables_charts_render() {
     let mut sh = Shape {
         id: ShapeId(600),
         xfrm: Some(Xfrm::new(50.0, 50.0, 200.0, 100.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
-    sh.effects = Some(deckcraft_model::Effects {
-        outer_shadow: Some(deckcraft_model::style::Shadow {
-            color: ColorRef::rgb(deckcraft_color::Rgba::BLACK),
+    sh.effects = Some(seho_model::Effects {
+        outer_shadow: Some(seho_model::style::Shadow {
+            color: ColorRef::rgb(seho_color::Rgba::BLACK),
             blur: 8.0,
             dist: 6.0,
             dir: 45.0,
@@ -146,7 +146,7 @@ fn effects_tables_charts_render() {
             align: String::new(),
             rotate_with_shape: false,
         }),
-        glow: Some(deckcraft_model::style::Glow { color: ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 200, 0)), radius: 6.0 }),
+        glow: Some(seho_model::style::Glow { color: ColorRef::rgb(seho_color::Rgba::rgb(255, 200, 0)), radius: 6.0 }),
         soft_edge: Some(4.0),
         ..Default::default()
     });
@@ -198,7 +198,7 @@ fn combo_chart_draws_columns_and_a_line_on_its_own_axis() {
     c.series[1].kind = Some(ChartType::Line);
     c.series[1].values = vec![Some(7_000.0), Some(7_000.0), Some(7_000.0)];
     c.series[1].secondary_axis = true;
-    c.series[1].line = Some(deckcraft_model::style::Line::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 176, 80)), 3.0));
+    c.series[1].line = Some(seho_model::style::Line::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 176, 80)), 3.0));
     let sh = Shape { id: ShapeId(620), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
     let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
     let green = |x: u32, y0: u32, y1: u32| {
@@ -312,9 +312,9 @@ fn trendlines_draw_through_the_points_with_a_label() {
         .filter(|(a, b)| a[0] < 50 && a[1] < 50 && a[2] < 50 && b[0] as i32 - a[0] as i32 > 20)
         .count();
     assert!(scatter_dark > 20, "scatter trendline ink {scatter_dark}");
-    if std::env::var_os("DECKCRAFT_TREND_SHOT").is_some() {
+    if std::env::var_os("SEHO_TREND_SHOT").is_some() {
         let png = trend_gallery(true, true).to_png();
-        std::fs::write("/tmp/deckcraft-trendlines.png", &png).expect("write trendline screenshot");
+        std::fs::write("/tmp/seho-trendlines.png", &png).expect("write trendline screenshot");
     }
 }
 
@@ -349,7 +349,7 @@ fn column_points_take_their_own_fill_and_smooth_lines_curve() {
     c.series.truncate(1);
     c.categories = vec!["A".into(), "B".into(), "C".into()];
     c.series[0].values = vec![Some(10.0), Some(10.0), Some(10.0)];
-    c.series[0].point_fills = vec![(1, deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 0, 0))))];
+    c.series[0].point_fills = vec![(1, seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 0, 0))))];
     let sh = Shape { id: ShapeId(621), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
     let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
     let red = |x: u32| (300..500).any(|y| img.pixel(x, y)[..3] == [255, 0, 0]);
@@ -365,7 +365,7 @@ fn column_points_take_their_own_fill_and_smooth_lines_curve() {
     c.categories = vec!["A".into()];
     c.series[0].values = vec![Some(10.0)];
     c.series[1].values = vec![Some(10.0)];
-    c.series[0].fill = Some(deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 0, 0))));
+    c.series[0].fill = Some(seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 0, 0))));
     (c.gap_width, c.overlap) = (1.5, 0.0);
     let sh = Shape { id: ShapeId(622), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
     let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -392,7 +392,7 @@ fn horizontal_bars_list_the_first_category_at_the_bottom_unless_reversed() {
         c.series.truncate(1);
         c.categories = vec!["A".into(), "B".into(), "C".into()];
         c.series[0].values = vec![Some(10.0), Some(10.0), Some(10.0)];
-        c.series[0].point_fills = vec![(0, deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 0, 0))))];
+        c.series[0].point_fills = vec![(0, seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 0, 0))))];
         c.cat_reversed = reversed;
         let sh = Shape { id: ShapeId(623), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
         let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -412,11 +412,11 @@ fn glow_of_an_unfilled_shape_follows_its_line() {
             id: ShapeId(610),
             xfrm: Some(Xfrm::new(100.0, 100.0, 400.0, 300.0)),
             fill,
-            line: Some(deckcraft_model::style::Line::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 176, 240)), 0.25)),
+            line: Some(seho_model::style::Line::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 176, 240)), 0.25)),
             ..Default::default()
         };
-        sh.effects = Some(deckcraft_model::Effects {
-            glow: Some(deckcraft_model::style::Glow { color: ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 255)), radius: 8.0 }),
+        sh.effects = Some(seho_model::Effects {
+            glow: Some(seho_model::style::Glow { color: ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 255)), radius: 8.0 }),
             ..Default::default()
         });
         render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() })
@@ -427,7 +427,7 @@ fn glow_of_an_unfilled_shape_follows_its_line() {
     let edge = img.pixel(300, 97);
     assert!(edge[0] < 230, "{edge:?}");
     // A filled shape's glow is still the whole silhouette's (the fill covers its inside).
-    let img = glow(Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 255, 255)))));
+    let img = glow(Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 255, 255)))));
     assert!(img.pixel(300, 94)[0] < 240);
 }
 
@@ -495,8 +495,8 @@ fn table_rows_of_zero_height_grow_to_fit_text() {
     }
     let tbl = Shape { id: ShapeId(610), xfrm: Some(Xfrm::new(100.0, 100.0, 300.0, 0.0)), kind: ShapeKind::Table(t.clone()), ..Default::default() };
     let p = deck_with(vec![tbl]);
-    let ctx = deckcraft_model::resolve::Ctx::for_slide(&p, &p.slides[0]).unwrap();
-    let hs = crate::table::row_heights(&ctx, &t, &deckcraft_text::NoFields);
+    let ctx = seho_model::resolve::Ctx::for_slide(&p, &p.slides[0]).unwrap();
+    let hs = crate::table::row_heights(&ctx, &t, &seho_text::NoFields);
     assert_eq!(hs.len(), 3);
     assert!(hs.iter().all(|h| *h > 10.0), "{hs:?}");
     let tops: Vec<f64> = crate::table::cell_rects(&t, &hs).iter().filter(|(_, c, _)| *c == 0).map(|(_, _, r)| r.y0).collect();
@@ -504,7 +504,7 @@ fn table_rows_of_zero_height_grow_to_fit_text() {
     // A taller stored height is kept.
     let mut tall = t;
     tall.rows[1].height = 200.0;
-    assert_eq!(crate::table::row_heights(&ctx, &tall, &deckcraft_text::NoFields)[1], 200.0);
+    assert_eq!(crate::table::row_heights(&ctx, &tall, &seho_text::NoFields)[1], 200.0);
     // The PDF text layer gets every cell's text, rows one below the other.
     let placed = place_slide(&p, 0);
     let top = |s: &str| {
@@ -521,13 +521,13 @@ fn blend_ends_match_the_slides_and_mixes_backdrops() {
     let sh = Shape {
         id: ShapeId(500),
         xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 100.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
     let mut p = deck_with(vec![sh.clone()]);
     let mut dark = (*p.slides[0]).clone();
     dark.background =
-        Some(deckcraft_model::Background::Fill { fill: deckcraft_model::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0))) });
+        Some(seho_model::Background::Fill { fill: seho_model::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0))) });
     p.slides.push(std::sync::Arc::new(dark));
     let o = RenderOpts { scale: 0.5, ..Default::default() };
     let shapes = vec![(sh, false)];
@@ -557,11 +557,11 @@ fn morph_text_tokens_are_words_or_characters() {
     let p = Presentation::default();
     let rctx = Ctx::for_slide(&p, &p.slides[0]).unwrap();
     let s = text_shape(1, "Hello big  world\nHello", 0.0, 0.0);
-    let l = deckcraft_text::layout(
+    let l = seho_text::layout(
         &rctx,
         &s,
         s.text.as_ref().unwrap(),
-        &Opts { rect: Rect::new(0.0, 0.0, 600.0, 120.0), fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false },
+        &Opts { rect: Rect::new(0.0, 0.0, 600.0, 120.0), fields: &seho_text::NoFields, prompt_color: None, no_shrink: false },
     );
     assert_eq!(morph_text::token_keys(&l, false), ["Hello", "big", "world", "Hello"]);
     assert_eq!(morph_text::token_keys(&l, true).concat(), "Hellobigworld".to_string() + "Hello");
@@ -603,14 +603,14 @@ fn morph_text_ends_match_the_slides() {
 fn field_shape(kind: Option<&str>, saved: &str) -> Shape {
     let mut sh = text_shape(1, saved, 40.0, 40.0);
     if let (Some(k), Some(run)) = (kind, sh.text.as_mut().and_then(|t| t.paragraphs[0].runs.first_mut())) {
-        run.kind = deckcraft_model::text::RunKind::Field { field: k.into() };
+        run.kind = seho_model::text::RunKind::Field { field: k.into() };
     }
     sh
 }
 
 #[test]
 fn date_fields_show_the_date_in_their_format() {
-    use deckcraft_text::datetime::DateTime;
+    use seho_text::datetime::DateTime;
     let fri = DateTime::new(2026, 10, 9, 20, 5, 7);
     let at = |p: &Presentation, now: DateTime| render_slide(p, 0, &RenderOpts { scale: 0.5, now: Some(now), ..Default::default() });
     let mut p = deck_with(vec![field_shape(Some("datetime1"), "1/1/2000")]);
@@ -657,7 +657,7 @@ fn two_frame_gif() -> Vec<u8> {
 fn animated_gif_shows_the_frame_for_its_time() {
     let mut p = Presentation::default();
     let media = p.add_media("a.gif", "image/gif", two_frame_gif()).expect("media");
-    let fill = deckcraft_model::style::PictureFill { media, ..Default::default() };
+    let fill = seho_model::style::PictureFill { media, ..Default::default() };
     let sh = Shape { id: ShapeId(600), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Picture { fill }, ..Default::default() };
     std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
     let at = |t: Option<f64>| {
@@ -685,7 +685,7 @@ fn morph_path_ends_match_the_slides() {
         id: ShapeId(id),
         xfrm: Some(x),
         geom: Geom::preset(g),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
     let mut p = deck_with(vec![form(1, "ellipse", from)]);
@@ -723,7 +723,7 @@ fn morph_path_fades_a_fill_only_one_side_has() {
         id: ShapeId(id),
         xfrm: Some(bx),
         geom: Geom::preset(g),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
     let mut p = deck_with(vec![form(1, "rect")]);
@@ -748,7 +748,7 @@ fn morph_path_aligns_once_per_transition() {
     let (from, to) = (Xfrm::new(0.0, 0.0, 200.0, 200.0), Xfrm::new(0.0, 0.0, 300.0, 150.0));
     let star = Shape { geom: Geom::preset("star5"), ..Default::default() };
     let pm = |t: f64| PathMorph { id: ShapeId(10), from: Geom::preset("ellipse"), from_box: from, to_box: to, t };
-    let els = |(g, f): (deckcraft_geom::preset::Geometry, Vec<_>)| (g.paths.iter().map(|p| p.path.elements().to_vec()).collect::<Vec<_>>(), f);
+    let els = |(g, f): (seho_geom::preset::Geometry, Vec<_>)| (g.paths.iter().map(|p| p.path.elements().to_vec()).collect::<Vec<_>>(), f);
     let mut cache = morph_path::Cache::default();
     for t in [0.0, 0.3, 0.7, 1.0] {
         let got = els(cache.geometry(&pm(t), &star, 250.0, 175.0));
@@ -842,18 +842,18 @@ fn flipped_shapes_draw_readable_text() {
 }
 
 /// A text box with one run of `props` (40 pt).
-fn run_deck(props: deckcraft_model::RunProps) -> Presentation {
+fn run_deck(props: seho_model::RunProps) -> Presentation {
     let mut sh = text_shape(1, "Linked text", 40.0, 40.0);
     if let Some(run) = sh.text.as_mut().and_then(|t| t.paragraphs[0].runs.first_mut()) {
-        run.props = deckcraft_model::RunProps { size: Some(40.0), ..props };
+        run.props = seho_model::RunProps { size: Some(40.0), ..props };
     }
     deck_with(vec![sh])
 }
 
 #[test]
 fn hyperlinks_draw_in_the_hyperlink_colour_underlined() {
-    use deckcraft_model::RunProps;
-    use deckcraft_model::text::{Action, Hyperlink};
+    use seho_model::RunProps;
+    use seho_model::text::{Action, Hyperlink};
     let o = RenderOpts { scale: 0.5, ..Default::default() };
     let px = |p: &Presentation| render_slide(p, 0, &o);
     let diff = |a: &Image, b: &Image| a.pixels.iter().zip(&b.pixels).filter(|(x, y)| x.abs_diff(**y) > 64).count();
@@ -865,7 +865,7 @@ fn hyperlinks_draw_in_the_hyperlink_colour_underlined() {
         stop_sound: false,
         zoom_return: None,
     });
-    let hlink = Some(Fill::solid(ColorRef::scheme(deckcraft_color::SchemeSlot::Hlink)));
+    let hlink = Some(Fill::solid(ColorRef::scheme(seho_color::SchemeSlot::Hlink)));
     let red = Some(Fill::solid(ColorRef::rgb(Rgba::rgb(200, 0, 0))));
     let _ = px(&run_deck(RunProps::default())); // faces load lazily
     let linked = px(&run_deck(RunProps { link: link.clone(), ..Default::default() }));
@@ -884,18 +884,18 @@ fn hyperlinks_draw_in_the_hyperlink_colour_underlined() {
 fn a_linear_gradient_ramps_like_powerpoint() {
     // Black to white, left to right: PowerPoint draws 105 a quarter of the way and 186 half way
     // (linear-light mix, S-shaped), not 64 and 128.
-    use deckcraft_model::style::{Fill, Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Fill, Gradient, GradientShape, GradientStop};
     let stop = |pos, c| GradientStop { pos, color: ColorRef::rgb(c) };
     let sh = Shape {
         id: ShapeId(700),
         xfrm: Some(Xfrm::new(0.0, 0.0, 800.0, 100.0)),
         fill: Some(Fill::Gradient(Gradient {
             tile: [0.0; 4],
-            stops: vec![stop(0.0, deckcraft_color::Rgba::rgb(0, 0, 0)), stop(1.0, deckcraft_color::Rgba::rgb(255, 255, 255))],
+            stops: vec![stop(0.0, seho_color::Rgba::rgb(0, 0, 0)), stop(1.0, seho_color::Rgba::rgb(255, 255, 255))],
             shape: GradientShape::Linear { angle: 0.0, scaled: false },
             rotate_with_shape: true,
         })),
-        line: Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
+        line: Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
         ..Default::default()
     };
     let p = deck_with(vec![sh]);
@@ -909,18 +909,18 @@ fn a_linear_gradient_ramps_like_powerpoint() {
 #[test]
 fn a_gradient_with_a_stop_off_the_end_stays_linear() {
     // Stops at 20 % and 100 %: PowerPoint blends linearly in sRGB (96 at 50 %, 175 at 75 %).
-    use deckcraft_model::style::{Fill, Gradient, GradientShape, GradientStop};
+    use seho_model::style::{Fill, Gradient, GradientShape, GradientStop};
     let stop = |pos, c| GradientStop { pos, color: ColorRef::rgb(c) };
     let sh = Shape {
         id: ShapeId(701),
         xfrm: Some(Xfrm::new(0.0, 0.0, 800.0, 100.0)),
         fill: Some(Fill::Gradient(Gradient {
             tile: [0.0; 4],
-            stops: vec![stop(0.2, deckcraft_color::Rgba::rgb(0, 0, 0)), stop(1.0, deckcraft_color::Rgba::rgb(255, 255, 255))],
+            stops: vec![stop(0.2, seho_color::Rgba::rgb(0, 0, 0)), stop(1.0, seho_color::Rgba::rgb(255, 255, 255))],
             shape: GradientShape::Linear { angle: 0.0, scaled: false },
             rotate_with_shape: true,
         })),
-        line: Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
+        line: Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
         ..Default::default()
     };
     let p = deck_with(vec![sh]);
@@ -936,12 +936,12 @@ fn a_shape_filled_with_the_background_shows_the_slide_background() {
     // `useBgFill`: PowerPoint paints the slide's background into the shape, laid out on the
     // slide. A white panel covers a black-to-grey background; a shape on it with the background
     // fill is a window onto that background.
-    use deckcraft_model::style::{Fill, Gradient, GradientShape, GradientStop};
-    let none = || Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() });
+    use seho_model::style::{Fill, Gradient, GradientShape, GradientStop};
+    let none = || Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() });
     let panel = Shape {
         id: ShapeId(710),
         xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)),
-        fill: Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 255, 255)))),
+        fill: Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 255, 255)))),
         line: none(),
         ..Default::default()
     };
@@ -953,8 +953,8 @@ fn a_shape_filled_with_the_background_shows_the_slide_background() {
         ..Default::default()
     };
     let mut p = deck_with(vec![panel, window]);
-    let stop = |pos, v| GradientStop { pos, color: ColorRef::rgb(deckcraft_color::Rgba::rgb(v, v, v)) };
-    std::sync::Arc::make_mut(&mut p.slides[0]).background = Some(deckcraft_model::Background::Fill {
+    let stop = |pos, v| GradientStop { pos, color: ColorRef::rgb(seho_color::Rgba::rgb(v, v, v)) };
+    std::sync::Arc::make_mut(&mut p.slides[0]).background = Some(seho_model::Background::Fill {
         fill: Fill::Gradient(Gradient {
             tile: [0.0; 4],
             stops: vec![stop(0.0, 0), stop(0.5, 0), stop(1.0, 200)],
@@ -974,19 +974,19 @@ fn a_shape_filled_with_the_background_shows_the_slide_background() {
 fn a_background_is_laid_over_white() {
     // A background picture stretched into the bottom-right quarter (fillRect l=50% t=50%), and a
     // half-transparent colour: PowerPoint shows white around and under them, not transparency.
-    use deckcraft_model::style::{Fill, PictureFill, PictureMode};
+    use seho_model::style::{Fill, PictureFill, PictureMode};
     let mut png = std::io::Cursor::new(Vec::new());
     image::DynamicImage::ImageRgb8(image::RgbImage::from_pixel(4, 4, image::Rgb([0, 0, 200]))).write_to(&mut png, image::ImageFormat::Png).unwrap();
     let mut p = deck_with(vec![]);
     let media = p.add_media("bg.png", "image/png", png.into_inner()).expect("media");
     let pf = PictureFill { media, mode: PictureMode::Stretch { fill_rect: [0.5, 0.5, 0.0, 0.0] }, ..Default::default() };
-    std::sync::Arc::make_mut(&mut p.slides[0]).background = Some(deckcraft_model::Background::Fill { fill: Fill::Picture(pf) });
+    std::sync::Arc::make_mut(&mut p.slides[0]).background = Some(seho_model::Background::Fill { fill: Fill::Picture(pf) });
     let img = render_slide(&p, 0, &RenderOpts { scale: 0.5, ..Default::default() });
     assert_eq!(img.pixel(20, 20), [255, 255, 255, 255], "white where the picture doesn't reach");
     let q = img.pixel(400, 230);
     assert!(q[2] > 190 && q[0] < 10 && q[3] == 255, "{q:?}");
-    let see_through = ColorRef::rgb(deckcraft_color::Rgba { r: 0, g: 0, b: 0, a: 128 });
-    std::sync::Arc::make_mut(&mut p.slides[0]).background = Some(deckcraft_model::Background::Fill { fill: Fill::solid(see_through) });
+    let see_through = ColorRef::rgb(seho_color::Rgba { r: 0, g: 0, b: 0, a: 128 });
+    std::sync::Arc::make_mut(&mut p.slides[0]).background = Some(seho_model::Background::Fill { fill: Fill::solid(see_through) });
     let img = render_slide(&p, 0, &RenderOpts { scale: 0.5, ..Default::default() });
     let g = img.pixel(20, 20);
     assert!(g[3] == 255 && (g[0] as i32 - 127).abs() <= 3, "half-transparent black over white is grey: {g:?}");
@@ -996,13 +996,13 @@ fn a_background_is_laid_over_white() {
 fn colour_glyphs_paint_their_layers() {
     // A COLRv0 test font (crates/render/tests/fixtures): U+E000 is a red square with a blue
     // square in its middle, U+E001 a square in the text colour.
-    deckcraft_fonts::FontDb::global().add_font(include_bytes!("../tests/fixtures/colr-squares.ttf").to_vec());
+    seho_fonts::FontDb::global().add_font(include_bytes!("../tests/fixtures/colr-squares.ttf").to_vec());
     let mut sh = Shape { id: ShapeId(720), xfrm: Some(Xfrm::new(0.0, 0.0, 400.0, 200.0)), text_box: true, ..Default::default() };
     let mut t = TextBody::from_text("\u{E000} \u{E001}");
     let props = &mut t.paragraphs[0].runs[0].props;
     props.size = Some(72.0);
-    props.font = Some("DeckCraft Colr Squares".into());
-    props.fill = Some(deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 160, 0))));
+    props.font = Some("Seho Colr Squares".into());
+    props.fill = Some(seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 160, 0))));
     sh.text = Some(t);
     let p = deck_with(vec![sh]);
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -1022,8 +1022,8 @@ fn colour_glyphs_paint_their_layers() {
 fn a_text_gradient_starts_over_on_every_line() {
     // PowerPoint fills each line of gradient text with the whole gradient, spanning that line
     // (black at the top of every line to white at its bottom), not the text box.
-    use deckcraft_model::style::{Fill, Gradient, GradientShape, GradientStop};
-    let stop = |pos, v| GradientStop { pos, color: ColorRef::rgb(deckcraft_color::Rgba::rgb(v, v, v)) };
+    use seho_model::style::{Fill, Gradient, GradientShape, GradientStop};
+    let stop = |pos, v| GradientStop { pos, color: ColorRef::rgb(seho_color::Rgba::rgb(v, v, v)) };
     let mut sh = Shape { id: ShapeId(730), xfrm: Some(Xfrm::new(0.0, 0.0, 600.0, 500.0)), text_box: true, ..Default::default() };
     let mut t = TextBody::from_text("HHHH\nHHHH");
     for p in &mut t.paragraphs {
@@ -1063,12 +1063,12 @@ fn a_text_gradient_starts_over_on_every_line() {
 }
 
 /// A text box of big black "IIII" with `set` applied to its run.
-fn effect_text(set: impl Fn(&mut deckcraft_model::text::RunProps)) -> Presentation {
+fn effect_text(set: impl Fn(&mut seho_model::text::RunProps)) -> Presentation {
     let mut sh = Shape { id: ShapeId(740), xfrm: Some(Xfrm::new(100.0, 100.0, 600.0, 300.0)), text_box: true, ..Default::default() };
     let mut t = TextBody::from_text("IIII");
     let props = &mut t.paragraphs[0].runs[0].props;
     props.size = Some(100.0);
-    props.fill = Some(deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0))));
+    props.fill = Some(seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0))));
     set(props);
     sh.text = Some(t);
     deck_with(vec![sh])
@@ -1084,15 +1084,15 @@ fn text_glow_and_shadow_are_drawn() {
     assert_eq!(count(&img, &green), 0);
     // Glow: a green halo hugging the letters, needing the blur filter.
     let glow =
-        effect_text(|p| p.glow = Some(deckcraft_model::style::Glow { color: ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 255, 0)), radius: 8.0 }));
+        effect_text(|p| p.glow = Some(seho_model::style::Glow { color: ColorRef::rgb(seho_color::Rgba::rgb(0, 255, 0)), radius: 8.0 }));
     assert!(needs_filters(&glow, &glow.slides[0]), "text glow blurs");
     let img = render_slide(&glow, 0, &RenderOpts { scale: 1.0, threads: 4, ..Default::default() });
     let halo = count(&img, &green);
     assert!(halo > 300, "green halo pixels {halo}");
     // Shadow: grey ink below and right of the letters, where the plain text has none.
     let shadow = effect_text(|p| {
-        p.shadow = Some(deckcraft_model::style::Shadow {
-            color: ColorRef::rgb(deckcraft_color::Rgba { r: 0, g: 0, b: 0, a: 128 }),
+        p.shadow = Some(seho_model::style::Shadow {
+            color: ColorRef::rgb(seho_color::Rgba { r: 0, g: 0, b: 0, a: 128 }),
             blur: 2.0,
             dist: 12.0,
             dir: 45.0,
@@ -1115,13 +1115,13 @@ fn text_glow_and_shadow_are_drawn() {
 fn pattern_fills_draw_powerpoints_tiles() {
     // dkVert at one output pixel per pattern cell (0.75 pt): columns 11001100… across, as
     // PowerPoint's export draws it; pct50 is a checkerboard.
-    use deckcraft_model::style::{Fill, PatternFill};
-    let rgb = |v| ColorRef::rgb(deckcraft_color::Rgba::rgb(v, v, v));
+    use seho_model::style::{Fill, PatternFill};
+    let rgb = |v| ColorRef::rgb(seho_color::Rgba::rgb(v, v, v));
     let shape = |id, x: f64, preset: &str| Shape {
         id: ShapeId(id),
         xfrm: Some(Xfrm::new(x, 0.0, 60.0, 60.0)),
         fill: Some(Fill::Pattern(PatternFill { preset: preset.into(), fg: rgb(0), bg: rgb(255) })),
-        line: Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
+        line: Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
         ..Default::default()
     };
     let p = deck_with(vec![shape(750, 0.0, "dkVert"), shape(751, 120.0, "pct50")]);
@@ -1141,14 +1141,14 @@ fn pattern_fills_draw_powerpoints_tiles() {
 fn compound_lines_draw_their_bands() {
     // A 24 pt outline on a rectangle, as PowerPoint's export draws each kind (top edge, outside
     // first): double 8/8/8, thin-thick 4.8/4.8/14.4, triple 4/4/8/4/4.
-    use deckcraft_model::style::{Compound, Fill, Line};
+    use seho_model::style::{Compound, Fill, Line};
     let runs = |c: Compound| {
         let sh = Shape {
             id: ShapeId(760),
             xfrm: Some(Xfrm::new(100.0, 100.0, 300.0, 200.0)),
-            fill: Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 255, 255)))),
+            fill: Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 255, 255)))),
             line: Some(Line {
-                fill: Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0)))),
+                fill: Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0)))),
                 width: Some(24.0),
                 compound: Some(c),
                 ..Default::default()
@@ -1185,8 +1185,8 @@ fn compound_lines_draw_their_bands() {
 fn rect_path_gradients_draw_x_shaped_contours() {
     // path="rect" from the centre, black to grey to white (linear): PowerPoint's colour position is
     // the larger axis share, so 20 pt right of centre in a 280x200 box is 1/7 and 20 pt down 1/5.
-    use deckcraft_model::style::{Fill, Gradient, GradientShape, GradientStop};
-    let stop = |pos, v| GradientStop { pos, color: ColorRef::rgb(deckcraft_color::Rgba::rgb(v, v, v)) };
+    use seho_model::style::{Fill, Gradient, GradientShape, GradientStop};
+    let stop = |pos, v| GradientStop { pos, color: ColorRef::rgb(seho_color::Rgba::rgb(v, v, v)) };
     let sh = Shape {
         id: ShapeId(770),
         xfrm: Some(Xfrm::new(0.0, 0.0, 280.0, 200.0)),
@@ -1196,7 +1196,7 @@ fn rect_path_gradients_draw_x_shaped_contours() {
             shape: GradientShape::Path { path: "rect".into(), focus: [0.5, 0.5, 0.5, 0.5] },
             rotate_with_shape: true,
         })),
-        line: Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
+        line: Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
         ..Default::default()
     };
     let p = deck_with(vec![sh]);
@@ -1217,9 +1217,9 @@ fn soft_edges_fade_to_the_outline() {
         id: ShapeId(780),
         xfrm: Some(Xfrm::new(100.0, 100.0, 300.0, 200.0)),
         geom: Geom::Preset { name: "ellipse".into(), adj: vec![] },
-        fill: Some(deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0)))),
-        line: Some(deckcraft_model::style::Line { fill: Some(deckcraft_model::style::Fill::None), ..Default::default() }),
-        effects: Some(deckcraft_model::Effects { soft_edge: Some(12.0), ..Default::default() }),
+        fill: Some(seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0)))),
+        line: Some(seho_model::style::Line { fill: Some(seho_model::style::Fill::None), ..Default::default() }),
+        effects: Some(seho_model::Effects { soft_edge: Some(12.0), ..Default::default() }),
         ..Default::default()
     };
     let p = deck_with(vec![sh]);
@@ -1237,10 +1237,10 @@ fn soft_edges_fade_to_the_outline() {
 #[test]
 fn a_file_defined_table_style_draws_its_parts() {
     // Red table background (tblBg), see-through white on banded rows, a 4 pt blue left border and
-    // no inside lines: drawn from the definition, not DeckCraft's own look for the style.
-    use deckcraft_model::style::{Fill, Line};
-    use deckcraft_model::table::{TableBorder, TablePart, TablePartStyle, TableStyleDef};
-    let rgb = |r, g, b| ColorRef::rgb(deckcraft_color::Rgba::rgb(r, g, b));
+    // no inside lines: drawn from the definition, not Seho's own look for the style.
+    use seho_model::style::{Fill, Line};
+    use seho_model::table::{TableBorder, TablePart, TablePartStyle, TableStyleDef};
+    let rgb = |r, g, b| ColorRef::rgb(seho_color::Rgba::rgb(r, g, b));
     let mut t = Table::new(4, 2, 400.0, 50.0);
     t.style = "{ABCDEF01-2345-4678-9ABC-DEF012345678}".into();
     t.first_row = false;
@@ -1249,7 +1249,7 @@ fn a_file_defined_table_style_draws_its_parts() {
     let mut whole = TablePartStyle { fill: Some(Fill::None), ..Default::default() };
     whole.borders[0] = Some(line(rgb(0, 0, 255), 4.0));
     whole.borders[4] = Some(TableBorder::Line { line: Line { fill: Some(Fill::None), ..Default::default() } });
-    let see_through = ColorRef::rgb(deckcraft_color::Rgba { r: 255, g: 255, b: 255, a: 51 });
+    let see_through = ColorRef::rgb(seho_color::Rgba { r: 255, g: 255, b: 255, a: 51 });
     let band = TablePartStyle { fill: Some(Fill::solid(see_through)), ..Default::default() };
     let def = TableStyleDef {
         id: t.style.clone(),
@@ -1277,10 +1277,10 @@ fn a_file_defined_table_style_draws_its_parts() {
 #[test]
 fn a_table_fill_shows_behind_cells_without_their_own() {
     // `a:tblPr` solidFill (tdf#127237): cells with no fill show the table's blue.
-    use deckcraft_model::style::Fill;
+    use seho_model::style::Fill;
     let mut t = Table::new(2, 2, 200.0, 50.0);
     t.style = "none".into();
-    t.background = Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 112, 192))));
+    t.background = Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 112, 192))));
     for r in 0..2 {
         for c in 0..2 {
             t.cell_mut(r, c).unwrap().fill = Some(Fill::None);
@@ -1294,12 +1294,12 @@ fn a_table_fill_shows_behind_cells_without_their_own() {
 }
 
 /// A white 280x200 pt rectangle at (20, 20) with `effects`, rendered at 1 px/pt.
-fn effect_box(effects: deckcraft_model::Effects) -> Image {
-    use deckcraft_model::style::{Fill, Line};
+fn effect_box(effects: seho_model::Effects) -> Image {
+    use seho_model::style::{Fill, Line};
     let sh = Shape {
         id: ShapeId(800),
         xfrm: Some(Xfrm::new(20.0, 20.0, 280.0, 200.0)),
-        fill: Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 255, 255)))),
+        fill: Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 255, 255)))),
         line: Some(Line { fill: Some(Fill::None), ..Default::default() }),
         effects: Some(effects),
         ..Default::default()
@@ -1307,9 +1307,9 @@ fn effect_box(effects: deckcraft_model::Effects) -> Image {
     render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() })
 }
 
-fn shadow(blur: f64, dist: f64, dir: f64) -> deckcraft_model::style::Shadow {
-    deckcraft_model::style::Shadow {
-        color: ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0)),
+fn shadow(blur: f64, dist: f64, dir: f64) -> seho_model::style::Shadow {
+    seho_model::style::Shadow {
+        color: ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0)),
         blur,
         dist,
         dir,
@@ -1328,7 +1328,7 @@ fn shadows_and_glows_spread_like_powerpoints() {
     let red = |img: &Image, x: u32, y: u32| img.pixel(x, y)[0] as i32;
     // Outer shadow, 9 pt blur, no offset: PowerPoint's export reads 144, 204, 238 at 1, 3 and 5
     // px outside the left edge.
-    let img = effect_box(deckcraft_model::Effects { outer_shadow: Some(shadow(9.0, 0.0, 0.0)), ..Default::default() });
+    let img = effect_box(seho_model::Effects { outer_shadow: Some(shadow(9.0, 0.0, 0.0)), ..Default::default() });
     for (d, want) in [(1, 144), (3, 204), (5, 238)] {
         assert!((red(&img, 20 - d, 120) - want).abs() <= 6, "outer {d}: {}", red(&img, 20 - d, 120));
     }
@@ -1336,20 +1336,20 @@ fn shadows_and_glows_spread_like_powerpoints() {
     // edges, not the top and left.
     let mut sh = shadow(0.0, 10.0, 45.0);
     sh.inner = true;
-    let img = effect_box(deckcraft_model::Effects { inner_shadow: Some(sh), ..Default::default() });
+    let img = effect_box(seho_model::Effects { inner_shadow: Some(sh), ..Default::default() });
     assert!(red(&img, 296, 120) < 20, "right edge {}", red(&img, 296, 120));
     assert!(red(&img, 160, 216) < 20, "bottom edge {}", red(&img, 160, 216));
     assert!(red(&img, 24, 120) > 250 && red(&img, 160, 24) > 250, "top and left stay clear");
     // Inner shadow with a 9 pt blur and no offset: the same profile as the outer one, inside.
     let mut sh = shadow(9.0, 0.0, 0.0);
     sh.inner = true;
-    let img = effect_box(deckcraft_model::Effects { inner_shadow: Some(sh), ..Default::default() });
+    let img = effect_box(seho_model::Effects { inner_shadow: Some(sh), ..Default::default() });
     for (d, want) in [(0, 144), (2, 204), (4, 238)] {
         assert!((red(&img, 20 + d, 120) - want).abs() <= 6, "inner {d}: {}", red(&img, 20 + d, 120));
     }
     // Glow of radius 10 pt: nearly solid 1 px out, about half strength 5 px out, gone by 10.
-    let glow = deckcraft_model::style::Glow { color: ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0)), radius: 10.0 };
-    let img = effect_box(deckcraft_model::Effects { glow: Some(glow), ..Default::default() });
+    let glow = seho_model::style::Glow { color: ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0)), radius: 10.0 };
+    let img = effect_box(seho_model::Effects { glow: Some(glow), ..Default::default() });
     assert!(red(&img, 19, 120) < 20);
     assert!((60..170).contains(&red(&img, 15, 120)), "{}", red(&img, 15, 120));
     assert!(red(&img, 10, 120) > 245);
@@ -1359,7 +1359,7 @@ fn shadows_and_glows_spread_like_powerpoints() {
 fn wordart(warp: Option<&str>, text: &str) -> Presentation {
     let mut t = TextBody::from_text(text);
     t.paragraphs[0].runs[0].props.size = Some(40.0);
-    t.paragraphs[0].props.align = Some(deckcraft_model::text::Align::Center);
+    t.paragraphs[0].props.align = Some(seho_model::text::Align::Center);
     t.body.warp = warp.map(String::from);
     deck_with(vec![Shape { id: ShapeId(700), xfrm: Some(Xfrm::new(100.0, 100.0, 400.0, 200.0)), text: Some(t), ..Default::default() }])
 }
@@ -1475,7 +1475,7 @@ fn half_red_wmf() -> Vec<u8> {
 fn metafile_pictures_draw_their_vectors() {
     let mut p = Presentation::default();
     let media = p.add_media("image1.wmf", "image/x-wmf", half_red_wmf()).expect("media");
-    let fill = deckcraft_model::style::PictureFill { media, ..Default::default() };
+    let fill = seho_model::style::PictureFill { media, ..Default::default() };
     let sh = Shape { id: ShapeId(600), xfrm: Some(Xfrm::new(100.0, 100.0, 400.0, 200.0)), kind: ShapeKind::Picture { fill }, ..Default::default() };
     std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
     for scale in [0.5, 1.0, 3.0] {
@@ -1500,7 +1500,7 @@ fn broken_metafiles_draw_nothing_and_never_panic() {
     for bytes in cases {
         let mut p = Presentation::default();
         let media = p.add_media("image1.emf", "image/x-emf", bytes).expect("media");
-        let fill = deckcraft_model::style::PictureFill { media, ..Default::default() };
+        let fill = seho_model::style::PictureFill { media, ..Default::default() };
         let sh = Shape { id: ShapeId(600), xfrm: Some(Xfrm::new(0.0, 0.0, 400.0, 200.0)), kind: ShapeKind::Picture { fill }, ..Default::default() };
         std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
         let _ = render_slide(&p, 0, &RenderOpts { scale: 0.25, ..Default::default() });
@@ -1508,7 +1508,7 @@ fn broken_metafiles_draw_nothing_and_never_panic() {
 }
 
 #[test]
-fn an_object_deckcraft_doesnt_model_shows_its_preview_picture() {
+fn an_object_seho_doesnt_model_shows_its_preview_picture() {
     // An embedded OLE object (or an unknown graphic) draws its preview stretched over its frame,
     // as PowerPoint does; with no preview it draws nothing.
     let png = {
@@ -1543,19 +1543,19 @@ fn off_slide_deck() -> Presentation {
     let half = Shape {
         id: ShapeId(2700),
         xfrm: Some(Xfrm::new(-100.0, 100.0, 200.0, 100.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
     let below = Shape {
         id: ShapeId(2701),
         xfrm: Some(Xfrm::new(400.0, 600.0, 100.0, 60.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent2)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent2)),
         ..Default::default()
     };
     deck_with(vec![half, below])
 }
 
-fn near(px: [u8; 4], c: deckcraft_color::Rgba) -> bool {
+fn near(px: [u8; 4], c: seho_color::Rgba) -> bool {
     (px[0] as i32 - c.r as i32).abs() <= 3 && (px[1] as i32 - c.g as i32).abs() <= 3 && (px[2] as i32 - c.b as i32).abs() <= 3 && px[3] == 255
 }
 
@@ -1564,7 +1564,7 @@ fn shows_exports_and_thumbnails_clip_to_the_slide() {
     let p = off_slide_deck();
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
     assert_eq!((img.width, img.height), (960, 540));
-    let a1 = p.masters[0].theme.colors.get(deckcraft_color::SchemeSlot::Accent1);
+    let a1 = p.masters[0].theme.colors.get(seho_color::SchemeSlot::Accent1);
     // The on-slide half is there, nothing else is drawn outside the slide.
     assert!(near(img.pixel(50, 150), a1), "{:?}", img.pixel(50, 150));
     assert_eq!(img.pixel(150, 150), [255, 255, 255, 255]);
@@ -1580,8 +1580,8 @@ fn the_editor_pasteboard_draws_shapes_off_the_slide() {
     let (img, drawn) = render_slide_drawn(&p, 0, &opts);
     assert_eq!((img.width, img.height), region.size());
     let at = |x: i32, y: i32| img.pixel((x - region.x) as u32, (y - region.y) as u32);
-    let a1 = p.masters[0].theme.colors.get(deckcraft_color::SchemeSlot::Accent1);
-    let a2 = p.masters[0].theme.colors.get(deckcraft_color::SchemeSlot::Accent2);
+    let a1 = p.masters[0].theme.colors.get(seho_color::SchemeSlot::Accent1);
+    let a2 = p.masters[0].theme.colors.get(seho_color::SchemeSlot::Accent2);
     // Both halves of the straddling shape, at full strength, and the shape below the slide.
     assert!(near(at(-50, 150), a1), "{:?}", at(-50, 150));
     assert!(near(at(50, 150), a1), "{:?}", at(50, 150));
@@ -1600,12 +1600,12 @@ fn master_graphics_off_the_slide_show_on_the_pasteboard() {
     m.shapes.push(Shape {
         id: ShapeId(2702),
         xfrm: Some(Xfrm::new(-150.0, 300.0, 100.0, 60.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent3)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent3)),
         ..Default::default()
     });
     let region = pasteboard_region((960, 540), 1.0, slide_extent(&p, 0), Region { x: -300, y: -100, w: 1500, h: 800 });
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, edit: true, offset: region.offset(), size: Some(region.size()), ..Default::default() });
-    let a3 = p.masters[0].theme.colors.get(deckcraft_color::SchemeSlot::Accent3);
+    let a3 = p.masters[0].theme.colors.get(seho_color::SchemeSlot::Accent3);
     assert!(near(img.pixel((-100 - region.x) as u32, (330 - region.y) as u32), a3));
 }
 
@@ -1807,8 +1807,8 @@ fn metafile_pattern_brush_tiles_and_averages_when_tiny() {
 /// A 400 x 200 group at (100, 100) holding a dashed 4 pt rectangle and a 3 pt line with an
 /// arrowhead, placed in the group's child coordinates by `to_child` (slide point to child point).
 fn outlined_group(child: Xfrm, to_child: impl Fn(f64, f64) -> (f64, f64)) -> Image {
-    use deckcraft_model::style::{Dash, LineEnd};
-    let ink = |w: f64| deckcraft_model::style::Line { dash: None, ..deckcraft_model::style::Line::solid(ColorRef::rgb(Rgba::rgb(200, 0, 0)), w) };
+    use seho_model::style::{Dash, LineEnd};
+    let ink = |w: f64| seho_model::style::Line { dash: None, ..seho_model::style::Line::solid(ColorRef::rgb(Rgba::rgb(200, 0, 0)), w) };
     let place = |x0: f64, y0: f64, x1: f64, y1: f64| {
         let ((a, b), (c, d)) = (to_child(x0, y0), to_child(x1, y1));
         Xfrm::new(a, b, c - a, d - b)
@@ -1817,7 +1817,7 @@ fn outlined_group(child: Xfrm, to_child: impl Fn(f64, f64) -> (f64, f64)) -> Ima
         id: ShapeId(11),
         xfrm: Some(place(140.0, 120.0, 300.0, 200.0)),
         geom: Geom::preset("rect"),
-        line: Some(deckcraft_model::style::Line { dash: Some(Dash::Preset { name: "dash".into() }), ..ink(4.0) }),
+        line: Some(seho_model::style::Line { dash: Some(Dash::Preset { name: "dash".into() }), ..ink(4.0) }),
         ..Default::default()
     };
     let end = LineEnd { kind: "triangle".into(), w: "lg".into(), len: "lg".into() };
@@ -1825,7 +1825,7 @@ fn outlined_group(child: Xfrm, to_child: impl Fn(f64, f64) -> (f64, f64)) -> Ima
         id: ShapeId(12),
         xfrm: Some(Xfrm { flip_v: true, ..place(150.0, 170.0, 450.0, 260.0) }),
         geom: Geom::preset("line"),
-        line: Some(deckcraft_model::style::Line { tail: Some(end), ..ink(3.0) }),
+        line: Some(seho_model::style::Line { tail: Some(end), ..ink(3.0) }),
         ..Default::default()
     };
     let pts: Vec<(f64, f64, f32)> = [(160.0, 240.0), (260.0, 285.0)].iter().map(|(x, y)| to_child(*x, *y)).map(|(x, y)| (x, y, 1.0)).collect();
@@ -1833,7 +1833,7 @@ fn outlined_group(child: Xfrm, to_child: impl Fn(f64, f64) -> (f64, f64)) -> Ima
         id: ShapeId(13),
         xfrm: Some(place(100.0, 100.0, 500.0, 300.0)),
         kind: ShapeKind::Ink {
-            strokes: vec![deckcraft_model::InkStroke { points: pts, color: Rgba::rgb(200, 0, 0), width: 5.0, highlighter: false }],
+            strokes: vec![seho_model::InkStroke { points: pts, color: Rgba::rgb(200, 0, 0), width: 5.0, highlighter: false }],
         },
         ..Default::default()
     };
@@ -1877,8 +1877,8 @@ fn a_picture_casts_its_shadow_from_its_pixels() {
         image::DynamicImage::ImageRgba8(img).write_to(&mut out, image::ImageFormat::Png).unwrap();
         out.into_inner()
     };
-    let shadow = deckcraft_model::style::Shadow {
-        color: ColorRef::rgb(deckcraft_color::Rgba::BLACK),
+    let shadow = seho_model::style::Shadow {
+        color: ColorRef::rgb(seho_color::Rgba::BLACK),
         blur: 0.0,
         dist: 20.0,
         dir: 90.0,
@@ -1893,15 +1893,15 @@ fn a_picture_casts_its_shadow_from_its_pixels() {
     for as_fill in [false, true] {
         let mut p = Presentation::default();
         let media = p.add_media("logo.png", "image/png", png.clone()).expect("media");
-        let pf = deckcraft_model::style::PictureFill { media, ..Default::default() };
+        let pf = seho_model::style::PictureFill { media, ..Default::default() };
         let mut sh = Shape { id: ShapeId(600), xfrm: Some(Xfrm::new(100.0, 100.0, 400.0, 200.0)), ..Default::default() };
         if as_fill {
             sh.fill = Some(Fill::Picture(pf));
-            sh.line = Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() });
+            sh.line = Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() });
         } else {
             sh.kind = ShapeKind::Picture { fill: pf };
         }
-        sh.effects = Some(deckcraft_model::Effects { outer_shadow: Some(shadow.clone()), ..Default::default() });
+        sh.effects = Some(seho_model::Effects { outer_shadow: Some(shadow.clone()), ..Default::default() });
         std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
         let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
         // Below the picture, 10 pt down: shadow under the opaque right half only.
@@ -1923,7 +1923,7 @@ fn text_in_a_scaled_group_keeps_its_point_size() {
         let mut p = Presentation::default();
         let mut body = TextBody::from_text("Hello");
         body.paragraphs[0].runs[0].props.size = Some(24.0);
-        body.paragraphs[0].runs[0].props.fill = Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::BLACK)));
+        body.paragraphs[0].runs[0].props.fill = Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::BLACK)));
         let child = Shape { id: ShapeId(601), xfrm: Some(Xfrm::new(0.0, 0.0, 400.0 / scale, 200.0 / scale)), text: Some(body), ..Default::default() };
         let g = Shape {
             id: ShapeId(600),
@@ -1948,18 +1948,18 @@ fn text_in_a_scaled_group_keeps_its_point_size() {
 fn a_fill_overlay_blends_over_the_fill() {
     // `a:fillOverlay blend="mult"`: a 50% grey multiplied over a light fill darkens it; "screen"
     // lightens a dark one; the overlay stays inside the shape.
-    use deckcraft_model::style::FillOverlay;
+    use seho_model::style::FillOverlay;
     let draw = |base: [u8; 3], blend: &str| {
         let mut p = Presentation::default();
         let mut sh = Shape {
             id: ShapeId(600),
             xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 100.0)),
-            fill: Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(base[0], base[1], base[2])))),
-            line: Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
+            fill: Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(base[0], base[1], base[2])))),
+            line: Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
             ..Default::default()
         };
-        sh.effects = Some(deckcraft_model::Effects {
-            fill_overlay: Some(FillOverlay { blend: blend.into(), fill: Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(128, 128, 128))) }),
+        sh.effects = Some(seho_model::Effects {
+            fill_overlay: Some(FillOverlay { blend: blend.into(), fill: Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(128, 128, 128))) }),
             ..Default::default()
         });
         std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
@@ -1984,7 +1984,7 @@ fn dotted_and_wavy_underlines_draw_their_pattern() {
         let props = &mut t.paragraphs[0].runs[0].props;
         props.size = Some(96.0);
         props.underline = Some(u.into());
-        props.fill = Some(deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 0, 0))));
+        props.fill = Some(seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 0, 0))));
         sh.text = Some(t);
         let p = deck_with(vec![sh]);
         let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -2010,13 +2010,13 @@ fn dotted_and_wavy_underlines_draw_their_pattern() {
 fn east_asian_vertical_text_stands_ideographs_upright() {
     // "一" is a horizontal stroke. In eaVert text it stays horizontal (upright) while the line runs
     // down the shape; in vert it lies on its side like Latin text.
-    let ink = |dir: deckcraft_model::text::TextDir| {
+    let ink = |dir: seho_model::text::TextDir| {
         let mut sh = Shape { id: ShapeId(770), xfrm: Some(Xfrm::new(100.0, 50.0, 200.0, 400.0)), text_box: true, ..Default::default() };
         let mut t = TextBody::from_text("一");
         t.body.vert = Some(dir);
         let props = &mut t.paragraphs[0].runs[0].props;
         props.size = Some(80.0);
-        props.fill = Some(deckcraft_model::style::Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(0, 0, 0))));
+        props.fill = Some(seho_model::style::Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(0, 0, 0))));
         sh.text = Some(t);
         let p = deck_with(vec![sh]);
         let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -2031,15 +2031,15 @@ fn east_asian_vertical_text_stands_ideographs_upright() {
         assert!(x1 >= x0 && y1 >= y0, "no ink for {dir:?}");
         (x1 - x0, y1 - y0)
     };
-    let (w, h) = ink(deckcraft_model::text::TextDir::EaVertical);
+    let (w, h) = ink(seho_model::text::TextDir::EaVertical);
     assert!(w > h * 3, "eaVert: upright stroke {w}x{h}");
-    let (w, h) = ink(deckcraft_model::text::TextDir::Vertical);
+    let (w, h) = ink(seho_model::text::TextDir::Vertical);
     assert!(h > w * 3, "vert: stroke on its side {w}x{h}");
 }
 
 #[test]
 fn placed_shapes_give_the_click_boxes_of_a_slide_in_drawing_order() {
-    use deckcraft_model::text::{Action, Hyperlink};
+    use seho_model::text::{Action, Hyperlink};
     let link =
         Hyperlink { action: Action::NextSlide, tooltip: String::new(), highlight_click: false, sound: None, stop_sound: false, zoom_return: None };
     let rect = |id: u32, x: f64, click: Option<Hyperlink>| Shape {
@@ -2078,7 +2078,7 @@ fn placed_shapes_give_the_click_boxes_of_a_slide_in_drawing_order() {
 
 #[test]
 fn a_text_hyperlink_belongs_to_the_shape_that_holds_the_text() {
-    use deckcraft_model::text::{Action, Hyperlink};
+    use seho_model::text::{Action, Hyperlink};
     let mut body = TextBody::from_text("click here");
     for r in &mut body.paragraphs[0].runs {
         r.props.link = Some(Hyperlink {
@@ -2133,7 +2133,7 @@ fn tiny_chart_does_not_blank_the_slide() {
     let red = Shape {
         id: ShapeId(800),
         xfrm: Some(Xfrm::new(100.0, 100.0, 200.0, 100.0)),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
         ..Default::default()
     };
     let mut shapes = vec![red];
@@ -2158,8 +2158,8 @@ fn extruded_deck() -> Presentation {
         id: ShapeId(id),
         xfrm: Some(Xfrm::new(x, 170.0, 170.0, 130.0)),
         geom: Geom::preset(preset),
-        style: Some(ShapeStyle::accent(deckcraft_color::SchemeSlot::Accent1)),
-        effects: Some(deckcraft_model::Effects { raw3d: Some(raw.into()), ..Default::default() }),
+        style: Some(ShapeStyle::accent(seho_color::SchemeSlot::Accent1)),
+        effects: Some(seho_model::Effects { raw3d: Some(raw.into()), ..Default::default() }),
         ..Default::default()
     };
     deck_with(vec![
@@ -2214,7 +2214,7 @@ fn contours_band_the_outline_in_their_colour() {
 fn extrusions_show_their_sides_under_a_turned_camera() {
     let p = extruded_deck();
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
-    if let Ok(path) = std::env::var("DECKCRAFT_PNG_OUT") {
+    if let Ok(path) = std::env::var("SEHO_PNG_OUT") {
         let _ = std::fs::write(path, img.to_png());
     }
     let count = |x0: u32, x1: u32, f: &dyn Fn([u8; 4]) -> bool| {
@@ -2272,7 +2272,7 @@ fn office_2016_charts_draw_their_own_layouts() {
             gridlines: false,
             subtotals,
             categories: (0..vals.len()).map(|i| format!("C{i}")).collect(),
-            series: vec![deckcraft_model::chart::Series { values: vals.iter().map(|v| Some(*v)).collect(), ..Default::default() }],
+            series: vec![seho_model::chart::Series { values: vals.iter().map(|v| Some(*v)).collect(), ..Default::default() }],
             ..Default::default()
         };
         let sh = Shape { id: ShapeId(621), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
@@ -2320,7 +2320,7 @@ fn histogram_pareto_and_box_charts_draw() {
     let blank = inked(&shot(empty));
     for kind in [ChartType::Histogram, ChartType::Pareto, ChartType::BoxWhisker] {
         let img = shot(Chart::sample(kind));
-        if let Ok(dir) = std::env::var("DECKCRAFT_CHART_SHOTS") {
+        if let Ok(dir) = std::env::var("SEHO_CHART_SHOTS") {
             let _ = std::fs::write(format!("{dir}/{kind:?}.png"), img.to_png());
         }
         let n = inked(&img);
@@ -2336,7 +2336,7 @@ fn multilevel_treemap_and_sunburst_draw_their_groups() {
         let c = Chart::sample(kind);
         let sh = Shape { id: ShapeId(623), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
         let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
-        if let Ok(dir) = std::env::var("DECKCRAFT_CHART_SHOTS") {
+        if let Ok(dir) = std::env::var("SEHO_CHART_SHOTS") {
             let _ = std::fs::write(format!("{dir}/{kind:?}-levels.png"), img.to_png());
         }
         // Distinct colours: one hue per top-level group plus lighter children.
@@ -2363,13 +2363,13 @@ fn region_map_draws_tiles_on_its_colour_scale() {
         kind: ChartType::RegionMap,
         title: Some("Sales by region".into()),
         categories: names.iter().map(|s| s.to_string()).collect(),
-        series: vec![deckcraft_model::chart::Series { name: "Sales".into(), values: vals.iter().map(|v| Some(*v)).collect(), ..Default::default() }],
+        series: vec![seho_model::chart::Series { name: "Sales".into(), values: vals.iter().map(|v| Some(*v)).collect(), ..Default::default() }],
         data_labels: true,
         ..Default::default()
     };
     let sh = Shape { id: ShapeId(624), xfrm: Some(Xfrm::new(0.0, 0.0, 960.0, 540.0)), kind: ShapeKind::Chart(Box::new(c)), ..Default::default() };
     let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
-    if let Ok(dir) = std::env::var("DECKCRAFT_CHART_SHOTS") {
+    if let Ok(dir) = std::env::var("SEHO_CHART_SHOTS") {
         let _ = std::fs::write(format!("{dir}/RegionMap-tiles.png"), img.to_png());
     }
     let mut seen: Vec<[u8; 3]> = Vec::new();
@@ -2392,7 +2392,7 @@ fn radar_stock_and_combo_draw_their_own_layouts() {
     let mut ohlc = Chart::sample(ChartType::Stock);
     ohlc.series.insert(
         0,
-        deckcraft_model::chart::Series {
+        seho_model::chart::Series {
             name: "Open".into(),
             values: [44.0, 25.0, 38.0, 50.0, 35.0].iter().map(|v| Some(*v)).collect(),
             ..Default::default()
@@ -2414,7 +2414,7 @@ fn radar_stock_and_combo_draw_their_own_layouts() {
             ..Default::default()
         };
         let img = render_slide(&deck_with(vec![sh]), 0, &RenderOpts { scale: 1.0, ..Default::default() });
-        if let Ok(dir) = std::env::var("DECKCRAFT_CHART_SHOTS") {
+        if let Ok(dir) = std::env::var("SEHO_CHART_SHOTS") {
             let _ = std::fs::write(format!("{dir}/{name}.png"), img.to_png());
         }
         let ink = |x: u32, y: u32| img.pixel(x, y)[..3] != [255, 255, 255];
@@ -2482,15 +2482,15 @@ fn charts_in_degenerate_frames_draw_without_panicking() {
     }
 }
 
-/// Renders the EMF at `$DECKCRAFT_EMF_IN` to `$DECKCRAFT_EMF_PNG` (a look-at helper; does nothing
+/// Renders the EMF at `$SEHO_EMF_IN` to `$SEHO_EMF_PNG` (a look-at helper; does nothing
 /// without them).
 #[test]
 fn render_an_emf_file_to_look_at() {
-    let (Ok(src), Ok(out)) = (std::env::var("DECKCRAFT_EMF_IN"), std::env::var("DECKCRAFT_EMF_PNG")) else { return };
+    let (Ok(src), Ok(out)) = (std::env::var("SEHO_EMF_IN"), std::env::var("SEHO_EMF_PNG")) else { return };
     let Ok(bytes) = std::fs::read(&src) else { return };
     let mut p = Presentation::default();
     let media = p.add_media("image1.emf", "image/x-emf", bytes).expect("media");
-    let fill = deckcraft_model::style::PictureFill { media, ..Default::default() };
+    let fill = seho_model::style::PictureFill { media, ..Default::default() };
     let sh = Shape { id: ShapeId(600), xfrm: Some(Xfrm::new(40.0, 40.0, 840.0, 400.0)), kind: ShapeKind::Picture { fill }, ..Default::default() };
     std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -2525,7 +2525,7 @@ fn a_cropped_picture_is_decoded_at_the_resolution_of_the_whole_image() {
     // Decoding at the box's size instead of the whole image's blurs the stripes to grey (#762).
     let mut p = Presentation::default();
     let media = p.add_media("stripes.png", "image/png", fine_stripes_png()).expect("media");
-    let fill = deckcraft_model::style::PictureFill { media, crop: [0.0, 0.0, 15.0 / 16.0, 15.0 / 16.0], ..Default::default() };
+    let fill = seho_model::style::PictureFill { media, crop: [0.0, 0.0, 15.0 / 16.0, 15.0 / 16.0], ..Default::default() };
     let sh = Shape { id: ShapeId(600), xfrm: Some(Xfrm::new(100.0, 100.0, 64.0, 64.0)), kind: ShapeKind::Picture { fill }, ..Default::default() };
     std::sync::Arc::make_mut(&mut p.slides[0]).shapes = vec![sh];
     let img = render_slide(&p, 0, &RenderOpts { scale: 1.0, ..Default::default() });
@@ -2544,7 +2544,7 @@ fn a_cropped_picture_is_decoded_at_the_resolution_of_the_whole_image() {
 
 #[test]
 fn empty_bullet_is_gray_only_while_editing_and_never_in_exports() {
-    use deckcraft_model::text::{Bullet, Paragraph};
+    use seho_model::text::{Bullet, Paragraph};
     let mut para = Paragraph::default();
     para.props.bullet = Some(Bullet::Char { char: "•".into() });
     para.props.margin_left = Some(24.0);

@@ -149,7 +149,7 @@ pub(crate) fn animated(ctx: &egui::Context) -> bool {
 }
 
 fn zoom_id() -> egui::Id {
-    egui::Id::new("pdfcraft-motion-wheel-zoom")
+    egui::Id::new("taratasy-motion-wheel-zoom")
 }
 
 /// This pass's zoom factor from a pinch or ⌘/Ctrl with the wheel (1.0 for none): egui's

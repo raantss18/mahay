@@ -1,5 +1,5 @@
 //! Parser and lookup table for translation catalogs (`*.tsv`, format documented in `zh-hans.tsv`).
-//! The format is PdfCraft's. Most entries are plain (empty context); a few use one of
+//! The format is Taratasy's. Most entries are plain (empty context); a few use one of
 //! [`CONTEXTS`] where the same English needs different wording in one place.
 //!
 //! Validation is strict (unknown escapes, unknown `@` contexts, placeholder, ellipsis and plural

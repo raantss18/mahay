@@ -1,7 +1,7 @@
 //! Reference adjustment: copying formulas, inserting/deleting rows and columns, moving cells,
 //! renaming and deleting sheets.
 
-use gridcraft_core::{CellError, MAX_COLS, MAX_ROWS, RangeRef};
+use tabilao_core::{CellError, MAX_COLS, MAX_ROWS, RangeRef};
 
 use crate::ast::*;
 

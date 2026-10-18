@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use deckcraft_model::{Presentation, SlideId};
+use seho_model::{Presentation, SlideId};
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, WidgetInfo, WidgetType, pos2, vec2};
 use serde_json::json;
 
@@ -374,12 +374,12 @@ pub fn notes_page(app: &mut SlideApp, ui: &mut Ui) {
     let to_screen = |(x0, y0, x1, y1): (f64, f64, f64, f64)| {
         Rect::from_min_max(page.min + vec2(x0 as f32 * k, y0 as f32 * k), page.min + vec2(x1 as f32 * k, y1 as f32 * k))
     };
-    let (slide_box, notes_box) = deckcraft_engine::pdf::notes_frames(&doc, paper);
+    let (slide_box, notes_box) = seho_engine::pdf::notes_frames(&doc, paper);
     // On the physical pixel grid, so the thumbnail is one texel per device pixel (#184).
     let srect = crate::textures::device_pixel_rect(to_screen((slide_box.x0, slide_box.y0, slide_box.x1, slide_box.y1)), ui.ctx().pixels_per_point());
     if let Some(m) = doc.notes_master.as_deref() {
         // Laid out by the text engine as on the PDF page: wrapped, each run in its size and colour.
-        for piece in deckcraft_engine::pdf::master_text_pieces(&doc, m, paper, idx + 1) {
+        for piece in seho_engine::pdf::master_text_pieces(&doc, m, paper, idx + 1) {
             let size = (piece.size as f32 * k).max(4.0);
             let at = page.min + vec2(piece.at.0 as f32 * k, piece.at.1 as f32 * k - size * 0.8);
             let c = Color32::from_rgba_unmultiplied(piece.color.r, piece.color.g, piece.color.b, piece.color.a);
@@ -401,7 +401,7 @@ pub fn notes_page(app: &mut SlideApp, ui: &mut Ui) {
     let focused = child.ctx().memory(|m| m.has_focus(edit_id));
     let notes_of = |app: &SlideApp| app.session.active().and_then(|st| st.doc.slides.get(idx)).map(|s| s.notes.clone()).unwrap_or_default();
     let notes = notes_of(app);
-    let stored: Option<(deckcraft_model::text::TextBody, crate::notes::Draft)> = child.data_mut(|d| d.get_temp(id));
+    let stored: Option<(seho_model::text::TextBody, crate::notes::Draft)> = child.data_mut(|d| d.get_temp(id));
     let mut draft = stored.filter(|(base, _)| *base == notes).map(|(_, d)| d);
     // Save an edited draft once the field has lost focus, before anything reloads it.
     if !focused && let Some(d) = draft.as_mut().filter(|d| d.edited) {
@@ -470,7 +470,7 @@ pub fn outline_pane(app: &mut SlideApp, ui: &mut Ui) {
 mod ui_tests;
 
 /// A slide's outline block height before it has been laid out: title row plus its text lines.
-fn outline_estimate(s: &deckcraft_model::Slide) -> f32 {
+fn outline_estimate(s: &seho_model::Slide) -> f32 {
     let lines: usize = s
         .shapes
         .iter()
@@ -483,7 +483,7 @@ fn outline_estimate(s: &deckcraft_model::Slide) -> f32 {
 }
 
 /// One slide in the outline: number, title editor, then its other text.
-fn outline_slide(app: &mut SlideApp, ui: &mut Ui, t: &Tokens, i: usize, s: &deckcraft_model::Slide, cur: usize) {
+fn outline_slide(app: &mut SlideApp, ui: &mut Ui, t: &Tokens, i: usize, s: &seho_model::Slide, cur: usize) {
     let title_shape = s.shapes.iter().find(|x| x.ph_type().is_some_and(|k| k.is_title())).map(|x| x.id.0);
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new(format!("{}", i + 1)).color(t.text_dim));

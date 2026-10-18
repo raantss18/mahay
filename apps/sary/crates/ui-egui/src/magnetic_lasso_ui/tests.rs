@@ -3,7 +3,7 @@
 
 use egui::{Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::Harness;
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 use serde_json::json;
 
 use super::*;
@@ -12,8 +12,8 @@ use crate::canvas::{ToolEvent, ViewXform, tool_event};
 const SQUARE: Rect = Rect::new(50, 40, 130, 110);
 
 /// A black 80×70 square on a white 200×150 document, the Magnetic Lasso, 100 % zoom.
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 150})).unwrap();
     app.sync_views();
     app.session
@@ -28,13 +28,13 @@ fn app() -> PhotocraftApp {
     app
 }
 
-fn click(app: &mut PhotocraftApp, x: f64, y: f64, m: Modifiers) {
+fn click(app: &mut SaryApp, x: f64, y: f64, m: Modifiers) {
     tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, m);
     tool_event(app, ToolEvent::Up { x, y }, m);
 }
 
 /// The pointer moves (button up) along the polyline `pts` in 2 px steps, like a hand on a mouse.
-fn hover_along(app: &mut PhotocraftApp, pts: &[[f64; 2]]) {
+fn hover_along(app: &mut SaryApp, pts: &[[f64; 2]]) {
     for w in pts.windows(2) {
         let n = (dist(w[0], w[1]) / 2.0).ceil().max(1.0) as usize;
         for k in 1..=n {
@@ -48,15 +48,15 @@ fn hover_along(app: &mut PhotocraftApp, pts: &[[f64; 2]]) {
 /// Around the square, 3 px outside its edges, back to just past the start.
 const AROUND: [[f64; 2]; 6] = [[52.0, 37.0], [133.0, 37.0], [133.0, 113.0], [47.0, 113.0], [47.0, 37.0], [52.0, 37.0]];
 
-fn coverage(app: &PhotocraftApp, x: i32, y: i32) -> f32 {
+fn coverage(app: &SaryApp, x: i32, y: i32) -> f32 {
     app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |m| m.sample_channel(x, y, 0))
 }
 
-fn selected_area(app: &PhotocraftApp) -> f32 {
+fn selected_area(app: &SaryApp) -> f32 {
     (0..150).flat_map(|y| (0..200).map(move |x| (x, y))).map(|(x, y)| coverage(app, x, y)).sum()
 }
 
-fn last_step(app: &PhotocraftApp) -> Option<String> {
+fn last_step(app: &SaryApp) -> Option<String> {
     app.session.active().unwrap().history.entries().last().cloned()
 }
 
@@ -273,7 +273,7 @@ fn hostile_input_never_panics() {
     remove_last_point(&mut app);
     cancel(&mut app);
     // No document at all.
-    let mut empty = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut empty = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     empty.ui.tool = Tool::MagneticLasso;
     click(&mut empty, 5.0, 5.0, Modifiers::NONE);
     hover_along(&mut empty, &[[5.0, 5.0], [60.0, 5.0], [60.0, 60.0]]);
@@ -283,11 +283,11 @@ fn hostile_input_never_panics() {
 
 // ---------------------------------------------------------------------------- real canvas
 
-fn harness() -> Harness<'static, PhotocraftApp> {
+fn harness() -> Harness<'static, SaryApp> {
     let mut app = app();
     app.ui.extras.rulers = false;
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -297,7 +297,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let v = &mut h.state_mut().ui.views[0];
     v.zoom = 1.0;
@@ -307,7 +307,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn screen(h: &Harness<'static, PhotocraftApp>, x: f64, y: f64) -> Pos2 {
+fn screen(h: &Harness<'static, SaryApp>, x: f64, y: f64) -> Pos2 {
     let app = h.state();
     let v = &app.ui.views[0];
     let xf = ViewXform {
@@ -321,7 +321,7 @@ fn screen(h: &Harness<'static, PhotocraftApp>, x: f64, y: f64) -> Pos2 {
     xf.to_screen(x as f32, y as f32)
 }
 
-fn ui_click(h: &mut Harness<'static, PhotocraftApp>, x: f64, y: f64) {
+fn ui_click(h: &mut Harness<'static, SaryApp>, x: f64, y: f64) {
     let p = screen(h, x, y);
     h.event(egui::Event::PointerMoved(p));
     h.run_steps(1);
@@ -331,7 +331,7 @@ fn ui_click(h: &mut Harness<'static, PhotocraftApp>, x: f64, y: f64) {
     }
 }
 
-fn ui_hover(h: &mut Harness<'static, PhotocraftApp>, pts: &[[f64; 2]]) {
+fn ui_hover(h: &mut Harness<'static, SaryApp>, pts: &[[f64; 2]]) {
     for w in pts.windows(2) {
         let n = (dist(w[0], w[1]) / 3.0).ceil().max(1.0) as usize;
         for k in 1..=n {

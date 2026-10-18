@@ -150,7 +150,7 @@ fn color_replacement_modes() {
     let before = rgba(&s, 30, 20);
     s.execute("paint.colorReplacement", json!({"points": [[10, 20], [50, 20]], "size": 20, "mode": "color", "tolerance": 20})).unwrap();
     let c = rgba(&s, 30, 20);
-    let lum = |c: [f32; 4]| photocraft_color::blend::lum([c[0], c[1], c[2]]);
+    let lum = |c: [f32; 4]| sary_color::blend::lum([c[0], c[1], c[2]]);
     assert!(c[0] > c[1], "{c:?}");
     assert!((lum(c) - lum(before)).abs() < 0.02);
     s.execute("paint.colorReplacement", json!({"points": [[10, 5], [50, 5]], "size": 6, "mode": "luminosity", "sampling": "once", "limits": "discontiguous"}))
@@ -260,13 +260,13 @@ fn presets_save_captures_size_tool_settings_and_color_as_asked() {
     s.tools.foreground = [0.0, 0.0, 1.0, 1.0];
     s.execute("tools.setBrush", json!({"preset": "Legacy"})).unwrap();
     let b = &s.tools.brush;
-    assert_eq!((b.size, b.opacity, b.flow, b.mode, b.pressure_size), (40.0, 0.5, 0.25, photocraft_color::BlendMode::Multiply, false), "everything it saved");
+    assert_eq!((b.size, b.opacity, b.flow, b.mode, b.pressure_size), (40.0, 0.5, 0.25, sary_color::BlendMode::Multiply, false), "everything it saved");
     assert_eq!(s.tools.foreground, [0.0, 0.0, 1.0, 1.0], "a preset without Include Color leaves the foreground");
 
     s.execute("tools.setBrush", other.clone()).unwrap();
     s.execute("tools.setBrush", json!({"preset": "Bare"})).unwrap();
     let b = &s.tools.brush;
-    assert_eq!((b.size, b.opacity, b.flow, b.mode, b.pressure_size), (9.0, 1.0, 1.0, photocraft_color::BlendMode::Normal, true), "the tool's own");
+    assert_eq!((b.size, b.opacity, b.flow, b.mode, b.pressure_size), (9.0, 1.0, 1.0, sary_color::BlendMode::Normal, true), "the tool's own");
     assert_eq!(s.tools.current_preset.as_deref(), Some("Bare"));
 
     s.execute("tools.setBrush", json!({"preset": "Red"})).unwrap();
@@ -386,8 +386,8 @@ fn set_brush_keeps_untouched_bitmaps_and_replaces_touched_ones() {
     let tile = |w, h, k: u32| GrayTile::from_fn(w, h, move |x, y| ((x * k + y) % 5) as f32 / 4.0);
     let base = BrushSettings {
         tip: TipShape::Sampled(tile(900, 700, 3)),
-        dual_brush: photocraft_paint::DualBrush { tip: TipShape::Sampled(tile(30, 20, 2)), ..Default::default() },
-        texture: photocraft_paint::Texture { pattern: photocraft_paint::Pattern::Tile(tile(64, 64, 1)), ..Default::default() },
+        dual_brush: sary_paint::DualBrush { tip: TipShape::Sampled(tile(30, 20, 2)), ..Default::default() },
+        texture: sary_paint::Texture { pattern: sary_paint::Pattern::Tile(tile(64, 64, 1)), ..Default::default() },
         ..Default::default()
     };
     let cmd = "tools.setBrush";
@@ -406,7 +406,7 @@ fn set_brush_keeps_untouched_bitmaps_and_replaces_touched_ones() {
     )
     .unwrap();
     assert_eq!((&b.tip, &b.dual_brush.tip), (&TipShape::Round, &TipShape::Round));
-    assert!(matches!(b.texture.pattern, photocraft_paint::Pattern::Procedural { size: 32, .. }));
+    assert!(matches!(b.texture.pattern, sary_paint::Pattern::Procedural { size: 32, .. }));
     // A section replaced by a non-object is an error, not a silently kept bitmap.
     assert!(merge_brush(&base, &json!({"dualBrush": 3}), cmd).is_err());
     assert!(merge_brush(&base, &json!(null), cmd).is_err());
@@ -623,7 +623,7 @@ fn live_pencil_matches_the_committed_pencil_and_auto_erases() {
 }
 
 /// Pencil latency on a 24 MP document: the time to start a live stroke, per pointer move, and
-/// to commit. `cargo test -p photocraft-engine --release --lib pencil_latency -- --ignored --nocapture`
+/// to commit. `cargo test -p sary-engine --release --lib pencil_latency -- --ignored --nocapture`
 #[test]
 #[ignore]
 fn pencil_latency_24mp() {
@@ -717,7 +717,7 @@ fn new_brush_controls_round_trip_through_set_brush() {
     s.execute("tools.setBrush", json!({ "brush": patch })).unwrap();
     let b = &s.tools.brush;
     assert!(!b.spacing_enabled && b.shape_dynamics.brush_projection && b.shape_dynamics.tilt_scale == 1.5);
-    assert_eq!(b.transfer.wetness.control, photocraft_paint::Control::PenPressure);
+    assert_eq!(b.transfer.wetness.control, sary_paint::Control::PenPressure);
     assert_eq!((b.transfer.mix.jitter, b.transfer.mix.minimum), (0.6, 0.2));
     assert!(b.locks.shape_dynamics && b.locks.texture && b.locks.noise && !b.locks.scattering);
     assert_eq!((b.mixer.wet, b.mixer.load, b.mixer.mix, b.mixer.flow, b.mixer.sample_all_layers), (0.8, 0.25, 0.4, 0.9, true));
@@ -847,7 +847,7 @@ fn strokes_convert_through_the_documents_cmyk_profile() {
     // A synthetic uncoated-like profile: heavier dot gain than the built-in coated CMYK (whose
     // params are the defaults here), so painted ink differs from the default conversion. The
     // compositors and composite exports enter the document's space; the stroke must too (#583).
-    let profile = photocraft_cms::synth::cmyk_profile(&photocraft_cms::synth::CmykParams {
+    let profile = sary_cms::synth::cmyk_profile(&sary_cms::synth::CmykParams {
         description: "Stroke Test Uncoated".into(),
         tvi: [0.26, 0.26, 0.26, 0.3],
         grid_a2b: 5,
@@ -972,7 +972,7 @@ fn set_brush_takes_a_per_dynamic_curve_and_a_patch_resets_it() {
     assert!(with.transfer.opacity.curve.is_linear(), "other dynamics keep their own curve");
     // The panel's diff back to linear is a real patch, and applying it restores the linear curve.
     let mut linear = with.clone();
-    linear.shape_dynamics.size.curve = photocraft_paint::ResponseCurve::LINEAR;
+    linear.shape_dynamics.size.curve = sary_paint::ResponseCurve::LINEAR;
     let patch = brush_patch(&with, &linear);
     assert_eq!(patch["shapeDynamics"]["size"]["curve"], json!([[0.0, 0.0], [1.0, 1.0]]));
     s.execute("tools.setBrush", patch).unwrap();
@@ -1077,7 +1077,7 @@ fn brush_and_pencil_paint_a_cmyk_pick_with_the_picked_inks() {
     for cmd in ["paint.stroke", "paint.pencil"] {
         let mut s = session(16, 16);
         s.execute("image.mode.cmyk", json!({})).unwrap();
-        let rgb = photocraft_color::convert::cmyk_to_rgb(cyan).map(|c| c.clamp(0.0, 1.0));
+        let rgb = sary_color::convert::cmyk_to_rgb(cyan).map(|c| c.clamp(0.0, 1.0));
         s.execute("tools.setColors", json!({"foreground": rgb, "foregroundCmyk": cyan})).unwrap();
         s.execute(cmd, json!({"points": [[8.0, 8.0]], "size": 6.0, "hardness": 1.0})).unwrap();
         let st = s.active().unwrap();

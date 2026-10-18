@@ -19,44 +19,44 @@ regression_min_ms = 1.0
 
 [[bench]]
 name = "perf_scenarios"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 quick_args = ["--quick"]
 note = "the #209/#210/#211 rows: layered 20 MP, 150 layers, 16/32-bit, open, retouch, selection"
 
 [[bench]]
 name = "interactive_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 args = ["--reps", "5"]
 note = "36 MP photo: dabs, filters, adjustment previews, saves"
 
 [[bench]]
 name = "fx_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 args = ["--no-cpu", "--reps", "5"]
 note = "36 MP document with layer effects, GPU compositor"
 
 [[bench]]
 name = "bevel_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 args = ["--reps", "9"]
 quick_args = ["--size", "1200x800", "--reps", "3"]
 note = "chisel bevel size change (a dragged slider) on a 12 MP ellipse and a text paragraph, GPU canvas and CPU"
 
 [[bench]]
 name = "camera_raw_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 quick_args = ["--quick"]
 note = "36 MP dense RGB layer: CPU develop, histogram, ICC vectorscope, clipping, nine Lab probes and egui tessellation; excludes GPU upload/presentation"
 
 [[bench]]
 name = "type_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 quick_args = ["--size", "2000x1500", "--layers", "20", "--steps", "15"]
 note = "font-size drag on 50 type layers"
 
 [[bench]]
 name = "large_image_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 args = ["--size", "14000x14000", "--op", "refresh"]
 note = "196 MP: open and full refresh"
 
@@ -64,7 +64,7 @@ note = "196 MP: open and full refresh"
 # rows are kept in results.json) as soon as the example exists; add scenarios for its rows then.
 [[bench]]
 name = "layout_bench"
-package = "photocraft-ui-egui"
+package = "sary-ui-egui"
 requires = "crates/ui-egui/examples/layout_bench.rs"
 quick_args = []
 note = "layout PSDs with many styled layers (#125/#128)"

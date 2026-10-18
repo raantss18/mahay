@@ -2,7 +2,7 @@
 //! ordinary commands: `shape.visible` (eye), `shape.lock` (padlock), `shape.rename`,
 //! `arrange.bringForward` / `arrange.sendBackward` (arrows) and `arrange.reorder` (drag and drop).
 
-use deckcraft_model::{Shape, ShapeId};
+use seho_model::{Shape, ShapeId};
 use serde_json::{Value, json};
 
 use super::*;
@@ -34,7 +34,7 @@ fn select(s: &mut Session, p: &Value) -> Result<Value> {
     };
     let (toggle, add) = (bool_or(p, "toggle", false), bool_or(p, "add", false));
     let st = s.doc()?;
-    let in_group = |id: &ShapeId| deckcraft_model::parent_of(st.shapes(), *id).map(|p| p.is_some());
+    let in_group = |id: &ShapeId| seho_model::parent_of(st.shapes(), *id).map(|p| p.is_some());
     let mut valid: Vec<ShapeId> = ids.iter().copied().filter(|i| in_group(i).is_some()).collect();
     if valid.is_empty() {
         return Err(bad("selection.select", "no such shape"));
@@ -72,7 +72,7 @@ fn select(s: &mut Session, p: &Value) -> Result<Value> {
         s.edit(|doc, sel| {
             let shapes = crate::shapes_mut(doc, sel).ok_or_else(|| bad("selection.select", "no slide"))?;
             for id in &reveal {
-                if let Some(sh) = deckcraft_model::find_shape_mut(shapes, *id) {
+                if let Some(sh) = seho_model::find_shape_mut(shapes, *id) {
                     sh.hidden = false;
                 }
             }
@@ -88,7 +88,7 @@ fn select(s: &mut Session, p: &Value) -> Result<Value> {
 fn show_all(s: &mut Session, _p: &Value) -> Result<Value> {
     fn any_hidden(v: &[Shape]) -> bool {
         let mut found = false;
-        deckcraft_model::walk(v, &mut |sh, _| found |= sh.hidden);
+        seho_model::walk(v, &mut |sh, _| found |= sh.hidden);
         found
     }
     if !any_hidden(s.doc()?.shapes()) {

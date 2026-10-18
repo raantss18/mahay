@@ -1,7 +1,7 @@
 //! Behavioural checks for switching languages in a running shell.
 
 use super::*;
-use crate::{PhotocraftApp, Services};
+use crate::{SaryApp, Services};
 use serde_json::json;
 
 fn lang(code: &str) -> Lang {
@@ -33,8 +33,8 @@ fn requested_languages_resolve_regional_preferences() {
 fn ukrainian_native_app_menu_keeps_product_and_language_names() {
     with_language(Lang::EN, || {
         let h = harness();
-        let layout = crate::native_menu::photocraft_layout(&crate::menus::menu_items(h.state()), lang("uk"), "uk");
-        for (id, label) in [("help.about", "Про PhotoCraft"), (crate::native_menu::HIDE, "Приховати PhotoCraft"), ("file.exit", "Вийти з PhotoCraft")]
+        let layout = crate::native_menu::sary_layout(&crate::menus::menu_items(h.state()), lang("uk"), "uk");
+        for (id, label) in [("help.about", "Про Sary"), (crate::native_menu::HIDE, "Приховати Sary"), ("file.exit", "Вийти з Sary")]
         {
             assert_eq!(layout.bar.find(id).map(|item| item.label.as_str()), Some(label), "{id}");
         }
@@ -144,7 +144,7 @@ fn fill_dialog_and_contour_choices_have_translations_and_draw_in_the_selected_la
     let labels = ["Contents:", "Color:", "Custom Pattern:", "Mode:", "Opacity:", "{size} (was {old})"];
     for language in Lang::all().filter(|language| language.complete_menus()) {
         let contents = crate::fill_ui::CONTENTS.iter().map(|(_, label)| *label);
-        let contours = photocraft_engine::layer_style::CONTOURS.iter().map(|(name, _)| *name);
+        let contours = sary_engine::layer_style::CONTOURS.iter().map(|(name, _)| *name);
         for text in labels.into_iter().chain(contents).chain(contours) {
             assert!(has(language, text), "{}: untranslated {text}", language.code());
         }
@@ -167,13 +167,13 @@ fn fill_dialog_and_contour_choices_have_translations_and_draw_in_the_selected_la
 fn file_info_camera_data_has_translations_and_draws_read_only() {
     for language in Lang::all().filter(|language| language.complete_menus()) {
         assert!(has(language, "Camera Data"), "{}: untranslated Camera Data", language.code());
-        for (_, label) in photocraft_engine::file_cmds::CAMERA_FIELDS {
+        for (_, label) in sary_engine::file_cmds::CAMERA_FIELDS {
             assert!(language.catalog().contextual("cameraData", label).is_some(), "{}: untranslated cameraData {label}", language.code());
         }
     }
     with_language(Lang::EN, || {
         let mut h = harness();
-        let exif = photocraft_algo::exif::build(&photocraft_algo::exif::CameraInfo {
+        let exif = sary_algo::exif::build(&sary_algo::exif::CameraInfo {
             make: Some("SONY".into()),
             exposure_time: Some(1.0 / 250.0),
             f_number: Some(8.0),
@@ -203,7 +203,7 @@ fn file_info_camera_data_has_translations_and_draws_read_only() {
 
 #[test]
 fn cjk_font_order_follows_the_selected_language() {
-    use photocraft_text::cjk::CjkScript;
+    use sary_text::cjk::CjkScript;
     for (code, script) in [("zh-hans", CjkScript::SimplifiedChinese), ("ja", CjkScript::Japanese), ("ko", CjkScript::Korean)] {
         with_language(lang(code), || {
             let mut fallback = crate::cjk_fonts::CjkFallback::new(crate::cjk_fonts::Sources::system());
@@ -215,7 +215,7 @@ fn cjk_font_order_follows_the_selected_language() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn korean_glyphs_remain_available_after_repeated_language_switches() {
-    use photocraft_text::cjk::{self, CjkChar, CjkScript};
+    use sary_text::cjk::{self, CjkChar, CjkScript};
     #[cfg(target_os = "linux")]
     crate::cjk_fonts::wait_for_fontconfig_cjk_scan();
     if !cjk::font_files(CjkScript::Korean).iter().any(|font| font.path.is_file()) {
@@ -242,14 +242,14 @@ fn korean_glyphs_remain_available_after_repeated_language_switches() {
     });
 }
 
-fn harness() -> egui_kittest::Harness<'static, PhotocraftApp> {
+fn harness() -> egui_kittest::Harness<'static, SaryApp> {
     harness_with_services(Services::default())
 }
 
-fn harness_with_services(services: Services) -> egui_kittest::Harness<'static, PhotocraftApp> {
+fn harness_with_services(services: Services) -> egui_kittest::Harness<'static, SaryApp> {
     let mut harness = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), services);
         app.run("file.new", json!({"name": "User layer name", "width": 64, "height": 64})).expect("new document");
         app
     });
@@ -292,7 +292,7 @@ fn older_preferences_without_a_language_follow_the_system() {
             let services = Services { load_prefs: Some(Box::new(|| Some(r#"{"interface":{"uiScale":"125"}}"#.into()))), ..Default::default() };
             let h = harness_with_services(services);
             assert_eq!(h.state().session.prefs().interface.language, "auto");
-            assert_eq!(h.state().session.prefs().interface.ui_scale, photocraft_engine::prefs::UiScale::P125);
+            assert_eq!(h.state().session.prefs().interface.ui_scale, sary_engine::prefs::UiScale::P125);
             assert_eq!(current(), lang("fr"));
         });
     });
@@ -367,7 +367,7 @@ fn preferences_preview_does_not_commit_until_applied_and_survives_reload() {
         h.step();
         assert_eq!(current(), lang("ko"));
         let saved = h.state().session.prefs_to_json();
-        let mut restored = photocraft_engine::Session::new();
+        let mut restored = sary_engine::Session::new();
         restored.load_prefs_json(&saved).expect("reload preferences");
         assert_eq!(restored.prefs().interface.language, "ko");
     });
@@ -393,7 +393,7 @@ fn keyboard_shortcuts_list_commands_in_the_selected_language() {
     });
 }
 
-fn drawn_text(h: &egui_kittest::Harness<'_, PhotocraftApp>) -> Vec<String> {
+fn drawn_text(h: &egui_kittest::Harness<'_, SaryApp>) -> Vec<String> {
     fn collect(shape: &egui::Shape, text: &mut Vec<String>) {
         match shape {
             egui::Shape::Text(shape) => text.push(shape.galley.job.text.clone()),
@@ -420,7 +420,7 @@ fn czech_status_notices_and_navigator_draw_translated_text() {
             crate::notices::post(
                 h.state_mut(),
                 "Preferences can't be saved",
-                vec!["PhotoCraft keeps retrying; until a save succeeds, preference changes are lost when it closes.".into()],
+                vec!["Sary keeps retrying; until a save succeeds, preference changes are lost when it closes.".into()],
                 true,
                 None,
             );

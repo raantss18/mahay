@@ -1,4 +1,4 @@
-//! GridCraft's calculation engine: the evaluator (references, names, tables, LET/LAMBDA,
+//! Tabilao's calculation engine: the evaluator (references, names, tables, LET/LAMBDA,
 //! dynamic arrays) and dependency-driven recalculation with spills and cycle detection.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]

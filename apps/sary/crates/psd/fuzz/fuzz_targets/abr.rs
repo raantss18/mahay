@@ -3,7 +3,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::abr;
+use sary_psd::abr;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(f) = abr::parse(data) {

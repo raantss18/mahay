@@ -1,9 +1,9 @@
 //! A native document and its PSD must quantize the same later mask edit alike.
 
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Document, LayerMask};
-use photocraft_engine::Session;
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_doc::{Document, LayerMask};
+use sary_engine::Session;
+use sary_raster::Surface;
 use serde_json::json;
 
 fn session(depth: u64, mode: &str) -> Session {
@@ -74,14 +74,14 @@ fn soft_mask_edits_match_after_native_and_psd_reopen() {
         s.execute("layer.newFillLayer.solidColor", json!({"color": "#000000"})).unwrap();
         s.execute("select.deselect", json!({})).unwrap();
         let before = s.active().unwrap().doc.clone();
-        let native = photocraft_format::save_to_bytes(&before, &Default::default()).unwrap();
-        let psd = photocraft_io::export(&before, "psd", &Default::default()).unwrap();
+        let native = sary_format::save_to_bytes(&before, &Default::default()).unwrap();
+        let psd = sary_io::export(&before, "psd", &Default::default()).unwrap();
         assert!(psd.warnings.is_empty(), "{:?}", psd.warnings);
         let mut branches = Vec::new();
-        for reopened in [photocraft_format::load_from_bytes(&native).unwrap(), photocraft_io::import("mask.psd", &psd.bytes).unwrap().document] {
+        for reopened in [sary_format::load_from_bytes(&native).unwrap(), sary_io::import("mask.psd", &psd.bytes).unwrap().document] {
             assert_eq!(mask(&reopened).surface.format(), mask(&before).surface.format(), "{depth}-bit mask depth survives reopening");
             assert_eq!(mask(&reopened).surface.read_region(before.bounds()), mask(&before).surface.read_region(before.bounds()));
-            assert_eq!(photocraft_compose::flatten(&reopened), photocraft_compose::flatten(&before));
+            assert_eq!(sary_compose::flatten(&reopened), sary_compose::flatten(&before));
             let layer = reopened.walk().into_iter().find_map(|(_, _, l)| l.mask.as_ref().map(|_| l.id.0)).unwrap();
             let mut edited = Session::new();
             edited.add_document(reopened, None);
@@ -106,7 +106,7 @@ fn soft_mask_edits_match_after_native_and_psd_reopen() {
         let changed = a.iter().zip(&b).filter(|(a, b)| a != b).count();
         let worst = a.iter().zip(&b).map(|(a, b)| (a - b).abs()).fold(0.0f32, f32::max);
         assert_eq!(changed, 0, "{depth}-bit mask edit depends on the save format (worst coverage difference {worst})");
-        assert_eq!(photocraft_compose::flatten(&branches[0]), photocraft_compose::flatten(&branches[1]), "{depth}-bit composite depends on the save format");
+        assert_eq!(sary_compose::flatten(&branches[0]), sary_compose::flatten(&branches[1]), "{depth}-bit composite depends on the save format");
         if depth > 8 {
             assert!(a.iter().any(|v| (v * 255.0 - (v * 255.0).round()).abs() > 0.01), "{depth}-bit mask edits retain sub-8-bit coverage");
         }
@@ -121,7 +121,7 @@ fn mask_creation_preserves_selection_coverage_and_existing_masks() {
             s.execute("layer.new.layer", json!({})).unwrap();
             s.edit("synthetic coverage", |doc, _| {
                 let mut selection = Surface::with_default(PixelFormat::GRAY8, &[1.0]);
-                selection.write_region(photocraft_geom::Rect::new(0, 0, 16, 16), &(0..256).map(|i| i as f32 / 255.0).collect::<Vec<_>>());
+                selection.write_region(sary_geom::Rect::new(0, 0, 16, 16), &(0..256).map(|i| i as f32 / 255.0).collect::<Vec<_>>());
                 doc.selection = Some(selection);
                 let mut existing = LayerMask::reveal_all();
                 existing.surface = Surface::with_default(PixelFormat::new(ColorMode::Grayscale, SampleType::F32, false), &[0.123456]);

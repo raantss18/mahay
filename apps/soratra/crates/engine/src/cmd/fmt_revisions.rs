@@ -12,10 +12,10 @@ use std::sync::Arc;
 
 use serde::Serialize;
 use serde_json::{Value, json};
-use wordcraft_doc::props::{CellProps, CharProps, ParaProps, PropChange, RowProps, TableProps};
-use wordcraft_doc::section::SectionProps;
-use wordcraft_doc::table::{Cell, Row, Table};
-use wordcraft_doc::{Block, Blocks, Document, Paragraph, Revision, RevisionKind};
+use soratra_doc::props::{CellProps, CharProps, ParaProps, PropChange, RowProps, TableProps};
+use soratra_doc::section::SectionProps;
+use soratra_doc::table::{Cell, Row, Table};
+use soratra_doc::{Block, Blocks, Document, Paragraph, Revision, RevisionKind};
 
 use crate::Session;
 

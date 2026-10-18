@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to PdfCraft.
+Thanks for contributing to Taratasy.
 
 Base this on `main` — it is the only integration branch. `main` moves fast (it took
 396 commits in the three days to 2026-10-12), so a PR that sits for a day usually needs
@@ -47,7 +47,7 @@ least likely to know about. Please read `AGENTS.md` §1 before adding any asset.
 
 - [ ] No asset from an Adobe product, and no Adobe icon recreated, traced or imitated
 - [ ] No font files committed here (they live in
-      [storytold/craft-fonts](https://github.com/storytold/craft-fonts))
+      [raantss18/mahay-fonts](https://github.com/raantss18/mahay))
 - [ ] No GPL/AGPL code copied in — MuPDF, Ghostscript, Poppler, veraPDF and DSS may only be
       run as external oracle processes
 - [ ] Behaviour comes from the specification or black-box observation, **not** from reading

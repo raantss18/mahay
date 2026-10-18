@@ -238,7 +238,7 @@ fn known(value: Option<&str>, known: &[&str], default: &str) -> String {
     value.filter(|v| known.contains(v)).unwrap_or(default).to_string()
 }
 
-fn num(e: &deckcraft_pptx::XmlEl, name: &str) -> Option<f64> {
+fn num(e: &seho_pptx::XmlEl, name: &str) -> Option<f64> {
     e.attr(name).and_then(|v| v.trim().parse::<f64>().ok()).filter(|v| v.is_finite())
 }
 
@@ -246,7 +246,7 @@ impl Shape3d {
     /// Reads kept 3-D XML (`a:scene3d` and `a:sp3d`); unknown or invalid parts take their defaults.
     pub fn parse(raw: &str) -> Shape3d {
         let mut s = Shape3d::default();
-        let Ok(doc) = deckcraft_pptx::parse_xml(format!("<r>{raw}</r>").as_bytes()) else { return s };
+        let Ok(doc) = seho_pptx::parse_xml(format!("<r>{raw}</r>").as_bytes()) else { return s };
         let root = &doc.root;
         if let Some(cam) = root.path(&["scene3d", "camera"]) {
             s.camera = known(cam.attr("prst"), ALL_CAMERAS, "orthographicFront");
@@ -380,7 +380,7 @@ impl Shape3d {
 }
 
 /// Sets a shape's 3-D settings on its effects, keeping `bevel` (the top bevel's preset) in step.
-pub fn store(e: &mut deckcraft_model::Effects, s: &Shape3d) {
+pub fn store(e: &mut seho_model::Effects, s: &Shape3d) {
     e.raw3d = s.to_xml();
     e.bevel = if e.raw3d.is_some() { s.top.as_ref().map(|b| b.preset.clone()) } else { None };
 }
@@ -410,7 +410,7 @@ mod tests {
         let xml = s.to_xml().expect("not flat");
         assert!(!xml.contains("<a:evil"), "{xml}");
         // What is written is well-formed XML with the colour's value escaped.
-        let doc = deckcraft_pptx::parse_xml(format!("<r {NS}>{xml}</r>").as_bytes()).expect("well-formed");
+        let doc = seho_pptx::parse_xml(format!("<r {NS}>{xml}</r>").as_bytes()).expect("well-formed");
         assert_eq!(doc.root.path(&["sp3d", "extrusionClr", "srgbClr"]).and_then(|c| c.attr("val")), Some(r#"x"/><a:evil/>"#));
     }
 

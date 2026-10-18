@@ -1,4 +1,4 @@
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 fn fixture() -> Session {

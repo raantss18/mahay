@@ -6,7 +6,7 @@ use egui_kittest::kittest::Queryable;
 use serde_json::{Value, json};
 
 use super::{KysCommand, parse, plan};
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::file_dialog::FileDialogAnswer;
 
 /// A cut-down set in Photoshop's own layout: BOM, a dynamic (filter) row, static rows with
@@ -53,8 +53,8 @@ const SAMPLE: &str = "\u{feff}<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 </photoshop-keyboard-shortcuts>
 ";
 
-fn app() -> PhotocraftApp {
-    PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default())
+fn app() -> SaryApp {
+    SaryApp::new(sary_engine::Session::new(), crate::Services::default())
 }
 
 #[test]
@@ -123,8 +123,8 @@ fn import_button_fills_the_dialog_and_ok_applies_the_set() {
     let answers = vec![Some(FileDialogAnswer::Contents("/sets/texcuts.kys".into(), SAMPLE.as_bytes().to_vec()))];
     let services = crate::Services { file_dialog: Some(crate::file_dialog::fake(answers).0), ..Default::default() };
     let mut h = Harness::builder().with_size(egui::vec2(1100.0, 760.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(photocraft_engine::Session::new(), services)
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(sary_engine::Session::new(), services)
     });
     let ctx = h.ctx.clone();
     // A hand-made override the file agrees with the default on: the import clears it.
@@ -136,7 +136,7 @@ fn import_button_fills_the_dialog_and_ok_applies_the_set() {
     h.run_steps(2);
     h.get_by_label("Import Shortcuts…").click();
     h.run_steps(3);
-    let field = |h: &Harness<'_, PhotocraftApp>, name: &str| -> Value {
+    let field = |h: &Harness<'_, SaryApp>, name: &str| -> Value {
         h.state().ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.get(name).cloned().unwrap_or(Value::Null)
     };
     assert_eq!(h.state().ui.status, "", "the import failed");
@@ -149,7 +149,7 @@ fn import_button_fills_the_dialog_and_ok_applies_the_set() {
     assert!(overrides.get("view.zoomIn").is_none(), "Cmd+= is among the keys, so the default stays: {overrides}");
     let message = field(&h, "message");
     // 9 commands and the Move Tool's V (its own letter: no override).
-    assert_eq!(message, json!("Imported 10 shortcuts from texcuts.kys. Click OK to keep them. 2 commands are not in PhotoCraft."));
+    assert_eq!(message, json!("Imported 10 shortcuts from texcuts.kys. Click OK to keep them. 2 commands are not in Sary."));
     assert!(overrides.get("tools.select.move").is_none(), "{overrides}");
     assert_eq!(field(&h, "capture"), json!(false));
     assert_eq!(field(&h, "messageWarning"), json!(false), "an import clears the earlier shortcut conflict warning");
@@ -216,7 +216,7 @@ type Store = std::sync::Arc<std::sync::Mutex<Option<String>>>;
 
 /// An app beside a Photoshop whose live set is `set`; `saved_prefs` is this app's own saved
 /// preferences file, and the store receives what it writes back.
-fn with_photoshop(set: &'static str, saved_prefs: Option<&'static str>) -> (PhotocraftApp, Store) {
+fn with_photoshop(set: &'static str, saved_prefs: Option<&'static str>) -> (SaryApp, Store) {
     let store: Store = Default::default();
     let written = store.clone();
     let services = crate::Services {
@@ -230,7 +230,7 @@ fn with_photoshop(set: &'static str, saved_prefs: Option<&'static str>) -> (Phot
         })),
         ..Default::default()
     };
-    (PhotocraftApp::new(photocraft_engine::Session::new(), services), store)
+    (SaryApp::new(sary_engine::Session::new(), services), store)
 }
 
 /// First launch beside Photoshop: its live set is offered, not applied. Import applies it,
@@ -284,7 +284,7 @@ fn dont_import_keeps_the_defaults_and_is_not_asked_again() {
 #[test]
 fn the_prompt_shows_the_set_and_its_import_button_applies_it() {
     let mut h = Harness::builder().with_size(egui::vec2(1100.0, 760.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
         with_photoshop(SAMPLE, None).0
     });
     h.run_steps(2);
@@ -349,8 +349,8 @@ fn a_windows_set_with_tool_keys_imports_as_photoshop_meant_it() {
     assert_eq!(f["overrides"]["tools.select.pencil"], json!("N"));
     let levels = f["overrides"].as_object().unwrap().iter().find(|(id, _)| id.contains("levels")).map(|(_, v)| v.clone());
     assert_eq!(
-        levels.as_ref().and_then(Value::as_str).and_then(photocraft_engine::prefs::normalize_shortcut),
-        photocraft_engine::prefs::normalize_shortcut("Cmd+Alt+Shift+L")
+        levels.as_ref().and_then(Value::as_str).and_then(sary_engine::prefs::normalize_shortcut),
+        sary_engine::prefs::normalize_shortcut("Cmd+Alt+Shift+L")
     );
     crate::dialogs::confirm(&mut app, id).unwrap();
     assert_eq!(crate::tool_shortcuts::shortcut(&app, crate::state::Tool::Pencil).as_deref(), Some("N"));

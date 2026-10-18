@@ -4,11 +4,11 @@
 
 use std::sync::Arc;
 
-use pdfcraft_cos::Document;
-use pdfcraft_sign::der::{self, Time, tag};
-use pdfcraft_sign::pkcs12::DigitalId;
-use pdfcraft_sign::x509::{Certificate, Name, build_chain, build_chain_noted};
-use pdfcraft_sign::{PrivateKey, SignOptions, Status, TrustStore, signatures};
+use taratasy_cos::Document;
+use taratasy_sign::der::{self, Time, tag};
+use taratasy_sign::pkcs12::DigitalId;
+use taratasy_sign::x509::{Certificate, Name, build_chain, build_chain_noted};
+use taratasy_sign::{PrivateKey, SignOptions, Status, TrustStore, signatures};
 
 fn time(year: u32) -> Time {
     Time { year, month: 6, day: 1, hour: 12, minute: 0, second: 0 }
@@ -188,7 +188,7 @@ fn verdict(leaf: Party, embedded: Vec<Certificate>, anchor: &Certificate) -> (St
     let id = DigitalId { key: leaf.key, certificate: leaf.cert, chain: embedded, friendly_name: None };
     let doc = Document::open(Arc::new(fixture())).unwrap();
     let opts = SignOptions { page: 0, rect: None, date: "D:20260601120000Z".into(), ..SignOptions::default() };
-    let signed = pdfcraft_sign::sign(&doc, &id, &opts).unwrap();
+    let signed = taratasy_sign::sign(&doc, &id, &opts).unwrap();
     let trust = TrustStore { certs: vec![anchor.clone()] };
     let s = signatures(&Document::open(Arc::new(signed.clone())).unwrap(), &signed, &trust).into_iter().rfind(|s| s.signed).unwrap();
     // The details as they read in English; what an interface says in another language is checked in
@@ -258,9 +258,9 @@ fn the_signer_certificate_must_allow_document_signing() {
     let unknown = "1.2.3.4.5.6";
     assert!(problem(&[ext(unknown, &der::octets(&[0]))]).is_some_and(|w| w.message.contains(unknown)));
     assert!(problem(&[der::seq(&[&der::oid(unknown), &der::octets(&der::octets(&[0]))])]).is_none());
-    // Critical extensions PdfCraft knows, or may accept as they are, don't refuse.
+    // Critical extensions Taratasy knows, or may accept as they are, don't refuse.
     assert!(problem(&[ext("2.5.29.32", &der::seq(&[]))]).is_none());
-    // No extensions at all, and the digital IDs PdfCraft creates, may sign.
+    // No extensions at all, and the digital IDs Taratasy creates, may sign.
     assert!(issue("Plain", Some(&r), FOREVER, &[]).cert.signing_problem().is_none());
     let key = PrivateKey::generate_p256().unwrap();
     let name = Name::build("Own ID", "", "", "", "US");

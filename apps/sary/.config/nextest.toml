@@ -12,7 +12,7 @@
 gpu = { max-threads = 4 }
 
 [[profile.default.overrides]]
-filter = 'package(photocraft-gpu) | (package(photocraft-ui-egui) & (kind(test) | test(/canvas|gpu|mip|type_tool|background_redraw::|floating_group_titles|swap_arrow::tests::rendered_glyph/)))'
+filter = 'package(sary-gpu) | (package(sary-ui-egui) & (kind(test) | test(/canvas|gpu|mip|type_tool|background_redraw::|floating_group_titles|swap_arrow::tests::rendered_glyph/)))'
 test-group = 'gpu'
 
 # CI (`--profile ci`, .github/workflows/ci.yml). Stops at the first failure so a red PR frees its

@@ -5,12 +5,12 @@ use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
-fn app() -> Harness<'static, PhotocraftApp> {
+fn app() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 64, "background": "white"})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app
@@ -32,7 +32,7 @@ fn the_layers_panel_locks_every_selected_layer() {
     h.query_by_label_contains("Lock all").expect("the Lock all button").click();
     h.run_steps(3);
     let st = h.state().session.active().unwrap();
-    let locked = |id: u64| st.doc.layer(photocraft_doc::LayerId(id)).unwrap().locks.all;
+    let locked = |id: u64| st.doc.layer(sary_doc::LayerId(id)).unwrap().locks.all;
     assert!(locked(extra) && locked(ids[1]), "both selected layers lock");
     assert!(!locked(ids[0]), "the unselected Background doesn't");
 }
@@ -41,8 +41,8 @@ fn the_layers_panel_locks_every_selected_layer() {
 #[test]
 fn the_basic_lock_toggle_locks_every_selected_layer() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, crate::theme::ThemeKind::Studio);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, crate::theme::ThemeKind::Studio);
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("prefs.set", json!({"path": "interface.theme", "value": crate::theme::ThemeKind::Studio.id()})).unwrap();
         app.ui.theme = crate::theme::ThemeKind::Studio;
         app.run("file.new", json!({"width": 64, "height": 64, "background": "white"})).unwrap();
@@ -55,7 +55,7 @@ fn the_basic_lock_toggle_locks_every_selected_layer() {
     h.get_by_label("Lock layer").click();
     h.run_steps(3);
     let st = h.state().session.active().unwrap();
-    let locked = |id: u64| st.doc.layer(photocraft_doc::LayerId(id)).unwrap().locks.all;
+    let locked = |id: u64| st.doc.layer(sary_doc::LayerId(id)).unwrap().locks.all;
     assert!(locked(a) && locked(b), "both selected layers lock");
 }
 
@@ -72,7 +72,7 @@ fn a_selected_background_is_left_out_of_a_several_layer_change() {
     h.get_by_label("Lock all").click();
     h.run_steps(3);
     let st = h.state().session.active().unwrap();
-    let l = |id: u64| st.doc.layer(photocraft_doc::LayerId(id)).unwrap().clone();
+    let l = |id: u64| st.doc.layer(sary_doc::LayerId(id)).unwrap().clone();
     assert!(l(top).locks.all, "the layer locks");
-    assert!(st.doc.is_background(photocraft_doc::LayerId(bg)) && !l(bg).locks.all, "the Background is left as it was");
+    assert!(st.doc.is_background(sary_doc::LayerId(bg)) && !l(bg).locks.all, "the Background is left as it was");
 }

@@ -232,7 +232,7 @@ fn merge_compat(orig: &str, generated: &str) -> Option<String> {
 }
 
 /// Does `original` (a settings part) hold anything the model doesn't write? Then the reader keeps
-/// it for [`merge`]. False for parts WordCraft wrote itself, and for anything it can't scan.
+/// it for [`merge`]. False for parts Soratra wrote itself, and for anything it can't scan.
 pub fn has_unowned(original: &[u8]) -> bool {
     let Some(xml) = std::str::from_utf8(original).ok() else { return false };
     let Some((_, _, kids)) = children(xml, "w:settings") else { return false };

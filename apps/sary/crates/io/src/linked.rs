@@ -9,8 +9,8 @@
 //! Pascal uuid, Unicode file name, file type, creator, `u64` data length, open-descriptor flag (+
 //! versioned descriptor), then for `liFD` the raw file bytes.
 
-use photocraft_doc::Metadata;
-use photocraft_psd::descriptor::VersionedDescriptor;
+use sary_doc::Metadata;
+use sary_psd::descriptor::VersionedDescriptor;
 
 /// An embedded file found in a linked-layer block.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -126,7 +126,7 @@ pub fn find_in_blocks<'a>(blocks: impl IntoIterator<Item = (&'a [u8; 4], &'a [u8
 pub(crate) fn source_size_in_blocks<'a>(
     blocks: impl IntoIterator<Item = (&'a [u8; 4], &'a [u8])>,
     uuid: &str,
-    ctl: &photocraft_raster::Interrupt,
+    ctl: &sary_raster::Interrupt,
 ) -> Option<(f64, f64)> {
     let f = find_in_blocks(blocks, uuid)?;
     if ctl.cancelled() {
@@ -137,8 +137,8 @@ pub(crate) fn source_size_in_blocks<'a>(
 
 /// Pixel size of an embedded source file from its header: PSD/PSB, TIFF (the default page's
 /// directory), PNG (`IHDR`) and JPEG (the frame header); WebP, GIF, BMP, EXR and the rest of
-/// `photocraft_codecs::probe_size`'s formats from their decoder's header; anything else (or a
-/// header that probe cannot read) is decoded flat by `photocraft-codecs`. It never imports a
+/// `sary_codecs::probe_size`'s formats from their decoder's header; anything else (or a
+/// header that probe cannot read) is decoded flat by `sary-codecs`. It never imports a
 /// document: a layered TIFF can carry PSD layer data whose `lnkD` holds another file, so a full
 /// import here would nest without bound (#2465).
 pub(crate) fn source_size_probe(bytes: &[u8]) -> Option<(f64, f64)> {
@@ -147,13 +147,13 @@ pub(crate) fn source_size_probe(bytes: &[u8]) -> Option<(f64, f64)> {
     match bytes {
         _ if crate::is_psd(bytes) => be32(18).zip(be32(14)).map(|(w, h)| size(w, h)),
         [b'I', b'I', 42, 0, ..] | [b'M', b'M', 0, 42, ..] | [b'I', b'I', 43, 0, ..] | [b'M', b'M', 0, 43, ..] => {
-            let info = photocraft_codecs::tiff_info(bytes).ok()?;
+            let info = sary_codecs::tiff_info(bytes).ok()?;
             let page = info.pages.get(info.default_page()?)?;
             Some(size(page.width, page.height))
         }
         [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, ..] => be32(16).zip(be32(20)).map(|(w, h)| size(w, h)),
         [0xFF, 0xD8, ..] => jpeg_size(bytes),
-        _ => photocraft_codecs::probe_size(bytes).or_else(|_| photocraft_codecs::decode(bytes).map(|img| img.dimensions())).ok().map(|(w, h)| size(w, h)),
+        _ => sary_codecs::probe_size(bytes).or_else(|_| sary_codecs::decode(bytes).map(|img| img.dimensions())).ok().map(|(w, h)| size(w, h)),
     }
 }
 
@@ -192,17 +192,17 @@ fn jpeg_size(bytes: &[u8]) -> Option<(f64, f64)> {
     }
 }
 
-/// Size and resolution of a smart-object source file (PSD/PSB header, `.pcraft`, or any image).
+/// Size and resolution of a smart-object source file (PSD/PSB header, `.sary`, or any image).
 /// Other formats are decoded in full, which `ctl` can cancel (its progress is left alone: this is
 /// a step of a larger operation).
-pub(crate) fn source_geometry(name: &str, bytes: &[u8], ctl: &photocraft_raster::Interrupt) -> Result<((f64, f64), f64), String> {
+pub(crate) fn source_geometry(name: &str, bytes: &[u8], ctl: &sary_raster::Interrupt) -> Result<((f64, f64), f64), String> {
     if crate::is_psd(bytes) {
         let rd = |at: usize| bytes.get(at..at + 4).map(|b| f64::from(u32::from_be_bytes([b[0], b[1], b[2], b[3]])));
         let (h, w) = rd(14).zip(rd(18)).ok_or("truncated PSD header")?;
         return Ok(((w, h), 72.0));
     }
     let cancel = || ctl.cancelled();
-    let doc = crate::import_with(name, bytes, &photocraft_raster::Interrupt::cancel_only(&cancel)).map_err(|e| e.to_string())?.document;
+    let doc = crate::import_with(name, bytes, &sary_raster::Interrupt::cancel_only(&cancel)).map_err(|e| e.to_string())?.document;
     Ok(((f64::from(doc.size.width), f64::from(doc.size.height)), f64::from(doc.resolution_dpi)))
 }
 
@@ -405,10 +405,10 @@ mod tests {
     /// and never by importing it as a document.
     #[test]
     fn source_size_probe_reads_headers() {
-        use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
+        use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
         let img = Image::new(7, 5, ChannelLayout::Rgb, SampleType::U8).unwrap();
         for format in [Format::Png, Format::Jpeg, Format::Tiff, Format::Bmp, Format::WebP, Format::Gif, Format::OpenExr, Format::Tga] {
-            let bytes = photocraft_codecs::encode(&img, format, &EncodeOptions::default()).unwrap();
+            let bytes = sary_codecs::encode(&img, format, &EncodeOptions::default()).unwrap();
             assert_eq!(source_size_probe(&bytes), Some((7.0, 5.0)), "{format:?}");
             // A header cut short neither panics nor invents a size (the decode fallback fails too).
             assert_eq!(source_size_probe(&bytes[..10]), None, "{format:?} truncated");
@@ -467,7 +467,7 @@ mod tests {
         assert_eq!(rebuild_block(&data, &|_| true, &[]), None);
         let out = rebuild_block(&data, &|u| u != "a", std::slice::from_ref(&c)).unwrap();
         assert_eq!(parse_linked_files(&out), vec![b.clone(), c.clone()]);
-        photocraft_psd::TaggedBlock::new(*b"lnk2", out).check_structure().unwrap();
+        sary_psd::TaggedBlock::new(*b"lnk2", out).check_structure().unwrap();
         assert_eq!(file_type(&b.bytes), *b"8BPB");
         assert_eq!(file_type(&a.bytes), *b"PNGf");
         // A malformed tail is kept as is.

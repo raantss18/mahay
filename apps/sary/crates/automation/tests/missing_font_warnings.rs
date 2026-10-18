@@ -1,6 +1,6 @@
 //! #3391: `doc.save`, `doc.open`, and type commands emit warnings when text uses a missing font.
 
-use photocraft_automation::Headless;
+use sary_automation::Headless;
 use serde_json::json;
 
 fn tmp_dir() -> std::path::PathBuf {

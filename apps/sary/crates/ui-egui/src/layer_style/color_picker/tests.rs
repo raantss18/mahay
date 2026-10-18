@@ -4,19 +4,19 @@ use egui::{Key, vec2};
 use egui_kittest::{Harness, kittest::Queryable};
 use std::sync::Arc;
 
-fn app(depth: u32) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app(depth: u32) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("prefs.set", json!({"path":"interface.language","value":"en"})).unwrap();
     app.run("file.new", json!({"width":32,"height":24,"depth":depth,"background":"#406080"})).unwrap();
     app
 }
-fn fields(app: &PhotocraftApp, id: u64) -> Map<String, Value> {
+fn fields(app: &SaryApp, id: u64) -> Map<String, Value> {
     app.ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.clone()
 }
-fn set_color(app: &mut PhotocraftApp, id: u64, color: &str) {
+fn set_color(app: &mut SaryApp, id: u64, color: &str) {
     app.ui.dialog_mut(id).unwrap().fields.insert("color".into(), json!(color));
 }
-fn selected(app: &PhotocraftApp, parent: u64) -> String {
+fn selected(app: &SaryApp, parent: u64) -> String {
     fields(app, parent)["selected"].as_str().unwrap().into()
 }
 
@@ -70,7 +70,7 @@ fn preview_cancel_ok_parent_cancel_and_apply_are_transactional_at_every_depth() 
         let again = canvas::display_doc(&mut app, 0);
         assert_eq!(key, again.1);
         assert!(Arc::ptr_eq(&shown, &again.0), "unchanged preview is cached");
-        let pixel = photocraft_compose::flatten(&shown).get(3, 3);
+        let pixel = sary_compose::flatten(&shown).get(3, 3);
         assert!(pixel[1] > pixel[0] && pixel[1] > pixel[2], "live preview is green at {depth} bits");
         let st = app.session.active().unwrap();
         assert_eq!((st.history.past_len(), st.revision, st.is_dirty()), (history, revision, dirty));
@@ -91,7 +91,7 @@ fn preview_cancel_ok_parent_cancel_and_apply_are_transactional_at_every_depth() 
         dialogs::confirm(&mut app, picker).unwrap();
         dialogs::confirm(&mut app, parent).unwrap();
         let applied = app.session.active().unwrap().doc.clone();
-        let pixel = photocraft_compose::flatten(&applied).get(3, 3);
+        let pixel = sary_compose::flatten(&applied).get(3, 3);
         assert!(pixel[1] > pixel[0]);
         app.run("edit.undo", json!({})).unwrap();
         assert_eq!(app.session.active().unwrap().doc.layer(doc.layers[0].id).unwrap().effects.items.len(), 0);
@@ -202,7 +202,7 @@ fn preview_off_and_parent_confirmation_and_cancellation_keep_their_contract() {
     assert!(app.ui.dialogs.is_empty());
 }
 
-fn harness() -> Harness<'static, PhotocraftApp> {
+fn harness() -> Harness<'static, SaryApp> {
     let mut app = app(8);
     layer_style::open(&mut app, Some("colorOverlay")).unwrap();
     let mut h = Harness::builder().with_size(vec2(1500.0, 1000.0)).build_ui_state(
@@ -213,7 +213,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, ThemeKind::ProMedium);
+    SaryApp::setup_context(&h.ctx, ThemeKind::ProMedium);
     h.run_steps(4);
     h
 }

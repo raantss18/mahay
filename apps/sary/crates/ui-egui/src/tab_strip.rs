@@ -8,12 +8,12 @@ use egui::{CornerRadius, Rect, Response, Sense, Stroke, StrokeKind, Ui, pos2, ve
 
 use crate::theme::{self, Tokens};
 
-pub use craft_ui::tabs::TabFit;
+pub use mahay_ui::tabs::TabFit;
 
 /// Fit tabs to a strip using the shared, bounded width policy. Local wrappers retain the
 /// application's themes, translated labels and panel/document overflow menus.
 pub fn fit(natural: &[f32], selected: usize, avail: f32, min_w: f32, chevron_w: f32) -> TabFit {
-    craft_ui::tabs::fit(natural, selected, avail, min_w, chevron_w)
+    mahay_ui::tabs::fit(natural, selected, avail, min_w, chevron_w)
 }
 
 /// A label laid out on one row no wider than `max_w`, cut with '…' when it doesn't fit.
@@ -125,7 +125,7 @@ fn tabs_in(
         // The padding gives way (down to a third) before the label is cut.
         let galley = elided(ui, name, font.clone(), t.text, (w - pad / 3.0).max(1.0));
         let cut = galley.size().x + pad + 0.5 < natural.get(i).copied().unwrap_or(0.0) && galley.size().x + pad / 3.0 >= w - 0.5;
-        let resp = craft_ui::tabs::Tab::new(id.with(("tab", i)), name, i == *selected).sense(sense).focus_stroke(Stroke::new(1.0, t.accent)).show_at(
+        let resp = mahay_ui::tabs::Tab::new(id.with(("tab", i)), name, i == *selected).sense(sense).focus_stroke(Stroke::new(1.0, t.accent)).show_at(
             ui,
             r,
             |ui, resp| paint_tab(ui, r, i, panel_id, galley, resp, active(i)),
@@ -325,7 +325,7 @@ mod tests {
     #[test]
     fn tiny_panel_strips_keep_tabs_and_overflow_inside_the_available_area() {
         let ctx = egui::Context::default();
-        crate::PhotocraftApp::setup_context(&ctx, crate::theme::ThemeKind::Pro);
+        crate::SaryApp::setup_context(&ctx, crate::theme::ThemeKind::Pro);
         for width in [0.0, 1.0, 5.0, 18.0, 19.0, 80.0, 180.0, 300.0] {
             let area = Rect::from_min_size(pos2(20.0, 20.0), vec2(width, 26.0));
             let mut selected = 3;
@@ -352,7 +352,7 @@ mod tests {
     fn overflow_icon_and_hover_paint_stay_inside_a_tiny_button() {
         for scale in [1.0, 2.0] {
             let ctx = egui::Context::default();
-            crate::PhotocraftApp::setup_context(&ctx, crate::theme::ThemeKind::Pro);
+            crate::SaryApp::setup_context(&ctx, crate::theme::ThemeKind::Pro);
             ctx.set_pixels_per_point(scale);
             for width in [1.0, 5.0, 11.0, 12.0, 18.0] {
                 let rect = Rect::from_min_size(pos2(20.25, 20.25), vec2(width, 26.0));

@@ -9,7 +9,7 @@
   stroke-linecap="round"
   stroke-linejoin="round"
 >
-  <!-- PhotoCraft's own Vertical Type Mask glyph (not from an icon set): a T drawn as marching
+  <!-- Sary's own Vertical Type Mask glyph (not from an icon set): a T drawn as marching
        ants beside a downward arrow (the text runs top to bottom). -->
   <path d="M2.5 7V4h12v3" stroke-dasharray="2.5 2.5" />
   <path d="M8.5 4v16" stroke-dasharray="2.5 2.5" />

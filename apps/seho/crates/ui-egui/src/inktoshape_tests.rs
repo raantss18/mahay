@@ -1,7 +1,7 @@
 //! Draw › Ink to Shape driven through the ribbon: pen a rough rectangle on the slide with the
 //! mouse, press the button, get a rectangle shape.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui::{Modifiers, PointerButton, Pos2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -42,7 +42,7 @@ fn pen_a_rectangle_then_ink_to_shape() {
     h.event(egui::Event::PointerButton { pos: at(204.0, 152.0), button: PointerButton::Primary, pressed: false, modifiers: Modifiers::NONE });
     h.run_steps(3);
     let has_ink = |h: &Harness<'_, SlideApp>| {
-        h.state().session.active().unwrap().shapes().iter().any(|s| matches!(s.kind, deckcraft_model::ShapeKind::Ink { .. }))
+        h.state().session.active().unwrap().shapes().iter().any(|s| matches!(s.kind, seho_model::ShapeKind::Ink { .. }))
     };
     assert!(has_ink(&h), "the pen drew a stroke");
     h.get_by_label("Ink to Shape").click();
@@ -50,7 +50,7 @@ fn pen_a_rectangle_then_ink_to_shape() {
     assert!(!has_ink(&h), "the only stroke became a shape");
     let st = h.state().session.active().unwrap();
     let sh = st.shapes().last().unwrap();
-    assert!(matches!(&sh.geom, deckcraft_model::Geom::Preset { name, .. } if name == "rect"), "{:?}", sh.geom);
+    assert!(matches!(&sh.geom, seho_model::Geom::Preset { name, .. } if name == "rect"), "{:?}", sh.geom);
     let x = sh.xfrm.unwrap();
     assert!((x.x - 200.0).abs() < 10.0 && (x.w - 400.0).abs() < 15.0 && (x.h - 250.0).abs() < 15.0, "{x:?}");
     assert_eq!(st.selection.shapes, vec![sh.id]);

@@ -92,19 +92,19 @@ fn amounts_are_exact_and_small_costs_are_not_zero() {
 #[test]
 fn the_filter_narrows_by_app_model_and_time_and_empty_shows_all() {
     let e = entries(&[
-        ("a", T0, "photocraft", "m1", Some(Outcome::Done), Some(1)),
-        ("b", T0 + HOUR, "wordcraft", "m1", Some(Outcome::Done), None),
-        ("c", T0 + 2 * HOUR, "photocraft", "m2", None, None),
+        ("a", T0, "sary", "m1", Some(Outcome::Done), Some(1)),
+        ("b", T0 + HOUR, "soratra", "m1", Some(Outcome::Done), None),
+        ("c", T0 + 2 * HOUR, "sary", "m2", None, None),
     ]);
     assert_eq!(HistoryFilter::default().apply(&e).len(), 3);
-    let photo = HistoryFilter { app: Some("photocraft".into()), ..HistoryFilter::default() };
+    let photo = HistoryFilter { app: Some("sary".into()), ..HistoryFilter::default() };
     assert_eq!(photo.apply(&e).len(), 2);
     let both = HistoryFilter { model: Some("m2".into()), ..photo.clone() };
     assert_eq!(both.apply(&e).len(), 1);
     let recent = HistoryFilter { since_ms: Some(T0 + HOUR), ..HistoryFilter::default() };
     let runs: Vec<_> = recent.apply(&e).iter().map(|x| x.start.run.clone()).collect();
     assert_eq!(runs, ["c", "b"], "inclusive of the boundary, newest first");
-    assert_eq!(apps(&e), ["photocraft", "wordcraft"]);
+    assert_eq!(apps(&e), ["sary", "soratra"]);
     assert_eq!(models(&e), ["m1", "m2"]);
 }
 
@@ -238,17 +238,17 @@ fn the_daily_series_fills_empty_days_and_keeps_the_most_recent() {
 #[test]
 fn models_and_apps_group_busiest_first_and_average_only_successful_timed_jobs() {
     let e = entries(&[
-        ("a", T0, "photocraft", "flux", Some(Outcome::Done), Some(50_000)),
-        ("b", T0 + 10, "photocraft", "flux", Some(Outcome::Done), Some(50_000)),
-        ("c", T0 + 20, "wordcraft", "gpt", Some(Outcome::Done), Some(1_000)),
-        ("d", T0 + 30, "wordcraft", "gpt", Some(Outcome::Failed { kind: ErrorKind::Network }), None),
-        ("e", T0 + 40, "wordcraft", "gpt", None, None),
+        ("a", T0, "sary", "flux", Some(Outcome::Done), Some(50_000)),
+        ("b", T0 + 10, "sary", "flux", Some(Outcome::Done), Some(50_000)),
+        ("c", T0 + 20, "soratra", "gpt", Some(Outcome::Done), Some(1_000)),
+        ("d", T0 + 30, "soratra", "gpt", Some(Outcome::Failed { kind: ErrorKind::Network }), None),
+        ("e", T0 + 40, "soratra", "gpt", None, None),
     ]);
     let refs: Vec<&HistoryEntry> = e.iter().collect();
     let models = by_model(&refs);
     assert_eq!(models.iter().map(|(k, t)| (k.as_str(), t.jobs)).collect::<Vec<_>>(), [("gpt", 3), ("flux", 2)]);
     let apps = by_app(&refs);
-    assert_eq!(apps[0].0, "wordcraft");
+    assert_eq!(apps[0].0, "soratra");
     // Each finished job took two seconds in the fixture; the failed and unfinished ones do not count.
     assert_eq!(models[0].1.average_ms(), Some(2_000));
     assert_eq!(models[0].1.timed, 1);

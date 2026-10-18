@@ -1,7 +1,7 @@
 //! Ribbon widget paint tests, using egui's bundled fonts on every platform.
 
 use egui::{FontDefinitions, FontFamily, Rect, Shape, pos2, vec2};
-use gridcraft_ui_egui::{icons::Icon, theme, widgets};
+use tabilao_ui_egui::{icons::Icon, theme, widgets};
 
 fn render_big_button(label: &str, dropdown: bool) -> (Rect, Vec<Shape>) {
     let ctx = egui::Context::default();

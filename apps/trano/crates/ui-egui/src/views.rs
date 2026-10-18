@@ -1,11 +1,11 @@
 //! The header, toolbar, footer, the grid of cards and the table, laid out like the apps page on
-//! getartcraft.com: hairline cells, mono labels and square controls.
+//! mahay.com: hairline cells, mono labels and square controls.
 
-use artcraft_launcher_core::details::AppDetails;
-use artcraft_launcher_core::platform::pick_asset;
-use artcraft_launcher_core::protocol::{Command, JobPhase};
-use artcraft_launcher_core::status::AppStatus;
-use artcraft_launcher_core::{SUITE, time};
+use trano_core::details::AppDetails;
+use trano_core::platform::pick_asset;
+use trano_core::protocol::{Command, JobPhase};
+use trano_core::status::AppStatus;
+use trano_core::{SUITE, time};
 use egui::{Color32, CornerRadius, FontId, Rect, RichText, Sense, Stroke, Ui, vec2};
 
 use crate::app::{Dialog, LauncherUi, TitleBar};
@@ -77,10 +77,10 @@ impl LauncherUi {
             if bar == TitleBar::MacOs {
                 ui.add_space(TRAFFIC_LIGHTS_W);
             }
-            // The ArtCraft wordmark exactly as supplied, in its own cell.
-            let logo = vec2(14.0 * crate::icons::ARTCRAFT_LOGO_ASPECT, 14.0);
+            // The Mahay wordmark exactly as supplied, in its own cell.
+            let logo = vec2(14.0 * crate::icons::MAHAY_LOGO_ASPECT, 14.0);
             let (cell, _) = ui.allocate_exact_size(vec2(logo.x + 40.0, h), Sense::hover());
-            egui::Image::new(crate::icons::artcraft_logo(t.dark)).alt_text(tl!("ArtCraft")).paint_at(ui, Rect::from_center_size(cell.center(), logo));
+            egui::Image::new(crate::icons::mahay_logo(t.dark)).alt_text(tl!("Mahay")).paint_at(ui, Rect::from_center_size(cell.center(), logo));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 if bar == TitleBar::Custom {
                     widgets::window_buttons(ui, h);
@@ -92,7 +92,7 @@ impl LauncherUi {
                     self.check_now();
                 }
                 ui.add_space(6.0);
-                if widgets::nav_link(ui, tl!("Discord"), tl!("Join the ArtCraft community on Discord"), h, false).clicked() {
+                if widgets::nav_link(ui, tl!("Discord"), tl!("Join the Mahay community on Discord"), h, false).clicked() {
                     ui.ctx().open_url(egui::OpenUrl::new_tab(self.discord_url));
                 }
                 ui.add_space(6.0);
@@ -117,9 +117,9 @@ impl LauncherUi {
                         ui.add_space(16.0);
                         widgets::tag(ui, tl!("Launcher"), t.invert_bg, t.invert_fg);
                     }
-                    if ui.available_width() >= 12.0 + widgets::hud_galley(ui, tl!("Craft App Suite"), t.muted).size().x {
+                    if ui.available_width() >= 12.0 + widgets::hud_galley(ui, tl!("Mahay App Suite"), t.muted).size().x {
                         ui.add_space(12.0);
-                        widgets::hud(ui, tl!("Craft App Suite"), t.muted);
+                        widgets::hud(ui, tl!("Mahay App Suite"), t.muted);
                     }
                 });
             });
@@ -143,7 +143,7 @@ impl LauncherUi {
                         widgets::tag(ui, tl!("Update"), t.accent, Color32::WHITE);
                         ui.add_space(4.0);
                         ui.label(
-                            RichText::new(fmt(tl!("ArtCraft Launcher {version} is available."), &[("version", &r.version_label())]))
+                            RichText::new(fmt(tl!("Mahay Trano {version} is available."), &[("version", &r.version_label())]))
                                 .family(theme::medium())
                                 .color(t.ink_strong),
                         );
@@ -168,7 +168,7 @@ impl LauncherUi {
                                         .on_hover_text(tl!("Stop waiting; the update can be started again later"))
                                         .clicked()
                                 {
-                                    self.send(Command::Cancel { app: artcraft_launcher_core::catalog::LAUNCHER_ID.to_string() });
+                                    self.send(Command::Cancel { app: trano_core::catalog::LAUNCHER_ID.to_string() });
                                 }
                                 widgets::progress(ui, fraction, &caption, t.accent, 220.0);
                                 return;
@@ -203,7 +203,7 @@ impl LauncherUi {
         ui.horizontal(|ui| {
             let updates = self.count(Filter::Updates);
             let mut filters = vec![
-                (Filter::All, tl!("All"), tl!("Every Craft app"), None),
+                (Filter::All, tl!("All"), tl!("Every Mahay app"), None),
                 // The tab names a group ("installed ones"); the status pill says "Installed".
                 (Filter::Installed, tr_ctx(current(), "filter", "Installed"), tl!("Apps on this computer"), None),
                 (Filter::Updates, tl!("Updates"), tl!("Installed apps with a newer version"), Some(t.warn)),
@@ -262,10 +262,10 @@ impl LauncherUi {
         });
     }
 
-    /// News from ArtCraft's release feed (and app renames), until the user dismisses each.
+    /// News from Mahay's release feed (and app renames), until the user dismisses each.
     fn announcements(&mut self, ui: &mut Ui) {
         let t = Tokens::get(ui.ctx());
-        let shown: Vec<artcraft_launcher_core::feed::Notice> =
+        let shown: Vec<trano_core::feed::Notice> =
             self.announcements.iter().filter(|n| !self.settings.dismissed_notices.contains(&n.id)).take(3).cloned().collect();
         for notice in shown {
             egui::Frame::new().fill(t.sunken).stroke(t.hairline()).inner_margin(egui::Margin::symmetric(14, 10)).show(ui, |ui| {
@@ -319,7 +319,7 @@ impl LauncherUi {
             Some(p) => fmt(tl!("Downloads for {platform}"), &[("platform", &p.label())]),
             None => tl!("No downloads for this system").into(),
         };
-        use artcraft_launcher_core::catalog::{GITHUB_URL, SOCIAL, WEBSITE_URL};
+        use trano_core::catalog::{GITHUB_URL, SOCIAL, WEBSITE_URL};
         let links = [(tl!("Discord"), self.discord_url), (tl!("GitHub"), GITHUB_URL), (tl!("Website"), WEBSITE_URL)];
         let (icon, link_gap) = (13.0, 16.0);
         // The links and icons on the right keep their size; the status on the left gets what is
@@ -928,14 +928,14 @@ pub(crate) fn version_line(e: &AppEntry, status: &AppStatus) -> String {
 /// The launcher's own download for this platform. `flatpak` is whether this copy runs as a
 /// Flatpak; such a copy's download stays the `.flatpak` bundle — offering it an AppImage (or a
 /// `.deb`) would point at replacing the sandboxed install with a different one.
-pub(crate) fn launcher_download(r: &artcraft_launcher_core::Release, p: artcraft_launcher_core::Platform, flatpak: bool) -> Option<String> {
-    use artcraft_launcher_core::PackageKind;
+pub(crate) fn launcher_download(r: &trano_core::Release, p: trano_core::Platform, flatpak: bool) -> Option<String> {
+    use trano_core::PackageKind;
     let kinds: &[PackageKind] = match p.os {
-        artcraft_launcher_core::Os::Linux if flatpak => &[PackageKind::Flatpak],
-        artcraft_launcher_core::Os::Linux => &[PackageKind::AppImage, PackageKind::Deb],
+        trano_core::Os::Linux if flatpak => &[PackageKind::Flatpak],
+        trano_core::Os::Linux => &[PackageKind::AppImage, PackageKind::Deb],
         _ => p.default_kinds(),
     };
-    pick_asset(r, &[artcraft_launcher_core::catalog::LAUNCHER_ID], p, kinds).map(|(a, _)| a.url.clone())
+    pick_asset(r, &[trano_core::catalog::LAUNCHER_ID], p, kinds).map(|(a, _)| a.url.clone())
 }
 
 /// A column of single-line texts, one per font and `gap` apart, centred across the row it is in.
@@ -958,17 +958,17 @@ fn lines_height(ui: &Ui, fonts: &[&FontId], gap: f32) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use artcraft_launcher_core::catalog::LAUNCHER_ID;
-    use artcraft_launcher_core::{Arch, Asset, Platform, Release};
+    use trano_core::catalog::LAUNCHER_ID;
+    use trano_core::{Arch, Asset, Platform, Release};
 
     fn release() -> Release {
         let asset = |name: &str| Asset { name: name.into(), size: 0, url: format!("https://dl.example/{name}"), sha256: None };
         Release {
             tag: "v0.4.1".into(),
             version: None,
-            name: "ArtCraft Launcher v0.4.1".into(),
+            name: "Mahay Trano v0.4.1".into(),
             published_at: None,
-            html_url: "https://github.com/storytold/craft-launcher/releases/tag/v0.4.1".into(),
+            html_url: "https://github.com/raantss18/mahay/releases/tag/v0.4.1".into(),
             notes: String::new(),
             prerelease: false,
             assets: vec![
@@ -980,7 +980,7 @@ mod tests {
     }
 
     fn platform() -> Platform {
-        Platform { os: artcraft_launcher_core::Os::Linux, arch: Arch::X64 }
+        Platform { os: trano_core::Os::Linux, arch: Arch::X64 }
     }
 
     #[test]

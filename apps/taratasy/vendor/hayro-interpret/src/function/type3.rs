@@ -23,7 +23,7 @@ impl Type3 {
     ) -> Option<Self> {
         let clamper = Clamper::new(dict)?;
 
-        // PdfCraft patch: all descendants share the caller's depth, work and cycle guards.
+        // Taratasy patch: all descendants share the caller's depth, work and cycle guards.
         // The resolved iterator also ends on an unresolved/cyclic reference. Require one
         // resolved child per raw slot so that failure cannot silently shorten the function list.
         let array = dict.get::<Array<'_>>(FUNCTIONS)?;
@@ -84,7 +84,7 @@ impl Type3 {
         Some(evaluated)
     }
 
-    // PdfCraft patch (backport of hayro 0.8).
+    // Taratasy patch (backport of hayro 0.8).
     pub(crate) fn stitching_bounds(&self) -> StitchingBounds {
         let mut stitching_bounds = StitchingBounds::new();
         if self.bounds.len() > 2 {
@@ -219,8 +219,8 @@ mod tests {
             Some(smallvec![0.5])
         );
         let data = function_limits_stitching(65);
-        // Direct nesting beyond the hayro-syntax cap (PdfCraft patch) is refused while parsing,
-        // before this guard; the guard is tested with indirect references in pdfcraft-render
+        // Direct nesting beyond the hayro-syntax cap (Taratasy patch) is refused while parsing,
+        // before this guard; the guard is tested with indirect references in taratasy-render
         // (`function_limits_depth_guard_refuses_a_chain_of_references`).
         assert!(Object::from_bytes(data.as_bytes()).is_none());
     }

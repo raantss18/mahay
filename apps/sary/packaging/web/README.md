@@ -1,15 +1,15 @@
-# Hosting PhotoCraft for the web
+# Hosting Sary for the web
 
-`photocraft-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`) holds a
-static site in `photocraft-web-<version>/`:
+`sary-web-<version>.zip` (from the GitHub release, or `packaging/web/package.sh`) holds a
+static site in `sary-web-<version>/`:
 
 | File | What it is |
 |---|---|
 | `index.html` | The page. It loads everything through relative URLs. |
-| `photocraft-web-boot-<hash>.js`, `photocraft-web-boot-<hash>_bg.wasm` | A small module (about 120 KB) that starts the app from its parts, with its wasm-bindgen glue |
-| `app/photocraft-web-<hash>.part-aa`, `-ab`, … | The app's WebAssembly, gzipped and cut into parts of at most 20 MiB (see [Sizes](#sizes)) |
+| `sary-web-boot-<hash>.js`, `sary-web-boot-<hash>_bg.wasm` | A small module (about 120 KB) that starts the app from its parts, with its wasm-bindgen glue |
+| `app/sary-web-<hash>.part-aa`, `-ab`, … | The app's WebAssembly, gzipped and cut into parts of at most 20 MiB (see [Sizes](#sizes)) |
 | `app/parts.txt` | The parts, in order |
-| `app/photocraft-web.js` | The app's wasm-bindgen glue (generated, ES module) |
+| `app/sary-web.js` | The app's wasm-bindgen glue (generated, ES module) |
 | `_headers`, `.htaccess` | Sample header rules for Netlify/Cloudflare Pages and Apache |
 | `fonts/` (optional) | Fonts loaded on demand, listed in `fonts/manifest.txt` (see [Fonts](#fonts)) |
 
@@ -24,9 +24,9 @@ There is no server-side code. Upload the folder's contents anywhere that serves 
 From the repository root (Docker is the only build prerequisite):
 
 ```sh
-docker build --load -t photocraft-web:local .
-docker run -d --name photocraft-web --restart unless-stopped \
-  -p 8080:8080 photocraft-web:local
+docker build --load -t sary-web:local .
+docker run -d --name sary-web --restart unless-stopped \
+  -p 8080:8080 sary-web:local
 ```
 
 Open **http://localhost:8080/**. The multi-stage `Dockerfile` builds the existing Rust/Wasm
@@ -42,8 +42,8 @@ the default Rust version is the stable release CI used when the `Dockerfile` was
 (CI and releases always use the latest stable), and Trunk is pinned to the release workflow's
 `TRUNK_VERSION`. `RUST_VERSION`, `TRUNK_VERSION`, and `NGINX_VERSION` can be overridden with
 `--build-arg`. To stamp the About dialog with the commit and date instead of "dev build", pass
-`--build-arg PHOTOCRAFT_BUILD_SHA=$(git rev-parse HEAD) --build-arg PHOTOCRAFT_BUILD_DATE=$(date -u +%F)`.
-The web build does not embed the optional `craft-fonts` checkout.
+`--build-arg SARY_BUILD_SHA=$(git rev-parse HEAD) --build-arg SARY_BUILD_DATE=$(date -u +%F)`.
+The web build does not embed the optional `mahay-fonts` checkout.
 
 The Docker build uses thin LTO and one Cargo build job to reduce peak memory, while keeping
 the web profile's size optimizations and `wasm-opt -Oz`. Its Wasm size may differ from the
@@ -55,13 +55,13 @@ a builder with more memory, pass `--build-arg CARGO_PROFILE_WASM_RELEASE_LTO=fat
 For a public deployment, put an HTTPS reverse proxy or your hosting platform's TLS endpoint
 in front of container port 8080. With a reverse proxy on the same host, bind only loopback
 (`-p 127.0.0.1:8080:8080`); with a proxy container, connect both through a Docker network.
-HTTPS enables WebGPU and browser clipboard APIs. If hosting under `/photocraft/`, redirect
-`/photocraft` to `/photocraft/` and strip that prefix when proxying to the container. Relative
+HTTPS enables WebGPU and browser clipboard APIs. If hosting under `/sary/`, redirect
+`/sary` to `/sary/` and strip that prefix when proxying to the container. Relative
 asset URLs then work without rebuilding. For example, in an existing HTTPS NGINX server:
 
 ```nginx
-location = /photocraft { return 301 /photocraft/; }
-location /photocraft/ {
+location = /sary { return 301 /sary/; }
+location /sary/ {
     proxy_pass http://127.0.0.1:8080/;
 }
 ```
@@ -82,9 +82,9 @@ Measured on 2026-10-13 (0.8.2, `packaging/web/package.sh`):
 
 | File | Size |
 |---|---|
-| `app/photocraft-web-<hash>.part-aa` (the only part today) | 11,401,527 bytes (10.9 MiB) |
-| `app/photocraft-web.js` | about 170 KB (26 KB with gzip) |
-| `photocraft-web-boot-<hash>_bg.wasm` and `.js` | about 120 KB together |
+| `app/sary-web-<hash>.part-aa` (the only part today) | 11,401,527 bytes (10.9 MiB) |
+| `app/sary-web.js` | about 170 KB (26 KB with gzip) |
+| `sary-web-boot-<hash>_bg.wasm` and `.js` | about 120 KB together |
 
 The app's WebAssembly is 25,019,043 bytes (23.9 MiB) before gzip.
 
@@ -95,19 +95,19 @@ one file: packaging gzips it and cuts the result into parts of at most 20 MiB, a
 them back together while it downloads them. `packaging/web/package.sh` fails if any file in the
 site is over 24 MiB, so a release can't ship a file a common host refuses, and the app can grow
 without reaching that limit (issue #5302). A build straight from Trunk (`trunk build --release`
-in `apps/photocraft-web`, or the Docker image above) still has the app in one `.wasm`, for hosts
+in `apps/sary-web`, or the Docker image above) still has the app in one `.wasm`, for hosts
 without such a cap.
 
 The app is built with the `wasm-release` Cargo profile (fat LTO, size-optimized code with the
 pixel and file-decoding crates kept at speed) plus `wasm-opt -Oz`, and stores the bundled fonts
-(PhotoCraft's and egui's) and the translation catalogs compressed, unpacked on first use.
+(Sary's and egui's) and the translation catalogs compressed, unpacked on first use.
 
 ## Any path works
 
-All URLs in `index.html` are relative (`public_url = "./"` in `apps/photocraft-web/Trunk.toml`),
+All URLs in `index.html` are relative (`public_url = "./"` in `apps/sary-web/Trunk.toml`),
 so the site works at a domain root (`https://example.com/`), under a prefix
-(`https://example.com/tools/photocraft/`) and from a CDN bucket. The asset names carry a content
-hash, so they can be cached forever. `index.html`, `app/photocraft-web.js` and `app/parts.txt` keep
+(`https://example.com/tools/sary/`) and from a CDN bucket. The asset names carry a content
+hash, so they can be cached forever. `index.html`, `app/sary-web.js` and `app/parts.txt` keep
 their names and need revalidation.
 
 ## Required server settings
@@ -119,17 +119,17 @@ their names and need revalidation.
   are gzip already, and the page inflates them). Their extension is one servers don't
   know, so the usual result, `application/octet-stream` and no compression, is right.
 - **Missing files are 404s:** a host that answers every unknown path with `index.html` (a
-  single-page-app fallback) hides a failed upload. PhotoCraft notices and says the download
+  single-page-app fallback) hides a failed upload. Sary notices and says the download
   failed, but a 404 is clearer in the server's logs.
 - **Compression:** turn on gzip or Brotli for `.wasm`, `.js` and `.html`. It matters little for
   the download, since the parts are compressed already; it shrinks the two `.js` files and the
   small boot module. You can also precompress and let the server send `Content-Encoding: br`.
 - **Caching:** `Cache-Control: public, max-age=31536000, immutable` on the files whose names
-  carry a hash (the parts and `photocraft-web-boot-<hash>.*`), and `no-cache` on `index.html`,
-  `app/photocraft-web.js` and `app/parts.txt`. The sample `_headers` and `.htaccess` do this.
+  carry a hash (the parts and `sary-web-boot-<hash>.*`), and `no-cache` on `index.html`,
+  `app/sary-web.js` and `app/parts.txt`. The sample `_headers` and `.htaccess` do this.
 - **HTTPS:** WebGPU (and the clipboard) only work in a secure context, which means `https://`
   or `http://localhost`. Over plain HTTP elsewhere, the app falls back to WebGL2.
-- **No special isolation headers:** PhotoCraft doesn't use `SharedArrayBuffer`, so it doesn't
+- **No special isolation headers:** Sary doesn't use `SharedArrayBuffer`, so it doesn't
   need `Cross-Origin-Opener-Policy` or `Cross-Origin-Embedder-Policy`. If your site already sends
   COEP `require-corp`, also send `Cross-Origin-Resource-Policy: same-origin` (or `cross-origin`
   when the files live on a CDN) on the app's files.
@@ -137,12 +137,12 @@ their names and need revalidation.
 nginx example:
 
 ```nginx
-location /photocraft/ {
+location /sary/ {
     types { application/wasm wasm; text/javascript js; text/html html; }
     gzip on;
     gzip_types application/wasm text/javascript text/html;
     # The first matching line wins, so the files that keep their names come first.
-    location ~* (index\.html|app/photocraft-web\.js|app/parts\.txt)$ { add_header Cache-Control "no-cache"; }
+    location ~* (index\.html|app/sary-web\.js|app/parts\.txt)$ { add_header Cache-Control "no-cache"; }
     location ~* (\.(wasm|js)|\.part-[a-z]+)$ { add_header Cache-Control "public, max-age=31536000, immutable"; }
 }
 ```
@@ -158,7 +158,7 @@ it is picked or a document's text needs it, so starting the app costs one small 
 
 1. Put the font files (`.ttf`, `.otf`, `.ttc`) anywhere under `fonts/` next to `index.html`.
 2. List them in `fonts/manifest.txt`, one file per line, in the format of
-   [craft-fonts](https://github.com/storytold/craft-fonts)' own `fonts/manifest.txt`:
+   [mahay-fonts](https://github.com/raantss18/mahay)' own `fonts/manifest.txt`:
 
    ```text
    # family | style | file (relative to the site root) | scripts | licence | licence file | sha256 | source
@@ -174,8 +174,8 @@ it is picked or a document's text needs it, so starting the app costs one small 
    the weights of its `wght` axis.
 3. Put each font's licence next to it; the SIL Open Font License, for one, requires that.
 
-A craft-fonts checkout is already laid out this way, and so is any folder with a
-`fonts/manifest.txt` and the files it lists: `PHOTOCRAFT_WEB_FONTS_DIR=<that folder>
+A mahay-fonts checkout is already laid out this way, and so is any folder with a
+`fonts/manifest.txt` and the files it lists: `SARY_WEB_FONTS_DIR=<that folder>
 packaging/web/package.sh` copies the manifest, the fonts and their licences into the zip, keeping
 their paths. Without `fonts/manifest.txt` (a 404) nothing changes.
 
@@ -188,8 +188,8 @@ fetches them with `fetch()`, so a Content Security Policy needs them allowed by 
 
 ```html
 <iframe
-  src="https://example.com/photocraft/"
-  title="PhotoCraft image editor"
+  src="https://example.com/sary/"
+  title="Sary image editor"
   style="width: 100%; height: 720px; border: 0;"
   allow="fullscreen; clipboard-read; clipboard-write"
   allowfullscreen>
@@ -209,7 +209,7 @@ fetches them with `fetch()`, so a Content Security Policy needs them allowed by 
 
 ## Renderer selection and fallback flags
 
-PhotoCraft renders with wgpu. It uses **WebGPU** when the browser has it and falls back to
+Sary renders with wgpu. It uses **WebGPU** when the browser has it and falls back to
 **WebGL2** on its own. URL query flags override this, and they work on the iframe `src` too:
 
 | Flag | Effect |
@@ -218,6 +218,6 @@ PhotoCraft renders with wgpu. It uses **WebGPU** when the browser has it and fal
 | `?webgl` | Force the WebGL2 backend (useful when a WebGPU driver misbehaves) |
 | `?cpu` | Force the CPU canvas path (slowest, most compatible) |
 
-For example: `<iframe src="https://example.com/photocraft/?webgl" ...>`.
+For example: `<iframe src="https://example.com/sary/?webgl" ...>`.
 
 A browser with neither WebGPU nor WebGL2 gets a message in place of the app.

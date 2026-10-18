@@ -2,7 +2,7 @@
 //! lacks arrows, check marks and geometric shapes, so a symbol face backs it up.
 
 use egui::{Color32, FontFamily, FontId};
-use gridcraft_ui_egui::theme;
+use tabilao_ui_egui::theme;
 
 /// Symbols the interface draws as text (buttons, menus, dialogs, tooltips, Insert › Symbol).
 const UI_SYMBOLS: &str = "▲▼▸▾✓✕←↑→↓↳↘↗⇧⌃⌘★•›≠≤≥∞";

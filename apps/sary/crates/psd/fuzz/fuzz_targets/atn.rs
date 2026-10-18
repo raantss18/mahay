@@ -3,7 +3,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::atn;
+use sary_psd::atn;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(f) = atn::parse(data) {

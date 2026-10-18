@@ -1,26 +1,26 @@
 [package]
-name = "deckcraft-pptx"
+name = "seho-pptx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "DeckCraft PPTX: Office Open XML (PresentationML/DrawingML) import and export, written from the public ECMA-376 standard"
+description = "Seho PPTX: Office Open XML (PresentationML/DrawingML) import and export, written from the public ECMA-376 standard"
 
 [lints]
 workspace = true
 
 [dependencies]
-deckcraft-model = { workspace = true }
-deckcraft-geom = { workspace = true }
-deckcraft-color = { workspace = true }
+seho-model = { workspace = true }
+seho-geom = { workspace = true }
+seho-color = { workspace = true }
 quick-xml = { workspace = true }
 zip = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]
-deckcraft-engine = { workspace = true }
+seho-engine = { workspace = true }
 serde_json = { workspace = true }
-deckcraft-color = { workspace = true }
-deckcraft-geom = { workspace = true }
+seho-color = { workspace = true }
+seho-geom = { workspace = true }
 image = { workspace = true }
 zip = { workspace = true }

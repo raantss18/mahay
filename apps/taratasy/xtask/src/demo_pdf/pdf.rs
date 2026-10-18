@@ -352,7 +352,7 @@ pub fn pdf_string(s: &str) -> String {
 
 /// Map text to WinAnsiEncoding bytes (unmappable characters become `?`).
 ///
-/// Mirrors `pdfcraft_fonts::win_ansi` (ISO 32000-2 Annex D), which xtask doesn't depend on;
+/// Mirrors `taratasy_fonts::win_ansi` (ISO 32000-2 Annex D), which xtask doesn't depend on;
 /// keep the 0x80–0x9F rows in step with `crates/fonts/src/encodings.rs`.
 pub fn winansi(s: &str) -> Vec<u8> {
     s.chars()

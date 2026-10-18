@@ -5,10 +5,10 @@
 //! from the dropdown.
 
 use egui::{Event, Key};
-use photocraft_color::BlendMode;
+use sary_color::BlendMode;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// The mode `step` places after (or before, when negative) `current` in `modes`, wrapping around.
@@ -26,7 +26,7 @@ pub fn stepped(modes: &[BlendMode], current: BlendMode, step: i32) -> Option<Ble
 
 /// Consumes this frame's ⇧+ / ⇧− presses (⇧= on a US layout is `+`; on a German one
 /// `layout_keys::apply` has already turned ⇧+ and ⇧- into `+` and `-`) and applies them.
-pub fn handle(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn handle(app: &mut SaryApp, ctx: &egui::Context) {
     let steps: Vec<i32> = ctx.input_mut(|i| {
         let mut out = Vec::new();
         i.events.retain(|e| match e {
@@ -49,7 +49,7 @@ pub fn handle(app: &mut PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// One ⇧+ (`step` 1) or ⇧− (`step` -1) press.
-pub fn press(app: &mut PhotocraftApp, step: i32) {
+pub fn press(app: &mut SaryApp, step: i32) {
     match app.ui.tool {
         Tool::Brush | Tool::Pencil => {
             let current = app.session.tools.brush.mode;
@@ -89,21 +89,21 @@ pub fn press(app: &mut PhotocraftApp, step: i32) {
 mod tests {
     use super::*;
 
-    fn app(tool: Tool) -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    fn app(tool: Tool) -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 32, "height": 32})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.ui.tool = tool;
         app
     }
 
-    fn layer_blend(app: &PhotocraftApp) -> BlendMode {
+    fn layer_blend(app: &SaryApp) -> BlendMode {
         let st = app.session.active().unwrap();
         st.doc.layer(st.active_layer.unwrap()).unwrap().blend
     }
 
     /// Feeds one key press with `modifiers` through the app's shortcut handling.
-    fn key(app: &mut PhotocraftApp, ctx: &egui::Context, key: Key, modifiers: egui::Modifiers) {
+    fn key(app: &mut SaryApp, ctx: &egui::Context, key: Key, modifiers: egui::Modifiers) {
         let raw = egui::RawInput {
             events: vec![egui::Event::ModifiersChanged(modifiers), egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }],
             ..Default::default()
@@ -122,7 +122,7 @@ mod tests {
         let mut a = app(Tool::Brush);
         a.session.tools.brush.hardness = 0.5;
         let shift = egui::Modifiers::SHIFT;
-        let typed = |a: &mut PhotocraftApp, key: Key, physical_key: Key, text: &str| {
+        let typed = |a: &mut SaryApp, key: Key, physical_key: Key, text: &str| {
             let press = egui::Event::Key { key, physical_key: Some(physical_key), pressed: true, repeat: false, modifiers: shift };
             let raw = egui::RawInput { events: vec![egui::Event::ModifiersChanged(shift), press, egui::Event::Text(text.into())], ..Default::default() };
             ctx.begin_pass(raw);
@@ -177,7 +177,7 @@ mod tests {
         a.run("layer.select", json!({"layer": bg.0})).unwrap();
         key(&mut a, &ctx, Key::Plus, egui::Modifiers::SHIFT);
         assert_eq!(a.session.active().unwrap().doc.layers[0].blend, BlendMode::Normal);
-        let mut none = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut none = SaryApp::new(sary_engine::Session::new(), Default::default());
         press(&mut none, 1);
     }
 }

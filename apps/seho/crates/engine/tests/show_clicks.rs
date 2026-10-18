@@ -3,11 +3,11 @@
 
 use std::sync::Arc;
 
-use deckcraft_anim::{Click, HitShape, ShowAction, ShowState};
-use deckcraft_geom::Xfrm;
-use deckcraft_model::anim::{AnimClass, AnimStart, Animation, Transition};
-use deckcraft_model::text::{Action, Hyperlink, TextBody};
-use deckcraft_model::{LayoutType, Presentation, Shape, ShapeId, SlideId, defaults};
+use seho_anim::{Click, HitShape, ShowAction, ShowState};
+use seho_geom::Xfrm;
+use seho_model::anim::{AnimClass, AnimStart, Animation, Transition};
+use seho_model::text::{Action, Hyperlink, TextBody};
+use seho_model::{LayoutType, Presentation, Shape, ShapeId, SlideId, defaults};
 
 fn shape(p: &mut Presentation, name: &str, text: &str, x: f64, y: f64, w: f64, h: f64) -> Shape {
     Shape {
@@ -95,14 +95,14 @@ struct Show {
 
 impl Show {
     fn open(p: &Presentation) -> Show {
-        let bytes = deckcraft_pptx::export(p).expect("export");
-        let pres = deckcraft_pptx::import(&bytes).expect("import");
+        let bytes = seho_pptx::export(p).expect("export");
+        let pres = seho_pptx::import(&bytes).expect("import");
         let state = ShowState::new(&pres);
         Show { pres, state }
     }
 
     fn hits(&self, x: f64, y: f64) -> (Vec<HitShape>, Vec<bool>) {
-        let placed = deckcraft_render::place_slide(&self.pres, self.state.slide);
+        let placed = seho_render::place_slide(&self.pres, self.state.slide);
         let tl = ShowState::timeline(&self.pres, self.state.slide);
         let hits = placed
             .shapes

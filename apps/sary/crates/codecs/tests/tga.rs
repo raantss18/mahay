@@ -1,7 +1,7 @@
 //! Targa writing (#6382): run-length packets end with their scanline, rows are stored bottom-up,
 //! and the file reads back exactly.
 
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, decode_as, encode};
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, decode_as, encode};
 
 /// The packets of a run-length encoded Targa body, as (pixels, is a run), from just after the
 /// 18-byte header (no image ID or colour map) up to `pixels` pixels.

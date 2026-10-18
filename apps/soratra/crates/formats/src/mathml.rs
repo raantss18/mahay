@@ -5,16 +5,16 @@
 //! pasting into Word and LibreOffice not yet verified); and read back from pasted or opened HTML.
 //!
 //! The writer walks the equation tree ([`MNode`]) and wraps it in `<semantics>` with the linear
-//! format as an `application/x-unicodemath` annotation, which renderers ignore and WordCraft reads
+//! format as an `application/x-unicodemath` annotation, which renderers ignore and Soratra reads
 //! back exactly. The reader takes that annotation when present, else a TeX annotation, else
 //! builds the tree from the presentation elements (fractions, scripts, radicals, under/over
 //! limits, tables, fences); both bound their nesting and size.
 
-use wordcraft_doc::math::{
+use soratra_doc::math::{
     Arg, ColJc, FracKind, LimLoc, MAX_DEPTH, MClass, MNode, MRun, MScr, MSty, ScriptKind, is_integral, is_nary_char, math_alnum, math_class,
     to_linear,
 };
-use wordcraft_doc::math_linear::FUNCTION_NAMES;
+use soratra_doc::math_linear::FUNCTION_NAMES;
 
 use crate::html::esc;
 
@@ -47,7 +47,7 @@ pub fn to_mathml(nodes: &[MNode], display: bool, linear: &str) -> String {
 
 /// An equation known by its linear format, as a `<math>` element.
 pub fn linear_to_mathml(linear: &str, display: bool) -> String {
-    to_mathml(&wordcraft_doc::math::parse_linear(linear), display, linear)
+    to_mathml(&soratra_doc::math::parse_linear(linear), display, linear)
 }
 
 /// An argument as a row of elements. `eq_arr`: a row of an equation array, whose `&` marks are
@@ -477,7 +477,7 @@ fn linear_of(math: &El) -> String {
             return to_linear(&tree);
         }
         if let Some(t) = ann(&|v| v.contains("tex")) {
-            return to_linear(&wordcraft_doc::math_latex::parse_latex(&t));
+            return to_linear(&soratra_doc::math_latex::parse_latex(&t));
         }
         return String::new();
     }
@@ -487,7 +487,7 @@ fn linear_of(math: &El) -> String {
 /// A MathML element's children as an equation tree.
 pub fn to_tree(math: &El) -> Arg {
     let mut budget = MAX_NODES;
-    wordcraft_doc::math::merge_runs(children(math, 0, &mut budget))
+    soratra_doc::math::merge_runs(children(math, 0, &mut budget))
 }
 
 fn children(e: &El, depth: usize, budget: &mut usize) -> Arg {
@@ -780,7 +780,7 @@ fn nary(chr: char, lim_loc: LimLoc, sub: Arg, sup: Arg) -> MNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_doc::math::parse_linear;
+    use soratra_doc::math::parse_linear;
 
     fn ml(linear: &str) -> String {
         to_mathml(&parse_linear(linear), false, "")
@@ -888,7 +888,7 @@ mod tests {
         assert!(pasted("<math display=\"block\"><mi>x</mi></math>").first().is_some_and(|g| g.1));
         // Text after the equation still arrives; an unclosed element ends with the input.
         let f = crate::html::parse("<p><math><mi>x</mi></math> tail</p>");
-        assert!(crate::model::to_doc(&f).plain_text(wordcraft_doc::StoryRef::Body).contains("tail"));
+        assert!(crate::model::to_doc(&f).plain_text(soratra_doc::StoryRef::Body).contains("tail"));
         assert!(!pasted("<p><math><mfrac><mi>x").is_empty());
         // Hostile nesting is bounded.
         let deep = format!("<math>{}<mi>x</mi>{}</math>", "<mrow>".repeat(5000), "</mrow>".repeat(5000));
@@ -939,7 +939,7 @@ mod tests {
     fn one_column_tables_are_column_vectors_unless_marked() {
         let tree = |html: &str| {
             let linear = pasted(html).first().map(|g| g.0.clone()).unwrap_or_default();
-            wordcraft_doc::math::parse_linear(&linear)
+            soratra_doc::math::parse_linear(&linear)
         };
         let vector = tree("<math><mtable><mtr><mtd><mi>a</mi></mtd></mtr><mtr><mtd><mi>b</mi></mtd></mtr></mtable></math>");
         assert!(matches!(vector.as_slice(), [MNode::Matrix { rows, .. }] if rows.len() == 2), "{vector:?}");

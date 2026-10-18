@@ -3,7 +3,7 @@
 
 use std::io::{Read, Write};
 
-use wordcraft_doc::props::TextDirection;
+use soratra_doc::props::TextDirection;
 
 fn docx(body: &str) -> Vec<u8> {
     let root = r#"<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>"#;
@@ -35,16 +35,16 @@ fn section_text_direction_round_trips_in_schema_order() {
         sect("btLr"),
         sect("diagonal")
     );
-    let d = wordcraft_docx::read(&docx(&body)).unwrap();
+    let d = soratra_docx::read(&docx(&body)).unwrap();
     let dirs: Vec<TextDirection> = d.sections().iter().map(|(_, s)| s.text_direction).collect();
     assert_eq!(dirs, vec![TextDirection::Down, TextDirection::Up, TextDirection::Horizontal]);
-    let out = wordcraft_docx::write(&d).unwrap();
+    let out = soratra_docx::write(&d).unwrap();
     let xml = document_xml(&out);
     // After w:titlePg and before w:bidi (CT_SectPr's sequence); a horizontal section writes none.
     assert!(xml.contains(r#"<w:titlePg/><w:textDirection w:val="tbRl"/><w:bidi/>"#), "{xml}");
     assert!(xml.contains(r#"<w:textDirection w:val="btLr"/>"#));
     assert_eq!(xml.matches("w:textDirection").count(), 2);
-    let back = wordcraft_docx::read(&out).unwrap();
+    let back = soratra_docx::read(&out).unwrap();
     let again: Vec<TextDirection> = back.sections().iter().map(|(_, s)| s.text_direction).collect();
     assert_eq!(again, dirs);
 }
@@ -52,10 +52,10 @@ fn section_text_direction_round_trips_in_schema_order() {
 #[test]
 fn explicit_horizontal_direction_is_kept_in_sections_and_cells() {
     let body = r#"<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/><w:textDirection w:val="lrTb"/></w:tcPr><w:p><w:r><w:t>Cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p><w:r><w:t>Body</w:t></w:r></w:p><w:sectPr><w:textDirection w:val="lrTb"/></w:sectPr>"#;
-    let d = wordcraft_docx::read(&docx(body)).unwrap();
-    let xml = document_xml(&wordcraft_docx::write(&d).unwrap());
+    let d = soratra_docx::read(&docx(body)).unwrap();
+    let xml = document_xml(&soratra_docx::write(&d).unwrap());
     assert_eq!(xml.matches(r#"<w:textDirection w:val="lrTb"/>"#).count(), 2, "{xml}");
     // A horizontal section or cell that never said so still writes nothing.
-    let plain = wordcraft_docx::read(&docx(r#"<w:p><w:r><w:t>Body</w:t></w:r></w:p><w:sectPr/>"#)).unwrap();
-    assert!(!document_xml(&wordcraft_docx::write(&plain).unwrap()).contains("textDirection"));
+    let plain = soratra_docx::read(&docx(r#"<w:p><w:r><w:t>Body</w:t></w:r></w:p><w:sectPr/>"#)).unwrap();
+    assert!(!document_xml(&soratra_docx::write(&plain).unwrap()).contains("textDirection"));
 }

@@ -18,9 +18,9 @@ explicit surface finalization, even if a caller retains the writer after a narro
 catch. A caller must still discard other captured app state after a panic. Normal
 finalization, including checks for unbalanced state, remains unchanged.
 
-Public marker constants, `CRAFT_UNWIND_SAFE_DROP` and `CRAFT_UNWIND_POISONING`, let craft-pdf reject an accidentally
+Public marker constants, `MAHAY_UNWIND_SAFE_DROP` and `MAHAY_UNWIND_POISONING`, let mahay-pdf reject an accidentally
 unpatched dependency at compile time. Consumers must copy the Krilla root patch
-from the craft-pdf README because Cargo ignores dependency workspaces' patches.
+from the mahay-pdf README because Cargo ignores dependency workspaces' patches.
 
 The shared writer's native subprocess regression covers the previously aborting
 cleanup and a successful fresh export afterward. Native and WASM export tests

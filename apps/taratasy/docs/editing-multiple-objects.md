@@ -15,7 +15,7 @@ In **Edit a PDF → Edit text & images**, select several items on the same page:
   Finish or discard a text draft before starting a multi-selection.
 
 The supported items are the existing paragraph boxes, raster Image XObjects, whole Form artwork,
-and text/images added by PdfCraft. A Form remains one item, including its nested artwork and
+and text/images added by Taratasy. A Form remains one item, including its nested artwork and
 resources. Added items appear once in the selection inventory. Selections stay on one page and
 contain at most 1,000 items; pages with more than 10,000 recognised objects are refused for group
 selection. Content streams must decode completely within 64 MiB each and 128 MiB per page, with
@@ -79,7 +79,7 @@ Use the actual generation and references from your document, rather than assumin
 values. `offset` is in displayed points: positive x moves right, positive y moves down. The optional
 generation guard rejects a changed document before interpreting references. Re-list after any edit,
 undo, redo, or save; there is no claim that an index persists across generations. Run a script with
-`pdfcraft-cli run --script steps.json --root DIR` or call these tools through the opt-in MCP server.
+`taratasy-cli run --script steps.json --root DIR` or call these tools through the opt-in MCP server.
 
 Regression coverage: `crates/edit/src/tests.rs` (glyph bytes, neighbours, split streams, shared Forms,
 rotated/cropped/UserUnit pages and refusal), `crates/engine/src/tests.rs` (permissions, history,

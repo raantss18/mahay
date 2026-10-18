@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-  Build, sign and package ArtCraft Launcher for Windows.
+  Build, sign and package Mahay Trano for Windows.
 
 .DESCRIPTION
   Produces, in $env:DIST (default: dist/release):
-    artcraft-launcher-<version>-windows-<arch>.msi            per-user installer with a setup wizard (WiX v5)
-    artcraft-launcher-<version>-windows-<arch>-portable.zip   artcraft-launcher.exe + portable.txt
+    trano-<version>-windows-<arch>.msi            per-user installer with a setup wizard (WiX v5)
+    trano-<version>-windows-<arch>-portable.zip   trano.exe + portable.txt
 
   The binary links the C runtime statically (+crt-static), so neither the MSI nor the portable
   zip needs the Visual C++ redistributable. Signing is delegated to sign.ps1 (skipped with a
@@ -28,8 +28,8 @@ $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 
 # ---- app-specific values ----------------------------------------------------------------------
-$Pkg = 'artcraft-launcher'          # cargo package and binary
-$AppName = 'ArtCraft Launcher'      # display name
+$Pkg = 'trano'          # cargo package and binary
+$AppName = 'Mahay Trano'      # display name
 
 function Invoke-Native([string] $What, [scriptblock] $Block) {
   Write-Output "==> $What"
@@ -38,7 +38,7 @@ function Invoke-Native([string] $What, [scriptblock] $Block) {
 }
 
 # The version lives in one place: [workspace.package] version in the root Cargo.toml.
-$Version = $env:ARTCRAFT_LAUNCHER_VERSION
+$Version = $env:TRANO_VERSION
 if (-not $Version) {
   $inPkg = $false
   foreach ($line in Get-Content (Join-Path $Root 'Cargo.toml')) {
@@ -55,8 +55,8 @@ $Dist = if ($env:DIST) { $env:DIST } else { Join-Path $Root 'dist\release' }
 $TargetDir = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR } else { Join-Path $Root 'target' }
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 
-if (-not $env:ARTCRAFT_LAUNCHER_BUILD_SHA) { $env:ARTCRAFT_LAUNCHER_BUILD_SHA = (git -C $Root rev-parse HEAD 2>$null) }
-if (-not $env:ARTCRAFT_LAUNCHER_BUILD_DATE) { $env:ARTCRAFT_LAUNCHER_BUILD_DATE = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd') }
+if (-not $env:TRANO_BUILD_SHA) { $env:TRANO_BUILD_SHA = (git -C $Root rev-parse HEAD 2>$null) }
+if (-not $env:TRANO_BUILD_DATE) { $env:TRANO_BUILD_DATE = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd') }
 
 Write-Output "$AppName $Version for Windows $Arch ($Target)"
 
@@ -66,7 +66,7 @@ if (-not $SkipBuild) {
   $flagVar = 'CARGO_TARGET_' + ($Target.ToUpper() -replace '-', '_') + '_RUSTFLAGS'
   [Environment]::SetEnvironmentVariable($flagVar, '-C target-feature=+crt-static')
   # Fail the build (rather than warn) if the icon/VERSIONINFO can't be embedded.
-  $env:ARTCRAFT_LAUNCHER_REQUIRE_WINRES = '1'
+  $env:TRANO_REQUIRE_WINRES = '1'
   Invoke-Native "cargo build ($Target)" { cargo build --release --locked -p $Pkg --target $Target }
 }
 
@@ -95,25 +95,25 @@ Copy-Item (Join-Path $Bin $Exe) $Stage
 & (Join-Path $PSScriptRoot 'sign.ps1') (Join-Path $Stage $Exe)
 
 # ---- MSI ---------------------------------------------------------------------------------------
-# The setup wizard's art, drawn here (System.Drawing) in getartcraft.com's style so the MSI shows
-# ArtCraft rather than WiX's stock bitmaps. Both must be 24-bit BMPs:
+# The setup wizard's art, drawn here (System.Drawing) in mahay.com's style so the MSI shows
+# Mahay rather than WiX's stock bitmaps. Both must be 24-bit BMPs:
 #   - dialog, 493x312: the Welcome and Finish pages' backdrop. Their text sits on the right, so
-#     that stays white; the left panel is ours: the blue ArtCraft mark, the white wordmark, a mono
-#     "Launcher" label and the Craft apps' icons in a hairline grid.
+#     that stays white; the left panel is ours: the blue Mahay mark, the white wordmark, a mono
+#     "Launcher" label and the Mahay apps' icons in a hairline grid.
 #   - banner, 493x58: across the top of the inner pages. The page title is drawn over its left
 #     side, so that stays white; the right end is a dark cell with the mark.
-# The ArtCraft mark and wordmark are drawn as supplied (docs/brand/LICENSE-brand.txt).
+# The Mahay mark and wordmark are drawn as supplied (docs/brand/LICENSE-brand.txt).
 function New-InstallerArt([string] $BannerOut, [string] $DialogOut) {
   Add-Type -AssemblyName System.Drawing
   $ink = [System.Drawing.ColorTranslator]::FromHtml('#121316')
   $accent = [System.Drawing.ColorTranslator]::FromHtml('#2d81ff')
   $muted = [System.Drawing.Color]::FromArgb(153, 242, 241, 238)
   $line = [System.Drawing.Color]::FromArgb(38, 242, 241, 238)
-  # The Craft App Suite, in the launcher's order (crates/core/src/catalog.rs).
-  $apps = 'photocraft', 'vectorcraft', 'filmcraft', 'lightcraft', 'pdfcraft', 'effectcraft',
-    'designcraft', 'figcraft', 'wordcraft', 'soundcraft', 'deckcraft', 'cadcraft', 'gridcraft'
-  $mark = [System.Drawing.Image]::FromFile((Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\ai.storyteller.artcraft-launcher.png'))
-  $wordmark = [System.Drawing.Image]::FromFile((Join-Path $Root 'docs\brand\artcraft-logo-white.png'))
+  # The Mahay App Suite, in the launcher's order (crates/core/src/catalog.rs).
+  $apps = 'sary', 'tsipika', 'hetsika', 'hazavana', 'taratasy', 'tselatra',
+    'pejy', 'endrika', 'soratra', 'feo', 'seho', 'drafitra', 'tabilao'
+  $mark = [System.Drawing.Image]::FromFile((Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\ai.storyteller.trano.png'))
+  $wordmark = [System.Drawing.Image]::FromFile((Join-Path $Root 'docs\brand\mahay-logo-white.png'))
   $icons = $apps | ForEach-Object { [System.Drawing.Image]::FromFile((Join-Path $Root "assets\app-icons\$_.png")) }
   # The site's label face; GDI+ draws a variable font at its default instance (Regular).
   $fonts = New-Object System.Drawing.Text.PrivateFontCollection
@@ -198,8 +198,8 @@ foreach ($f in 'README.md', 'LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE', 'ATTRIBUT
   $p = Join-Path $Root $f
   if (Test-Path $p) { Copy-Item $p $Portable }
 }
-# portable.txt beside artcraft-launcher.exe switches on portable mode: settings and the download
-# cache go to ArtCraftLauncherData\ next to the exe instead of %APPDATA%.
+# portable.txt beside trano.exe switches on portable mode: settings and the download
+# cache go to MahayLauncherData\ next to the exe instead of %APPDATA%.
 Copy-Item (Join-Path $PSScriptRoot 'portable.txt') $Portable
 $Zip = Join-Path $Dist "$Pkg-$Version-windows-$Arch-portable.zip"
 Remove-Item -Force $Zip -ErrorAction SilentlyContinue

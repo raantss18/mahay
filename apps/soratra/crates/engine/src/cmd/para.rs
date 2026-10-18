@@ -1,11 +1,11 @@
 //! Paragraph formatting, lists and styles (Home › Paragraph, Home › Styles).
 
 use serde_json::{Value, json};
-use wordcraft_doc::collate::{SortKey, sort_key};
-use wordcraft_doc::numbering::ListKind;
-use wordcraft_doc::props::{Align, Border, BorderStyle, Borders, LineSpacing, NumRef, ParaProps, Rgb, TabAlign, TabLeader, TabStop};
-use wordcraft_doc::styles::{Style, StyleKind};
-use wordcraft_doc::{Block, CharProps, Pos};
+use soratra_doc::collate::{SortKey, sort_key};
+use soratra_doc::numbering::ListKind;
+use soratra_doc::props::{Align, Border, BorderStyle, Borders, LineSpacing, NumRef, ParaProps, Rgb, TabAlign, TabLeader, TabStop};
+use soratra_doc::styles::{Style, StyleKind};
+use soratra_doc::{Block, CharProps, Pos};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};
@@ -241,7 +241,7 @@ pub fn specs() -> Vec<CommandSpec> {
 }
 
 /// Resolved paragraph props at the caret.
-fn cur(s: &Session) -> wordcraft_doc::resolve::ResolvedPara {
+fn cur(s: &Session) -> soratra_doc::resolve::ResolvedPara {
     // A selection ending at the next paragraph's start doesn't format that paragraph (#418), so
     // its state comes from the last paragraph it does cover.
     let (a, b) = s.sel.ordered();
@@ -511,9 +511,9 @@ fn list(s: &mut Session, v: &Value, default: ListKind) -> CmdResult {
         super::selected_paths(s).iter().map(|p| s.doc.para(a.story, p).and_then(|x| x.props.numbering).filter(|n| n.num != 0)).collect();
     let same_kind = |n: &NumRef| {
         s.doc.numbering.level(n.num, 0).is_some_and(|l| {
-            let want = wordcraft_doc::numbering::levels_for(kind);
+            let want = soratra_doc::numbering::levels_for(kind);
             want.first().is_some_and(|w| {
-                (w.format == wordcraft_doc::section::NumFormat::Bullet) == (l.format == wordcraft_doc::section::NumFormat::Bullet)
+                (w.format == soratra_doc::section::NumFormat::Bullet) == (l.format == soratra_doc::section::NumFormat::Bullet)
                     && (p::str(v, "kind").is_none() || w.text == l.text)
             })
         })
@@ -622,7 +622,7 @@ fn tabs(s: &mut Session, v: &Value) -> CmdResult {
         return sel_result(s);
     }
     let styles = s.doc.styles.clone();
-    let near = |a: f32, b: f32| (a - b).abs() < wordcraft_doc::props::TAB_POS_EPS;
+    let near = |a: f32, b: f32| (a - b).abs() < soratra_doc::props::TAB_POS_EPS;
     fmt(s, &|p| {
         // The stops the paragraph inherits from its style.
         let inherited = styles.resolve_para(&ParaProps { tabs: None, ..p.clone() }).tabs;
@@ -747,7 +747,7 @@ fn heading_level(s: &Session, props: &ParaProps) -> Option<u8> {
 
 /// Give paragraph `path` Heading `level` (1–9), or make it body text (`None`: the default
 /// paragraph style); its own outline level goes, so the style's counts.
-pub(crate) fn set_heading(s: &mut Session, story: wordcraft_doc::StoryRef, path: &wordcraft_doc::Path, level: Option<u8>) -> Result<(), CmdError> {
+pub(crate) fn set_heading(s: &mut Session, story: soratra_doc::StoryRef, path: &soratra_doc::Path, level: Option<u8>) -> Result<(), CmdError> {
     let style = level.map(|n| ensure_heading_style(s, n.clamp(1, 9)));
     let para = s.doc.para_mut(story, path)?;
     para.props.style = style;
@@ -761,7 +761,7 @@ pub(crate) fn set_heading(s: &mut Session, story: wordcraft_doc::StoryRef, path:
 pub(crate) fn ensure_heading_style(s: &mut Session, n: u8) -> String {
     let id = format!("Heading{n}");
     if s.doc.styles.get(&id).is_none() {
-        let builtin = wordcraft_doc::styles::StyleSheet::builtin();
+        let builtin = soratra_doc::styles::StyleSheet::builtin();
         for sid in [id.clone(), format!("{id}Char")] {
             if s.doc.styles.get(&sid).is_none()
                 && let Some(st) = builtin.get(&sid).cloned()
@@ -826,7 +826,7 @@ fn outline_step(s: &mut Session, promote: bool) -> CmdResult {
     for (j, h) in carried {
         let n = if promote { h.saturating_sub(1).max(1) } else { (h + 1).min(9) };
         if n != h {
-            set_heading(s, wordcraft_doc::StoryRef::Body, &wordcraft_doc::Path::top(j), Some(n))?;
+            set_heading(s, soratra_doc::StoryRef::Body, &soratra_doc::Path::top(j), Some(n))?;
         }
     }
     sel_result(s)
@@ -1208,7 +1208,7 @@ fn own_format(st: &Style) -> Value {
             f.insert(k.into(), json!(b));
         }
     }
-    if let Some(wordcraft_doc::TextColor::Rgb(rgb)) = c.color {
+    if let Some(soratra_doc::TextColor::Rgb(rgb)) = c.color {
         f.insert("color".into(), json!(rgb.hex()));
     }
     let pp = &st.para;
@@ -1248,10 +1248,10 @@ pub struct ListButtons {
 /// props it already resolved). The paragraph's own level decides Bullets (a bulleted level) or
 /// Numbering (a numbered one); Multilevel is on too when the list numbers its levels together:
 /// some level's label shows another level's number (`1.1.`) or uses legal numbering.
-pub fn list_buttons(doc: &wordcraft_doc::Document, numbering: Option<NumRef>) -> ListButtons {
+pub fn list_buttons(doc: &soratra_doc::Document, numbering: Option<NumRef>) -> ListButtons {
     let Some(n) = numbering.filter(|n| n.num != 0) else { return ListButtons::default() };
     let Some(level) = doc.numbering.level(n.num, n.level) else { return ListButtons::default() };
-    let bullets = level.format == wordcraft_doc::section::NumFormat::Bullet;
+    let bullets = level.format == soratra_doc::section::NumFormat::Bullet;
     let joined = |i: u8| {
         doc.numbering.level(n.num, i).is_some_and(|l| {
             let own = u32::from(i) + 1;

@@ -2,13 +2,13 @@
 //! and the on-canvas geometry of the Gradient tool's live gradients, where a start and an end
 //! point stand for the fill's angle, scale and centre offset.
 //!
-//! The mapping matches the Gradient tool's destructive drag (`photocraft_algo::paint`): a
+//! The mapping matches the Gradient tool's destructive drag (`sary_algo::paint`): a
 //! Linear gradient runs from the start (t = 0) to the end point (t = 1); Radial, Angle,
 //! Reflected and Diamond gradients are centred on the start point and reach t = 1 at the end
 //! point's distance. Fill and painted gradients share this geometry (see the tests).
 
-use photocraft_doc::{Fill, GradientStyle};
-use photocraft_geom::Rect;
+use sary_doc::{Fill, GradientStyle};
+use sary_geom::Rect;
 
 use crate::effects::gradient_units;
 
@@ -35,7 +35,7 @@ impl Ramp {
 }
 
 impl<const N: usize> Ramp<N> {
-    fn with_colors(f: &Fill, convert: impl Fn(photocraft_doc::Color) -> [f32; N]) -> Option<Self> {
+    fn with_colors(f: &Fill, convert: impl Fn(sary_doc::Color) -> [f32; N]) -> Option<Self> {
         let Fill::Gradient { stops, opacity_stops, midpoints, .. } = f else { return None };
         let mut color: Vec<_> = stops.iter().map(|(p, c)| (*p, convert(*c))).collect();
         color.sort_by(|a, b| a.0.total_cmp(&b.0));
@@ -111,7 +111,7 @@ fn dither_channels(c: &mut [f32], x: i32, y: i32) {
 /// gradient: left in float, a dark channel lifted 0.002 above black is still 0.002 to the next
 /// blend, and Color Dodge under a bright layer turns that into visible speckle (#2755).
 fn dither_channels_to(c: &mut [f32], x: i32, y: i32, quantum: Option<f32>) {
-    let n = (photocraft_color::dither_noise(x, y) - 0.5) / 255.0;
+    let n = (sary_color::dither_noise(x, y) - 0.5) / 255.0;
     for ch in c {
         *ch = (*ch + n).clamp(0.0, 1.0);
         if let Some(q) = quantum {
@@ -133,12 +133,12 @@ pub fn render_quantized(f: &Fill, rect: Rect, frame: Rect, quantum: Option<f32>)
 
 /// Native CMYK solid/gradient pixels at document depth; patterns return `None`.
 /// Use the same samples for rendering and PSD caches to avoid a lossy RGB separation.
-pub fn render_cmyk_fill(f: &Fill, rect: Rect, frame: Rect, depth: photocraft_color::SampleType) -> Option<photocraft_raster::Surface> {
-    let native = |c: photocraft_doc::Color| {
-        let c = c.in_mode(photocraft_color::ColorMode::Cmyk);
+pub fn render_cmyk_fill(f: &Fill, rect: Rect, frame: Rect, depth: sary_color::SampleType) -> Option<sary_raster::Surface> {
+    let native = |c: sary_doc::Color| {
+        let c = c.in_mode(sary_color::ColorMode::Cmyk);
         [c.c[0], c.c[1], c.c[2], c.c[3], c.alpha]
     };
-    let mut surface = photocraft_raster::Surface::new(photocraft_color::PixelFormat::new(photocraft_color::ColorMode::Cmyk, depth, true));
+    let mut surface = sary_raster::Surface::new(sary_color::PixelFormat::new(sary_color::ColorMode::Cmyk, depth, true));
     match f {
         Fill::Solid(c) => surface.fill_rect(rect, &native(*c)),
         Fill::Gradient { .. } => {
@@ -248,13 +248,13 @@ pub fn from_handles(style: GradientStyle, from: [f32; 2], to: [f32; 2], frame: R
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::Color;
+    use sary_doc::Color;
 
     const STYLES: [GradientStyle; 5] = [GradientStyle::Linear, GradientStyle::Radial, GradientStyle::Angle, GradientStyle::Reflected, GradientStyle::Diamond];
 
     #[test]
     fn native_cmyk_ramp_interpolates_black_and_alpha_separately() {
-        let a = Color { mode: photocraft_color::ColorMode::Cmyk, c: [0.0, 0.2, 0.4, 0.6], alpha: 0.5 };
+        let a = Color { mode: sary_color::ColorMode::Cmyk, c: [0.0, 0.2, 0.4, 0.6], alpha: 0.5 };
         let b = Color { c: [0.4, 0.6, 0.8, 1.0], alpha: 1.0, ..a };
         let mut f = Fill::gradient(vec![(1.0, b), (0.0, a)], 0.0, 1.0, GradientStyle::Linear, false);
         if let Fill::Gradient { midpoints, opacity_stops, .. } = &mut f {
@@ -269,7 +269,7 @@ mod tests {
         let mut dithered = ramp.sample(0.25);
         dither_channels(&mut dithered[..4], 3, 7);
         assert_eq!(dithered[4], expected[4]);
-        let noise = (photocraft_color::dither_noise(3, 7) - 0.5) / 255.0;
+        let noise = (sary_color::dither_noise(3, 7) - 0.5) / 255.0;
         for i in 0..4 {
             assert!((dithered[i] - expected[i] - noise).abs() < 1e-6);
         }

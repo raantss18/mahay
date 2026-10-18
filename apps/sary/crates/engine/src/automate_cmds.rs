@@ -2,9 +2,9 @@
 //! and Script Events Manager, plus the session state the File-menu commands share
 //! ([`FileMenuState`]).
 //!
-//! "Scripts" are PhotoCraft action scripts: JSON (`[[id, params], …]`, `{"steps": …}` or a
+//! "Scripts" are Sary action scripts: JSON (`[[id, params], …]`, `{"steps": …}` or a
 //! droplet) or a plain-text list with one `command.id {json params}` per line (`#` comments).
-//! Droplets are JSON files (`.pcdroplet`) holding an action plus batch options; `photocraft-cli
+//! Droplets are JSON files (`.pcdroplet`) holding an action plus batch options; `sary-cli
 //! droplet <file> <inputs…>` runs one, and on Unix a `.command` shim makes it
 //! double-clickable / drop-target-able from the shell.
 //!
@@ -12,7 +12,7 @@
 //! bound in Preferences (`scriptEvents`) and fired by [`fire_event`]: the engine fires New,
 //! Close, Print and Export itself; the app shell fires Start, Open and Save.
 
-use photocraft_doc::{DocId, Layer, LayerContent};
+use sary_doc::{DocId, Layer, LayerContent};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -24,7 +24,7 @@ fn bad(cmd: &str, msg: impl Into<String>) -> EngineError {
     EngineError::BadParams { cmd: cmd.into(), msg: msg.into() }
 }
 
-/// Photoshop ExtendScript / UXP script suffixes — not PhotoCraft JSON or command lists.
+/// Photoshop ExtendScript / UXP script suffixes — not Sary JSON or command lists.
 fn extendscript_ext(path: &str) -> Option<&str> {
     let name = path.rsplit(['/', '\\']).next().unwrap_or(path);
     let dot = name.rfind('.')?;
@@ -35,7 +35,7 @@ fn extendscript_ext(path: &str) -> Option<&str> {
 
 fn reject_extendscript(cmd: &str, path: &str) -> Result<()> {
     match extendscript_ext(path) {
-        Some(_) => Err(bad(cmd, "PhotoCraft scripts are JSON or command lists (one command.id {json} per line), not Photoshop ExtendScript (.js/.jsx)")),
+        Some(_) => Err(bad(cmd, "Sary scripts are JSON or command lists (one command.id {json} per line), not Photoshop ExtendScript (.js/.jsx)")),
         None => Ok(()),
     }
 }
@@ -329,7 +329,7 @@ fn create_droplet(s: &mut Session, p: &Value) -> Result<Value> {
             options.insert(k.into(), v.clone());
         }
     }
-    let mut droplet = json!({"photocraftDroplet": 1, "name": name, "action": {"name": name, "steps": steps_json}, "options": options});
+    let mut droplet = json!({"saryDroplet": 1, "name": name, "action": {"name": name, "steps": steps_json}, "options": options});
     if !called.is_empty() {
         droplet["calledActions"] = json!(called);
     }
@@ -350,7 +350,7 @@ fn write_shim(droplet: &str) -> Result<String> {
     // quoted segment, emit a literal quote, then resume it.
     let quoted_abs = format!("'{}'", abs.replace('\'', "'\\''"));
     let body = format!(
-        "#!/bin/sh\n# PhotoCraft droplet: runs the action on the files given (or dropped).\nexec \"${{PHOTOCRAFT_CLI:-photocraft-cli}}\" droplet {quoted_abs} \"$@\"\n"
+        "#!/bin/sh\n# Sary droplet: runs the action on the files given (or dropped).\nexec \"${{SARY_CLI:-sary-cli}}\" droplet {quoted_abs} \"$@\"\n"
     );
     crate::file_cmds::write_file(&shim, body.as_bytes())?;
     #[cfg(unix)]
@@ -370,8 +370,8 @@ fn run_droplet(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.automate.runDroplet";
     let path = p.get("droplet").or_else(|| p.get("path")).and_then(Value::as_str).ok_or_else(|| bad(cmd, "missing \"droplet\""))?;
     let v: Value = serde_json::from_slice(&read_file(path)?).map_err(|e| bad(cmd, format!("{path}: {e}")))?;
-    if v.get("photocraftDroplet").is_none() {
-        return Err(bad(cmd, format!("{path} is not a PhotoCraft droplet")));
+    if v.get("saryDroplet").is_none() {
+        return Err(bad(cmd, format!("{path} is not a Sary droplet")));
     }
     let steps = v.get("action").and_then(|a| a.get("steps")).cloned().ok_or_else(|| bad(cmd, "droplet has no action"))?;
     let opts = v.get("options").cloned().unwrap_or(json!({}));
@@ -407,7 +407,7 @@ fn run_droplet(s: &mut Session, p: &Value) -> Result<Value> {
 fn statistics(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.scripts.statistics";
     let mode = p.get("mode").or_else(|| p.get("stackMode")).and_then(Value::as_str).unwrap_or("median");
-    let sm = photocraft_doc::StackMode::ALL
+    let sm = sary_doc::StackMode::ALL
         .into_iter()
         .find(|m| m.id().eq_ignore_ascii_case(mode))
         .ok_or_else(|| bad(cmd, format!("unknown stack mode `{mode}`")))?;
@@ -456,7 +456,7 @@ fn contact_sheet(s: &mut Session, p: &Value) -> Result<Value> {
     let across = p.get("placeAcrossFirst").and_then(Value::as_bool).unwrap_or(true);
     let rotate = p.get("rotateForBestFit").and_then(Value::as_bool).unwrap_or(false);
     let caption = p.get("caption").and_then(Value::as_bool).unwrap_or(true);
-    let font = p.get("font").and_then(Value::as_str).unwrap_or(photocraft_text::fonts::DEFAULT_FAMILY).to_string();
+    let font = p.get("font").and_then(Value::as_str).unwrap_or(sary_text::fonts::DEFAULT_FAMILY).to_string();
     let font_pt = f("fontSize", 12.0);
     let flatten = p.get("flatten").and_then(Value::as_bool).unwrap_or(false);
     let mode = p.get("mode").and_then(Value::as_str).unwrap_or("rgb").to_string();
@@ -482,7 +482,7 @@ fn contact_sheet(s: &mut Session, p: &Value) -> Result<Value> {
             let (c, r) = if across { (k % cols, k / cols) } else { (k / rows, k % rows) };
             let x0 = hs + f64::from(c) * (cell_w + hs);
             let y0 = vs + f64::from(r) * (cell_h + vs);
-            let thumb = (|| -> Result<photocraft_doc::Surface> {
+            let thumb = (|| -> Result<sary_doc::Surface> {
                 let bytes = read_file(path)?;
                 let src = import(&file_name(path), &bytes)?;
                 let mut t = Session::new();
@@ -497,16 +497,16 @@ fn contact_sheet(s: &mut Session, p: &Value) -> Result<Value> {
                 let (tw, th) = ((w * k).round().max(1.0), (h * k).round().max(1.0));
                 t.execute("image.imageSize", json!({"width": tw, "height": th, "resample": "bicubic"}))?;
                 let d = &t.active().ok_or(EngineError::NoDocument)?.doc;
-                let buf = photocraft_compose::flatten(d);
+                let buf = sary_compose::flatten(d);
                 let ox = (x0 + (cell_w - tw) / 2.0).round() as i32;
                 let oy = (y0 + (box_h - th) / 2.0).round() as i32;
                 let n = fmt.channels();
                 let mut data = vec![0.0f32; buf.px.len() * n];
                 for (px, out) in buf.px.iter().zip(data.chunks_exact_mut(n)) {
-                    photocraft_raster::from_rgba_into(&fmt, *px, out);
+                    sary_raster::from_rgba_into(&fmt, *px, out);
                 }
-                let mut surf = photocraft_doc::Surface::new(fmt);
-                surf.write_region(photocraft_geom::Rect::new(ox, oy, ox + tw as i32, oy + th as i32), &data);
+                let mut surf = sary_doc::Surface::new(fmt);
+                surf.write_region(sary_geom::Rect::new(ox, oy, ox + tw as i32, oy + th as i32), &data);
                 Ok(surf)
             })();
             let surf = match thumb {
@@ -558,7 +558,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "file.automate.createDroplet",
             "Create Droplet…",
             &["File", "Automate"],
-            r##"{"path":str (.pcdroplet),"steps":[[id,params]…] (the action),"name":str?,"output":folder?,"format":"same|png|jpg|…"?,"quality":0..12?,"shim":bool=true on Unix (writes <name>.command calling `photocraft-cli droplet`)} → {path, shim} (the actions its Play Action steps call are saved in the droplet)"##,
+            r##"{"path":str (.pcdroplet),"steps":[[id,params]…] (the action),"name":str?,"output":folder?,"format":"same|png|jpg|…"?,"quality":0..12?,"shim":bool=true on Unix (writes <name>.command calling `sary-cli droplet`)} → {path, shim} (the actions its Play Action steps call are saved in the droplet)"##,
             native,
             create_droplet
         ),

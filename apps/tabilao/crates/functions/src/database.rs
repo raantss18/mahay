@@ -10,7 +10,7 @@
 
 use std::borrow::Cow;
 
-use gridcraft_core::{Array, CellError, Value, compare_text};
+use tabilao_core::{Array, CellError, Value, compare_text};
 
 use crate::criteria::Criterion;
 use crate::util::{A, R, as_array, has, num_val};
@@ -21,7 +21,7 @@ fn find_column(db: &Array, label: &str) -> Option<usize> {
     let label = label.trim();
     (0..db.cols).find(|&c| match db.get(0, c) {
         Some(Value::Text(t)) => compare_text(t.trim(), label).is_eq(),
-        Some(Value::Number(n)) => gridcraft_core::number_to_text(*n) == label,
+        Some(Value::Number(n)) => tabilao_core::number_to_text(*n) == label,
         _ => false,
     })
 }
@@ -55,7 +55,7 @@ fn cell_criterion(v: &Value) -> Option<Criterion> {
             let s: &str = t;
             let has_op = s.starts_with(['=', '<', '>']);
             let plain_text = !has_op
-                && gridcraft_core::parse::parse_number_text(s).is_none()
+                && tabilao_core::parse::parse_number_text(s).is_none()
                 && !s.eq_ignore_ascii_case("TRUE")
                 && !s.eq_ignore_ascii_case("FALSE")
                 && CellError::parse(s).is_none();
@@ -77,7 +77,7 @@ fn matching_records(db: &Array, crit: &Array, ctx: &mut dyn Ctx) -> Vec<usize> {
             let Some(cr) = cell_criterion(cell) else { continue };
             let col = match crit.get(0, c) {
                 Some(Value::Text(t)) => find_column(db, t),
-                Some(Value::Number(n)) => find_column(db, &gridcraft_core::number_to_text(*n)),
+                Some(Value::Number(n)) => find_column(db, &tabilao_core::number_to_text(*n)),
                 _ => None,
             };
             conds.push((c, col, cr));
@@ -300,7 +300,7 @@ pub(crate) fn specs() -> Vec<FnSpec> {
 #[cfg(test)]
 mod tests {
     use crate::util::testutil::*;
-    use gridcraft_core::{CellError, Value};
+    use tabilao_core::{CellError, Value};
 
     /// The classic orchard table.
     fn db() -> Value {

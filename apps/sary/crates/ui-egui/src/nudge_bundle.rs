@@ -15,9 +15,9 @@
 
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
-use photocraft_doc::DocId;
-use photocraft_engine::DocState;
+use crate::SaryApp;
+use sary_doc::DocId;
+use sary_engine::DocState;
 
 /// What a run of nudges needs to find unchanged to go on: the document, and its revisions (every
 /// edit, Undo, Redo and layer selection moves `revision`, a save moves `saved_revision`).
@@ -83,14 +83,14 @@ impl NudgeBundle {
 
 /// The longest pause (seconds) between two nudges of one run, or `None` when nudges aren't
 /// bundled (Tools › Bundle Arrow-Key Nudges).
-pub(crate) fn pause(app: &PhotocraftApp) -> Option<f64> {
+pub(crate) fn pause(app: &SaryApp) -> Option<f64> {
     let tools = &app.session.prefs().tools;
     tools.bundle_nudges.then(|| f64::from(tools.nudge_bundle_pause_ms) / 1000.0)
 }
 
 /// Run the nudge command `id` (`what` names the thing it nudges: "layers", "selection") as part
 /// of the current run of nudges, or on its own when nudges aren't bundled.
-pub(crate) fn run(app: &mut PhotocraftApp, what: &str, id: &str, mut params: Value) -> Result<Value, String> {
+pub(crate) fn run(app: &mut SaryApp, what: &str, id: &str, mut params: Value) -> Result<Value, String> {
     let Some(pause) = pause(app) else {
         app.nudge_bundle.reset();
         return app.run(id, params);

@@ -32,7 +32,7 @@ impl DesktopTheme {
     /// first answer is sent straight away, so the caller does not have to ask for it separately.
     pub fn start() -> Self {
         let (tx, rx) = channel();
-        let started = std::thread::Builder::new().name("gridcraft-desktop-theme".into()).spawn(move || {
+        let started = std::thread::Builder::new().name("tabilao-desktop-theme".into()).spawn(move || {
             let mut last = read();
             if tx.send(last).is_err() {
                 return;

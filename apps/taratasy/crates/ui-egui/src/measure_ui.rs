@@ -1,7 +1,7 @@
 //! Measure objects: page-space clicks, live readings and persistent drawing scales.
-use crate::{LeftPanel, PdfCraftApp, QuickTool, canvas::DocView, theme::Tokens, widgets};
+use crate::{LeftPanel, TaratasyApp, QuickTool, canvas::DocView, theme::Tokens, widgets};
 use egui::{Color32, Pos2, Stroke};
-use pdfcraft_engine::{
+use taratasy_engine::{
     Document, Edit, Style,
     measure::{self, Kind, NewMeasurement, Point, Reading, Scale},
 };
@@ -282,10 +282,10 @@ fn finish(state: &mut MeasureView, pending: &mut Option<Edit>, doc: &Document, p
         state.cancel();
     }
 }
-pub(crate) fn panel(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens) {
+pub(crate) fn panel(app: &mut TaratasyApp, ui: &mut egui::Ui, t: &Tokens) {
     egui::ScrollArea::vertical().id_salt("measure-panel").show(ui, |ui| panel_body(app, ui, t));
 }
-fn panel_body(app: &mut PdfCraftApp, ui: &mut egui::Ui, _t: &Tokens) {
+fn panel_body(app: &mut TaratasyApp, ui: &mut egui::Ui, _t: &Tokens) {
     crate::widgets::begin_dialog(ui);
     let Some((index, id)) = app.active_ids() else {
         ui.label(tl!("Open a PDF to measure it."));
@@ -442,7 +442,7 @@ fn panel_body(app: &mut PdfCraftApp, ui: &mut egui::Ui, _t: &Tokens) {
         export_csv(app);
     }
 }
-pub(crate) fn command(app: &mut PdfCraftApp, id: &str) {
+pub(crate) fn command(app: &mut TaratasyApp, id: &str) {
     app.left = LeftPanel::Tool("measure");
     app.left_open = true;
     if let Some((index, _)) = app.active_ids()
@@ -455,7 +455,7 @@ pub(crate) fn command(app: &mut PdfCraftApp, id: &str) {
         export_csv(app);
     }
 }
-fn export_csv(app: &mut PdfCraftApp) {
+fn export_csv(app: &mut TaratasyApp) {
     let Some((_, id)) = app.active_ids() else { return };
     let result = app.session.get(id).ok_or_else(|| "no such document".to_string()).and_then(|d| d.measurements());
     match result {
@@ -470,7 +470,7 @@ fn export_csv(app: &mut PdfCraftApp) {
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
-                let write = move |app: &mut PdfCraftApp, path: std::path::PathBuf| match crate::editing::write_atomically(
+                let write = move |app: &mut TaratasyApp, path: std::path::PathBuf| match crate::editing::write_atomically(
                     &path.to_string_lossy(),
                     csv.as_bytes(),
                 ) {

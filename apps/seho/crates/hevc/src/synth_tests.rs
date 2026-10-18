@@ -8,7 +8,7 @@
 use crate::Decoder;
 use crate::cabac::{Contexts, NEXT_STATE, RANGE_TAB_LPS, init_contexts};
 use crate::spec_tables::*;
-use deckcraft_bitstream::{BitWriter, escape_rbsp};
+use seho_bitstream::{BitWriter, escape_rbsp};
 
 const W: usize = 96;
 const H: usize = 64;
@@ -546,7 +546,7 @@ fn as_u8(p: &crate::Plane) -> &[u8] {
 
 /// Compare with ffmpeg's decode of the same stream (skipped when ffmpeg is absent).
 fn check_ffmpeg(name: &str, stream: &[u8], pics: &[crate::Picture]) {
-    // The ffmpeg cross-check lives in FilmCraft (test oracle).
+    // The ffmpeg cross-check lives in Hetsika (test oracle).
     let _ = (name, stream, pics);
 }
 
@@ -635,12 +635,12 @@ fn decodes_within(stream: &[u8], budget: u64) -> bool {
 fn picture_store_is_checked_against_the_memory_budget() {
     let (stream, _) = sequence(&None, true, whole(WC * HC));
     let sps_nal = sps(true);
-    let parsed = crate::params::Sps::parse(&deckcraft_bitstream::unescape_rbsp(&sps_nal[6..])).unwrap();
+    let parsed = crate::params::Sps::parse(&seho_bitstream::unescape_rbsp(&sps_nal[6..])).unwrap();
     // 96x64 4:2:0 in 16-bit samples; the decoder holds the DPB, the current picture and up to
     // threads + 2 in flight.
     let one = (W * H + 2 * (W / 2) * (H / 2)) as u64 * 2;
     let pictures = u64::from(parsed.max_dec_pic_buffering) + 1 + 3;
     assert!(decodes_within(&stream, pictures * one));
     assert!(!decodes_within(&stream, pictures * one - 1));
-    assert!(decodes_within(&stream, deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET));
+    assert!(decodes_within(&stream, seho_bitstream::budget::DECODE_MEMORY_BUDGET));
 }

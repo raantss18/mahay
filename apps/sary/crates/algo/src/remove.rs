@@ -12,7 +12,7 @@
 
 use crate::nonlocal::{Params, complete_with};
 use crate::poisson::membrane_fill_with;
-use photocraft_raster::{Cancelled, Interrupt};
+use sary_raster::{Cancelled, Interrupt};
 
 /// `mask` plus everything it encloses: the cells from which no path of unmasked cells (4-connected)
 /// reaches the grid's border. A mask of the wrong length is returned unchanged.

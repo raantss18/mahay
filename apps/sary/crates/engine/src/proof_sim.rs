@@ -16,9 +16,9 @@
 //!   display unchanged: the canvas texture is clamped to 0–1, so there is nothing above white
 //!   to compress.
 
-use photocraft_cms::{Builtin, Intent, Lut3d, Transform};
-use photocraft_color::SampleType;
-use photocraft_doc::Document;
+use sary_cms::{Builtin, Intent, Lut3d, Transform};
+use sary_color::SampleType;
+use sary_doc::Document;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -158,7 +158,7 @@ pub fn display_lut_with(c: &ColorState, doc: &Document, size: usize, include_hdr
     if kind == ProofKind::Profile && hdr.is_none() {
         return Ok(None);
     }
-    let err = |e: photocraft_cms::CmsError| EngineError::Other(format!("colour management: {e}"));
+    let err = |e: sary_cms::CmsError| EngineError::Other(format!("colour management: {e}"));
     let src = c.canvas_display_for(doc, display)?.source.clone();
     let mon = c.monitor_for(display);
     let srgb = Builtin::Srgb.profile();
@@ -246,7 +246,7 @@ pub fn set_kind(s: &mut Session, kind: ProofKind) -> Result<Value> {
     let st = s.active().ok_or(EngineError::NoDocument)?;
     let (id, doc) = (st.doc.id, st.doc.clone());
     let plates = matches!(kind, ProofKind::Plate(_) | ProofKind::CmyPlate);
-    let working = if plates { Some(s.color.resolve("working-cmyk", Some(&doc), Some(photocraft_color::ColorMode::Cmyk))?) } else { None };
+    let working = if plates { Some(s.color.resolve("working-cmyk", Some(&doc), Some(sary_color::ColorMode::Cmyk))?) } else { None };
     let pv = s.color.proof_mut(id);
     if let Some(w) = working {
         pv.setup.profile = w;

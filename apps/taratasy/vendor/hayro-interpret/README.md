@@ -40,9 +40,9 @@ Licensed under either of
 
 at your option.
 
-## PdfCraft function limits
+## Taratasy function limits
 
-The PdfCraft patch rejects function construction after 64 nested functions or 10,000 total
+The Taratasy patch rejects function construction after 64 nested functions or 10,000 total
 function nodes, including repeated references, and detects cycles on the current path. Shared
 children in different branches remain valid. Stitching functions reject empty or unresolved
 child lists instead of silently truncating them. Calculator functions have a shared limit of 64

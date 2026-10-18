@@ -12,10 +12,10 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use wordcraft_doc::para::ShapeKind;
-use wordcraft_doc::props::{Align, Border, BorderStyle, CharProps, Rgb};
-use wordcraft_doc::{Block, Document, Paragraph, StoryRef};
-use wordcraft_geom::Rect;
+use soratra_doc::para::ShapeKind;
+use soratra_doc::props::{Align, Border, BorderStyle, CharProps, Rgb};
+use soratra_doc::{Block, Document, Paragraph, StoryRef};
+use soratra_geom::Rect;
 
 use crate::{DocLayout, Page, ParaLayout, Placed};
 

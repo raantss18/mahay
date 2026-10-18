@@ -15,7 +15,7 @@
 //!   NEFLinearizationTable); ITU-T T.81 Annex F / H for the "difference
 //!   category + additional bits" coding and canonical Huffman codes.
 //! * The Huffman tables, which Nikon files do not carry, come from the
-//!   black-box analysis documented in LightCraft (storytold/lightcraft#86,
+//!   black-box analysis documented in Hazavana (raantss18/hazavana#86,
 //!   `crates/raw/src/vendor/nefc.rs`): recovered from CC0 raw.pixls.us samples
 //!   shot in both compressed and uncompressed mode, and verified on ~45 files
 //!   from ~35 bodies (D40 … D850, Df, Z 6, Z 50, 1 J1). Only the format facts

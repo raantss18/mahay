@@ -7,8 +7,8 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 use egui::Color32;
-use photocraft_engine::BrushSettings;
-use photocraft_engine::paint::{self, Pattern, StrokePoint, TipShape};
+use sary_engine::BrushSettings;
+use sary_engine::paint::{self, Pattern, StrokePoint, TipShape};
 
 /// Values cached per named slot, each tagged with the signature it was rendered for. A slot holds
 /// one value, so dragging a slider replaces the slot's texture instead of piling up new ones.
@@ -106,7 +106,7 @@ pub fn tip_sig(tip: &TipShape, hardness: f32, angle: f32, roundness: f32, flip: 
 /// A stroke rendered with the brush (scaled down to fit), as straight RGBA8: Photoshop's preview
 /// S-curve with pressure tapering in and out.
 pub fn preview_pixels(b: &BrushSettings, w: u32, h: u32, color: [f32; 4]) -> Vec<u8> {
-    use photocraft_color::{ColorMode, PixelFormat, SampleType};
+    use sary_color::{ColorMode, PixelFormat, SampleType};
     let mut brush = b.clone();
     let k = ((h as f32 * 0.55) / brush.size.max(1.0)).min(1.0);
     brush.size = (brush.size * k).max(1.0);
@@ -126,9 +126,9 @@ pub fn preview_pixels(b: &BrushSettings, w: u32, h: u32, color: [f32; 4]) -> Vec
         })
         .collect();
     let fmt = PixelFormat::new(ColorMode::Rgb, SampleType::U8, true);
-    let mut s = photocraft_raster::Surface::new(fmt);
+    let mut s = sary_raster::Surface::new(fmt);
     paint::apply_stroke(&mut s, &paint::Stroke { brush, points }, None, false);
-    let r = photocraft_geom::Rect::new(0, 0, w as i32, h as i32);
+    let r = sary_geom::Rect::new(0, 0, w as i32, h as i32);
     let mut px = vec![[0.0f32; 4]; (w * h) as usize];
     s.read_rgba_into(r, &mut px);
     px.iter().flat_map(|p| p.map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8)).collect()

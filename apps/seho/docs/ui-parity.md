@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** major (community PR wave 2026-10-14: 14 new dialogs (41 in all), Eyedropper, Export button, New Window, Grid Options, WordArt gallery and handles, Slide Sorter sections, Quick Access Toolbar, Format Background and Format Shape depth, rich-text clipboard; duplicated rows and headers folded; previous: minor, File tab / Backstage, #76) · **Target:** Microsoft PowerPoint for Mac 16.113 (Microsoft 365)
 
-How DeckCraft looks and feels next to PowerPoint: the shell, the ribbon, menus, panes, dialogs,
+How Seho looks and feels next to PowerPoint: the shell, the ribbon, menus, panes, dialogs,
 direct manipulation, keyboard and precision. Observations of PowerPoint are kept locally in
 `plan/powerpoint/01-observed-ui.md` and `menu-tree.txt` (gitignored, clean-room rules in
 AGENTS.md §2). Dimension score: **~60% ready** (estimated), **30–50 h** to parity.
@@ -16,11 +16,11 @@ ends and are omitted from thumbnails, slide shows and exports.
 
 ## Shell
 
-| Element | PowerPoint for Mac | DeckCraft | Gap |
+| Element | PowerPoint for Mac | Seho | Gap |
 |---|---|---|---|
 | Title bar: AutoSave, Home, Save, Undo/Redo, document title, Share, search | yes | yes, plus Export; no Share (cloud) | #71 macOS window controls misaligned |
 | Native macOS menu bar (File, Edit, View, Insert, Format, Arrange, Tools, Slide Show, Window, Help) | yes | **no** (`menus::menu_tree()` is defined but not installed) | 3–5 h |
-| Menu-bar items with a DeckCraft equivalent | 217 app-specific items | 128 matched by name (59%, heuristic lower bound) | See [target-app-parity.md](target-app-parity.md) |
+| Menu-bar items with a Seho equivalent | 217 app-specific items | 128 matched by name (59%, heuristic lower bound) | See [target-app-parity.md](target-app-parity.md) |
 | Ribbon tabs: Home, Insert, Draw, Design, Transitions, Animations, Slide Show, Record, Review, View | 10 | 10 | Record tab is a placeholder |
 | Colour menus: theme and standard colours, hex field, Eyedropper | yes (plus a More Colors dialog) | yes: theme and standard colours, hex field and an Eyedropper that takes the colour drawn under the pointer on the slide (#367) | More Colors dialog; Eyedropper only takes colours from the slide, not the rest of the screen |
 | Contextual tabs: Shape Format, Picture Format, Table Design, Table Layout, Chart Design, Chart Format, Video/Audio Format and Playback | yes | most; checklist P0 row partial | Chart Format, media tabs thinner |
@@ -42,27 +42,27 @@ Close and, at the bottom under a rule, Account and Options. Entries are 40 point
 outline icon; the current page is drawn in the accent colour and outlined. Esc goes back. Alt+F opens
 on Home with the keyboard in the side menu; Up and Down move through it and a page shows as soon as
 its entry has the focus. PowerPoint's start screen is the same Home page, with only Home, New and
-Open at the top. DeckCraft follows all of this (`crates/ui-egui/src/backstage.rs`), with the page and
+Open at the top. Seho follows all of this (`crates/ui-egui/src/backstage.rs`), with the page and
 menu colours taken from the theme tokens (menu `chrome`, page `card`).
 
-| Page | PowerPoint | DeckCraft |
+| Page | PowerPoint | Seho |
 |---|---|---|
-| Home | Prompt box (Copilot), New row of themes with More themes, Recent / Favorites / Shared with Me with a file search, More presentations | DeckCraft's mark, Blank Presentation and the first themes with More themes →, the first starter decks with More templates →, Recent with a file search and More presentations → (to Open). No Copilot prompt, Favorites or Shared with Me |
+| Home | Prompt box (Copilot), New row of themes with More themes, Recent / Favorites / Shared with Me with a file search, More presentations | Seho's mark, Blank Presentation and the first themes with More themes →, the first starter decks with More templates →, Recent with a file search and More presentations → (to Open). No Copilot prompt, Favorites or Shared with Me |
 | New | Blank Presentation, template search with suggested searches, gallery of online templates and themes | Blank Presentation, search box, the built-in themes, six original starter decks (`file.new {template}`) and the sample deck (`file.new {theme}`). No online templates |
 | Open | Recent, Shared with Me, OneDrive, This PC, Add a Place, Browse; Presentations / Folders; Recover Unsaved Presentations | Recent and Browse (`app.openDialog`), recent presentations with a search box (`file.open`), Recover Unsaved Presentations (`file.recovery.open`). No cloud places or Folders tab |
 | Info | Name and path, Upload / Share / Copy path / Open file location; Protect, Inspect, Version History, Manage Presentation; Properties, Related Dates, Related People | Name and path, Copy path, Open file location; Inspect Presentation (Accessibility Checker), Manage Presentation (Revert); Size, Slides, Hidden slides and editable Title, Subject, Tags, Categories, Company, Comments, Author (`file.info`, `file.properties`). No Protect, Version History or dates |
 | Save | Saves; a presentation never saved goes to Save As | Same (`file.save`) |
-| Save As | Places, folder, file name, type, Save, More options | Type (PowerPoint, DeckCraft, PDF, Outline, PNG, JPEG) and Save, which opens the system Save dialog (web: Download). .pptx/.deckcraft take the new file; the others are copies (`file.saveAs`, `file.export`) |
-| Print | Print and Copies, Printer, Print All / Selection / Current / Custom Range, Slides box, layout (Full Page Slides, Notes Pages, Outline, Handouts 1–9), sides, collation, colour, Edit Header & Footer; page preview with pager and zoom | Print, Print All Slides / Current Slide / Custom Range, Slides box (`1-3, 5`), Full Page Slides / Notes Pages / Handouts 1–9, Print Hidden Slides, Frame Slides, Edit Header & Footer; preview with pager. DeckCraft prints through a PDF (`file.export`) opened in the system viewer, which has the printers (web: downloaded). No printer list, copies, sides or colour |
+| Save As | Places, folder, file name, type, Save, More options | Type (PowerPoint, Seho, PDF, Outline, PNG, JPEG) and Save, which opens the system Save dialog (web: Download). .pptx/.seho take the new file; the others are copies (`file.saveAs`, `file.export`) |
+| Print | Print and Copies, Printer, Print All / Selection / Current / Custom Range, Slides box, layout (Full Page Slides, Notes Pages, Outline, Handouts 1–9), sides, collation, colour, Edit Header & Footer; page preview with pager and zoom | Print, Print All Slides / Current Slide / Custom Range, Slides box (`1-3, 5`), Full Page Slides / Notes Pages / Handouts 1–9, Print Hidden Slides, Frame Slides, Edit Header & Footer; preview with pager. Seho prints through a PDF (`file.export`) opened in the system viewer, which has the printers (web: downloaded). No printer list, copies, sides or colour |
 | Share | Cloud sharing | Not offered |
 | Export | Create PDF/XPS Document, Create a Video, Create an Animated GIF, Package Presentation for CD, Create Handouts, Change File Type | Create PDF Document, Create Handouts (a PDF), Change File Type. No video, GIF or CD package |
 | Close | Closes; asks Save / Don't Save / Cancel about unsaved changes | Same (`file.close` after the prompt); Ctrl+W asks too |
-| Account | User information, sign-in, Office Background and Office Theme, product information, About | Appearance (light/dark, `view.dark`), product information, About DeckCraft. No accounts to sign in to |
+| Account | User information, sign-in, Office Background and Office Theme, product information, About | Appearance (light/dark, `view.dark`), product information, About Seho. No accounts to sign in to |
 | Options | Opens the PowerPoint Options dialog | Opens Preferences |
 
 ## Panes and dialogs
 
-| Pane / dialog | PowerPoint | DeckCraft |
+| Pane / dialog | PowerPoint | Seho |
 |---|---|---|
 | Format Shape / Picture / Text pane (Fill & Line, Effects, Size & Properties, Picture, Text Box) | full | partial: fill (solid transparency follows the selection), gradient editor, picture/texture fill (source, tile, offsets, scale, alignment, mirror, transparency, rotate with shape), line (dash, compound, cap, join, begin/end arrows and sizes), shadow/glow/reflection details (colour, transparency, blur, angle, distance, size), soft edges, 3-D format and rotation (bevels, depth, contour, material, lighting, camera presets, X/Y/Z rotation), size (lock aspect ratio) |
 | Slide Master | Insert Layout, Rename, Delete, Preserve, Insert Placeholder, Title and Footers | Insert Layout, Rename, Delete, Insert Placeholder, and Preserve, Title and Footers checkboxes (`master.preserve`, `master.placeholders`). A master thumbnail selects the master |
@@ -72,11 +72,11 @@ menu colours taken from the theme tokens (menu `chrome`, page `card`).
 | Animation Pane | list + advanced timeline | list, reorder, timing, an advanced timeline with draggable bars, play the current slide on the canvas; no preview from the selected effect |
 | Design Ideas (Designer) | yes (cloud) | no |
 | Dialogs | ~60 (Font, Paragraph, Bullets and Numbering, Find, Replace, Replace Fonts, Hyperlink, Action Settings, Header and Footer, Slide Size, Set Up Show, Custom Shows, Print, Page Setup, Insert Object, Symbol, Photo Album, Equation, Chart data sheet, SmartArt chooser, Preferences…) | 41 (`crates/ui-egui/src/dialogs.rs`): Font, Paragraph, Tabs, Bullets and Numbering, Find and Replace, Replace Fonts, Table, Slide Size, Size and Position, Header and Footer, Date and Time, Hyperlink (address, slide and ScreenTip follow the selection), Action Settings, Set Up Show, Zoom (percent or Fit, applies on OK), Comment, Alt Text (decorative follows the selection), Outline, Rename (section, shape, layout), About, Preferences, AutoCorrect, Grid Options, Export, Symbol, Photo Album (Edit Photo Album reopens this dialog), Paste Special, Equation (placeholder), Spelling, Accessibility, Language, Custom Shows, Chart Data, Trim Media (start, end and fades follow the selection), SmartArt chooser, Create New Theme Colors, Create New Theme Fonts, Quit, Notes Pages |
-| Design ▸ Effects | named theme effect schemes | DeckCraft, Soft, Crisp, Lift, Glow and Plain (`design.effects`); colours and fonts stay |
+| Design ▸ Effects | named theme effect schemes | Seho, Soft, Crisp, Lift, Glow and Plain (`design.effects`); colours and fonts stay |
 
 ## Direct manipulation
 
-| Behaviour | PowerPoint | DeckCraft |
+| Behaviour | PowerPoint | Seho |
 |---|---|---|
 | Selection handles, rotation handle, yellow adjustment handles | yes | yes |
 | Marquee, Shift/Cmd multi-select, Tab to cycle | yes | yes |

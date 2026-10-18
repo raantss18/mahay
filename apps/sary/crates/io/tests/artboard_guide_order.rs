@@ -4,10 +4,10 @@
 //! document with guides of both orientations associated the artboard with the
 //! wrong guides.
 
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Artboard, ArtboardBackground, Document, Guides, Layer, LayerContent};
-use photocraft_geom::{Rect, Size};
-use photocraft_io::comps_map::guides_in;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_doc::{Artboard, ArtboardBackground, Document, Guides, Layer, LayerContent};
+use sary_geom::{Rect, Size};
+use sary_io::comps_map::guides_in;
 
 #[test]
 fn guides_in_numbers_vertical_first_like_resource_1032() {
@@ -40,10 +40,10 @@ fn doc_with_board(rect: Rect) -> Document {
 
 #[test]
 fn exported_artboard_indices_match_guides_resource() {
-    use photocraft_io::ExportOptions;
+    use sary_io::ExportOptions;
     let d = doc_with_board(Rect::new(10, 0, 30, 50));
     let bytes = export(&d, "x.psd", &ExportOptions::default()).expect("export").bytes;
-    let f = photocraft_psd::PsdFile::from_bytes(&bytes).expect("parse");
+    let f = sary_psd::PsdFile::from_bytes(&bytes).expect("parse");
     let res = f.resources.iter().find(|r| r.id == 1032).expect("guides resource");
     // 1032: version(4) hRes(4) vRes(4) count(4), then 5 bytes per guide: loc(4) dir(1).
     let dta = &res.data;
@@ -66,4 +66,4 @@ fn exported_artboard_indices_match_guides_resource() {
     assert_eq!(idx, 0, "the inside guide is the vertical one, 1032 index 0");
 }
 
-use photocraft_io::export;
+use sary_io::export;

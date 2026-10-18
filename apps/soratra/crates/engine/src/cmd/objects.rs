@@ -4,10 +4,10 @@
 //! caret). Picture adjustments re-encode the bitmap (originals are kept for Reset Picture).
 
 use serde_json::{Value, json};
-use wordcraft_doc::para::{Float, InlineObject, Wrap, WrapText};
-use wordcraft_doc::props::{Rgb, TextVert, VAlign};
-use wordcraft_doc::{Pos, StoryRef, TextBody};
-use wordcraft_geom::Spin;
+use soratra_doc::para::{Float, InlineObject, Wrap, WrapText};
+use soratra_doc::props::{Rgb, TextVert, VAlign};
+use soratra_doc::{Pos, StoryRef, TextBody};
+use soratra_geom::Spin;
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -34,14 +34,14 @@ fn movable_story(s: &Session, story: StoryRef) -> bool {
     match story {
         StoryRef::Body => true,
         StoryRef::Part(id) => {
-            s.doc.parts.get(&id).is_some_and(|p| matches!(p.kind, wordcraft_doc::PartKind::Header | wordcraft_doc::PartKind::Footer))
+            s.doc.parts.get(&id).is_some_and(|p| matches!(p.kind, soratra_doc::PartKind::Header | soratra_doc::PartKind::Footer))
         }
     }
 }
 /// Charts and diagrams are not written back on save yet, so their size, position and wrapping stay
 /// as imported: they can be selected and deleted, not moved, resized or arranged.
 const FROZEN: &str = "charts and diagrams can't be moved or resized yet";
-/// `has_movable` for Size: charts and SmartArt WordCraft can edit are laid out again at their
+/// `has_movable` for Size: charts and SmartArt Soratra can edit are laid out again at their
 /// new size.
 fn has_sizable(s: &Session) -> Option<&'static str> {
     match selected(s) {
@@ -219,7 +219,7 @@ pub fn specs() -> Vec<CommandSpec> {
             } else {
                 return Err(CmdError::Params("`path` or `data` required".into()));
             };
-            wordcraft_render::image_size(&bytes).ok_or_else(|| CmdError::Failed("not a supported image".into()))?;
+            soratra_render::image_size(&bytes).ok_or_else(|| CmdError::Failed("not a supported image".into()))?;
             let key = s.doc.add_media(bytes.clone(), super::insert::image_ext(&bytes));
             with_obj(s, |o| {
                 if let InlineObject::Image { media, .. } = o {
@@ -292,8 +292,8 @@ pub fn specs() -> Vec<CommandSpec> {
                 if f.wrap == Wrap::Inline {
                     f.wrap = Wrap::Square;
                 }
-                f.h_rel = wordcraft_doc::para::Anchor::Margin;
-                f.v_rel = wordcraft_doc::para::Anchor::Margin;
+                f.h_rel = soratra_doc::para::Anchor::Margin;
+                f.v_rel = soratra_doc::para::Anchor::Margin;
                 (f.h_align, f.v_align) = (None, None);
                 let (tw, th) = (sect.text_width(), sect.text_height());
                 let col = if preset.ends_with("Left") { 0.0 } else if preset.ends_with("Right") { tw - size.0 } else { (tw - size.0) / 2.0 };
@@ -314,7 +314,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 if f.wrap == Wrap::Inline {
                     f.wrap = Wrap::Square;
                 }
-                f.h_rel = wordcraft_doc::para::Anchor::Margin;
+                f.h_rel = soratra_doc::para::Anchor::Margin;
                 f.h_align = None;
                 f.x = match h.as_str() {
                     "left" => 0.0,
@@ -354,7 +354,7 @@ pub fn specs() -> Vec<CommandSpec> {
             let n = p::u64(v, "index").unwrap_or(0) as usize;
             let list = all_objects(s);
             let (pos, _) = list.into_iter().nth(n).ok_or_else(|| CmdError::Failed("no such object".into()))?;
-            let end = Pos { off: pos.off + wordcraft_doc::para::OBJ.len_utf8(), ..pos.clone() };
+            let end = Pos { off: pos.off + soratra_doc::para::OBJ.len_utf8(), ..pos.clone() };
             s.sel = Selection { anchor: pos, focus: end };
             sel_result(s)
         })
@@ -397,7 +397,7 @@ pub fn specs() -> Vec<CommandSpec> {
             )
             .when(has_shape),
         CommandSpec::new("shape.change", "Change Shape", "Shape Format › Insert Shapes", |s, v| {
-            let kind: wordcraft_doc::para::ShapeKind = serde_json::from_value(v.get("kind").cloned().unwrap_or(json!("rectangle"))).map_err(|e| CmdError::Params(e.to_string()))?;
+            let kind: soratra_doc::para::ShapeKind = serde_json::from_value(v.get("kind").cloned().unwrap_or(json!("rectangle"))).map_err(|e| CmdError::Params(e.to_string()))?;
             with_obj(s, |o| {
                 if let InlineObject::Shape { kind: k, .. } = o {
                     *k = kind;
@@ -457,7 +457,7 @@ fn has_text_box(s: &Session) -> Option<&'static str> {
 }
 
 fn is_text_box(s: &Session, id: u32) -> bool {
-    s.doc.parts.get(&id).is_some_and(|p| p.kind == wordcraft_doc::PartKind::TextBox)
+    s.doc.parts.get(&id).is_some_and(|p| p.kind == soratra_doc::PartKind::TextBox)
 }
 
 /// The text box the Shape Format › Text commands work on: the selected one, or the one whose
@@ -473,7 +473,7 @@ pub fn text_box_target(s: &Session) -> Option<(Pos, u32)> {
         return None;
     }
     let after = s.doc.text_box_anchor(id)?;
-    let off = after.off.checked_sub(wordcraft_doc::para::OBJ.len_utf8())?;
+    let off = after.off.checked_sub(soratra_doc::para::OBJ.len_utf8())?;
     Some((Pos { off, ..after }, id))
 }
 
@@ -534,7 +534,7 @@ fn link_text_box(s: &mut Session, v: &Value) -> CmdResult {
 /// text: what clicking an object selects.
 pub fn object_selection(s: &Session) -> Option<(Pos, &InlineObject)> {
     let (a, b) = s.sel.ordered();
-    if a.story != b.story || a.path != b.path || b.off != a.off + wordcraft_doc::para::OBJ.len_utf8() {
+    if a.story != b.story || a.path != b.path || b.off != a.off + soratra_doc::para::OBJ.len_utf8() {
         return None;
     }
     let o = s.doc.para_at(&a)?.object_at(a.off)?;
@@ -558,7 +558,7 @@ pub fn selected_all(s: &Session, max: usize) -> Vec<(Pos, InlineObject)> {
         let Some(p) = s.doc.para(story, &path) else { continue };
         for off in p.object_offsets() {
             let inside = if a == b {
-                off + wordcraft_doc::para::OBJ.len_utf8() == a.off || off == a.off
+                off + soratra_doc::para::OBJ.len_utf8() == a.off || off == a.off
             } else {
                 (path != a.path || off >= a.off) && (path != b.path || off < b.off)
             };
@@ -581,7 +581,7 @@ const MAX_EFFECT_SHAPES: usize = 10_000;
 
 /// `shape.effects`: set or clear the shadow, glow and soft edges of the selected shapes.
 fn shape_effects(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_doc::effects::{Glow, Shadow, ShapeEffects};
+    use soratra_doc::effects::{Glow, Shadow, ShapeEffects};
     let color = |o: &Value| p::str(o, "color").and_then(Rgb::parse);
     // Each change is `None` (leave as it is) or `Some(new value)`.
     let shadow: Option<Option<Shadow>> = match v.get("shadow") {
@@ -692,7 +692,7 @@ fn bounds(s: &mut Session, v: &Value) -> CmdResult {
         Some((x, y)) => move_object(s, pos, p::u64(v, "page"), x, y, (w, h))?,
         None => pos,
     };
-    s.sel = Selection { anchor: pos.clone(), focus: Pos { off: pos.off + wordcraft_doc::para::OBJ.len_utf8(), ..pos.clone() } };
+    s.sel = Selection { anchor: pos.clone(), focus: Pos { off: pos.off + soratra_doc::para::OBJ.len_utf8(), ..pos.clone() } };
     let o = s.doc.para_at(&pos).and_then(|p| p.object_at(pos.off)).cloned();
     Ok(json!({"object": serde_json::to_value(o).unwrap_or(Value::Null), "pos": super::pos_json(&pos)}))
 }
@@ -704,7 +704,7 @@ fn copy_to(s: &mut Session, v: &Value) -> CmdResult {
     if p::f32(v, "x").is_none() || p::f32(v, "y").is_none() {
         return Err(CmdError::Params("`x` and `y` are required".into()));
     }
-    let len = wordcraft_doc::para::OBJ.len_utf8();
+    let len = soratra_doc::para::OBJ.len_utf8();
     let end = Pos { off: pos.off + len, ..pos.clone() };
     let frag = s.doc.copy_range(&pos, &end);
     s.sel = Selection::caret(end.clone());
@@ -722,7 +722,7 @@ fn copy_to(s: &mut Session, v: &Value) -> CmdResult {
 /// starts, it anchors to the nearest line and is positioned on the page. Returns the object's
 /// position afterwards.
 fn move_object(s: &mut Session, pos: Pos, page: Option<u64>, x: f32, y: f32, (w, h): (f32, f32)) -> Result<Pos, CmdError> {
-    use wordcraft_doc::para::Anchor;
+    use soratra_doc::para::Anchor;
     if pos.path.depth() > 0 || !movable_story(s, pos.story) {
         return Err(CmdError::Disabled("only objects in the body text, headers and footers can be moved".into()));
     }
@@ -744,14 +744,14 @@ fn move_object(s: &mut Session, pos: Pos, page: Option<u64>, x: f32, y: f32, (w,
         pos
     } else {
         let obj = s.doc.para_at(&pos).and_then(|p| p.object_at(pos.off)).cloned().ok_or_else(|| CmdError::Failed("object vanished".into()))?;
-        let len = wordcraft_doc::para::OBJ.len_utf8();
+        let len = soratra_doc::para::OBJ.len_utf8();
         s.doc.delete_range(&pos, &Pos { off: pos.off + len, ..pos.clone() })?;
         let mut at = anchor;
         if at.story == pos.story && at.path == pos.path && at.off > pos.off {
             at.off = at.off.saturating_sub(len);
         }
         let at = s.doc.clamp(&at);
-        s.doc.insert_object(&at, obj, &wordcraft_doc::CharProps::default())?;
+        s.doc.insert_object(&at, obj, &soratra_doc::CharProps::default())?;
         at
     };
     let (h_rel, v_rel) = if on_page { (Anchor::Page, Anchor::Page) } else { (Anchor::Column, Anchor::Paragraph) };
@@ -768,7 +768,7 @@ fn move_object(s: &mut Session, pos: Pos, page: Option<u64>, x: f32, y: f32, (w,
     })?;
     // Offsets from where the anchor puts it (its paragraph may have moved with the edit).
     let origin = if on_page {
-        wordcraft_geom::Point::new(0.0, 0.0)
+        soratra_geom::Point::new(0.0, 0.0)
     } else {
         s.touch(); // lay out the edit so far
         let layout = s.layout();
@@ -784,7 +784,7 @@ fn move_object(s: &mut Session, pos: Pos, page: Option<u64>, x: f32, y: f32, (w,
 /// Turn the selected floating object's alignment (left, centred, …) into an offset from its
 /// column / paragraph that keeps it where it is, so it can be moved by an offset.
 fn unalign(s: &mut Session) -> Result<(), CmdError> {
-    use wordcraft_doc::para::Anchor;
+    use soratra_doc::para::Anchor;
     let (pos, obj) = selected(s).ok_or_else(|| CmdError::Disabled("no picture or shape selected".into()))?;
     let Some((_, _, float)) = obj.frame() else { return Ok(()) };
     if float.h_align.is_none() && float.v_align.is_none() {
@@ -811,14 +811,14 @@ fn unalign(s: &mut Session) -> Result<(), CmdError> {
 /// follows its paragraph (as layout places any anchor but the page and its margins), rather than
 /// being fixed on the page ("Fix Position on Page").
 pub fn moves_with_text(f: &Float) -> bool {
-    use wordcraft_doc::para::Anchor;
+    use soratra_doc::para::Anchor;
     !matches!(f.v_rel, Anchor::Page | Anchor::Margin | Anchor::TopMargin | Anchor::BottomMargin | Anchor::InsideMargin | Anchor::OutsideMargin)
 }
 
 /// Arrange › Wrap Text › Move with Text / Fix Position on Page: anchor the selected floating
 /// object's vertical position to its paragraph or to the page, keeping it where it is now.
 fn move_with_text(s: &mut Session, with_text: bool) -> CmdResult {
-    use wordcraft_doc::para::Anchor;
+    use soratra_doc::para::Anchor;
     let (pos, obj) = selected(s).ok_or_else(|| CmdError::Disabled("no picture or shape selected".into()))?;
     let Some((_, _, float)) = obj.frame() else { return Err(CmdError::Disabled("select a floating picture or shape first".into())) };
     if moves_with_text(float) == with_text {
@@ -844,27 +844,27 @@ fn move_with_text(s: &mut Session, with_text: bool) -> CmdResult {
 /// earlier column) can't wrap around it. (Nor do lines continuing a paragraph from the column
 /// before: layout breaks them once, in the column the paragraph starts in.)
 pub(crate) fn anchor_paragraph(
-    doc: &wordcraft_doc::Document,
-    layout: &wordcraft_layout::DocLayout,
+    doc: &soratra_doc::Document,
+    layout: &soratra_layout::DocLayout,
     page: usize,
     (x, y): (f32, f32),
     story: StoryRef,
-) -> Option<wordcraft_doc::Path> {
+) -> Option<soratra_doc::Path> {
     let pg = layout.pages.get(page)?;
-    let items: Box<dyn Iterator<Item = &wordcraft_layout::Placed> + '_> = match story {
+    let items: Box<dyn Iterator<Item = &soratra_layout::Placed> + '_> = match story {
         StoryRef::Body => Box::new(pg.items.iter()),
         StoryRef::Part(_) => Box::new(pg.header.iter().chain(pg.footer.iter())),
     };
     // Top-level text on the page: (path, left, top, starts the paragraph).
-    let pieces: Vec<(&wordcraft_doc::Path, f32, f32, bool)> = items
+    let pieces: Vec<(&soratra_doc::Path, f32, f32, bool)> = items
         .filter_map(|it| match it {
-            wordcraft_layout::Placed::Lines { story: s, path, l0, x, y: top, .. } if *s == story && path.depth() == 0 => {
+            soratra_layout::Placed::Lines { story: s, path, l0, x, y: top, .. } if *s == story && path.depth() == 0 => {
                 Some((path, *x, *top, *l0 == 0))
             }
             _ => None,
         })
         .collect();
-    let starts: Vec<(&wordcraft_doc::Path, f32)> = pieces.iter().filter(|p| p.3).map(|p| (p.0, p.2)).collect();
+    let starts: Vec<(&soratra_doc::Path, f32)> = pieces.iter().filter(|p| p.3).map(|p| (p.0, p.2)).collect();
     // The page's columns (left, right), from its section's column geometry (headers and footers
     // span the text area); the column under `x` is the rightmost one starting at or left of it.
     let boxes = match story {
@@ -876,16 +876,16 @@ pub(crate) fn anchor_paragraph(
     cols.sort_by(|a, b| a.0.total_cmp(&b.0));
     let col_of = |px: f32| cols.iter().rposition(|c| c.0 <= px + 0.5).unwrap_or(0);
     let col = col_of(x);
-    let in_col: Vec<(&wordcraft_doc::Path, f32)> = pieces.iter().filter(|p| p.3 && col_of(p.1) == col).map(|p| (p.0, p.2)).collect();
-    let pick = |v: &[(&wordcraft_doc::Path, f32)]| v.iter().rev().find(|(_, top)| *top <= y + 0.5).or(v.first()).map(|(p, _)| (*p).clone());
+    let in_col: Vec<(&soratra_doc::Path, f32)> = pieces.iter().filter(|p| p.3 && col_of(p.1) == col).map(|p| (p.0, p.2)).collect();
+    let pick = |v: &[(&soratra_doc::Path, f32)]| v.iter().rev().find(|(_, top)| *top <= y + 0.5).or(v.first()).map(|(p, _)| (*p).clone());
     pick(&in_col).or_else(|| pick(&starts))
 }
 
 /// The start of the top-level line of `story` on `page` nearest to `y`.
-pub(crate) fn nearest_line(layout: &wordcraft_layout::DocLayout, page: usize, y: f32, story: StoryRef) -> Option<Pos> {
-    let lines = wordcraft_layout::hit::page_lines(layout.pages.get(page)?, story);
+pub(crate) fn nearest_line(layout: &soratra_layout::DocLayout, page: usize, y: f32, story: StoryRef) -> Option<Pos> {
+    let lines = soratra_layout::hit::page_lines(layout.pages.get(page)?, story);
     let best = lines.iter().filter(|l| l.path.depth() == 0).min_by(|a, b| {
-        let d = |l: &wordcraft_layout::hit::LineHit| if y < l.top { l.top - y } else { (y - l.bottom).max(0.0) };
+        let d = |l: &soratra_layout::hit::LineHit| if y < l.top { l.top - y } else { (y - l.bottom).max(0.0) };
         d(a).total_cmp(&d(b))
     })?;
     let off = best.para.lines.get(best.li)?.start;
@@ -908,7 +908,7 @@ fn alt_text(s: &mut Session, v: &Value) -> CmdResult {
         }
         if let Some(f) = o.float_mut() {
             if let Some(t) = title {
-                f.alt.title = wordcraft_doc::para::cap_alt(t);
+                f.alt.title = soratra_doc::para::cap_alt(t);
             }
             if let Some(d) = decorative {
                 f.alt.decorative = d;
@@ -1244,7 +1244,7 @@ fn add_object(s: &mut Session, v: &Value) -> CmdResult {
         match object_selection(s).map(|(p, _)| p) {
             None => {
                 s.also_selected.clear();
-                s.sel = Selection { anchor: pos.clone(), focus: Pos { off: pos.off + wordcraft_doc::para::OBJ.len_utf8(), ..pos } };
+                s.sel = Selection { anchor: pos.clone(), focus: Pos { off: pos.off + soratra_doc::para::OBJ.len_utf8(), ..pos } };
             }
             Some(first) if first == pos => {}
             Some(_) => {
@@ -1263,7 +1263,7 @@ fn add_object(s: &mut Session, v: &Value) -> CmdResult {
 /// where the first of them was, in the box around them all; they keep their places and sizes.
 /// A group among them is merged in (its members join the new group).
 fn group(s: &mut Session, _: &Value) -> CmdResult {
-    use wordcraft_doc::para::GroupChild;
+    use soratra_doc::para::GroupChild;
     let mut picks = picked_objects(s);
     if picks.len() < 2 {
         return Err(CmdError::Disabled("select two or more pictures or shapes first".into()));
@@ -1309,7 +1309,7 @@ fn group(s: &mut Session, _: &Value) -> CmdResult {
     // The group's box takes in what they cover, turned.
     let (mut x0, mut y0, mut x1, mut y1) = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
     for ([x, y, w, h], spin, _) in &shown {
-        let b = spin.bounds(wordcraft_geom::Rect::new(*x, *y, *w, *h));
+        let b = spin.bounds(soratra_geom::Rect::new(*x, *y, *w, *h));
         (x0, y0) = (x0.min(b.x), y0.min(b.y));
         (x1, y1) = (x1.max(b.right()), y1.max(b.bottom()));
     }
@@ -1338,13 +1338,13 @@ fn group(s: &mut Session, _: &Value) -> CmdResult {
     let grouped = InlineObject::Group { w, h, float, ch_w: w, ch_h: h, children, canvas: None };
     // Take the members out, last first so the earlier positions hold, and put the group where
     // the first one was.
-    let len = wordcraft_doc::para::OBJ.len_utf8();
+    let len = soratra_doc::para::OBJ.len_utf8();
     for pos in picks.iter().rev() {
         s.doc.delete_range(pos, &Pos { off: pos.off + len, ..pos.clone() })?;
     }
     let first = picks.first().cloned().ok_or_else(|| CmdError::Failed("nothing to group".into()))?;
     let at = s.doc.clamp(&first);
-    s.doc.insert_object(&at, grouped, &wordcraft_doc::CharProps::default())?;
+    s.doc.insert_object(&at, grouped, &soratra_doc::CharProps::default())?;
     s.touch();
     let pos = move_object(s, at, Some(page as u64), x0, y0, (w, h))?;
     s.also_selected.clear();
@@ -1395,13 +1395,13 @@ fn ungroup(s: &mut Session, _: &Value) -> CmdResult {
     if members.is_empty() {
         return Err(CmdError::Failed("the group is empty".into()));
     }
-    let len = wordcraft_doc::para::OBJ.len_utf8();
+    let len = soratra_doc::para::OBJ.len_utf8();
     s.doc.delete_range(&pos, &Pos { off: pos.off + len, ..pos.clone() })?;
     let mut at = s.doc.clamp(&pos);
     let mut placed = Vec::new();
     for m in members {
         placed.push(at.clone());
-        at = s.doc.insert_object(&at, m, &wordcraft_doc::CharProps::default())?;
+        at = s.doc.insert_object(&at, m, &soratra_doc::CharProps::default())?;
     }
     let first = placed.first().cloned().unwrap_or(pos);
     s.sel = Selection { anchor: first.clone(), focus: Pos { off: first.off + len, ..first } };
@@ -1414,7 +1414,7 @@ fn ungroup(s: &mut Session, _: &Value) -> CmdResult {
 /// centre, moves each member's centre. Empty for anything but a group.
 fn shown_members(group: &InlineObject, [x, y, w, h]: [f32; 4]) -> Vec<([f32; 4], Spin, &InlineObject)> {
     let outer = group.frame().map(|(_, _, f)| f.spin()).unwrap_or_default();
-    let [x, y, w, h] = [x, y, w, h].map(wordcraft_geom::finite);
+    let [x, y, w, h] = [x, y, w, h].map(soratra_geom::finite);
     let (gx, gy) = (x + w / 2.0, y + h / 2.0);
     group
         .group_rects(x, y, w, h)
@@ -1473,15 +1473,15 @@ mod tests {
         b
     }
     /// The laid-out area of the only picture or shape (not a text box).
-    fn object_area(s: &mut Session) -> wordcraft_layout::hit::ObjectHit {
+    fn object_area(s: &mut Session) -> soratra_layout::hit::ObjectHit {
         s.layout().find_object(0, |o| o.text_box.is_none()).unwrap()
     }
 
     /// What a click and a handle or body drag do in the editor (#142, #82): hit-test the object,
     /// select it, then resize and move it with `arrange.bounds`.
     fn click_resize_and_drag(insert: &str, params: Value) {
-        use wordcraft_doc::para::Wrap;
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        use soratra_doc::para::Wrap;
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("text.insert", &json!({"text": "Some text "})).unwrap();
         s.run(insert, &params).unwrap();
         assert!(selected(&s).is_some(), "{insert}: a new object is selected");
@@ -1493,7 +1493,7 @@ mod tests {
         let (cx, cy) = (o.rect.x + o.rect.w / 2.0, o.rect.y + o.rect.h / 2.0);
         let hit = s.layout().object_at(o.page, cx, cy, 4.0).unwrap_or_else(|| panic!("{insert}: click misses it"));
         assert_eq!(hit.pos(), o.pos());
-        let end = Pos { off: o.off + wordcraft_doc::para::OBJ.len_utf8(), ..o.pos() };
+        let end = Pos { off: o.off + soratra_doc::para::OBJ.len_utf8(), ..o.pos() };
         s.run("select.range", &json!({"anchor": o.pos(), "focus": end})).unwrap();
         assert!(selected(&s).is_some(), "{insert}: not selected");
         // Resize by a handle: stays inline.
@@ -1511,7 +1511,7 @@ mod tests {
         let n = object_area(&mut s).rect;
         assert!((n.x - 256.0).abs() < 0.01 && (n.y - 298.0).abs() < 0.01, "{insert}: {n:?}");
         // The text around it is untouched, and each change is one undo step.
-        assert_eq!(s.doc.plain_text(StoryRef::Body).replace(wordcraft_doc::para::OBJ, ""), "Some text  more text");
+        assert_eq!(s.doc.plain_text(StoryRef::Body).replace(soratra_doc::para::OBJ, ""), "Some text  more text");
         s.run("edit.undo", &json!({})).unwrap();
         assert_eq!((object_area(&mut s).rect.x, object_area(&mut s).rect.y), (250.0, 300.0), "{insert}");
     }
@@ -1520,12 +1520,12 @@ mod tests {
     /// is untouched, and it is one undo step.
     #[test]
     fn copy_to_drops_a_copy_and_leaves_the_original() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("text.insert", &json!({"text": "Some text "})).unwrap();
         s.run("insert.shape", &json!({"kind": "rectangle"})).unwrap();
         s.run("arrange.bounds", &json!({"width": 100, "height": 60, "page": 0, "x": 100, "y": 200})).unwrap();
         s.clipboard_text = "keep".into();
-        let count = |s: &Session| s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().objects.len();
+        let count = |s: &Session| s.doc.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().objects.len();
         assert_eq!(count(&s), 1);
         s.run("arrange.copyTo", &json!({"page": 0, "x": 300, "y": 200})).unwrap();
         assert_eq!(count(&s), 2);
@@ -1559,7 +1559,7 @@ mod tests {
     fn typing_after_an_inserted_picture_keeps_it() {
         let data = super::super::insert::base64_encode(&png(20, 10));
         for (id, params) in [("insert.picture", json!({"data": data, "width": 100})), ("insert.icon", json!({"id": "sun"}))] {
-            let mut s = Session::new(wordcraft_doc::Document::new());
+            let mut s = Session::new(soratra_doc::Document::new());
             s.run("text.insert", &json!({"text": "x"})).unwrap();
             s.run("text.newParagraph", &json!({})).unwrap();
             s.run(id, &params).unwrap();
@@ -1573,7 +1573,7 @@ mod tests {
                 .body
                 .iter()
                 .filter_map(|b| match &**b {
-                    wordcraft_doc::Block::Para(p) => Some(p.text.replace(wordcraft_doc::para::OBJ, "#")),
+                    soratra_doc::Block::Para(p) => Some(p.text.replace(soratra_doc::para::OBJ, "#")),
                     _ => None,
                 })
                 .collect();
@@ -1588,7 +1588,7 @@ mod tests {
     #[test]
     fn two_inserted_pictures_in_a_row_are_both_kept() {
         let data = super::super::insert::base64_encode(&png(20, 10));
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.picture", &json!({"data": data})).unwrap();
         s.run("insert.picture", &json!({"data": data})).unwrap();
         assert_eq!(s.run("arrange.selectionPane", &json!({})).unwrap().as_array().map(Vec::len), Some(2));
@@ -1596,7 +1596,7 @@ mod tests {
 
     #[test]
     fn picture_pipeline() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data})).unwrap();
         assert!(selected(&s).is_some());
@@ -1633,7 +1633,7 @@ mod tests {
     /// re-set the same way: brightness 0 and saturation 100 restore the original.
     #[test]
     fn transparency_is_absolute_from_the_original() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data})).unwrap();
         let rgba = |s: &Session| {
@@ -1673,8 +1673,8 @@ mod tests {
     /// vertically without moving it; one undo step each; an inline picture can't.
     #[test]
     fn move_with_text_and_fix_position_keep_the_picture_in_place() {
-        use wordcraft_doc::para::Anchor;
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        use soratra_doc::para::Anchor;
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("text.insert", &json!({"text": "First paragraph\nSecond"})).unwrap();
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data, "width": 100})).unwrap();
@@ -1702,7 +1702,7 @@ mod tests {
     /// angle is normalised; each is one undo step; the rotated frame takes its rotated room.
     #[test]
     fn rotate_and_flip_turn_the_frame_not_the_pixels() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data, "width": 200})).unwrap();
         let (pos, before) = selected(&s).unwrap();
@@ -1723,13 +1723,13 @@ mod tests {
         assert_eq!(spin(&s).deg, 270.0);
         // A flip mirrors the page view: the angle reverses.
         s.run("arrange.rotate", &json!({"direction": "flipHorizontal"})).unwrap();
-        assert_eq!(spin(&s), wordcraft_geom::Spin::new(90.0, true, false));
+        assert_eq!(spin(&s), soratra_geom::Spin::new(90.0, true, false));
         s.run("arrange.rotation", &json!({"degrees": -30.0})).unwrap();
-        assert_eq!(spin(&s), wordcraft_geom::Spin::new(330.0, true, false));
+        assert_eq!(spin(&s), soratra_geom::Spin::new(330.0, true, false));
         assert!(s.run("arrange.rotation", &json!({"degrees": "NaN"})).is_err());
         assert!(s.run("arrange.rotate", &json!({"direction": "sideways"})).is_err());
         s.run("edit.undo", &json!({})).unwrap();
-        assert_eq!(spin(&s), wordcraft_geom::Spin::new(90.0, true, false));
+        assert_eq!(spin(&s), soratra_geom::Spin::new(90.0, true, false));
         // Shapes and text boxes turn too.
         s.run("select.collapse", &json!({"end": true})).unwrap();
         s.run("insert.shape", &json!({"kind": "textBox"})).unwrap();
@@ -1752,7 +1752,7 @@ mod tests {
     /// selected, so Group regroups them.
     #[test]
     fn group_moves_as_one_and_ungroups() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("document.setText", &json!({"text": "one\ntwo\nthree\nfour"})).unwrap();
         s.sel = Selection::caret(s.doc.start_of(StoryRef::Body));
         s.run("insert.shape", &json!({"kind": "rectangle", "width": 100, "height": 50})).unwrap();
@@ -1779,7 +1779,7 @@ mod tests {
         let members: Vec<[f32; 4]> = obj.group_rects(x, y, w, h).into_iter().map(|(r, _)| r).collect();
         assert!(near(members[0], [120.0, 160.0, 100.0, 50.0]) && near(members[1], [320.0, 210.0, 60.0, 40.0]), "{members:?}");
         // Drawn there too: the page shows both shapes inside the group's frame.
-        let shapes = s.layout().pages[0].items.iter().filter(|i| matches!(i, wordcraft_layout::Placed::Shape { .. })).count();
+        let shapes = s.layout().pages[0].items.iter().filter(|i| matches!(i, soratra_layout::Placed::Shape { .. })).count();
         assert_eq!(shapes, 2);
 
         // Ungroup: two shapes again, where the group showed them, both still selected.
@@ -1800,7 +1800,7 @@ mod tests {
     /// Page 1 as exported (`file.exportPng` at scale 1), its pixels.
     fn page_pixels(s: &Session) -> Vec<u8> {
         let l = s.export_layout();
-        wordcraft_render::render_page(&s.doc, &l.pages[0], 1.0, &Default::default()).pixels
+        soratra_render::render_page(&s.doc, &l.pages[0], 1.0, &Default::default()).pixels
     }
 
     /// How many pixels of two renders clearly differ (not just in antialiasing).
@@ -1812,7 +1812,7 @@ mod tests {
     /// A rectangle at (100, 100) and an arrow at (250, 100), both 80 × 40, on a blank page; the
     /// arrow turned `arrow_deg`.
     fn rectangle_and_arrow(arrow_deg: f32) -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.shape", &json!({"kind": "rectangle", "width": 80, "height": 40})).unwrap();
         s.run("arrange.bounds", &json!({"x": 100, "y": 100})).unwrap();
         s.run("select.collapse", &json!({"end": true})).unwrap();
@@ -1844,7 +1844,7 @@ mod tests {
             assert_eq!(float.rot, 0.0, "the group itself is unturned");
             assert!(pixels_differing(&before, &page_pixels(&s)) < 20, "{deg}°: grouping changes nothing on the page");
             // Saved and reopened, it looks the same.
-            let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+            let back = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
             let reopened = Session::new(back);
             assert!(pixels_differing(&before, &page_pixels(&reopened)) < 20, "{deg}°: reopened");
             // Undo gives back the two objects.
@@ -1858,7 +1858,7 @@ mod tests {
     #[test]
     fn size_resizes_a_group() {
         let grouped = || {
-            let mut s = Session::new(wordcraft_doc::Document::new());
+            let mut s = Session::new(soratra_doc::Document::new());
             s.run("insert.shape", &json!({"kind": "rectangle", "width": 80, "height": 40})).unwrap();
             s.run("arrange.bounds", &json!({"x": 100, "y": 100})).unwrap();
             s.run("select.collapse", &json!({"end": true})).unwrap();
@@ -1914,7 +1914,7 @@ mod tests {
 
     #[test]
     fn picture_alt_and_crop_round_trip() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data})).unwrap();
         s.run("picture.altText", &json!({"text": "A red box"})).unwrap();
@@ -1928,7 +1928,7 @@ mod tests {
     /// A crop handle drop: `picture.crop` with the new size is one edit, one undo step.
     #[test]
     fn picture_crop_with_size_is_one_undo_step() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data})).unwrap();
         s.run("picture.size", &json!({"width": 200.0, "height": 100.0, "lockAspect": false})).unwrap();
@@ -1952,7 +1952,7 @@ mod tests {
     /// it is on the page: the frame moves by the trimmed amount, in the same undo step.
     #[test]
     fn cropping_a_floating_picture_keeps_the_visible_part_in_place() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data})).unwrap();
         s.run("picture.size", &json!({"width": 200.0, "height": 100.0, "lockAspect": false})).unwrap();
@@ -1973,7 +1973,7 @@ mod tests {
     /// the frame; cropping the source's left (now on the right) doesn't.
     #[test]
     fn cropping_a_flipped_floating_picture_moves_it_by_the_side_on_its_left() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         let data = super::super::insert::base64_encode(&png(20, 10));
         s.run("insert.picture", &json!({"data": data})).unwrap();
         s.run("picture.size", &json!({"width": 200.0, "height": 100.0, "lockAspect": false})).unwrap();
@@ -1995,7 +1995,7 @@ mod tests {
     /// and lands where dropped; the header hit test finds it.
     #[test]
     fn header_pictures_can_be_resized_and_dragged() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.editHeader", &json!({})).unwrap();
         let story = s.sel.focus.story;
         assert!(matches!(story, StoryRef::Part(_)), "editing the header, got {story:?}");
@@ -2023,7 +2023,7 @@ mod tests {
     /// Create Link to an empty box and Break Link, each one undo step.
     #[test]
     fn text_direction_alignment_and_links() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.textBox", &json!({"text": "Some text that flows on"})).unwrap();
         let a = text_box_target(&s).unwrap().1;
         s.run("shape.textDirection", &json!({"dir": "vert270"})).unwrap();
@@ -2045,7 +2045,7 @@ mod tests {
         // The second box shows the first one's story.
         let l = s.layout();
         assert_eq!(
-            l.pages[0].items.iter().filter(|it| matches!(it, wordcraft_layout::Placed::Object { text_box: Some(t), .. } if *t == a)).count(),
+            l.pages[0].items.iter().filter(|it| matches!(it, soratra_layout::Placed::Object { text_box: Some(t), .. } if *t == a)).count(),
             2
         );
         // Linking back to the start, or to a box with text, is refused.
@@ -2062,7 +2062,7 @@ mod tests {
 
     #[test]
     fn shape_alt_text_and_decorative_are_one_undo_step_each() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.shape", &json!({"kind": "ellipse"})).unwrap();
         s.run("object.altText", &json!({"text": "A green circle", "title": "Logo"})).unwrap();
         let (_, o) = selected(&s).unwrap();
@@ -2076,7 +2076,7 @@ mod tests {
         assert_eq!(selected(&s).unwrap().1.alt_text(), "");
         // Hostile input is capped, and nothing to set is an error.
         s.run("object.altText", &json!({"text": "x".repeat(50_000)})).unwrap();
-        assert_eq!(selected(&s).unwrap().1.alt_text().len(), wordcraft_doc::para::MAX_ALT_TEXT);
+        assert_eq!(selected(&s).unwrap().1.alt_text().len(), soratra_doc::para::MAX_ALT_TEXT);
         assert!(s.run("object.altText", &json!({})).is_err());
         // A picture-only alias stays a picture-only alias.
         assert!(s.run("picture.altText", &json!({"text": "no"})).is_err());
@@ -2084,20 +2084,20 @@ mod tests {
 
     #[test]
     fn table_alt_text_sets_title_and_description() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.table", &json!({"rows": 2, "cols": 2})).unwrap();
         s.run("table.altText", &json!({"title": "Prices", "text": "Prices by year"})).unwrap();
-        let t = s.doc.body.iter().find_map(|b| if let wordcraft_doc::Block::Table(t) = &**b { Some(t.clone()) } else { None }).unwrap();
+        let t = s.doc.body.iter().find_map(|b| if let soratra_doc::Block::Table(t) = &**b { Some(t.clone()) } else { None }).unwrap();
         assert_eq!((t.props.caption.as_deref(), t.props.description.as_deref()), (Some("Prices"), Some("Prices by year")));
         s.run("table.altText", &json!({"text": ""})).unwrap();
-        let t = s.doc.body.iter().find_map(|b| if let wordcraft_doc::Block::Table(t) = &**b { Some(t.clone()) } else { None }).unwrap();
+        let t = s.doc.body.iter().find_map(|b| if let soratra_doc::Block::Table(t) = &**b { Some(t.clone()) } else { None }).unwrap();
         assert_eq!((t.props.caption.as_deref(), t.props.description.as_deref()), (Some("Prices"), None));
     }
 
     /// The lines of `page` beside `r` vertically (top above its bottom, bottom below its top).
-    fn lines_beside(s: &mut Session, page: usize, r: wordcraft_geom::Rect) -> Vec<(f32, f32, f32)> {
+    fn lines_beside(s: &mut Session, page: usize, r: soratra_geom::Rect) -> Vec<(f32, f32, f32)> {
         let layout = s.layout();
-        wordcraft_layout::hit::page_lines(&layout.pages[page], StoryRef::Body)
+        soratra_layout::hit::page_lines(&layout.pages[page], StoryRef::Body)
             .iter()
             .filter(|l| l.top < r.bottom() - 0.5 && l.bottom > r.y + 0.5)
             .map(|l| (l.top, l.left, l.right))
@@ -2108,7 +2108,7 @@ mod tests {
     /// column it lands in wraps around it there, and its old place closes up.
     #[test]
     fn dragged_square_shape_wraps_text_in_its_new_column() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("layout.columns", &json!({"count": 2})).unwrap();
         for i in 0..40 {
             if i > 0 {
@@ -2123,21 +2123,21 @@ mod tests {
         let cols: Vec<(f32, f32)> = {
             let layout = s.layout();
             let mut v: Vec<(f32, f32)> =
-                wordcraft_layout::hit::page_lines(&layout.pages[0], StoryRef::Body).iter().map(|l| (l.left, l.right)).collect();
+                soratra_layout::hit::page_lines(&layout.pages[0], StoryRef::Body).iter().map(|l| (l.left, l.right)).collect();
             v.sort_by(|a, b| a.0.total_cmp(&b.0));
             v.dedup_by(|a, b| (a.0 - b.0).abs() < 1.0);
             v
         };
         assert_eq!(cols.len(), 2, "two columns: {cols:?}");
         let mid = |c: (f32, f32)| (c.0 + c.1) / 2.0 - 40.0;
-        let wrapped = |s: &mut Session, r: wordcraft_geom::Rect| {
+        let wrapped = |s: &mut Session, r: soratra_geom::Rect| {
             let beside = lines_beside(s, 0, r);
             assert!(!beside.is_empty(), "text beside {r:?}");
             for (top, left, right) in beside {
                 assert!(right <= r.x + 0.5 || left >= r.right() - 0.5, "line at {top} ({left}..{right}) runs into {r:?}");
             }
         };
-        let full = |s: &mut Session, r: wordcraft_geom::Rect, c: (f32, f32)| {
+        let full = |s: &mut Session, r: soratra_geom::Rect, c: (f32, f32)| {
             for (top, left, right) in lines_beside(s, 0, r) {
                 if left < c.1 && right > c.0 {
                     assert!((left - c.0).abs() < 0.5 && (right - c.1).abs() < 0.5, "line at {top} ({left}..{right}) still kept clear in {c:?}");
@@ -2159,7 +2159,7 @@ mod tests {
 
     /// Two columns of `n` paragraphs.
     fn two_column_doc(n: usize) -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("layout.columns", &json!({"count": 2})).unwrap();
         for i in 0..n {
             if i > 0 {
@@ -2185,7 +2185,7 @@ mod tests {
     fn mirrored_indents_make_no_extra_column() {
         let mut s = two_column_doc(40);
         for i in (1..40).step_by(2) {
-            let p = s.doc.para_mut(StoryRef::Body, &wordcraft_doc::Path::top(i)).unwrap();
+            let p = s.doc.para_mut(StoryRef::Body, &soratra_doc::Path::top(i)).unwrap();
             p.props.mirror_indents = Some(true);
             p.props.indent_right = Some(36.0);
             p.touch();
@@ -2199,7 +2199,7 @@ mod tests {
             .items
             .iter()
             .filter_map(|it| match it {
-                wordcraft_layout::Placed::Lines { path, l0: 0, x, y, .. } if path.depth() == 0 && *x < cols[1].0 - 0.5 => Some((path.last(), *x, *y)),
+                soratra_layout::Placed::Lines { path, l0: 0, x, y, .. } if path.depth() == 0 && *x < cols[1].0 - 0.5 => Some((path.last(), *x, *y)),
                 _ => None,
             })
             .collect();
@@ -2207,6 +2207,6 @@ mod tests {
         let &(plain, _, top) = starts.iter().skip(1).find(|p| p.0 % 2 == 0).unwrap();
         let mid = (cols[0].0 + cols[0].1) / 2.0;
         let got = anchor_paragraph(&s.doc, &layout, 1, (mid, top + 1.0), StoryRef::Body);
-        assert_eq!(got, Some(wordcraft_doc::Path::top(plain)));
+        assert_eq!(got, Some(soratra_doc::Path::top(plain)));
     }
 }

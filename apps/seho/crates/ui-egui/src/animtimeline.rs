@@ -1,9 +1,9 @@
 //! Animation Pane advanced timeline: bar geometry and drag-to-retime maths.
 //!
 //! Pure functions so the layout and the drag results are unit-tested without a frame. Times
-//! come from [`deckcraft_anim::Timeline`], the same schedule the slide show plays.
+//! come from [`seho_anim::Timeline`], the same schedule the slide show plays.
 
-use deckcraft_anim::{EffectTiming, Sequence};
+use seho_anim::{EffectTiming, Sequence};
 
 /// Drags snap to this step (milliseconds), like PowerPoint's 0.05 s granularity.
 pub const SNAP_MS: u32 = 50;
@@ -93,7 +93,7 @@ pub fn label(bar: &Bar) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deckcraft_model::{AnimClass, ShapeId};
+    use seho_model::{AnimClass, ShapeId};
 
     fn eff(anim: usize, step: usize, start: f64, span: f64) -> EffectTiming {
         EffectTiming {

@@ -1,16 +1,16 @@
 [package]
-name = "wordcraft-docx"
+name = "soratra-docx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft DOCX (OOXML WordprocessingML) reader and writer"
+description = "Soratra DOCX (OOXML WordprocessingML) reader and writer"
 
 [lints]
 workspace = true
 
 [dependencies]
-wordcraft-doc = { workspace = true }
-wordcraft-geom = { workspace = true }
+soratra-doc = { workspace = true }
+soratra-geom = { workspace = true }
 quick-xml = { workspace = true }
 zip = { workspace = true }
 thiserror = { workspace = true }

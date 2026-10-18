@@ -22,7 +22,7 @@
 use egui::Key;
 use serde::{Deserialize, Serialize};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// How long (seconds) a tool letter must stay down for its tool to be temporary.
@@ -62,7 +62,7 @@ pub fn is_tool_key(k: Key) -> bool {
 
 /// A tool letter switched the tool from `before` (the switch is already made). `plain` is false
 /// when ⇧ or ⌥ was held: those switches are permanent. `now` is the input time.
-pub fn pressed(app: &mut PhotocraftApp, letter: char, before: Tool, plain: bool, now: f64) {
+pub fn pressed(app: &mut SaryApp, letter: char, before: Tool, plain: bool, now: f64) {
     let active = app.ui.spring.as_ref().is_some_and(|s| !s.released);
     if !plain {
         app.ui.spring = None;
@@ -83,7 +83,7 @@ pub fn pressed(app: &mut PhotocraftApp, letter: char, before: Tool, plain: bool,
 }
 
 /// The canvas was pressed: a held letter's tool becomes temporary.
-pub fn note_canvas_press(app: &mut PhotocraftApp) {
+pub fn note_canvas_press(app: &mut SaryApp) {
     if let Some(s) = app.ui.spring.as_mut().filter(|s| !s.released) {
         s.used = true;
     }
@@ -91,7 +91,7 @@ pub fn note_canvas_press(app: &mut PhotocraftApp) {
 
 /// Once a frame, before the key handling: notice released letters and give the previous tool
 /// back when the switch was temporary and no drag is in progress.
-pub fn tick(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(mut s) = app.ui.spring.take() else { return };
     // Type editing begun with the temporary Type tool keeps it: the edit owns the tool now. So
     // does a tool picked another way while the letter is down.

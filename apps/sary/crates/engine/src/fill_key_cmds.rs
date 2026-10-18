@@ -9,7 +9,7 @@
 //! When targeting a vector shape layer, the fill keys recolor the shape's fill; on a type layer
 //! they recolor the text (#4580), and the layer stays type.
 
-use photocraft_doc::{LayerContent, LayerId};
+use sary_doc::{LayerContent, LayerId};
 use serde_json::{Map, Value, json};
 
 use crate::commands::CommandSpec;
@@ -179,8 +179,8 @@ mod tests {
         let l = st.doc.layers.last().unwrap();
         let surf = l.surface().unwrap();
         let fmt = surf.format();
-        let v = surf.read_region(photocraft_geom::Rect::new(x, y, x + 1, y + 1));
-        photocraft_raster::to_rgba(&fmt, &v)
+        let v = surf.read_region(sary_geom::Rect::new(x, y, x + 1, y + 1));
+        sary_raster::to_rgba(&fmt, &v)
     }
 
     #[test]
@@ -284,7 +284,7 @@ mod tests {
         assert_eq!(px(&s, 0, 0)[3], 0.0);
     }
 
-    /// `cargo test --release -p photocraft-engine --lib fill_keys_24mp -- --ignored --nocapture`
+    /// `cargo test --release -p sary-engine --lib fill_keys_24mp -- --ignored --nocapture`
     #[test]
     #[ignore]
     fn fill_keys_24mp() {
@@ -304,7 +304,7 @@ mod tests {
     fn inks(s: &Session) -> Vec<f32> {
         let st = s.active().unwrap();
         let surf = st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap();
-        surf.read_region(photocraft_geom::Rect::new(0, 0, 1, 1)).into_iter().take(4).collect()
+        surf.read_region(sary_geom::Rect::new(0, 0, 1, 1)).into_iter().take(4).collect()
     }
 
     /// #4196: a foreground picked as CMYK 100/0/0/0 fills a CMYK document with those inks, not with
@@ -314,7 +314,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", json!({"width": 4, "height": 4})).unwrap();
         s.execute("image.mode.cmyk", json!({})).unwrap();
-        let rgb = photocraft_color::convert::cmyk_to_rgb([1.0, 0.0, 0.0, 0.0]).map(|c| c.clamp(0.0, 1.0));
+        let rgb = sary_color::convert::cmyk_to_rgb([1.0, 0.0, 0.0, 0.0]).map(|c| c.clamp(0.0, 1.0));
         s.execute("tools.setColors", json!({"foreground": rgb, "foregroundCmyk": [1.0, 0.0, 0.0, 0.0]})).unwrap();
         s.execute("edit.fillForeground", json!({})).unwrap();
         let got = inks(&s);

@@ -7,12 +7,12 @@
 //! document):
 //!
 //! ```sh
-//! cargo build --release -p photocraft-ui-egui --example huge_doc_bench
+//! cargo build --release -p sary-ui-egui --example huge_doc_bench
 //! for op in full view; do
 //!   /usr/bin/time -l target/release/examples/huge_doc_bench --size 20000x20000 --op $op 2>&1 | grep -E 'ms|MB|maximum resident|peak memory'
 //! done
 //! # The CPU fallback, for comparison:
-//! PHOTOCRAFT_CPU_COMPOSE=1 /usr/bin/time -l target/release/examples/huge_doc_bench --op full
+//! SARY_CPU_COMPOSE=1 /usr/bin/time -l target/release/examples/huge_doc_bench --op full
 //! ```
 //!
 //! `full`: the first refresh (every page uploaded, every effect map built) and three repeats.
@@ -22,10 +22,10 @@
 use std::time::Instant;
 
 use eframe::egui_wgpu::RenderState;
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Adjustment, Document, Effect, FxCommon, FxPaint, Layer, LayerContent, Shadow, StrokeFx, StrokePosition, TextLayer};
-use photocraft_geom::{Rect, Size};
-use photocraft_ui_egui::gpu_canvas::GpuCanvas;
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{Adjustment, Document, Effect, FxCommon, FxPaint, Layer, LayerContent, Shadow, StrokeFx, StrokePosition, TextLayer};
+use sary_geom::{Rect, Size};
+use sary_ui_egui::gpu_canvas::GpuCanvas;
 use rayon::prelude::*;
 
 fn arg(args: &[String], name: &str) -> Option<String> {
@@ -87,7 +87,7 @@ fn text(name: &str, r: Rect) -> Layer {
             distance: 12.0,
             spread: 0.0,
             size: 16.0,
-            contour: photocraft_doc::Contour::Linear,
+            contour: sary_doc::Contour::Linear,
             anti_alias: false,
             noise: 0.0,
             knocks_out: true,
@@ -134,7 +134,7 @@ fn build(w: u32, h: u32) -> Document {
             distance: 20.0,
             spread: 0.0,
             size: 24.0,
-            contour: photocraft_doc::Contour::Linear,
+            contour: sary_doc::Contour::Linear,
             anti_alias: false,
             noise: 0.0,
             knocks_out: true,
@@ -161,7 +161,7 @@ fn build(w: u32, h: u32) -> Document {
 
 /// A headless GPU canvas on a device created like the app's.
 fn canvas() -> Option<(GpuCanvas, RenderState)> {
-    let setup = photocraft_ui_egui::gpu_canvas::wgpu_setup();
+    let setup = sary_ui_egui::gpu_canvas::wgpu_setup();
     let rs = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| egui_kittest::wgpu::create_render_state(setup, Default::default()))).ok()?;
     let l = rs.device.limits();
     eprintln!("adapter: {} (max texture {})", rs.adapter.get_info().name, l.max_texture_dimension_2d);
@@ -190,7 +190,7 @@ fn main() {
     println!("document {w}×{h} ({:.0} MP), {} layers, built in {:.0} ms", (w as f64 * h as f64) / 1e6, doc.walk().len(), ms(t));
 
     // The compositor budget the app would use: Memory Usage (default 8 GB, `--memory-mb`) less
-    // the document's pixels, within a quarter of RAM (`PHOTOCRAFT_RAM_MB` simulates a smaller
+    // the document's pixels, within a quarter of RAM (`SARY_RAM_MB` simulates a smaller
     // machine). The view is the first viewport (`view`) or the whole document (`full`).
     let allowance = arg(&args, "--memory-mb").and_then(|v| v.parse::<u64>().ok()).unwrap_or(8192) << 20;
     let pixels: u64 = doc
@@ -199,9 +199,9 @@ fn main() {
         .flat_map(|(_, _, l)| l.surface().into_iter().chain(l.mask.as_ref().map(|m| &m.surface)))
         .map(|s| s.tiles().map(|(_, t)| t.bytes().len() as u64).sum::<u64>())
         .sum();
-    let ram = photocraft_ui_egui::gpu_canvas::physical_memory();
+    let ram = sary_ui_egui::gpu_canvas::physical_memory();
     let vram = g.video_memory();
-    let budget = photocraft_ui_egui::gpu_canvas::memory_budget(allowance, pixels, ram, vram, 0);
+    let budget = sary_ui_egui::gpu_canvas::memory_budget(allowance, pixels, ram, vram, 0);
     g.set_memory_budget(budget);
     println!(
         "RAM {} MB, VRAM {} MB, document pixels {} MB, Memory Usage {} MB -> GPU budget {} MB",

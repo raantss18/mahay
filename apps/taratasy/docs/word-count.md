@@ -47,6 +47,6 @@ contains `total`, per-page `pages` entries with `page` and `counts`, `pages_with
 `pages_without_text` is measured after exclusions, so it can also include pages whose entire
 text was deliberately excluded.
 
-The engine entry point is `pdfcraft_engine::word_count::count`. Its page indexes are 0-based;
+The engine entry point is `taratasy_engine::word_count::count`. Its page indexes are 0-based;
 its progress callback can cancel between pages. Frontends must enforce document copy
 permissions before supplying an `ExportSource`.

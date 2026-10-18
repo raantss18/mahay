@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-edit"
+name = "taratasy-edit"
 description = "Page content editing: headers and footers, watermarks, backgrounds, Bates numbers (ISO 32000-2 §14.8)"
 version.workspace = true
 edition.workspace = true
@@ -9,11 +9,11 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-annot = { workspace = true }
-pdfcraft-cos = { workspace = true }
-pdfcraft-content = { workspace = true }
-pdfcraft-fonts = { workspace = true }
-pdfcraft-model = { workspace = true }
+taratasy-annot = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-content = { workspace = true }
+taratasy-fonts = { workspace = true }
+taratasy-model = { workspace = true }
 thiserror = { workspace = true }
 kurbo = { workspace = true }
 # Display order of right-to-left lines in added text, and reading and writing order in Edit text;

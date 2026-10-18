@@ -7,10 +7,10 @@
 
 use std::sync::Arc;
 
-use photocraft_engine::web_cmds::{self, Optimized, WebSettings};
+use sary_engine::web_cmds::{self, Optimized, WebSettings};
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 use crate::theme::Tokens;
 
@@ -18,13 +18,13 @@ fn no_params(p: &Value) -> bool {
     p.as_object().is_none_or(|o| o.is_empty())
 }
 
-fn default_dir(app: &PhotocraftApp) -> String {
+fn default_dir(app: &SaryApp) -> String {
     app.session.active().and_then(|d| d.path.as_deref()).and_then(|p| p.rfind(['/', '\\']).map(|i| p[..i].to_string())).unwrap_or_else(|| ".".into())
 }
 
 /// A packaged macOS app does not start in a useful writable working directory. A saved
 /// document keeps its own folder; otherwise prefer the user's Documents folder.
-fn droplet_default_dir(app: &PhotocraftApp) -> String {
+fn droplet_default_dir(app: &SaryApp) -> String {
     let dir = default_dir(app);
     if dir != "." {
         return dir;
@@ -38,12 +38,12 @@ fn droplet_default_dir(app: &PhotocraftApp) -> String {
     dir
 }
 
-fn doc_stem(app: &PhotocraftApp) -> String {
+fn doc_stem(app: &SaryApp) -> String {
     app.session.active().map(|d| d.doc.name.rsplit_once('.').map_or(d.doc.name.clone(), |(a, _)| a.to_string())).unwrap_or_else(|| tl!("Untitled").into())
 }
 
 /// A generic form dialog for `command` (rendered by `view_cmds::form_body`).
-fn form(app: &mut PhotocraftApp, command: &str, label: &str, fields: Value, choices: Value) -> Value {
+fn form(app: &mut SaryApp, command: &str, label: &str, fields: Value, choices: Value) -> Value {
     let mut f = Map::new();
     f.insert("__command".into(), json!(command));
     f.insert("__label".into(), json!(label));
@@ -61,7 +61,7 @@ fn form(app: &mut PhotocraftApp, command: &str, label: &str, fields: Value, choi
 const SCRIPT_EXTENSIONS: &[&str] = &["psjs", "ccjs", "jsx", "js", "jsxbin", "json", "txt", "pcdroplet"];
 
 /// Menu items fronted here (dialogs before the engine command). `None` when not ours.
-pub fn invoke(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
+pub fn invoke(app: &mut SaryApp, ctx: &egui::Context, id: &str, params: &Value) -> Option<Result<Value, String>> {
     if !no_params(params) {
         return None;
     }
@@ -85,7 +85,7 @@ pub fn invoke(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &V
             app,
             id,
             tl!("Contact Sheet II"),
-            json!({"input": dir, "units": "inches", "width": 8.0, "height": 10.0, "resolution": 300.0, "mode": "rgb", "depth": 8, "columns": 5, "rows": 6, "placeAcrossFirst": true, "autoSpacing": true, "rotateForBestFit": false, "caption": true, "font": photocraft_text::fonts::DEFAULT_FAMILY, "fontSize": 12.0, "flatten": false}),
+            json!({"input": dir, "units": "inches", "width": 8.0, "height": 10.0, "resolution": 300.0, "mode": "rgb", "depth": 8, "columns": 5, "rows": 6, "placeAcrossFirst": true, "autoSpacing": true, "rotateForBestFit": false, "caption": true, "font": sary_text::fonts::DEFAULT_FAMILY, "fontSize": 12.0, "flatten": false}),
             json!({"units": ["inches", "cm", "pixels"], "mode": ["rgb", "gray", "cmyk", "lab"]}),
         ),
         "file.automate.createDroplet" => {
@@ -116,7 +116,7 @@ pub fn invoke(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &V
         }
         "file.scripts.scriptEventsManager" => {
             let enabled = app.session.prefs().script_events.enabled;
-            let events: Vec<&str> = photocraft_engine::automate_cmds::EVENTS.iter().map(|e| e.0).collect();
+            let events: Vec<&str> = sary_engine::automate_cmds::EVENTS.iter().map(|e| e.0).collect();
             form(app, id, "Script Events Manager", json!({"enabled": enabled, "event": "openDocument", "script": "", "name": ""}), json!({"event": events}))
         }
         "file.package" => form(app, id, "Package", json!({"dir": dir}), json!({})),
@@ -135,7 +135,7 @@ pub fn invoke(app: &mut PhotocraftApp, ctx: &egui::Context, id: &str, params: &V
 }
 
 /// Checked state of toggle items owned here.
-pub fn checked(app: &PhotocraftApp, id: &str) -> Option<bool> {
+pub fn checked(app: &SaryApp, id: &str) -> Option<bool> {
     match id {
         "view.lockSlices" => Some(app.session.file_menu.slices_locked),
         "file.generate.imageAssets" => Some(app.session.active().is_some_and(|d| app.session.file_menu.image_assets.contains(&d.doc.id))),
@@ -168,7 +168,7 @@ pub fn ok_label(f: &Map<String, Value>) -> Option<&'static str> {
     }
 }
 
-pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+pub fn body(app: &mut SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     if f.contains_key("__web") {
         web_body(app, ui, f);
     } else {
@@ -176,7 +176,7 @@ pub fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
     }
 }
 
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     if f.contains_key("__web") { web_confirm(app, f) } else { print_confirm(app, f) }
 }
 
@@ -202,7 +202,7 @@ mod web_preview;
 const WEB_FORMATS: [(&str, &str); 5] = [("gif", "GIF"), ("png8", "PNG-8"), ("png24", "PNG-24"), ("jpeg", "JPEG"), ("wbmp", "WBMP")];
 const WEB_COMMAND: &str = "file.export.saveForWebLegacy";
 
-pub fn open_web(app: &mut PhotocraftApp) -> u64 {
+pub fn open_web(app: &mut SaryApp) -> u64 {
     let mut f = Map::new();
     f.insert("__web".into(), json!(true));
     f.insert("__command".into(), json!(WEB_COMMAND));
@@ -276,7 +276,7 @@ type WebProxy = (Arc<Vec<[f32; 4]>>, u32, u32, f64, egui::Vec2);
 type WebCache = (String, Arc<egui::TextureHandle>, Option<(usize, Option<usize>, &'static str)>);
 
 /// Renders one preview pane: the original (`None`) or an optimised variant.
-fn web_pane(app: &PhotocraftApp, ui: &mut egui::Ui, size: egui::Vec2, p: Option<&Value>, f: &mut Map<String, Value>, pane: usize, frame: Option<usize>) {
+fn web_pane(app: &SaryApp, ui: &mut egui::Ui, size: egui::Vec2, p: Option<&Value>, f: &mut Map<String, Value>, pane: usize, frame: Option<usize>) {
     let t = Tokens::get(ui.ctx());
     let Some(st) = app.session.active() else { return };
     let doc = st.doc.clone();
@@ -306,7 +306,7 @@ fn web_pane(app: &PhotocraftApp, ui: &mut egui::Ui, size: egui::Vec2, p: Option<
             else {
                 return;
             };
-            let buf = photocraft_compose::flatten(&wd);
+            let buf = sary_compose::flatten(&wd);
             let v = (
                 Arc::new(buf.px),
                 wd.size.width,
@@ -439,7 +439,7 @@ fn advance_preview(frame: usize, duration: usize, fps: f32, last: f64, now: f64)
     (next, now - (elapsed_frames - steps) / fps)
 }
 
-fn web_playback(ui: &mut egui::Ui, f: &mut Map<String, Value>, doc: &photocraft_doc::Document) -> Option<usize> {
+fn web_playback(ui: &mut egui::Ui, f: &mut Map<String, Value>, doc: &sary_doc::Document) -> Option<usize> {
     let mut timeline = doc.timeline.clone()?;
     timeline.clamp();
     if timeline.duration < 2 {
@@ -470,14 +470,14 @@ fn web_playback(ui: &mut egui::Ui, f: &mut Map<String, Value>, doc: &photocraft_
 }
 
 /// Seek a preview copy, preserving any edits to the source's currently displayed frame.
-fn web_frame_document(doc: &photocraft_doc::Document, frame: Option<usize>) -> Result<photocraft_doc::Document, photocraft_engine::EngineError> {
+fn web_frame_document(doc: &sary_doc::Document, frame: Option<usize>) -> Result<sary_doc::Document, sary_engine::EngineError> {
     let Some(frame) = frame else { return Ok(doc.clone()) };
-    let mut preview = photocraft_engine::Session::new();
+    let mut preview = sary_engine::Session::new();
     preview.add_document(doc.clone(), None);
     preview.execute("timeline.setFrame", json!({"frame": frame}))?;
-    Ok((*preview.active().ok_or(photocraft_engine::EngineError::NoDocument)?.doc).clone())
+    Ok((*preview.active().ok_or(sary_engine::EngineError::NoDocument)?.doc).clone())
 }
-fn web_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+fn web_body(app: &mut SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     let t = Tokens::get(ui.ctx());
     let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
     ui.horizontal(|ui| {
@@ -634,7 +634,7 @@ fn web_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
                         .color(t.text_dim)
                         .size(11.5),
                 );
-                let nslices = photocraft_doc::slices::resolve(&doc).len();
+                let nslices = sary_doc::slices::resolve(&doc).len();
                 if !doc.slices.is_empty() {
                     ui.add_space(6.0);
                     ui.label(egui::RichText::new(crate::i18n::trn(crate::i18n::current(), nslices as u64, "{n} slice", "{n} slices")).color(t.text_dim));
@@ -646,7 +646,7 @@ fn web_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Valu
     });
 }
 
-fn web_confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+fn web_confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     // Check while the control/input policy is still installed, before an asynchronous picker
     // can outlive the request. A browser download uses the interactive platform writer.
     let authorize = |p: &Value| -> Result<(), String> {
@@ -678,7 +678,7 @@ fn web_confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value,
     let has_slices = !doc.slices.is_empty();
     let html = b(f, "html", true);
     let st = WebSettings::from_params(&p, "file.export.saveForWebLegacy").map_err(|e| e.to_string())?;
-    let base = photocraft_doc::slices::base_name(&doc);
+    let base = sary_doc::slices::base_name(&doc);
     let suggested = if has_slices && html { format!("{base}.html") } else { format!("{base}.{}", st.format.ext()) };
     app.pick_save(&suggested, move |app, path| {
         app.refocus(doc.id)?;
@@ -694,7 +694,7 @@ fn web_confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value,
 }
 
 /// Runs Save for Web with `p`, which says where to write.
-fn save_for_web(app: &mut PhotocraftApp, p: Value) -> Result<Value, String> {
+fn save_for_web(app: &mut SaryApp, p: Value) -> Result<Value, String> {
     #[cfg(target_arch = "wasm32")]
     let result = download_for_web(app, p);
     #[cfg(not(target_arch = "wasm32"))]
@@ -711,21 +711,21 @@ fn save_for_web(app: &mut PhotocraftApp, p: Value) -> Result<Value, String> {
 }
 
 #[cfg(any(test, target_arch = "wasm32"))]
-fn download_for_web(app: &mut PhotocraftApp, mut p: Value) -> Result<Value, String> {
+fn download_for_web(app: &mut SaryApp, mut p: Value) -> Result<Value, String> {
     // Browser downloads have no directory hierarchy. Keep the HTML's image and spacer URLs
     // beside the downloaded page, matching the names handed to the platform service.
     p["imagesFolder"] = json!("");
     let write = app.services.write.as_mut().ok_or("no download service")?;
-    web_cmds::save_for_web_with_writer(&mut app.session, &p, &mut |path, bytes| write(path, bytes).map_err(photocraft_engine::EngineError::Other))
+    web_cmds::save_for_web_with_writer(&mut app.session, &p, &mut |path, bytes| write(path, bytes).map_err(sary_engine::EngineError::Other))
         .map_err(|e| e.to_string())
 }
 
 // ---------- Print ----------
 
-pub fn open_print(app: &mut PhotocraftApp) -> u64 {
+pub fn open_print(app: &mut SaryApp) -> u64 {
     let mut f = Map::new();
     f.insert("__print".into(), json!(true));
-    f.insert("__label".into(), json!("PhotoCraft Print Settings"));
+    f.insert("__label".into(), json!("Sary Print Settings"));
     // Asked once per opening: the Printer menu lists what the spooler knows now.
     let printers = app.session.execute("file.printers", json!({})).unwrap_or_default();
     f.insert("__systemPrinters".into(), printers["printers"].clone());
@@ -758,7 +758,7 @@ pub fn open_print(app: &mut PhotocraftApp) -> u64 {
         f.entry(k.to_string()).or_insert(v);
     }
     // Windows: the system's printers, and the paper from the chosen printer's driver settings.
-    if let Ok(list) = craft_print::rgb::printers() {
+    if let Ok(list) = mahay_print::rgb::printers() {
         f.insert("__printers".into(), json!(list.iter().map(|p| p.name.clone()).collect::<Vec<_>>()));
         let known = |n: &str| list.iter().any(|p| p.name == n);
         if !known(&s(&f, "printer", "")) {
@@ -773,8 +773,8 @@ pub fn open_print(app: &mut PhotocraftApp) -> u64 {
 /// Takes the paper from the printer's driver settings (Windows), as Photoshop does.
 fn driver_page(f: &mut Map<String, Value>) {
     let printer = s(f, "printer", "");
-    let settings = f.get("printerSettings").and_then(Value::as_str).and_then(|h| craft_print::rgb::DevMode::from_hex(h).ok());
-    match craft_print::rgb::page(&printer, settings.as_ref()) {
+    let settings = f.get("printerSettings").and_then(Value::as_str).and_then(|h| mahay_print::rgb::DevMode::from_hex(h).ok());
+    match mahay_print::rgb::page(&printer, settings.as_ref()) {
         Ok(pg) => {
             f.insert("paper".into(), json!([pg.paper.0, pg.paper.1]));
             f.insert("orientation".into(), json!("portrait"));
@@ -822,7 +822,7 @@ fn print_paper_size(value: Option<&Value>) -> (f64, f64) {
     let default = (612.0, 792.0);
     match value {
         Some(Value::Array(a)) => (a.first().and_then(Value::as_f64).unwrap_or(default.0), a.get(1).and_then(Value::as_f64).unwrap_or(default.1)),
-        Some(Value::String(name)) => photocraft_engine::print_cmds::PAPERS.iter().find(|p| p.0.eq_ignore_ascii_case(name)).map_or(default, |p| (p.1, p.2)),
+        Some(Value::String(name)) => sary_engine::print_cmds::PAPERS.iter().find(|p| p.0.eq_ignore_ascii_case(name)).map_or(default, |p| (p.1, p.2)),
         _ => default,
     }
 }
@@ -831,7 +831,7 @@ fn print_paper_controls(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     let previous = f.get("paper").cloned();
     let mut selected = if previous.as_ref().is_some_and(Value::is_array) { "custom".to_string() } else { s(f, "paper", "letter") };
     ui.horizontal(|ui| {
-        let mut papers: Vec<_> = photocraft_engine::print_cmds::PAPERS.iter().map(|p| (p.0.to_string(), p.0)).collect();
+        let mut papers: Vec<_> = sary_engine::print_cmds::PAPERS.iter().map(|p| (p.0.to_string(), p.0)).collect();
         papers.push(("custom".to_string(), tl!("Custom")));
         if crate::widgets::dropdown(ui, "print-paper", &mut selected, &papers, 110.0) {
             if selected == "custom" {
@@ -864,7 +864,7 @@ fn print_paper_controls(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     }
 }
 
-fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+fn print_body(app: &mut SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     let t = Tokens::get(ui.ctx());
     let Some(doc) = app.session.active().map(|d| d.doc.clone()) else { return };
     // PDF exports and previews retain editable paper on Windows too. Only a real native
@@ -889,7 +889,7 @@ fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
         ui.vertical(|ui| {
             let (area, _) = ui.allocate_exact_size(egui::vec2(330.0, 400.0), egui::Sense::hover());
             ui.painter().rect_filled(area, 0.0, t.canvas);
-            match photocraft_engine::print_cmds::layout(&doc, &p, "file.print") {
+            match sary_engine::print_cmds::layout(&doc, &p, "file.print") {
                 Ok(l) => {
                     let (pw, ph) = l.paper;
                     let k = ((area.width() - 20.0) / pw as f32).min((area.height() - 20.0) / ph as f32);
@@ -906,7 +906,7 @@ fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
                     let key = egui::Id::new(("print-thumb", doc.id.0, app.session.active().map_or(0, |d| d.revision)));
                     let tex: Option<Arc<egui::TextureHandle>> = ui.data(|d| d.get_temp(key));
                     let tex = tex.unwrap_or_else(|| {
-                        let th = photocraft_compose::thumbnail(&doc, 400);
+                        let th = sary_compose::thumbnail(&doc, 400);
                         let ci = egui::ColorImage::from_rgba_unmultiplied([th.width as usize, th.height as usize], &th.pixels);
                         let tx = Arc::new(ui.ctx().load_texture("print-thumb", ci, egui::TextureOptions::LINEAR));
                         ui.data_mut(|d| d.insert_temp(key, tx.clone()));
@@ -975,8 +975,8 @@ fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
                     number(ui, f, "copies", tl!("Copies"), 1.0..=999.0, "", 1.0);
                     if ui.button(tl!("Print Settings…")).clicked() {
                         let printer = s(f, "printer", "");
-                        let current = f.get("printerSettings").and_then(Value::as_str).and_then(|h| craft_print::rgb::DevMode::from_hex(h).ok());
-                        match craft_print::rgb::settings_dialog(&printer, current.as_ref(), None) {
+                        let current = f.get("printerSettings").and_then(Value::as_str).and_then(|h| mahay_print::rgb::DevMode::from_hex(h).ok());
+                        match mahay_print::rgb::settings_dialog(&printer, current.as_ref(), None) {
                             Ok(Some(dm)) => {
                                 f.insert("printerSettings".into(), json!(dm.to_hex()));
                                 driver_page(f);
@@ -1018,17 +1018,17 @@ fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
                 "colorHandling",
                 &[
                     ("printerManages", tl!("Printer Manages Colors")),
-                    ("photocraftManages", tl!("PhotoCraft Manages Colors")),
+                    ("saryManages", tl!("Sary Manages Colors")),
                     ("noColorManagement", tl!("No Color Management")),
                 ],
                 240.0,
             );
-            if s(f, "colorHandling", "") == "photocraftManages" {
+            if s(f, "colorHandling", "") == "saryManages" {
                 // Photoshop's Printer Profile menu: the built-ins, then every installed printer
                 // (output class) profile by its description.
-                let installed: Vec<_> = photocraft_engine::installed_profiles::installed()
+                let installed: Vec<_> = sary_engine::installed_profiles::installed()
                     .into_iter()
-                    .filter(|p| p.is_destination() && p.class == photocraft_cms::ProfileClass::Output)
+                    .filter(|p| p.is_destination() && p.class == sary_cms::ProfileClass::Output)
                     .collect();
                 let mut profiles: Vec<(&str, &str)> = vec![
                     ("coated-cmyk", tl!("Coated CMYK")),
@@ -1084,7 +1084,7 @@ fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
             }
             check(ui, f, "scaleToFit", tl!("Scale to Fit Media"), false);
             // Scaled Print Size: Scale, Height and Width move together; Print Resolution follows.
-            if let Ok(l) = photocraft_engine::print_cmds::layout(&doc, &params(f), "file.print") {
+            if let Ok(l) = sary_engine::print_cmds::layout(&doc, &params(f), "file.print") {
                 let (_, _, w, h) = l.rect;
                 let (mut w2, mut h2) = (w, h);
                 let fit = b(f, "scaleToFit", false);
@@ -1141,7 +1141,7 @@ fn print_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Va
     });
 }
 
-fn print_confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+fn print_confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     let r = app.run("file.print", params(f))?;
     if r["pending"] != json!(true) {
         print_status(app, &r);
@@ -1149,7 +1149,7 @@ fn print_confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Valu
     Ok(r)
 }
 
-pub(crate) fn print_status(app: &mut PhotocraftApp, r: &Value) {
+pub(crate) fn print_status(app: &mut SaryApp, r: &Value) {
     app.ui.status = if let Some(printer) = r["spooler"]["printer"].as_str() {
         crate::i18n::fmt(tl!("Sent to {printer}"), &[("printer", printer)])
     } else if r["sent"] == json!(true) {
@@ -1166,8 +1166,8 @@ pub(crate) fn print_status(app: &mut PhotocraftApp, r: &Value) {
 mod tests {
     use super::*;
 
-    fn app() -> (PhotocraftApp, egui::Context) {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> (SaryApp, egui::Context) {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 120, "height": 80, "name": "web"})).unwrap();
         (app, egui::Context::default())
     }
@@ -1182,8 +1182,8 @@ mod tests {
         }
         #[cfg(not(target_os = "macos"))]
         assert_eq!(fallback, ".");
-        app.session.active_mut().unwrap().path = Some("/tmp/photocraft/drawing.pcraft".into());
-        assert_eq!(droplet_default_dir(&app), "/tmp/photocraft");
+        app.session.active_mut().unwrap().path = Some("/tmp/sary/drawing.sary".into());
+        assert_eq!(droplet_default_dir(&app), "/tmp/sary");
     }
 
     #[test]
@@ -1269,8 +1269,8 @@ mod tests {
 
     #[test]
     fn save_for_web_authorizes_before_opening_a_picker() {
-        fn deny(_: &str, _: &Value) -> photocraft_engine::Result<()> {
-            Err(photocraft_engine::EngineError::Other("export denied".into()))
+        fn deny(_: &str, _: &Value) -> sary_engine::Result<()> {
+            Err(sary_engine::EngineError::Other("export denied".into()))
         }
         for explicit_path in [false, true] {
             for synthetic_input in [false, true] {
@@ -1299,8 +1299,8 @@ mod tests {
 
     #[test]
     fn save_for_web_authorizes_generated_palette_before_opening_a_picker() {
-        fn deny_palette(_: &str, p: &Value) -> photocraft_engine::Result<()> {
-            if p.get("colorTable").is_some() { Err(photocraft_engine::EngineError::Other("palette denied".into())) } else { Ok(()) }
+        fn deny_palette(_: &str, p: &Value) -> sary_engine::Result<()> {
+            if p.get("colorTable").is_some() { Err(sary_engine::EngineError::Other("palette denied".into())) } else { Ok(()) }
         }
         for synthetic_input in [false, true] {
             let (mut app, _) = app();
@@ -1335,9 +1335,9 @@ mod tests {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, Default::default());
+        SaryApp::setup_context(&h.ctx, Default::default());
         h.run_steps(5);
-        let pane = |h: &egui_kittest::Harness<'_, PhotocraftApp>| {
+        let pane = |h: &egui_kittest::Harness<'_, SaryApp>| {
             let r = &h.state().ui.dialogs[0].fields["__previewRects"][0];
             egui::Rect::from_min_max(
                 egui::pos2(r[0].as_f64().unwrap() as f32, r[1].as_f64().unwrap() as f32),
@@ -1472,8 +1472,8 @@ mod web_playback_tests {
     use super::*;
     use egui_kittest::{Harness, kittest::Queryable};
 
-    fn animated_app(depth: u32) -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn animated_app(depth: u32) -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 32, "height": 24, "depth": depth})).unwrap();
         app.run("timeline.create", json!({"duration": 3, "fps": 2})).unwrap();
         app.run("layer.videoLayers.newBlankVideoLayer", json!({})).unwrap();
@@ -1485,9 +1485,9 @@ mod web_playback_tests {
         app
     }
 
-    fn harness(app: PhotocraftApp, fields: Map<String, Value>) -> Harness<'static, (PhotocraftApp, Map<String, Value>)> {
+    fn harness(app: SaryApp, fields: Map<String, Value>) -> Harness<'static, (SaryApp, Map<String, Value>)> {
         let mut h = Harness::builder().with_size(egui::vec2(1000.0, 800.0)).with_step_dt(0.1).build_ui_state(
-            |ui, state: &mut (PhotocraftApp, Map<String, Value>)| {
+            |ui, state: &mut (SaryApp, Map<String, Value>)| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -1495,7 +1495,7 @@ mod web_playback_tests {
             },
             (app, fields),
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(3);
         h
     }
@@ -1549,13 +1549,13 @@ mod web_playback_tests {
             for (frame, expected) in [[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 1.0], [0.0, 0.0, 1.0, 1.0]].iter().enumerate() {
                 let preview = web_frame_document(&source, Some(frame)).unwrap();
                 let (proxy, _, _) = web_cmds::web_document(&preview, &json!({"width":16,"height":12}), &WebSettings::default()).unwrap();
-                let pixels = photocraft_compose::flatten(&proxy);
+                let pixels = sary_compose::flatten(&proxy);
                 for (actual, expected) in pixels.px[0].iter().zip(expected) {
                     assert!((actual - expected).abs() < 0.002, "depth={depth} frame={frame}");
                 }
             }
             assert_eq!(source.timeline.as_ref().unwrap().current, 0);
-            assert_eq!(photocraft_compose::flatten(&source).px[0], [1.0, 0.0, 0.0, 1.0]);
+            assert_eq!(sary_compose::flatten(&source).px[0], [1.0, 0.0, 0.0, 1.0]);
         }
     }
 
@@ -1621,7 +1621,7 @@ mod web_playback_tests {
     #[test]
     fn still_documents_have_no_playback_controls() {
         for duration in [None, Some(1)] {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width":32,"height":24})).unwrap();
             if let Some(duration) = duration {
                 app.run("timeline.create", json!({"duration":duration,"fps":2})).unwrap();
@@ -1641,8 +1641,8 @@ mod web_playback_tests {
         let source = app.session.active().unwrap().doc.clone();
         let edited = web_frame_document(&source, Some(0)).unwrap();
         let other = web_frame_document(&source, Some(1)).unwrap();
-        assert_eq!(photocraft_compose::flatten(&edited).px[0], [1.0, 1.0, 0.0, 1.0]);
-        assert_eq!(photocraft_compose::flatten(&other).px[0], [0.0, 1.0, 0.0, 1.0]);
+        assert_eq!(sary_compose::flatten(&edited).px[0], [1.0, 1.0, 0.0, 1.0]);
+        assert_eq!(sary_compose::flatten(&other).px[0], [0.0, 1.0, 0.0, 1.0]);
         assert!(Arc::ptr_eq(&source, &app.session.active().unwrap().doc));
         assert_eq!(source.timeline.as_ref().unwrap().current, 0);
     }
@@ -1655,8 +1655,8 @@ mod web_playback_tests {
             for (frame, expected) in [[255, 0, 0, 255], [0, 255, 0, 255], [0, 0, 255, 255]].iter().enumerate() {
                 let doc = web_frame_document(&app.session.active().unwrap().doc, Some(frame)).unwrap();
                 let (proxy, _, _) = web_cmds::web_document(&doc, &json!({"width":16,"height":12}), &settings).unwrap();
-                let pixels = photocraft_compose::flatten(&proxy);
-                let optimized = web_cmds::optimize(&pixels.px, 16, photocraft_geom::Rect::new(0, 0, 16, 12), &settings, None, None, 72.0, true).unwrap();
+                let pixels = sary_compose::flatten(&proxy);
+                let optimized = web_cmds::optimize(&pixels.px, 16, sary_geom::Rect::new(0, 0, 16, 12), &settings, None, None, 72.0, true).unwrap();
                 assert_eq!(&optimized.preview[..4], expected, "depth={depth} frame={frame}");
             }
         }

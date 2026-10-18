@@ -12,7 +12,7 @@
 # Clean-room: every entry was written from the plain meaning of the English label using ordinary
 # Polish computing vocabulary. No proprietary localisation resource, string table or product UI
 # (Acrobat's included) was consulted or copied; add entries the same way.
-# Product and technology names (PdfCraft, PDF, Acrobat JavaScript ...) stay in Latin letters;
+# Product and technology names (Taratasy, PDF, Acrobat JavaScript ...) stay in Latin letters;
 # the trailing "…" of dialog commands is kept.
 
 	Menu	Menu
@@ -158,17 +158,17 @@
 	Next page	Następna strona
 	Previous page	Poprzednia strona
 	Current page — type a page number or label (such as iv) and press Enter	Bieżąca strona — wpisz numer lub etykietę strony (np. iv) i naciśnij Enter
-	Welcome to PdfCraft	Witamy w PdfCraft
+	Welcome to Taratasy	Witamy w Taratasy
 	An open-source PDF workbench — local, private, and scriptable.	Otwarty zestaw narzędzi do PDF — lokalny, prywatny i obsługujący skrypty.
-	Join the ArtCraft community	Dołącz do społeczności ArtCraft
+	Join the Mahay community	Dołącz do społeczności Mahay
 	Get help, share feedback and follow development on Discord.	Uzyskaj pomoc, podziel się opinią i śledź rozwój na Discordzie.
 	Recommended tools	Polecane narzędzia
 	Use now	Użyj teraz
 	Open file	Otwórz plik
 	Recent	Ostatnie
-	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Pliki otwierane w PdfCraft pojawiają się tutaj. Upuść PDF w dowolnym miejscu, aby go otworzyć.
+	Files you open in Taratasy appear here. Drop a PDF anywhere to open it.	Pliki otwierane w Taratasy pojawiają się tutaj. Upuść PDF w dowolnym miejscu, aby go otworzyć.
 	Privacy	Prywatność
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft działa offline. Bez telemetrii, konta i przetwarzania w chmurze, chyba że dodasz dostawcę.
+	Taratasy works offline. No telemetry, no account, and no cloud processing unless you add a provider.	Taratasy działa offline. Bez telemetrii, konta i przetwarzania w chmurze, chyba że dodasz dostawcę.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skrypty działają w piaskownicy bez dostępu do plików i sieci. Przy wyłączonym JavaScript standardowe funkcje formatowania, walidacji i obliczeń Acrobata nadal działają.
 	Back to all tools	Wróć do wszystkich narzędzi
 	Close panel	Zamknij panel
@@ -305,12 +305,12 @@
 	Split document…	Podziel dokument…
 	Number pages…	Ponumeruj strony…
 	Keyboard shortcuts	Skróty klawiaturowe
-	Join the ArtCraft Discord	Dołącz do Discorda ArtCraft
-	PdfCraft web page	Strona internetowa PdfCraft
-	PdfCraft on GitHub	PdfCraft na GitHubie
-	ArtCraft website	Strona internetowa ArtCraft
+	Join the Mahay Discord	Dołącz do Discorda Mahay
+	Taratasy web page	Strona internetowa Taratasy
+	Taratasy on GitHub	Taratasy na GitHubie
+	Mahay website	Strona internetowa Mahay
 	Check for updates…	Sprawdź aktualizacje…
-	About PdfCraft	O PdfCraft
+	About Taratasy	O Taratasy
 	Export a PDF	Eksportuj PDF
 	Export to	Eksportuj do
 	Microsoft Word (.docx)	Microsoft Word (.docx)
@@ -767,9 +767,9 @@
 	Check for updates	Sprawdź aktualizacje
 	No check has run yet.	Nie sprawdzono jeszcze aktualizacji.
 	Checking for a newer version…	Sprawdzanie dostępności nowszej wersji…
-	PdfCraft {v} is available.	PdfCraft {v} jest dostępny.
+	Taratasy {v} is available.	Taratasy {v} jest dostępny.
 	You have version {c}. Download the new version from its release page.	Masz wersję {c}. Pobierz nową wersję ze strony wydania.
-	PdfCraft {c} is up to date.	PdfCraft {c} jest aktualny.
+	Taratasy {c} is up to date.	Taratasy {c} jest aktualny.
 	Couldn't check for updates: {e}	Nie można sprawdzić aktualizacji: {e}
 	You have version {c}. All releases are listed at {page}.	Masz wersję {c}. Wszystkie wydania są dostępne na {page}.
 	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Sprawdza najnowsze wydanie na GitHubie. Nic nie jest pobierane ani instalowane automatycznie.
@@ -887,8 +887,8 @@
 	No changes allowed	Zmiany niedozwolone
 	Annotations, form fill-in, and digital signatures	Adnotacje, wypełnianie formularzy i podpisy cyfrowe
 	Form fill-in and digital signatures	Wypełnianie formularzy i podpisy cyfrowe
-	The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.	Klucz znajduje się w pęku kluczy macOS, który może poprosić o zgodę na jego użycie przez PdfCraft.
-	The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.	Klucz znajduje się w magazynie certyfikatów Windows, który może poprosić o zgodę na jego użycie przez PdfCraft.
+	The key is in the macOS Keychain, which may ask to allow Taratasy to use it.	Klucz znajduje się w pęku kluczy macOS, który może poprosić o zgodę na jego użycie przez Taratasy.
+	The key is in the Windows certificate store, which may ask to allow Taratasy to use it.	Klucz znajduje się w magazynie certyfikatów Windows, który może poprosić o zgodę na jego użycie przez Taratasy.
 	Digital ID password	Hasło identyfikatora cyfrowego
 	Back	Wstecz
 	Validate all	Zweryfikuj wszystkie
@@ -1241,7 +1241,7 @@
 	Downsample to	Zmniejsz rozdzielczość do
 	Also recognize pages that already have text	Rozpoznaj także strony, które zawierają już tekst
 	Pictures on those pages are recognized too; words already in the page's text are not added again	Obrazy na tych stronach też są rozpoznawane; słowa, które już są w tekście strony, nie są dodawane ponownie
-	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Rozpoznawanie tekstu nie jest zainstalowane: brakuje plików modeli. Zainstaluj PdfCraft ponownie lub ustaw PDFCRAFT_MODELS na folder zawierający te pliki.
+	Text recognition isn't installed: its model files are missing. Reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them.	Rozpoznawanie tekstu nie jest zainstalowane: brakuje plików modeli. Zainstaluj Taratasy ponownie lub ustaw TARATASY_MODELS na folder zawierający te pliki.
 	Settings	Ustawienia
 	Optional	Opcjonalne
 	Planned · {m}	Planowane · {m}
@@ -1388,7 +1388,7 @@
 	Anyone opening the document will need this password. It's applied when you save.	Każda osoba otwierająca dokument będzie potrzebować tego hasła. Zostanie zastosowane przy zapisie.
 	The document opens without a password; this password is needed to change the restrictions. It's applied when you save.	Dokument otwiera się bez hasła; to hasło jest potrzebne do zmiany ograniczeń. Zostanie zastosowane przy zapisie.
 	Recover unsaved documents?	Odzyskać niezapisane dokumenty?
-	PdfCraft didn't shut down normally. These documents had changes that were autosaved:	PdfCraft nie został zamknięty prawidłowo. Automatycznie zapisano zmiany w tych dokumentach:
+	Taratasy didn't shut down normally. These documents had changes that were autosaved:	Taratasy nie został zamknięty prawidłowo. Automatycznie zapisano zmiany w tych dokumentach:
 	just now	przed chwilą
 	{n} min ago	{n} min temu
 	{n} h ago	{n} godz. temu
@@ -1547,10 +1547,10 @@
 	On the web, open or drop an image to convert it	W wersji internetowej otwórz lub upuść obraz, aby go przekonwertować
 	Couldn't optimize the file: {e}	Nie można zoptymalizować pliku: {e}
 	Couldn't write {path}: {e}	Nie można zapisać {path}: {e}
-	The form asks to be submitted to {u}; PdfCraft doesn't send form data. Save the document to keep your entries.	Formularz wymaga wysłania do {u}; PdfCraft nie wysyła danych formularza. Zapisz dokument, aby zachować wpisane dane.
+	The form asks to be submitted to {u}; Taratasy doesn't send form data. Save the document to keep your entries.	Formularz wymaga wysłania do {u}; Taratasy nie wysyła danych formularza. Zapisz dokument, aby zachować wpisane dane.
 	This PDF uses the unsupported {s} action.	Ten PDF używa nieobsługiwanej akcji {s}.
 	{name}: the {other} action isn't supported yet	{name}: akcja {other} nie jest jeszcze obsługiwana
-	{name} submits the form to {url}; PdfCraft doesn't send form data. Save the document to keep your entries.	{name} wysyła formularz do {url}; PdfCraft nie wysyła danych formularza. Zapisz dokument, aby zachować wpisane dane.
+	{name} submits the form to {url}; Taratasy doesn't send form data. Save the document to keep your entries.	{name} wysyła formularz do {url}; Taratasy nie wysyła danych formularza. Zapisz dokument, aby zachować wpisane dane.
 	Export stopped: {e}	Eksport zatrzymany: {e}
 	Exported 1 image	Wyeksportowano 1 obraz
 	Exported {n} images	Liczba wyeksportowanych obrazów: {n}
@@ -1715,7 +1715,7 @@
 	Couldn't open {name}: {e}	Nie można otworzyć {name}: {e}
 	Couldn't read {name}: {e}	Nie można odczytać {name}: {e}
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	Tryb przenośny jest wyłączony: nie można zapisywać w {folder} ({error}). Ustawienia są przechowywane w folderze użytkownika.
-	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	PdfCraft renderuje bez procesora graficznego, więc może działać wolno. Aktualizacja sterownika graficznego może pomóc.
+	Taratasy is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	Taratasy renderuje bez procesora graficznego, więc może działać wolno. Aktualizacja sterownika graficznego może pomóc.
 	Couldn't save: {e}	Nie można zapisać: {e}
 	Downloading attachments on the web arrives with M3.10 ({n} bytes ready)	Pobieranie załączników w wersji internetowej będzie dostępne w M3.10 (gotowe bajty: {n})
 	`{command}` {when}	`{command}` {when}
@@ -1788,8 +1788,8 @@
 	Signed and all signatures are valid.	Dokument jest podpisany i wszystkie podpisy są prawidłowe.
 	At least one signature has problems.	Co najmniej jeden podpis ma problemy.
 	This document is secured. Some changes are restricted by its security settings.	Ten dokument jest zabezpieczony. Niektóre zmiany są ograniczone ustawieniami zabezpieczeń.
-	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	To dynamiczny formularz XFA, którego PdfCraft nie potrafi jeszcze wyświetlić. Widzisz stronę zastępczą pliku.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ten formularz zawiera również dane XFA, których PdfCraft jeszcze nie odczytuje. Możesz wypełniać jego pola, ale Acrobat może zamiast nich wyświetlać wartości XFA.
+	This is a dynamic XFA form, which Taratasy can't display yet. What you see is the file's placeholder page.	To dynamiczny formularz XFA, którego Taratasy nie potrafi jeszcze wyświetlić. Widzisz stronę zastępczą pliku.
+	This form also contains XFA data, which Taratasy doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ten formularz zawiera również dane XFA, których Taratasy jeszcze nie odczytuje. Możesz wypełniać jego pola, ale Acrobat może zamiast nich wyświetlać wartości XFA.
 	This document contains {n} interactive form fields.	Ten dokument zawiera interaktywne pola formularza w liczbie {n}.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Ten plik był uszkodzony i został naprawiony. Zapis zachowa naprawioną wersję.
 	Dismiss	Zamknij komunikat
@@ -1838,7 +1838,7 @@
 	there are no pages to print	brak stron do wydrukowania
 	the document has no tags	dokument nie ma tagów
 	{0}: {1}	{0}: {1}
-	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	modele rozpoznawania tekstu nie są zainstalowane (zainstaluj PdfCraft ponownie lub ustaw PDFCRAFT_MODELS na folder zawierający modele)
+	the text recognition models are not installed (reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them)	modele rozpoznawania tekstu nie są zainstalowane (zainstaluj Taratasy ponownie lub ustaw TARATASY_MODELS na folder zawierający modele)
 	the image is empty	obraz jest pusty
 	this file isn't XFDF, FDF, XML or text form data	ten plik nie zawiera danych formularza XFDF, FDF, XML ani tekstowych
 	nothing in the file matches this document	żadne dane w pliku nie pasują do tego dokumentu
@@ -2044,11 +2044,11 @@
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	Wybierz obraz PNG lub JPEG (do 4 MiB). Przezroczystość zostanie zachowana.
 	Couldn't import the signature image: {e}	Nie można zaimportować obrazu podpisu: {e}
 	Go to page…	Przejdź do strony…
-	Reopen the files that were open when PdfCraft last closed	Otwórz ponownie pliki otwarte przy ostatnim zamknięciu PdfCraft
+	Reopen the files that were open when Taratasy last closed	Otwórz ponownie pliki otwarte przy ostatnim zamknięciu Taratasy
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Czcionki tekstu PDF nie obsługują znaku „{c}” ({code}). Wybierz obsługiwany tekst.
 	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Standardowe czcionki nie obsługują znaku „{c}” ({code}). Na razie można dodawać tylko tekst ze znakami zachodnioeuropejskimi.
-	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Czcionka tego pola nie obsługuje znaku „{c}” ({code}), więc PdfCraft wyświetla w jego miejscu ?. Wartość została zapisana, a inne przeglądarki PDF odrysują pole na jej podstawie.
-	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Czcionki, którymi pisze PdfCraft, nie obsługują znaku „{c}” ({code}), więc w każdej przeglądarce PDF w jego miejscu widać ?. Tekst został zapisany.
+	This field's font can't draw “{c}” ({code}), so Taratasy shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Czcionka tego pola nie obsługuje znaku „{c}” ({code}), więc Taratasy wyświetla w jego miejscu ?. Wartość została zapisana, a inne przeglądarki PDF odrysują pole na jej podstawie.
+	The fonts Taratasy writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Czcionki, którymi pisze Taratasy, nie obsługują znaku „{c}” ({code}), więc w każdej przeglądarce PDF w jego miejscu widać ?. Tekst został zapisany.
 	Open arrow	Otwarta strzałka
 	Closed arrow	Zamknięta strzałka
 	Butt	Poprzeczna kreska
@@ -2147,7 +2147,7 @@
 	Squiggly	Faliste podkreślenie
 	Table	Tabela
 	Table rows belong directly in a table or its head, body or foot. Fix the table's tags.	Wiersze tabeli należą bezpośrednio do tabeli lub jej nagłówka, treści albo stopki. Popraw tagi tabeli.
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Rozpoznawanie tekstu nie jest zainstalowane: brakuje modeli (uruchom `cargo xtask models` lub ustaw PDFCRAFT_MODELS).
+	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set TARATASY_MODELS).	Rozpoznawanie tekstu nie jest zainstalowane: brakuje modeli (uruchom `cargo xtask models` lub ustaw TARATASY_MODELS).
 	That didn't work: an internal error stopped it ({m}).	Operacja nie powiodła się z powodu błędu wewnętrznego ({m}).
 	The Windows store's digital IDs couldn't be listed: {e}	Nie można wyświetlić identyfikatorów cyfrowych z magazynu Windows: {e}
 	The document changed while you were choosing a file, so nothing was changed.	Dokument zmienił się podczas wybierania pliku, więc nic nie zmieniono.
@@ -2166,8 +2166,8 @@
 	Write this email?	Napisać tę wiadomość e-mail?
 	XFA form: its fields and its XFA data are kept in step, so other viewers show what you fill in.	Formularz XFA: pola i dane XFA są synchronizowane, aby inne przeglądarki wyświetlały wpisane wartości.
 	{n} contributors · {c} commits	Współtwórców: {n} · Commitów: {c}
-	{who} in this document tried to open an address PdfCraft won't open: {e}.	Element „{who}” w tym dokumencie próbował otworzyć adres, którego PdfCraft nie otworzy: {e}.
-	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Element „{who}” w tym dokumencie próbował otworzyć adres, którego PdfCraft nie otworzy: {e}. Z dokumentów otwierane są tylko łącza internetowe (http, https) i pocztowe (mailto).
+	{who} in this document tried to open an address Taratasy won't open: {e}.	Element „{who}” w tym dokumencie próbował otworzyć adres, którego Taratasy nie otworzy: {e}.
+	{who} in this document tried to open an address Taratasy won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Element „{who}” w tym dokumencie próbował otworzyć adres, którego Taratasy nie otworzy: {e}. Z dokumentów otwierane są tylko łącza internetowe (http, https) i pocztowe (mailto).
 	{who} in this document wants to open this address in your browser:	Element „{who}” w tym dokumencie chce otworzyć ten adres w przeglądarce:
 	{who} in this document wants to open your email app with this address:	Element „{who}” w tym dokumencie chce otworzyć aplikację pocztową z tym adresem:
 	ΔLOC	ΔLOC
@@ -2309,7 +2309,7 @@ animation effects	Off	Wyłączone
 	no output folder was chosen	nie wybrano folderu wyjściowego
 @plural	Downloaded {n} PDF|Downloaded {n} PDFs	Pobrano {n} plik PDF|Pobrano {n} pliki PDF|Pobrano {n} plików PDF
 	Scan	Skanuj
-	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: PdfCraft finds the signature and removes the paper.	Podpisz się na białej kartce i zrób jej zdjęcie przy jasnym, równomiernym świetle (użyj lampy błyskowej). Wybierz zdjęcie lub upuść je tutaj: PdfCraft znajdzie podpis i usunie papier.
+	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: Taratasy finds the signature and removes the paper.	Podpisz się na białej kartce i zrób jej zdjęcie przy jasnym, równomiernym świetle (użyj lampy błyskowej). Wybierz zdjęcie lub upuść je tutaj: Taratasy znajdzie podpis i usunie papier.
 	Choose photo…	Wybierz zdjęcie…
 	No photo chosen	Nie wybrano zdjęcia
 	Photo	Zdjęcie

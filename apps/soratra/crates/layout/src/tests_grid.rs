@@ -2,8 +2,8 @@
 //! to the pitch, never font metrics (fonts differ between machines; CJK glyphs may be missing).
 
 use super::*;
-use wordcraft_doc::props::LineSpacing;
-use wordcraft_doc::section::{DocGrid, DocGridType};
+use soratra_doc::props::LineSpacing;
+use soratra_doc::section::{DocGrid, DocGridType};
 
 fn lay(doc: &Document) -> DocLayout {
     layout(doc, &mut LayoutCache::new(), &LayoutOptions::default())
@@ -66,7 +66,7 @@ fn line_grid_snaps_line_heights_and_fixes_lines_per_page() {
 fn character_grid_places_east_asian_text_on_the_pitch() {
     let text = "日本語の文書abc";
     // The default font size plus 2.5 pt: a pitch unlike any font's advance.
-    let lines = wordcraft_doc::SectionProps { doc_grid: Some(DocGrid { kind: DocGridType::Lines, ..Default::default() }), ..Default::default() };
+    let lines = soratra_doc::SectionProps { doc_grid: Some(DocGrid { kind: DocGridType::Lines, ..Default::default() }), ..Default::default() };
     let size = para::Grid::of(&Document::from_text(""), &lines).font_size;
     let cs = DocGrid::char_space_for(size + 2.5, size);
     let d = with_grid(text, DocGridType::LinesAndChars, cs);

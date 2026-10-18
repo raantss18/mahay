@@ -11,18 +11,18 @@ use egui::CursorIcon;
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
-fn capslock_harness() -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn capslock_harness() -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.run("tools.setBrush", json!({"brush": {"size": 40, "hardness": 1.0}})).unwrap();
     app.sync_views();
     app.ui.extras.rulers = false;
     app.ui.tool = Tool::Brush;
     let mut h = Harness::builder().with_size(egui::vec2(900.0, 600.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -31,7 +31,7 @@ fn capslock_harness() -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     // 100 %: one document pixel per point; the pointer hovers the canvas centre.
     let v = &mut h.state_mut().ui.views[0];
@@ -56,18 +56,18 @@ struct CursorFp {
     shapes: Vec<egui::epaint::ClippedShape>,
 }
 
-fn fp(h: &Harness<'_, PhotocraftApp>) -> CursorFp {
+fn fp(h: &Harness<'_, SaryApp>) -> CursorFp {
     let out = h.output();
     CursorFp { icon: out.platform_output.cursor_icon, image: out.platform_output.cursor_image.as_ref().map(|i| i.size), shapes: out.shapes.clone() }
 }
 
-fn painting(h: &mut Harness<'_, PhotocraftApp>, value: &str) {
+fn painting(h: &mut Harness<'_, SaryApp>, value: &str) {
     h.state_mut().run("prefs.set", json!({"path": "cursors.painting", "value": value})).unwrap();
     h.run_steps(2);
 }
 
 /// Caps Lock is read from the OS by the app shell; tests toggle the per-frame flag directly.
-fn caps(h: &mut Harness<'_, PhotocraftApp>, on: bool) {
+fn caps(h: &mut Harness<'_, SaryApp>, on: bool) {
     h.state_mut().caps_lock = on;
     h.run_steps(2);
 }
@@ -116,7 +116,7 @@ fn caps_lock_leaves_non_painting_tools_cursors_alone() {
     }
 }
 
-fn other(h: &mut Harness<'_, PhotocraftApp>, value: &str) {
+fn other(h: &mut Harness<'_, SaryApp>, value: &str) {
     h.state_mut().run("prefs.set", json!({"path": "cursors.other", "value": value})).unwrap();
     h.run_steps(2);
 }

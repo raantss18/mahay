@@ -1,8 +1,8 @@
 //! `layer.layerStyle.*` commands: add/replace layer effects on a layer.
 
-use photocraft_color::{BlendMode, Color};
-use photocraft_doc::adjust::CurvePoint;
-use photocraft_doc::{
+use sary_color::{BlendMode, Color};
+use sary_doc::adjust::CurvePoint;
+use sary_doc::{
     Bevel, BevelStyle, BevelTechnique, Contour, Effect, FxCommon, FxPaint, Glow, GlowSource, GlowTechnique, Gradient, GradientStyle, Satin, Shadow, StrokeFx,
     StrokePosition,
 };
@@ -59,8 +59,8 @@ fn color(p: &Value, k: &str, d: [f32; 3]) -> Color {
 /// colours: a straight ramp was up to 12 levels off.
 fn gradient_stops(p: &Value, from: Color, to: Color) -> Vec<(f32, Color)> {
     let stops = vec![(0.0, from), (1.0, to)];
-    match p.get("method").and_then(Value::as_str).and_then(photocraft_io::GradientMethod::from_name) {
-        Some(m) => photocraft_io::bake_gradient(stops, &[0.5], (f(p, "smoothness", 100.0) / 100.0).clamp(0.0, 1.0), m),
+    match p.get("method").and_then(Value::as_str).and_then(sary_io::GradientMethod::from_name) {
+        Some(m) => sary_io::bake_gradient(stops, &[0.5], (f(p, "smoothness", 100.0) / 100.0).clamp(0.0, 1.0), m),
         None => stops,
     }
 }
@@ -113,7 +113,7 @@ pub type ContourPoint = (f32, f32, bool);
 /// Built-in contour presets, in the order of Photoshop's default contour picker. Each is Photoshop's
 /// own curve as measured in Photoshop 27.11 (a Satin of each preset against a Linear one, 38
 /// levels per curve, read back through Satin's mirrored lookup — see
-/// `photocraft_compose::effects::satin_lut` — and thinned to within 1 %), joined by straight
+/// `sary_compose::effects::satin_lut` — and thinned to within 1 %), joined by straight
 /// segments (every inner point a corner). Imported PSD contours keep their own points.
 pub const CONTOURS: &[(&str, &[ContourPoint])] = &[
     ("Linear", &[(0.0, 0.0, false), (1.0, 1.0, false)]),
@@ -444,7 +444,7 @@ pub fn contour_from_param(v: &Value) -> Option<Contour> {
 /// The contours of an `.shc` contour preset file (Contour Editor › Load…), as `contour` params.
 /// Points are rescaled from the file's `0..=255` levels; unusable curves are skipped.
 pub fn contours_from_shc(bytes: &[u8]) -> Result<Vec<Value>> {
-    let file = photocraft_psd::shc::parse(bytes).map_err(|e| EngineError::Other(format!("not a contour file: {e}")))?;
+    let file = sary_psd::shc::parse(bytes).map_err(|e| EngineError::Other(format!("not a contour file: {e}")))?;
     Ok(file
         .into_iter()
         .filter_map(|c| {
@@ -467,9 +467,9 @@ pub fn contour_to_shc(contour: &Contour) -> Result<Vec<u8>> {
     let points = points
         .iter()
         .enumerate()
-        .map(|(i, p)| photocraft_psd::shc::ShcPoint { input: p.input * 255.0, output: p.output * 255.0, continuous: !contour.is_corner(i) })
+        .map(|(i, p)| sary_psd::shc::ShcPoint { input: p.input * 255.0, output: p.output * 255.0, continuous: !contour.is_corner(i) })
         .collect();
-    photocraft_psd::shc::write(&[photocraft_psd::shc::ShcContour { name, points }]).map_err(|e| EngineError::Other(format!("can't write the contour: {e}")))
+    sary_psd::shc::write(&[sary_psd::shc::ShcContour { name, points }]).map_err(|e| EngineError::Other(format!("can't write the contour: {e}")))
 }
 
 /// An effect of `kind` with its factory settings (before params are applied).
@@ -559,7 +559,7 @@ fn fresh_effect(kind: &str) -> Option<Effect> {
 /// Intermediate stops, opacity stops, alignment and offset survive a round trip.
 fn overlay_gradient(g: &mut Gradient, p: &Value) {
     // A method rebuilds the gradient from its end colours (the stops between are the old curve).
-    if p.get("method").and_then(Value::as_str).is_some_and(|m| photocraft_io::GradientMethod::from_name(m).is_some()) {
+    if p.get("method").and_then(Value::as_str).is_some_and(|m| sary_io::GradientMethod::from_name(m).is_some()) {
         let ends = (g.stops.first().map(|s| s.1), g.stops.last().map(|s| s.1));
         let from = color_of(p, "from").or(ends.0).unwrap_or(Color::BLACK);
         let to = color_of(p, "to").or(ends.1).unwrap_or(Color::WHITE);
@@ -793,7 +793,7 @@ pub fn overlay_effect(fx: &mut Effect, p: &Value) {
             // Anti-aliased edit the element in place, so an imported curve survives.
             match b_of(p, "contour") {
                 Some(false) => bv.contour = None,
-                Some(true) if bv.contour.is_none() => bv.contour = Some(photocraft_doc::BevelContour::default()),
+                Some(true) if bv.contour.is_none() => bv.contour = Some(sary_doc::BevelContour::default()),
                 _ => {}
             }
             if let Some(c) = &mut bv.contour {
@@ -804,7 +804,7 @@ pub fn overlay_effect(fx: &mut Effect, p: &Value) {
                 set_bool(p, "contourAntiAlias", &mut c.anti_alias);
             }
             if let Some(t) = p.get("texture").and_then(Value::as_str).filter(|t| !t.is_empty()) {
-                bv.texture = Some(photocraft_doc::BevelTexture {
+                bv.texture = Some(sary_doc::BevelTexture {
                     name: t.to_string(),
                     id: t.to_string(),
                     scale: (f(p, "textureScale", 100.0) / 100.0).clamp(0.01, 10.0),
@@ -1073,7 +1073,7 @@ pub fn specs() -> Vec<CommandSpec> {
                 s.edit("Clear Layer Style", |doc, _| {
                     for id in ids {
                         let l = doc.layer_mut(id).ok_or(EngineError::NoLayer(id))?;
-                        l.effects = photocraft_doc::Effects { enabled: true, ..Default::default() };
+                        l.effects = sary_doc::Effects { enabled: true, ..Default::default() };
                     }
                     Ok(())
                 })?;
@@ -1091,7 +1091,7 @@ fn delete_effect(s: &mut Session, p: &Value, effect: &Value) -> Result<Value> {
     let index = effect.as_u64().and_then(|i| usize::try_from(i).ok()).ok_or_else(|| bad(CMD, "`effect` must be an effect index"))?;
     let d = s.active().ok_or(EngineError::NoDocument)?;
     let id = match p.get("layer").filter(|v| !v.is_null()) {
-        Some(v) => photocraft_doc::LayerId(v.as_u64().ok_or_else(|| bad(CMD, "`layer` must be a layer id"))?),
+        Some(v) => sary_doc::LayerId(v.as_u64().ok_or_else(|| bad(CMD, "`layer` must be a layer id"))?),
         None => d.active_layer.ok_or_else(|| bad(CMD, "no active layer"))?,
     };
     let count = d.doc.layer(id).ok_or(EngineError::NoLayer(id))?.effects.items.len();
@@ -1131,7 +1131,7 @@ mod tests {
         s.execute("layer.layerStyle.bevelEmboss", json!({"style": "pillow", "technique": "chiselHard", "contour": true, "contourRange": 70, "texture": "Bubbles", "textureDepth": -200, "textureInvert": true})).unwrap();
         let fx = effects(&s);
         let Effect::BevelEmboss(b) = &fx[0] else { panic!("{fx:?}") };
-        assert_eq!((b.style, b.technique), (photocraft_doc::BevelStyle::PillowEmboss, BevelTechnique::ChiselHard));
+        assert_eq!((b.style, b.technique), (sary_doc::BevelStyle::PillowEmboss, BevelTechnique::ChiselHard));
         assert!((b.contour.as_ref().unwrap().range - 0.7).abs() < 1e-6);
         let t = b.texture.as_ref().unwrap();
         assert_eq!((t.name.as_str(), t.depth, t.invert), ("Bubbles", -2.0, true));
@@ -1309,7 +1309,7 @@ mod tests {
         let mut s = session();
         // Two strokes: the first edits a snapshot (params overlay), the second is fresh.
         let first = Effect::Stroke(StrokeFx {
-            common: photocraft_doc::FxCommon::new(BlendMode::Normal, 1.0),
+            common: sary_doc::FxCommon::new(BlendMode::Normal, 1.0),
             size: 7.0,
             position: StrokePosition::Outside,
             paint: FxPaint::Gradient(Gradient { stops: vec![(0.0, Color::rgb(0.0, 0.0, 1.0)), (1.0, Color::WHITE)], ..Gradient::default() }),
@@ -1345,7 +1345,7 @@ mod tests {
     fn replace_rejects_bad_entries_gracefully() {
         let mut s = session();
         let stroke = Effect::Stroke(StrokeFx {
-            common: photocraft_doc::FxCommon::new(BlendMode::Normal, 1.0),
+            common: sary_doc::FxCommon::new(BlendMode::Normal, 1.0),
             size: 3.0,
             position: StrokePosition::Outside,
             paint: FxPaint::Color(Color::BLACK),
@@ -1384,7 +1384,7 @@ mod tests {
         // An imported contour with an unknown name survives the same round trip.
         let imported = Contour::Custom {
             name: "Photoshop contour".into(),
-            points: vec![photocraft_doc::adjust::CurvePoint { input: 0.0, output: 1.0 }, photocraft_doc::adjust::CurvePoint { input: 1.0, output: 0.0 }],
+            points: vec![sary_doc::adjust::CurvePoint { input: 0.0, output: 1.0 }, sary_doc::adjust::CurvePoint { input: 1.0, output: 0.0 }],
             corners: vec![],
         };
         let mut carried = before[0].clone();
@@ -1407,9 +1407,9 @@ mod tests {
         // and Gaussian reads 0.36 at 0.5 through Satin but 0.64 as the preset curve (glows, gloss).
         let lut = |name: &str| {
             let Some(Contour::Custom { points, corners, .. }) = builtin_contour(name) else { panic!("{name}") };
-            photocraft_compose::adjust::contour_curve_lut(&points, &corners)
+            sary_compose::adjust::contour_curve_lut(&points, &corners)
         };
-        let satin = |name: &str| photocraft_compose::effects::satin_lut(&builtin_contour(name).unwrap()).unwrap();
+        let satin = |name: &str| sary_compose::effects::satin_lut(&builtin_contour(name).unwrap()).unwrap();
         let at = |l: &[f32], x: f32| l[(x * (l.len() - 1) as f32).round() as usize];
         let (cone, inverted) = (satin("Cone"), satin("Cone - Inverted"));
         for x in [0.1, 0.25, 0.5, 0.8] {
@@ -1449,7 +1449,7 @@ mod tests {
         assert_eq!(sh.contour, builtin_contour("Cone").unwrap());
         assert!(sh.contour.is_corner(1) && sh.anti_alias);
         let Contour::Custom { points, corners, .. } = &sh.contour else { panic!() };
-        let lut = photocraft_compose::adjust::contour_curve_lut(points, corners);
+        let lut = sary_compose::adjust::contour_curve_lut(points, corners);
         let at = |x: f32| lut[(x * (lut.len() - 1) as f32).round() as usize];
         // Photoshop's measured Cone: 0 at both ends, a 0.99 peak at 0.5, symmetric.
         assert!(at(0.0).abs() < 1e-3 && at(1.0).abs() < 1e-3 && at(0.5) > 0.98, "a Λ: {} {} {}", at(0.0), at(0.5), at(1.0));

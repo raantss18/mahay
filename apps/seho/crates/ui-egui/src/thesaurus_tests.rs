@@ -1,6 +1,6 @@
 //! Review › Thesaurus driven like a person: caret in a word, open the pane, click a synonym.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;

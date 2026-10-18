@@ -1,4 +1,4 @@
-use gridcraft_formula::{FormulaLocale, parse, parse_input, print, print_input};
+use tabilao_formula::{FormulaLocale, parse, parse_input, print, print_input};
 
 fn input(src: &str) -> String {
     print(&parse_input(src, FormulaLocale::Es, |_| false).unwrap())

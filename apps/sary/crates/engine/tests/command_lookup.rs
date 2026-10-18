@@ -1,5 +1,5 @@
 //! Index lookups must return the same spec, in the same order, as the registry's public slice.
-use photocraft_engine::commands;
+use sary_engine::commands;
 
 #[test]
 fn every_lookup_matches_the_first_linear_match() {

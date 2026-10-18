@@ -1,9 +1,9 @@
-//! Office Math (OMML, ECMA-376 Part 1 §22.1) → [`wordcraft_doc::math`] tree.
+//! Office Math (OMML, ECMA-376 Part 1 §22.1) → [`soratra_doc::math`] tree.
 
-use wordcraft_doc::math::{
+use soratra_doc::math::{
     Arg, BrkBin, BrkBinSub, ColJc, FracKind, LimLoc, MAX_DEPTH, MNode, MRun, MScr, MSty, Math, MathJc, MathProps, ScriptKind, merge_runs,
 };
-use wordcraft_doc::props::Rgb;
+use soratra_doc::props::Rgb;
 
 use crate::xml::El;
 
@@ -17,12 +17,12 @@ pub fn read_omath(e: &El, jc: MathJc) -> Math {
 /// is kept: the writer replaces it only when the colour changes.
 pub fn lift_color(math: &mut Math) -> Option<Rgb> {
     let (mut shared, mut uniform) = (None, true);
-    wordcraft_doc::math_edit::each_run_mut(&mut math.nodes, &mut |r| match shared {
+    soratra_doc::math_edit::each_run_mut(&mut math.nodes, &mut |r| match shared {
         None => shared = Some(r.color),
         Some(c) => uniform &= c == r.color,
     });
     let c = shared.flatten().filter(|_| uniform)?;
-    wordcraft_doc::math_edit::each_run_mut(&mut math.nodes, &mut |r| r.color = None);
+    soratra_doc::math_edit::each_run_mut(&mut math.nodes, &mut |r| r.color = None);
     Some(c)
 }
 
@@ -347,7 +347,7 @@ mod tests {
         let MNode::Rad { deg_hide, e, .. } = &num[1] else { panic!() };
         assert!(*deg_hide);
         assert!(matches!(e[0], MNode::Script { kind: ScriptKind::Sup, .. }));
-        assert_eq!(wordcraft_doc::math::to_linear(&m.nodes), "x=(-b±√(b^2-4ac))/2a");
+        assert_eq!(soratra_doc::math::to_linear(&m.nodes), "x=(-b±√(b^2-4ac))/2a");
         assert!(m.omml.starts_with("<m:oMath>"));
     }
 

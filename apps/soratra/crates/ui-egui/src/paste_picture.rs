@@ -80,7 +80,7 @@ pub(crate) fn paste(app: &mut WordApp) -> Option<Result<Value, String>> {
     let picture = app.services.clipboard_picture.as_ref()?()?;
     let r = match picture {
         ClipboardPicture::Pixels { width, height, rgba } => match png_from_rgba(width, height, rgba) {
-            Ok(png) => app.execute("insert.picture", json!({"data": wordcraft_engine::cmd::insert::base64_encode(&png)})),
+            Ok(png) => app.execute("insert.picture", json!({"data": soratra_engine::cmd::insert::base64_encode(&png)})),
             Err(e) => {
                 log::warn!("clipboard picture: {e}");
                 app.status(e.clone());
@@ -92,7 +92,7 @@ pub(crate) fn paste(app: &mut WordApp) -> Option<Result<Value, String>> {
             app.status(e.clone());
             Err(e)
         }
-        ClipboardPicture::Encoded(bytes) => app.execute("insert.picture", json!({"data": wordcraft_engine::cmd::insert::base64_encode(&bytes)})),
+        ClipboardPicture::Encoded(bytes) => app.execute("insert.picture", json!({"data": soratra_engine::cmd::insert::base64_encode(&bytes)})),
         ClipboardPicture::Unreadable(why) => {
             let e = format!("the picture on the clipboard couldn't be read: {why}");
             log::warn!("clipboard picture: {e}");
@@ -135,7 +135,7 @@ pub(crate) fn clipboard_png(app: &WordApp) -> Option<Vec<u8>> {
         ClipboardPicture::Files(files) => {
             let path = files.into_iter().take(MAX_FILES).find(|p| is_picture_file(p))?;
             let size = std::fs::metadata(&path).ok()?.len();
-            if size > MAX_FILE_BYTES.min(wordcraft_engine::cmd::paste::MAX_PICTURE_BYTES as u64 / 4 * 3) {
+            if size > MAX_FILE_BYTES.min(soratra_engine::cmd::paste::MAX_PICTURE_BYTES as u64 / 4 * 3) {
                 return None;
             }
             std::fs::read(path).ok()
@@ -154,11 +154,11 @@ pub(crate) fn paste_named_files(app: &mut WordApp, text: &str) -> bool {
 mod tests {
     use super::*;
     use crate::Services;
-    use wordcraft_engine::Session;
+    use soratra_engine::Session;
 
     fn app_with(picture: impl Fn() -> Option<ClipboardPicture> + 'static) -> WordApp {
         let services = Services { clipboard_picture: Some(Box::new(picture)), ..Default::default() };
-        WordApp::new(Session::new(wordcraft_doc::Document::new()), services)
+        WordApp::new(Session::new(soratra_doc::Document::new()), services)
     }
 
     fn pictures(a: &mut WordApp) -> usize {
@@ -174,7 +174,7 @@ mod tests {
         assert_eq!((r["width"].as_f64(), r["height"].as_f64()), (Some(30.0), Some(15.0)));
         assert_eq!(pictures(&mut a), 1);
         let media = a.session.doc.media.values().next().unwrap();
-        assert_eq!(wordcraft_render::image_size(media), Some((40, 20)));
+        assert_eq!(soratra_render::image_size(media), Some((40, 20)));
         a.run("edit.undo", json!({})).unwrap();
         assert_eq!(pictures(&mut a), 0);
         // Pasted text that names picture files only becomes pictures when files were copied.
@@ -209,7 +209,7 @@ mod tests {
             clipboard_picture: Some(Box::new(|| Some(ClipboardPicture::Pixels { width: 4, height: 4, rgba: vec![200; 4 * 4 * 4] }))),
             ..Default::default()
         };
-        let mut a = WordApp::new(Session::new(wordcraft_doc::Document::new()), services);
+        let mut a = WordApp::new(Session::new(soratra_doc::Document::new()), services);
         a.run("edit.paste", json!({})).unwrap();
         a.run("edit.pasteText", json!({})).unwrap();
         a.run("edit.pasteMerge", json!({})).unwrap();
@@ -233,7 +233,7 @@ mod tests {
             clipboard_picture: Some(Box::new(move || Some(ClipboardPicture::Files(vec![file.clone()])))),
             ..Default::default()
         };
-        let mut a = WordApp::new(Session::new(wordcraft_doc::Document::new()), services);
+        let mut a = WordApp::new(Session::new(soratra_doc::Document::new()), services);
         let r = a.run("edit.paste", json!({}));
         let _ = std::fs::remove_file(&path);
         r.unwrap();

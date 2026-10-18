@@ -7,7 +7,7 @@
 //! incremental update, which the change classifier treats as a permitted "document security
 //! store" change.
 
-use pdfcraft_cos::{Dict, Document, Object, SaveOptions, Stream};
+use taratasy_cos::{Dict, Document, Object, SaveOptions, Stream};
 
 use crate::SignError;
 
@@ -93,11 +93,11 @@ pub fn embed(doc: &Document, evidence: &Evidence) -> Result<Vec<u8>, SignError> 
     }
     let dss_ref = doc.add(Object::Dict(dss));
     doc.update_dict(root, |c| c.set(b"DSS".to_vec(), Object::Ref(dss_ref)))?;
-    Ok(pdfcraft_cos::write_incremental(&doc, &SaveOptions::default())?)
+    Ok(taratasy_cos::write_incremental(&doc, &SaveOptions::default())?)
 }
 
 /// Store one DER blob as a `/Type /Embed` stream.
-fn embed_stream(doc: &mut Document, blob: &[u8]) -> pdfcraft_cos::ObjRef {
+fn embed_stream(doc: &mut Document, blob: &[u8]) -> taratasy_cos::ObjRef {
     let mut d = Dict::new();
     d.set(b"Type".to_vec(), Object::name("Embed"));
     doc.add(Object::Stream(Stream::from_raw(d, blob.to_vec())))

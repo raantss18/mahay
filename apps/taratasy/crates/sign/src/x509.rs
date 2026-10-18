@@ -141,11 +141,11 @@ pub struct Certificate {
     pub crl_urls: Vec<String>,
     /// The `version` field: 0 for v1, 1 for v2, 2 for v3.
     pub version: u64,
-    /// OIDs of extensions marked critical that PdfCraft does not process (RFC 5280 §4.2).
+    /// OIDs of extensions marked critical that Taratasy does not process (RFC 5280 §4.2).
     pub unknown_critical: Vec<String>,
 }
 
-/// Extensions PdfCraft reads or may safely ignore when they are critical: the ones
+/// Extensions Taratasy reads or may safely ignore when they are critical: the ones
 /// `Extensions::read` handles, subject/issuer alternative names, and certificate policies
 /// (accepted as any policy).
 /// qcStatements (1.3.6.1.5.5.7.1.3) is included: RFC 3739 lets qualified (eIDAS and other national)
@@ -359,7 +359,7 @@ impl Certificate {
 
     /// Why this certificate may not sign documents, if it may not (RFC 5280 §4.2.1.3,
     /// §4.2.1.12, §4.2): a key usage without digitalSignature or nonRepudiation, an extended key
-    /// usage without a document-signing purpose, or a critical extension PdfCraft doesn't process.
+    /// usage without a document-signing purpose, or a critical extension Taratasy doesn't process.
     /// The sentences are wordings of this crate's, listed in [`WORDINGS`](crate::pdf::WORDINGS), so an
     /// interface reading in another language says them in it; only the extensions' own OIDs go in as
     /// they stand.
@@ -376,7 +376,7 @@ impl Certificate {
             ))
         } else if !self.unknown_critical.is_empty() {
             Some(Detail::of(
-                "The signer's certificate has critical extensions PdfCraft does not recognize ({}).",
+                "The signer's certificate has critical extensions Taratasy does not recognize ({}).",
                 Fill::Value(self.unknown_critical.join(", ")),
             ))
         } else {
@@ -470,7 +470,7 @@ impl Certificate {
 }
 
 /// The subject alone, to name a certificate `Certificate::parse` rejects (one with a key type
-/// PdfCraft doesn't support, say). `None` when even that can't be read.
+/// Taratasy doesn't support, say). `None` when even that can't be read.
 pub fn subject_of(raw: &[u8]) -> Option<Name> {
     let cert = Tlv::parse_all(raw).ok()?.expect(tag::SEQUENCE, "Certificate").ok()?;
     let tbs = cert.children().ok()?.into_iter().next()?;

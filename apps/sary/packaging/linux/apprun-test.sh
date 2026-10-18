@@ -8,22 +8,22 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-APP_ID=ai.storyteller.photocraft
+APP_ID=ai.storyteller.sary
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # Fake AppDir with the real AppRun, .desktop template, icons, and a stub binary.
-APPDIR="$TMP/PhotoCraft.AppDir"
+APPDIR="$TMP/Sary.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
 install -Dm644 "$HERE/$APP_ID.desktop" "$APPDIR/usr/share/applications/$APP_ID.desktop"
 mkdir -p "$APPDIR/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$APPDIR/usr/share/icons/"
-printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/photocraft"
-chmod +x "$APPDIR/usr/bin/photocraft"
+printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/sary"
+chmod +x "$APPDIR/usr/bin/sary"
 
-APPIMAGE="$TMP/photocraft test.AppImage" # spaces on purpose: Exec must stay quoted
+APPIMAGE="$TMP/sary test.AppImage" # spaces on purpose: Exec must stay quoted
 : >"$APPIMAGE"
 export APPIMAGE
 export HOME="$TMP/home"
@@ -75,8 +75,8 @@ grep -Fxq "Exec=\"$(readlink -f "$APPIMAGE")\" %F" "$DESKTOP" || fail "Exec not 
 # 6. External AppImage integrator (#3623): if another .desktop file in $XDG_DATA_HOME/applications
 #    already launches this AppImage (e.g. AppImageLauncher's appimagekit-*.desktop), AppRun removes
 #    its own duplicate .desktop entry while keeping the hicolor icons installed.
-ext_desktop="$XDG_DATA_HOME/applications/appimagekit-photocraft.desktop"
-printf '[Desktop Entry]\nType=Application\nName=PhotoCraft\nExec="%s" %%F\nIcon=%s\n' "$(readlink -f "$APPIMAGE")" "$APP_ID" >"$ext_desktop"
+ext_desktop="$XDG_DATA_HOME/applications/appimagekit-sary.desktop"
+printf '[Desktop Entry]\nType=Application\nName=Sary\nExec="%s" %%F\nIcon=%s\n' "$(readlink -f "$APPIMAGE")" "$APP_ID" >"$ext_desktop"
 "$APPDIR/AppRun" >/dev/null || fail "launch with external integrator desktop entry exited non-zero"
 [ ! -e "$DESKTOP" ] || fail "duplicate desktop entry kept alongside external integrator entry"
 [ -f "$ext_desktop" ] || fail "external integrator desktop entry removed"
@@ -97,8 +97,8 @@ DESKTOPINTEGRATION=AppImageLauncher "$APPDIR/AppRun" >/dev/null || fail "second 
 [ -f "$DESKTOP" ] || fail "DESKTOPINTEGRATION removed the desktop entry on a later launch"
 [ "$before" = "$(stat -c %i "$DESKTOP")" ] || fail "desktop entry rewritten under DESKTOPINTEGRATION although unchanged"
 # A real integrator entry still wins, including when DESKTOPINTEGRATION is also set (#3623).
-ext_desktop="$XDG_DATA_HOME/applications/appimagekit-photocraft.desktop"
-printf '[Desktop Entry]\nType=Application\nName=PhotoCraft\nExec="%s" %%F\nIcon=%s\n' "$(readlink -f "$APPIMAGE")" "$APP_ID" >"$ext_desktop"
+ext_desktop="$XDG_DATA_HOME/applications/appimagekit-sary.desktop"
+printf '[Desktop Entry]\nType=Application\nName=Sary\nExec="%s" %%F\nIcon=%s\n' "$(readlink -f "$APPIMAGE")" "$APP_ID" >"$ext_desktop"
 DESKTOPINTEGRATION=AppImageLauncher "$APPDIR/AppRun" >/dev/null || fail "launch with integrator entry and DESKTOPINTEGRATION exited non-zero"
 [ ! -e "$DESKTOP" ] || fail "duplicate desktop entry kept when an integrator entry exists"
 [ -f "$ext_desktop" ] || fail "external integrator desktop entry removed"
@@ -107,7 +107,7 @@ rm -f "$ext_desktop"
 
 # 8. Opt-out installs nothing.
 rm -rf "$XDG_DATA_HOME"
-PHOTOCRAFT_NO_DESKTOP_INTEGRATION=1 "$APPDIR/AppRun" >/dev/null || fail "opt-out launch exited non-zero"
+SARY_NO_DESKTOP_INTEGRATION=1 "$APPDIR/AppRun" >/dev/null || fail "opt-out launch exited non-zero"
 [ ! -e "$XDG_DATA_HOME" ] || fail "opt-out still integrated"
 
 # 9. An unwritable data dir never blocks the launch.
@@ -129,17 +129,17 @@ out="$(APPIMAGE="$odd" "$APPDIR/AppRun" x)" || fail "launch with an odd path exi
 [ "$out" = "stub: x" ] || fail "odd path: $out"
 [ ! -e "$XDG_DATA_HOME" ] || fail "integrated an AppImage path that needs escaping"
 
-# 12. AM / AppMan (#6392): a photocraft-AM.desktop launcher in the user's applications
+# 12. AM / AppMan (#6392): a sary-AM.desktop launcher in the user's applications
 #     dir owns the menu entry. AppRun removes its own entry left from an earlier run,
 #     writes no second one and still installs the icons.
 rm -rf "$XDG_DATA_HOME"
 "$APPDIR/AppRun" >/dev/null || fail "launch before AM install exited non-zero"
 [ -f "$DESKTOP" ] || fail "no desktop entry before AM install"
-am_desktop="$XDG_DATA_HOME/applications/photocraft-AM.desktop"
+am_desktop="$XDG_DATA_HOME/applications/sary-AM.desktop"
 printf '[Desktop Entry]
 Type=Application
-Name=PhotoCraft
-Exec=photocraft %%F
+Name=Sary
+Exec=sary %%F
 Icon=%s
 ' "$APP_ID" >"$am_desktop"
 "$APPDIR/AppRun" >/dev/null || fail "launch with AM launcher exited non-zero"

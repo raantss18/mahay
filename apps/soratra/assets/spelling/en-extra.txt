@@ -1,10 +1,10 @@
 # English spelling supplement: common words the public-domain Moby list (1990s) lacks.
-# Written by WordCraft contributors (MIT OR Apache-2.0); see ATTRIBUTION.md.
+# Written by Soratra contributors (MIT OR Apache-2.0); see ATTRIBUTION.md.
 # One lowercase base form per line, sorted. Plurals, -ed, -ing, -er, -ly… come from the
 # inflection rules in crates/proof/src/lib.rs, so list "desktop", not "desktops".
 airbag
 airfare
-artcraft
+mahay
 autocomplete
 autocorrect
 autofill
@@ -231,7 +231,7 @@ wifi
 wiki
 wikipedia
 wireframe
-wordcraft
+soratra
 workaround
 workflow
 workforce

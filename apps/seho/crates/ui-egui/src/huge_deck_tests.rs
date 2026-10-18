@@ -6,7 +6,7 @@ use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
 use crate::{Services, SlideApp};
-use deckcraft_engine::Session;
+use seho_engine::Session;
 
 fn harness(n: usize) -> egui_kittest::Harness<'static, SlideApp> {
     let mut s = Session::with_new();

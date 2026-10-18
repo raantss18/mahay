@@ -16,32 +16,32 @@ use anyhow::{Context, Result, bail};
 
 /// (file stem, title, what it shows, shot arguments after the PDF path).
 pub const SCENES: &[(&str, &str, &str, &[&str])] = &[
-    ("pdfcraft-viewer", "Viewer with comments", "README hero", &["--panel", "comments", "--zoom", "72"]),
-    ("pdfcraft-dark", "Dark theme", "README: themes", &["--theme", "dark", "--panel", "comments", "--page", "11", "--zoom", "80", "--notice", "off"]),
-    ("pdfcraft-organize", "Organize pages", "README: organize", &["--organize", "on", "--panel", "none", "--select", "5,6,7"]),
-    ("pdfcraft-find", "Find text", "README: search", &["--find", "type", "--page", "4", "--zoom", "90", "--panel", "none", "--notice", "off"]),
-    ("pdfcraft-bookmarks", "Bookmarks", "README: navigation", &["--panel", "bookmarks", "--page", "7", "--zoom", "75", "--notice", "off"]),
-    ("pdfcraft-forms", "Interactive form", "README: forms", &["--page", "13", "--fields", "on", "--zoom", "80", "--panel", "fields"]),
-    ("pdfcraft-layers", "Layers", "README: layers", &["--panel", "layers", "--page", "12", "--zoom", "75", "--notice", "off"]),
+    ("taratasy-viewer", "Viewer with comments", "README hero", &["--panel", "comments", "--zoom", "72"]),
+    ("taratasy-dark", "Dark theme", "README: themes", &["--theme", "dark", "--panel", "comments", "--page", "11", "--zoom", "80", "--notice", "off"]),
+    ("taratasy-organize", "Organize pages", "README: organize", &["--organize", "on", "--panel", "none", "--select", "5,6,7"]),
+    ("taratasy-find", "Find text", "README: search", &["--find", "type", "--page", "4", "--zoom", "90", "--panel", "none", "--notice", "off"]),
+    ("taratasy-bookmarks", "Bookmarks", "README: navigation", &["--panel", "bookmarks", "--page", "7", "--zoom", "75", "--notice", "off"]),
+    ("taratasy-forms", "Interactive form", "README: forms", &["--page", "13", "--fields", "on", "--zoom", "80", "--panel", "fields"]),
+    ("taratasy-layers", "Layers", "README: layers", &["--panel", "layers", "--page", "12", "--zoom", "75", "--notice", "off"]),
     (
-        "pdfcraft-scripts",
+        "taratasy-scripts",
         "Scripts of the world",
         "README: rendering",
         &["--page", "7", "--zoom", "125", "--left", "closed", "--panel", "none", "--notice", "off"],
     ),
-    ("pdfcraft-properties", "Document properties", "README: metadata", &["--dialog", "properties", "--notice", "off"]),
-    ("pdfcraft-palette", "Command palette", "README: tools", &["--palette", "page", "--notice", "off"]),
-    ("pdfcraft-split", "Split dialog", "README: split", &["--organize", "on", "--panel", "none", "--dialog", "split", "--notice", "off"]),
-    ("pdfcraft-tools", "All tools", "README: tool catalogue", &["--tools", "expanded", "--home", "on"]),
+    ("taratasy-properties", "Document properties", "README: metadata", &["--dialog", "properties", "--notice", "off"]),
+    ("taratasy-palette", "Command palette", "README: tools", &["--palette", "page", "--notice", "off"]),
+    ("taratasy-split", "Split dialog", "README: split", &["--organize", "on", "--panel", "none", "--dialog", "split", "--notice", "off"]),
+    ("taratasy-tools", "All tools", "README: tool catalogue", &["--tools", "expanded", "--home", "on"]),
     (
-        "pdfcraft-twoup",
+        "taratasy-twoup",
         "Two-up reading",
         "README: layouts",
         &["--layout", "two-up", "--mode", "read", "--page", "4", "--theme", "dark", "--notice", "off"],
     ),
 ];
 
-const PDF: &str = "dist/demo/pdfcraft-showcase.pdf";
+const PDF: &str = "dist/demo/taratasy-showcase.pdf";
 
 pub fn run(args: &[String]) -> Result<()> {
     let root = crate::assets::root();
@@ -50,7 +50,7 @@ pub fn run(args: &[String]) -> Result<()> {
         crate::demo_pdf::run(&[])?;
     }
     let status = Command::new(env!("CARGO"))
-        .args(["build", "--release", "-p", "pdfcraft-ui-egui", "--example", "shot"])
+        .args(["build", "--release", "-p", "taratasy-ui-egui", "--example", "shot"])
         .current_dir(&root)
         .status()
         .context("building the shot example")?;
@@ -71,7 +71,7 @@ pub fn run(args: &[String]) -> Result<()> {
             .args(["--size", "1440x900", "--scale", "2", "--width", "1600"])
             .args(*scene)
             // Published images show only the embedded, openly licensed fonts (AGENTS.md §1.2).
-            .env("PDFCRAFT_SYSTEM_FONTS", "0")
+            .env("TARATASY_SYSTEM_FONTS", "0")
             .current_dir(&root)
             .status()
             .with_context(|| format!("running shot for {name}"))?;
@@ -105,18 +105,18 @@ fn update_attribution(root: &Path) -> Result<()> {
     for file in images.iter().filter(|f| f.ends_with(".png")) {
         let stem = file.trim_end_matches(".png");
         let scene = SCENES.iter().find(|(n, ..)| *n == stem);
-        let (title, usage) = scene.map(|(_, t, u, _)| (*t, *u)).unwrap_or(("PdfCraft screenshot", "README"));
-        // The home screen shows the ArtCraft mark: say so (it is a Storyteller trademark, not open
+        let (title, usage) = scene.map(|(_, t, u, _)| (*t, *u)).unwrap_or(("Taratasy screenshot", "README"));
+        // The home screen shows the Mahay mark: say so (it is a Storyteller trademark, not open
         // source; AGENTS.md §1.2), so the screenshot's licence is not read as covering it.
         let shows_home = scene.is_some_and(|(.., args)| args.windows(2).any(|w| w[0] == "--home" && w[1] == "on"));
         let contents = if shows_home {
-            "Shows PdfCraft UI, Lucide icons, the showcase PDF built from the [[fetched]] OFL fonts, and the ArtCraft mark (Storyteller trademark from docs/brand/, not covered by this licence)"
+            "Shows Taratasy UI, Lucide icons, the showcase PDF built from the [[fetched]] OFL fonts, and the Mahay mark (Storyteller trademark from docs/brand/, not covered by this licence)"
         } else {
-            "Shows only PdfCraft UI, Lucide icons and the showcase PDF built from the [[fetched]] OFL fonts"
+            "Shows only Taratasy UI, Lucide icons and the showcase PDF built from the [[fetched]] OFL fonts"
         };
         let bytes = std::fs::read(root.join("docs/images").join(file))?;
         out.push_str(&format!(
-            "\n[[asset]]\npath = \"docs/images/{file}\"\ntitle = \"PdfCraft screenshot: {title}\"\nauthor = \"PdfCraft contributors (generated by `cargo xtask screenshots`)\"\nsource = \"this repository\"\nlicence = \"MIT OR Apache-2.0\"\nlicence_file = \"LICENSE-MIT\"\nkind = \"image\"\nusage = \"{usage}. {contents}\"\nsha256 = \"{}\"\n",
+            "\n[[asset]]\npath = \"docs/images/{file}\"\ntitle = \"Taratasy screenshot: {title}\"\nauthor = \"Taratasy contributors (generated by `cargo xtask screenshots`)\"\nsource = \"this repository\"\nlicence = \"MIT OR Apache-2.0\"\nlicence_file = \"LICENSE-MIT\"\nkind = \"image\"\nusage = \"{usage}. {contents}\"\nsha256 = \"{}\"\n",
             crate::assets::sha256_hex(&bytes)
         ));
     }

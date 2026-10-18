@@ -1,12 +1,12 @@
-//! Flat raster formats via `photocraft-codecs`.
+//! Flat raster formats via `sary-codecs`.
 
 use std::sync::Arc;
 
-use photocraft_codecs::{self as codecs, ChannelLayout, Format, Image, SampleType as CSample};
-use photocraft_color::{BlendMode, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{AlphaChannel, Document, Layer, LayerContent};
-use photocraft_geom::{Rect, Size, TILE_SIZE};
-use photocraft_raster::Surface;
+use sary_codecs::{self as codecs, ChannelLayout, Format, Image, SampleType as CSample};
+use sary_color::{BlendMode, ColorMode, PixelFormat, SampleType};
+use sary_doc::{AlphaChannel, Document, Layer, LayerContent};
+use sary_geom::{Rect, Size, TILE_SIZE};
+use sary_raster::Surface;
 
 use crate::{ExportOptions, ExportResult, ImportResult, IoError, TgaBits, XmpEmbed};
 
@@ -34,7 +34,7 @@ pub fn import_flat(name: &str, bytes: &[u8]) -> Result<ImportResult, IoError> {
         && r.document.mode == ColorMode::Rgb
     {
         r.document.mode = ColorMode::Indexed;
-        r.document.color_table = Some(photocraft_doc::ColorTable { colors, transparent });
+        r.document.color_table = Some(sary_doc::ColorTable { colors, transparent });
     }
     r.document.file_encoding = file_encoding_as(format, bytes);
     if format == Some(Format::Tga) && img.layout() == ChannelLayout::Rgba {
@@ -46,8 +46,8 @@ pub fn import_flat(name: &str, bytes: &[u8]) -> Result<ImportResult, IoError> {
     let d = &mut r.document;
     if d.icc_profile.is_none() && matches!(format, Some(Format::OpenExr | Format::Hdr)) {
         d.icc_profile = match d.mode {
-            ColorMode::Rgb => Some(photocraft_cms::Builtin::LinearSrgb.profile().to_bytes()),
-            ColorMode::Grayscale => Some(photocraft_cms::builtin::linear_gray().to_bytes()),
+            ColorMode::Rgb => Some(sary_cms::Builtin::LinearSrgb.profile().to_bytes()),
+            ColorMode::Grayscale => Some(sary_cms::builtin::linear_gray().to_bytes()),
             _ => None,
         };
     }
@@ -69,13 +69,13 @@ pub fn import_gif_frames(name: &str, bytes: &[u8], each: &mut dyn FnMut(Document
 /// The lossy settings `bytes` were encoded with, for File › Save to keep: a JPEG's quality
 /// (estimated from its quantisation tables) and a WebP's lossless or lossy encoding with its
 /// quality. A lossy WebP whose quality can't be read gets [`DEFAULT_LOSSY_WEBP_QUALITY`].
-pub fn file_encoding(bytes: &[u8]) -> photocraft_doc::FileEncoding {
+pub fn file_encoding(bytes: &[u8]) -> sary_doc::FileEncoding {
     file_encoding_as(codecs::detect(bytes), bytes)
 }
 
 /// [`file_encoding`] for `bytes` already detected as `format`.
-fn file_encoding_as(format: Option<Format>, bytes: &[u8]) -> photocraft_doc::FileEncoding {
-    let mut e = photocraft_doc::FileEncoding::default();
+fn file_encoding_as(format: Option<Format>, bytes: &[u8]) -> sary_doc::FileEncoding {
+    let mut e = sary_doc::FileEncoding::default();
     match format {
         Some(Format::Jpeg) => e.jpeg_quality = codecs::jpeg_quality(bytes),
         Some(Format::WebP) => match codecs::webp_encoding(bytes) {
@@ -140,7 +140,7 @@ fn tga_alpha_to_channel(doc: &mut Document) -> Result<(), IoError> {
     layer.name = "Background".into();
     layer.locks.transparency = true;
     layer.locks.position = true;
-    doc.channels.push(photocraft_doc::AlphaChannel::new("Alpha 1", alpha));
+    doc.channels.push(sary_doc::AlphaChannel::new("Alpha 1", alpha));
     Ok(())
 }
 
@@ -289,8 +289,8 @@ pub(crate) fn single_layer(doc: &Document) -> Option<&Surface> {
         && l.effects.items.is_empty()
         && l.effects.psd_raw.is_none()
         && matches!(l.blend, BlendMode::Normal | BlendMode::PassThrough)
-        && photocraft_compose::channel_weights(l, doc.mode).is_none()
-        && !photocraft_compose::blend_if_active(l, doc.mode);
+        && sary_compose::channel_weights(l, doc.mode).is_none()
+        && !sary_compose::blend_if_active(l, doc.mode);
     match (&l.content, ok) {
         (LayerContent::Raster(s), true) if s.format() == doc.pixel_format() => Some(s),
         _ => None,
@@ -367,7 +367,7 @@ fn document_to_image_for(doc: &Document, warnings: &mut Vec<String>, cmyk_target
         // Only a CMYK target needs the document's profile; RGB-only targets keep the compositor's
         // own handling (built-in coated CMYK when the embedded profile is unusable).
         let space = if cmyk {
-            use photocraft_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
+            use sary_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
             let profile = match doc.icc_profile.as_ref() {
                 Some(bytes) => Profile::parse(bytes).map_err(|e| IoError::Unsupported(format!("invalid CMYK composite profile: {e}")))?,
                 None => Builtin::CoatedCmyk.profile().clone(),
@@ -381,7 +381,7 @@ fn document_to_image_for(doc: &Document, warnings: &mut Vec<String>, cmyk_target
             if icc.is_none() {
                 icc = Some(profile.to_bytes().to_vec());
             }
-            photocraft_compose::cmyk_space(doc)
+            sary_compose::cmyk_space(doc)
         } else {
             None
         };
@@ -389,7 +389,7 @@ fn document_to_image_for(doc: &Document, warnings: &mut Vec<String>, cmyk_target
         if (fmt.mode == ColorMode::Cmyk && !cmyk) || fmt.mode == ColorMode::Lab {
             // RGB-only targets use the sRGB composite directly, without reseparating CMYK.
             warnings.push(format!("{:?} composite written as sRGB RGB (colour-managed conversion)", fmt.mode));
-            icc = Some(photocraft_cms::Builtin::Srgb.profile().to_bytes().to_vec());
+            icc = Some(sary_cms::Builtin::Srgb.profile().to_bytes().to_vec());
         }
         let cs = csample(fmt.sample);
         let colors = if cmyk {
@@ -403,10 +403,10 @@ fn document_to_image_for(doc: &Document, warnings: &mut Vec<String>, cmyk_target
         // is dropped afterwards, in place, when every pixel turned out opaque.
         let mut data = try_buffer(n, (colors + 1) * cs.bytes())?;
         let mut opaque = true;
-        let _ = photocraft_compose::render_bands(doc, canvas, 0, |band| -> Result<(), ()> {
+        let _ = sary_compose::render_bands(doc, canvas, 0, |band| -> Result<(), ()> {
             opaque &= band.px.iter().all(|p| p[3] >= 1.0);
             let parts = crate::pixels::par_map(crate::pixels::bands(band.px.len()), |range| {
-                photocraft_color::convert::with_cmyk_space(space.as_ref(), || {
+                sary_color::convert::with_cmyk_space(space.as_ref(), || {
                     let mut out = Vec::with_capacity(range.len() * (colors + 1) * cs.bytes());
                     let mut put = |v: f32| {
                         let v = if v.is_nan() { 0.0 } else { v };
@@ -419,13 +419,13 @@ fn document_to_image_for(doc: &Document, warnings: &mut Vec<String>, cmyk_target
                     let mut converted = [0.0; 5];
                     for p in &band.px[range] {
                         if cmyk {
-                            let channels = photocraft_raster::from_rgba_into(&fmt, *p, &mut converted);
+                            let channels = sary_raster::from_rgba_into(&fmt, *p, &mut converted);
                             for value in converted.iter().take(channels) {
                                 put(*value);
                             }
                             continue;
                         } else if gray {
-                            put(photocraft_color::convert::rgb_to_gray([p[0], p[1], p[2]]));
+                            put(sary_color::convert::rgb_to_gray([p[0], p[1], p[2]]));
                         } else {
                             put(p[0]);
                             put(p[1]);
@@ -491,9 +491,9 @@ fn opaque_surface(s: &Surface, r: Rect) -> bool {
     let fmt = s.format();
     let (ch, bps) = (fmt.channels(), fmt.sample.bytes());
     let a = ch - 1;
-    let alpha_ok = |px: &[u8]| photocraft_color::read_sample(px, fmt.sample, a) >= 1.0;
+    let alpha_ok = |px: &[u8]| sary_color::read_sample(px, fmt.sample, a) >= 1.0;
     let mut default = vec![0u8; ch * bps];
-    photocraft_raster::encode_pixel(&fmt, &s.default_pixel(), &mut default);
+    sary_raster::encode_pixel(&fmt, &s.default_pixel(), &mut default);
     r.tiles().all(|tc| {
         let tr = tc.rect().intersect(&r);
         match s.tile(tc) {
@@ -519,13 +519,13 @@ fn composite_share(format: Format) -> f32 {
 
 /// Flattens and encodes as `format`.
 pub fn export_flat(doc: &Document, format: Format, opts: &ExportOptions) -> Result<ExportResult, IoError> {
-    export_flat_with(doc, format, opts, &photocraft_raster::Interrupt::NONE)
+    export_flat_with(doc, format, opts, &sary_raster::Interrupt::NONE)
 }
 
 /// [`export_flat`] reporting a coarse step through `ctl` once the composite is rendered; the
 /// encoder does the rest (#3389).
-pub(crate) fn export_flat_with(doc: &Document, format: Format, opts: &ExportOptions, ctl: &photocraft_raster::Interrupt) -> Result<ExportResult, IoError> {
-    use photocraft_cms::{Builtin, Intent};
+pub(crate) fn export_flat_with(doc: &Document, format: Format, opts: &ExportOptions, ctl: &sary_raster::Interrupt) -> Result<ExportResult, IoError> {
+    use sary_cms::{Builtin, Intent};
     if let Some(r) = export_mode_specific(doc, format, opts)? {
         return Ok(r);
     }
@@ -556,7 +556,7 @@ pub(crate) fn export_flat_with(doc: &Document, format: Format, opts: &ExportOpti
         // see [`import_flat`]).
         if let Some(linear) = convert_rgb(&img, Builtin::LinearSrgb.profile(), Intent::RelativeColorimetric, false, CSample::F32)? {
             img = linear;
-        } else if let Some(linear) = convert_gray(&img, photocraft_cms::builtin::linear_gray(), CSample::F32)? {
+        } else if let Some(linear) = convert_gray(&img, sary_cms::builtin::linear_gray(), CSample::F32)? {
             img = linear;
         }
     } else if !format.caps().icc || (img.layout().is_gray() && !format.caps().layouts.iter().any(|l| l.is_gray())) {
@@ -709,8 +709,8 @@ fn matte_over_white(img: &Image) -> Result<Image, IoError> {
 
 /// RGB pixels converted from their profile (sRGB when untagged) to `dst`, unclamped, untagged and
 /// stored as `sample`. `None` when the image isn't RGB or already holds `dst`'s colours.
-fn convert_rgb(img: &Image, dst: &photocraft_cms::Profile, intent: photocraft_cms::Intent, bpc: bool, sample: CSample) -> Result<Option<Image>, IoError> {
-    use photocraft_cms::{Builtin, ColorSpace, Profile};
+fn convert_rgb(img: &Image, dst: &sary_cms::Profile, intent: sary_cms::Intent, bpc: bool, sample: CSample) -> Result<Option<Image>, IoError> {
+    use sary_cms::{Builtin, ColorSpace, Profile};
     if !img.layout().is_rgb() {
         return Ok(None);
     }
@@ -721,8 +721,8 @@ fn convert_rgb(img: &Image, dst: &photocraft_cms::Profile, intent: photocraft_cm
 
 /// Gray pixels converted from their profile (sGray when untagged) to `dst`, unclamped, untagged
 /// and stored as `sample`. `None` when the image isn't gray or already holds `dst`'s colours.
-fn convert_gray(img: &Image, dst: &photocraft_cms::Profile, sample: CSample) -> Result<Option<Image>, IoError> {
-    use photocraft_cms::{Builtin, ColorSpace, Intent, Profile};
+fn convert_gray(img: &Image, dst: &sary_cms::Profile, sample: CSample) -> Result<Option<Image>, IoError> {
+    use sary_cms::{Builtin, ColorSpace, Intent, Profile};
     if !matches!(img.layout(), ChannelLayout::Gray | ChannelLayout::GrayA) {
         return Ok(None);
     }
@@ -734,16 +734,16 @@ fn convert_gray(img: &Image, dst: &photocraft_cms::Profile, sample: CSample) -> 
 /// `img`'s pixels converted from `src` to `dst` (see [`convert_rgb`]).
 fn convert_from(
     img: &Image,
-    src: &photocraft_cms::Profile,
-    dst: &photocraft_cms::Profile,
-    intent: photocraft_cms::Intent,
+    src: &sary_cms::Profile,
+    dst: &sary_cms::Profile,
+    intent: sary_cms::Intent,
     bpc: bool,
     sample: CSample,
 ) -> Result<Option<Image>, IoError> {
     if src.same_colors(dst) {
         return Ok(None);
     }
-    let t = photocraft_cms::Transform::new(src, dst, intent, bpc).map_err(|e| IoError::Unsupported(e.to_string()))?;
+    let t = sary_cms::Transform::new(src, dst, intent, bpc).map_err(|e| IoError::Unsupported(e.to_string()))?;
     let stride = img.layout().channels();
     let out = map_bands(img, img.layout(), sample, |mut vals| {
         t.apply(&mut vals, stride);
@@ -755,7 +755,7 @@ fn convert_from(
 /// Colour-managed CMYK → sRGB for formats that cannot store CMYK (the document's embedded
 /// CMYK profile when it parses, else the built-in coated CMYK; relative colorimetric + BPC).
 fn cmyk_image_to_srgb(img: &Image) -> Result<Image, IoError> {
-    use photocraft_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
+    use sary_cms::{Builtin, ColorSpace, Intent, Profile, Transform};
     let src = img
         .icc
         .as_ref()
@@ -814,9 +814,9 @@ fn export_mode_specific(doc: &Document, format: Format, opts: &ExportOptions) ->
             // transparent entry out of opaque lookup, even when it duplicates an opaque colour.
             let (opaque_indices, colors): (Vec<u8>, Vec<_>) =
                 table.colors.iter().copied().enumerate().filter(|(i, _)| Some(*i) != table.transparent.map(usize::from)).map(|(i, c)| (i as u8, c)).unzip();
-            let opaque = photocraft_doc::ColorTable { colors, transparent: None };
+            let opaque = sary_doc::ColorTable { colors, transparent: None };
             let mut idx = try_buffer(doc.size.area() as usize, 1)?;
-            photocraft_compose::render_bands(doc, doc.bounds(), 0, |band| -> Result<(), IoError> {
+            sary_compose::render_bands(doc, doc.bounds(), 0, |band| -> Result<(), IoError> {
                 for p in &band.px {
                     let i = match table.transparent {
                         Some(t) if p[3] < 0.5 => t,
@@ -840,7 +840,7 @@ fn export_mode_specific(doc: &Document, format: Format, opts: &ExportOptions) ->
         ColorMode::Duotone => {
             let Some(d) = doc.duotone.as_ref() else { return Ok(None) };
             let mut shown = doc.clone();
-            shown.layers.push(photocraft_doc::Layer::new("Duotone", photocraft_doc::LayerContent::Adjustment(d.display_adjustment())));
+            shown.layers.push(sary_doc::Layer::new("Duotone", sary_doc::LayerContent::Adjustment(d.display_adjustment())));
             shown.mode = ColorMode::Rgb;
             shown.icc_profile = None;
             shown.duotone = None;

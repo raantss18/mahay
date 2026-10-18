@@ -49,7 +49,7 @@ impl ShadingFunction {
         }
     }
 
-    /// PdfCraft patch (backport of hayro 0.8): stitching breakpoints of all component functions.
+    /// Taratasy patch (backport of hayro 0.8): stitching breakpoints of all component functions.
     pub(crate) fn stitching_bounds(&self) -> StitchingBounds {
         let mut bounds = StitchingBounds::new();
 
@@ -563,7 +563,7 @@ impl TensorProductPatch {
     }
 }
 
-/// PdfCraft patch: the most triangles a free-form or lattice mesh, and the most patches a
+/// Taratasy patch: the most triangles a free-form or lattice mesh, and the most patches a
 /// patch mesh, may hold. Each was read without limit: a patch can be 19 bits, a triangle 216
 /// bytes in memory, so a small stream made gigabytes. Real meshes are far smaller (a 200 × 200
 /// gradient mesh is 40 thousand patches).
@@ -619,7 +619,7 @@ fn read_free_form_triangles(
             continue;
         }
 
-        // PdfCraft patch: see `MAX_MESH_TRIANGLES`.
+        // Taratasy patch: see `MAX_MESH_TRIANGLES`.
         if triangles.len() >= MAX_MESH_TRIANGLES {
             warn!("free-form mesh has over {MAX_MESH_TRIANGLES} triangles; the rest is not drawn");
             break;
@@ -817,7 +817,7 @@ fn read_lattice_triangles(
     vertices_per_row: u32,
     decode: &[f32],
 ) -> Option<Vec<Triangle>> {
-    // PdfCraft patch: ISO 32000-2 8.7.4.5.6 requires at least two vertices per row; with none,
+    // Taratasy patch: ISO 32000-2 8.7.4.5.6 requires at least two vertices per row; with none,
     // the loop below pushed empty rows for ever, and one row of 4294967295 read the whole stream
     // into memory before any cap (see `MAX_MESH_TRIANGLES`).
     if !(2..=(MAX_MESH_TRIANGLES / 2) as u32).contains(&vertices_per_row) {
@@ -845,7 +845,7 @@ fn read_lattice_triangles(
     };
 
     'outer: loop {
-        // PdfCraft patch: see `MAX_MESH_TRIANGLES` (two triangles per vertex at most).
+        // Taratasy patch: see `MAX_MESH_TRIANGLES` (two triangles per vertex at most).
         if lattices.len().saturating_mul(vertices_per_row as usize) >= MAX_MESH_TRIANGLES / 2 {
             warn!("lattice-form mesh has too many vertices; the rest is not drawn");
             break;
@@ -939,7 +939,7 @@ where
     let mut patches = vec![];
 
     while let Some(flag) = reader.read(bpf) {
-        // PdfCraft patch: see `MAX_MESH_PATCHES`.
+        // Taratasy patch: see `MAX_MESH_PATCHES`.
         if patches.len() >= MAX_MESH_PATCHES {
             warn!("patch mesh has over {MAX_MESH_PATCHES} patches; the rest is not drawn");
             break;

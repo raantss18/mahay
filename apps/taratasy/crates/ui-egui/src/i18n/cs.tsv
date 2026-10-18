@@ -15,7 +15,7 @@
 # localisation or any other product's translation. Terminology: annotations are "komentáře",
 # pages are "stránky", form fields are "formulářová pole", redaction is "začernění", flattening is
 # "sloučení se stránkou", tags are "tagy" (to tag = "označkovat"). Product and format names
-# (PdfCraft, PDF, PDF/A, OCR, XFA, Word, HTML…) stay in Latin letters; the trailing "…" of dialog
+# (Taratasy, PDF, PDF/A, OCR, XFA, Word, HTML…) stay in Latin letters; the trailing "…" of dialog
 # commands is kept. Messages with a count but no `@plural` entry use count-neutral wording
 # ("Vybráno stránek: {n}"), because Czech has three plural forms.
 
@@ -117,12 +117,12 @@
 	Split document…	Rozdělit dokument…
 	Number pages…	Očíslovat stránky…
 	Keyboard shortcuts	Klávesové zkratky
-	Join the ArtCraft Discord	Připojit se ke komunitě ArtCraft na Discordu
-	PdfCraft web page	Webová stránka PdfCraft
-	PdfCraft on GitHub	PdfCraft na GitHubu
-	ArtCraft website	Web ArtCraft
+	Join the Mahay Discord	Připojit se ke komunitě Mahay na Discordu
+	Taratasy web page	Webová stránka Taratasy
+	Taratasy on GitHub	Taratasy na GitHubu
+	Mahay website	Web Mahay
 	Check for updates…	Zkontrolovat aktualizace…
-	About PdfCraft	O aplikaci PdfCraft
+	About Taratasy	O aplikaci Taratasy
 	Auto	Automaticky
 	Continuous scrolling	Plynulé posouvání
 	Single page	Jednostránkové zobrazení
@@ -136,7 +136,7 @@
 	Fit to width scrolling	Plynulé posouvání s přizpůsobením šířce
 	Fit one full page	Celá jedna stránka
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Používá se, když PDF nepožaduje rozložení ani zvětšení. Plynulé posouvání mezi stránkami neskáče.
-	Reopen the files that were open when PdfCraft last closed	Znovu otevřít soubory, které byly otevřené při posledním zavření aplikace PdfCraft
+	Reopen the files that were open when Taratasy last closed	Znovu otevřít soubory, které byly otevřené při posledním zavření aplikace Taratasy
 	Reload documents when their files change on disk	Znovu načítat dokumenty při změně jejich souborů na disku
 	This file changed on disk. Reload shows the new version and drops your unsaved changes; Save replaces it with this version.	Tento soubor se na disku změnil. Znovu načíst zobrazí novou verzi a zahodí neuložené změny; Uložit ji nahradí touto verzí.
 	Reload	Znovu načíst
@@ -144,7 +144,7 @@
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	Vyberte obrázek PNG nebo JPEG (nejvýše 4 MiB). Průhlednost bude zachována.
 	Couldn't import the signature image: {e}	Obrázek podpisu nelze importovat: {e}
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	Přenosný režim je vypnutý: do složky {folder} nelze zapisovat ({error}). Nastavení se místo toho ukládá do vaší uživatelské složky.
-	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	PdfCraft vykresluje bez grafického procesoru, takže může být pomalý. Pomoci může aktualizace grafického ovladače.
+	Taratasy is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	Taratasy vykresluje bez grafického procesoru, takže může být pomalý. Pomoci může aktualizace grafického ovladače.
 	Go to page…	Přejít na stránku…
 	Margins	Okraje
 	For page sizes and margins.	Pro velikosti stránek a okraje.
@@ -279,17 +279,17 @@ key	Space	Mezerník
 	Next page	Další stránka
 	Previous page	Předchozí stránka
 	Current page — type a page number or label (such as iv) and press Enter	Aktuální stránka — zadejte číslo nebo označení stránky (třeba iv) a stiskněte Enter
-	Welcome to PdfCraft	Vítá vás PdfCraft
+	Welcome to Taratasy	Vítá vás Taratasy
 	An open-source PDF workbench — local, private, and scriptable.	Open-source dílna pro PDF — lokální, soukromá a skriptovatelná.
-	Join the ArtCraft community	Připojte se ke komunitě ArtCraft
+	Join the Mahay community	Připojte se ke komunitě Mahay
 	Get help, share feedback and follow development on Discord.	Získejte pomoc, sdílejte zpětnou vazbu a sledujte vývoj na Discordu.
 	Recommended tools	Doporučené nástroje
 	Use now	Použít
 	Open file	Otevřít soubor
 	Recent	Nedávné
-	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Zde se zobrazí soubory, které otevřete v PdfCraftu. Soubor PDF otevřete přetažením kamkoli do okna.
+	Files you open in Taratasy appear here. Drop a PDF anywhere to open it.	Zde se zobrazí soubory, které otevřete v Taratasyu. Soubor PDF otevřete přetažením kamkoli do okna.
 	Privacy	Soukromí
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft funguje offline. Žádná telemetrie, žádný účet a žádné zpracování v cloudu, pokud nepřidáte poskytovatele.
+	Taratasy works offline. No telemetry, no account, and no cloud processing unless you add a provider.	Taratasy funguje offline. Žádná telemetrie, žádný účet a žádné zpracování v cloudu, pokud nepřidáte poskytovatele.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skripty běží v izolovaném prostředí bez přístupu k souborům a síti. S vypnutým JavaScriptem dál fungují standardní funkce Acrobatu pro formátování, ověření a výpočty.
 	Back to all tools	Zpět na všechny nástroje
 	Close panel	Zavřít panel
@@ -849,9 +849,9 @@ key	Space	Mezerník
 	Check for updates	Zkontrolovat aktualizace
 	No check has run yet.	Kontrola zatím neproběhla.
 	Checking for a newer version…	Hledání novější verze…
-	PdfCraft {v} is available.	Je k dispozici PdfCraft {v}.
+	Taratasy {v} is available.	Je k dispozici Taratasy {v}.
 	You have version {c}. Download the new version from its release page.	Máte verzi {c}. Novou verzi si stáhněte z její stránky s vydáním.
-	PdfCraft {c} is up to date.	PdfCraft {c} je aktuální.
+	Taratasy {c} is up to date.	Taratasy {c} je aktuální.
 	Couldn't check for updates: {e}	Aktualizace nelze zkontrolovat: {e}
 	You have version {c}. All releases are listed at {page}.	Máte verzi {c}. Všechna vydání najdete na {page}.
 	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Zjistí na GitHubu nejnovější vydání. Nic se automaticky nestahuje ani neinstaluje.
@@ -970,8 +970,8 @@ key	Space	Mezerník
 	No changes allowed	Nejsou povoleny žádné změny
 	Annotations, form fill-in, and digital signatures	Anotace, vyplňování formulářů a digitální podpisy
 	Form fill-in and digital signatures	Vyplňování formulářů a digitální podpisy
-	The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.	Klíč je v Klíčence systému macOS, která se může zeptat, zda PdfCraftu povolit jeho použití.
-	The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.	Klíč je v úložišti certifikátů Windows, které se může zeptat, zda PdfCraftu povolit jeho použití.
+	The key is in the macOS Keychain, which may ask to allow Taratasy to use it.	Klíč je v Klíčence systému macOS, která se může zeptat, zda Taratasyu povolit jeho použití.
+	The key is in the Windows certificate store, which may ask to allow Taratasy to use it.	Klíč je v úložišti certifikátů Windows, které se může zeptat, zda Taratasyu povolit jeho použití.
 	Digital ID password	Heslo digitálního ID
 	Back	Zpět
 	Validate all	Ověřit vše
@@ -1325,7 +1325,7 @@ key	Space	Mezerník
 	Downsample to	Převzorkovat na
 	Also recognize pages that already have text	Rozpoznat i stránky, které už obsahují text
 	Pictures on those pages are recognized too; words already in the page's text are not added again	Rozpoznají se i obrázky na těchto stránkách; slova, která už jsou v textu stránky, se znovu nepřidají
-	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Rozpoznávání textu není nainstalováno: chybí soubory jeho modelů. Přeinstalujte PdfCraft nebo nastavte PDFCRAFT_MODELS na složku, ve které jsou.
+	Text recognition isn't installed: its model files are missing. Reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them.	Rozpoznávání textu není nainstalováno: chybí soubory jeho modelů. Přeinstalujte Taratasy nebo nastavte TARATASY_MODELS na složku, ve které jsou.
 	Settings	Nastavení
 	Optional	Volitelné
 	Planned · {m}	Plánováno · {m}
@@ -1470,7 +1470,7 @@ key	Space	Mezerník
 	Anyone opening the document will need this password. It's applied when you save.	Každý, kdo dokument otevře, bude potřebovat toto heslo. Použije se při uložení.
 	The document opens without a password; this password is needed to change the restrictions. It's applied when you save.	Dokument se otevře bez hesla; toto heslo je potřeba ke změně omezení. Použije se při uložení.
 	Recover unsaved documents?	Obnovit neuložené dokumenty?
-	PdfCraft didn't shut down normally. These documents had changes that were autosaved:	PdfCraft nebyl řádně ukončen. V těchto dokumentech byly změny, které se automaticky uložily:
+	Taratasy didn't shut down normally. These documents had changes that were autosaved:	Taratasy nebyl řádně ukončen. V těchto dokumentech byly změny, které se automaticky uložily:
 	just now	právě teď
 	{n} min ago	před {n} min
 	{n} h ago	před {n} h
@@ -1629,10 +1629,10 @@ key	Space	Mezerník
 	On the web, open or drop an image to convert it	Na webu obrázek k převodu otevřete nebo přetáhněte
 	Couldn't optimize the file: {e}	Soubor nelze optimalizovat: {e}
 	Couldn't write {path}: {e}	Nelze zapsat {path}: {e}
-	The form asks to be submitted to {u}; PdfCraft doesn't send form data. Save the document to keep your entries.	Formulář žádá o odeslání na {u}; PdfCraft data formulářů neodesílá. Své údaje zachováte uložením dokumentu.
+	The form asks to be submitted to {u}; Taratasy doesn't send form data. Save the document to keep your entries.	Formulář žádá o odeslání na {u}; Taratasy data formulářů neodesílá. Své údaje zachováte uložením dokumentu.
 	This PDF uses the unsupported {s} action.	Tento PDF používá nepodporovanou akci {s}.
 	{name}: the {other} action isn't supported yet	{name}: akce {other} zatím není podporována
-	{name} submits the form to {url}; PdfCraft doesn't send form data. Save the document to keep your entries.	{name} odesílá formulář na {url}; PdfCraft data formulářů neodesílá. Své údaje zachováte uložením dokumentu.
+	{name} submits the form to {url}; Taratasy doesn't send form data. Save the document to keep your entries.	{name} odesílá formulář na {url}; Taratasy data formulářů neodesílá. Své údaje zachováte uložením dokumentu.
 	Export stopped: {e}	Export byl zastaven: {e}
 	Exported 1 image	Exportován 1 obrázek
 	Exported {n} images	Exportováno obrázků: {n}
@@ -1841,8 +1841,8 @@ key	Space	Mezerník
 	Signed and all signatures are valid.	Podepsáno a všechny podpisy jsou platné.
 	At least one signature has problems.	Alespoň jeden podpis má problémy.
 	This document is secured. Some changes are restricted by its security settings.	Tento dokument je zabezpečený. Některé změny omezuje jeho nastavení zabezpečení.
-	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Toto je dynamický formulář XFA, který PdfCraft zatím neumí zobrazit. Vidíte zástupnou stránku souboru.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Tento formulář obsahuje také data XFA, která PdfCraft zatím nečte. Pole můžete vyplnit, ale Acrobat může místo nich zobrazit hodnoty XFA.
+	This is a dynamic XFA form, which Taratasy can't display yet. What you see is the file's placeholder page.	Toto je dynamický formulář XFA, který Taratasy zatím neumí zobrazit. Vidíte zástupnou stránku souboru.
+	This form also contains XFA data, which Taratasy doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Tento formulář obsahuje také data XFA, která Taratasy zatím nečte. Pole můžete vyplnit, ale Acrobat může místo nich zobrazit hodnoty XFA.
 	This document contains {n} interactive form fields.	Tento dokument obsahuje interaktivní formulářová pole (počet: {n}).
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Tento soubor byl poškozený a byl opraven. Uložením se zachová opravená verze.
 	Dismiss	Zavřít
@@ -1891,7 +1891,7 @@ key	Space	Mezerník
 	there are no pages to print	nejsou žádné stránky k tisku
 	the document has no tags	dokument nemá žádné tagy
 	{0}: {1}	{0}: {1}
-	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	modely pro rozpoznávání textu nejsou nainstalované (přeinstalujte PdfCraft nebo nastavte PDFCRAFT_MODELS na složku, ve které jsou)
+	the text recognition models are not installed (reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them)	modely pro rozpoznávání textu nejsou nainstalované (přeinstalujte Taratasy nebo nastavte TARATASY_MODELS na složku, ve které jsou)
 	the image is empty	obrázek je prázdný
 	this file isn't XFDF, FDF, XML or text form data	tento soubor neobsahuje data formuláře ve formátu XFDF, FDF, XML ani v textovém
 	nothing in the file matches this document	nic v souboru neodpovídá tomuto dokumentu
@@ -2193,8 +2193,8 @@ calendar date	December	prosince
 	A link	Odkaz
 	A button	Tlačítko
 	A script	Skript
-	{who} in this document tried to open an address PdfCraft won't open: {e}.	Pokus o otevření adresy, kterou PdfCraft neotevře ({who} v tomto dokumentu): {e}.
-	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Pokus o otevření adresy, kterou PdfCraft neotevře ({who} v tomto dokumentu): {e}. Z dokumentů se otevírají jen webové (http, https) a e-mailové (mailto) odkazy.
+	{who} in this document tried to open an address Taratasy won't open: {e}.	Pokus o otevření adresy, kterou Taratasy neotevře ({who} v tomto dokumentu): {e}.
+	{who} in this document tried to open an address Taratasy won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Pokus o otevření adresy, kterou Taratasy neotevře ({who} v tomto dokumentu): {e}. Z dokumentů se otevírají jen webové (http, https) a e-mailové (mailto) odkazy.
 	Another file dialog is still open. Finish with it first.	Je stále otevřené jiné dialogové okno se soubory. Nejdřív ho dokončete.
 	Couldn't show the file picker. Please try again.	Výběr souborů nelze zobrazit. Zkuste to prosím znovu.
 	The document changed while you were choosing a file, so nothing was changed.	Dokument se změnil, zatímco jste vybírali soubor, proto se nic nezměnilo.
@@ -2249,7 +2249,7 @@ certificate	Subject	Subjekt
 	The selected fields could not be found. Select them again.	Vybraná pole nebyla nalezena. Vyberte je znovu.
 	The field {name} no longer exists.	Pole {name} už neexistuje.
 	A selected field has no widget on any page, so the fields can't be edited together.	Vybrané pole nemá na žádné stránce widget, takže pole nelze upravit společně.
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Rozpoznávání textu není nainstalováno: chybí jeho modely (spusťte `cargo xtask models` nebo nastavte PDFCRAFT_MODELS).
+	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set TARATASY_MODELS).	Rozpoznávání textu není nainstalováno: chybí jeho modely (spusťte `cargo xtask models` nebo nastavte TARATASY_MODELS).
 	 ({n} at {dpi} dpi, the largest size they can be drawn at)	 (stránky: {n}, s rozlišením {dpi} dpi, největším, v jakém je lze vykreslit)
 
 # Labels added upstream since the catalog was completed: the Combine grid, printing, the comment
@@ -2385,8 +2385,8 @@ animation effects	Off	Vypnuto
 	Change the colour of line art as well as text	Změnit barvu i čar, ne jen textu
 	Colours are remapped while rendering; the document itself never changes.	Barvy se mění při vykreslování; samotný dokument se nikdy nemění.
 	This printer's driver doesn't take two-sided settings from other programs, so its own setting applies. Change it in Properties…	Ovladač této tiskárny nepřijímá nastavení oboustranného tisku z jiných programů, proto platí jeho vlastní nastavení. Změňte ho ve Vlastnosti…
-	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Písmo tohoto pole neumí zobrazit „{c}“ ({code}), proto PdfCraft místo něj ukazuje ?. Hodnota se uloží a jiné prohlížeče PDF pole podle ní překreslí.
-	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Písma, kterými PdfCraft píše, neumí zobrazit „{c}“ ({code}), proto se ve všech prohlížečích PDF zobrazí jako ?. Text se uloží.
+	This field's font can't draw “{c}” ({code}), so Taratasy shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Písmo tohoto pole neumí zobrazit „{c}“ ({code}), proto Taratasy místo něj ukazuje ?. Hodnota se uloží a jiné prohlížeče PDF pole podle ní překreslí.
+	The fonts Taratasy writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Písma, kterými Taratasy píše, neumí zobrazit „{c}“ ({code}), proto se ve všech prohlížečích PDF zobrazí jako ?. Text se uloží.
 	Browser's print dialog	Dialog tisku prohlížeče
 	Copies, two-sided printing and colour are chosen in the browser's print dialog.	Počet kopií, oboustranný tisk a barva se volí v dialogu tisku prohlížeče.
 	Preparing {n} sheets for printing…	Příprava {n} listů k tisku…
@@ -2415,7 +2415,7 @@ animation effects	Off	Vypnuto
 	no output folder was chosen	nebyla vybrána výstupní složka
 @plural	Downloaded {n} PDF|Downloaded {n} PDFs	Stažen {n} soubor PDF|Staženy {n} soubory PDF|Staženo {n} souborů PDF
 	Scan	Skenovat
-	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: PdfCraft finds the signature and removes the paper.	Podepište se na bílý list papíru a vyfoťte ho při jasném, rovnoměrném světle (použijte blesk). Vyberte fotografii nebo ji sem přetáhněte: PdfCraft najde podpis a odstraní papír.
+	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: Taratasy finds the signature and removes the paper.	Podepište se na bílý list papíru a vyfoťte ho při jasném, rovnoměrném světle (použijte blesk). Vyberte fotografii nebo ji sem přetáhněte: Taratasy najde podpis a odstraní papír.
 	Choose photo…	Vybrat fotografii…
 	No photo chosen	Není vybrána žádná fotografie
 	Photo	Fotografie

@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use photocraft_algo::transform::Interp;
-use photocraft_cms::Intent;
-use photocraft_color::BlendMode;
-use photocraft_doc::{Document, Group, Layer, LayerContent, LayerId, Metadata, SmartObject, SmartSource};
+use sary_algo::transform::Interp;
+use sary_cms::Intent;
+use sary_color::BlendMode;
+use sary_doc::{Document, Group, Layer, LayerContent, LayerId, Metadata, SmartObject, SmartSource};
 use serde_json::{Value, json};
 
 use super::{authorize_source, authorized_source_bytes, decode_source, detach_psd, other, placement, shift_layer, smart};
@@ -48,7 +48,7 @@ fn contents(s: &Session, doc: &Document, sm: &SmartObject, intent: Intent, bpc: 
 /// behind: embed those sources so the nested smart objects keep rendering in the document.
 fn embed_nested(meta: &Metadata, l: &mut Layer) {
     let found = match &l.content {
-        LayerContent::Smart(SmartObject { source: SmartSource::Linked { path }, .. }) => photocraft_io::linked::find_linked_file(meta, path),
+        LayerContent::Smart(SmartObject { source: SmartSource::Linked { path }, .. }) => sary_io::linked::find_linked_file(meta, path),
         _ => None,
     };
     if let Some(f) = found {
@@ -90,7 +90,7 @@ fn place(s: &Session, doc: &Document, sm: &SmartObject, layers: &mut [Layer]) ->
     let h = placement(sm);
     let affine = sm.perspective.is_none().then_some(sm.transform);
     for l in layers {
-        released(l, |l| crate::transform_cmds::transform_layer(None, photocraft_doc::Locks::default(), l, &h, affine, Interp::Bicubic))?;
+        released(l, |l| crate::transform_cmds::transform_layer(None, sary_doc::Locks::default(), l, &h, affine, Interp::Bicubic))?;
         crate::transform_cmds::refresh_text(doc, l);
     }
     Ok(())

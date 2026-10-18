@@ -3,10 +3,10 @@
 use egui::{Key, Modifiers};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 20, "height": 10})).unwrap();
     app
 }
@@ -15,16 +15,16 @@ fn app() -> PhotocraftApp {
 /// still Cycle Screen Mode.
 #[test]
 fn space_f_cycles_the_canvas_colour() {
-    use photocraft_engine::prefs::CanvasColor;
+    use sary_engine::prefs::CanvasColor;
     let mut app = app();
     let ctx = egui::Context::default();
-    let frame = |app: &mut PhotocraftApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut SaryApp, events: Vec<egui::Event>| {
         ctx.begin_pass(egui::RawInput { events, ..Default::default() });
         crate::shortcuts::handle(app, &ctx);
         ctx.end_pass().textures_delta.clear();
     };
     let key = |key, pressed, modifiers| egui::Event::Key { key, physical_key: None, pressed, repeat: false, modifiers };
-    let color = |app: &PhotocraftApp| app.session.prefs().interface.canvas_color;
+    let color = |app: &SaryApp| app.session.prefs().interface.canvas_color;
     frame(&mut app, vec![key(Key::Space, true, Modifiers::NONE)]);
     frame(&mut app, vec![key(Key::F, true, Modifiers::NONE), key(Key::F, false, Modifiers::NONE)]);
     assert_eq!(color(&app), CanvasColor::Black);

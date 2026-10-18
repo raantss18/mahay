@@ -2,7 +2,7 @@
 
 > **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-13 · **Change:** minor (Spanish dynamic labels; previously minor: Serbian catalog) · **Target:** Adobe Photoshop 2026
 
-Per-language status of PhotoCraft's UI. How catalogs work and how to add one:
+Per-language status of Sary's UI. How catalogs work and how to add one:
 [`localization.md`](localization.md). Language notes: [Korean](localization-ko.md), [Spanish](localization-es.md),
 [Simplified Chinese](localization-zh-hans.md), [Italian](localization-it.md).
 

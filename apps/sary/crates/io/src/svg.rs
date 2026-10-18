@@ -12,13 +12,13 @@
 
 use std::sync::{Arc, OnceLock};
 
-use photocraft_color::blend::BlendMode;
-use photocraft_color::{Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::effects::GradientStyle;
-use photocraft_doc::vector::{FillRule, Knot, LineCap, LineJoin, Path, PathOp, ShapeLayer, ShapeStroke, StrokeAlign, Subpath, VectorMask};
-use photocraft_doc::{Document, Fill, Group, Layer, LayerContent, MAX_GROUP_DEPTH};
-use photocraft_geom::{Point, Rect, Size};
-use photocraft_raster::Surface;
+use sary_color::blend::BlendMode;
+use sary_color::{Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::effects::GradientStyle;
+use sary_doc::vector::{FillRule, Knot, LineCap, LineJoin, Path, PathOp, ShapeLayer, ShapeStroke, StrokeAlign, Subpath, VectorMask};
+use sary_doc::{Document, Fill, Group, Layer, LayerContent, MAX_GROUP_DEPTH};
+use sary_geom::{Point, Rect, Size};
+use sary_raster::Surface;
 use resvg::tiny_skia;
 use resvg::usvg;
 
@@ -50,13 +50,13 @@ pub fn is_svg(bytes: &[u8]) -> bool {
     (t.starts_with("<?xml") || t.starts_with("<!DOCTYPE") || t.starts_with("<!--")) && t.contains("<svg")
 }
 
-/// The fonts text runs are shaped with: the bundled craft fonts plus, on the desktop, the
+/// The fonts text runs are shaped with: the bundled Mahay fonts plus, on the desktop, the
 /// system's. Loaded once per process.
 fn fonts() -> Arc<usvg::fontdb::Database> {
     static DB: OnceLock<Arc<usvg::fontdb::Database>> = OnceLock::new();
     DB.get_or_init(|| {
         let mut db = usvg::fontdb::Database::new();
-        for f in photocraft_text::CRAFT_FONTS {
+        for f in sary_text::MAHAY_FONTS {
             db.load_font_data(f.bytes.to_vec());
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -241,7 +241,7 @@ fn import_parsed(name: &str, parsed: Parsed, max_group_depth: usize) -> Result<I
 
 /// The whole drawing rendered at `scale` (1 = its own size), as a straight-alpha RGBA buffer at
 /// the origin. Smart objects use it to stay sharp at any placement.
-pub fn rasterize(bytes: &[u8], scale: f32) -> Result<photocraft_compose::Buffer, IoError> {
+pub fn rasterize(bytes: &[u8], scale: f32) -> Result<sary_compose::Buffer, IoError> {
     let tree = parse(bytes)?.tree;
     let cv = canvas(&tree, &mut Vec::new());
     let k = cv.scale * scale.clamp(1.0 / 64.0, 64.0);
@@ -251,7 +251,7 @@ pub fn rasterize(bytes: &[u8], scale: f32) -> Result<photocraft_compose::Buffer,
     resvg::render(&tree, tiny_skia::Transform::from_scale(k, k), &mut pixmap.as_mut());
     let rect = Rect::new(0, 0, w as i32, h as i32);
     let px = pixmap.pixels().iter().map(|p| rgba(p.demultiply())).collect();
-    Ok(photocraft_compose::Buffer { rect, px })
+    Ok(sary_compose::Buffer { rect, px })
 }
 
 /// A transparent pixmap, or `None` past [`MAX_RASTER_PIXELS`].
@@ -271,7 +271,7 @@ fn surface(pixmap: &tiny_skia::Pixmap, rect: Rect, fmt: PixelFormat) -> Surface 
     let n = fmt.channels();
     let mut data = vec![0.0f32; pixmap.pixels().len() * n];
     for (p, out) in pixmap.pixels().iter().zip(data.chunks_exact_mut(n)) {
-        photocraft_raster::from_rgba_into(&fmt, rgba(p.demultiply()), out);
+        sary_raster::from_rgba_into(&fmt, rgba(p.demultiply()), out);
     }
     let mut s = Surface::new(fmt);
     if !rect.is_empty() {
@@ -505,7 +505,7 @@ impl Conv {
             _ => FillRule::NonZero,
         };
         let mut sh = ShapeLayer { path: Path { subpaths, fill_rule, inverted: false }, fill, stroke, ..Default::default() };
-        sh.cache = Some(photocraft_vector::render_shape(&sh, self.fmt, self.canvas));
+        sh.cache = Some(sary_vector::render_shape(&sh, self.fmt, self.canvas));
         Some(Layer::new(self.name(p.id(), 0), LayerContent::Shape(sh)))
     }
 
@@ -736,7 +736,7 @@ mod tests {
         assert!(r.warnings.iter().all(|w| !w.contains("font")), "{:?}", r.warnings);
     }
 
-    /// #4266: a group clipped by one path (the PhotoCraft icon's rounded square) stays editable
+    /// #4266: a group clipped by one path (the Sary icon's rounded square) stays editable
     /// shapes with the clip as its vector mask, and looks as resvg draws the drawing; a clip of
     /// two shapes is still rasterised, with the warning.
     #[test]
@@ -758,7 +758,7 @@ mod tests {
         let (lo, hi) = (xs.iter().copied().fold(f64::MAX, f64::min), xs.iter().copied().fold(f64::MIN, f64::max));
         assert!((lo - 12.0).abs() < 1e-3 && (hi - 52.0).abs() < 1e-3, "in the group's space: {lo}..{hi}");
         // Pixel for pixel what resvg draws, but for anti-aliasing along the edges.
-        let ours = photocraft_compose::flatten(&r.document).to_rgba8().pixels;
+        let ours = sary_compose::flatten(&r.document).to_rgba8().pixels;
         let tree = parse(svg).unwrap().tree;
         let mut pm = tiny_skia::Pixmap::new(64, 64).unwrap();
         resvg::render(&tree, tiny_skia::Transform::default(), &mut pm.as_mut());
@@ -772,8 +772,8 @@ mod tests {
             .collect();
         let off = ours.chunks(4).zip(theirs.chunks(4)).filter(|(a, b)| a.iter().zip(*b).any(|(x, y)| x.abs_diff(*y) > 48)).count();
         assert!(off < 64, "{off} pixels differ");
-        // The report's file: PhotoCraft's own icon opens without the clip-path warning.
-        let icon = import_svg("photocraft.svg", include_bytes!("../../../assets/app-icon/photocraft.svg")).unwrap();
+        // The report's file: Sary's own icon opens without the clip-path warning.
+        let icon = import_svg("sary.svg", include_bytes!("../../../assets/app-icon/sary.svg")).unwrap();
         assert!(icon.warnings.iter().all(|w| !w.contains("clip-path")), "{:?}", icon.warnings);
         assert!(icon.document.layers.iter().any(|l| l.vector_mask.is_some()), "its rounded square is a vector mask");
         // Two shapes in the clip: rasterised, and said so.

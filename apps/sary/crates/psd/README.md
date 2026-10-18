@@ -1,6 +1,6 @@
-# photocraft-psd
+# sary-psd
 
-A standalone reader and writer for Adobe Photoshop **PSD** (version 1) and **PSB** (version 2, "large document format") files. It keeps everything it reads, so an unmodified file writes back byte for byte. It depends on no other photocraft crate.
+A standalone reader and writer for Adobe Photoshop **PSD** (version 1) and **PSB** (version 2, "large document format") files. It keeps everything it reads, so an unmodified file writes back byte for byte. It depends on no other sary crate.
 
 * Clean-room implementation from Adobe's public *Photoshop File Formats Specification*. Where the spec is silent, behavior follows MIT-licensed psd-tools / ag-psd documentation, and the code comments say so.
 * `#![forbid(unsafe_code)]`. Builds for `wasm32-unknown-unknown`. The core API works on byte slices; the file helpers only exist on native targets.
@@ -132,7 +132,7 @@ allocations for padded channels return an error on failure.
 
 ## Testing
 
-`cargo test -p photocraft-psd --all-features` runs the unit tests, integration tests and proptests:
+`cargo test -p sary-psd --all-features` runs the unit tests, integration tests and proptests:
 
 * Byte stability and model round-trips for every generated case: all depths, color modes and compressions, PSD and PSB.
 * PackBits edge cases.
@@ -146,7 +146,7 @@ allocations for padded channels return an error on failure.
 
 `tests/corpus.rs` walks `corpus/psd/**/*.{psd,psb}` at the workspace root when that directory exists. For each file it asserts that parsing succeeds and the file round-trips byte for byte, and it prints a result per file. Without the directory it skips silently.
 
-A `cargo-fuzz` skeleton lives in `fuzz/`. It is its own workspace and is excluded from photocraft's. Run it with `cargo +nightly fuzz run parse` (or `descriptor`) from `crates/psd`.
+A `cargo-fuzz` skeleton lives in `fuzz/`. It is its own workspace and is excluded from sary's. Run it with `cargo +nightly fuzz run parse` (or `descriptor`) from `crates/psd`.
 
 ## Spec ambiguities and decisions
 

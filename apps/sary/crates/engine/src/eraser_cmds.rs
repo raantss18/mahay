@@ -7,12 +7,12 @@
 //! layers with locked transparency; the Background Eraser refuses them. Both respect the selection,
 //! work in the layer's own colour model and depth, and are one undo step per click / stroke.
 
-use photocraft_algo::selection as sel;
-use photocraft_doc::{Document, Layer, LayerContent, LayerId};
-use photocraft_geom::Rect;
-use photocraft_paint::Stroke;
-use photocraft_paint::bg_erase::{BgEraseSettings, apply_background_eraser};
-use photocraft_paint::replace::{Limits, Sampling};
+use sary_algo::selection as sel;
+use sary_doc::{Document, Layer, LayerContent, LayerId};
+use sary_geom::Rect;
+use sary_paint::Stroke;
+use sary_paint::bg_erase::{BgEraseSettings, apply_background_eraser};
+use sary_paint::replace::{Limits, Sampling};
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -111,8 +111,8 @@ fn magic_eraser(s: &mut Session, p: &Value) -> Result<Value> {
         let surf = l.surface_mut().ok_or_else(|| bad(CMD, "not a pixel layer"))?;
         let fmt = surf.format();
         // Locked transparency: paint the background colour instead (Photoshop).
-        let lock_color = lock.then(|| photocraft_raster::from_rgba(&fmt, [bg[0], bg[1], bg[2], 1.0]));
-        Ok(photocraft_algo::erase::magic_erase(surf, &region, opacity, selection.as_ref(), lock_color.as_deref()))
+        let lock_color = lock.then(|| sary_raster::from_rgba(&fmt, [bg[0], bg[1], bg[2], 1.0]));
+        Ok(sary_algo::erase::magic_erase(surf, &region, opacity, selection.as_ref(), lock_color.as_deref()))
     })?;
     Ok(damage(s, dmg, true))
 }

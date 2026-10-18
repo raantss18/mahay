@@ -35,15 +35,15 @@ fn a_compound_file_without_the_streams_is_malformed() {
 }
 
 #[test]
-fn a_gridcraft_workbook_survives_encryption() {
-    let b2 = gridcraft_core::CellRef::parse("B2").unwrap();
-    let mut wb = gridcraft_model::Workbook::new();
-    wb.sheet_mut(0).unwrap().set_value(b2, gridcraft_core::Value::Number(42.0));
+fn a_tabilao_workbook_survives_encryption() {
+    let b2 = tabilao_core::CellRef::parse("B2").unwrap();
+    let mut wb = tabilao_model::Workbook::new();
+    wb.sheet_mut(0).unwrap().set_value(b2, tabilao_core::Value::Number(42.0));
     let xlsx = crate::write_xlsx(&wb).unwrap();
     let file = encrypt_workbook(&xlsx, "Pass1234");
     assert_eq!(crate::sniff(&file), crate::Format::Encrypted);
     let (back, _) = crate::read_xlsx(&decrypt(&file, "Pass1234").unwrap()).unwrap();
-    assert_eq!(back.active().unwrap().value(b2), gridcraft_core::Value::Number(42.0));
+    assert_eq!(back.active().unwrap().value(b2), tabilao_core::Value::Number(42.0));
 }
 
 #[test]

@@ -13,7 +13,7 @@
 
 use std::sync::Arc;
 
-use wordcraft_doc::{Align, Document};
+use soratra_doc::{Align, Document};
 
 use crate::model::{
     self, Cell, FBlock, FTable, Flow, Fmt, Inline, Kind, ListInfo, Meta, Para, base64_encode, data_uri, make_img, mime_of, parse_color,
@@ -958,7 +958,7 @@ impl<'r> Builder<'r> {
                     let borderless = !t.bordered;
                     // Keep at most MAX_ROWS rows (the model drops the rest anyway): bounds the
                     // O(rows × rowspan) work of `insert_covered` on a table of millions of `<tr>`.
-                    let rows: Vec<_> = t.rows.into_iter().filter(|r| !r.is_empty()).take(wordcraft_doc::table::MAX_ROWS).collect();
+                    let rows: Vec<_> = t.rows.into_iter().filter(|r| !r.is_empty()).take(soratra_doc::table::MAX_ROWS).collect();
                     let mut ft = FTable { rows, widths: Vec::new(), borderless };
                     if !ft.rows.is_empty() {
                         ft.insert_covered();
@@ -1143,7 +1143,7 @@ impl<'r> Builder<'r> {
             "code" | "kbd" | "tt" | "samp" => fmt.code = true,
             "sup" => fmt.sup = true,
             "sub" => fmt.sub = true,
-            "mark" => fmt.background = Some(wordcraft_doc::Rgb(255, 255, 0)),
+            "mark" => fmt.background = Some(soratra_doc::Rgb(255, 255, 0)),
             "font" => {
                 if let Some(c) = attr(attrs, "color").and_then(parse_color) {
                     fmt.color = Some(c);
@@ -1161,7 +1161,7 @@ impl<'r> Builder<'r> {
                 }
             }
             "a" => {
-                if let Some(h) = attr(attrs, "href").filter(|h| wordcraft_doc::link::is_safe_href(h)) {
+                if let Some(h) = attr(attrs, "href").filter(|h| soratra_doc::link::is_safe_href(h)) {
                     fmt.link = Some(h.trim().to_string());
                 }
             }
@@ -1337,7 +1337,7 @@ fn read_math(lx: &mut Lexer, name: String, attrs: Vec<(String, String)>) -> crat
             }
             Tok::Start { name, attrs, self_close } => {
                 let el = El { name, attrs, children: Vec::new() };
-                if self_close || stack.len() > wordcraft_doc::math::MAX_DEPTH {
+                if self_close || stack.len() > soratra_doc::math::MAX_DEPTH {
                     if let Some(top) = stack.last_mut() {
                         top.children.push(Item::El(el));
                     }
@@ -1398,7 +1398,7 @@ pub fn import_with(s: &str, images: ImageLoader) -> Document {
 
 /// [`import_with`] onto `page` (its size and margins), which tables size to: HTML gives no page
 /// size, so the caller picks it (the region's paper, #1381).
-pub fn import_on(s: &str, images: ImageLoader, page: &wordcraft_doc::SectionProps) -> Document {
+pub fn import_on(s: &str, images: ImageLoader, page: &soratra_doc::SectionProps) -> Document {
     model::to_doc_in(&parse_with(s, images), page.clone())
 }
 
@@ -1458,7 +1458,7 @@ pub fn inlines_html(inlines: &[Inline]) -> String {
                 let mut open = String::new();
                 let mut close: Vec<&str> = Vec::new();
                 // A script or other non-web target is written as plain text (`is_safe_href`).
-                if let Some(l) = f.link.as_deref().filter(|l| wordcraft_doc::link::is_safe_href(l)) {
+                if let Some(l) = f.link.as_deref().filter(|l| soratra_doc::link::is_safe_href(l)) {
                     open.push_str(&format!("<a href=\"{}\">", esc(l)));
                     close.push("</a>");
                 }
@@ -1716,7 +1716,7 @@ pub fn export_flow(flow: &Flow, lang: &str) -> String {
     let mut out = String::new();
     out.push_str("<!DOCTYPE html>\n");
     out.push_str(&format!("<html lang=\"{}\">\n<head>\n<meta charset=\"utf-8\">\n", esc(lang)));
-    out.push_str("<meta name=\"generator\" content=\"WordCraft\">\n");
+    out.push_str("<meta name=\"generator\" content=\"Soratra\">\n");
     out.push_str(&format!("<title>{}</title>\n", esc(&m.title)));
     for (k, v) in [("author", &m.author), ("description", &m.description), ("keywords", &m.keywords), ("subject", &m.subject)] {
         if !v.is_empty() {
@@ -1750,7 +1750,7 @@ mod tests {
     fn table_style(html: &str) -> Option<String> {
         let doc = crate::model::to_doc(&parse(html));
         doc.body.iter().find_map(|b| match &**b {
-            wordcraft_doc::Block::Table(t) => Some(t.props.style.clone().unwrap_or_default()),
+            soratra_doc::Block::Table(t) => Some(t.props.style.clone().unwrap_or_default()),
             _ => None,
         })
     }
@@ -1843,7 +1843,7 @@ mod tests {
         let f = parse("<p style='text-align:center'><span style=\"color:#ff0000;font-weight:700\">red</span> <a href=\"http://x\">l</a><br>n</p>");
         let FBlock::Para(p) = &f.blocks[0] else { panic!() };
         assert_eq!(p.align, Some(Align::Center));
-        assert!(matches!(&p.inlines[0], Inline::Text(t, f) if t == "red" && f.bold && f.color == Some(wordcraft_doc::Rgb(255,0,0))));
+        assert!(matches!(&p.inlines[0], Inline::Text(t, f) if t == "red" && f.bold && f.color == Some(soratra_doc::Rgb(255,0,0))));
         assert!(p.inlines.iter().any(|i| matches!(i, Inline::Text(t, f) if t == "l" && f.link.as_deref() == Some("http://x"))));
         assert!(p.text().ends_with("l\nn"));
     }

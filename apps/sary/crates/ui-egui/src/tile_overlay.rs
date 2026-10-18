@@ -1,6 +1,6 @@
 //! The developer tile grid: the active layer's storage tiles over the canvas, turned on with the
 //! control channel's `ui.set {"tileGrid": true}` ([`crate::view_cmds::ViewOptions::tile_grid`]).
-//! It shows how sparse a layer is, which tiles copy-on-write shares, and which ones `.pcraft`
+//! It shows how sparse a layer is, which tiles copy-on-write shares, and which ones `.sary`
 //! saves once.
 //!
 //! A layer's pixels live in a sparse [`Surface`] of [`TILE_SIZE`] tiles; cells with no stored
@@ -19,12 +19,12 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use egui::{Align2, Color32, FontId, Painter, Shape, Stroke};
-use photocraft_geom::{Rect as DRect, TILE_SIZE, TileCoord};
-use photocraft_raster::{Surface, Tile};
+use sary_geom::{Rect as DRect, TILE_SIZE, TileCoord};
+use sary_raster::{Surface, Tile};
 #[cfg(not(target_arch = "wasm32"))]
 use rayon::prelude::*;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 
 /// Outline and fill of a tile whose pixels appear nowhere else in the layer.
@@ -137,7 +137,7 @@ fn quad(xf: &ViewXform, r: DRect) -> [egui::Pos2; 4] {
 }
 
 /// Draw the active layer's tiles of document `idx`. `visible` is the document area in view.
-pub fn paint(app: &PhotocraftApp, ctx: &egui::Context, painter: &Painter, xf: &ViewXform, idx: usize, visible: DRect) {
+pub fn paint(app: &SaryApp, ctx: &egui::Context, painter: &Painter, xf: &ViewXform, idx: usize, visible: DRect) {
     let Some(st) = app.session.documents().get(idx) else { return };
     let Some(surface) = st.active_layer.and_then(|id| st.doc.layer(id)).and_then(|l| l.surface()) else { return };
     let revision = st.revision;
@@ -195,7 +195,7 @@ pub fn paint(app: &PhotocraftApp, ctx: &egui::Context, painter: &Painter, xf: &V
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::PixelFormat;
+    use sary_color::PixelFormat;
 
     /// The document rect of tile cell (tx, ty).
     fn cell(tx: i32, ty: i32) -> DRect {
@@ -216,7 +216,7 @@ mod tests {
 
     fn identical_pixels_share_a_group_in(fmt: PixelFormat) {
         let mut s = Surface::new(fmt);
-        // Two separately allocated tiles with the same red pixels, as after loading a .pcraft.
+        // Two separately allocated tiles with the same red pixels, as after loading a .sary.
         s.fill_rect(cell(0, 0), &[1.0, 0.0, 0.0, 1.0]);
         s.fill_rect(cell(2, 0), &[1.0, 0.0, 0.0, 1.0]);
         // One shared allocation in two cells (copy-on-write), and a lone green tile.
@@ -258,7 +258,7 @@ mod tests {
         }
     }
 
-    /// `cargo test --release -p photocraft-ui-egui --lib tile_grouping_36mp -- --ignored --nocapture`
+    /// `cargo test --release -p sary-ui-egui --lib tile_grouping_36mp -- --ignored --nocapture`
     #[test]
     #[ignore = "benchmark"]
     fn tile_grouping_36mp() {

@@ -6,12 +6,12 @@
 //! `drag_preview_canvas.rs`).
 
 use egui::{Modifiers, PointerButton, Pos2};
-use photocraft_ui_egui::PhotocraftApp;
-use photocraft_ui_egui::canvas::ViewXform;
-use photocraft_ui_egui::control::{ControlRequest, handle};
+use sary_ui_egui::SaryApp;
+use sary_ui_egui::canvas::ViewXform;
+use sary_ui_egui::control::{ControlRequest, handle};
 use serde_json::{Value, json};
 
-type Harness = egui_kittest::Harness<'static, PhotocraftApp>;
+type Harness = egui_kittest::Harness<'static, SaryApp>;
 
 fn harness() -> Option<Harness> {
     harness_with_size(egui::vec2(900.0, 640.0))
@@ -20,8 +20,8 @@ fn harness() -> Option<Harness> {
 fn harness_with_size(size: egui::Vec2) -> Option<Harness> {
     let built = std::panic::catch_unwind(|| {
         egui_kittest::Harness::builder().with_size(size).with_max_steps(64).wgpu().build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
             if let Some(rs) = cc.wgpu_render_state.as_ref() {
                 app.set_wgpu(rs.clone());
             }
@@ -165,7 +165,7 @@ fn rotated_marquee_scrolls_on_the_axis_that_is_visibly_clipped() {
         pointer_at(&mut h, outside);
         h.run_steps(30);
         let moved = xf(&h).center[0] - start.center[0];
-        if let Some(dir) = std::env::var_os("CRAFT_UI_VISUAL_FIXTURES") {
+        if let Some(dir) = std::env::var_os("MAHAY_UI_VISUAL_FIXTURES") {
             let dir = std::path::PathBuf::from(dir);
             std::fs::create_dir_all(&dir).expect("fixture directory");
             h.render().expect("render").save(dir.join(format!("rotated-marquee-overscroll-{overscroll}.png"))).expect("save fixture");

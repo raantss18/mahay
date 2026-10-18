@@ -1,4 +1,4 @@
-# pdfcraft-engine
+# taratasy-engine
 
 The façade every frontend talks to. It holds the open documents, their edit history and the tool
 catalogue; frontends never reach past it into the parsing, rendering or editing crates.
@@ -12,13 +12,13 @@ with optional semantic exclusions; see [word-count behavior and limits](../../do
   code keep a last-resort `catch_unwind` guard so an escaped panic becomes an error and the user
   keeps their document.
 
-Two frontends exist on top of it today: `pdfcraft-ui-egui` (desktop and web) and
-`pdfcraft-automation` (headless tools, the CLI and MCP). Anything one can do, the other must be
+Two frontends exist on top of it today: `taratasy-ui-egui` (desktop and web) and
+`taratasy-automation` (headless tools, the CLI and MCP). Anything one can do, the other must be
 able to do — see AGENTS.md §3.
 
 ## The editing model
 
-Each open document holds a `pdfcraft_cos::Document`: the object graph plus a copy-on-write overlay.
+Each open document holds a `taratasy_cos::Document`: the object graph plus a copy-on-write overlay.
 
 1. An edit runs **on a clone**. On success the previous state is pushed onto the undo stack. Clones
    share all unchanged data, so a snapshot is cheap — this is what makes 100 levels of undo
@@ -70,12 +70,12 @@ family (`sign`, `sign_with_timestamp`, `timestamp_document`, `embed_ltv`).
 | `catalog` | Acrobat's "All tools" information architecture as data — groups, sections, icons, hues, and an `Availability` of `Ready`, `Planned(milestone)` or `Provider`. The UI renders what is *not* built yet, honestly |
 | `actions` | PDF action dispatch (go-to, URI, named, set-layer-state, JavaScript) |
 | `links` | Link creation, properties, and finding URLs in page text |
-| `js` | The bridge to `pdfcraft-js`. `forms` never depends on `js` directly; the engine injects it, so a build without JavaScript is possible |
+| `js` | The bridge to `taratasy-js`. `forms` never depends on `js` directly; the engine injects it, so a build without JavaScript is possible |
 | `xfa`, `ocr`, `compare`, `export` | Façades over the L3/L4 crates of the same names |
 
 ## Not done here
 
-- **Rendering is still borrowed.** `pdfcraft-render` wraps `hayro` and inspects through `lopdf`
+- **Rendering is still borrowed.** `taratasy-render` wraps `hayro` and inspects through `lopdf`
   (ADR-0004). The engine only sees `inspect() -> DocInfo`, `RenderPool` and `text::PageText`, and
   that API stays frozen while M2 replaces what is behind it.
 - Performance budgets (`misc.performance-budgets`) are not set or enforced.

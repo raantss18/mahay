@@ -20,7 +20,7 @@ list is [`gaps.md`](gaps.md); numbers and method are in
 
 The core workflows a typical Excel user runs every day, checked end to end on the main platform
 (macOS desktop), including saving and reopening the work. Any "no", or a "partial" that blocks the
-workflow, would make GridCraft pre-alpha.
+workflow, would make Tabilao pre-alpha.
 
 | Core workflow | Works end to end? | Evidence | Hours to pass |
 |---|---|---|---|
@@ -101,7 +101,7 @@ to check our files, and Windows machines with the reported GPU drivers.
 - `cargo xtask parity` regenerates [`parity-checklist.md`](parity-checklist.md) (ribbon
   catalog vs registered commands); `cargo xtask ci` checks it is current.
 - `cargo test --workspace`: engine, formula, function, XLSX and UI behaviour.
-- `cargo run --release -p gridcraft-ui-egui --example snapshot -- --sample sales out.png`: look at
+- `cargo run --release -p tabilao-ui-egui --example snapshot -- --sample sales out.png`: look at
   the UI offscreen.
 - Function coverage: the script method in [function-parity.md](function-parity.md). A
   `cargo xtask functions` that diffs the registry against a checked-in Excel name list would make

@@ -1,4 +1,4 @@
-//! Equation layout: the [`wordcraft_doc::math`] tree → positioned glyphs and rules.
+//! Equation layout: the [`soratra_doc::math`] tree → positioned glyphs and rules.
 //!
 //! Follows the OpenType `MATH` model (the one Word's own math engine and Cambria Math were built
 //! around): font constants for script shifts, fraction and radical gaps, limits and rules; size
@@ -10,14 +10,14 @@
 
 use std::sync::Arc;
 
-use wordcraft_doc::math::{
+use soratra_doc::math::{
     Arg, BrkBin, BrkBinSub, ColJc, FracKind, LimLoc, MAX_DEPTH, MClass, MNode, MRun, MScr, MSty, MathProps, ScriptKind, is_integral, math_alnum,
     parse_linear,
 };
-use wordcraft_doc::props::{Rgb, TextColor};
-use wordcraft_doc::resolve::ResolvedChar;
-use wordcraft_fonts::math::{C, Construction, MathTable, glyph_bounds};
-use wordcraft_fonts::{FaceRef, FontDb};
+use soratra_doc::props::{Rgb, TextColor};
+use soratra_doc::resolve::ResolvedChar;
+use soratra_fonts::math::{C, Construction, MathTable, glyph_bounds};
+use soratra_fonts::{FaceRef, FontDb};
 
 /// Something to draw.
 #[derive(Clone, Debug)]
@@ -130,7 +130,7 @@ fn slot_dist(s: &Slot, x: f32, y: f32) -> f32 {
 }
 
 /// Numbered rows (`#`) in an equation: they advance the automatic numbering.
-pub fn auto_numbers(math: &wordcraft_doc::math::Math, display: bool) -> u32 {
+pub fn auto_numbers(math: &soratra_doc::math::Math, display: bool) -> u32 {
     if !display {
         return 0;
     }
@@ -179,7 +179,7 @@ fn split_number(row: &[MNode]) -> Option<(Arg, Arg, usize)> {
 /// wrap to it as `props` says); `counter` counts the document's automatic equation numbers so far
 /// and advances past this equation's.
 pub fn layout_equation(
-    math: &wordcraft_doc::math::Math,
+    math: &soratra_doc::math::Math,
     linear: &str,
     rc: &ResolvedChar,
     display: bool,
@@ -194,7 +194,7 @@ pub fn layout_equation(
     } else {
         &math.nodes
     };
-    let (face, table) = wordcraft_fonts::math::resolve_math("Cambria Math");
+    let (face, table) = soratra_fonts::math::resolve_math("Cambria Math");
     let color = match rc.color {
         TextColor::Rgb(c) => c,
         TextColor::Auto => Rgb::BLACK,
@@ -423,7 +423,7 @@ fn fallback(c: C) -> f32 {
 
 /// Characters drawn as operators with their own spacing class.
 fn class_of(c: char) -> Cls {
-    match wordcraft_doc::math::math_class(c) {
+    match soratra_doc::math::math_class(c) {
         MClass::Ord => Cls::Ord,
         MClass::Op => Cls::Op,
         MClass::Bin => Cls::Bin,
@@ -525,7 +525,7 @@ impl Ctx {
     /// An empty equation: a grey prompt (screen only).
     fn hint(&mut self, st: St) -> Bx {
         let size = self.size(st);
-        let rs = wordcraft_fonts::word::resolve(&self.text_font, false, false);
+        let rs = soratra_fonts::word::resolve(&self.text_font, false, false);
         let mut g = self.glyphs(rs.face, "Type an equation", size, 0, Rgb(0x80, 0x80, 0x80), (rs.synth_bold, rs.synth_italic));
         g.items = std::mem::take(&mut g.items).into_iter().map(|i| MItem::ScreenOnly(Box::new(i))).collect();
         g.glyph = None;
@@ -601,8 +601,8 @@ impl Ctx {
 
     /// Glyph run for `text` in `face` at `size`: a box with ink extents.
     fn glyphs(&self, face: FaceRef, text: &str, size: f32, level: u8, color: Rgb, synth: (bool, bool)) -> Bx {
-        let feats = if level > 0 { vec![wordcraft_fonts::feature_value(b"ssty", level as u32)] } else { Vec::new() };
-        let shaped = wordcraft_fonts::shape(&face, text, &feats, |c| c);
+        let feats = if level > 0 { vec![soratra_fonts::feature_value(b"ssty", level as u32)] } else { Vec::new() };
+        let shaped = soratra_fonts::shape(&face, text, &feats, |c| c);
         let k = size / face.upem.max(1.0) as f32;
         let mut x = 0.0f32;
         let mut b = Bx::default();
@@ -698,7 +698,7 @@ impl Ctx {
                 Some(MSty::BoldItalic) => (true, true),
                 _ => (false, false),
             };
-            let rs = wordcraft_fonts::word::resolve(&fam, bold, italic);
+            let rs = soratra_fonts::word::resolve(&fam, bold, italic);
             let mut b = self.text_atom(rs.face, &r.text, size, 0, color, (rs.synth_bold, rs.synth_italic), path, u0);
             b.glyph = None;
             out.push(RunPart::Atom(b.cls(Cls::Ord)));
@@ -1960,10 +1960,10 @@ fn hcat(parts: Vec<Bx>) -> Bx {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_doc::math::Math;
+    use soratra_doc::math::Math;
 
     fn rc() -> ResolvedChar {
-        wordcraft_doc::styles::StyleSheet::default().resolve_char(None, &Default::default())
+        soratra_doc::styles::StyleSheet::default().resolve_char(None, &Default::default())
     }
 
     fn lay(lin: &str, display: bool) -> MathLayout {
@@ -2111,7 +2111,7 @@ mod tests {
 
     #[test]
     fn every_structure_lays_out() {
-        use wordcraft_doc::math::*;
+        use soratra_doc::math::*;
         let x = || vec![MNode::Run(MRun::new("x"))];
         let nodes = vec![
             MNode::Acc { chr: '\u{302}', e: x() },
@@ -2146,8 +2146,8 @@ mod tests {
 
     #[test]
     fn caret_slots_cover_every_position() {
-        use wordcraft_doc::math_edit::{MathPos, move_right, units};
-        let math = Math { nodes: wordcraft_doc::math::parse_linear("x=(-b±√(b^2-4ac))/2a+■(a&b@c&d)"), ..Default::default() };
+        use soratra_doc::math_edit::{MathPos, move_right, units};
+        let math = Math { nodes: soratra_doc::math::parse_linear("x=(-b±√(b^2-4ac))/2a+■(a&b@c&d)"), ..Default::default() };
         let m = layout_equation(&math, "", &rc(), true, 400.0, &MathProps::default(), &mut 0);
         // Walking the caret through the equation, every position has a slot.
         let mut p = MathPos::default();
@@ -2171,7 +2171,7 @@ mod tests {
 
     #[test]
     fn empty_slots_show_placeholders_on_screen_only() {
-        let math = Math { nodes: wordcraft_doc::math::parse_linear("⬚/⬚"), ..Default::default() };
+        let math = Math { nodes: soratra_doc::math::parse_linear("⬚/⬚"), ..Default::default() };
         let m = layout_equation(&math, "", &rc(), true, 400.0, &MathProps::default(), &mut 0);
         assert!(m.items.iter().all(|i| matches!(i, MItem::ScreenOnly(_) | MItem::Rect { .. })), "{:?}", m.items);
         assert!(m.slots.iter().any(|s| s.path == vec![(0, 0)] && s.off == 0));
@@ -2181,7 +2181,7 @@ mod tests {
 
     #[test]
     fn numbered_equations_fill_the_line_with_the_number_at_the_right() {
-        let math = Math { nodes: wordcraft_doc::math::parse_linear("E=mc^2#(1)"), ..Default::default() };
+        let math = Math { nodes: soratra_doc::math::parse_linear("E=mc^2#(1)"), ..Default::default() };
         let m = layout_equation(&math, "", &rc(), true, 400.0, &MathProps::default(), &mut 0);
         assert!((m.width - 400.0).abs() < 0.01, "{}", m.width);
         let xs: Vec<f32> =
@@ -2191,7 +2191,7 @@ mod tests {
         let min = xs.iter().cloned().fold(f32::MAX, f32::min);
         assert!(min > 120.0 && min < 220.0, "equation centred: {xs:?}");
         // Automatic numbers count.
-        let auto = Math { nodes: wordcraft_doc::math::parse_linear("a=b#"), ..Default::default() };
+        let auto = Math { nodes: soratra_doc::math::parse_linear("a=b#"), ..Default::default() };
         let mut n = 4;
         let _ = layout_equation(&auto, "", &rc(), true, 400.0, &MathProps::default(), &mut n);
         assert_eq!(n, 5);
@@ -2210,7 +2210,7 @@ mod tests {
 
     #[test]
     fn hostile_trees_never_panic() {
-        use wordcraft_doc::math::*;
+        use soratra_doc::math::*;
         // Deep nesting.
         let mut n = vec![MNode::Run(MRun::new("x"))];
         for _ in 0..500 {

@@ -799,7 +799,7 @@ impl<'a> SliceDecoder<'a> {
         let (bl, bc) = (self.sps.pcm_bit_depth_luma, self.sps.pcm_bit_depth_chroma);
         let total_bits = n * n * bl as usize + 2 * (n / 2) * (n / 2) * bc as usize;
         ensure!(start + total_bits.div_ceil(8) <= data.len(), "PCM samples truncated");
-        let mut r = deckcraft_bitstream::BitReader::new(&data[start..]);
+        let mut r = seho_bitstream::BitReader::new(&data[start..]);
         let (sy, sc) = (self.pic.bd_y - bl, self.pic.bd_c - bc);
         let w = self.pic.width;
         for y in 0..n {

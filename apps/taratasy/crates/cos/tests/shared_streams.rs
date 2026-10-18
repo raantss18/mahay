@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use pdfcraft_cos::{Document, ObjRef, Object, SaveOptions, write_full, write_incremental};
+use taratasy_cos::{Document, ObjRef, Object, SaveOptions, write_full, write_incremental};
 
 const CONTENT: &[u8] = b"0 0 1 rg 10 10 30 20 re f";
 

@@ -1,12 +1,12 @@
-//! Media playback in the UI host: the [`deckcraft_media::Player`] (audio out + clocks), video
+//! Media playback in the UI host: the [`seho_media::Player`] (audio out + clocks), video
 //! feeds and their textures, the editor's media control bar, and the engine's `media.*` requests.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use deckcraft_engine::{MediaStatus, Session};
-use deckcraft_media::{AudioOut, ClipParams, Frame, PlayState, Player, VideoFeed, VoiceSpec, VoiceStatus};
-use deckcraft_model::{MediaClip, Presentation, ShapeId, ShapeKind};
+use seho_engine::{MediaStatus, Session};
+use seho_media::{AudioOut, ClipParams, Frame, PlayState, Player, VideoFeed, VoiceSpec, VoiceStatus};
+use seho_model::{MediaClip, Presentation, ShapeId, ShapeKind};
 use egui::{Align2, Color32, CornerRadius, Pos2, Rect, Sense, Stroke, TextureHandle, Ui, pos2, vec2};
 
 use crate::icons::{self, Icon};
@@ -56,7 +56,7 @@ pub struct MediaHost {
 /// An animated GIF picture on a slide: its box, play time, frame and seconds to the next frame.
 pub struct Gif {
     pub id: ShapeId,
-    pub rect: deckcraft_geom::Xfrm,
+    pub rect: seho_geom::Xfrm,
     pub t: f64,
     pub frame: usize,
     pub next: f64,
@@ -127,7 +127,7 @@ impl MediaHost {
                 self.durations.remove(&k);
             }
         }
-        let duration = deckcraft_media::probe(bytes).map(|i| i.duration()).unwrap_or(0.0);
+        let duration = seho_media::probe(bytes).map(|i| i.duration()).unwrap_or(0.0);
         self.durations.insert(media_key, Probed { source: Arc::clone(bytes), duration });
         duration
     }
@@ -150,7 +150,7 @@ impl MediaHost {
                 c.0 = now - held;
             }
             let t = c.1.unwrap_or(now - c.0);
-            if let Some((frame, next)) = deckcraft_render::gif_frame(&item.data, &fill.adjust, t) {
+            if let Some((frame, next)) = seho_render::gif_frame(&item.data, &fill.adjust, t) {
                 out.push(Gif { id: sh.id, rect, t, frame, next, paused: p });
             }
         }
@@ -335,7 +335,7 @@ impl MediaHost {
 
 /// The clip of media shape `id` anywhere in the deck.
 pub fn find_clip(doc: &Presentation, id: ShapeId) -> Option<MediaClip> {
-    fn walk(shapes: &[deckcraft_model::Shape], id: ShapeId) -> Option<MediaClip> {
+    fn walk(shapes: &[seho_model::Shape], id: ShapeId) -> Option<MediaClip> {
         shapes.iter().find_map(|s| match &s.kind {
             ShapeKind::Media(m) if s.id == id => Some(m.clone()),
             ShapeKind::Group { children, .. } => walk(children, id),
@@ -346,7 +346,7 @@ pub fn find_clip(doc: &Presentation, id: ShapeId) -> Option<MediaClip> {
 }
 
 /// Media shapes directly on slide `index`: (id, box in slide points, clip).
-pub fn slide_media(doc: &Presentation, index: usize) -> Vec<(ShapeId, deckcraft_geom::Xfrm, MediaClip)> {
+pub fn slide_media(doc: &Presentation, index: usize) -> Vec<(ShapeId, seho_geom::Xfrm, MediaClip)> {
     let Some(s) = doc.slides.get(index) else { return vec![] };
     s.shapes
         .iter()
@@ -506,9 +506,9 @@ mod tests {
     use std::collections::HashSet;
     use std::sync::Arc;
 
-    use deckcraft_geom::Xfrm;
-    use deckcraft_model::style::PictureFill;
-    use deckcraft_model::{MediaClip, Presentation, Shape, ShapeId, ShapeKind};
+    use seho_geom::Xfrm;
+    use seho_model::style::PictureFill;
+    use seho_model::{MediaClip, Presentation, Shape, ShapeId, ShapeKind};
 
     use super::*;
 

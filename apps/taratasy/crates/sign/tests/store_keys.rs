@@ -3,8 +3,8 @@
 //! the one a CMS signature carries.
 
 use p256::ecdsa::signature::hazmat::PrehashSigner;
-use pdfcraft_sign::keys::{DigestAlg, Scheme, StoreKey};
-use pdfcraft_sign::{PublicKey, SignError};
+use taratasy_sign::keys::{DigestAlg, Scheme, StoreKey};
+use taratasy_sign::{PublicKey, SignError};
 
 /// One key of every kind, with what the store must hold to sign for it.
 fn every_kind() -> Vec<(PublicKey, Option<StoreKey>)> {

@@ -1,7 +1,7 @@
 //! Cell entry, selection, undo/redo, clipboard, clear, fill, find & replace.
 
-use gridcraft_core::{CellRef, MAX_ROWS, RangeRef, Value};
-use gridcraft_model::{Cell, Formula, StyleId};
+use tabilao_core::{CellRef, MAX_ROWS, RangeRef, Value};
+use tabilao_model::{Cell, Formula, StyleId};
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -121,7 +121,7 @@ pub fn specs() -> Vec<CommandSpec> {
 /// What typing `input` into a cell produces (constant or formula, plus an automatic number
 /// format). Inherits the destination's cell, row or column style, including its number
 /// format, before parsing. Errors when the formula can't be parsed.
-pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gridcraft_model::Workbook) -> Result<Option<Cell>> {
+pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut tabilao_model::Workbook) -> Result<Option<Cell>> {
     let style = wb.sheet(sheet).map(|sh| sh.style_id(at)).unwrap_or_default();
     if input.is_empty() {
         let c = Cell { value: Value::Empty, formula: None, style };
@@ -134,19 +134,19 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
     let is_formula = input.starts_with('=')
         || (input.len() > 1
             && (input.starts_with('+') || input.starts_with('-'))
-            && gridcraft_core::parse::parse_number_text(input).is_none()
+            && tabilao_core::parse::parse_number_text(input).is_none()
             && input.chars().nth(1).is_some_and(|c| c.is_ascii_alphabetic() || c == '('));
     if is_formula {
         let body = input.strip_prefix('=').unwrap_or(input);
         // Excel closes missing parentheses for you.
         let mut text = body.to_string();
-        let mut parsed = gridcraft_formula::parse(&text);
+        let mut parsed = tabilao_formula::parse(&text);
         for _ in 0..8 {
             if parsed.is_ok() {
                 break;
             }
             text.push(')');
-            parsed = gridcraft_formula::parse(&text);
+            parsed = tabilao_formula::parse(&text);
         }
         let expr = parsed.map_err(|e| EngineError::Other(format!("There's a problem with this formula: {e}")))?;
         let expr = wb.name_call_case(expr);
@@ -171,17 +171,17 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
                 None
             };
             if let Some(code) = auto {
-                cell.style = wb.styles.derive(style, |s| s.num_fmt = gridcraft_model::NumFmt::new(code));
+                cell.style = wb.styles.derive(style, |s| s.num_fmt = tabilao_model::NumFmt::new(code));
             }
         }
         return Ok(Some(cell));
     }
-    let parsed = gridcraft_core::parse::parse_input(input, wb.date_system);
+    let parsed = tabilao_core::parse::parse_input(input, wb.date_system);
     let mut style = style;
     if let Some(code) = parsed.format {
         let cur = wb.styles.get(style).num_fmt.as_str().to_string();
         if cur == "General" {
-            style = wb.styles.derive(style, |s| s.num_fmt = gridcraft_model::NumFmt::new(code));
+            style = wb.styles.derive(style, |s| s.num_fmt = tabilao_model::NumFmt::new(code));
         }
     }
     // Wrap text automatically when the input has line breaks (Alt+Enter).
@@ -195,12 +195,12 @@ pub(crate) fn input_to_cell(input: &str, sheet: usize, at: CellRef, wb: &mut gri
 /// refused when it's entered, rather than stored to show `#VALUE!`. Functions the registry doesn't
 /// hold (special forms like LET, LAMBDA, OFFSET, INDIRECT, SUBTOTAL), defined LAMBDA names and
 /// unknown functions are skipped.
-fn check_arg_counts(expr: &gridcraft_formula::Expr) -> Result<()> {
+fn check_arg_counts(expr: &tabilao_formula::Expr) -> Result<()> {
     let mut bad = None;
     expr.walk(&mut |e| {
         if bad.is_none()
-            && let gridcraft_formula::Expr::Call(name, args) = e
-            && let Some(spec) = gridcraft_functions::lookup(name)
+            && let tabilao_formula::Expr::Call(name, args) = e
+            && let Some(spec) = tabilao_functions::lookup(name)
             && !spec.accepts(args.len())
         {
             let few = args.len() < spec.min_args;
@@ -348,7 +348,7 @@ fn range_fill(s: &mut Session, p: &Json) -> Result<Json> {
                 if let Some(f) = &cell.formula
                     && let Some(e) = f.expr()
                 {
-                    let shifted = gridcraft_formula::adjust::shift_relative(e, at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64);
+                    let shifted = tabilao_formula::adjust::shift_relative(e, at.row as i64 - origin.row as i64, at.col as i64 - origin.col as i64);
                     cell.formula = Some(std::sync::Arc::new(Formula::from_expr(shifted)));
                 }
                 cell.style = cx.wb.sheet(sheet).and_then(|sh| sh.cell(at)).map(|c| c.style).unwrap_or(cell.style);
@@ -678,7 +678,7 @@ fn copy_impl(s: &mut Session, p: &Json, cut: bool) -> Result<Json> {
 /// bottom), without overlapping. Returns a copy of the workbook whose sheet holds the areas packed
 /// into one block at the first area's place, and that block. Formulas travel as their values, as
 /// in Excel. `None` when the areas don't line up.
-fn slide_together(wb: &gridcraft_model::Workbook, sheet: usize, areas: &[RangeRef]) -> Option<(gridcraft_model::Workbook, RangeRef)> {
+fn slide_together(wb: &tabilao_model::Workbook, sheet: usize, areas: &[RangeRef]) -> Option<(tabilao_model::Workbook, RangeRef)> {
     let first = *areas.first()?;
     let across = areas.iter().all(|a| a.start.row == first.start.row && a.end.row == first.end.row);
     let down = areas.iter().all(|a| a.start.col == first.start.col && a.end.col == first.end.col);
@@ -828,7 +828,7 @@ fn paste_text(s: &mut Session, p: &Json, text: &str) -> Result<Json> {
 /// source recorded for it in its HTML, with a format that shows the same text when one can be
 /// inferred and the cell has none. The HTML cell must show the same text as the tab-separated
 /// field, so HTML that belongs to another copy (or a table laid out differently) changes nothing.
-fn numeric_from_html(cell: &mut Cell, field: &str, html: Option<&crate::clip_html::HtmlCell>, wb: &mut gridcraft_model::Workbook) {
+fn numeric_from_html(cell: &mut Cell, field: &str, html: Option<&crate::clip_html::HtmlCell>, wb: &mut tabilao_model::Workbook) {
     let Some(hc) = html else { return };
     let Some(n) = hc.num else { return };
     if cell.formula.is_some() || !matches!(cell.value, Value::Text(_)) || wb.styles.get(cell.style).num_fmt.as_str() == "@" {
@@ -841,7 +841,7 @@ fn numeric_from_html(cell: &mut Cell, field: &str, html: Option<&crate::clip_htm
     if wb.styles.get(cell.style).num_fmt.as_str() == "General"
         && let Some(code) = crate::clip_html::format_for(field, n)
     {
-        cell.style = wb.styles.derive(cell.style, |s| s.num_fmt = gridcraft_model::NumFmt::new(&code));
+        cell.style = wb.styles.derive(cell.style, |s| s.num_fmt = tabilao_model::NumFmt::new(&code));
     }
 }
 
@@ -939,7 +939,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
     edit(s, |cx| {
         // Styles from another workbook must be re-interned.
         let mut style_map = std::collections::HashMap::new();
-        let mut map_style = |id: StyleId, wb: &mut gridcraft_model::Workbook| -> StyleId {
+        let mut map_style = |id: StyleId, wb: &mut tabilao_model::Workbook| -> StyleId {
             if same_doc {
                 return id;
             }
@@ -986,9 +986,9 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                 // those references before the workbook-wide move adjustment below.
                                 let e = if dest_sheet != clip.sheet {
                                     e.map(&mut |x| match x {
-                                        gridcraft_formula::Expr::Ref(mut r) if r.sheet == gridcraft_formula::SheetSel::Current => {
-                                            r.sheet = gridcraft_formula::SheetSel::Named(src_sheet_name.clone());
-                                            gridcraft_formula::Expr::Ref(r)
+                                        tabilao_formula::Expr::Ref(mut r) if r.sheet == tabilao_formula::SheetSel::Current => {
+                                            r.sheet = tabilao_formula::SheetSel::Named(src_sheet_name.clone());
+                                            tabilao_formula::Expr::Ref(r)
                                         }
                                         other => other,
                                     })
@@ -1002,14 +1002,14 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                 return Some(std::sync::Arc::new(moved));
                             }
                             let moved =
-                                gridcraft_formula::adjust::shift_relative(e, dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
+                                tabilao_formula::adjust::shift_relative(e, dest.row as i64 - sc.row as i64, dest.col as i64 - sc.col as i64);
                             Some(std::sync::Arc::new(Formula::from_expr(moved)))
                         };
                         if link {
                             let sheet_prefix = if dest_sheet == clip.sheet && same_doc {
                                 String::new()
                             } else {
-                                format!("{}!", gridcraft_formula::quote_sheet(&src_sheet_name))
+                                format!("{}!", tabilao_formula::quote_sheet(&src_sheet_name))
                             };
                             new.formula = Some(std::sync::Arc::new(Formula::new(&format!("={sheet_prefix}{}", sc.a1()))));
                             new.value = Value::Empty;
@@ -1057,7 +1057,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                             {
                                 if old_picture.is_some() || new_picture.is_some() {
                                     new_picture = None;
-                                    new.value = Value::Error(gridcraft_core::CellError::Value);
+                                    new.value = Value::Error(tabilao_core::CellError::Value);
                                 }
                                 let a = old.value.clone();
                                 let b = new.value.clone();
@@ -1073,7 +1073,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                         "multiply" => Value::number(x * y),
                                         "divide" => {
                                             if y == 0.0 {
-                                                Value::Error(gridcraft_core::CellError::Div0)
+                                                Value::Error(tabilao_core::CellError::Div0)
                                             } else {
                                                 Value::number(x / y)
                                             }
@@ -1095,7 +1095,7 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
                                         _ => None,
                                     }
                                 {
-                                    let text = format!("=({}){sym}{}", f.text, gridcraft_core::number_to_text(y));
+                                    let text = format!("=({}){sym}{}", f.text, tabilao_core::number_to_text(y));
                                     new.formula = Some(std::sync::Arc::new(Formula::new(&text)));
                                     new.value = Value::Empty;
                                 }
@@ -1160,9 +1160,9 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
             // References elsewhere to the moved block now point to its new place.
             let dest_name = cx.wb.sheet(dest_sheet).map(|s| s.name.clone()).unwrap_or_default();
             let e = if dest_sheet == clip.sheet {
-                gridcraft_formula::adjust::Edit::Move { from: src, to_row: at.row, to_col: at.col }
+                tabilao_formula::adjust::Edit::Move { from: src, to_row: at.row, to_col: at.col }
             } else {
-                gridcraft_formula::adjust::Edit::MoveToSheet { from: src, to_sheet: dest_name, to_row: at.row, to_col: at.col }
+                tabilao_formula::adjust::Edit::MoveToSheet { from: src, to_sheet: dest_name, to_row: at.row, to_col: at.col }
             };
             rewrite_all_formulas(&mut cx.wb, &src_sheet_name, &e);
             cx.structural = true;
@@ -1178,8 +1178,8 @@ fn paste_special(s: &mut Session, p: &Json) -> Result<Json> {
 }
 
 /// Applies a reference adjustment to every cell formula and defined name in the workbook.
-pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &str, e: &gridcraft_formula::adjust::Edit) {
-    use gridcraft_formula::adjust::Edit;
+pub(crate) fn rewrite_all_formulas(wb: &mut tabilao_model::Workbook, target: &str, e: &tabilao_formula::adjust::Edit) {
+    use tabilao_formula::adjust::Edit;
     // Rows and columns inserted or deleted on the target sheet move its legacy array ranges too
     // (a cut moves its arrays itself).
     let moves_arrays = matches!(e, Edit::Insert { .. } | Edit::Delete { .. } | Edit::InsertCells { .. } | Edit::DeleteCells { .. });
@@ -1194,8 +1194,8 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
         let Some(sheet) = wb.sheet_mut(si) else { continue };
         for (c, f) in keys {
             let Some(expr) = f.expr() else { continue };
-            let new = gridcraft_formula::adjust::adjust(expr, &host, target, e);
-            let text = gridcraft_formula::print(&new);
+            let new = tabilao_formula::adjust::adjust(expr, &host, target, e);
+            let text = tabilao_formula::print(&new);
             let array = match f.array {
                 Some(a) if on_target => super::sheet::map_range(a, e),
                 a => a,
@@ -1210,10 +1210,10 @@ pub(crate) fn rewrite_all_formulas(wb: &mut gridcraft_model::Workbook, target: &
         }
     }
     for n in wb.names.iter_mut() {
-        if let Ok(expr) = gridcraft_formula::parse(&n.formula) {
+        if let Ok(expr) = tabilao_formula::parse(&n.formula) {
             // Names are workbook-level: unqualified refs don't occur; qualified ones adjust.
-            let new = gridcraft_formula::adjust::adjust(expr, "\u{0}", target, e);
-            n.formula = gridcraft_formula::print(&new);
+            let new = tabilao_formula::adjust::adjust(expr, "\u{0}", target, e);
+            n.formula = tabilao_formula::print(&new);
         }
     }
 }
@@ -1259,7 +1259,7 @@ fn clear(s: &mut Session, p: &Json, what: &str) -> Result<Json> {
                     } else {
                         cell.value = Value::Empty;
                         if checkbox {
-                            cell.style = cx.wb.styles.derive(cell.style, |st| st.num_fmt = gridcraft_model::NumFmt::new("General"));
+                            cell.style = cx.wb.styles.derive(cell.style, |st| st.num_fmt = tabilao_model::NumFmt::new("General"));
                         }
                     }
                 }
@@ -1300,7 +1300,7 @@ fn clear(s: &mut Session, p: &Json, what: &str) -> Result<Json> {
                     let blocked: Vec<_> = sh
                         .cells
                         .iter_range(reach)
-                        .filter(|(_, cell)| cell.formula.is_some() && cell.value == Value::Error(gridcraft_core::CellError::Spill))
+                        .filter(|(_, cell)| cell.formula.is_some() && cell.value == Value::Error(tabilao_core::CellError::Spill))
                         .map(|(c, _)| (sheet, c))
                         .collect();
                     cx.changed.extend(blocked);

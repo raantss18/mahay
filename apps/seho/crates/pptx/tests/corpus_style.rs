@@ -3,11 +3,11 @@
 
 use std::sync::Arc;
 
-use deckcraft_color::{ColorTransform, Rgba, SchemeSlot};
-use deckcraft_geom::Xfrm;
-use deckcraft_model::style::{ColorRef, Dash, Effects, Fill, Glow, Gradient, GradientShape, GradientStop, Line, PatternFill, Reflection, Shadow};
-use deckcraft_model::text::{Align, AutoFit, BodyProps, ParaProps, Paragraph, Run, RunProps, Spacing, TabStop, TextBody, TextDir};
-use deckcraft_model::{Geom, Presentation, Shape, ShapeId, ShapeKind, defaults};
+use seho_color::{ColorTransform, Rgba, SchemeSlot};
+use seho_geom::Xfrm;
+use seho_model::style::{ColorRef, Dash, Effects, Fill, Glow, Gradient, GradientShape, GradientStop, Line, PatternFill, Reflection, Shadow};
+use seho_model::text::{Align, AutoFit, BodyProps, ParaProps, Paragraph, Run, RunProps, Spacing, TabStop, TextBody, TextDir};
+use seho_model::{Geom, Presentation, Shape, ShapeId, ShapeKind, defaults};
 
 fn shape(p: &mut Presentation, name: &str, x: f64, y: f64, w: f64, h: f64) -> Shape {
     Shape { id: ShapeId(p.alloc_id().expect("id")), name: name.into(), xfrm: Some(Xfrm::new(x, y, w, h)), ..Default::default() }
@@ -73,7 +73,7 @@ fn style_deck() -> Presentation {
         ..Default::default()
     };
 
-    let layout = defaults::layout_of_kind(&p, deckcraft_model::LayoutType::Blank).unwrap_or_default();
+    let layout = defaults::layout_of_kind(&p, seho_model::LayoutType::Blank).unwrap_or_default();
     let mut s = defaults::new_slide(&mut p, layout).expect("slide");
 
     let mut word = shape(&mut p, "Styled text", 40.0, 40.0, 400.0, 180.0);
@@ -148,8 +148,8 @@ fn style_deck() -> Presentation {
 }
 
 fn round(p: &Presentation) -> Presentation {
-    let bytes = deckcraft_pptx::export(p).expect("export");
-    deckcraft_pptx::import(&bytes).expect("import")
+    let bytes = seho_pptx::export(p).expect("export");
+    seho_pptx::import(&bytes).expect("import")
 }
 
 fn by_name<'a>(p: &'a Presentation, name: &str) -> &'a Shape {

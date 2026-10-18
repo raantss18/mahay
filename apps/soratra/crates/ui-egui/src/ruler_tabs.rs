@@ -4,8 +4,8 @@
 //! once when the button is released, so it is one undo step.
 use egui::{Painter, Rect, Sense, Shape, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use wordcraft_doc::Pos;
-use wordcraft_doc::props::{TAB_POS_EPS, TabAlign, TabLeader, TabStop};
+use soratra_doc::Pos;
+use soratra_doc::props::{TAB_POS_EPS, TabAlign, TabLeader, TabStop};
 
 use crate::WordApp;
 use crate::theme::Tokens;

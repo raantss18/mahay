@@ -1,21 +1,21 @@
 [package]
-name = "craft-print"
+name = "mahay-print"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
-description = "System PDF print spooler for the Craft apps: CUPS and Windows"
+description = "System PDF print spooler for the Mahay apps: CUPS and Windows"
 
 [dependencies]
 # Safe API; Win32 calls are isolated in this maintained MIT OR Apache-2.0 dependency.
-craft-winprint-gdi = { git = "https://github.com/storytold/winprint.rs", rev = "417ac3c4d14d3da5485a99c7d5ce8f05664ec312" }
+mahay-winprint-gdi = { package = "craft-winprint-gdi", git = "https://github.com/storytold/winprint.rs", rev = "417ac3c4d14d3da5485a99c7d5ce8f05664ec312" }
 
 [lints]
 workspace = true
 
 [target.'cfg(windows)'.dependencies]
-# Printing without starting anything (storytold/pdfcraft#1107): the printer list (EnumPrinters)
+# Printing without starting anything (raantss18/taratasy#1107): the printer list (EnumPrinters)
 # and the job (Windows.Data.Pdf drawn with Direct2D into the XPS print API, options as a
 # PrintTicket) are safe wrappers over Win32 and WinRT (BSD-3-Clause). Its default `pdfium`
 # feature downloads PDFium at build time and is off. The maintained BSD-3-Clause fork

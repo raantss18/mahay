@@ -1,5 +1,5 @@
 //! Regression tests for issue #706: sigmas in [0.3, ~0.577) must blur, not silently no-op.
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 fn px(s: &mut Session, x: i32, y: i32) -> Vec<f32> {

@@ -9,12 +9,12 @@
 
 use std::sync::Arc;
 
-use photocraft_algo::{
+use sary_algo::{
     self as algo, BlurPath, BlurQuality, BlurShape, DepthSource, DiffuseMode, Distribution, ExtrudeType, FieldPin, FilterParams, HsbModel, IrisPin, LensType,
     Light, LightKind, MezzotintType, SmartBlurMode, SpinPin, TextureChannel, TileFill, UndefinedAreas, WindMethod, ZigZagStyle,
 };
-use photocraft_doc::{Document, Layer};
-use photocraft_geom::Rect;
+use sary_doc::{Document, Layer};
+use sary_geom::Rect;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -154,7 +154,7 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
             stretch: s(p, "fit", "stretch") != "tile",
             undefined: undefined(p, "repeat"),
             // A Displace imported from PSD carries its map; `mapPath` / `mapDocument` resolve later.
-            map: photocraft_io::smart_map::displace_embedded_map(p),
+            map: sary_io::smart_map::displace_embedded_map(p),
         },
         "filter.distort.shear" => FilterParams::Shear {
             points: list::<[f32; 2]>(p, "points").unwrap_or_else(|| {
@@ -418,9 +418,9 @@ pub(crate) fn prepare(s: &Session, id: &str, p: &Value) -> Value {
 
 /// A flattened document (or one of its layers) as an RGBA map image.
 fn map_from_document(doc: &Document, layer: Option<u64>) -> Option<algo::Image> {
-    let buf = match layer.and_then(|l| doc.layer(photocraft_doc::LayerId(l))) {
-        Some(l) => photocraft_compose::render_layer(l, l.surface().map(|s| s.content_bounds()).filter(|r| !r.is_empty()).unwrap_or_else(|| doc.bounds())),
-        None => photocraft_compose::flatten(doc),
+    let buf = match layer.and_then(|l| doc.layer(sary_doc::LayerId(l))) {
+        Some(l) => sary_compose::render_layer(l, l.surface().map(|s| s.content_bounds()).filter(|r| !r.is_empty()).unwrap_or_else(|| doc.bounds())),
+        None => sary_compose::flatten(doc),
     };
     if buf.rect.is_empty() {
         return None;

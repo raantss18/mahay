@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-create"
+name = "taratasy-create"
 description = "Create PDFs: blank documents, from images (PNG, JPEG) and from plain text"
 version.workspace = true
 edition.workspace = true
@@ -9,9 +9,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-model = { workspace = true }
-pdfcraft-fonts = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-model = { workspace = true }
+taratasy-fonts = { workspace = true }
 png = "0.18"
 tiff = "0.11"
 image = { version = "0.25", default-features = false, features = ["bmp", "gif", "jpeg"] }

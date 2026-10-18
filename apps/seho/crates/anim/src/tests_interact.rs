@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use deckcraft_model::text::Action;
-use deckcraft_model::{AnimClass, AnimStart, Animation, Presentation, Shape, ShapeId, Slide, SlideId, Transition, Xfrm};
+use seho_model::text::Action;
+use seho_model::{AnimClass, AnimStart, Animation, Presentation, Shape, ShapeId, Slide, SlideId, Transition, Xfrm};
 
 use crate::*;
 

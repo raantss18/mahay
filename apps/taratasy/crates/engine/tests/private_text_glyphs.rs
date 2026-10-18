@@ -1,6 +1,6 @@
 //! Private acceptance input stays outside the repository; no private pixels/fonts are emitted.
-use pdfcraft_engine::{BlockStyle, Edit, Session};
-use pdfcraft_render::{PageRenderer, RenderRequest};
+use taratasy_engine::{BlockStyle, Edit, Session};
+use taratasy_render::{PageRenderer, RenderRequest};
 use std::sync::Arc;
 
 fn pixels(bytes: Arc<Vec<u8>>, page: usize) -> Vec<u8> {
@@ -12,9 +12,9 @@ fn pixels(bytes: Arc<Vec<u8>>, page: usize) -> Vec<u8> {
 }
 
 #[test]
-#[ignore = "requires a private Chinese PDF and its full approved face in craft-fonts"]
+#[ignore = "requires a private Chinese PDF and its full approved face in mahay-fonts"]
 fn private_new_chinese_glyphs_keep_face_position_save_reopen_and_undo() {
-    let path = std::env::var("PDFCRAFT_CHINESE_TEXT_PDF").expect("provide a local PDF");
+    let path = std::env::var("TARATASY_CHINESE_TEXT_PDF").expect("provide a local PDF");
     let original = Arc::new(std::fs::read(&path).unwrap());
     let mut session = Session::new();
     let id = session.open("private.pdf", None, original.clone(), None).unwrap();
@@ -55,7 +55,7 @@ fn private_new_chinese_glyphs_keep_face_position_save_reopen_and_undo() {
         let live = pixels(edited.display.clone(), page);
         assert_ne!(live, original_pixels);
         let saved = session.save_bytes(id).unwrap();
-        let scratch = std::env::temp_dir().join(format!("pdfcraft-private-glyphs-{}.pdf", std::process::id()));
+        let scratch = std::env::temp_dir().join(format!("taratasy-private-glyphs-{}.pdf", std::process::id()));
         std::fs::write(&scratch, saved.as_slice()).unwrap();
         let reopened = session.open("reopened.pdf", None, Arc::new(std::fs::read(&scratch).unwrap()), None).unwrap();
         let reopen = session.get(reopened).unwrap();

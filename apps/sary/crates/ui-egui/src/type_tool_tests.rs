@@ -6,12 +6,12 @@
 use egui::{Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use photocraft_doc::{LayerContent, LayerId, TextLayer};
-use photocraft_geom::{Affine, Point};
+use sary_doc::{LayerContent, LayerId, TextLayer};
+use sary_geom::{Affine, Point};
 use serde_json::json;
 
 use super::{layout, text_layer};
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 
 #[test]
@@ -30,7 +30,7 @@ fn focused_font_search_does_not_type_into_the_canvas_layer() {
         preedit: None,
     });
     let mut h = Harness::builder().build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let search_id = egui::Id::new("font-search-regression");
             let mut query = ui.data(|d| d.get_temp::<String>(search_id)).unwrap_or_default();
             ui.add(egui::TextEdit::singleline(&mut query).id(search_id)).request_focus();
@@ -62,7 +62,7 @@ fn numeric_type_fields_have_localized_accessible_names() {
         },
         24.0,
     );
-    PhotocraftApp::setup_context(&h.ctx, Default::default());
+    SaryApp::setup_context(&h.ctx, Default::default());
     h.run_steps(4);
     h.get_by_role_and_label(egui::accesskit::Role::SpinButton, "Tamanho da fonte").click();
     h.run();
@@ -73,25 +73,25 @@ fn numeric_type_fields_have_localized_accessible_names() {
     assert_eq!(*h.state(), 36.0);
 }
 
-fn harness(ppp: f32, app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+fn harness(ppp: f32, app: SaryApp) -> Harness<'static, SaryApp> {
     make_harness(ppp, app, false)
 }
 
-fn make_harness(ppp: f32, app: PhotocraftApp, render: bool) -> Harness<'static, PhotocraftApp> {
+fn make_harness(ppp: f32, app: SaryApp, render: bool) -> Harness<'static, SaryApp> {
     make_harness_with(Harness::builder(), ppp, app, render)
 }
 
 /// 60 frames a second: every queued event is a frame, and the default quarter-second step puts
 /// the second click of a double-click past egui's double-click delay.
-fn fast_harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+fn fast_harness(app: SaryApp) -> Harness<'static, SaryApp> {
     make_harness_with(Harness::builder().with_step_dt(1.0 / 60.0), 1.0, app, false)
 }
 
-fn make_harness_with(builder: egui_kittest::HarnessBuilder<PhotocraftApp>, ppp: f32, app: PhotocraftApp, render: bool) -> Harness<'static, PhotocraftApp> {
+fn make_harness_with(builder: egui_kittest::HarnessBuilder<SaryApp>, ppp: f32, app: SaryApp, render: bool) -> Harness<'static, SaryApp> {
     let builder = builder.with_size(vec2(1200.0, 800.0)).with_pixels_per_point(ppp);
     let builder = if render { builder.wgpu() } else { builder };
     let mut h = builder.build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -101,13 +101,13 @@ fn make_harness_with(builder: egui_kittest::HarnessBuilder<PhotocraftApp>, ppp: 
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     h
 }
 
-fn new_app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn new_app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 1600, "height": 900})).unwrap();
     app.sync_views();
     app.ui.extras.rulers = false;
@@ -115,7 +115,7 @@ fn new_app() -> PhotocraftApp {
     app
 }
 
-fn xf(app: &PhotocraftApp) -> ViewXform {
+fn xf(app: &SaryApp) -> ViewXform {
     let v = &app.ui.views[0];
     ViewXform {
         rect: crate::rulers::content_rect(app, app.last_canvas_rect),
@@ -128,7 +128,7 @@ fn xf(app: &PhotocraftApp) -> ViewXform {
 }
 
 /// Screen position of a text-space point of layer `id`.
-fn screen(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, x: f32, y: f32) -> Pos2 {
+fn screen(h: &mut Harness<'static, SaryApp>, id: LayerId, x: f32, y: f32) -> Pos2 {
     let app = h.state_mut();
     let (_, aff, _) = layout(app, id).unwrap();
     let p = aff.apply(Point::new(f64::from(x), f64::from(y)));
@@ -137,7 +137,7 @@ fn screen(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, x: f32, y: f32) 
 
 /// A point inside glyph `i` (character index): `f` of the way along its advance, in the upper
 /// half of its line.
-fn glyph(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, i: usize, f: f32) -> Pos2 {
+fn glyph(h: &mut Harness<'static, SaryApp>, id: LayerId, i: usize, f: f32) -> Pos2 {
     let (l, _, text) = layout(h.state_mut(), id).unwrap();
     let b = text.char_indices().nth(i).unwrap().0;
     let c = l.clusters.iter().find(|c| c.range.start == b).unwrap().clone();
@@ -145,12 +145,12 @@ fn glyph(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, i: usize, f: f32)
     screen(h, id, c.x + c.advance * f, ln.baseline - ln.ascent * 0.35)
 }
 
-fn press(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, down: bool) {
+fn press(h: &mut Harness<'static, SaryApp>, p: Pos2, down: bool) {
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: down, modifiers: Modifiers::NONE });
     h.run_steps(1);
 }
 
-fn click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
+fn click(h: &mut Harness<'static, SaryApp>, p: Pos2) {
     h.hover_at(p);
     h.run_steps(1);
     press(h, p, true);
@@ -159,7 +159,7 @@ fn click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
 }
 
 /// Two clicks within egui's double-click delay (use [`fast_harness`]).
-fn double_click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
+fn double_click(h: &mut Harness<'static, SaryApp>, p: Pos2) {
     h.hover_at(p);
     h.run_steps(1);
     for pressed in [true, false, true, false] {
@@ -168,7 +168,7 @@ fn double_click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
     h.run_steps(2);
 }
 
-fn drag(h: &mut Harness<'static, PhotocraftApp>, a: Pos2, b: Pos2) {
+fn drag(h: &mut Harness<'static, SaryApp>, a: Pos2, b: Pos2) {
     h.hover_at(a);
     h.run_steps(1);
     press(h, a, true);
@@ -180,7 +180,7 @@ fn drag(h: &mut Harness<'static, PhotocraftApp>, a: Pos2, b: Pos2) {
     h.run_steps(1);
 }
 
-fn selection(h: &Harness<'static, PhotocraftApp>) -> (usize, usize) {
+fn selection(h: &Harness<'static, SaryApp>) -> (usize, usize) {
     let Some(e) = h.state().ui.text_edit.clone() else { return (usize::MAX, usize::MAX) };
     (e.anchor, e.caret)
 }
@@ -242,7 +242,7 @@ fn clicks_and_drags_land_on_the_glyph_under_the_pointer() {
     }
 }
 
-fn text(app: &PhotocraftApp, id: LayerId) -> TextLayer {
+fn text(app: &SaryApp, id: LayerId) -> TextLayer {
     text_layer(&app.session.active().unwrap().doc, id).unwrap().clone()
 }
 
@@ -257,7 +257,7 @@ fn editing_psd_type_shows_our_layout_and_cancel_restores_it() {
     let moved = {
         let mut t = text(&app, id);
         t.transform = Affine::translate(330.0, 380.0);
-        photocraft_text::shared().lock().unwrap().render(&t, 72.0, photocraft_color::PixelFormat::RGBA8).1.surface
+        sary_text::shared().lock().unwrap().render(&t, 72.0, sary_color::PixelFormat::RGBA8).1.surface
     };
     let st = app.session.active_mut().unwrap();
     let mut doc = (*st.doc).clone();
@@ -310,7 +310,7 @@ fn use_escape_to_commit_off_makes_escape_cancel_the_session() {
     }
 }
 
-fn size_at(app: &PhotocraftApp, id: LayerId, ci: usize) -> f32 {
+fn size_at(app: &SaryApp, id: LayerId, ci: usize) -> f32 {
     let t = text(app, id);
     let b = t.text.char_indices().nth(ci).map_or(t.text.len(), |(b, _)| b);
     let mut at = 0;
@@ -334,8 +334,8 @@ fn size_applies_at_layer_and_selection_scope() {
         app.run("type.edit", json!({"layer": id.0, "transform": [2.0, 0.0, 0.0, 2.0, 300.0, 420.0]})).unwrap();
         let id = if psd {
             let doc = (*app.session.active().unwrap().doc).clone();
-            let out = photocraft_io::export(&doc, "t.psd", &Default::default()).unwrap();
-            let back = photocraft_io::import("t.psd", &out.bytes).unwrap().document;
+            let out = sary_io::export(&doc, "t.psd", &Default::default()).unwrap();
+            let back = sary_io::import("t.psd", &out.bytes).unwrap().document;
             app.session.add_document(back, None);
             app.sync_views();
             let d = &app.session.active().unwrap().doc;
@@ -378,12 +378,12 @@ fn size_drag_is_live_and_one_history_step_per_drag() {
     let mut app = new_app();
     let id = LayerId(app.run("type.create", json!({"text": "Hello", "size": 20, "x": 300, "y": 420})).unwrap()["layer"].as_u64().unwrap());
     let mut h = Harness::builder().with_size(vec2(900.0, 60.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             ui.horizontal(|ui| super::options_bar(app, ui));
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(3);
     let steps = h.state().session.active().unwrap().history.entries().len();
     let mut last = 20.0;
@@ -412,7 +412,7 @@ fn size_drag_is_live_and_one_history_step_per_drag() {
 
 /// A point inside glyph `i` of vertical type: `f` of the way down its advance, right of the
 /// column's centre line.
-fn vglyph(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, i: usize, f: f32) -> Pos2 {
+fn vglyph(h: &mut Harness<'static, SaryApp>, id: LayerId, i: usize, f: f32) -> Pos2 {
     let (l, _, text) = layout(h.state_mut(), id).unwrap();
     assert!(l.vertical);
     let b = text.char_indices().nth(i).unwrap().0;
@@ -422,7 +422,7 @@ fn vglyph(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, i: usize, f: f32
     screen(h, id, x, y)
 }
 
-fn key(h: &mut Harness<'static, PhotocraftApp>, k: egui::Key) {
+fn key(h: &mut Harness<'static, SaryApp>, k: egui::Key) {
     h.event(egui::Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(1);
 }
@@ -479,7 +479,7 @@ fn vertical_type_caret_selection_and_arrows_follow_the_columns() {
     assert_eq!(super::flow_key(egui::Key::ArrowUp, false), egui::Key::ArrowUp);
 }
 
-fn rgb_at(app: &PhotocraftApp, id: LayerId, ci: usize) -> [u8; 4] {
+fn rgb_at(app: &SaryApp, id: LayerId, ci: usize) -> [u8; 4] {
     let t = text(app, id);
     let b = t.text.char_indices().nth(ci).map_or(t.text.len(), |(b, _)| b);
     let mut at = 0;
@@ -529,7 +529,7 @@ fn foreground_colour_recolours_only_selected_type() {
 #[test]
 fn vertical_type_tool_creates_point_and_paragraph_text_with_one_undo() {
     use crate::canvas::{ToolEvent, tool_event};
-    use photocraft_doc::text::{Orientation, TextShape};
+    use sary_doc::text::{Orientation, TextShape};
     for end in [[100.0, 100.0], [240.0, 230.0]] {
         let mut app = new_app();
         app.ui.tool = crate::state::Tool::VerticalType;
@@ -660,7 +660,7 @@ fn empty_ime_events_never_delete_the_selection() {
         preedit: None,
     });
     let mut h = harness(1.0, app);
-    let ime = |h: &mut Harness<'static, PhotocraftApp>, e: egui::ImeEvent| {
+    let ime = |h: &mut Harness<'static, SaryApp>, e: egui::ImeEvent| {
         h.event(egui::Event::Ime(e));
         h.run_steps(1);
     };
@@ -679,17 +679,17 @@ fn type_command() -> Modifiers {
     Modifiers { command: true, ctrl: true, ..Modifiers::NONE }
 }
 
-fn hold(h: &mut Harness<'static, PhotocraftApp>, mods: Modifiers) {
+fn hold(h: &mut Harness<'static, SaryApp>, mods: Modifiers) {
     h.event(egui::Event::ModifiersChanged(mods));
     h.run_steps(1);
 }
 
-fn transform_press(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, down: bool, mods: Modifiers) {
+fn transform_press(h: &mut Harness<'static, SaryApp>, p: Pos2, down: bool, mods: Modifiers) {
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: down, modifiers: mods });
     h.run_steps(1);
 }
 
-fn transform_drag(h: &mut Harness<'static, PhotocraftApp>, a: Pos2, b: Pos2, mods: Modifiers, release_command: bool) {
+fn transform_drag(h: &mut Harness<'static, SaryApp>, a: Pos2, b: Pos2, mods: Modifiers, release_command: bool) {
     hold(h, mods);
     h.hover_at(a);
     h.run_steps(1);
@@ -705,7 +705,7 @@ fn transform_drag(h: &mut Harness<'static, PhotocraftApp>, a: Pos2, b: Pos2, mod
     hold(h, Modifiers::NONE);
 }
 
-fn transform_app(paragraph: bool, vertical: bool, transform: Affine) -> (PhotocraftApp, LayerId) {
+fn transform_app(paragraph: bool, vertical: bool, transform: Affine) -> (SaryApp, LayerId) {
     let mut app = new_app();
     let mut p = json!({"text": "Hello é世界\nSecond line", "size": 32, "x": 300, "y": 420});
     if paragraph {
@@ -723,7 +723,7 @@ fn transform_app(paragraph: bool, vertical: bool, transform: Affine) -> (Photocr
     (app, id)
 }
 
-fn frame_point(app: &PhotocraftApp, p: [f64; 2]) -> Pos2 {
+fn frame_point(app: &SaryApp, p: [f64; 2]) -> Pos2 {
     xf(app).to_screen(p[0] as f32, p[1] as f32)
 }
 
@@ -987,7 +987,7 @@ fn temporary_type_transform_control_roundtrip_and_input_safety() {
     let frame = crate::type_transform::frame(&mut app).unwrap();
     let a = frame.quad[2];
     let ctx = egui::Context::default();
-    let call = |app: &mut PhotocraftApp, params| {
+    let call = |app: &mut SaryApp, params| {
         let (req, _) = ControlRequest::new("ui.pointer", params);
         let Outcome::Done(result) = crate::control::handle(app, &ctx, &req) else { panic!("expected immediate pointer reply") };
         assert_eq!(result["ok"], true, "{result}");
@@ -999,9 +999,9 @@ fn temporary_type_transform_control_roundtrip_and_input_safety() {
     call(&mut app, json!({"events": [{"kind": "up", "x": a[0]+60.0, "y": a[1]+30.0}]}));
     assert_ne!(text(&app, id).transform, initial);
     let doc = &app.session.active().unwrap().doc;
-    for name in ["type.pcraft", "type.psd"] {
-        let out = photocraft_io::export(doc, name, &Default::default()).unwrap();
-        let back = photocraft_io::import(name, &out.bytes).unwrap().document;
+    for name in ["type.sary", "type.psd"] {
+        let out = sary_io::export(doc, name, &Default::default()).unwrap();
+        let back = sary_io::import(name, &out.bytes).unwrap().document;
         let t = back.walk().into_iter().find_map(|(_, _, l)| if let LayerContent::Text(t) = &l.content { Some(t) } else { None }).unwrap();
         assert_affine(t.transform, text(&app, id).transform);
         assert_eq!(t.text, text(&app, id).text);
@@ -1025,9 +1025,9 @@ fn temporary_type_transform_control_roundtrip_and_input_safety() {
 fn temporary_type_transform_preserves_depth_and_color_model() {
     use crate::canvas::{ToolEvent, tool_event};
     for (depth, mode) in [(8, "rgb"), (16, "rgb"), (32, "rgb"), (16, "gray"), (8, "cmyk"), (16, "lab")] {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 1200, "height": 900, "depth": depth, "mode": mode})).unwrap();
-        let id = LayerId(app.run("type.create", json!({"text": "PhotoCraft é世界", "size": 32, "x": 300, "y": 350})).unwrap()["layer"].as_u64().unwrap());
+        let id = LayerId(app.run("type.create", json!({"text": "Sary é世界", "size": 32, "x": 300, "y": 350})).unwrap()["layer"].as_u64().unwrap());
         super::edit_active(&mut app).unwrap();
         let format = app.session.active().unwrap().doc.pixel_format();
         let a = crate::type_transform::frame(&mut app).unwrap().quad[2];
@@ -1038,7 +1038,7 @@ fn temporary_type_transform_preserves_depth_and_color_model() {
         assert_eq!(text_layer(&shown, id).unwrap().cache.as_ref().unwrap().format(), format);
         tool_event(&mut app, ToolEvent::Up { x: a[0] + 30.0, y: a[1] + 15.0 }, Modifiers::NONE);
         assert_eq!(text(&app, id).cache.as_ref().unwrap().format(), format);
-        assert_eq!(text(&app, id).text, "PhotoCraft é世界");
+        assert_eq!(text(&app, id).text, "Sary é世界");
     }
 }
 
@@ -1130,7 +1130,7 @@ fn temporary_type_transform_captures_press_and_rejects_collapsed_geometry() {
 #[test]
 #[ignore = "writes visual evidence to target/issue-1091; run explicitly for visual QA"]
 fn temporary_type_transform_visual_evidence() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/issue-1091");
     std::fs::create_dir_all(&out).unwrap();
     for (index, theme) in crate::theme::ThemeKind::ALL.into_iter().enumerate() {
@@ -1190,8 +1190,8 @@ fn temporary_type_transform_imported_psd_retains_editability_and_styles() {
         .unwrap();
     app.run("layer.renameLayer", json!({"layer": original_id.0, "name": "Styled caption"})).unwrap();
     app.run("layer.layerStyle.dropShadow", json!({"layer": original_id.0, "distance": 8, "size": 4})).unwrap();
-    let exported = photocraft_io::export(&app.session.active().unwrap().doc, "type.psd", &Default::default()).unwrap();
-    let imported = photocraft_io::import("type.psd", &exported.bytes).unwrap().document;
+    let exported = sary_io::export(&app.session.active().unwrap().doc, "type.psd", &Default::default()).unwrap();
+    let imported = sary_io::import("type.psd", &exported.bytes).unwrap().document;
     let mut app = new_app();
     app.session.add_document(imported, None);
     app.sync_views();
@@ -1223,10 +1223,10 @@ fn temporary_type_transform_imported_psd_retains_editability_and_styles() {
 #[ignore = "release benchmark for issue #1091: 24 MP, eight text layers, 60 preview updates"]
 fn temporary_type_transform_large_document_preview() {
     use crate::canvas::{ToolEvent, tool_event};
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 6000, "height": 4000})).unwrap();
     for i in 0..8 {
-        app.run("type.create", json!({"text": "PhotoCraft transform preview", "size": 60, "x": 300, "y": 300 + i * 200})).unwrap();
+        app.run("type.create", json!({"text": "Sary transform preview", "size": 60, "x": 300, "y": 300 + i * 200})).unwrap();
     }
     super::edit_active(&mut app).unwrap();
     let frame = crate::type_transform::frame(&mut app).unwrap();
@@ -1261,7 +1261,7 @@ fn temporary_type_transform_large_document_preview() {
         times[29], times[56], times[59]
     );
     // Compare the same matrices with the existing live-command path on the same document.
-    let mut commands = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut commands = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     commands.session.add_document(source, None);
     let mut command_times = Vec::new();
     for transform in transforms {
@@ -1291,8 +1291,8 @@ fn font_styles_keep_metadata_names_and_numeric_labels() {
 fn postscript_only_style_shows_actual_subfamily() {
     // selected_style reads the engine only once the font scan is done (try_shared). Under nextest
     // this test runs in a process of its own, where nothing else has started the scan, so start it.
-    let _ = photocraft_text::shared();
-    let style = photocraft_doc::text::CharStyle { font_family: "Inter".into(), postscript_name: Some("Inter-SemiBold".into()), ..Default::default() };
+    let _ = sary_text::shared();
+    let style = sary_doc::text::CharStyle { font_family: "Inter".into(), postscript_name: Some("Inter-SemiBold".into()), ..Default::default() };
     assert_eq!(super::selected_style(&style), "SemiBold");
 }
 
@@ -1307,7 +1307,7 @@ fn variable_faces_list_the_weights_of_their_axis() {
             _ => "Bold",
         };
         let style = if italic { format!("{base} Italic") } else { base.to_string() };
-        photocraft_text::FaceInfo { family: "Montserrat".into(), style, postscript_name: None, weight, italic, axes }
+        sary_text::FaceInfo { family: "Montserrat".into(), style, postscript_name: None, weight, italic, axes }
     };
     let full = || vec![("wght".to_string(), 100.0, 100.0, 900.0)];
     let names = super::style_names(&[face(100.0, false, full()), face(100.0, true, full())]);
@@ -1326,8 +1326,8 @@ fn variable_faces_list_the_weights_of_their_axis() {
 /// each shows the style's value for it, or what the layout draws without one (#2985).
 #[test]
 fn variable_font_axes_become_sliders_with_the_drawn_value() {
-    use photocraft_doc::text::{CharStyle, FontVariation};
-    let face = |italic: bool, axes: Vec<super::Axis>| photocraft_text::FaceInfo {
+    use sary_doc::text::{CharStyle, FontVariation};
+    let face = |italic: bool, axes: Vec<super::Axis>| sary_text::FaceInfo {
         family: "Roboto Flex".into(),
         style: "Regular".into(),
         postscript_name: None,
@@ -1352,7 +1352,7 @@ fn variable_font_axes_become_sliders_with_the_drawn_value() {
 /// Families the host serves are in the font menu before they are fetched.
 #[test]
 fn the_font_menu_lists_served_families() {
-    photocraft_text::served::add_families(["Served Menu Test Serif".to_string()]);
+    sary_text::served::add_families(["Served Menu Test Serif".to_string()]);
     assert!(super::families().iter().any(|f| f == "Served Menu Test Serif"));
 }
 
@@ -1360,15 +1360,15 @@ fn the_font_menu_lists_served_families() {
 mod multi_layer_formatting {
     use super::*;
     use egui::accesskit::Role;
-    use photocraft_doc::text::{AntiAlias, CharStyle, Orientation, TextAlign};
+    use sary_doc::text::{AntiAlias, CharStyle, Orientation, TextAlign};
 
-    fn selected(app: &mut PhotocraftApp, ids: &[LayerId]) {
+    fn selected(app: &mut SaryApp, ids: &[LayerId]) {
         for (i, id) in ids.iter().enumerate() {
             app.run("layer.select", json!({"layer": id.0, "mode": if i == 0 { "replace" } else { "add" }})).unwrap();
         }
     }
 
-    fn fixture() -> (PhotocraftApp, [LayerId; 3]) {
+    fn fixture() -> (SaryApp, [LayerId; 3]) {
         let mut app = new_app();
         let ids = std::array::from_fn(|i| {
             LayerId(
@@ -1380,7 +1380,7 @@ mod multi_layer_formatting {
         (app, ids)
     }
 
-    fn style(app: &PhotocraftApp, id: LayerId, ci: usize) -> CharStyle {
+    fn style(app: &SaryApp, id: LayerId, ci: usize) -> CharStyle {
         let t = text(app, id);
         let byte = t.text.char_indices().nth(ci).unwrap().0;
         let mut end = 0;
@@ -1394,7 +1394,7 @@ mod multi_layer_formatting {
             .style
     }
 
-    fn controls(app: PhotocraftApp, properties: bool) -> Harness<'static, PhotocraftApp> {
+    fn controls(app: SaryApp, properties: bool) -> Harness<'static, SaryApp> {
         let mut h = Harness::builder().with_size(vec2(1100.0, 800.0)).build_ui_state(
             move |ui, app| {
                 if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
@@ -1408,12 +1408,12 @@ mod multi_layer_formatting {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, Default::default());
+        SaryApp::setup_context(&h.ctx, Default::default());
         h.run_steps(4);
         h
     }
 
-    fn number(h: &mut Harness<'static, PhotocraftApp>, label: &str, value: &str) {
+    fn number(h: &mut Harness<'static, SaryApp>, label: &str, value: &str) {
         // Variable-font axes add numeric fields before size/leading. Select the setting by
         // its accessible name, so a font scan cannot shift this action onto another control.
         h.get_by_role_and_label(Role::SpinButton, label).click();
@@ -1424,7 +1424,7 @@ mod multi_layer_formatting {
         h.run();
     }
 
-    fn editing(app: &mut PhotocraftApp, id: LayerId) {
+    fn editing(app: &mut SaryApp, id: LayerId) {
         app.ui.text_edit = Some(crate::state::TextEdit {
             layer: id.0,
             caret: 3,
@@ -1455,7 +1455,7 @@ mod multi_layer_formatting {
             expected.font_family = "JetBrains Mono".into();
             // #3556: the new family's installed face at the peer's weight and italic is named (no
             // name without such a face), so a PSD names a real font.
-            expected.postscript_name = photocraft_text::shared()
+            expected.postscript_name = sary_text::shared()
                 .lock()
                 .unwrap()
                 .fonts
@@ -1491,9 +1491,9 @@ mod multi_layer_formatting {
         let mut pass = 0u32;
         let mut h = Harness::builder().with_size(vec2(1100.0, 800.0)).build_ui_state(
             move |ui, app| {
-                photocraft_text::TextEngine::new();
+                sary_text::TextEngine::new();
                 // The served catalog is process-wide: names that sort last.
-                photocraft_text::served::add_families([format!("zz Churn Test {pass:03}")]);
+                sary_text::served::add_families([format!("zz Churn Test {pass:03}")]);
                 pass = pass.saturating_add(1);
                 if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     ui.horizontal(|ui| super::super::options_bar(app, ui));
@@ -1501,7 +1501,7 @@ mod multi_layer_formatting {
             },
             app,
         );
-        PhotocraftApp::setup_context(&h.ctx, Default::default());
+        SaryApp::setup_context(&h.ctx, Default::default());
         h.run_steps(4);
         h.get_all_by_role(Role::ComboBox).next().unwrap().click();
         h.run();
@@ -1600,11 +1600,11 @@ mod multi_layer_formatting {
     fn character_panel_opentype_buttons_toggle_and_show_the_feature() {
         use egui::accesskit::Toggled;
         use egui_kittest::kittest::NodeT;
-        use photocraft_engine::type_extra_cmds::feature_on;
+        use sary_engine::type_extra_cmds::feature_on;
         let (app, ids) = fixture();
         let untouched = style(&app, ids[2], 0);
         let mut h = controls(app, true);
-        let shown = |h: &Harness<'static, PhotocraftApp>, label: &str| h.get_by_label(label).accesskit_node().toggled();
+        let shown = |h: &Harness<'static, SaryApp>, label: &str| h.get_by_label(label).accesskit_node().toggled();
         let order: Vec<String> = h
             .get_all_by_role(Role::Button)
             .filter_map(|n| n.accesskit_node().label())
@@ -1632,7 +1632,7 @@ mod multi_layer_formatting {
         h.run();
         h.get_by_label("Swash").click();
         h.run();
-        let swash = |h: &Harness<'static, PhotocraftApp>, ci| feature_on(&style(h.state(), ids[0], ci), "swsh");
+        let swash = |h: &Harness<'static, SaryApp>, ci| feature_on(&style(h.state(), ids[0], ci), "swsh");
         assert!(!swash(&h, 0) && swash(&h, 1) && swash(&h, 2) && !swash(&h, 3));
         h.run();
         assert_eq!(shown(&h, "Swash"), Some(Toggled::True), "shown at the selection start");
@@ -1646,7 +1646,7 @@ mod multi_layer_formatting {
         app.run("type.orientation.vertical", json!({"layer": ids[0].0})).unwrap();
         app.run("type.antiAlias.crisp", json!({"layer": ids[1].0})).unwrap();
         app.run("type.orientation.horizontal", json!({"layer": ids[1].0})).unwrap();
-        let checks = |app: &PhotocraftApp| -> Vec<String> {
+        let checks = |app: &SaryApp| -> Vec<String> {
             let items = crate::menus::menu_items(app);
             for id in ["type.antiAlias.none", "type.antiAlias.crisp", "type.orientation.horizontal", "type.orientation.vertical"] {
                 let it = items.iter().find(|i| i.id == id).unwrap();
@@ -1693,7 +1693,7 @@ mod multi_layer_formatting {
                 },
                 app,
             );
-            PhotocraftApp::setup_context(&h.ctx, Default::default());
+            SaryApp::setup_context(&h.ctx, Default::default());
             h.run_steps(4);
             assert!(h.query_by_label("Bend").is_some(), "the actual Warp form is visible");
             for label in ["Layer", "Layers", "Range", "Coalesce"] {
@@ -1739,7 +1739,7 @@ mod multi_layer_formatting {
             for i in 0..3 {
                 let mut expected = originals[i].clone();
                 if confirm && i < 2 {
-                    expected.color = photocraft_color::Color::rgb(0.0, 1.0, 0.0);
+                    expected.color = sary_color::Color::rgb(0.0, 1.0, 0.0);
                 }
                 assert_eq!(style(h.state(), ids[i], 0), expected);
             }
@@ -1782,12 +1782,12 @@ fn move_tool_double_click_on_type_edits_it() {
     assert!(h.state().ui.text_edit.is_none());
 }
 
-fn selection_bounds(app: &PhotocraftApp) -> Option<photocraft_geom::Rect> {
+fn selection_bounds(app: &SaryApp) -> Option<sary_geom::Rect> {
     app.session.active().unwrap().doc.selection.as_ref().map(|m| m.content_bounds())
 }
 
 /// Click with `tool` at (200, 300), type `text` and commit.
-fn type_with(app: &mut PhotocraftApp, tool: crate::state::Tool, text: &str) {
+fn type_with(app: &mut SaryApp, tool: crate::state::Tool, text: &str) {
     use crate::canvas::{ToolEvent, tool_event};
     app.ui.tool = tool;
     tool_event(app, ToolEvent::Down { x: 200.0, y: 300.0, pressure: 1.0 }, Modifiers::NONE);
@@ -1846,9 +1846,9 @@ fn type_mask_escape_leaves_the_selection_unchanged() {
 }
 
 /// A harness with short frames, so a run of clicks stays inside egui's double-click delay.
-fn quick_harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+fn quick_harness(app: SaryApp) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).with_step_dt(0.02).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -1858,13 +1858,13 @@ fn quick_harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     h
 }
 
 /// `n` quick clicks at `p`, then a pause long enough that the next click starts a new run.
-fn clicks(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, n: usize) -> (usize, usize) {
+fn clicks(h: &mut Harness<'static, SaryApp>, p: Pos2, n: usize) -> (usize, usize) {
     h.hover_at(p);
     h.run_steps(1);
     for _ in 0..n {
@@ -1877,7 +1877,7 @@ fn clicks(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, n: usize) -> (usize,
 }
 
 /// Centre the view on layer `id` at 50 % zoom.
-fn centre_on(h: &mut Harness<'static, PhotocraftApp>, id: LayerId) {
+fn centre_on(h: &mut Harness<'static, SaryApp>, id: LayerId) {
     let (l, aff, _) = layout(h.state_mut(), id).unwrap();
     let b = l.bounds().unwrap();
     let m = aff.apply(Point::new(f64::from(b[0] + b[2]) / 2.0, f64::from(b[1] + b[3]) / 2.0));
@@ -1887,12 +1887,12 @@ fn centre_on(h: &mut Harness<'static, PhotocraftApp>, id: LayerId) {
 }
 
 /// Laid-out line (character range) holding character `i`.
-fn line_chars(h: &mut Harness<'static, PhotocraftApp>, id: LayerId, i: usize) -> (usize, usize) {
+fn line_chars(h: &mut Harness<'static, SaryApp>, id: LayerId, i: usize) -> (usize, usize) {
     let (l, _, text) = layout(h.state_mut(), id).unwrap();
     let b = text.char_indices().nth(i).unwrap().0;
     let c = l.clusters.iter().find(|c| c.range.start == b).unwrap();
     let ln = &l.lines[c.line];
-    (photocraft_text::char_index(&text, ln.range.start), photocraft_text::char_index(&text, ln.range.end))
+    (sary_text::char_index(&text, ln.range.start), sary_text::char_index(&text, ln.range.end))
 }
 
 /// #3493: like Photoshop, two clicks select the word, three the line, four the paragraph (up
@@ -1995,7 +1995,7 @@ fn click_selection_without_layout_and_on_hostile_input() {
         assert_eq!(sel(None, "", 99, Some(usize::MAX), count), (0, 0), "empty text, count {count}");
         let (a, b) = sel(None, text, usize::MAX, Some(usize::MAX), count);
         assert!(a <= b && b <= 15, "caret past the end, count {count}: {a}..{b}");
-        let empty = photocraft_text::TextLayout::default();
+        let empty = sary_text::TextLayout::default();
         let (a, b) = sel(Some(&empty), text, usize::MAX, Some(usize::MAX), count);
         assert!(a <= b && b <= 15, "empty layout, count {count}: {a}..{b}");
     }
@@ -2036,7 +2036,7 @@ fn multi_click_without_a_session_does_nothing() {
 fn type_mask_shift_adds_and_alt_subtracts_without_a_layer_row() {
     use crate::canvas::{ToolEvent, tool_event};
     use crate::state::Tool;
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
     let mut app = new_app();
     type_with(&mut app, Tool::HorizontalTypeMask, "I");
     let glyphs = selection_bounds(&app).unwrap();
@@ -2045,7 +2045,7 @@ fn type_mask_shift_adds_and_alt_subtracts_without_a_layer_row() {
     let rect = Rect::new(1000, 100, 1100, 200);
     app.run("select.rect", json!({"x": 1000, "y": 100, "width": 100, "height": 100})).unwrap();
     // Type, then commit with a click outside the text holding `m`.
-    let type_and_commit = |app: &mut PhotocraftApp, m: Modifiers| {
+    let type_and_commit = |app: &mut SaryApp, m: Modifiers| {
         app.ui.tool = Tool::HorizontalTypeMask;
         tool_event(app, ToolEvent::Down { x: 200.0, y: 300.0, pressure: 1.0 }, Modifiers::NONE);
         tool_event(app, ToolEvent::Up { x: 200.0, y: 300.0 }, Modifiers::NONE);
@@ -2057,7 +2057,7 @@ fn type_mask_shift_adds_and_alt_subtracts_without_a_layer_row() {
         tool_event(app, ToolEvent::Up { x: 1500.0, y: 800.0 }, m);
         assert!(app.ui.text_edit.is_none());
     };
-    let at = |app: &PhotocraftApp, x: i32, y: i32| app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |s| s.sample_channel(x, y, 0));
+    let at = |app: &SaryApp, x: i32, y: i32| app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |s| s.sample_channel(x, y, 0));
     let stem = ((glyphs.x0 + glyphs.x1) / 2, (glyphs.y0 + glyphs.y1) / 2);
     type_and_commit(&mut app, Modifiers::SHIFT);
     assert_eq!(selection_bounds(&app), Some(rect.union(&glyphs)), "⇧ adds");

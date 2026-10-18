@@ -2,9 +2,9 @@
 //! layer happens to be active (#466 for smart filters, generalised): a script, action or agent can
 //! Replace Contents or Rasterize a smart object while another layer is selected.
 
-use photocraft_doc::{LayerContent, LayerId};
-use photocraft_engine::{EngineError, Session};
-use photocraft_geom::Rect;
+use sary_doc::{LayerContent, LayerId};
+use sary_engine::{EngineError, Session};
+use sary_geom::Rect;
 use serde_json::json;
 
 /// A smart object (blue) under a plain pixel layer, which is active.
@@ -37,17 +37,17 @@ fn smart_object_commands_act_on_a_named_layer_while_another_is_active() {
     // Without "layer" the active pixel layer decides, as the menus show.
     assert!(!s.is_enabled("layer.smartObjects.replaceContents"));
     // Replace Contents on the named smart object.
-    let dir = std::env::temp_dir().join(format!("pcraft-explicit-layer-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-explicit-layer-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let png = dir.join("red.png");
-    let red = photocraft_doc::Document::with_background(
+    let red = sary_doc::Document::with_background(
         "r",
-        photocraft_geom::Size::new(8, 6),
-        photocraft_color::ColorMode::Rgb,
-        photocraft_color::SampleType::U8,
-        photocraft_color::Color::rgba(1.0, 0.0, 0.0, 1.0),
+        sary_geom::Size::new(8, 6),
+        sary_color::ColorMode::Rgb,
+        sary_color::SampleType::U8,
+        sary_color::Color::rgba(1.0, 0.0, 0.0, 1.0),
     );
-    std::fs::write(&png, photocraft_io::export(&red, "png", &Default::default()).unwrap().bytes).unwrap();
+    std::fs::write(&png, sary_io::export(&red, "png", &Default::default()).unwrap().bytes).unwrap();
     s.execute("layer.smartObjects.replaceContents", json!({"layer": so, "path": png.to_str().unwrap()})).unwrap();
     std::fs::remove_dir_all(&dir).ok();
     let LayerContent::Smart(sm) = &s.active().unwrap().doc.layer(LayerId(so)).unwrap().content else { panic!("smart object") };

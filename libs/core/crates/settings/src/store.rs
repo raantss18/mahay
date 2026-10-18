@@ -355,7 +355,7 @@ impl<T: Settings> SettingsStore<T> {
         merge_into(&mut self.doc, &self.value).map_err(|e| SettingsError::Serialize(e.to_string()))?;
         set_schema_version(&mut self.doc, T::SCHEMA_VERSION);
         let text = document::render(&self.doc);
-        craft_atomic::WriteOptions::default().with_new_file_permissions(craft_atomic::NewFilePermissions::Private).atomic_write_with(
+        mahay_atomic::WriteOptions::default().with_new_file_permissions(mahay_atomic::NewFilePermissions::Private).atomic_write_with(
             &path,
             |file| {
                 restrict_permissions(file)?;
@@ -415,7 +415,7 @@ pub fn retry_delay(failures: u32) -> Duration {
     (FIRST_RETRY_DELAY * 2u32.saturating_pow(exp)).min(MAX_RETRY_DELAY)
 }
 
-/// New files are owner-only; on a replace `craft-atomic` keeps the existing file's mode.
+/// New files are owner-only; on a replace `mahay-atomic` keeps the existing file's mode.
 #[cfg(unix)]
 fn restrict_permissions(file: &std::fs::File) -> io::Result<()> {
     use std::os::unix::fs::PermissionsExt;

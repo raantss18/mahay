@@ -1,5 +1,5 @@
-//! GridCraft's egui frontend: an Excel-style window (title bar with Quick Access Toolbar,
-//! ribbon, formula bar, grid, sheet tabs, status bar) over `gridcraft-engine`.
+//! Tabilao's egui frontend: an Excel-style window (title bar with Quick Access Toolbar,
+//! ribbon, formula bar, grid, sheet tabs, status bar) over `tabilao-engine`.
 //!
 //! The UI is thin: it reads engine state and acts through [`SheetApp::run`] (engine commands by
 //! id). Everything it can do is also reachable over the control channel ([`control`]).
@@ -36,8 +36,8 @@ pub mod widgets;
 
 use std::collections::HashMap;
 
-use gridcraft_engine::core::{CellRef, RangeRef};
-use gridcraft_engine::{Session, UiRequest};
+use tabilao_engine::core::{CellRef, RangeRef};
+use tabilao_engine::{Session, UiRequest};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value as Json, json};
 
@@ -152,7 +152,7 @@ pub enum NoticeKind {
 }
 
 /// A dismissible bar under the ribbon, in the spirit of Excel's message bar. Used to tell the
-/// user what an opened file carried that GridCraft handled differently (e.g. preserved macros).
+/// user what an opened file carried that Tabilao handled differently (e.g. preserved macros).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Notice {
     pub text: String,
@@ -185,7 +185,7 @@ pub struct Services {
     pub paste_html: Option<Box<dyn FnMut() -> Option<String>>>,
     /// Read the system clipboard's plain text for the ribbon and menu Paste commands (Cmd/Ctrl+V
     /// gets it from egui's `Event::Paste`). `None` from the host, or no service (web), pastes
-    /// GridCraft's own clipboard.
+    /// Tabilao's own clipboard.
     pub paste_text: Option<Box<dyn FnMut() -> Option<String>>>,
     /// Web: deliver a file to the user (name, bytes).
     pub download: Option<Box<dyn Fn(&str, &[u8])>>,
@@ -254,11 +254,11 @@ pub struct SheetApp {
     pub(crate) shots: control::Shots,
     /// Chart selected on the sheet (id).
     pub selected_chart: Option<u32>,
-    /// The system clipboard's text when GridCraft last copied without publishing to it (a
+    /// The system clipboard's text when Tabilao last copied without publishing to it (a
     /// control-channel or MCP `edit.copy`/`edit.cut`). While the system clipboard still holds this
-    /// text, GridCraft's copy is the newer one and Paste uses it.
+    /// text, Tabilao's copy is the newer one and Paste uses it.
     clipboard_text_at_copy: Option<String>,
-    /// The system clipboard's text right after GridCraft's last cut (the published text, or the
+    /// The system clipboard's text right after Tabilao's last cut (the published text, or the
     /// text noted for an unpublished cut); `None` after a copy, or once the clipboard is seen
     /// holding other text. Once the cut has been pasted, Paste leaves this text alone.
     cut_text: Option<String>,
@@ -342,7 +342,7 @@ impl SheetApp {
     pub fn run(&mut self, id: &str, params: Json) -> Result<Json, String> {
         let r = self.run_command(id, params);
         // This copy leaves the system clipboard alone: note what it holds, so Paste can tell
-        // that GridCraft's copy is newer while that text is still there.
+        // that Tabilao's copy is newer while that text is still there.
         if matches!(id, "edit.copy" | "edit.cut") && r.is_ok() {
             self.clipboard_text_at_copy = self.system_clipboard_text();
             self.cut_text = if id == "edit.cut" { self.clipboard_text_at_copy.clone() } else { None };
@@ -423,8 +423,8 @@ impl SheetApp {
     /// Paste text that came from the system clipboard (Cmd/Ctrl+V, or the ribbon and menu Paste),
     /// with the clipboard's HTML flavour when the host can read it.
     ///
-    /// Excel pastes a cut once: after GridCraft's cut has been pasted, the system clipboard text
-    /// that came with it is not pasted again over the moved block; GridCraft's own (empty)
+    /// Excel pastes a cut once: after Tabilao's cut has been pasted, the system clipboard text
+    /// that came with it is not pasted again over the moved block; Tabilao's own (empty)
     /// clipboard is pasted instead, which reports "Nothing to paste.". Other text means the
     /// clipboard has moved on, so the cut's text is forgotten and pastes normally later.
     pub fn paste_external(&mut self, text: String) {
@@ -444,8 +444,8 @@ impl SheetApp {
     }
 
     /// Ribbon and menu Paste: paste the text on the system clipboard, as Cmd/Ctrl+V does. With no
-    /// text there, no host clipboard (web), or the text that was there when GridCraft last copied
-    /// without publishing, GridCraft's own clipboard is pasted.
+    /// text there, no host clipboard (web), or the text that was there when Tabilao last copied
+    /// without publishing, Tabilao's own clipboard is pasted.
     pub fn paste_from_clipboard(&mut self) {
         match self.system_clipboard_text() {
             Some(text) if self.session.clipboard.is_none() || self.clipboard_text_at_copy.as_ref() != Some(&text) => self.paste_external(text),
@@ -477,7 +477,7 @@ impl SheetApp {
             return;
         }
         if let Some(dl) = &self.services.download
-            && let Some(b) = result.get("base64").and_then(Json::as_str).and_then(gridcraft_engine::io::base64_decode)
+            && let Some(b) = result.get("base64").and_then(Json::as_str).and_then(tabilao_engine::io::base64_decode)
         {
             let title = self.session.active().map(|d| d.display_title()).unwrap_or_else(|| "Book1".into());
             dl(&std::path::Path::new(&title).with_extension("pdf").to_string_lossy(), &b);
@@ -538,7 +538,7 @@ impl SheetApp {
         if e.contains("is not available right now") {
             self.toast = Some((e, now_ms()));
         } else {
-            self.message = Some(("GridCraft".into(), clean_error(&e)));
+            self.message = Some(("Tabilao".into(), clean_error(&e)));
         }
     }
 
@@ -557,7 +557,7 @@ impl SheetApp {
         }
         let pdf = self.run("file.print", params)?;
         let encoded = pdf.get("base64").and_then(Json::as_str).ok_or("The print command did not produce a PDF.")?;
-        let bytes = gridcraft_engine::io::base64_decode(encoded).ok_or("Couldn't decode the generated PDF.")?;
+        let bytes = tabilao_engine::io::base64_decode(encoded).ok_or("Couldn't decode the generated PDF.")?;
         let len = bytes.len();
         if let Some(submit) = &self.services.print_native {
             self.printing.begin(submit(bytes, self.printing.settings.clone())).map_err(|_| "A print job is already being submitted.".to_owned())?;
@@ -689,7 +689,7 @@ impl SheetApp {
         for req in self.session.take_ui_requests() {
             match req {
                 UiRequest::Dialog(name, params) => self.open_dialog(&name, params),
-                UiRequest::Message(m) => self.message = Some(("GridCraft".into(), m)),
+                UiRequest::Message(m) => self.message = Some(("Tabilao".into(), m)),
                 UiRequest::EditCell(text) => {
                     let text = text.map(|text| {
                         self.session
@@ -733,7 +733,7 @@ impl SheetApp {
                 } else if self.services.download.is_some()
                     && let Ok(r) = self.run("file.saveBytes", json!({"format": "xlsx"}))
                     && let Some(dl) = &self.services.download
-                    && let Some(b) = r.get("base64").and_then(Json::as_str).and_then(gridcraft_engine::io::base64_decode)
+                    && let Some(b) = r.get("base64").and_then(Json::as_str).and_then(tabilao_engine::io::base64_decode)
                 {
                     let name = r.get("name").and_then(Json::as_str).unwrap_or("Book.xlsx").to_string();
                     dl(&name, &b);
@@ -765,8 +765,8 @@ impl SheetApp {
         match self.run("file.open", json!({"path": path})) {
             Ok(r) => self.after_open(Some(path), &r),
             // A password-protected workbook: ask for the password; the dialog opens it.
-            Err(e) if e.contains(gridcraft_engine::io::PASSWORD_REQUIRED) => self.open_dialog("openPassword", json!({"path": path})),
-            Err(e) => self.message = Some(("GridCraft".into(), clean_error(&e))),
+            Err(e) if e.contains(tabilao_engine::io::PASSWORD_REQUIRED) => self.open_dialog("openPassword", json!({"path": path})),
+            Err(e) => self.message = Some(("Tabilao".into(), clean_error(&e))),
         }
         self.after_engine();
     }
@@ -801,7 +801,7 @@ impl SheetApp {
         let vba: Vec<&str> = msgs.iter().copied().filter(|m| m.to_lowercase().contains("macro") || m.contains("VBA")).collect();
         if !vba.is_empty() {
             self.notice = Some(Notice {
-                text: "This workbook contains VBA macros. GridCraft keeps them intact when you save, but does not run them.".into(),
+                text: "This workbook contains VBA macros. Tabilao keeps them intact when you save, but does not run them.".into(),
                 kind: NoticeKind::Warning,
                 action: Some(("What this means".into(), "macros".into())),
             });
@@ -832,7 +832,7 @@ impl SheetApp {
     /// The view a sheet opens with: scrolled to the file's saved first visible cell (`topLeftCell`).
     fn saved_view(&self) -> SheetView {
         let Some(sh) = self.session.active().and_then(|d| d.wb.active()) else { return SheetView::default() };
-        if sh.view != gridcraft_engine::model::SheetViewMode::Normal {
+        if sh.view != tabilao_engine::model::SheetViewMode::Normal {
             return SheetView::default();
         }
         let (fr, fc) = sh.freeze.unwrap_or((0, 0));
@@ -849,7 +849,7 @@ impl SheetApp {
         let Some(d) = self.session.active_mut() else { return };
         let mut tops = Vec::new();
         for (&(uid, si), v) in &self.views {
-            let Some(sh) = d.wb.sheets.get(si).filter(|sh| uid == d.uid && sh.view == gridcraft_engine::model::SheetViewMode::Normal) else {
+            let Some(sh) = d.wb.sheets.get(si).filter(|sh| uid == d.uid && sh.view == tabilao_engine::model::SheetViewMode::Normal) else {
                 continue;
             };
             let (fr, fc) = sh.freeze.unwrap_or((0, 0));
@@ -882,7 +882,7 @@ impl SheetApp {
         } else {
             match sh.cell(at) {
                 Some(c) if c.formula.is_some() => formula_locale::display(&c.input_text(), locale, &d.wb, d.wb.active_sheet),
-                _ => gridcraft_engine::display::edit_text(&d.wb, sh, at),
+                _ => tabilao_engine::display::edit_text(&d.wb, sh, at),
             }
         };
         let (text, replace) = match text {
@@ -895,13 +895,13 @@ impl SheetApp {
             ed.completion = editor::column_completion(sh, at, &ed.text);
         }
         self.editor = Some(ed);
-        self.session.mode = if replace { gridcraft_engine::Mode::Enter } else { gridcraft_engine::Mode::Edit };
+        self.session.mode = if replace { tabilao_engine::Mode::Enter } else { tabilao_engine::Mode::Edit };
     }
 
     /// Commits the edit; `then` moves the selection (dr, dc) afterwards.
     pub fn commit_edit(&mut self, dr: i64, dc: i64, array: bool, fill_selection: bool) -> bool {
         let Some(ed) = self.editor.take() else { return true };
-        self.session.mode = gridcraft_engine::Mode::Ready;
+        self.session.mode = tabilao_engine::Mode::Ready;
         let text = match &ed.completion {
             Some(full) if full.to_lowercase().starts_with(&ed.text.to_lowercase()) => full.clone(),
             _ => ed.text.clone(),
@@ -909,22 +909,22 @@ impl SheetApp {
         let text = match self.session.active().map(|d| formula_locale::canonical(&text, ed.locale, &d.wb, ed.sheet, ed.cell)) {
             Some(Ok(text)) => text,
             Some(Err(error)) => {
-                self.message = Some(("GridCraft".into(), error.to_string()));
+                self.message = Some(("Tabilao".into(), error.to_string()));
                 self.editor = Some(ed);
-                self.session.mode = gridcraft_engine::Mode::Edit;
+                self.session.mode = tabilao_engine::Mode::Edit;
                 return false;
             }
             None => text,
         };
         // Data validation.
         if let Some(d) = self.session.active()
-            && let Some((dv, msg)) = gridcraft_engine::cmd::data::check_validation(&d.wb, ed.sheet, ed.cell, &text)
+            && let Some((dv, msg)) = tabilao_engine::cmd::data::check_validation(&d.wb, ed.sheet, ed.cell, &text)
         {
-            if dv.error_style == gridcraft_engine::model::ErrorStyle::Stop {
-                let title = if dv.error_title.is_empty() { "GridCraft".to_string() } else { dv.error_title.clone() };
+            if dv.error_style == tabilao_engine::model::ErrorStyle::Stop {
+                let title = if dv.error_title.is_empty() { "Tabilao".to_string() } else { dv.error_title.clone() };
                 self.message = Some((title, msg));
                 self.editor = Some(ed);
-                self.session.mode = gridcraft_engine::Mode::Edit;
+                self.session.mode = tabilao_engine::Mode::Edit;
                 return false;
             }
             self.toast = Some((msg, now_ms()));
@@ -943,9 +943,9 @@ impl SheetApp {
                 true
             }
             Err(e) => {
-                self.message = Some(("GridCraft".into(), clean_error(&e)));
+                self.message = Some(("Tabilao".into(), clean_error(&e)));
                 self.editor = Some(ed);
-                self.session.mode = gridcraft_engine::Mode::Edit;
+                self.session.mode = tabilao_engine::Mode::Edit;
                 false
             }
         }
@@ -953,7 +953,7 @@ impl SheetApp {
 
     pub fn cancel_edit(&mut self) {
         self.editor = None;
-        self.session.mode = gridcraft_engine::Mode::Ready;
+        self.session.mode = tabilao_engine::Mode::Ready;
     }
 
     /// Enter/Tab move inside a multi-cell selection, otherwise to the next cell.
@@ -1046,7 +1046,7 @@ impl SheetApp {
         }
         self.effective_dark = ctx.theme() == egui::Theme::Dark;
         // Interface size: the preference owns the zoom factor, so egui's own Ctrl/Cmd +/-/0 zoom
-        // keys stay off (they would also swallow GridCraft's shortcuts).
+        // keys stay off (they would also swallow Tabilao's shortcuts).
         if ctx.options(|o| o.zoom_with_keyboard) {
             ctx.options_mut(|o| o.zoom_with_keyboard = false);
         }
@@ -1064,18 +1064,18 @@ impl SheetApp {
             .map(|i| std::mem::take(&mut *i.lock().unwrap_or_else(std::sync::PoisonError::into_inner)))
             .unwrap_or_default();
         for (name, bytes) in arrived {
-            let b64 = gridcraft_engine::io::base64_encode(&bytes);
+            let b64 = tabilao_engine::io::base64_encode(&bytes);
             match self.run("file.open", json!({"name": &name, "base64": &b64})) {
                 // A file picked from File › Open (web) arrives here: show it, not the Backstage.
                 Ok(r) => {
                     self.backstage = None;
                     self.show_open_warnings(&r);
                 }
-                Err(e) if e.contains(gridcraft_engine::io::PASSWORD_REQUIRED) => {
+                Err(e) if e.contains(tabilao_engine::io::PASSWORD_REQUIRED) => {
                     self.backstage = None;
                     self.open_dialog("openPassword", json!({"name": name, "base64": b64}));
                 }
-                Err(e) => self.message = Some(("GridCraft".into(), clean_error(&e))),
+                Err(e) => self.message = Some(("Tabilao".into(), clean_error(&e))),
             }
             self.after_engine();
         }
@@ -1197,7 +1197,7 @@ impl SheetApp {
                 // Reserved sequence: fires silently while its command is missing. When the
                 // command lands in the catalog it goes live with no table edit.
                 keytips::Action::Pending(id) => {
-                    if gridcraft_engine::find_command(id).is_some() {
+                    if tabilao_engine::find_command(id).is_some() {
                         self.run_or_alert(id, json!({}));
                     }
                 }

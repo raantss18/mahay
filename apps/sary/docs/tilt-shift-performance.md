@@ -2,10 +2,10 @@
 
 Starting base: `a28d786638ffbb84c5fb7d5d30ea1c3d594cd3bc`, freshly fetched
 `origin/main`. Branch: `codex/tilt-shift-performance-20261010`. Worktree:
-`C:\Users\Colum\.codex\worktrees\6c32\photocraft`. At investigation time,
+`C:\Users\Colum\.codex\worktrees\6c32\sary`. At investigation time,
 `upstream/main` was `5963e5b7f0aefa0d94b5cf67ef3c1c9b6d3399dd`, two commits ahead:
-[Recent entries](https://github.com/storytold/photocraft/commit/b773a39efa4a65888fcce4a5d8dffcf4fa45700a)
-and [temporary Move](https://github.com/storytold/photocraft/commit/5963e5b7f0aefa0d94b5cf67ef3c1c9b6d3399dd).
+[Recent entries](https://github.com/raantss18/mahay/commit/b773a39efa4a65888fcce4a5d8dffcf4fa45700a)
+and [temporary Move](https://github.com/raantss18/mahay/commit/5963e5b7f0aefa0d94b5cf67ef3c1c9b6d3399dd).
 Neither changes filtering. The original checkout, local main and other worktrees
 were not edited. Cargo uses `target/agent-tilt-shift` throughout.
 
@@ -18,11 +18,11 @@ source were inspected before the implementation was selected.
 
 | Work | Status and evidence | Consequence for Tilt-Shift |
 |---|---|---|
-| [#1524: portable Mosaic reads](https://github.com/storytold/photocraft/pull/1524), [merge d651be13](https://github.com/storytold/photocraft/commit/d651be1393b709d638dd9d0e4824a420f795d3ae) | The SIMD-related proposal the human referred to. Its AVX2/pulp portion was experimental and removed before merge: the [review](https://github.com/storytold/photocraft/pull/1524#issuecomment-6072959394) found no complete-filter gain to justify dependencies/features/CI. Portable contiguous row reads and exact-output tests landed. | Reuse contiguous reads. Main has no general portable-SIMD Gallery backend or nightly std::simd path to reuse. |
-| [#1471: adaptive rustfft Motion Blur](https://github.com/storytold/photocraft/pull/1471), [merge c7dbb37b](https://github.com/storytold/photocraft/commit/c7dbb37b3c61c18223e56c10d06efc71e48c7677) | Merged. Builds on [#902](https://github.com/storytold/photocraft/pull/902)'s merged bilinear taps/row convolution. Wide uniform streaks benefit from FFT; short/unsupported cases retain rows. Current code bounds FFT allocations and rejects unsuitable coordinates/samples from that path. | Tilt-Shift is spatially varying, not one uniform convolution. A single FFT would change the band; one FFT per existing Gaussian level would preserve spatial blending but replace linear-time box cascades with transforms, padding, complex scratch and numerical differences. No demonstrated crossover warrants that machinery here. |
+| [#1524: portable Mosaic reads](https://github.com/storytold/photocraft/pull/1524), [merge d651be13](https://github.com/raantss18/mahay/commit/d651be1393b709d638dd9d0e4824a420f795d3ae) | The SIMD-related proposal the human referred to. Its AVX2/pulp portion was experimental and removed before merge: the [review](https://github.com/storytold/photocraft/pull/1524#issuecomment-6072959394) found no complete-filter gain to justify dependencies/features/CI. Portable contiguous row reads and exact-output tests landed. | Reuse contiguous reads. Main has no general portable-SIMD Gallery backend or nightly std::simd path to reuse. |
+| [#1471: adaptive rustfft Motion Blur](https://github.com/storytold/photocraft/pull/1471), [merge c7dbb37b](https://github.com/raantss18/mahay/commit/c7dbb37b3c61c18223e56c10d06efc71e48c7677) | Merged. Builds on [#902](https://github.com/storytold/photocraft/pull/902)'s merged bilinear taps/row convolution. Wide uniform streaks benefit from FFT; short/unsupported cases retain rows. Current code bounds FFT allocations and rejects unsuitable coordinates/samples from that path. | Tilt-Shift is spatially varying, not one uniform convolution. A single FFT would change the band; one FFT per existing Gaussian level would preserve spatial blending but replace linear-time box cascades with transforms, padding, complex scratch and numerical differences. No demonstrated crossover warrants that machinery here. |
 | [#867: Gaussian running sums and bands](https://github.com/storytold/photocraft/pull/867), [#628: Box Blur](https://github.com/storytold/photocraft/pull/628), [#1602: fixed-channel accumulators](https://github.com/storytold/photocraft/pull/1602) carrying closed [#1511](https://github.com/storytold/photocraft/pull/1511) | Merged, with radius-independent separable passes, traversal/allocation improvements and compiler-friendly accumulators. | Gallery already uses separable boxes, with f64 running sums. Replacing them with the f32 Gaussian accumulators would change HDR cancellation/rounding. Avoid a broad kernel/traversal rewrite. |
 | [#1499: Radial sampling](https://github.com/storytold/photocraft/pull/1499) | Merged after [review](https://github.com/storytold/photocraft/pull/1499#issuecomment-6071866387) removed a changed-output polar approximation and a separate preview scheduler. Exact transform preparation and interleaved taps remained. | Preserve the kernel and reuse current services. Tilt-Shift already prepares its band geometry once per tile and has no radial/disk samples to precompute. |
-| [#2578: Iris Blur](https://github.com/storytold/photocraft/pull/2578), [merge fa33712d](https://github.com/storytold/photocraft/commit/fa33712dd3bd87c4502c01dbeae3d235383e1b46) | Already merged in the starting base. Prepares Iris geometry and adds exact-output contiguous premultiplication and per-level trailing-halo trimming to the shared helper; only Iris opts in. | Opt Tilt-Shift into that established helper. No new algorithm, dependency, cache or scheduler is needed. Field remains unchanged. |
+| [#2578: Iris Blur](https://github.com/storytold/photocraft/pull/2578), [merge fa33712d](https://github.com/raantss18/mahay/commit/fa33712dd3bd87c4502c01dbeae3d235383e1b46) | Already merged in the starting base. Prepares Iris geometry and adds exact-output contiguous premultiplication and per-level trailing-halo trimming to the shared helper; only Iris opts in. | Opt Tilt-Shift into that established helper. No new algorithm, dependency, cache or scheduler is needed. Field remains unchanged. |
 | [#1899: preview worker/cancellation](https://github.com/storytold/photocraft/pull/1899), [#1825: keep preview during commit](https://github.com/storytold/photocraft/pull/1825), [#2207: preview scale](https://github.com/storytold/photocraft/pull/2207) | Merged. Latest-request worker; cancel stale work after 150 ms without parameter changes, preserving updates during dragging. Pixel parameters scale with the existing proxy. | Leave the UI and worker intact; faster tile computation also shortens the existing worker's filtering work. |
 | Active [#2685](https://github.com/storytold/photocraft/pull/2685), [#2580](https://github.com/storytold/photocraft/pull/2580), [#2739](https://github.com/storytold/photocraft/pull/2739) | Respectively Spin/Lens/Extrude/Wind/Trap sampling, general compression/IO/compositing allocation work, and smart-filter stage caching/background jobs. #2685 touches Gallery's Spin path, not Tilt-Shift's Gaussian field. | No existing Tilt-Shift fix or overlapping implementation found. Keep this change confined to Tilt-Shift's opt-in and its tests. |
 
@@ -110,10 +110,10 @@ latency. The implementation does not alter the preview factor or kernel.
 ```powershell
 $env:CARGO_TARGET_DIR = 'target/agent-tilt-shift'
 $env:RAYON_NUM_THREADS = '8'
-cargo run --release -p photocraft-algo --example bench_tilt_shift -- 6000 4000 5 1
-cargo run --release -p photocraft-algo --example bench_tilt_shift -- 6000 6000 5 1
-cargo run --release -p photocraft-algo --example bench_tilt_shift -- 1500 1000 7 4
-cargo run --release -p photocraft-algo --example bench_tilt_shift -- 128 96 7 1
+cargo run --release -p sary-algo --example bench_tilt_shift -- 6000 4000 5 1
+cargo run --release -p sary-algo --example bench_tilt_shift -- 6000 6000 5 1
+cargo run --release -p sary-algo --example bench_tilt_shift -- 1500 1000 7 4
+cargo run --release -p sary-algo --example bench_tilt_shift -- 128 96 7 1
 ```
 
 ## Results
@@ -221,7 +221,7 @@ regression intentionally differs from the starting kernel by returning identity.
 
 ## Validation and remaining limits
 
-The full `photocraft-algo` suite passes: 425 tests, 18 ignored, no failures.
+The full `sary-algo` suite passes: 425 tests, 18 ignored, no failures.
 All six Tilt-Shift differential/regression tests also pass in release. Strict
 all-targets Clippy passes for the algorithm crate. The existing engine filter
 integration group passes all 16 tests, including selection, repeat, undo and
@@ -246,10 +246,10 @@ limited to this Windows x86_64 machine. `cargo xtask test-corpus --changed`
 correctly skips its suites because no format, IO, compositor, GPU or text crate
 changed. Command registrations and UI code are unchanged.
 
-The measurements establish equivalence to the starting PhotoCraft kernel, not a
+The measurements establish equivalence to the starting Sary kernel, not a
 new Photoshop oracle or broader parity increase. Cold startup, actual GUI
 input/frame latency, allocation counts and other platforms' native performance
 remain unmeasured. No performance budget, scorecard checklist or parity floor is
-raised from these local results. The shared craftrules checkout was unavailable
+raised from these local results. The shared mahay-rules checkout was unavailable
 at the documented paths; the repository's own contributor and validation rules
 were followed.

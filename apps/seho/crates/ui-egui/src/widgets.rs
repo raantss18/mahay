@@ -1,8 +1,8 @@
 //! Ribbon widgets: large and small buttons, split buttons, groups, dropdowns, spinners, the colour
 //! picker and galleries.
 
-use deckcraft_color::{ColorScheme, Rgba, SchemeSlot};
-use deckcraft_model::ColorRef;
+use seho_color::{ColorScheme, Rgba, SchemeSlot};
+use seho_model::ColorRef;
 use egui::{Align2, Color32, CornerRadius, Rect, Response, Sense, Stroke, Ui, Vec2, pos2, vec2};
 
 use crate::icons::{self, Icon};
@@ -315,9 +315,9 @@ pub fn color_grid(ui: &mut Ui, scheme: &ColorScheme, none_label: Option<&str>) -
         for row in 0..5 {
             for slot in slots {
                 let base = scheme.get(slot);
-                let vars = deckcraft_color::theme_variants(base);
+                let vars = seho_color::theme_variants(base);
                 let Some((mods, label)) = vars.get(row) else { continue };
-                let c = deckcraft_color::apply(base, mods);
+                let c = seho_color::apply(base, mods);
                 if sw(ui, c, label) {
                     let alias = match slot {
                         SchemeSlot::Lt1 => SchemeSlot::Bg1,
@@ -338,7 +338,7 @@ pub fn color_grid(ui: &mut Ui, scheme: &ColorScheme, none_label: Option<&str>) -
     ui.label(egui::RichText::new("Standard Colors").font(theme::bold(12.0)));
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 3.0;
-        for (c, name) in deckcraft_color::STANDARD_COLORS {
+        for (c, name) in seho_color::STANDARD_COLORS {
             if sw(ui, c, name) {
                 out = Some(Some(ColorRef::rgb(c)));
             }
@@ -497,7 +497,7 @@ mod tests {
     #[test]
     fn the_hex_field_keeps_the_color_menu_open() {
         let picked = RefCell::new(None);
-        let scheme = deckcraft_model::Theme::default().colors;
+        let scheme = seho_model::Theme::default().colors;
         let mut harness = egui_kittest::Harness::builder().with_size(vec2(400.0, 500.0)).build_ui(|ui| {
             theme::install_fonts(ui.ctx());
             let r = ui.button("Pick");
@@ -525,7 +525,7 @@ mod tests {
     #[test]
     fn the_eyedroppers_colour_comes_back_through_the_menu_that_asked() {
         let picked = RefCell::new(None);
-        let scheme = deckcraft_model::Theme::default().colors;
+        let scheme = seho_model::Theme::default().colors;
         let mut harness = egui_kittest::Harness::builder().with_size(vec2(400.0, 500.0)).build_ui(|ui| {
             theme::install_fonts(ui.ctx());
             let r = ui.button("Pick");
@@ -542,7 +542,7 @@ mod tests {
         assert!(harness.query_by_label("Eyedropper").is_none(), "choosing it closes the menu");
         assert!(picked.borrow().is_none(), "nothing is picked yet");
         // The app starts the Eyedropper from this request; here the colour is taken at once.
-        assert!(harness.ctx.data_mut(|d| d.remove_temp::<bool>(egui::Id::new("deckcraft.eyedropper.request"))).unwrap_or(false));
+        assert!(harness.ctx.data_mut(|d| d.remove_temp::<bool>(egui::Id::new("seho.eyedropper.request"))).unwrap_or(false));
         let menu = crate::eyedropper::open_menu(&harness.ctx).expect("the open menu noted its button");
         crate::eyedropper::store_result(&harness.ctx, menu, "00FF00");
         harness.run();

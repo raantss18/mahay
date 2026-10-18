@@ -1,4 +1,4 @@
-//! pdfcraft-ocr — Scan & OCR ▸ Recognize text (L4).
+//! taratasy-ocr — Scan & OCR ▸ Recognize text (L4).
 //!
 //! Recognition runs the ocrs engine (MIT/Apache-2.0) with its pre-trained models (CC-BY-SA-4.0,
 //! fetched by `cargo xtask models`; see ATTRIBUTION.toml). The caller renders a page to pixels;
@@ -12,7 +12,7 @@
 
 use std::path::{Path, PathBuf};
 
-pub use pdfcraft_fonts::helvetica_width;
+pub use taratasy_fonts::helvetica_width;
 
 /// The model files, as named in ATTRIBUTION.toml.
 pub const DETECTION_MODEL: &str = "text-detection.rten";
@@ -30,7 +30,7 @@ pub const LANGUAGES: &[(&str, &str)] = &[("en", "English")];
 pub enum OcrError {
     /// Shown to end users (release packages ship the models; a source build fetches them with
     /// `cargo xtask models`). The UI catalogs key this exact text.
-    #[error("the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)")]
+    #[error("the text recognition models are not installed (reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them)")]
     NoModels,
     #[error("loading {0}: {1}")]
     Load(String, String),
@@ -54,7 +54,7 @@ impl Models {
         (m.detection.is_file() && m.recognition.is_file()).then_some(m)
     }
 
-    /// Look for the models: `$PDFCRAFT_MODELS`, then where the release packages install them
+    /// Look for the models: `$TARATASY_MODELS`, then where the release packages install them
     /// beside the executable ([`Models::dirs_beside_exe`]), then the source tree's `assets/models/`.
     pub fn find() -> Option<Models> {
         Self::search_dirs().iter().find_map(|d| Self::in_dir(d))
@@ -63,7 +63,7 @@ impl Models {
     /// The directories [`Models::find`] looks in, in order.
     pub fn search_dirs() -> Vec<PathBuf> {
         let mut dirs = Vec::new();
-        if let Some(d) = std::env::var_os("PDFCRAFT_MODELS") {
+        if let Some(d) = std::env::var_os("TARATASY_MODELS") {
             dirs.push(PathBuf::from(d));
         }
         if let Some(exe) = std::env::current_exe().ok().and_then(|e| e.parent().map(Path::to_path_buf)) {
@@ -77,10 +77,10 @@ impl Models {
     /// executable (packaging/*):
     /// - `models/` beside it: the Windows MSI and portable zip;
     /// - `../Resources/models`: the macOS app bundle (`Contents/MacOS` → `Contents/Resources`);
-    /// - `../share/pdfcraft/models`: the FHS-style trees (`bin/` → `share/`) of the Linux
+    /// - `../share/taratasy/models`: the FHS-style trees (`bin/` → `share/`) of the Linux
     ///   deb/rpm/tar.gz/AppImage/Flatpak and the FreeBSD tarball, wherever they are installed.
     pub fn dirs_beside_exe(exe_dir: &Path) -> Vec<PathBuf> {
-        vec![exe_dir.join("models"), exe_dir.join("../Resources/models"), exe_dir.join("../share/pdfcraft/models")]
+        vec![exe_dir.join("models"), exe_dir.join("../Resources/models"), exe_dir.join("../share/taratasy/models")]
     }
 }
 
@@ -235,7 +235,7 @@ pub fn text_layer(words: &[PlacedWord]) -> Vec<u8> {
         let nums: Vec<String> = m.iter().map(|v| num(*v)).collect();
         out.extend_from_slice(nums.join(" ").as_bytes());
         out.extend_from_slice(b" Tm ");
-        out.extend(pdfcraft_fonts::literal(&pdfcraft_fonts::win_ansi(&w.text)));
+        out.extend(taratasy_fonts::literal(&taratasy_fonts::win_ansi(&w.text)));
         out.extend_from_slice(b" Tj\n");
     }
     out.extend_from_slice(b"ET\nQ\nEMC\n");
@@ -261,7 +261,7 @@ mod tests {
     /// alphabet (Chinese, for example) needs a text layer in another font first.
     #[test]
     fn the_model_alphabet_fits_the_text_layer_font() {
-        assert_eq!(pdfcraft_fonts::first_undrawable(ALPHABET), None);
+        assert_eq!(taratasy_fonts::first_undrawable(ALPHABET), None);
     }
 
     #[test]
@@ -325,15 +325,15 @@ mod tests {
     /// Mirrors packaging/{windows/package.ps1,macos/package.sh,linux/package.sh,freebsd/package.sh}.
     #[test]
     fn finds_the_models_in_every_release_package_layout() {
-        let base = std::env::temp_dir().join(format!("pdfcraft-ocr-layouts-{}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("taratasy-ocr-layouts-{}", std::process::id()));
         let layouts = [
-            ("windows", "PdfCraft", "PdfCraft/models"),
-            ("macos", "PdfCraft.app/Contents/MacOS", "PdfCraft.app/Contents/Resources/models"),
-            ("linux-deb-rpm", "usr/bin", "usr/share/pdfcraft/models"),
-            ("linux-tar", "pdfcraft-1.0.0-linux-x86_64/bin", "pdfcraft-1.0.0-linux-x86_64/share/pdfcraft/models"),
-            ("appimage", "PdfCraft.AppDir/usr/bin", "PdfCraft.AppDir/usr/share/pdfcraft/models"),
-            ("flatpak", "app/bin", "app/share/pdfcraft/models"),
-            ("freebsd", "usr/local/bin", "usr/local/share/pdfcraft/models"),
+            ("windows", "Taratasy", "Taratasy/models"),
+            ("macos", "Taratasy.app/Contents/MacOS", "Taratasy.app/Contents/Resources/models"),
+            ("linux-deb-rpm", "usr/bin", "usr/share/taratasy/models"),
+            ("linux-tar", "taratasy-1.0.0-linux-x86_64/bin", "taratasy-1.0.0-linux-x86_64/share/taratasy/models"),
+            ("appimage", "Taratasy.AppDir/usr/bin", "Taratasy.AppDir/usr/share/taratasy/models"),
+            ("flatpak", "app/bin", "app/share/taratasy/models"),
+            ("freebsd", "usr/local/bin", "usr/local/share/taratasy/models"),
         ];
         for (name, exe_dir, models_dir) in layouts {
             let root = base.join(name);
@@ -364,7 +364,7 @@ mod tests {
     #[test]
     fn missing_models_message_is_for_end_users() {
         let message = OcrError::NoModels.to_string();
-        assert!(!message.contains("cargo") && message.contains("PDFCRAFT_MODELS"), "{message}");
+        assert!(!message.contains("cargo") && message.contains("TARATASY_MODELS"), "{message}");
     }
 
     /// End to end on rendered text, when the models are installed (`cargo xtask models`).

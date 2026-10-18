@@ -1,5 +1,5 @@
 //! PDF-tab actions. Closed history contains paths only, never bytes or passwords.
-use pdfcraft_engine::DocId;
+use taratasy_engine::DocId;
 
 pub(crate) enum Action {
     Close(DocId),
@@ -7,7 +7,7 @@ pub(crate) enum Action {
     Reveal(DocId),
 }
 
-impl crate::PdfCraftApp {
+impl crate::TaratasyApp {
     pub(crate) fn tab_action(&mut self, action: Action) {
         match action {
             Action::Close(id) => {
@@ -61,7 +61,7 @@ fn reveal(path: &std::path::Path) -> Result<(), String> {
     if matches!(platform, "linux" | "freebsd") {
         // `dbus-send --print-reply` waits up to 2 s for the file manager (then xdg-open may run),
         // so it runs off the UI thread; a failure there is only logged.
-        let spawned = std::thread::Builder::new().name("pdfcraft-reveal".into()).spawn(move || {
+        let spawned = std::thread::Builder::new().name("taratasy-reveal".into()).spawn(move || {
             if let Err(e) = reveal_via(platform, &path, run) {
                 log::warn!("reveal {}: {e}", path.display());
             }
@@ -136,11 +136,11 @@ mod tests {
 
     #[test]
     fn confirmed_close_uses_id_and_cancel_keeps_history_empty() {
-        let mut app = crate::PdfCraftApp::new();
+        let mut app = crate::TaratasyApp::new();
         app.open_bytes("first.pdf", Some("/tmp/first.pdf".into()), PDF.to_vec()).unwrap();
         let first = app.views[0].id;
         app.open_bytes("second.pdf", None, PDF.to_vec()).unwrap();
-        app.session.apply(first, pdfcraft_engine::Edit::InsertBlankPage { at: 0, width: 300.0, height: 400.0 }).unwrap();
+        app.session.apply(first, taratasy_engine::Edit::InsertBlankPage { at: 0, width: 300.0, height: 400.0 }).unwrap();
         app.tab_action(Action::Close(first));
         assert_eq!(app.views.len(), 2);
         assert!(app.closed_tabs.is_empty());
@@ -159,11 +159,11 @@ mod tests {
     fn reopen_reads_saved_file_and_history_is_bounded() {
         use std::io::Write as _;
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let path = std::env::temp_dir().join(format!("pdfcraft-tab-{}-{nonce}-年度 report.pdf", std::process::id()));
+        let path = std::env::temp_dir().join(format!("taratasy-tab-{}-{nonce}-年度 report.pdf", std::process::id()));
         let mut file = std::fs::OpenOptions::new().write(true).create_new(true).open(&path).unwrap();
         file.write_all(PDF).unwrap();
         drop(file);
-        let mut app = crate::PdfCraftApp::new();
+        let mut app = crate::TaratasyApp::new();
         let path_text = path.to_str().unwrap();
         for _ in 0..12 {
             app.open_path(path_text);
@@ -183,12 +183,12 @@ mod tests {
     fn failed_reopen_keeps_history_and_retry_does_not_duplicate_tabs() {
         use std::io::Write as _;
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let path = std::env::temp_dir().join(format!("pdfcraft-retry-{}-{nonce}.pdf", std::process::id()));
+        let path = std::env::temp_dir().join(format!("taratasy-retry-{}-{nonce}.pdf", std::process::id()));
         let text = path.to_str().unwrap();
         let mut file = std::fs::OpenOptions::new().create_new(true).write(true).open(&path).unwrap();
         file.write_all(PDF).unwrap();
         drop(file);
-        let mut app = crate::PdfCraftApp::new();
+        let mut app = crate::TaratasyApp::new();
         app.open_path(text);
         app.close_tab(0);
         std::fs::remove_file(&path).unwrap();
@@ -245,7 +245,7 @@ mod tests {
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod ui_tests {
-    use crate::PdfCraftApp;
+    use crate::TaratasyApp;
     use egui_kittest::{
         Harness,
         kittest::{NodeT, Queryable},
@@ -254,7 +254,7 @@ mod ui_tests {
     #[test]
     fn inactive_tab_menu_closes_target_and_disables_unavailable_actions() {
         let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             for name in ["first.pdf", "second.pdf"] {
                 app.open_bytes(name, None, include_bytes!("../tests/data/form.pdf").to_vec()).unwrap();

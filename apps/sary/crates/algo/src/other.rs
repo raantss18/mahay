@@ -1,6 +1,6 @@
 //! Minimum, Maximum, Offset.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 use crate::image::{Edge, Image};
 use crate::{Ctx, Preserve, UndefinedAreas};
@@ -219,7 +219,7 @@ mod offset_overflow_tests {
             for (i, sample) in src.data.iter_mut().enumerate() {
                 *sample = i as f32 * 0.125 - 2.0;
             }
-            let ctx = Ctx { bounds, mode: photocraft_color::ColorMode::Rgb, alpha: true };
+            let ctx = Ctx { bounds, mode: sary_color::ColorMode::Rgb, alpha: true };
             for policy in [UndefinedAreas::Wrap, UndefinedAreas::Repeat, UndefinedAreas::Transparent] {
                 for dx in [i32::MIN, i32::MAX, -8, 0, 7] {
                     for dy in [i32::MIN, i32::MAX, -9, 0, 6] {
@@ -249,7 +249,7 @@ mod offset_overflow_tests {
             let bounds = Rect::new(start, start, start + 3, start + 3);
             let mut src = Image::new(bounds, 1);
             src.data = (0..9).map(|i| i as f32).collect();
-            let ctx = Ctx { bounds, mode: photocraft_color::ColorMode::Grayscale, alpha: false };
+            let ctx = Ctx { bounds, mode: sary_color::ColorMode::Grayscale, alpha: false };
             assert_eq!(offset(&src, bounds, &ctx, i32::MIN, i32::MIN, UndefinedAreas::Wrap), vec![8.0, 6.0, 7.0, 2.0, 0.0, 1.0, 5.0, 3.0, 4.0]);
         }
     }
@@ -259,7 +259,7 @@ mod offset_overflow_tests {
         let bounds = Rect::new(0, 0, 3, 1);
         let mut src = Image::new(bounds, 1);
         src.data = vec![0.1, 0.5, 0.9];
-        let ctx = Ctx { bounds, mode: photocraft_color::ColorMode::Grayscale, alpha: false };
+        let ctx = Ctx { bounds, mode: sary_color::ColorMode::Grayscale, alpha: false };
         let got = offset(&src, bounds, &ctx, i32::MIN, 0, UndefinedAreas::Wrap);
         assert_eq!(got, vec![0.9, 0.1, 0.5]);
     }

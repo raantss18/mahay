@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-color"
+name = "sary-color"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,5 +8,5 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-photocraft-cms = { workspace = true }
+sary-cms = { workspace = true }
 serde = { workspace = true }

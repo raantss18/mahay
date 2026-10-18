@@ -4,7 +4,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
-use deckcraft_model::style::PictureAdjust;
+use seho_model::style::PictureAdjust;
 use vello_cpu::Pixmap;
 
 const BUDGET: usize = 512 << 20;
@@ -106,14 +106,14 @@ fn adjust_key(a: &PictureAdjust) -> u64 {
 
 /// The duotone's dark and light colours. The painter resolves them to plain RGB first (see
 /// `paint::resolved`); a colour that is still a scheme reference falls back to black and white.
-fn duotone_rgb(a: &PictureAdjust) -> Option<(deckcraft_color::Rgba, deckcraft_color::Rgba)> {
-    use deckcraft_model::style::ColorBase;
+fn duotone_rgb(a: &PictureAdjust) -> Option<(seho_color::Rgba, seho_color::Rgba)> {
+    use seho_model::style::ColorBase;
     let (d, l) = a.duotone.as_ref()?;
-    let rgb = |c: &deckcraft_model::style::ColorRef, or: deckcraft_color::Rgba| match &c.base {
+    let rgb = |c: &seho_model::style::ColorRef, or: seho_color::Rgba| match &c.base {
         ColorBase::Rgb { rgb } if c.mods.is_empty() => *rgb,
         _ => or,
     };
-    Some((rgb(d, deckcraft_color::Rgba::BLACK), rgb(l, deckcraft_color::Rgba::WHITE)))
+    Some((rgb(d, seho_color::Rgba::BLACK), rgb(l, seho_color::Rgba::WHITE)))
 }
 
 /// Decode encoded bytes (PNG, JPEG, GIF, WebP, BMP, TIFF; WMF and EMF drawn at
@@ -580,8 +580,8 @@ mod tests {
 
     #[test]
     fn duotone_maps_luminance_between_its_two_colours() {
-        use deckcraft_color::Rgba;
-        use deckcraft_model::style::ColorRef;
+        use seho_color::Rgba;
+        use seho_model::style::ColorRef;
         let mut img = image::RgbaImage::from_fn(3, 1, |x, _| image::Rgba([[0, 0, 0, 255], [128, 128, 128, 200], [255, 255, 255, 255]][x as usize]));
         let adj =
             PictureAdjust { duotone: Some((ColorRef::rgb(Rgba::rgb(100, 40, 0)), ColorRef::rgb(Rgba::rgb(250, 240, 200)))), ..Default::default() };

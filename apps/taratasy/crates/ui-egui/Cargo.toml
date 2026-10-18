@@ -1,6 +1,6 @@
 [package]
-name = "pdfcraft-ui-egui"
-description = "The egui shell of PdfCraft"
+name = "taratasy-ui-egui"
+description = "The egui shell of Taratasy"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,15 +10,15 @@ rust-version = "1.95"
 workspace = true
 
 [dependencies]
-craft-ui = { workspace = true }
+mahay-ui = { workspace = true }
 # macOS: a window close quits through `terminate:` (the Touch Bar crash, #1136); elsewhere a no-op.
-craft-quit = { workspace = true, features = ["egui"] }
-pdfcraft-fonts = { workspace = true }
-pdfcraft-engine = { workspace = true }
-pdfcraft-cos = { workspace = true }
-pdfcraft-render = { workspace = true }
-pdfcraft-model = { workspace = true }
-pdfcraft-platform = { workspace = true }
+mahay-quit = { workspace = true, features = ["egui"] }
+taratasy-fonts = { workspace = true }
+taratasy-engine = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-render = { workspace = true }
+taratasy-model = { workspace = true }
+taratasy-platform = { workspace = true }
 egui = { workspace = true, features = ["bytemuck"] }
 egui_extras = { workspace = true }
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "persistence", "links"] }
@@ -56,7 +56,7 @@ objc2 = "0.6"
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSEvent", "NSScreen"] }
 objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSGeometry"] }
 # A plain fsync where a volume refuses the full flush `sync_all` asks for (SMB, FUSE); already in
-# the tree through pdfcraft-cli.
+# the tree through taratasy-cli.
 rustix = { version = "1", features = ["fs"] }
 
 [target.'cfg(windows)'.dependencies]
@@ -74,10 +74,10 @@ js-sys = "0.3"
 web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "HtmlAnchorElement", "Blob", "BlobPropertyBag", "Url", "HtmlIFrameElement", "HtmlImageElement", "HtmlCollection", "Node", "EventTarget", "Navigator"] }
 
 [dev-dependencies]
-pdfcraft-xfa = { workspace = true }
+taratasy-xfa = { workspace = true }
 egui_kittest = { workspace = true, features = ["eframe", "wgpu"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
-# Glyph-coverage test of the interface fonts; the same skrifa pdfcraft-fonts already uses.
+# Glyph-coverage test of the interface fonts; the same skrifa taratasy-fonts already uses.
 skrifa = "0.44"
 
 [build-dependencies]

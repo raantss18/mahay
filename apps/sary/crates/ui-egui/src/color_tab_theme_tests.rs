@@ -4,7 +4,7 @@
 use egui::{Rect, pos2};
 use egui_kittest::kittest::Queryable;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::dock::Group;
 use crate::theme::{ThemeKind, Tokens};
 
@@ -13,12 +13,12 @@ fn left_top() -> egui::Id {
 }
 
 /// The Color tab of `kind`, alone in a 300 pt wide panel, starting from a red foreground.
-fn color_tab(kind: ThemeKind) -> egui_kittest::Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn color_tab(kind: ThemeKind) -> egui_kittest::Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.session.tools.foreground = [1.0, 0.0, 0.0, 1.0];
     let tab = Group::Color.tabs(Tokens::for_kind(kind).pro).iter().position(|name| *name == "Color").unwrap();
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(300.0, 400.0)).build_ui_state(
-        move |ui, app: &mut PhotocraftApp| {
+        move |ui, app: &mut SaryApp| {
             if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 let origin = ui.cursor().min;
                 ui.data_mut(|d| d.insert_temp(left_top(), Rect::from_min_size(origin, egui::Vec2::ZERO)));
@@ -27,7 +27,7 @@ fn color_tab(kind: ThemeKind) -> egui_kittest::Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, kind);
+    SaryApp::setup_context(&h.ctx, kind);
     h.run_steps(3);
     h
 }

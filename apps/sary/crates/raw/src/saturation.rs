@@ -2,7 +2,7 @@
 //!
 //! A DNG's `WhiteLevel` is what the writer says the samples top out at, not always where the sensor
 //! really saturates: a camera app can state 4095 for 12-bit data that piles up at 3567 (85 % of the
-//! range above black, storytold/photocraft#4348, as storytold/lightcraft#548). Development clips each
+//! range above black, raantss18/sary#4348, as raantss18/hazavana#548). Development clips each
 //! channel at 1 after white balance, so samples stuck 15 % below the white level are not clipped
 //! together: red and blue (multiplied by more than green) reach 1, green stays at 0.85, and blown
 //! highlights turn magenta.
@@ -10,7 +10,7 @@
 //! [`Sensor::lift_clipped_samples`] finds the real saturation point of each colour from the samples
 //! (a pile-up of identical values near the top of the range) and raises the samples at or above it to
 //! the stated white level. Unclipped samples keep their values, and a file whose data reaches its white
-//! level, or has no pile-up, is left alone. Same detector as storytold/lightcraft#586.
+//! level, or has no pile-up, is left alone. Same detector as raantss18/hazavana#586.
 
 use crate::sensor::Sensor;
 

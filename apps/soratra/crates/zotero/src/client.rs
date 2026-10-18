@@ -9,7 +9,7 @@ use std::net::{SocketAddr, TcpStream};
 use std::time::Duration;
 
 use serde_json::Value;
-use wordcraft_engine::Session;
+use soratra_engine::Session;
 
 use crate::wire::{self, Call};
 use crate::{Bridge, Host, ZoteroError};

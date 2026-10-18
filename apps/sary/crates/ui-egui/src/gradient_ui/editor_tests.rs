@@ -6,8 +6,8 @@ use egui_kittest::{
     kittest::{NodeT, Queryable},
 };
 
-fn editor(layer: bool) -> (Harness<'static, PhotocraftApp>, Sink) {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn editor(layer: bool) -> (Harness<'static, SaryApp>, Sink) {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 120})).unwrap();
     let mut params = json!({"stops": [[0, "#ff0000"], [0.5, "#00ff00"], [1, "#0000ff"]], "transparency": [[0, 25], [0.5, 60], [1, 100]]});
     let sink = if layer {
@@ -19,15 +19,15 @@ fn editor(layer: bool) -> (Harness<'static, PhotocraftApp>, Sink) {
         app.run("gradient.presets.select", params).unwrap();
         Sink::Preset
     };
-    let mut h = Harness::builder().with_size(vec2(1000.0, 900.0)).build_ui_state(|ui, app: &mut PhotocraftApp| editor_window(app, ui.ctx()), app);
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ProMedium);
+    let mut h = Harness::builder().with_size(vec2(1000.0, 900.0)).build_ui_state(|ui, app: &mut SaryApp| editor_window(app, ui.ctx()), app);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ProMedium);
     h.run_steps(2);
     h.state_mut().ui.panels.gradient_editor = true;
     h.run_steps(4);
     (h, sink)
 }
 
-fn click(h: &mut Harness<PhotocraftApp>, pos: Pos2) {
+fn click(h: &mut Harness<SaryApp>, pos: Pos2) {
     h.event(egui::Event::PointerMoved(pos));
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed: true, modifiers: egui::Modifiers::NONE });
@@ -36,12 +36,12 @@ fn click(h: &mut Harness<PhotocraftApp>, pos: Pos2) {
     h.run_steps(3);
 }
 
-fn select(h: &mut Harness<PhotocraftApp>, location: f32, opacity: bool) {
+fn select(h: &mut Harness<SaryApp>, location: f32, opacity: bool) {
     let rect = h.get_by_label("Gradient stops").rect();
     click(h, pos2(rect.left() + 8.0 + location * (rect.width() - 16.0), rect.top() + if opacity { 6.0 } else { 50.0 }));
 }
 
-fn type_number(h: &mut Harness<PhotocraftApp>, index: usize, value: &str, commit: bool) {
+fn type_number(h: &mut Harness<SaryApp>, index: usize, value: &str, commit: bool) {
     h.get_all_by_role(egui::accesskit::Role::SpinButton).nth(index).unwrap().click();
     h.run_steps(2);
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::A);

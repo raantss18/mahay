@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
-use pdfcraft_cos::Document;
-use pdfcraft_measure::snap::{self, Geometry, SnapOptions};
+use taratasy_cos::Document;
+use taratasy_measure::snap::{self, Geometry, SnapOptions};
 
 const CASES: usize = 1_000;
 const SEED: u64 = 1;

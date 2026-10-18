@@ -1,8 +1,8 @@
 //! Synthetic DNG files: every storage layout decodes to the exact sensor
 //! samples, and development reproduces known colours.
 
-use photocraft_raw::testgen::{DngSpec, DngStorage, Val, baseline_jpeg, mosaic, scene};
-use photocraft_raw::*;
+use sary_raw::testgen::{DngSpec, DngStorage, Val, baseline_jpeg, mosaic, scene};
+use sary_raw::*;
 
 fn sensor(bytes: &[u8]) -> Sensor {
     decode(bytes, &Limits::default()).unwrap()
@@ -425,7 +425,7 @@ fn highlights_clip_to_white_and_exposure_applies() {
     assert!((lin(up) / lin(base) - 2.0).abs() < 0.02, "{} vs {}", lin(up), lin(base));
 }
 
-/// storytold/photocraft#4348 (as storytold/lightcraft#548): a 12-bit DNG that states WhiteLevel 4095
+/// raantss18/sary#4348 (as raantss18/hazavana#548): a 12-bit DNG that states WhiteLevel 4095
 /// but whose sensor saturates at 3567 in every colour. Under the camera's white balance (red x2.46,
 /// blue x1.59) the stuck red and blue samples clip at 1 while green stays at 0.85, so a blown wall
 /// rendered magenta. The wall must come out neutral, and the unclipped ramp beside it unchanged.
@@ -458,7 +458,7 @@ fn gain_map_opcode_is_applied() {
     spec.as_shot_neutral = Some([1.0; 3]);
     let lin = |v: u16| (f64::from(v) / 65535.0).powf(1.8);
     let base = develop(&spec.build(), &DevelopOptions::default()).unwrap().rgb[(6 * w + 8) * 3 + 1];
-    spec.opcode_list2 = Some(photocraft_raw::testgen::gain_map_opcode_list([0, 0, h as u32, w as u32], 1, [[2.0, 2.0], [2.0, 2.0]]));
+    spec.opcode_list2 = Some(sary_raw::testgen::gain_map_opcode_list([0, 0, h as u32, w as u32], 1, [[2.0, 2.0], [2.0, 2.0]]));
     let d = develop(&spec.build(), &DevelopOptions::default()).unwrap();
     assert!(!d.warnings.iter().any(|w| w.contains("Opcode")), "{:?}", d.warnings);
     let gained = d.rgb[(6 * w + 8) * 3 + 1];

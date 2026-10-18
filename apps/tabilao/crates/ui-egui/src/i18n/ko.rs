@@ -227,7 +227,7 @@ pub(super) fn translate(text: &str) -> Option<&'static str> {
         "Command\nPalette" => "명령\n팔레트",
         "Agent\nControl" => "에이전트\n제어",
         "Action\nJournal" => "작업\n기록",
-        "About\nGridCraft" => "GridCraft\n정보",
+        "About\nTabilao" => "Tabilao\n정보",
         "Share" => "공유",
         "Add Chart\nElement" => "차트\n요소 추가",
         "Change\nChart Type" => "차트 종류\n변경",

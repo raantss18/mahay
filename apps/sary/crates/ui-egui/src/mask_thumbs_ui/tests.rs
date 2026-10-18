@@ -7,11 +7,11 @@ use egui_kittest::kittest::Queryable;
 use serde_json::json;
 
 use super::{MaskKind, THUMB_VECTOR, recorded, vector_thumb_image};
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// A 200×100 document: "Masked" (pixel + vector mask) and a "Badge" shape layer.
-fn session() -> (photocraft_engine::Session, u64, u64) {
-    let mut s = photocraft_engine::Session::new();
+fn session() -> (sary_engine::Session, u64, u64) {
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
     let masked = s.execute("layer.new.layer", json!({"name": "Masked"})).unwrap()["layer"].as_u64().unwrap();
     s.execute("edit.fill", json!({"contents": "color", "color": "#336699"})).unwrap();
@@ -24,10 +24,10 @@ fn session() -> (photocraft_engine::Session, u64, u64) {
     (s, masked, shape)
 }
 
-fn harness(session: photocraft_engine::Session, tab: usize, ppp: f32, dock_width: f32) -> Harness<'static, PhotocraftApp> {
+fn harness(session: sary_engine::Session, tab: usize, ppp: f32, dock_width: f32) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1440.0, 1000.0)).with_pixels_per_point(ppp).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(session, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(session, crate::Services::default())
     });
     let ctx = h.ctx.clone();
     let (req, _rx) = crate::control::ControlRequest::new(
@@ -39,7 +39,7 @@ fn harness(session: photocraft_engine::Session, tab: usize, ppp: f32, dock_width
     h
 }
 
-fn click_with(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, modifiers: Modifiers) {
+fn click_with(h: &mut Harness<'_, SaryApp>, at: Pos2, modifiers: Modifiers) {
     h.hover_at(at);
     h.event(egui::Event::ModifiersChanged(modifiers));
     h.run_steps(1);
@@ -51,9 +51,9 @@ fn click_with(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, modifiers: Modifiers
     h.run_steps(2);
 }
 
-fn layer(h: &Harness<'_, PhotocraftApp>, id: u64) -> photocraft_doc::Layer {
+fn layer(h: &Harness<'_, SaryApp>, id: u64) -> sary_doc::Layer {
     let st = h.state().session.active().unwrap();
-    st.doc.layer(photocraft_doc::LayerId(id)).unwrap().clone()
+    st.doc.layer(sary_doc::LayerId(id)).unwrap().clone()
 }
 
 #[test]
@@ -71,7 +71,7 @@ fn rows_show_both_mask_thumbnails_with_chains_and_cache_the_vector_one() {
         assert!(thumbs[0].1.right() <= chains[1].1.left() + 0.01);
         let row = crate::layer_row_ui::recorded(&h.ctx).into_iter().find(|r| r.layer == masked).unwrap();
         assert!(row.name.unwrap().left() >= thumbs[1].1.right(), "@{ppp}x the name starts after the masks");
-        assert!(h.state().thumbs.contains_key(&(photocraft_doc::LayerId(masked), THUMB_VECTOR)), "vector thumbnail cached");
+        assert!(h.state().thumbs.contains_key(&(sary_doc::LayerId(masked), THUMB_VECTOR)), "vector thumbnail cached");
     }
 }
 
@@ -79,7 +79,7 @@ fn rows_show_both_mask_thumbnails_with_chains_and_cache_the_vector_one() {
 fn deleting_the_vector_mask_prunes_its_thumbnail() {
     let (s, masked, _) = session();
     let mut h = harness(s, 0, 1.0, 290.0);
-    let key = (photocraft_doc::LayerId(masked), THUMB_VECTOR);
+    let key = (sary_doc::LayerId(masked), THUMB_VECTOR);
     assert!(h.state().thumbs.contains_key(&key));
     h.state_mut().run("layer.vectorMask.delete", json!({"layer": masked})).unwrap();
     h.run_steps(3);
@@ -102,9 +102,9 @@ fn footer_trash_deletes_only_the_targeted_mask_linked_or_unlinked() {
             click_with(&mut h, at, Modifiers::NONE);
             let l = layer(&h, masked);
             assert!(h.state().ui.dialogs.is_empty(), "mask deletion remains immediate");
-            let original = before.layer(photocraft_doc::LayerId(masked)).unwrap();
+            let original = before.layer(sary_doc::LayerId(masked)).unwrap();
             assert_eq!(l.content, original.content);
-            assert_eq!(layer(&h, shape), *before.layer(photocraft_doc::LayerId(shape)).unwrap());
+            assert_eq!(layer(&h, shape), *before.layer(sary_doc::LayerId(shape)).unwrap());
             if kind == MaskKind::Pixel {
                 assert!(l.mask.is_none());
                 assert_eq!(l.vector_mask, original.vector_mask);
@@ -131,11 +131,11 @@ fn footer_trash_still_deletes_the_layer_when_its_content_is_targeted() {
     assert!(!h.state().ui.mask_target && !h.state().ui.vector_mask_target);
     let at = h.get_by_label("Delete layer").rect().center();
     click_with(&mut h, at, Modifiers::NONE);
-    assert!(h.state().session.active().unwrap().doc.layer(photocraft_doc::LayerId(masked)).is_some());
+    assert!(h.state().session.active().unwrap().doc.layer(sary_doc::LayerId(masked)).is_some());
     assert!(h.state().ui.dialogs.iter().any(|d| crate::delete_layer_prompt::owns(&d.fields)));
     h.get_by_label("Delete").click();
     h.run_steps(3);
-    assert!(h.state().session.active().unwrap().doc.layer(photocraft_doc::LayerId(masked)).is_none());
+    assert!(h.state().session.active().unwrap().doc.layer(sary_doc::LayerId(masked)).is_none());
 }
 
 /// Like Photoshop, ⌥/Alt-clicking the trash deletes the layer without asking.
@@ -148,7 +148,7 @@ fn alt_click_on_the_footer_trash_deletes_without_confirmation() {
     let at = h.get_by_label("Delete layer").rect().center();
     click_with(&mut h, at, Modifiers::ALT);
     assert!(h.state().ui.dialogs.is_empty(), "no confirmation");
-    assert!(h.state().session.active().unwrap().doc.layer(photocraft_doc::LayerId(masked)).is_none());
+    assert!(h.state().session.active().unwrap().doc.layer(sary_doc::LayerId(masked)).is_none());
 }
 
 #[test]
@@ -166,7 +166,7 @@ fn a_new_mask_is_targeted_so_the_next_footer_trash_keeps_its_layer() {
     let at = h.get_by_label("Delete Layer Mask").rect().center();
     click_with(&mut h, at, Modifiers::NONE);
     assert!(h.state().session.active().unwrap().doc.layer(id).unwrap().mask.is_none());
-    assert!(h.state().session.active().unwrap().doc.layer(photocraft_doc::LayerId(shape)).is_some());
+    assert!(h.state().session.active().unwrap().doc.layer(sary_doc::LayerId(shape)).is_some());
 }
 
 /// #4728: with a path selected in the Paths panel, the footer's "Add vector mask" makes the vector
@@ -211,7 +211,7 @@ fn dragging_a_layer_row_to_trash_still_deletes_the_layer_with_a_mask_targeted() 
     }
     h.event(egui::Event::PointerButton { pos: to, button: PointerButton::Primary, pressed: false, modifiers: Modifiers::NONE });
     h.run_steps(3);
-    assert!(h.state().session.active().unwrap().doc.layer(photocraft_doc::LayerId(masked)).is_none());
+    assert!(h.state().session.active().unwrap().doc.layer(sary_doc::LayerId(masked)).is_none());
 }
 
 /// #3113: dragging the layer mask's thumbnail onto the Trash asks "Apply mask to layer before
@@ -224,7 +224,7 @@ fn dragging_the_mask_thumbnail_to_trash_asks_to_apply_or_delete_it() {
     s.execute("select.rect", json!({"x": 100, "y": 0, "width": 100, "height": 100})).unwrap();
     s.execute("layer.layerMask.revealSelection", json!({"layer": masked})).unwrap();
     let mut h = harness(s, 0, 1.0, 290.0);
-    let drag_mask = |h: &mut Harness<'_, PhotocraftApp>| {
+    let drag_mask = |h: &mut Harness<'_, SaryApp>| {
         let from = recorded(&h.ctx, masked).unwrap().0.into_iter().find(|(k, _)| *k == MaskKind::Pixel).unwrap().1.center();
         click_with(h, from, Modifiers::NONE);
         let to = h.get_by_label("Delete Layer Mask").rect().center();
@@ -243,7 +243,7 @@ fn dragging_the_mask_thumbnail_to_trash_asks_to_apply_or_delete_it() {
         assert!(layer(h, masked).mask.is_some(), "nothing changes before the answer");
         d.id
     };
-    let pixels = |h: &Harness<'_, PhotocraftApp>| layer(h, masked).content;
+    let pixels = |h: &Harness<'_, SaryApp>| layer(h, masked).content;
     let before = pixels(&h);
     let past = h.state().session.active().unwrap().history.past_len();
     // Cancel keeps the mask.
@@ -272,7 +272,7 @@ fn dragging_the_mask_thumbnail_to_trash_asks_to_apply_or_delete_it() {
 fn dragging_the_vector_mask_thumbnail_to_trash_asks_to_delete_just_the_mask() {
     let (s, masked, _) = session();
     let mut h = harness(s, 0, 1.0, 290.0);
-    let drag_vector_mask = |h: &mut Harness<'_, PhotocraftApp>| {
+    let drag_vector_mask = |h: &mut Harness<'_, SaryApp>| {
         let from = recorded(&h.ctx, masked).unwrap().0.into_iter().find(|(k, _)| *k == MaskKind::Vector).unwrap().1.center();
         click_with(h, from, Modifiers::NONE);
         let to = h.get_by_label("Delete Vector Mask").rect().center();
@@ -287,7 +287,7 @@ fn dragging_the_vector_mask_thumbnail_to_trash_asks_to_delete_just_the_mask() {
         h.event(egui::Event::PointerButton { pos: to, button: PointerButton::Primary, pressed: false, modifiers: Modifiers::NONE });
         h.run_steps(3);
         let st = h.state().session.active().unwrap();
-        assert!(st.doc.layer(photocraft_doc::LayerId(masked)).is_some(), "the layer is not deleted");
+        assert!(st.doc.layer(sary_doc::LayerId(masked)).is_some(), "the layer is not deleted");
         let d = h.state().ui.dialogs.iter().find(|d| crate::mask_trash_prompt::owns(&d.fields)).expect("the prompt is open");
         assert_eq!(d.fields["message"], "Delete the vector mask?");
         assert!(layer(h, masked).vector_mask.is_some(), "nothing changes before the answer");
@@ -319,8 +319,8 @@ fn the_chain_toggles_linking_and_it_survives_psd() {
     click_with(&mut h, p, Modifiers::NONE);
     assert!(!layer(&h, masked).vector_mask.unwrap().linked);
     let doc = (*h.state().session.active().unwrap().doc).clone();
-    let bytes = photocraft_io::export(&doc, "m.psd", &Default::default()).unwrap().bytes;
-    let back = photocraft_io::import("m.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&doc, "m.psd", &Default::default()).unwrap().bytes;
+    let back = sary_io::import("m.psd", &bytes).unwrap().document;
     let l = back.walk().into_iter().map(|(_, _, l)| l.clone()).find(|l| l.name == "Masked").unwrap();
     assert!(!l.mask.unwrap().linked && !l.vector_mask.unwrap().linked, "unlinked state round-trips PSD");
     // Clicking the (now empty) chain slot links again.
@@ -346,7 +346,7 @@ fn shift_click_disables_a_mask() {
 fn vector_thumbnail_is_white_inside_grey_outside_at_the_document_aspect() {
     let (s, masked, _) = session();
     let doc = s.active().unwrap().doc.clone();
-    let vm = doc.layer(photocraft_doc::LayerId(masked)).unwrap().vector_mask.clone().unwrap();
+    let vm = doc.layer(sary_doc::LayerId(masked)).unwrap().vector_mask.clone().unwrap();
     let img = vector_thumb_image(&doc, &vm, 64);
     let at = |x: usize, y: usize| img.pixels[y * 64 + x];
     // 200×100 doc in 64 px: 0.32 scale, rows 16..48. The mask covers x 20..120, y 10..90.
@@ -413,7 +413,7 @@ fn panels_never_panic_on_odd_documents() {
     // Rows render for a 1×1 and a very wide document, and the fitted thumbnails stay finite.
     for (w, hgt) in [(1, 1), (2000, 3)] {
         for tab in 0..3 {
-            let mut s = photocraft_engine::Session::new();
+            let mut s = sary_engine::Session::new();
             s.execute("file.new", json!({"width": w, "height": hgt})).unwrap();
             s.execute("layer.new.layer", json!({})).unwrap();
             s.execute("layer.layerMask.hideAll", json!({})).unwrap();
@@ -429,29 +429,29 @@ fn panels_never_panic_on_odd_documents() {
 // #196: ⌥-click mask view, ⌘-click vector mask to select, vector-mask target brackets.
 
 /// The session above with a black dot painted into the layer mask at (50, 50).
-fn dotted() -> (photocraft_engine::Session, u64, u64) {
+fn dotted() -> (sary_engine::Session, u64, u64) {
     let (mut s, masked, shape) = session();
     s.execute("paint.stroke", json!({"points": [[50, 50]], "size": 20, "hardness": 1.0, "color": "#000000", "target": "mask"})).unwrap();
     (s, masked, shape)
 }
 
-fn mask_rect(h: &Harness<'_, PhotocraftApp>, id: u64, kind: MaskKind) -> Rect {
+fn mask_rect(h: &Harness<'_, SaryApp>, id: u64, kind: MaskKind) -> Rect {
     recorded(&h.ctx, id).unwrap().0.into_iter().find(|(k, _)| *k == kind).unwrap().1
 }
 
 /// The layer thumbnail sits left of the first chain (see `paint`).
-fn layer_thumb_center(h: &Harness<'_, PhotocraftApp>, id: u64) -> Pos2 {
+fn layer_thumb_center(h: &Harness<'_, SaryApp>, id: u64) -> Pos2 {
     let first = recorded(&h.ctx, id).unwrap().0[0].1;
     pos2(first.left() - 4.0 - super::CHAIN_W - first.width() / 2.0, first.center().y)
 }
 
-fn mask_view(h: &Harness<'_, PhotocraftApp>) -> serde_json::Value {
-    photocraft_engine::inspect::document(h.state().session.active().unwrap())["layerMaskView"].clone()
+fn mask_view(h: &Harness<'_, SaryApp>) -> serde_json::Value {
+    sary_engine::inspect::document(h.state().session.active().unwrap())["layerMaskView"].clone()
 }
 
-fn canvas_px(h: &Harness<'_, PhotocraftApp>) -> Option<Vec<egui::Color32>> {
+fn canvas_px(h: &Harness<'_, SaryApp>) -> Option<Vec<egui::Color32>> {
     let st = h.state().session.active().unwrap();
-    crate::channel_view::render(&st.doc, &st.channel_view, photocraft_geom::Rect::new(0, 0, 200, 100), 1, false, st.active_layer)
+    crate::channel_view::render(&st.doc, &st.channel_view, sary_geom::Rect::new(0, 0, 200, 100), 1, false, st.active_layer)
 }
 
 fn near(a: Rect, b: Rect) -> bool {
@@ -523,7 +523,7 @@ fn command_click_a_vector_mask_loads_its_path_as_a_selection() {
     let (s, masked, _) = session();
     let mut h = harness(s, 0, 1.0, 290.0);
     let r = mask_rect(&h, masked, MaskKind::Vector);
-    let sel = |h: &Harness<'_, PhotocraftApp>| h.state().session.active().unwrap().doc.selection.clone();
+    let sel = |h: &Harness<'_, SaryApp>| h.state().session.active().unwrap().doc.selection.clone();
     click_with(&mut h, r.center(), Modifiers::COMMAND);
     let b = sel(&h).expect("⌘-click selects the path").content_bounds();
     assert_eq!((b.x0, b.y0, b.width(), b.height()), (20, 10, 100, 80));
@@ -593,9 +593,9 @@ fn mask_view_gestures_fail_gracefully_without_a_mask() {
     assert_eq!(mask_view(&h), serde_json::Value::Null);
     h.run_steps(2);
     // A stale view (layer gone) draws nothing instead of panicking.
-    h.state_mut().session.active_mut().unwrap().channel_view.layer_mask = Some(photocraft_engine::mask_view_cmds::LayerMaskView {
-        layer: photocraft_doc::LayerId(u64::MAX),
-        mode: photocraft_engine::mask_view_cmds::MaskViewMode::Gray,
+    h.state_mut().session.active_mut().unwrap().channel_view.layer_mask = Some(sary_engine::mask_view_cmds::LayerMaskView {
+        layer: sary_doc::LayerId(u64::MAX),
+        mode: sary_engine::mask_view_cmds::MaskViewMode::Gray,
     });
     assert!(canvas_px(&h).is_none());
     h.run_steps(2);
@@ -728,7 +728,7 @@ fn selecting_mask_thumbnail_toggles_swatches_to_mask_colors_and_back() {
 #[test]
 fn a_new_adjustment_or_fill_layer_shows_its_settings_until_the_mask_thumbnail_is_clicked() {
     for (command, settings) in [("layer.newAdjustmentLayer.curves", Some("Reset to defaults")), ("layer.newFillLayer.solidColor", None)] {
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
         s.execute("layer.new.layer", json!({})).unwrap();
         let mut h = harness(s, 0, 1.0, 290.0);
@@ -765,7 +765,7 @@ fn a_new_adjustment_or_fill_layer_shows_its_settings_until_the_mask_thumbnail_is
 // Properties to the front and expands it, as in Photoshop, so its settings can be edited at once.
 #[test]
 fn a_new_adjustment_layer_brings_properties_to_the_front() {
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
     let mut h = harness(s, 0, 1.0, 290.0);
     let ctx = h.ctx.clone();

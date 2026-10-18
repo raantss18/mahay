@@ -1,9 +1,9 @@
 # MCP conventions
 
-PhotoCraft follows the same conventions as FilmCraft #28. Start a headless session:
+Sary follows the same conventions as Hetsika #28. Start a headless session:
 
 ```sh
-photocraft-cli mcp --automation-read-root /work/project --automation-write-root /work/project
+sary-cli mcp --automation-read-root /work/project --automation-write-root /work/project
 ```
 
 Paths are relative to the corresponding root, or absolute paths beneath it; without a root that
@@ -59,7 +59,7 @@ No filesystem root is needed for the in-memory commands. External linked sources
 a file read remain refused. See the [control policy](control-protocol.md#engine-commands)
 for the shared restrictions.
 
-`photocraft://document` and `photocraft://commands` return live JSON matching `doc_inspect`
+`sary://document` and `sary://commands` return live JSON matching `doc_inspect`
 and `command_list`. Resource reads are uncached; tool/resource catalogs are private and cached
 for ten minutes. List/read responses include the MCP 2026-07-28 result/cache fields.
 

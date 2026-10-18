@@ -1,7 +1,7 @@
 //! Photoshop keyboard shortcut sets (`.kys`, Edit › Keyboard Shortcuts › Save Set) imported
 //! into Edit › Keyboard Shortcuts (#1163): the dialog's Import Shortcuts… button, File › Open
 //! and a drop on the window. Parsing and matching rows to commands are the engine's
-//! ([`photocraft_engine::kys`], also behind `edit.keyboardShortcuts {"importKys": …}`); here
+//! ([`sary_engine::kys`], also behind `edit.keyboardShortcuts {"importKys": …}`); here
 //! the candidates are the app's menus, in Photoshop's menu order, so ties go its way.
 //!
 //! The import fills the open dialog's overrides, so OK applies them like hand-made changes
@@ -15,33 +15,33 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
-pub use photocraft_engine::kys::{KysCommand, KysSet, MAX_BYTES, Plan, parse};
+use crate::SaryApp;
+pub use sary_engine::kys::{KysCommand, KysSet, MAX_BYTES, Plan, parse};
 
 /// Match the rows to our commands: the menus' items first, then engine commands the menus list
 /// under another label (Preferences › General… is the Settings… item).
-pub fn plan(app: &PhotocraftApp, set: &KysSet) -> Plan {
-    use photocraft_engine::kys::Candidate;
+pub fn plan(app: &SaryApp, set: &KysSet) -> Plan {
+    use sary_engine::kys::Candidate;
     let items = crate::menus::menu_items(app);
     let menu = items.iter().filter(|i| i.label != "---" && crate::menus::is_live(&i.id)).map(|i| Candidate {
         id: i.id.clone(),
         label: i.label.clone(),
         default: crate::shortcuts::default_shortcut(&i.id),
     });
-    let specs = photocraft_engine::kys::command_candidates().into_iter().map(|c| Candidate { default: crate::shortcuts::default_shortcut(&c.id), ..c });
-    photocraft_engine::kys::plan(menu.chain(specs), set)
+    let specs = sary_engine::kys::command_candidates().into_iter().map(|c| Candidate { default: crate::shortcuts::default_shortcut(&c.id), ..c });
+    sary_engine::kys::plan(menu.chain(specs), set)
 }
 
 /// The set's tool keys matched to our tools by name (Photoshop's names are ours): tool
-/// shortcut id (`tools.select.move`) → letter, and the tools PhotoCraft doesn't have.
+/// shortcut id (`tools.select.move`) → letter, and the tools Sary doesn't have.
 pub fn plan_tools(set: &KysSet) -> (BTreeMap<String, String>, Vec<String>) {
-    photocraft_engine::kys::plan_tools(photocraft_engine::shell_commands::TOOLS.iter().map(|t| (t.0, t.1)), set)
+    sary_engine::kys::plan_tools(sary_engine::shell_commands::TOOLS.iter().map(|t| (t.0, t.1)), set)
 }
 
 /// Put the plan into the open Keyboard Shortcuts dialog (opening one when none is), as
 /// overrides the OK button applies: a key equal to the command's default clears its override.
 /// Returns the dialog id and the plan as JSON.
-pub fn import_text(app: &mut PhotocraftApp, file_name: &str, text: &str) -> Result<Value, String> {
+pub fn import_text(app: &mut SaryApp, file_name: &str, text: &str) -> Result<Value, String> {
     let set = parse(text).map_err(|e| format!("{file_name}: {e}"))?;
     let plan = plan(app, &set);
     let (tool_keys, unknown_tools) = plan_tools(&set);
@@ -52,7 +52,7 @@ pub fn import_text(app: &mut PhotocraftApp, file_name: &str, text: &str) -> Resu
     let f = &mut app.ui.dialog_mut(id).ok_or("the Keyboard Shortcuts dialog is gone")?.fields;
     let mut overrides: BTreeMap<String, String> = f.get("overrides").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
     for (cmd, sc) in &plan.set {
-        let default = crate::shortcuts::default_shortcut(cmd).and_then(|d| photocraft_engine::prefs::normalize_shortcut(&d));
+        let default = crate::shortcuts::default_shortcut(cmd).and_then(|d| sary_engine::prefs::normalize_shortcut(&d));
         if default.as_deref() == Some(sc.as_str()) {
             overrides.remove(cmd);
         } else {
@@ -74,7 +74,7 @@ pub fn import_text(app: &mut PhotocraftApp, file_name: &str, text: &str) -> Resu
     let mut alternates: BTreeMap<String, Vec<String>> = f.get("alternates").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
     for (cmd, keys) in &plan.alternate_keys {
         let main = plan.set.get(cmd).map(String::as_str);
-        if photocraft_engine::prefs::Preferences::default().alternates(cmd, main) == *keys {
+        if sary_engine::prefs::Preferences::default().alternates(cmd, main) == *keys {
             alternates.remove(cmd);
         } else {
             alternates.insert(cmd.clone(), keys.clone());
@@ -86,7 +86,7 @@ pub fn import_text(app: &mut PhotocraftApp, file_name: &str, text: &str) -> Resu
     if !plan.unknown.is_empty() || !unknown_tools.is_empty() {
         let u = (plan.unknown.len() + unknown_tools.len()).to_string();
         message.push(' ');
-        message.push_str(&crate::i18n::fmt(tl!("{n} commands are not in PhotoCraft."), &[("n", &u)]));
+        message.push_str(&crate::i18n::fmt(tl!("{n} commands are not in Sary."), &[("n", &u)]));
     }
     f.insert("tab".into(), json!(0));
     f.insert("overrides".into(), json!(overrides));
@@ -112,7 +112,7 @@ pub fn import_text(app: &mut PhotocraftApp, file_name: &str, text: &str) -> Resu
 }
 
 /// A `.kys` opened like a document (File › Open, a drop): its bytes are text.
-pub fn open_bytes(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> Result<Value, String> {
+pub fn open_bytes(app: &mut SaryApp, name: &str, bytes: &[u8]) -> Result<Value, String> {
     if bytes.len() > MAX_BYTES {
         return Err(format!("{name}: not a keyboard shortcut set (.kys): larger than 4 MiB"));
     }
@@ -121,7 +121,7 @@ pub fn open_bytes(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> Result<V
 }
 
 /// The dialog's Import Shortcuts… button: ask for the file, then fill the dialog.
-pub fn import_dialog(app: &mut PhotocraftApp) -> Result<Value, String> {
+pub fn import_dialog(app: &mut SaryApp) -> Result<Value, String> {
     app.pick_file_bytes(|app, name, bytes| open_bytes(app, &name, &bytes))
 }
 
@@ -143,13 +143,13 @@ pub struct Offer {
     text: String,
 }
 
-fn remember(app: &mut PhotocraftApp, source: &str, imported: bool) {
+fn remember(app: &mut SaryApp, source: &str, imported: bool) {
     app.session.prefs.edit(|p| {
         p.dialogs.insert(IMPORTED_PREF.into(), json!({"source": source, "imported": imported}));
     });
 }
 
-fn not_imported(app: &mut PhotocraftApp, e: &str) {
+fn not_imported(app: &mut SaryApp, e: &str) {
     app.ui.status = crate::i18n::fmt(tl!("The keyboard shortcut set was not imported: {error}"), &[("error", e)]);
     app.ui.status_error = true;
 }
@@ -158,7 +158,7 @@ fn not_imported(app: &mut PhotocraftApp, e: &str) {
 /// is offered once. Someone who already changed a shortcut keeps their own set and is not asked;
 /// a set that changes nothing (Photoshop's defaults are ours too) is not offered either. The
 /// preference remembers each outcome, so a later launch never asks again.
-pub fn offer_import(app: &mut PhotocraftApp) {
+pub fn offer_import(app: &mut SaryApp) {
     if app.session.prefs().dialogs.contains_key(IMPORTED_PREF) {
         return;
     }
@@ -174,7 +174,7 @@ pub fn offer_import(app: &mut PhotocraftApp) {
         }
     };
     let plan = plan(app, &set);
-    let default = |id: &str| crate::shortcuts::default_shortcut(id).and_then(|d| photocraft_engine::prefs::normalize_shortcut(&d));
+    let default = |id: &str| crate::shortcuts::default_shortcut(id).and_then(|d| sary_engine::prefs::normalize_shortcut(&d));
     let changes = plan.set.iter().filter(|(id, sc)| default(id).as_deref() != Some(sc.as_str())).count();
     if changes == 0 {
         return remember(app, &source, false);
@@ -184,7 +184,7 @@ pub fn offer_import(app: &mut PhotocraftApp) {
 }
 
 /// The offer's answer: Import applies the set and says so; either answer is remembered.
-pub fn answer_offer(app: &mut PhotocraftApp, import: bool) {
+pub fn answer_offer(app: &mut SaryApp, import: bool) {
     let Some(offer) = app.ui.kys_offer.take() else { return };
     remember(app, &offer.source, import);
     if !import {
@@ -211,12 +211,12 @@ pub fn answer_offer(app: &mut PhotocraftApp, import: bool) {
 }
 
 /// The first-launch prompt: which set was found, and Import / Don't Import.
-pub fn show_offer(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show_offer(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(offer) = &app.ui.kys_offer else { return };
     let n = offer.changes.to_string();
     let line = crate::i18n::fmt(
         tl!(
-            "PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?"
+            "Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?"
         ),
         &[("set", &offer.set), ("n", &n)],
     );

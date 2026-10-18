@@ -22,7 +22,7 @@ struct FiltersAndParams<'a> {
     params: SmallVec<[Dict<'a>; 2]>,
 }
 
-/// PdfCraft patch: how the decoded data of a stream can be produced (see `Stream::incremental`).
+/// Taratasy patch: how the decoded data of a stream can be produced (see `Stream::incremental`).
 pub(crate) enum Incremental {
     /// The stream has no filter, so its data is its own bytes.
     Plain,
@@ -167,7 +167,7 @@ impl<'a> Stream<'a> {
         self.filters_and_params().filters
     }
 
-    /// PdfCraft patch: how the decoded data of the stream can be produced a piece at a time.
+    /// Taratasy patch: how the decoded data of the stream can be produced a piece at a time.
     pub(crate) fn incremental(&self) -> Incremental {
         let filters_and_params = self.filters_and_params();
 
@@ -199,7 +199,7 @@ impl<'a> Stream<'a> {
         self.decode_within(image_params, usize::MAX)
     }
 
-    /// PdfCraft patch: the decoded data of the stream, for callers that budget what a page
+    /// Taratasy patch: the decoded data of the stream, for callers that budget what a page
     /// holds. Flate, LZW and RunLength stop at `max` bytes (and at
     /// this PDF's ordinary stream limit in any case). A stream without filters is returned
     /// as it is; ASCIIHex and ASCII85 barely expand, and the image codecs stop at their own pixel
@@ -217,7 +217,7 @@ impl<'a> Stream<'a> {
         self.decode_raw_within(self.raw_data(), image_params, max)
     }
 
-    /// PdfCraft patch: decode caller-supplied raw/decrypted bytes with the same filters and limits.
+    /// Taratasy patch: decode caller-supplied raw/decrypted bytes with the same filters and limits.
     pub(crate) fn decoded_raw_within(
         &self,
         data: Cow<'a, [u8]>,
@@ -244,7 +244,7 @@ impl<'a> Stream<'a> {
             .zip(filters_and_params.params.iter())
             .enumerate()
         {
-            // PdfCraft patch: see `filter::decode_limit`.
+            // Taratasy patch: see `filter::decode_limit`.
             let limit = crate::filter::decode_limit(image_params, i + 1 == count, self.dict.ctx().decode_limits()).min(max);
             let new = filter.apply(current.as_ref().map(|c| c.data.as_ref()).unwrap_or(&data), params, image_params, limit)?;
             current = Some(new);
@@ -367,7 +367,7 @@ fn parse_proper<'a>(r: &mut Reader<'a>, dict: &Dict<'a>) -> Option<Stream<'a>> {
 }
 
 fn parse_fallback<'a>(r: &mut Reader<'a>, dict: &Dict<'a>) -> Option<Stream<'a>> {
-    // PdfCraft patch: `stream` must be the next token. Scanning ahead to a later
+    // Taratasy patch: `stream` must be the next token. Scanning ahead to a later
     // `stream` made a dictionary look like a stream — in particular an indirect
     // `/AP /N` appearance-state dictionary (`<< /Yes 5 0 R /Off 6 0 R >>`, as Quartz
     // writes checkboxes). The widget then had no form to draw, so the box disappeared.

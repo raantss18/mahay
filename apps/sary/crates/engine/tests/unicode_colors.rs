@@ -1,5 +1,5 @@
 //! Colour strings supplied through the same commands used by CLI/MCP clients.
-use photocraft_engine::{Session, command_specs};
+use sary_engine::{Session, command_specs};
 use serde_json::{Value, json};
 
 fn run(id: &str, params: Value) {
@@ -27,7 +27,7 @@ fn unicode_render_colour_uses_the_existing_fallback() {
 
 #[test]
 fn unicode_preference_colour_is_invalid() {
-    assert_eq!(photocraft_engine::prefs::parse_hex("#€€"), None);
-    assert_eq!(photocraft_engine::prefs::parse_hex(""), None);
-    assert_eq!(photocraft_engine::prefs::parse_hex("#12aBcD"), Some([0x12, 0xab, 0xcd]));
+    assert_eq!(sary_engine::prefs::parse_hex("#€€"), None);
+    assert_eq!(sary_engine::prefs::parse_hex(""), None);
+    assert_eq!(sary_engine::prefs::parse_hex("#12aBcD"), Some([0x12, 0xab, 0xcd]));
 }

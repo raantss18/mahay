@@ -1,7 +1,7 @@
 //! Compare plain, single-axis and dual-axis live painting on a 24 MP document.
-//! Run with `cargo run --release -p photocraft-engine --example bench_symmetry`.
-use photocraft_engine::{Session, brush_cmds::LiveStroke};
-use photocraft_paint::StrokePoint;
+//! Run with `cargo run --release -p sary-engine --example bench_symmetry`.
+use sary_engine::{Session, brush_cmds::LiveStroke};
+use sary_paint::StrokePoint;
 use serde_json::json;
 use std::time::Instant;
 

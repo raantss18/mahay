@@ -230,7 +230,7 @@ fn content(app: &mut WordApp, ui: &mut egui::Ui, t: &Tokens) {
         let size =
             st.get("size").and_then(Value::as_f64).map(|s| if s.fract() == 0.0 { format!("{s:.0}") } else { s.to_string() }).unwrap_or_default();
         let sizes: Vec<String> =
-            wordcraft_engine::cmd::format::SIZES.iter().map(|s| if s.fract() == 0.0 { format!("{s:.0}") } else { s.to_string() }).collect();
+            soratra_engine::cmd::format::SIZES.iter().map(|s| if s.fract() == 0.0 { format!("{s:.0}") } else { s.to_string() }).collect();
         if let Some(v) = widgets::combo(ui, "mini_size", COMBO_SIZE_W, &size, &sizes, None)
             && let Ok(x) = v.trim().parse::<f64>()
         {
@@ -253,13 +253,13 @@ fn content(app: &mut WordApp, ui: &mut egui::Ui, t: &Tokens) {
             highlight_menu(ui, app);
         });
         let fc = app.canvas.last_font_color.clone();
-        let sw = wordcraft_doc::Rgb::parse(&fc).map(crate::theme::c32);
+        let sw = soratra_doc::Rgb::parse(&fc).map(crate::theme::c32);
         widgets::split(ui, app, "fontcolor", "Font Color", "format.color", json!({"color": fc}), false, sw, |ui, app| {
             font_color_menu(ui, app);
         });
         sep(ui, t);
 
-        use wordcraft_doc::Align as A;
+        use soratra_doc::Align as A;
         widgets::small(ui, app, "alignLeft", None, "Align Left", "para.alignLeft", json!({}), align == A::Left);
         widgets::small(ui, app, "alignCenter", None, "Center", "para.alignCenter", json!({}), align == A::Center);
         widgets::small(ui, app, "alignRight", None, "Align Right", "para.alignRight", json!({}), align == A::Right);
@@ -277,7 +277,7 @@ fn sep(ui: &mut egui::Ui, t: &Tokens) {
 /// Highlight colour grid, matching the ribbon's.
 fn highlight_menu(ui: &mut egui::Ui, app: &mut WordApp) {
     egui::Grid::new("mini_hl").spacing(Vec2::new(3.0, 3.0)).show(ui, |ui| {
-        for (i, h) in wordcraft_doc::props::Highlight::ALL.iter().enumerate().skip(1) {
+        for (i, h) in soratra_doc::props::Highlight::ALL.iter().enumerate().skip(1) {
             let Some(c) = h.rgb() else { continue };
             let (r, resp) = ui.allocate_exact_size(Vec2::new(18.0, 18.0), Sense::click());
             ui.painter().rect_filled(r, 2.0, egui::Color32::from_rgb(c.0, c.1, c.2));
@@ -321,7 +321,7 @@ mod tests {
 
     #[test]
     fn reading_mode_hides_formatting_even_with_an_existing_selection() {
-        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        let mut app = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), Default::default());
         app.run("text.insert", json!({"text": "Selectable text"})).unwrap();
         app.run("select.all", json!({})).unwrap();
         assert!(!app.session.sel.is_collapsed());
@@ -437,8 +437,8 @@ mod tests {
     /// controls (both rows end together).
     #[test]
     fn every_control_fits_inside_the_bar() {
-        use wordcraft_engine::Session;
-        let mut a = WordApp::new(Session::new(wordcraft_doc::Document::new()), Default::default());
+        use soratra_engine::Session;
+        let mut a = WordApp::new(Session::new(soratra_doc::Document::new()), Default::default());
         a.run("text.insert", json!({"text": "The quick brown fox jumps over the lazy dog"})).unwrap();
         a.run("select.text", json!({"text": "brown fox"})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(Vec2::new(1440.0, 900.0)).build_ui_state(
@@ -468,7 +468,7 @@ mod tests {
 
     /// The whole window over a document with `pick` selected, run until the bar is up.
     fn bar_over(pick: &str) -> egui_kittest::Harness<'static, WordApp> {
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), Default::default());
         a.run("text.insert", json!({"text": "The quick brown fox jumps over the lazy dog"})).unwrap();
         a.run("select.text", json!({"text": pick})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(Vec2::new(1440.0, 900.0)).build_ui_state(

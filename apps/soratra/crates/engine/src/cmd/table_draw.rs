@@ -5,11 +5,11 @@
 //! finished stroke or click here, so every stroke is one undo step.
 
 use serde_json::Value;
-use wordcraft_doc::props::{HeightRule, VMerge};
-use wordcraft_doc::table::{MAX_COLS, MAX_ROWS};
-use wordcraft_doc::{Block, Cell, Path, Pos, StoryRef, Table, para_block};
-use wordcraft_geom::Rect;
-use wordcraft_layout::{DocLayout, Placed};
+use soratra_doc::props::{HeightRule, VMerge};
+use soratra_doc::table::{MAX_COLS, MAX_ROWS};
+use soratra_doc::{Block, Cell, Path, Pos, StoryRef, Table, para_block};
+use soratra_geom::Rect;
+use soratra_layout::{DocLayout, Placed};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -228,7 +228,7 @@ fn aligned_rows(t: &Table, a: &Logical, b: &Logical) -> Option<(usize, usize)> {
 /// `vertical`: the line sits left of grid column `line` and the edge covers rows `lo..=hi`;
 /// otherwise it sits above row `line` and covers grid columns `lo..hi`.
 fn hide_edge(t: &mut Table, vertical: bool, line: usize, (lo, hi): (usize, usize)) {
-    let nil = wordcraft_doc::props::Border { style: wordcraft_doc::props::BorderStyle::None, width: 0.0, color: None, space: 0.0 };
+    let nil = soratra_doc::props::Border { style: soratra_doc::props::BorderStyle::None, width: 0.0, color: None, space: 0.0 };
     // Only a cell whose edge lies on the line is touched.
     let set_v = |t: &mut Table, r: usize, g: usize, before: bool| {
         let Some(ci) = t.cell_at_grid(r, g) else { return };
@@ -396,7 +396,7 @@ fn split_rows(s: &mut Session, l: &DocLayout, page: usize, y: f32, (xa, xb): (f3
     // An exact height leaves out the row's bottom margin (its cells' largest), which the layout
     // adds below it: take it off each half so the two rows draw where the line went.
     let row_bottom =
-        t.rows.get(r).map_or(0.0, |row| (0..row.cells.len()).map(|ci| wordcraft_layout::cell_margins(&s.doc, t, r, ci)[2]).fold(0.0f32, f32::max));
+        t.rows.get(r).map_or(0.0, |row| (0..row.cells.len()).map(|ci| soratra_layout::cell_margins(&s.doc, t, r, ci)[2]).fold(0.0f32, f32::max));
     let crossed_set: std::collections::BTreeSet<usize> = cells.iter().map(|c| c.1).collect();
     let merged = |ci: &usize| t.rows.get(r).and_then(|row| row.cells.get(*ci)).is_some_and(|c| c.props.vmerge != VMerge::None);
     if crossed_set.iter().any(merged) {
@@ -404,7 +404,7 @@ fn split_rows(s: &mut Session, l: &DocLayout, page: usize, y: f32, (xa, xb): (f3
     }
     let t = s.doc.table_mut(story, &tp)?;
     let Some(row) = t.rows.get_mut(r) else { return Err(CmdError::Failed("the row isn't there any more".into())) };
-    let mut new_row = wordcraft_doc::Row { props: row.props.clone(), cells: Vec::with_capacity(row.cells.len()), controls: Default::default() };
+    let mut new_row = soratra_doc::Row { props: row.props.clone(), cells: Vec::with_capacity(row.cells.len()), controls: Default::default() };
     new_row.props.header = false;
     if top.is_finite() && bottom.is_finite() && bottom > top {
         let rule = if row.props.height_rule == HeightRule::Exact { HeightRule::Exact } else { HeightRule::AtLeast };
@@ -562,14 +562,14 @@ fn eraser(s: &mut Session, v: &Value) -> CmdResult {
     let mut moved = Vec::new();
     if let Some(b) = t.rows.get_mut(r2).and_then(|row| row.cells.get_mut(c2)) {
         b.props.vmerge = VMerge::Continue;
-        let blocks = std::mem::replace(&mut b.blocks, vec![para_block(wordcraft_doc::Paragraph::new())]);
+        let blocks = std::mem::replace(&mut b.blocks, vec![para_block(soratra_doc::Paragraph::new())]);
         moved.extend(blocks.into_iter().filter(|x| x.as_para().is_none_or(|q| !q.is_empty())));
     }
     let tc = t.cell_at_grid(top, ga).unwrap_or(0);
     if !moved.is_empty()
         && let Some(dst) = t.rows.get_mut(top).and_then(|row| row.cells.get_mut(tc))
     {
-        if dst.blocks.len() == 1 && dst.blocks.first().and_then(|b| b.as_para()).is_some_and(wordcraft_doc::Paragraph::is_empty) {
+        if dst.blocks.len() == 1 && dst.blocks.first().and_then(|b| b.as_para()).is_some_and(soratra_doc::Paragraph::is_empty) {
             dst.blocks.clear();
         }
         dst.blocks.extend(moved);
@@ -605,7 +605,7 @@ mod tests {
     /// A rectangle drawn on the page inserts a one-cell table of its size; undo takes it out.
     #[test]
     fn a_drawn_rectangle_inserts_a_table() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("document.setText", &json!({"text": "Above the table"})).unwrap();
         let before = s.doc.clone();
         let l = s.layout();
@@ -632,7 +632,7 @@ mod tests {
     /// the line went: the bottom margin the layout adds below each isn't counted twice.
     #[test]
     fn a_line_through_an_exact_row_keeps_its_drawn_height() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.table", &json!({"rows": 2, "cols": 2})).unwrap();
         let t = s.doc.body.iter_mut().find_map(|b| match std::sync::Arc::make_mut(b) {
             Block::Table(t) => Some(t),
@@ -659,7 +659,7 @@ mod tests {
     /// below the merge extends it.
     #[test]
     fn erasing_a_horizontal_border_lays_the_merge_out_as_one_cell() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.table", &json!({"rows": 3, "cols": 2})).unwrap();
         let (a, b) = (cell_rect(&mut s, 0, 0), cell_rect(&mut s, 1, 0));
         s.run("table.eraser", &json!({"page": 0, "x": a.x + a.w / 2.0, "y": a.bottom() + 0.5})).unwrap();
@@ -681,7 +681,7 @@ mod tests {
     /// the eraser merges the cells back; each is one undo step.
     #[test]
     fn lines_split_cells_and_the_eraser_merges_them() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.table", &json!({"rows": 2, "cols": 2})).unwrap();
         s.run("text.insert", &json!({"text": "A"})).unwrap();
         let start = first_table(&s);
@@ -728,7 +728,7 @@ mod tests {
 
     /// A 3x3 table with columns 1 and 2 merged down rows 0-1 (made with the eraser itself).
     fn merged_columns_table() -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("insert.table", &json!({"rows": 3, "cols": 3})).unwrap();
         for cell in [2, 1] {
             let a = cell_rect(&mut s, 0, cell);

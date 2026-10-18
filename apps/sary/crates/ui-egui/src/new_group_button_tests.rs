@@ -3,28 +3,28 @@
 
 use egui::Modifiers;
 use egui_kittest::kittest::Queryable;
-use photocraft_doc::{Layer, LayerId};
+use sary_doc::{Layer, LayerId};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Background, then `A` and `B` on top of it with both selected (`B` active).
-fn two_selected() -> (egui_kittest::Harness<'static, PhotocraftApp>, LayerId, LayerId) {
-    let mut s = photocraft_engine::Session::new();
+fn two_selected() -> (egui_kittest::Harness<'static, SaryApp>, LayerId, LayerId) {
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 8, "height": 8})).unwrap();
     let a = LayerId(s.execute("layer.new.layer", json!({"name": "A"})).unwrap()["layer"].as_u64().unwrap());
     let b = LayerId(s.execute("layer.new.layer", json!({"name": "B"})).unwrap()["layer"].as_u64().unwrap());
     s.execute("layer.select", json!({"layer": a.0})).unwrap();
     s.execute("layer.select", json!({"layer": b.0, "mode": "add"})).unwrap();
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(s, crate::Services::default())
     });
     h.run_steps(4);
     (h, a, b)
 }
 
-fn groups(h: &egui_kittest::Harness<'static, PhotocraftApp>) -> Vec<Layer> {
+fn groups(h: &egui_kittest::Harness<'static, SaryApp>) -> Vec<Layer> {
     h.state().session.active().unwrap().doc.walk().into_iter().map(|(_, _, l)| l).filter(|l| l.is_group()).cloned().collect()
 }
 

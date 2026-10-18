@@ -1,7 +1,7 @@
 //! Frozen scalar rasterizer used only as a pixel oracle for the computed-tip fast path.
 use super::*;
 use crate::tile::GrayTile;
-use photocraft_geom::Point;
+use sary_geom::Point;
 
 impl BrushContext {
     fn rasterize_reference(&self, d: &Dab, dual: bool, rect: Rect, out: &mut Vec<f32>, mut depth: Option<&mut Vec<f32>>) {

@@ -4,11 +4,11 @@
 //! without an adapter that renders 32-bit float targets (like `crates/gpu/tests/parity.rs`).
 
 use eframe::wgpu;
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Document, Layer, LayerId, LayerMask, Size};
-use photocraft_geom::Rect;
-use photocraft_gpu::{Compositor, render_to_vec};
-use photocraft_ui_egui::adjust_preview::{PREVIEW_LAYER, preview_document};
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::{Document, Layer, LayerId, LayerMask, Size};
+use sary_geom::Rect;
+use sary_gpu::{Compositor, render_to_vec};
+use sary_ui_egui::adjust_preview::{PREVIEW_LAYER, preview_document};
 use serde_json::{Value, json};
 
 fn block_on<F: std::future::Future>(f: F) -> F::Output {
@@ -82,7 +82,7 @@ fn document(mode: ColorMode, depth: SampleType, selection: bool) -> (Document, L
     top.blend = BlendMode::Screen;
     doc.layers.extend([target, clip, top]);
     if selection {
-        let mut sel = photocraft_raster::Surface::new(PixelFormat::GRAY8);
+        let mut sel = sary_raster::Surface::new(PixelFormat::GRAY8);
         sel.fill_rect(Rect::from_xywh(8, 4, 30, 26), &[1.0]);
         sel.fill_rect(Rect::from_xywh(8, 4, 8, 26), &[0.5]);
         doc.selection = Some(sel);
@@ -135,7 +135,7 @@ fn preview_layer_composites_on_the_gpu_like_the_command() {
         for depth in [SampleType::U8, SampleType::U16, SampleType::F32] {
             for selection in [false, true] {
                 let (doc, target) = document(mode, depth, selection);
-                for kind in photocraft_ui_egui::adjust_editors::KINDS {
+                for kind in sary_ui_egui::adjust_editors::KINDS {
                     let params = sample(kind);
                     let Ok(preview) = preview_document(&doc, target, kind, &params) else {
                         // Grayscale kinds that make colour preview on the CPU proxy.
@@ -149,14 +149,14 @@ fn preview_layer_composites_on_the_gpu_like_the_command() {
                     // may flip a few pixels sitting right at a step (1 % allowed).
                     let skip = if matches!(kind, "threshold" | "posterize") && depth != SampleType::U8 { (b.width() * b.height()) as usize / 100 } else { 0 };
                     let on_gpu = render_to_vec(&mut comp, &device, &queue, &preview, b).unwrap_or_else(|e| panic!("{what}: {e:?}"));
-                    let on_cpu = photocraft_compose::render(&preview, b).px;
+                    let on_cpu = sary_compose::render(&preview, b).px;
                     let d = max_diff(&on_gpu, &on_cpu, skip);
                     assert!(d <= tol_gpu, "{what}: GPU vs CPU {:.2}/255", d * 255.0);
-                    let mut s = photocraft_engine::Session::new();
+                    let mut s = sary_engine::Session::new();
                     s.add_document(doc.clone(), None);
                     s.select_layer(target).unwrap();
                     s.execute(&format!("image.adjustments.{kind}"), params.clone()).unwrap();
-                    let cmd = photocraft_compose::render(&s.active().unwrap().doc, b).px;
+                    let cmd = sary_compose::render(&s.active().unwrap().doc, b).px;
                     let d = max_diff(&on_gpu, &cmd, skip);
                     worst = worst.max(d);
                     assert!(d <= tol_cmd, "{what}: GPU preview vs command {:.2}/255", d * 255.0);
@@ -170,17 +170,17 @@ fn preview_layer_composites_on_the_gpu_like_the_command() {
 /// The zoomed-out proxy preview (own document and layer ids) composites on the GPU like the CPU.
 #[test]
 fn proxy_preview_composites_on_the_gpu() {
-    use photocraft_ui_egui::adjust_preview::{base_document, proxy_base, proxy_with_settings};
+    use sary_ui_egui::adjust_preview::{base_document, proxy_base, proxy_with_settings};
     let Some((device, queue, mut comp)) = gpu() else { return };
     for selection in [false, true] {
         let (doc, target) = document(ColorMode::Rgb, SampleType::U8, selection);
         let proxy = proxy_base(&base_document(&doc, target).unwrap(), 2);
         // Render the full document too, so both share the compositor's resident textures.
         render_to_vec(&mut comp, &device, &queue, &doc, doc.bounds()).unwrap();
-        for kind in photocraft_ui_egui::adjust_editors::KINDS {
+        for kind in sary_ui_egui::adjust_editors::KINDS {
             let p = proxy_with_settings(&proxy, kind, &sample(kind)).unwrap();
             let on_gpu = render_to_vec(&mut comp, &device, &queue, &p, p.bounds()).unwrap();
-            let on_cpu = photocraft_compose::render(&p, p.bounds()).px;
+            let on_cpu = sary_compose::render(&p, p.bounds()).px;
             let d = max_diff(&on_gpu, &on_cpu, 0);
             assert!(d <= 2.0 / 255.0, "{kind} selection {selection}: {:.2}/255", d * 255.0);
         }

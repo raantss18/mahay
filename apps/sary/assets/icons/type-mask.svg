@@ -9,7 +9,7 @@
   stroke-linecap="round"
   stroke-linejoin="round"
 >
-  <!-- PhotoCraft's own Horizontal Type Mask glyph (not from an icon set): a T drawn as marching ants. -->
+  <!-- Sary's own Horizontal Type Mask glyph (not from an icon set): a T drawn as marching ants. -->
   <path d="M4 7V4h16v3" stroke-dasharray="2.5 2.5" />
   <path d="M12 4v16" stroke-dasharray="2.5 2.5" />
   <path d="M8.5 20h7" stroke-dasharray="2.5 2.5" />

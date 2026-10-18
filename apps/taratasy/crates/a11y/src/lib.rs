@@ -1,4 +1,4 @@
-//! pdfcraft-a11y — accessibility (L4): the Accessibility Checker's full check.
+//! taratasy-a11y — accessibility (L4): the Accessibility Checker's full check.
 //!
 //! [`check`] runs the 32 rules in Acrobat's seven categories (Document, Page Content, Forms,
 //! Alternate Text, Tables, Lists, Headings) and returns, per rule, Passed, Failed, Needs manual
@@ -10,7 +10,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use pdfcraft_cos::Document;
+use taratasy_cos::Document;
 
 mod alt;
 mod autotag;
@@ -429,7 +429,7 @@ pub struct Finding {
     /// 0-based page, when the problem is on a page.
     pub page: Option<usize>,
     /// Indirect structure element that caused the finding, when one is available.
-    pub object: Option<pdfcraft_cos::ObjRef>,
+    pub object: Option<taratasy_cos::ObjRef>,
     /// Bounds in PDF user space when the affected content can be located safely.
     pub bbox: Option<[f64; 4]>,
     pub message: String,
@@ -614,7 +614,7 @@ const AND_MORE: &str = "… and {n} more";
 
 /// Run the full check.
 pub fn check(doc: &Document, options: &Options) -> Report {
-    let pages = pdfcraft_model::pages(doc);
+    let pages = taratasy_model::pages(doc);
     let page_list: Vec<usize> = match &options.pages {
         Some(p) => p.iter().copied().filter(|p| *p < pages.len()).collect(),
         None => (0..pages.len()).collect(),
@@ -622,7 +622,7 @@ pub fn check(doc: &Document, options: &Options) -> Report {
     let tagged = structure::has_struct_tree(doc);
     let scan = content::Scan::run(doc, &pages, &page_list);
     let mut tree_rules = structure::run(doc, &pages, &options.rules);
-    let mut figure_bounds: Option<HashMap<pdfcraft_cos::ObjRef, (usize, [f64; 4])>> = None;
+    let mut figure_bounds: Option<HashMap<taratasy_cos::ObjRef, (usize, [f64; 4])>> = None;
     let mut results = Vec::with_capacity(32);
     for rule in Rule::ALL {
         if !options.rules.contains(&rule) {

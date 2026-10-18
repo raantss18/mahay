@@ -5,11 +5,11 @@
 //! Check Spelling is not implemented: it needs a word list per language, and no permissively
 //! licensed dictionary small enough to bundle (or a pure-Rust checker with one) was available.
 
-use photocraft_color::{BlendMode, PixelFormat};
-use photocraft_doc::vector::Path;
-use photocraft_doc::{DocId, Document, Layer, LayerContent, LayerId};
-use photocraft_geom::Rect;
-use photocraft_raster::{Surface, from_rgba_into, to_rgba};
+use sary_color::{BlendMode, PixelFormat};
+use sary_doc::vector::Path;
+use sary_doc::{DocId, Document, Layer, LayerContent, LayerId};
+use sary_geom::Rect;
+use sary_raster::{Surface, from_rgba_into, to_rgba};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -190,7 +190,7 @@ pub fn fade_surface(before: &Surface, after: &mut Surface, area: Rect, mode: Ble
         } else {
             let rb = to_rgba(&fmt, pb);
             let ra = to_rgba(&fmt, pa);
-            let blended = photocraft_color::blend::composite(mode, rb, ra, 1.0);
+            let blended = sary_color::blend::composite(mode, rb, ra, 1.0);
             let mut o = [0.0f32; 4];
             lerp_premul(&rb, &blended, &mut o, true);
             let mut enc = [0.0f32; 8];
@@ -233,7 +233,7 @@ fn history_bytes(s: &Session, all: bool) -> usize {
     // Purge keeps the snapshots, so the tiles they share with the states aren't freed.
     docs.iter()
         .map(|d| {
-            let snaps: Vec<&photocraft_doc::Document> = d.snapshots.iter().map(|s| &*s.doc).collect();
+            let snaps: Vec<&sary_doc::Document> = d.snapshots.iter().map(|s| &*s.doc).collect();
             d.history.unique_bytes_besides(&d.doc, &snaps)
         })
         .sum()
@@ -272,12 +272,12 @@ fn purge(s: &mut Session, what: &str) -> Result<Value> {
         }
     }
     if what == "all" {
-        let fx = photocraft_compose::purge_effect_cache();
+        let fx = sary_compose::purge_effect_cache();
         if fx > 0 {
             freed += fx;
             items.push("effect cache");
         }
-        let masks = photocraft_compose::masks::purge_cache();
+        let masks = sary_compose::masks::purge_cache();
         if masks > 0 {
             freed = freed.saturating_add(masks);
             items.push("mask cache");
@@ -287,7 +287,7 @@ fn purge(s: &mut Session, what: &str) -> Result<Value> {
             freed = freed.saturating_add(stages);
             items.push("smart filter cache");
         }
-        let strokes = photocraft_compose::shape_split::purge_cache();
+        let strokes = sary_compose::shape_split::purge_cache();
         if strokes > 0 {
             freed = freed.saturating_add(strokes);
             items.push("shape stroke cache");
@@ -309,7 +309,7 @@ fn can_purge_histories(s: &Session) -> std::result::Result<(), String> {
 }
 fn can_purge_all(s: &Session) -> std::result::Result<(), String> {
     can_purge_histories(s).or_else(|_| can_purge_clipboard(s)).or_else(|_| {
-        if photocraft_compose::effect_cache_bytes() > 0 || photocraft_compose::masks::cache_bytes() > 0 || crate::smart_cmds::stack_cache_bytes() > 0 {
+        if sary_compose::effect_cache_bytes() > 0 || sary_compose::masks::cache_bytes() > 0 || crate::smart_cmds::stack_cache_bytes() > 0 {
             Ok(())
         } else {
             Err("nothing to purge".into())
@@ -387,7 +387,7 @@ pub struct CafPlan {
     /// What may be copied from: the sampling option's area before the brush strokes, and after.
     pub base: Vec<bool>,
     pub source: Vec<bool>,
-    pub opts: photocraft_algo::content_aware::FillOptions,
+    pub opts: sary_algo::content_aware::FillOptions,
     pub output: String,
 }
 
@@ -473,7 +473,7 @@ fn fill_edits(p: &Value, cmd: &str, budget: &mut usize) -> Result<Vec<FillEdit>>
         .collect()
 }
 
-fn sampling_strokes(p: &Value, cmd: &str, budget: &mut usize) -> Result<Vec<photocraft_algo::content_aware::SamplingStroke>> {
+fn sampling_strokes(p: &Value, cmd: &str, budget: &mut usize) -> Result<Vec<sary_algo::content_aware::SamplingStroke>> {
     edits_param(p, "samplingStrokes", cmd)?
         .iter()
         .map(|e| {
@@ -487,7 +487,7 @@ fn sampling_strokes(p: &Value, cmd: &str, budget: &mut usize) -> Result<Vec<phot
                 .and_then(Value::as_f64)
                 .filter(|v| v.is_finite() && (1.0..=5000.0).contains(v))
                 .ok_or_else(|| bad(cmd, "a stroke's `size` must be 1..5000 px"))?;
-            Ok(photocraft_algo::content_aware::SamplingStroke { add, size, points: points_param(e, cmd, "a sampling stroke", budget)? })
+            Ok(sary_algo::content_aware::SamplingStroke { add, size, points: points_param(e, cmd, "a sampling stroke", budget)? })
         })
         .collect()
 }
@@ -498,17 +498,17 @@ struct CafParams<'a> {
     /// The selection's bounds on the canvas.
     sb: Rect,
     edits: Vec<FillEdit>,
-    strokes: Vec<photocraft_algo::content_aware::SamplingStroke>,
+    strokes: Vec<sary_algo::content_aware::SamplingStroke>,
     sampling: String,
     custom_mask: Option<&'a Surface>,
     custom_rect: Option<Rect>,
-    opts: photocraft_algo::content_aware::FillOptions,
+    opts: sary_algo::content_aware::FillOptions,
     output: String,
     surf: &'a Surface,
 }
 
 fn caf_params<'a>(doc: &'a Document, id: LayerId, p: &Value, cmd: &str) -> Result<CafParams<'a>> {
-    use photocraft_algo::content_aware::{FillOptions, color_level, rotation_level};
+    use sary_algo::content_aware::{FillOptions, color_level, rotation_level};
     let sel = doc.selection.as_ref().ok_or_else(|| bad(cmd, "no selection"))?;
     let sb = sel.content_bounds().intersect(&doc.bounds());
     if sb.is_empty() {
@@ -544,12 +544,12 @@ fn caf_params<'a>(doc: &'a Document, id: LayerId, p: &Value, cmd: &str) -> Resul
 
 /// Work out a Content-Aware Fill (see [`CafPlan`]) on layer `id` of `doc`.
 pub fn content_aware_plan(doc: &Document, id: LayerId, p: &Value, cmd: &str) -> Result<CafPlan> {
-    content_aware_plan_with(doc, id, p, cmd, &photocraft_raster::Interrupt::NONE)
+    content_aware_plan_with(doc, id, p, cmd, &sary_raster::Interrupt::NONE)
 }
 
 /// [`content_aware_plan`], asking `ctl` row by row whether to stop ([`EngineError::Cancelled`]).
-pub fn content_aware_plan_with(doc: &Document, id: LayerId, p: &Value, cmd: &str, ctl: &photocraft_raster::Interrupt) -> Result<CafPlan> {
-    use photocraft_algo::content_aware::{auto_sampling_with, grow_mask, paint_strokes, polygon_mask};
+pub fn content_aware_plan_with(doc: &Document, id: LayerId, p: &Value, cmd: &str, ctl: &sary_raster::Interrupt) -> Result<CafPlan> {
+    use sary_algo::content_aware::{auto_sampling_with, grow_mask, paint_strokes, polygon_mask};
     use rayon::prelude::*;
 
     use crate::fill_cmds::{read_window, read_window_mask};
@@ -693,7 +693,7 @@ pub fn content_aware_plan_with(doc: &Document, id: LayerId, p: &Value, cmd: &str
 }
 
 fn content_aware_fill_as(s: &mut Session, p: &Value, cmd: &'static str, label: &'static str) -> Result<Value> {
-    use photocraft_algo::content_aware::fill_owned;
+    use sary_algo::content_aware::fill_owned;
     // The workspace names the layer it opened on: after an Apply to a new layer that one is
     // active, but the fill still samples the original.
     let id = match p.get("layer").and_then(Value::as_u64) {
@@ -717,7 +717,7 @@ fn content_aware_fill_as(s: &mut Session, p: &Value, cmd: &'static str, label: &
             use rayon::prelude::*;
             ctx.progress(0.0, label);
             let cancel = || ctx.cancelled();
-            let plan = content_aware_plan_with(&doc, id, &p, cmd, &photocraft_raster::Interrupt::cancel_only(&cancel))?;
+            let plan = content_aware_plan_with(&doc, id, &p, cmd, &sary_raster::Interrupt::cancel_only(&cancel))?;
             let CafPlan { layer, rect, fmt, img, layer_px, cover, hole, source, opts, output, .. } = plan;
             let (w, h) = (rect.width() as usize, rect.height() as usize);
             let n = fmt.channels();
@@ -919,7 +919,7 @@ fn cas_pixels(
     (nw, nh): (usize, usize),
     amount: f32,
 ) -> Result<Vec<f32>> {
-    use photocraft_algo::seam::{carve_with, resize_bilinear, skin_mask};
+    use sary_algo::seam::{carve_with, resize_bilinear, skin_mask};
     let n = fmt.channels();
     if skin_tones {
         let rgba: Vec<f32> = img.chunks_exact(n).flat_map(|px| to_rgba(&fmt, px)).collect();
@@ -1343,11 +1343,11 @@ fn preset_manager(s: &mut Session, p: &Value) -> Result<Value> {
 pub struct PresetFile {
     pub format: String,
     pub version: u32,
-    pub brushes: Vec<photocraft_paint::BrushPreset>,
+    pub brushes: Vec<sary_paint::BrushPreset>,
     pub custom_shapes: Vec<CustomShape>,
 }
 
-pub const PRESET_FORMAT: &str = "photocraft-presets";
+pub const PRESET_FORMAT: &str = "sary-presets";
 
 fn export_import(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "edit.presets.exportImportPresets";
@@ -1363,7 +1363,7 @@ fn export_import(s: &mut Session, p: &Value) -> Result<Value> {
                 format: PRESET_FORMAT.into(),
                 version: 1,
                 brushes: if want("brushes") {
-                    let mut out: Vec<photocraft_paint::BrushPreset> =
+                    let mut out: Vec<sary_paint::BrushPreset> =
                         s.tools.presets.iter().filter(|b| !b.builtin || bool_or(p, "includeBuiltins", false)).cloned().collect();
                     // The file embeds every bitmap: load the tips the preset store keeps (#1843).
                     for b in &mut out {

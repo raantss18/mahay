@@ -1,7 +1,7 @@
 //! Formulas tab: AutoSum, Insert Function, names, auditing, calculation.
 
-use gridcraft_core::{CellRef, RangeRef};
-use gridcraft_model::{CalcMode, DefinedName, Formula};
+use tabilao_core::{CellRef, RangeRef};
+use tabilao_model::{CalcMode, DefinedName, Formula};
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -83,7 +83,7 @@ fn auto_sum(s: &mut Session, p: &Json) -> Result<Json> {
         let Some(last_col) = sh.cells.used_range().map(|u| u.end.col.min(sel.end.col)) else { return ok() };
         let last_row_blank = (sel.start.col..=last_col).all(|c| sh.value(CellRef::new(sel.end.row, c)).is_empty());
         let (data_end_row, out_row) = if last_row_blank { (sel.end.row.saturating_sub(1), sel.end.row) } else { (sel.end.row, sel.end.row + 1) };
-        if out_row >= gridcraft_core::MAX_ROWS {
+        if out_row >= tabilao_core::MAX_ROWS {
             return Err(EngineError::Other("There's no room below the selection for the totals.".into()));
         }
         let writes: Vec<(CellRef, String)> = (sel.start.col..=last_col)
@@ -154,7 +154,7 @@ fn insert_function(s: &mut Session, p: &Json) -> Result<Json> {
 }
 
 pub fn function_list() -> Vec<Json> {
-    let mut v: Vec<Json> = gridcraft_functions::all()
+    let mut v: Vec<Json> = tabilao_functions::all()
         .iter()
         .map(|f| json!({"name": f.name, "category": format!("{:?}", f.category), "signature": f.signature, "description": f.description}))
         .collect();
@@ -265,22 +265,22 @@ fn define_name(s: &mut Session, p: &Json) -> Result<Json> {
     let refers = match str_param(p, "refersTo") {
         // As in Excel, relative references are relative to the active cell; names keep them
         // relative to A1, as files do.
-        Some(r) => match gridcraft_formula::parse(r.trim_start_matches('=')) {
-            Ok(e) if gridcraft_formula::adjust::has_relative_refs(&e) => {
+        Some(r) => match tabilao_formula::parse(r.trim_start_matches('=')) {
+            Ok(e) if tabilao_formula::adjust::has_relative_refs(&e) => {
                 let at = d.selection.active;
-                gridcraft_formula::print(&gridcraft_formula::adjust::shift_relative_wrapping(e, -(at.row as i64), -(at.col as i64)))
+                tabilao_formula::print(&tabilao_formula::adjust::shift_relative_wrapping(e, -(at.row as i64), -(at.col as i64)))
             }
             _ => r.trim_start_matches('=').to_string(),
         },
         None => {
             let sh = d.wb.active().ok_or(EngineError::NoDocument)?;
             let r = d.selection.current();
-            let abs = |c: CellRef| format!("${}${}", gridcraft_core::col_to_letters(c.col), c.row + 1);
+            let abs = |c: CellRef| format!("${}${}", tabilao_core::col_to_letters(c.col), c.row + 1);
             let body = if r.is_single() { abs(r.start) } else { format!("{}:{}", abs(r.start), abs(r.end)) };
-            format!("{}!{}", gridcraft_formula::quote_sheet(&sh.name), body)
+            format!("{}!{}", tabilao_formula::quote_sheet(&sh.name), body)
         }
     };
-    if gridcraft_formula::parse(&refers).is_err() {
+    if tabilao_formula::parse(&refers).is_err() {
         return Err(EngineError::Other("There's a problem with this formula.".into()));
     }
     let comment = str_param(p, "comment").unwrap_or("").to_string();
@@ -320,19 +320,19 @@ fn define_name(s: &mut Session, p: &Json) -> Result<Json> {
 /// Formulas that use a renamed name follow it: cell formulas and other names' definitions, on
 /// the sheets where `old` resolves to the renamed name (its own sheet for a sheet-scoped name;
 /// every sheet without a same-named sheet-level name for a workbook-level one).
-fn rename_name_in_formulas(wb: &mut gridcraft_model::Workbook, old: &str, old_scope: Option<usize>, new: &str) {
+fn rename_name_in_formulas(wb: &mut tabilao_model::Workbook, old: &str, old_scope: Option<usize>, new: &str) {
     let shadowed: Vec<usize> = wb.names.iter().filter(|n| n.name.eq_ignore_ascii_case(old)).filter_map(|n| n.scope).collect();
     let applies = |sheet: usize| match old_scope {
         Some(s) => s == sheet,
         None => !shadowed.contains(&sheet),
     };
     // The renamed expression, or `None` when the name doesn't occur in it.
-    let rename = |e: gridcraft_formula::Expr| {
+    let rename = |e: tabilao_formula::Expr| {
         let mut hit = false;
         let out = e.map(&mut |x| match x {
-            gridcraft_formula::Expr::Name(n) if n.eq_ignore_ascii_case(old) => {
+            tabilao_formula::Expr::Name(n) if n.eq_ignore_ascii_case(old) => {
                 hit = true;
-                gridcraft_formula::Expr::Name(new.to_string())
+                tabilao_formula::Expr::Name(new.to_string())
             }
             o => o,
         });
@@ -355,9 +355,9 @@ fn rename_name_in_formulas(wb: &mut gridcraft_model::Workbook, old: &str, old_sc
     }
     for n in wb.names.iter_mut() {
         if n.scope.is_none_or(applies)
-            && let Some(e) = gridcraft_formula::parse(&n.formula).ok().and_then(rename)
+            && let Some(e) = tabilao_formula::parse(&n.formula).ok().and_then(rename)
         {
-            n.formula = gridcraft_formula::print(&e);
+            n.formula = tabilao_formula::print(&e);
         }
     }
 }
@@ -389,7 +389,7 @@ fn name_manager(s: &mut Session, _: &Json) -> Result<Json> {
         .filter(|n| !n.hidden)
         .map(|n| {
             let sheet = n.scope.unwrap_or(d.wb.active_sheet);
-            let v = gridcraft_calc::evaluate(&d.wb, sheet, CellRef::default(), &n.formula);
+            let v = tabilao_calc::evaluate(&d.wb, sheet, CellRef::default(), &n.formula);
             json!({"name": n.name, "refersTo": format!("={}", n.formula), "scope": n.scope.and_then(|i| d.wb.sheet(i)).map(|s| s.name.clone()).unwrap_or_else(|| "Workbook".into()), "value": crate::cmd::inspect::value_json(&v), "comment": n.comment})
         })
         .collect();
@@ -405,13 +405,13 @@ fn create_from_selection(s: &mut Session, p: &Json) -> Result<Json> {
     let replace = bool_param(p, "replace").unwrap_or(false);
     let d = s.doc()?;
     let sh = d.wb.active().ok_or(EngineError::NoDocument)?;
-    let q = gridcraft_formula::quote_sheet(&sh.name);
+    let q = tabilao_formula::quote_sheet(&sh.name);
     let abs = |r: RangeRef| {
         format!(
             "{q}!${}${}:${}${}",
-            gridcraft_core::col_to_letters(r.start.col),
+            tabilao_core::col_to_letters(r.start.col),
             r.start.row + 1,
-            gridcraft_core::col_to_letters(r.end.col),
+            tabilao_core::col_to_letters(r.end.col),
             r.end.row + 1
         )
     };
@@ -523,20 +523,20 @@ fn evaluate_formula(s: &mut Session, p: &Json) -> Result<Json> {
                 .ok_or_else(|| EngineError::Other("The cell has no formula.".into()))?
         }
     };
-    let expr = gridcraft_formula::parse(&text).map_err(|e| EngineError::Other(e.to_string()))?;
+    let expr = tabilao_formula::parse(&text).map_err(|e| EngineError::Other(e.to_string()))?;
     // Steps: each sub-expression (innermost first) with its value.
     let mut steps = Vec::new();
     let mut nodes = Vec::new();
     expr.walk(&mut |e| {
-        if matches!(e, gridcraft_formula::Expr::Call(..) | gridcraft_formula::Expr::Binary(..) | gridcraft_formula::Expr::Ref(_)) {
+        if matches!(e, tabilao_formula::Expr::Call(..) | tabilao_formula::Expr::Binary(..) | tabilao_formula::Expr::Ref(_)) {
             nodes.push(e.clone());
         }
     });
     for e in nodes.into_iter().rev().take(200) {
-        let v = gridcraft_calc::recalc::evaluate_expr(&d.wb, sheet, at, &e);
-        steps.push(json!({"expression": gridcraft_formula::print(&e), "value": crate::cmd::inspect::value_json(&v)}));
+        let v = tabilao_calc::recalc::evaluate_expr(&d.wb, sheet, at, &e);
+        steps.push(json!({"expression": tabilao_formula::print(&e), "value": crate::cmd::inspect::value_json(&v)}));
     }
-    let result = gridcraft_calc::recalc::evaluate_expr(&d.wb, sheet, at, &expr);
+    let result = tabilao_calc::recalc::evaluate_expr(&d.wb, sheet, at, &expr);
     Ok(json!({"formula": format!("={text}"), "steps": steps, "result": crate::cmd::inspect::value_json(&result)}))
 }
 
@@ -544,7 +544,7 @@ fn evaluate(s: &mut Session, p: &Json) -> Result<Json> {
     let d = s.doc()?;
     let f = str_param(p, "formula").ok_or_else(|| bad("formulas.evaluate", "missing `formula`"))?;
     let at = cell_param(s, p, "cell")?.unwrap_or(d.selection.active);
-    let v = gridcraft_calc::evaluate(&d.wb, d.wb.active_sheet, at, f);
+    let v = tabilao_calc::evaluate(&d.wb, d.wb.active_sheet, at, f);
     Ok(crate::cmd::inspect::value_json(&v))
 }
 

@@ -5,17 +5,17 @@
 use egui::accesskit::{Role, Toggled};
 use egui::{Modifiers, Pos2};
 use egui_kittest::kittest::{NodeT, Queryable};
-use photocraft_doc::{LayerContent, LayerId};
+use sary_doc::{LayerContent, LayerId};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Smart objects "Smart A" (Gaussian Blur and Offset) and "Smart B" (no filters), and a pixel
 /// layer "Pixels" on top: (harness, A, B, pixels).
-fn panel() -> (egui_kittest::Harness<'static, PhotocraftApp>, u64, u64, u64) {
-    let mut s = photocraft_engine::Session::new();
+fn panel() -> (egui_kittest::Harness<'static, SaryApp>, u64, u64, u64) {
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 16, "height": 16})).unwrap();
-    let smart = |s: &mut photocraft_engine::Session, name: &str| {
+    let smart = |s: &mut sary_engine::Session, name: &str| {
         s.execute("layer.new.layer", json!({})).unwrap();
         s.execute("edit.fill", json!({"contents": "black"})).unwrap();
         let id = s.execute("layer.smartObjects.convertToSmartObject", json!({})).unwrap()["layer"].as_u64().unwrap();
@@ -30,14 +30,14 @@ fn panel() -> (egui_kittest::Harness<'static, PhotocraftApp>, u64, u64, u64) {
     s.execute("layer.setProps", json!({"layer": c, "name": "Pixels"})).unwrap();
     // 60 fps steps, so a double-click's two clicks fall inside egui's 0.3 s window.
     let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1200.0, 900.0)).with_max_steps(64).with_step_dt(1.0 / 60.0).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(s, crate::Services::default())
     });
     h.run_steps(4);
     (h, a, b, c)
 }
 
-fn filters(h: &egui_kittest::Harness<'static, PhotocraftApp>, id: u64) -> Vec<String> {
+fn filters(h: &egui_kittest::Harness<'static, SaryApp>, id: u64) -> Vec<String> {
     match &h.state().session.active().unwrap().doc.layer(LayerId(id)).unwrap().content {
         LayerContent::Smart(sm) => sm.smart_filters.iter().map(|f| f.command.clone()).collect(),
         _ => Vec::new(),
@@ -46,16 +46,16 @@ fn filters(h: &egui_kittest::Harness<'static, PhotocraftApp>, id: u64) -> Vec<St
 
 /// The centre of the Layers panel row (or footer button) labelled `label`: rows are selectable
 /// labels, which AccessKit calls buttons, unlike the same name drawn elsewhere.
-fn at(h: &egui_kittest::Harness<'static, PhotocraftApp>, label: &str) -> Pos2 {
+fn at(h: &egui_kittest::Harness<'static, SaryApp>, label: &str) -> Pos2 {
     h.query_all_by_label(label).find(|n| n.accesskit_node().role() == Role::Button).unwrap_or_else(|| panic!("`{label}` drawn")).rect().center()
 }
 
-fn selected(h: &egui_kittest::Harness<'static, PhotocraftApp>, label: &str) -> bool {
+fn selected(h: &egui_kittest::Harness<'static, SaryApp>, label: &str) -> bool {
     h.get_by_role_and_label(Role::Button, label).accesskit_node().toggled() == Some(Toggled::True)
 }
 
 /// Press at `from`, move to `to` in steps and release there, with `modifiers` held on release.
-fn drag(h: &mut egui_kittest::Harness<'static, PhotocraftApp>, from: Pos2, to: Pos2, modifiers: Modifiers) {
+fn drag(h: &mut egui_kittest::Harness<'static, SaryApp>, from: Pos2, to: Pos2, modifiers: Modifiers) {
     h.hover_at(from);
     h.run_steps(1);
     h.drag_at(from);
@@ -138,7 +138,7 @@ fn a_camera_raw_filter_copies_and_its_copy_opens_on_the_target() {
     h.run_steps(4);
     let (from, to) = (at(&h, "Camera Raw Filter"), at(&h, "Smart B"));
     drag(&mut h, from, to, Modifiers::ALT);
-    let raw = |h: &egui_kittest::Harness<'static, PhotocraftApp>, id: u64| match &h.state().session.active().unwrap().doc.layer(LayerId(id)).unwrap().content {
+    let raw = |h: &egui_kittest::Harness<'static, SaryApp>, id: u64| match &h.state().session.active().unwrap().doc.layer(LayerId(id)).unwrap().content {
         LayerContent::Smart(sm) => sm.smart_filters.iter().find(|f| f.command == "filter.cameraRaw").map(|f| f.params.clone()),
         _ => None,
     };
@@ -191,7 +191,7 @@ fn dragging_a_filter_up_or_down_its_stack_reorders_it() {
     assert_eq!(filters(&h, a), [blur, offset]);
 }
 
-fn click_at(h: &mut egui_kittest::Harness<'static, PhotocraftApp>, p: Pos2) {
+fn click_at(h: &mut egui_kittest::Harness<'static, SaryApp>, p: Pos2) {
     h.hover_at(p);
     h.run_steps(1);
     h.drag_at(p);

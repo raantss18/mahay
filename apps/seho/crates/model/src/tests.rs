@@ -11,7 +11,7 @@ fn new_presentation_is_valid() {
     let s = &p.slides[0];
     let (m, l) = p.master_for(s).unwrap();
     assert_eq!(l.unwrap().kind, LayoutType::Title);
-    assert_eq!(m.theme.name, "DeckCraft");
+    assert_eq!(m.theme.name, "Seho");
     // Title slide has a centred title and a subtitle.
     let kinds: Vec<_> = s.shapes.iter().filter_map(|x| x.ph_type()).collect();
     assert_eq!(kinds, vec![PhType::CtrTitle, PhType::SubTitle]);
@@ -202,7 +202,7 @@ fn hyperlinked_runs_take_the_theme_hyperlink_look() {
     });
     assert_eq!(resolve::run(&ctx, title, &para, &RunProps { link: slide, ..Default::default() }).fill, hlink);
     // The run's own colour and underline win; u="none" removes the underline.
-    let red = Some(Fill::solid(ColorRef::rgb(deckcraft_color::Rgba::rgb(255, 0, 0))));
+    let red = Some(Fill::solid(ColorRef::rgb(seho_color::Rgba::rgb(255, 0, 0))));
     let own = RunProps { link: link.clone(), fill: red.clone(), underline: Some("none".into()), ..Default::default() };
     let r = resolve::run(&ctx, title, &para, &own);
     assert_eq!((r.fill, r.underline.as_deref()), (red, Some("none")));

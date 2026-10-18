@@ -1,6 +1,6 @@
 //! Digital IDs from the macOS Keychain: identities (a certificate with its private key) that
 //! sign through the Security framework. The private key never leaves the Keychain; macOS may
-//! ask the user to allow PdfCraft to use it.
+//! ask the user to allow Taratasy to use it.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -31,7 +31,7 @@ impl ExternalKey for KeychainKey {
     }
 }
 
-/// The `keychain:<SHA-256 of the certificate>` reference PdfCraft keeps for an identity.
+/// The `keychain:<SHA-256 of the certificate>` reference Taratasy keeps for an identity.
 pub fn reference(c: &Certificate) -> String {
     let d = DigestAlg::Sha256.digest(&[&c.raw]);
     format!("keychain:{}", d.iter().map(|b| format!("{b:02x}")).collect::<String>())
@@ -51,7 +51,7 @@ pub fn find(reference_or_name: &str) -> Result<DigitalId, SignError> {
 /// The signing identities in the user's keychains (or only in the keychain file `keychain`).
 /// Without a keychain file, smart cards macOS reads through CryptoTokenKit (a CAC or PIV card
 /// in a reader) are searched too; their keys stay on the card, which asks for its PIN when
-/// signing. Identities with keys PdfCraft can't use (other curves, Ed25519) are left out.
+/// signing. Identities with keys Taratasy can't use (other curves, Ed25519) are left out.
 pub fn identities(keychain: Option<&Path>) -> Result<Vec<DigitalId>, SignError> {
     let mut search = ItemSearchOptions::new();
     search.class(ItemClass::identity()).load_refs(true).limit(Limit::All);

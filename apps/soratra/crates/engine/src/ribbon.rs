@@ -442,7 +442,7 @@ mod tests {
     /// through the command (as agents do) without opening the dialog.
     #[test]
     fn layout_changes_through_the_command() {
-        let mut s = crate::Session::new(wordcraft_doc::Document::new());
+        let mut s = crate::Session::new(soratra_doc::Document::new());
         let mut run = |v: Value| s.run("tools.customizeRibbon", &v);
         let r = run(json!({"newTab": {"name": "Mine", "after": "Home"}, "hide": "Draw"})).unwrap();
         assert_eq!(r["tab"], "Mine");

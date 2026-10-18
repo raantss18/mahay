@@ -1,11 +1,11 @@
 //! Excel keyboard shortcuts (crate::keymap) dispatched through real egui key events.
 
 use egui::{Event, Key, Modifiers};
-use gridcraft_engine::Session;
-use gridcraft_engine::core::CellRef;
-use gridcraft_engine::model::BorderStyle;
-use gridcraft_ui_egui::SheetApp;
-use gridcraft_ui_egui::keymap::{Shortcut, lookup};
+use tabilao_engine::Session;
+use tabilao_engine::core::CellRef;
+use tabilao_engine::model::BorderStyle;
+use tabilao_ui_egui::SheetApp;
+use tabilao_ui_egui::keymap::{Shortcut, lookup};
 use serde_json::json;
 
 type Harness = egui_kittest::Harness<'static, SheetApp>;
@@ -39,7 +39,7 @@ fn key(h: &mut Harness, k: Key, m: Modifiers) {
     h.run_steps(2);
 }
 
-fn style(h: &Harness, a1: &str) -> gridcraft_engine::model::Style {
+fn style(h: &Harness, a1: &str) -> tabilao_engine::model::Style {
     let d = h.state().session.active().unwrap();
     let sh = d.wb.active().unwrap();
     d.wb.styles.get(sh.style_id(CellRef::parse(a1).unwrap())).clone()
@@ -167,8 +167,8 @@ fn alt_down_opens_autofilter_headers_without_changing_the_workbook() {
             assert_eq!(d.selection.active, active);
             assert_eq!(d.wb, before);
             let sh = d.wb.active().unwrap();
-            let geo = gridcraft_ui_egui::grid::Geo::new(sh, h.state().grid.rect.unwrap(), h.state().view().scroll);
-            assert_eq!(at, geo.mirror_pos(gridcraft_ui_egui::grid::filter_button_rect(&geo, sh, active).center()));
+            let geo = tabilao_ui_egui::grid::Geo::new(sh, h.state().grid.rect.unwrap(), h.state().view().scroll);
+            assert_eq!(at, geo.mirror_pos(tabilao_ui_egui::grid::filter_button_rect(&geo, sh, active).center()));
             // Opening focuses the existing search box; typing must not edit the header.
             h.input_mut().events.push(Event::Text("1".into()));
             h.run_steps(2);

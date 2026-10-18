@@ -3,7 +3,7 @@
 
 mod spec_support;
 
-use craft_ai_core::spec::{MAX_SPEC_BYTES, Spec};
+use mahay_ai_core::spec::{MAX_SPEC_BYTES, Spec};
 use serde_json::{Value, json};
 use spec_support::{direct, parse, queue, refused, set};
 

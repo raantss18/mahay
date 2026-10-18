@@ -1,7 +1,7 @@
 //! In-place editing of a text box. The draft becomes one undoable engine command.
 
 use egui::{Color32, FontId, Key, Modifiers, Rect, TextEdit};
-use gridcraft_engine::{Mode, model::ShapeKind};
+use tabilao_engine::{Mode, model::ShapeKind};
 use serde_json::json;
 
 use crate::{SheetApp, grid::Geo, theme};
@@ -18,7 +18,7 @@ pub struct EditState {
 }
 
 pub(crate) fn editor_id() -> egui::Id {
-    egui::Id::new("gridcraft.text_box_editor")
+    egui::Id::new("tabilao.text_box_editor")
 }
 
 impl SheetApp {
@@ -110,7 +110,7 @@ pub(crate) fn contains_pointer(app: &SheetApp, ctx: &egui::Context) -> bool {
     app.text_box_editor.as_ref().and_then(|ed| ed.rect).is_some_and(|r| ctx.input(|i| i.pointer.hover_pos().is_some_and(|p| r.contains(p))))
 }
 
-pub(crate) fn show(app: &mut SheetApp, ui: &mut egui::Ui, geo: &Geo, sh: &gridcraft_engine::model::Sheet) {
+pub(crate) fn show(app: &mut SheetApp, ui: &mut egui::Ui, geo: &Geo, sh: &tabilao_engine::model::Sheet) {
     let Some(mut ed) = app.text_box_editor.take() else { return };
     if app.view_key() != Some((ed.uid, ed.sheet)) {
         app.text_box_editor = Some(ed);

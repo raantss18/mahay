@@ -1,7 +1,7 @@
 //! View tab (sheet view state that's saved with the file) and Page Layout settings.
 
-use gridcraft_core::{CellRef, RangeRef};
-use gridcraft_model::Orientation;
+use tabilao_core::{CellRef, RangeRef};
+use tabilao_model::Orientation;
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -105,7 +105,7 @@ pub fn specs() -> Vec<CommandSpec> {
             "Themes",
             ["Page Layout", "Themes"],
             None,
-            "{name: Craft|Slate|Meadow|Ember|Ocean|Orchid|Graphite, colors?: [12 hex], majorFont?, minorFont?}",
+            "{name: Mahay|Slate|Meadow|Ember|Ocean|Orchid|Graphite, colors?: [12 hex], majorFont?, minorFont?}",
             has_doc,
             theme
         ),
@@ -309,8 +309,8 @@ fn header_footer(s: &mut Session, p: &Json) -> Result<Json> {
                 other => return Err(bad(CMD, format!("`section` must be left, center or right, not `{other}`"))),
             };
             let page = match str_param(p, "page") {
-                None => gridcraft_model::HfPage::Odd,
-                Some(id) => gridcraft_model::HfPage::parse(id).ok_or_else(|| bad(CMD, format!("`page` must be odd, even or first, not `{id}`")))?,
+                None => tabilao_model::HfPage::Odd,
+                Some(id) => tabilao_model::HfPage::parse(id).ok_or_else(|| bad(CMD, format!("`page` must be odd, even or first, not `{id}`")))?,
             };
             Some((page, footer, idx, super::print::fields_to_codes(str_param(p, "text").unwrap_or(""))))
         }
@@ -360,10 +360,10 @@ fn header_footer(s: &mut Session, p: &Json) -> Result<Json> {
     })
 }
 
-/// GridCraft's own theme set (original palettes).
+/// Tabilao's own theme set (original palettes).
 pub fn themes() -> Vec<(&'static str, [u32; 12])> {
     vec![
-        ("Craft", [0xFFFFFF, 0x000000, 0xE8E8E8, 0x0E2841, 0x156082, 0xE97132, 0x196B24, 0x0F9ED5, 0xA02B93, 0x4EA72E, 0x467886, 0x96607D]),
+        ("Mahay", [0xFFFFFF, 0x000000, 0xE8E8E8, 0x0E2841, 0x156082, 0xE97132, 0x196B24, 0x0F9ED5, 0xA02B93, 0x4EA72E, 0x467886, 0x96607D]),
         ("Slate", [0xFFFFFF, 0x1F2328, 0xEEF1F4, 0x3B4652, 0x4F6D8A, 0x8AA1B8, 0xC27C4C, 0x6F9A72, 0x9D6C9B, 0xD3B25A, 0x2F6FB0, 0x7A5C8F]),
         ("Meadow", [0xFFFFFF, 0x16241A, 0xEEF4EA, 0x2E4A33, 0x4D8B3F, 0x9BC53D, 0xE4B33A, 0x2E8C83, 0xC4643C, 0x7B6A9E, 0x2B7A57, 0x6E7F3A]),
         ("Ember", [0xFFFFFF, 0x2A1A14, 0xF6EEE8, 0x5A2E1E, 0xD9532B, 0xF2994A, 0xF2C94C, 0x8C3B2E, 0x4A6FA5, 0x6F8F4E, 0xB5472A, 0x8C6A5A]),
@@ -374,7 +374,7 @@ pub fn themes() -> Vec<(&'static str, [u32; 12])> {
 }
 
 fn theme(s: &mut Session, p: &Json) -> Result<Json> {
-    let name = str_param(p, "name").unwrap_or("Craft").to_string();
+    let name = str_param(p, "name").unwrap_or("Mahay").to_string();
     let colors = p
         .get("colors")
         .and_then(Json::as_array)

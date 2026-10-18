@@ -6,12 +6,12 @@
 
 use std::sync::mpsc::{Receiver, TryRecvError};
 
-use photocraft_engine::jobs::JobCtx;
+use sary_engine::jobs::JobCtx;
 
 use crate::filter_dialog::FilterPreviewKey;
 
 pub(crate) struct Computed {
-    pub result: Option<(std::sync::Arc<photocraft_doc::Document>, photocraft_compose::Buffer)>,
+    pub result: Option<(std::sync::Arc<sary_doc::Document>, sary_compose::Buffer)>,
     pub ms: f64,
 }
 
@@ -94,7 +94,7 @@ impl Worker {
 }
 
 /// Stop and release previews of closed dialogs even when their canvas is no longer being drawn.
-pub(crate) fn discard_closed(app: &mut crate::PhotocraftApp) {
+pub(crate) fn discard_closed(app: &mut crate::SaryApp) {
     let visible =
         app.ui.dialogs.iter().any(|d| d.fields.contains_key("__filter") && d.fields.get("__preview").and_then(serde_json::Value::as_bool) == Some(true));
     if !visible {
@@ -112,7 +112,7 @@ mod tests {
 
     fn key(dialog: u64, revision: u64, colors: u32) -> FilterPreviewKey {
         FilterPreviewKey {
-            doc: photocraft_doc::DocId(1),
+            doc: sary_doc::DocId(1),
             revision,
             dialog,
             active: None,
@@ -172,7 +172,7 @@ mod tests {
         assert_ne!(original, key(1, 3, 64));
         assert_ne!(original, key(1, 2, 128));
         let mut layer = original.clone();
-        layer.active = Some(photocraft_doc::LayerId(4));
+        layer.active = Some(sary_doc::LayerId(4));
         assert_ne!(original, layer);
     }
 

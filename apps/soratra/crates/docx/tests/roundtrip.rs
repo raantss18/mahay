@@ -2,20 +2,20 @@
 
 use std::sync::Arc;
 
-use wordcraft_doc::numbering::ListKind;
-use wordcraft_doc::para::{Anchor, Float, FloatAlign, NoteKind, ShapeKind, Wrap};
-use wordcraft_doc::props::{
+use soratra_doc::numbering::ListKind;
+use soratra_doc::para::{Anchor, Float, FloatAlign, NoteKind, ShapeKind, Wrap};
+use soratra_doc::props::{
     Align, Border, BorderStyle, Borders, CharProps, HeightRule, Highlight, LineSpacing, NumRef, ParaProps, Rgb, RowProps, TabAlign, TabLeader,
     TabStop, TableLook, TextColor, TextDirection, Underline, VAlign, VMerge, VertAlign,
 };
-use wordcraft_doc::section::{Columns, DocGrid, DocGridType, LineNumberRestart, LineNumbering, NumFormat, PageVAlign, SectionProps, SectionStart};
-use wordcraft_doc::styles::{Style, StyleKind};
-use wordcraft_doc::table::{Cell, Table};
-use wordcraft_doc::{Block, Blocks, Comment, Document, InlineObject, Paragraph, PartKind, Revision, RevisionKind, Source, Watermark, para_block};
+use soratra_doc::section::{Columns, DocGrid, DocGridType, LineNumberRestart, LineNumbering, NumFormat, PageVAlign, SectionProps, SectionStart};
+use soratra_doc::styles::{Style, StyleKind};
+use soratra_doc::table::{Cell, Table};
+use soratra_doc::{Block, Blocks, Comment, Document, InlineObject, Paragraph, PartKind, Revision, RevisionKind, Source, Watermark, para_block};
 
 fn rt(doc: &Document) -> Document {
-    let bytes = wordcraft_docx::write(doc).expect("write");
-    wordcraft_docx::read(&bytes).expect("read")
+    let bytes = soratra_docx::write(doc).expect("write");
+    soratra_docx::read(&bytes).expect("read")
 }
 
 fn paras(doc: &Document) -> Vec<&Paragraph> {
@@ -80,16 +80,16 @@ fn every_char_prop_round_trips() {
         emboss: Some(false),
         engrave: Some(true),
         // WordArt effects ([MS-DOCX] w14 run properties).
-        text_effects: Some(Box::new(wordcraft_doc::wordart::TextEffects {
-            fill: Some(wordcraft_doc::wordart::TextFill::Gradient {
+        text_effects: Some(Box::new(soratra_doc::wordart::TextEffects {
+            fill: Some(soratra_doc::wordart::TextFill::Gradient {
                 stops: vec![
-                    wordcraft_doc::wordart::GradStop { pos: 0.0, color: Rgb(0x15, 0x60, 0x82), transparency: 0.0 },
-                    wordcraft_doc::wordart::GradStop { pos: 100.0, color: Rgb(0xE9, 0x71, 0x32), transparency: 25.0 },
+                    soratra_doc::wordart::GradStop { pos: 0.0, color: Rgb(0x15, 0x60, 0x82), transparency: 0.0 },
+                    soratra_doc::wordart::GradStop { pos: 100.0, color: Rgb(0xE9, 0x71, 0x32), transparency: 25.0 },
                 ],
                 angle: 90.0,
             }),
-            outline: Some(wordcraft_doc::wordart::TextOutline { color: Some(Rgb(0x0E, 0x28, 0x41)), width: 1.5, transparency: 0.0 }),
-            shadow: Some(wordcraft_doc::effects::Shadow {
+            outline: Some(soratra_doc::wordart::TextOutline { color: Some(Rgb(0x0E, 0x28, 0x41)), width: 1.5, transparency: 0.0 }),
+            shadow: Some(soratra_doc::effects::Shadow {
                 color: Rgb::BLACK,
                 transparency: 60.0,
                 blur: 4.0,
@@ -97,8 +97,8 @@ fn every_char_prop_round_trips() {
                 angle: 45.0,
                 rot_with_shape: false,
             }),
-            glow: Some(wordcraft_doc::effects::Glow { color: Rgb(0x0F, 0x9E, 0xD5), size: 5.0, transparency: 40.0 }),
-            reflection: Some(wordcraft_doc::wordart::Reflection::default()),
+            glow: Some(soratra_doc::effects::Glow { color: Rgb(0x0F, 0x9E, 0xD5), size: 5.0, transparency: 40.0 }),
+            reflection: Some(soratra_doc::wordart::Reflection::default()),
         })),
         lang: Some("fr-FR".into()),
         no_proof: Some(true),
@@ -110,10 +110,10 @@ fn every_char_prop_round_trips() {
         bold_cs: Some(false),
         italic_cs: Some(true),
         lang_bidi: Some("fa-IR".into()),
-        east_asian_layout: Some(wordcraft_doc::props::EastAsianLayout {
+        east_asian_layout: Some(soratra_doc::props::EastAsianLayout {
             id: Some(3),
             combine: Some(true),
-            combine_brackets: Some(wordcraft_doc::props::CombineBrackets::Square),
+            combine_brackets: Some(soratra_doc::props::CombineBrackets::Square),
             vert: Some(false),
             vert_compress: Some(true),
         }),
@@ -172,7 +172,7 @@ fn every_para_prop_round_trips() {
         suppress_line_numbers: Some(true),
         bidi: Some(false),
         drop_cap: None,
-        frame: Some(wordcraft_doc::props::TextFrame {
+        frame: Some(soratra_doc::props::TextFrame {
             w: Some(144.0),
             h: Some(36.0),
             h_exact: true,
@@ -527,7 +527,7 @@ fn comments_round_trip() {
 /// row band conditional formats (#146) survive a save.
 #[test]
 fn table_style_formatting_round_trips() {
-    use wordcraft_doc::styles::TableStyleParts;
+    use soratra_doc::styles::TableStyleParts;
     let mut d = doc_with(vec![Paragraph::with_text("x", CharProps::default())]);
     let parts = TableStyleParts {
         borders: Some(Borders { top: Some(Border::single(1.0)), ..Default::default() }),
@@ -565,7 +565,7 @@ fn table_style_formatting_round_trips() {
 /// formatting, cell shading, cell borders and horizontal and vertical alignment through a save.
 #[test]
 fn every_table_style_part_round_trips() {
-    use wordcraft_doc::styles::{PartFormat, TablePart};
+    use soratra_doc::styles::{PartFormat, TablePart};
     let mut d = doc_with(vec![Paragraph::with_text("x", CharProps::default())]);
     let mut st = Style { id: "Parts".into(), name: "Parts".into(), kind: StyleKind::Table, based_on: Some("TableGrid".into()), ..Default::default() };
     let aligns = [Align::Left, Align::Center, Align::Right];
@@ -653,7 +653,7 @@ fn notes_round_trip() {
 /// (`w:sectPr`), in schema order: `w:footnotePr` and `w:endnotePr` before `w:type`.
 #[test]
 fn note_options_round_trip_per_section() {
-    use wordcraft_doc::section::{NotePos, NoteProps, NoteRestart};
+    use soratra_doc::section::{NotePos, NoteProps, NoteRestart};
     let mut d = Document::new();
     d.settings.footnote_format = NumFormat::UpperLetter;
     d.settings.footnote_pr =
@@ -667,8 +667,8 @@ fn note_options_round_trip_per_section() {
         ..Default::default()
     }));
     d.body = vec![para_block(first), para_block(Paragraph::with_text("Section two", CharProps::default()))];
-    let bytes = wordcraft_docx::write(&d).unwrap();
-    let r = wordcraft_docx::read(&bytes).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
+    let r = soratra_docx::read(&bytes).unwrap();
     assert_eq!(r.settings.footnote_format, NumFormat::UpperLetter);
     assert_eq!((r.settings.footnote_pr, r.settings.endnote_pr), (d.settings.footnote_pr, d.settings.endnote_pr));
     let sections = r.sections();
@@ -701,14 +701,14 @@ fn note_never_references_itself() {
     p.insert_object(4, InlineObject::NoteRef { kind: NoteKind::Footnote, id: f, custom: String::new() }, &CharProps::default()).unwrap();
     d.body = vec![para_block(p)];
 
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/footnotes.xml").unwrap(), &mut xml).unwrap();
     assert!(!xml.contains("<w:footnoteReference"), "a footnote cites itself: {xml}");
     assert_eq!(xml.matches("<w:footnoteRef/>").count(), 1, "{xml}");
 
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got = paras(&r)[0];
     let Some(InlineObject::NoteRef { id, .. }) = got.objects.first() else { panic!("{:?}", got.objects) };
     assert_eq!(part_text(&r, Some(*id)).trim(), "The note.");
@@ -732,7 +732,7 @@ fn custom_note_mark_stays_in_the_note() {
     p.insert_object(end, InlineObject::NoteRef { kind: NoteKind::Endnote, id: e, custom: "*".into() }, &CharProps::default()).unwrap();
     d.body = vec![para_block(p)];
 
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     for (file, mark) in [("word/footnotes.xml", "<w:footnoteRef/>"), ("word/endnotes.xml", "<w:endnoteRef/>")] {
         let xml = part_xml(&bytes, file);
         assert!(!xml.contains(mark), "{file}: the custom mark became an automatic number: {xml}");
@@ -768,7 +768,7 @@ fn word_note_mark_round_trips_once() {
 
     let mut doc = d;
     for pass in 0..2 {
-        let bytes = wordcraft_docx::write(&doc).expect("write");
+        let bytes = soratra_docx::write(&doc).expect("write");
         let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
         for (file, mark, reference, style) in [
             ("word/footnotes.xml", "<w:footnoteRef/>", "<w:footnoteReference", "FootnoteReference"),
@@ -780,7 +780,7 @@ fn word_note_mark_round_trips_once() {
             assert!(!xml.contains(reference), "pass {pass}: a note cites itself: {xml}");
             assert!(xml.contains(&format!(r#"<w:rStyle w:val="{style}"/></w:rPr>{mark}"#)), "pass {pass}: {xml}");
         }
-        let r = wordcraft_docx::read(&bytes).expect("read");
+        let r = soratra_docx::read(&bytes).expect("read");
         let body = paras(&r)[0];
         assert_eq!(body.objects.len(), 2, "pass {pass}");
         for o in &body.objects {
@@ -822,7 +822,7 @@ fn toc_field_wraps_its_entries() {
         blocks.push(Paragraph::with_text("Body", CharProps::default()));
         let d = doc_with(blocks);
 
-        let bytes = wordcraft_docx::write(&d).expect("write");
+        let bytes = soratra_docx::write(&d).expect("write");
         let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
         let mut xml = String::new();
         std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -839,8 +839,8 @@ fn toc_field_wraps_its_entries() {
         let heading_end = xml[..xml.find("Intro").unwrap()].rfind("</w:p>").unwrap();
         assert!(begin > heading_end, "field must start in the first entry, not the heading: {xml}");
 
-        // WordCraft reads its own TOC back unchanged.
-        let r = wordcraft_docx::read(&bytes).expect("read");
+        // Soratra reads its own TOC back unchanged.
+        let r = soratra_docx::read(&bytes).expect("read");
         let ps = paras(&r);
         let expected: Vec<_> = std::iter::once("Contents").chain(entries.iter().map(|(t, _)| *t)).chain(std::iter::once("Body")).collect();
         assert_eq!(ps.iter().map(|p| p.plain_text()).collect::<Vec<_>>(), expected);
@@ -861,14 +861,14 @@ fn cell_text_direction_round_trips() {
     }
     let mut d = Document::new();
     d.body = vec![Arc::new(Block::Table(t)), para_block(Paragraph::new())];
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
     assert!(xml.contains(r#"<w:textDirection w:val="tbRl"/>"#), "{xml}");
     assert!(xml.contains(r#"<w:textDirection w:val="btLr"/>"#), "{xml}");
     assert_eq!(xml.matches("w:textDirection").count(), 2, "horizontal cells write nothing: {xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got: Vec<TextDirection> = r.body[0].as_table().expect("table").rows[0].cells.iter().map(|c| c.props.text_direction).collect();
     assert_eq!(got, dirs);
 }
@@ -916,7 +916,7 @@ fn toc_field_skips_nested_stories() {
     last.insert_object(end, text_box(&mut d, "Boxed"), &CharProps::default()).unwrap();
     d.body = vec![para_block(head), para_block(last), para_block(Paragraph::with_text("Body", CharProps::default()))];
 
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -973,13 +973,13 @@ fn tracked_paragraph_marks_round_trip() {
     joined.mark = CharProps { bold: Some(true), del: Some(1), ..Default::default() };
     let last = Paragraph::with_text("plain", CharProps::default());
     d.body = vec![para_block(split), para_block(joined), para_block(last)];
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
     assert!(xml.contains(r#"<w:rPr><w:ins w:id="#), "{xml}");
     assert!(xml.contains(r#"<w:rPr><w:del w:id="#), "{xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got = paras(&r);
     assert_eq!(got.len(), 3);
     let rev = |i: Option<u32>| i.and_then(|i| r.revisions.get(i as usize)).map(|v| (v.kind, v.author.as_str(), v.date.as_str()));
@@ -1041,13 +1041,13 @@ fn field_dirty_flag_round_trips() {
         )
         .unwrap();
     }
-    let bytes = wordcraft_docx::write(&doc_with(vec![p])).expect("write");
+    let bytes = soratra_docx::write(&doc_with(vec![p])).expect("write");
     // Another producer marks the first field's begin as dirty.
     let xml = document_xml(&bytes);
     let marked = xml.replacen(r#"<w:fldChar w:fldCharType="begin"/>"#, r#"<w:fldChar w:fldCharType="begin" w:dirty="true"/>"#, 1);
     assert_ne!(&marked, &xml, "the written begin marker must be bare: {xml}");
-    let r = wordcraft_docx::read(&replace_part(&bytes, "word/document.xml", marked.as_bytes())).expect("read");
-    let out = document_xml(&wordcraft_docx::write(&r).expect("write"));
+    let r = soratra_docx::read(&replace_part(&bytes, "word/document.xml", marked.as_bytes())).expect("read");
+    let out = document_xml(&soratra_docx::write(&r).expect("write"));
     assert_eq!(out.matches("w:dirty").count(), 1, "the dirty field keeps its flag, the other gains none: {out}");
     assert!(out.contains(r#"<w:fldChar w:fldCharType="begin" w:dirty="true"/>"#), "{out}");
 }
@@ -1069,17 +1069,17 @@ fn range_toc_dirty_flag_round_trips() {
         h.props.style = style.map(str::to_string);
         blocks.push(h);
     }
-    let bytes = wordcraft_docx::write(&doc_with(blocks)).expect("write");
+    let bytes = soratra_docx::write(&doc_with(blocks)).expect("write");
     let xml = document_xml(&bytes);
     let marked = xml.replacen(r#"<w:fldChar w:fldCharType="begin"/>"#, r#"<w:fldChar w:fldCharType="begin" w:dirty="true"/>"#, 1);
     assert_ne!(&marked, &xml, "the written begin marker must be bare: {xml}");
     let marked = replace_part(&bytes, "word/document.xml", marked.as_bytes());
-    let r = wordcraft_docx::read(&marked).expect("read");
+    let r = soratra_docx::read(&marked).expect("read");
     // Still the imported shape: a range field holding the placeholder as ordinary content.
     assert!(matches!(paras(&r)[0].objects.first(), Some(InlineObject::FieldStart { .. })), "{:?}", paras(&r)[0].objects);
     assert!(paras(&r)[0].objects.last().is_some_and(|o| matches!(o, InlineObject::FieldEnd)));
     assert_eq!(paras(&r)[0].plain_text(), "Placeholder: update fields (F9).");
-    let out = document_xml(&wordcraft_docx::write(&r).expect("write"));
+    let out = document_xml(&soratra_docx::write(&r).expect("write"));
     assert_eq!(out.matches("w:dirty").count(), 1, "the TOC keeps its flag: {out}");
     let (begin, placeholder) = (out.find("fldCharType=\"begin\"").unwrap(), out.find("Placeholder").unwrap());
     let (separate, end) = (out.find("fldCharType=\"separate\"").unwrap(), out.find("fldCharType=\"end\"").unwrap());
@@ -1146,7 +1146,7 @@ fn shapes_textboxes_equations_dropcaps_round_trip() {
         InlineObject::Equation { linear, display, math } => {
             assert_eq!(linear, "x=(-b±√(b^2-4ac))/2a");
             assert!(!display);
-            assert_eq!(math.nodes, wordcraft_doc::math::parse_linear(linear), "structure is written as OMML and read back");
+            assert_eq!(math.nodes, soratra_doc::math::parse_linear(linear), "structure is written as OMML and read back");
         }
         o => panic!("{o:?}"),
     }
@@ -1159,7 +1159,7 @@ fn shapes_textboxes_equations_dropcaps_round_trip() {
 /// size, placement and members' space, and each member's offset, size and content.
 #[test]
 fn groups_round_trip() {
-    use wordcraft_doc::para::GroupChild;
+    use soratra_doc::para::GroupChild;
     let mut d = Document::new();
     let key = d.add_media(tiny_png(), "png");
     let story = d.add_part(PartKind::TextBox, vec![para_block(Paragraph::with_text("In the group", CharProps::default()))]);
@@ -1175,8 +1175,8 @@ fn groups_round_trip() {
         story: None,
         freeform: None,
         // A member's shape effects (#275) come back too.
-        effects: wordcraft_doc::effects::ShapeEffects {
-            shadow: Some(wordcraft_doc::effects::Shadow {
+        effects: soratra_doc::effects::ShapeEffects {
+            shadow: Some(soratra_doc::effects::Shadow {
                 color: Rgb(0x20, 0x30, 0x40),
                 transparency: 60.0,
                 blur: 4.0,
@@ -1247,7 +1247,7 @@ fn groups_round_trip() {
 /// frame, background and outline, and each member at its offset in the canvas, unscaled.
 #[test]
 fn drawing_canvas_round_trips() {
-    use wordcraft_doc::para::{CanvasStyle, GroupChild};
+    use soratra_doc::para::{CanvasStyle, GroupChild};
     let mut d = Document::new();
     let key = d.add_media(tiny_png(), "png");
     let pic = InlineObject::Image { media: key, w: 60.0, h: 40.0, alt: "In the canvas".into(), float: Float::default(), crop: [0.0; 4], ole: None };
@@ -1278,12 +1278,12 @@ fn drawing_canvas_round_trips() {
     let end = p.len();
     p.insert_object(end, canvas, &CharProps::default()).unwrap();
     d.body = vec![para_block(p)];
-    let bytes = wordcraft_docx::write(&d).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
     assert!(xml.contains("wordprocessingCanvas") && xml.contains("<wpc:wpc>") && xml.contains("<wpc:bg>") && xml.contains("<wpc:whole>"), "{xml}");
-    let r = wordcraft_docx::read(&bytes).unwrap();
+    let r = soratra_docx::read(&bytes).unwrap();
     let got = paras(&r);
     let InlineObject::Group { w, h, ch_w, ch_h, children, canvas, .. } = &got[0].objects[0] else { panic!("{:?}", got[0].objects) };
     assert_eq!((*w, *h, *ch_w, *ch_h), (432.0, 216.0, 432.0, 216.0));
@@ -1298,7 +1298,7 @@ fn drawing_canvas_round_trips() {
 /// An unturned canvas writes no extension.
 #[test]
 fn rotated_drawing_canvas_round_trips() {
-    use wordcraft_doc::para::{CanvasStyle, GroupChild};
+    use soratra_doc::para::{CanvasStyle, GroupChild};
     let member = InlineObject::Shape {
         kind: ShapeKind::Rectangle,
         w: 60.0,
@@ -1326,16 +1326,16 @@ fn rotated_drawing_canvas_round_trips() {
     p.insert_object(1, canvas(Float { rot: 30.0, flip_h: true, ..square.clone() }), &CharProps::default()).unwrap();
     let end = p.len();
     p.insert_object(end, canvas(square), &CharProps::default()).unwrap();
-    let bytes = wordcraft_docx::write(&doc_with(vec![p])).expect("write");
+    let bytes = soratra_docx::write(&doc_with(vec![p])).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
     assert!(
-        xml.contains(r#"<wpc:extLst><a:ext uri="urn:wordcraft:canvas-xfrm"><a:xfrm rot="1800000" flipH="1"/></a:ext></wpc:extLst></wpc:wpc>"#),
+        xml.contains(r#"<wpc:extLst><a:ext uri="urn:soratra:canvas-xfrm"><a:xfrm rot="1800000" flipH="1"/></a:ext></wpc:extLst></wpc:wpc>"#),
         "{xml}"
     );
     assert_eq!(xml.matches("<wpc:extLst>").count(), 1, "{xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got = &paras(&r)[0].objects;
     let spins: Vec<(f32, bool, bool)> = got.iter().map(|o| o.frame().unwrap().2).map(|f| (f.rot, f.flip_h, f.flip_v)).collect();
     assert_eq!(spins, [(30.0, true, false), (0.0, false, false)]);
@@ -1356,7 +1356,7 @@ fn table_contextual_spacing_compatibility_flag_round_trips() {
             assert_eq!(r.settings.allow_space_of_same_style_in_table, allow);
             assert_eq!(r.settings.compat_mode, mode);
             if allow {
-                let bytes = wordcraft_docx::write(&d).unwrap();
+                let bytes = soratra_docx::write(&d).unwrap();
                 let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
                 let mut xml = String::new();
                 std::io::Read::read_to_string(&mut zip.by_name("word/settings.xml").unwrap(), &mut xml).unwrap();
@@ -1371,7 +1371,7 @@ fn table_contextual_spacing_compatibility_flag_round_trips() {
 fn compatibility_mode_round_trips() {
     // New documents are Word 2013+ documents; an older file keeps its mode, so saving it doesn't
     // change how Word lays it out.
-    assert_eq!(rt(&Document::new()).settings.compat_mode, wordcraft_doc::COMPAT_MODE_CURRENT);
+    assert_eq!(rt(&Document::new()).settings.compat_mode, soratra_doc::COMPAT_MODE_CURRENT);
     for mode in [11, 12, 14, 15] {
         let mut d = Document::new();
         d.settings.compat_mode = mode;
@@ -1389,7 +1389,7 @@ fn attached_template_and_link_styles_round_trip() {
     d.settings.link_styles = true;
     d.settings.mirror_margins = true;
     d.settings.track_changes = true;
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/settings.xml").unwrap(), &mut xml).unwrap();
@@ -1401,7 +1401,7 @@ fn attached_template_and_link_styles_round_trip() {
     std::io::Read::read_to_string(&mut zip.by_name("word/_rels/settings.xml.rels").unwrap(), &mut rels).unwrap();
     assert!(rels.contains("relationships/attachedTemplate") && rels.contains("TargetMode=\"External\""), "{rels}");
 
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     assert_eq!(r.settings.attached_template.as_deref(), Some("file:///C:/Templates/Report & Co.dotx"));
     assert!(r.settings.link_styles);
 
@@ -1421,7 +1421,7 @@ fn zoom_round_trips() {
         std::io::Read::read_to_string(&mut zip.by_name("word/settings.xml").unwrap(), &mut xml).unwrap();
         xml
     };
-    let plain = wordcraft_docx::write(&Document::new()).unwrap();
+    let plain = soratra_docx::write(&Document::new()).unwrap();
     let xml = settings(&plain);
     assert!(xml.contains(r#"<w:zoom w:percent="100"/>"#), "{xml}");
     for (zoom, written) in [
@@ -1431,7 +1431,7 @@ fn zoom_round_trips() {
         (r#"<w:zoom w:val="sideways" w:percent="80"/>"#, r#"<w:zoom w:percent="80"/>"#),
     ] {
         let file = replace_part(&plain, "word/settings.xml", xml.replace(r#"<w:zoom w:percent="100"/>"#, zoom).as_bytes());
-        let back = settings(&wordcraft_docx::write(&wordcraft_docx::read(&file).unwrap()).unwrap());
+        let back = settings(&soratra_docx::write(&soratra_docx::read(&file).unwrap()).unwrap());
         assert!(back.contains(written), "{zoom}: {back}");
     }
 }
@@ -1456,9 +1456,9 @@ fn settings_core_theme_round_trip() {
     d.settings.protection = Some("readOnly".into());
     d.settings.grid_h = 5.5;
     d.settings.grid_v = 18.0;
-    d.settings.math = Some(wordcraft_doc::math::MathProps {
-        brk_bin: wordcraft_doc::math::BrkBin::Repeat,
-        brk_bin_sub: wordcraft_doc::math::BrkBinSub::PlusMinus,
+    d.settings.math = Some(soratra_doc::math::MathProps {
+        brk_bin: soratra_doc::math::BrkBin::Repeat,
+        brk_bin_sub: soratra_doc::math::BrkBinSub::PlusMinus,
         wrap_indent: 36.0,
         wrap_right: false,
     });
@@ -1521,14 +1521,14 @@ fn watermark_roundtrips() {
 fn watermark_without_header_gains_one() {
     let mut d = doc_with(vec![Paragraph::with_text("Body", CharProps::default())]);
     d.settings.watermark = Some(Watermark::default());
-    let bytes = wordcraft_docx::write(&d).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
     let hdr = part_xml(&bytes, "word/header1.xml");
     assert_eq!(hdr.matches("<v:shape ").count(), 1);
     assert!(hdr.contains(r#"id="PowerPlusWaterMarkObject1""#) && hdr.contains("rotation:315") && hdr.contains(r#"<v:fill opacity=".5"/>"#));
     // The text sits between the top and bottom edges: on one line Word gives it no height.
     assert!(hdr.contains(r#"path="m0,0l21600,0m0,21600l21600,21600e""#));
     assert!(part_xml(&bytes, "word/document.xml").contains(r#"<w:headerReference w:type="default""#));
-    let r = wordcraft_docx::read(&bytes).unwrap();
+    let r = soratra_docx::read(&bytes).unwrap();
     assert_eq!(r.settings.watermark, d.settings.watermark);
     let ids = header_ids(&r);
     assert_eq!(ids.len(), 1);
@@ -1557,12 +1557,12 @@ fn watermark_joins_existing_headers() {
     d.last_section.title_page = true;
     d.last_section.footers.default = Some(f);
     d.settings.watermark = Some(Watermark::default());
-    let bytes = wordcraft_docx::write(&d).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
     for name in ["word/header1.xml", "word/header2.xml"] {
         assert_eq!(part_xml(&bytes, name).matches("<v:shape ").count(), 1, "{name}");
     }
     assert!(!part_xml(&bytes, "word/footer1.xml").contains("v:shape"));
-    let r = wordcraft_docx::read(&bytes).unwrap();
+    let r = soratra_docx::read(&bytes).unwrap();
     assert_eq!(r.settings.watermark, d.settings.watermark);
     assert_eq!(header_ids(&r).len(), 2, "no header was added");
     assert_eq!(part_text(&r, r.last_section.headers.default), "Head");
@@ -1724,12 +1724,12 @@ fn second_generation_is_stable() {
 #[test]
 fn flat_opc_round_trip_equals_docx() {
     let d = kitchen_sink();
-    let xml = wordcraft_docx::write_flat(&d).expect("write flat");
+    let xml = soratra_docx::write_flat(&d).expect("write flat");
     let text = std::str::from_utf8(&xml).expect("utf-8");
     assert!(text.starts_with("<?xml") && text.contains("<?mso-application progid=\"Word.Document\"?>"));
     assert!(text.contains("pkg:name=\"/word/document.xml\"") && text.contains("<pkg:binaryData>"));
-    assert_eq!(wordcraft_docx::sniff_xml(&xml), wordcraft_docx::XmlKind::FlatOpc);
-    let back = wordcraft_docx::read_xml(&xml).expect("read flat");
+    assert_eq!(soratra_docx::sniff_xml(&xml), soratra_docx::XmlKind::FlatOpc);
+    let back = soratra_docx::read_xml(&xml).expect("read flat");
     assert_eq!(back, rt(&d));
     assert_eq!(back.media.len(), 1);
 }
@@ -1779,8 +1779,8 @@ fn hostile_model_values_still_write() {
     d.body = vec![para_block(p)];
     d.media.insert("weird name/../x".into(), Arc::new(b"GIF89a....".to_vec()));
     d.media.insert("".into(), Arc::new(vec![0, 1, 2]));
-    let bytes = wordcraft_docx::write(&d).unwrap();
-    let r = wordcraft_docx::read(&bytes).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
+    let r = soratra_docx::read(&bytes).unwrap();
     let t = paras(&r)[0].plain_text();
     assert!(t.contains("y<&>\"'"), "{t}");
     assert!(t.contains("raw") && t.contains("fallback"), "{t}");
@@ -1821,17 +1821,17 @@ fn self_showing_text_box_saves_bounded() {
     };
     for _ in 0..30 {
         d.insert_object(
-            &wordcraft_doc::Pos { story: wordcraft_doc::StoryRef::Part(id), path: wordcraft_doc::Path::top(0), off: 0 },
+            &soratra_doc::Pos { story: soratra_doc::StoryRef::Part(id), path: soratra_doc::Path::top(0), off: 0 },
             shape(),
             &CharProps::default(),
         )
         .unwrap();
     }
-    d.insert_object(&wordcraft_doc::Pos::body(0, 0), shape(), &CharProps::default()).unwrap();
-    let bytes = wordcraft_docx::write(&d).unwrap();
+    d.insert_object(&soratra_doc::Pos::body(0, 0), shape(), &CharProps::default()).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
     assert!(bytes.len() < 200_000, "{} bytes", bytes.len());
     // It still opens, with the box's text.
-    let back = wordcraft_docx::read(&bytes).unwrap();
+    let back = soratra_docx::read(&bytes).unwrap();
     assert!(back.parts.values().any(|p| p.kind == PartKind::TextBox));
 }
 
@@ -1839,7 +1839,7 @@ fn self_showing_text_box_saves_bounded() {
 fn char_border_written_between_u_and_shd() {
     let c =
         CharProps { border: Some(Border::single(0.5)), underline: Some(Underline::Single), shading: Some(Rgb(0xFF, 0xFF, 0)), ..Default::default() };
-    let bytes = wordcraft_docx::write(&doc_with(vec![para_runs(&[("x", c)])])).unwrap();
+    let bytes = soratra_docx::write(&doc_with(vec![para_runs(&[("x", c)])])).unwrap();
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut z.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -1851,8 +1851,8 @@ fn char_border_written_between_u_and_shd() {
 
 #[test]
 fn floating_tables_round_trip() {
-    use wordcraft_doc::para::{Anchor, FloatAlign};
-    use wordcraft_doc::props::TableFloat;
+    use soratra_doc::para::{Anchor, FloatAlign};
+    use soratra_doc::props::TableFloat;
     let mut d = Document::new();
     let mut t = Table::new(1, 2, 200.0);
     let f = TableFloat {
@@ -1871,15 +1871,15 @@ fn floating_tables_round_trip() {
         TableFloat { h_rel: Anchor::Page, v_rel: Anchor::Margin, h_align: Some(FloatAlign::Center), y: 36.0, overlap: true, ..Default::default() };
     page.props.float = Some(centred);
     d.body = vec![Arc::new(Block::Table(t)), Arc::new(Block::Table(page)), para_block(Paragraph::with_text("after", CharProps::default()))];
-    let back = wordcraft_docx::read(&wordcraft_docx::write(&d).unwrap()).unwrap();
+    let back = soratra_docx::read(&soratra_docx::write(&d).unwrap()).unwrap();
     let floats: Vec<_> = back.body.iter().filter_map(|b| if let Block::Table(t) = &**b { t.props.float } else { None }).collect();
     assert_eq!(floats, [f, centred]);
 }
 
 #[test]
 fn list_level_overrides_round_trip() {
-    use wordcraft_doc::numbering::{Counters, Level};
-    use wordcraft_doc::section::NumFormat;
+    use soratra_doc::numbering::{Counters, Level};
+    use soratra_doc::section::NumFormat;
     let mut d = Document::new();
     let num = d.numbering.add_list(ListKind::Numbered);
     let restart = d.numbering.restart(num).unwrap();
@@ -1887,7 +1887,7 @@ fn list_level_overrides_round_trip() {
     if let Some(n) = d.numbering.nums.iter_mut().find(|n| n.id == restart) {
         n.level_overrides = vec![(1, own.clone())];
     }
-    let back = wordcraft_docx::read(&wordcraft_docx::write(&d).unwrap()).unwrap();
+    let back = soratra_docx::read(&soratra_docx::write(&d).unwrap()).unwrap();
     let n = back.numbering.num(restart).unwrap();
     assert_eq!(n.level_overrides.len(), 1);
     let (lvl, got) = &n.level_overrides[0];
@@ -1904,7 +1904,7 @@ fn list_level_overrides_round_trip() {
 /// drawing order.
 #[test]
 fn ink_and_freeforms_round_trip_as_custom_geometry() {
-    use wordcraft_doc::freeform::{FreePath, Freeform, InkTool};
+    use soratra_doc::freeform::{FreePath, Freeform, InkTool};
     let shape = |fill, stroke_width, wrap, f: Freeform| InlineObject::Shape {
         kind: ShapeKind::Freeform,
         w: f.w,
@@ -1938,7 +1938,7 @@ fn ink_and_freeforms_round_trip_as_custom_geometry() {
         p.insert_object(0, o, &CharProps::default()).unwrap();
     }
     let d = doc_with(vec![p]);
-    let bytes = wordcraft_docx::write(&d).unwrap();
+    let bytes = soratra_docx::write(&d).unwrap();
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut z.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -1959,7 +1959,7 @@ fn ink_and_freeforms_round_trip_as_custom_geometry() {
 /// and the effect extent leaves room for them.
 #[test]
 fn shape_effects_round_trip() {
-    use wordcraft_doc::effects::{Glow, Shadow, ShapeEffects};
+    use soratra_doc::effects::{Glow, Shadow, ShapeEffects};
     let effects = ShapeEffects {
         shadow: Some(Shadow { color: Rgb(0x20, 0x30, 0x40), transparency: 60.0, blur: 4.0, distance: 3.0, angle: 135.0, rot_with_shape: false }),
         glow: Some(Glow { color: Rgb(0xC0, 0x50, 0x10), size: 8.0, transparency: 40.0 }),
@@ -1980,7 +1980,7 @@ fn shape_effects_round_trip() {
     };
     let mut p = Paragraph::with_text("x", CharProps::default());
     p.insert_object(1, shape, &CharProps::default()).unwrap();
-    let bytes = wordcraft_docx::write(&doc_with(vec![p])).expect("write");
+    let bytes = soratra_docx::write(&doc_with(vec![p])).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -1992,7 +1992,7 @@ fn shape_effects_round_trip() {
     );
     assert!(xml.contains(r#"<a:glow rad="101600"><a:srgbClr val="C05010"><a:alpha val="60000"/>"#), "{xml}");
     assert!(xml.contains(r#"<a:softEdge rad="31750"/>"#), "{xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     match paras(&r)[0].objects.first() {
         Some(InlineObject::Shape { effects: got, float, .. }) => {
             assert_eq!(*got, effects);
@@ -2004,7 +2004,7 @@ fn shape_effects_round_trip() {
 
 #[test]
 fn equation_manual_breaks_round_trip() {
-    use wordcraft_doc::math::{MNode, MRun, Math};
+    use soratra_doc::math::{MNode, MRun, Math};
     let nodes = vec![
         MNode::Run(MRun::new("a=b")),
         MNode::Run(MRun { brk: Some(1), ..MRun::new("+c") }),
@@ -2063,7 +2063,7 @@ fn rotation_and_flips_round_trip() {
         float: Float { rot: 45.0, ..square },
         ch_w: 120.0,
         ch_h: 60.0,
-        children: vec![wordcraft_doc::para::GroupChild { x: 0.0, y: 0.0, obj: shape(ShapeKind::Ellipse, Float { rot: 10.0, ..Default::default() }) }],
+        children: vec![soratra_doc::para::GroupChild { x: 0.0, y: 0.0, obj: shape(ShapeKind::Ellipse, Float { rot: 10.0, ..Default::default() }) }],
         canvas: None,
     };
     let mut p = Paragraph::with_text("turned ", CharProps::default());
@@ -2072,7 +2072,7 @@ fn rotation_and_flips_round_trip() {
         p.insert_object(end, o, &CharProps::default()).unwrap();
     }
     d.body = vec![para_block(p)];
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -2082,7 +2082,7 @@ fn rotation_and_flips_round_trip() {
     // The 100 × 50 picture turned 30° covers 111.6 × 93.3: 5.8 and 21.7 pt more on each side,
     // plus its 6 pt of effects room.
     assert!(xml.contains(r#"<wp:effectExtent l="149876" t="351163" r="149876" b="351163"/>"#), "{xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got = &paras(&r)[0].objects;
     let spins: Vec<(f32, bool, bool)> = got.iter().map(|o| o.frame().unwrap().2).map(|f| (f.rot, f.flip_h, f.flip_v)).collect();
     assert_eq!(spins, [(30.0, false, false), (90.0, true, false), (315.5, false, true), (45.0, false, false)]);
@@ -2097,7 +2097,7 @@ fn rotation_and_flips_round_trip() {
 /// theirs inside it; whether a member's shadow turns with it (`rotWithShape`) survives too.
 #[test]
 fn rotated_group_and_shadow_rotation_round_trip() {
-    use wordcraft_doc::effects::{Shadow, ShapeEffects};
+    use soratra_doc::effects::{Shadow, ShapeEffects};
     let member = |rot_with_shape: bool| InlineObject::Shape {
         kind: ShapeKind::Rectangle,
         w: 60.0,
@@ -2118,20 +2118,20 @@ fn rotated_group_and_shadow_rotation_round_trip() {
         ch_w: 120.0,
         ch_h: 40.0,
         children: vec![
-            wordcraft_doc::para::GroupChild { x: 0.0, y: 0.0, obj: member(true) },
-            wordcraft_doc::para::GroupChild { x: 60.0, y: 0.0, obj: member(false) },
+            soratra_doc::para::GroupChild { x: 0.0, y: 0.0, obj: member(true) },
+            soratra_doc::para::GroupChild { x: 60.0, y: 0.0, obj: member(false) },
         ],
         canvas: None,
     };
     let mut p = Paragraph::with_text("g", CharProps::default());
     p.insert_object(1, group, &CharProps::default()).unwrap();
-    let bytes = wordcraft_docx::write(&doc_with(vec![p])).expect("write");
+    let bytes = soratra_docx::write(&doc_with(vec![p])).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
     assert!(xml.contains(r#"<wpg:grpSpPr><a:xfrm rot="8100000" flipH="1">"#), "{xml}");
     assert!(xml.contains(r#"rotWithShape="1""#) && xml.contains(r#"rotWithShape="0""#), "{xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let Some(InlineObject::Group { float, children, .. }) = paras(&r)[0].objects.first() else { panic!("{:?}", paras(&r)[0].objects) };
     assert_eq!((float.rot, float.flip_h, float.flip_v), (135.0, true, false));
     let got: Vec<(f32, Option<bool>)> = children
@@ -2204,7 +2204,7 @@ fn bibliography_sources_round_trip() {
         ..Default::default()
     });
 
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
 
     // Verify package-root customXml parts exist
@@ -2247,7 +2247,7 @@ fn bibliography_sources_round_trip() {
     assert!(item_xml.contains("<b:DayAccessed>15</b:DayAccessed>"), "{item_xml}");
     assert!(item_xml.contains("<b:Accessed>2024-05-15</b:Accessed>"), "{item_xml}");
 
-    let back = wordcraft_docx::read(&bytes).expect("read");
+    let back = soratra_docx::read(&bytes).expect("read");
     assert_eq!(back.sources.len(), 5);
     assert_eq!(back.sources[0].tag, "Rivera2021");
     assert_eq!(back.sources[0].kind, "book");
@@ -2294,7 +2294,7 @@ fn bibliography_sources_round_trip() {
 
 #[test]
 fn wrap_polygons_round_trip() {
-    use wordcraft_doc::wrap::{WrapPolygon, shape_outline};
+    use soratra_doc::wrap::{WrapPolygon, shape_outline};
     let mut d = Document::new();
     let shape = |kind, float| InlineObject::Shape {
         kind,
@@ -2320,13 +2320,13 @@ fn wrap_polygons_round_trip() {
         p.insert_object(end, o, &CharProps::default()).unwrap();
     }
     d.body = vec![para_block(p)];
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
     assert!(xml.contains(r#"<wp:wrapPolygon edited="1"><wp:start x="-300" y="0"/><wp:lineTo x="21600" y="1200"/>"#), "{xml}");
     assert!(xml.contains(r#"<wp:lineTo x="-300" y="0"/></wp:wrapPolygon>"#), "closed: {xml}");
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got = paras(&r)[0];
     let floats: Vec<Float> = got.objects.iter().filter_map(|o| o.frame().map(|(_, _, f)| f.clone())).collect();
     assert_eq!(floats[0], edited);
@@ -2340,7 +2340,7 @@ fn wrap_polygons_round_trip() {
 /// whether the field's size is set on the run or comes from the styles.
 #[test]
 fn enclosed_characters_round_trip_in_words_structure() {
-    use wordcraft_doc::eq::{EncloseShape, EncloseStyle, Enclosure};
+    use soratra_doc::eq::{EncloseShape, EncloseStyle, Enclosure};
     let mut p = Paragraph::new();
     let cases = [
         (EncloseShape::Circle, EncloseStyle::Shrink, Some(11.0)),
@@ -2359,7 +2359,7 @@ fn enclosed_characters_round_trip_in_words_structure() {
         .unwrap();
     }
     let doc = doc_with(vec![p]);
-    let bytes = wordcraft_docx::write(&doc).unwrap();
+    let bytes = soratra_docx::write(&doc).unwrap();
     let mut z = zip::ZipArchive::new(std::io::Cursor::new(bytes.clone())).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut z.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -2367,7 +2367,7 @@ fn enclosed_characters_round_trip_in_words_structure() {
     assert!(!xml.contains("separate") && !xml.contains("enlarge"), "{xml}");
     // Shrink text at 11 pt: the character at 7.5 pt (half-points 15), raised.
     assert!(xml.contains(r#"<w:sz w:val="15"/>"#), "{xml}");
-    let back = wordcraft_docx::read(&bytes).unwrap();
+    let back = soratra_docx::read(&bytes).unwrap();
     let got: Vec<Enclosure> = paras(&back)[0]
         .objects
         .iter()
@@ -2379,7 +2379,7 @@ fn enclosed_characters_round_trip_in_words_structure() {
 
 #[test]
 fn ruby_phonetic_guide_round_trips_as_w_ruby() {
-    use wordcraft_doc::para::RubyAlign;
+    use soratra_doc::para::RubyAlign;
     let mut p = Paragraph::with_text("Read  daily.", CharProps::default());
     let bold = CharProps { bold: Some(true), ..Default::default() };
     let ruby = InlineObject::Ruby {
@@ -2394,7 +2394,7 @@ fn ruby_phonetic_guide_round_trips_as_w_ruby() {
     };
     p.insert_object(5, ruby.clone(), &bold).unwrap();
     let d = doc_with(vec![p]);
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -2407,7 +2407,7 @@ fn ruby_phonetic_guide_round_trips_as_w_ruby() {
     ] {
         assert!(xml.contains(part), "missing {part}: {xml}");
     }
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let q = paras(&r)[0];
     assert_eq!(q.plain_text(), "Read 漢字 daily.");
     assert_eq!(q.objects, vec![ruby]);
@@ -2418,7 +2418,7 @@ fn ruby_phonetic_guide_round_trips_as_w_ruby() {
 /// Through; both sides is the default.
 #[test]
 fn wrap_text_sides_round_trip() {
-    use wordcraft_doc::para::WrapText;
+    use soratra_doc::para::WrapText;
     let mut d = Document::new();
     let shape = |float| InlineObject::Shape {
         kind: ShapeKind::Rectangle,
@@ -2441,7 +2441,7 @@ fn wrap_text_sides_round_trip() {
         p.insert_object(end, shape(Float { wrap, wrap_text: side, v_rel: Anchor::Paragraph, ..Default::default() }), &CharProps::default()).unwrap();
     }
     d.body = vec![para_block(p)];
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -2453,7 +2453,7 @@ fn wrap_text_sides_round_trip() {
     ] {
         assert!(xml.contains(tag), "{tag}: {xml}");
     }
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let got: Vec<_> = paras(&r)[0].objects.iter().filter_map(|o| o.frame().map(|(_, _, f)| (f.wrap, f.wrap_text))).collect();
     assert_eq!(got, sides);
     // A value outside the schema is no side (read as both sides).
@@ -2462,7 +2462,7 @@ fn wrap_text_sides_round_trip() {
 
 #[test]
 fn alt_text_title_and_decorative_round_trip_for_every_object() {
-    use wordcraft_doc::para::AltText;
+    use soratra_doc::para::AltText;
     let mut d = Document::new();
     let key = d.add_media(tiny_png(), "png");
     let pic = InlineObject::Image {
@@ -2495,7 +2495,7 @@ fn alt_text_title_and_decorative_round_trip_for_every_object() {
         float: Float { alt: AltText { text: "Two circles".into(), ..Default::default() }, ..Default::default() },
         ch_w: 120.0,
         ch_h: 60.0,
-        children: vec![wordcraft_doc::para::GroupChild { x: 0.0, y: 0.0, obj: shape(AltText { text: "Left circle".into(), ..Default::default() }) }],
+        children: vec![soratra_doc::para::GroupChild { x: 0.0, y: 0.0, obj: shape(AltText { text: "Left circle".into(), ..Default::default() }) }],
         canvas: None,
     };
     let mut p = Paragraph::with_text("objects ", CharProps::default());
@@ -2507,7 +2507,7 @@ fn alt_text_title_and_decorative_round_trip_for_every_object() {
     t.props.caption = Some("Prices".into());
     t.props.description = Some("Prices by year".into());
     d.body = vec![para_block(p), Arc::new(Block::Table(t))];
-    let bytes = wordcraft_docx::write(&d).expect("write");
+    let bytes = soratra_docx::write(&d).expect("write");
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(&bytes)).unwrap();
     let mut xml = String::new();
     std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
@@ -2516,7 +2516,7 @@ fn alt_text_title_and_decorative_round_trip_for_every_object() {
         xml.contains(r#"<w:tblLook "#) && xml.contains(r#"<w:tblCaption w:val="Prices"/><w:tblDescription w:val="Prices by year"/></w:tblPr>"#),
         "{xml}"
     );
-    let r = wordcraft_docx::read(&bytes).expect("read");
+    let r = soratra_docx::read(&bytes).expect("read");
     let objs = &paras(&r)[0].objects;
     let alts: Vec<_> =
         objs.iter().map(|o| (o.alt_text().to_string(), o.frame().map(|f| f.2.alt.title.clone()).unwrap_or_default(), o.is_decorative())).collect();
@@ -2540,8 +2540,8 @@ fn alt_text_title_and_decorative_round_trip_for_every_object() {
 /// loses its drawing id, and hostile values are reduced.
 #[test]
 fn warps_and_glued_connectors_round_trip() {
-    use wordcraft_doc::connector::{ConnEnd, ShapeExtra};
-    use wordcraft_doc::wordart::TextWarp;
+    use soratra_doc::connector::{ConnEnd, ShapeExtra};
+    use soratra_doc::wordart::TextWarp;
     let mut d = Document::new();
     let story = d.add_part(PartKind::TextBox, vec![para_block(Paragraph::with_text("Bent", CharProps::default()))]);
     let float = |x: f32| Float { wrap: Wrap::InFrontOfText, h_rel: Anchor::Column, v_rel: Anchor::Paragraph, x, y: 10.0, ..Default::default() };
@@ -2588,18 +2588,18 @@ fn warps_and_glued_connectors_round_trip() {
     assert_eq!(extra(&got[3]).id, 0, "nothing is glued to it");
 
     // Hostile: an unknown warp, a huge adjust value, a glue to a missing shape.
-    let xml = wordcraft_docx::write(&r).unwrap();
+    let xml = soratra_docx::write(&r).unwrap();
     let mut pkg = zip::ZipArchive::new(std::io::Cursor::new(xml)).unwrap();
     let mut doc_xml = String::new();
     std::io::Read::read_to_string(&mut pkg.by_name("word/document.xml").unwrap(), &mut doc_xml).unwrap();
     let doc_xml = doc_xml
         .replace("prst=\"textArchUp\"", "prst=\"textNotAWarp\"")
         .replace("a:stCxn id=\"5\" idx=\"3\"", "a:stCxn id=\"404\" idx=\"99999999999\"");
-    let bytes = replace_part(&wordcraft_docx::write(&r).unwrap(), "word/document.xml", doc_xml.as_bytes());
-    let h = wordcraft_docx::read(&bytes).unwrap();
+    let bytes = replace_part(&soratra_docx::write(&r).unwrap(), "word/document.xml", doc_xml.as_bytes());
+    let h = soratra_docx::read(&bytes).unwrap();
     let got = &paras(&h)[0].objects;
     assert_eq!(extra(&got[0]).warp, None);
-    assert_eq!(extra(&got[1]).start, Some(ConnEnd { id: 404, site: wordcraft_doc::connector::MAX_SITE }));
+    assert_eq!(extra(&got[1]).start, Some(ConnEnd { id: 404, site: soratra_doc::connector::MAX_SITE }));
 }
 
 /// `zip` with part `name` replaced by `data`.
@@ -2630,7 +2630,7 @@ fn page_background_picture_round_trips() {
     let mut d = Document::new();
     d.settings.page_color = Some(Rgb(0xFF, 0xFF, 0xCC));
     d.media.insert("paper.png".into(), Arc::new(png.clone()));
-    d.settings.page_picture = Some(wordcraft_doc::PagePicture { media: "paper.png".into(), fill_type: "tile".into(), title: "Paper".into() });
+    d.settings.page_picture = Some(soratra_doc::PagePicture { media: "paper.png".into(), fill_type: "tile".into(), title: "Paper".into() });
     let r = rt(&d);
     let pic = r.settings.page_picture.as_ref().expect("picture kept");
     assert_eq!((pic.fill_type.as_str(), pic.title.as_str()), ("tile", "Paper"));

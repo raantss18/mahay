@@ -1,7 +1,7 @@
 //! Draw Table driven like a person: Insert › Table › Draw Table, drag out a table, draw a border
 //! across it, then the Table Eraser merges the cells back.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui::{Modifiers, PointerButton};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -22,9 +22,9 @@ fn drag(h: &mut Harness<'_, SlideApp>, a: egui::Pos2, b: egui::Pos2) {
     h.run_steps(2);
 }
 
-fn table(h: &Harness<'_, SlideApp>) -> Option<(deckcraft_model::Table, deckcraft_geom::Xfrm)> {
+fn table(h: &Harness<'_, SlideApp>) -> Option<(seho_model::Table, seho_geom::Xfrm)> {
     h.state().session.active()?.shapes().iter().find_map(|s| match &s.kind {
-        deckcraft_model::ShapeKind::Table(t) => Some((t.clone(), s.xfrm?)),
+        seho_model::ShapeKind::Table(t) => Some((t.clone(), s.xfrm?)),
         _ => None,
     })
 }

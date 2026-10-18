@@ -1,4 +1,4 @@
-//! Independent runtime contract for the shipping `craft-pdf/read` dependency graph.
+//! Independent runtime contract for the shipping `mahay-pdf/read` dependency graph.
 //! The nested workspace excludes the facade's interpreter-bearing dev-dependencies.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -6,11 +6,11 @@
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
-    use craft_pdf::syntax::{
+    use mahay_pdf::syntax::{
         DecodeLimits,
         object::{ObjectIdentifier, Stream},
     };
-    use craft_pdf::{OpenError, OpenOptions, open, open_slice, open_slice_with_options, open_with_options};
+    use mahay_pdf::{OpenError, OpenOptions, open, open_slice, open_slice_with_options, open_with_options};
     use std::sync::Arc;
 
     // zlib-compressed b"q Q\n" repeated 128 times: 17 encoded bytes, 512 decoded bytes.

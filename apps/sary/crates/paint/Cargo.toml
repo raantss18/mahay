@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-paint"
+name = "sary-paint"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,9 +8,9 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-photocraft-geom = { workspace = true }
-photocraft-color = { workspace = true }
-photocraft-raster = { workspace = true }
+sary-geom = { workspace = true }
+sary-color = { workspace = true }
+sary-raster = { workspace = true }
 serde = { workspace = true }
 
 [dev-dependencies]

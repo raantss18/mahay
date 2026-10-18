@@ -4,10 +4,10 @@ use egui_kittest::kittest::{NodeT, Queryable};
 
 use super::*;
 
-fn harness() -> Harness<'static, PhotocraftApp> {
+fn harness() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default())
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(sary_engine::Session::new(), crate::Services::default())
     });
     h.state_mut().run("file.new", json!({"width": 400, "height": 300})).unwrap();
     h.state_mut().ui.tool = crate::state::Tool::Brush;
@@ -16,13 +16,13 @@ fn harness() -> Harness<'static, PhotocraftApp> {
 }
 
 /// The open New Brush Preset dialog, if there is one (and never two).
-fn dialog(h: &Harness<'_, PhotocraftApp>) -> Option<u64> {
+fn dialog(h: &Harness<'_, SaryApp>) -> Option<u64> {
     let open: Vec<u64> = h.state().ui.dialogs.iter().filter(|d| owns(&d.fields)).map(|d| d.id).collect();
     assert!(open.len() <= 1, "one dialog at a time: {open:?}");
     open.first().copied()
 }
 
-fn field<'a>(h: &'a Harness<'_, PhotocraftApp>, id: u64, key: &str) -> &'a Value {
+fn field<'a>(h: &'a Harness<'_, SaryApp>, id: u64, key: &str) -> &'a Value {
     &h.state().ui.dialogs.iter().find(|d| d.id == id).unwrap().fields[key]
 }
 
@@ -33,7 +33,7 @@ fn every_new_preset_button_opens_the_dialog_and_cancel_saves_nothing() {
     let before = h.state().session.tools.presets.clone();
     let brush = h.state().session.tools.brush.clone();
     let mut opened = 0;
-    let mut cancel = |h: &mut Harness<'_, PhotocraftApp>| {
+    let mut cancel = |h: &mut Harness<'_, SaryApp>| {
         dialog(h).expect("the dialog opened");
         h.run_steps(2);
         h.get_by_label("Cancel").click();
@@ -94,7 +94,7 @@ fn ok_saves_under_the_name_with_the_boxes_as_set() {
     h.run_steps(3);
     assert!(dialog(&h).is_none());
     let p = h.state().session.tools.presets.iter().find(|p| p.name == "Chalk 1").expect("saved");
-    assert_eq!(p.captures, photocraft_paint::PresetCaptures { size: false, tool_settings: true, color: true });
+    assert_eq!(p.captures, sary_paint::PresetCaptures { size: false, tool_settings: true, color: true });
     assert!(h.state().session.tools.presets.iter().any(|p| p.name == "Chalk"), "the preset it came from is still there");
     assert_eq!(h.state().session.tools.current_preset.as_deref(), Some("Chalk 1"));
 
@@ -112,14 +112,14 @@ fn ok_saves_under_the_name_with_the_boxes_as_set() {
 /// Include Color unchecked with it ticked earlier: the preset doesn't take the colour.
 #[test]
 fn include_color_needs_include_tool_settings() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     let id = open(&mut app, None);
     let f = &mut app.ui.dialog_mut(id).unwrap().fields;
     f.insert("name".into(), json!("Mine"));
     f.insert("color".into(), json!(true));
     crate::dialogs::confirm(&mut app, id).unwrap();
     let p = app.session.tools.presets.iter().find(|p| p.name == "Mine").unwrap();
-    assert_eq!(p.captures, photocraft_paint::PresetCaptures { size: true, tool_settings: false, color: false });
+    assert_eq!(p.captures, sary_paint::PresetCaptures { size: true, tool_settings: false, color: false });
 }
 
 /// The dialog opens on the name, all of it selected: typing replaces it, and Enter is OK.

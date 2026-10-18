@@ -3,11 +3,11 @@
 
 use std::sync::Arc;
 
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::adjust::{CurvePoint, LevelsChannel};
-use photocraft_doc::*;
-use photocraft_geom::{Rect, Size};
-use photocraft_raster::Surface;
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, SampleType};
+use sary_doc::adjust::{CurvePoint, LevelsChannel};
+use sary_doc::*;
+use sary_geom::{Rect, Size};
+use sary_raster::Surface;
 
 /// Quantize to the 1/255 grid so values survive 8-bit PSD fields.
 pub fn g(v: u8) -> f32 {
@@ -125,12 +125,12 @@ pub fn gen_doc(mode: ColorMode, depth: SampleType, f: Features) -> Document {
         if let LayerContent::Group(gr) = &mut inner.content {
             gr.expanded = false;
         }
-        inner.advanced.knockout = photocraft_doc::Knockout::Shallow;
+        inner.advanced.knockout = sary_doc::Knockout::Shallow;
         let a = raster("Outer child", fmt, Rect::new(6, 2, 12, 8), 8, true);
         let mut outer = Layer::group("Outer", vec![a, inner]);
         outer.locks.position = true;
         outer.label = LabelColor::Red;
-        outer.advanced.knockout = photocraft_doc::Knockout::Deep;
+        outer.advanced.knockout = sary_doc::Knockout::Deep;
         outer.advanced.blend_clipped = false;
         d.layers.push(outer);
         d.layers.push(Layer::group("Empty group", vec![]));
@@ -153,7 +153,7 @@ pub fn gen_doc(mode: ColorMode, depth: SampleType, f: Features) -> Document {
             Adjustment::Threshold { level: g(100) },
             Adjustment::Posterize { levels: 5 },
             Adjustment::BrightnessContrast { brightness: 20.0, contrast: -10.0, legacy: false },
-            Adjustment::HueSaturation { hue: 30.0, saturation: -20.0, lightness: 5.0, colorize: false, ranges: photocraft_doc::adjust::HueRange::defaults() },
+            Adjustment::HueSaturation { hue: 30.0, saturation: -20.0, lightness: 5.0, colorize: false, ranges: sary_doc::adjust::HueRange::defaults() },
             Adjustment::Exposure { exposure: 0.5, offset: 0.0, gamma: 1.0 },
             Adjustment::Levels {
                 master: LevelsChannel { in_black: g(10), in_white: g(240), gamma: 1.2, out_black: 0.0, out_white: 1.0 },
@@ -332,11 +332,11 @@ pub fn max_diff(a: &[[f32; 4]], b: &[[f32; 4]]) -> f32 {
 }
 
 /// The Levels/Curves channel space a PSD of `mode` stores (its records are the document's channels).
-fn tone_space(mode: ColorMode) -> photocraft_doc::adjust::ToneSpace {
+fn tone_space(mode: ColorMode) -> sary_doc::adjust::ToneSpace {
     match mode {
-        ColorMode::Cmyk => photocraft_doc::adjust::ToneSpace::Cmyk,
-        ColorMode::Lab => photocraft_doc::adjust::ToneSpace::Lab,
-        _ => photocraft_doc::adjust::ToneSpace::Rgb,
+        ColorMode::Cmyk => sary_doc::adjust::ToneSpace::Cmyk,
+        ColorMode::Lab => sary_doc::adjust::ToneSpace::Lab,
+        _ => sary_doc::adjust::ToneSpace::Rgb,
     }
 }
 
@@ -352,7 +352,7 @@ fn tone_space(mode: ColorMode) -> photocraft_doc::adjust::ToneSpace {
 /// - blocks with inner lengths (`PlLd`, `SoLd`, `SoLE`, `lnk2`/`lnk3`/`lnkD`, `lfx2`)
 ///   re-parse exactly (`TaggedBlock::check_structure`).
 pub fn strict_block_errors(bytes: &[u8]) -> Vec<String> {
-    let file = match photocraft_psd::PsdFile::from_bytes(bytes) {
+    let file = match sary_psd::PsdFile::from_bytes(bytes) {
         Ok(f) => f,
         Err(e) => return vec![format!("parse: {e}")],
     };
@@ -366,8 +366,8 @@ pub fn strict_block_errors(bytes: &[u8]) -> Vec<String> {
         let pad = li.padding.as_ref().map_or(body % 2, |p| p.len() as u64);
         // In a global `Lr16`/`Lr32` block the padding to 4 follows the block, outside its length.
         let after = match &file.layer_info_placement {
-            photocraft_psd::LayerInfoPlacement::GlobalBlock { padding, .. } => padding.as_ref().map_or((4 - (body + pad) % 4) % 4, |p| p.len() as u64),
-            photocraft_psd::LayerInfoPlacement::Section => 0,
+            sary_psd::LayerInfoPlacement::GlobalBlock { padding, .. } => padding.as_ref().map_or((4 - (body + pad) % 4) % 4, |p| p.len() as u64),
+            sary_psd::LayerInfoPlacement::Section => 0,
         };
         if (body + pad + after) % 4 != 0 {
             errs.push(format!("layer info: {body} bytes + {pad} padding is not a multiple of 4"));

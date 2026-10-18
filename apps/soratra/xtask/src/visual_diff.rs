@@ -1,12 +1,12 @@
 //! `cargo xtask visual-diff REF.pdf TEST.pdf OUTDIR [--private] [--dpi N]`: page-by-page
 //! comparison of two PDFs of the same document — a reference the user exported themselves (never
-//! committed: files produced by other word processors stay out of the repo) and WordCraft's export.
+//! committed: files produced by other word processors stay out of the repo) and Soratra's export.
 //!
 //! Per page: SSIM of the greyscale raster (8×8 windows), share of pixels differing by more than 64
-//! levels, lines in each, share of the reference's lines found with the same text in WordCraft
+//! levels, lines in each, share of the reference's lines found with the same text in Soratra
 //! (same line break), median |Δy| and max |Δx| of the matched lines, whether the page starts with
 //! the same line. Writes `OUTDIR/result.json` and, unless `--private`, `diff_pNNN.ppm` maps
-//! (reference red, WordCraft blue, shared ink black). `--private` writes numbers and line hashes
+//! (reference red, Soratra blue, shared ink black). `--private` writes numbers and line hashes
 //! only, for confidential documents.
 //!
 //! Needs poppler's `pdftoppm` and `pdftotext` on PATH.
@@ -229,7 +229,7 @@ fn diff_share(a: &Gray, b: &Gray) -> f64 {
     if w * h == 0 { 0.0 } else { n as f64 / (w * h) as f64 }
 }
 
-/// Reference ink red, WordCraft ink blue, both black (binary PPM).
+/// Reference ink red, Soratra ink blue, both black (binary PPM).
 fn write_diff_map(a: &Gray, b: &Gray, path: &Path) -> Result<(), String> {
     let (w, h) = (a.w.min(b.w), a.h.min(b.h));
     let mut out = format!("P6\n{w} {h}\n255\n").into_bytes();

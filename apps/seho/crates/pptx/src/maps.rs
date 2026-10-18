@@ -1,7 +1,7 @@
 //! Mappings between our transition / animation ids and PresentationML elements and preset
 //! numbers, shared by the reader and the writer.
 
-use deckcraft_model::anim::{ANIMATIONS, AnimClass};
+use seho_model::anim::{ANIMATIONS, AnimClass};
 
 use crate::xml::{A, El, W};
 
@@ -13,7 +13,7 @@ const SIMPLE: &[(&str, &str, &str)] =
 pub fn transition_from_xml(e: &El) -> Option<(String, String)> {
     let (k, o) = transition_from_xml_raw(e)?;
     // Kinds without options keep none.
-    let has_opts = deckcraft_model::anim::TRANSITIONS.iter().find(|t| t.0 == k).is_none_or(|t| !t.4.is_empty());
+    let has_opts = seho_model::anim::TRANSITIONS.iter().find(|t| t.0 == k).is_none_or(|t| !t.4.is_empty());
     Some((k, if has_opts { o } else { String::new() }))
 }
 
@@ -69,7 +69,7 @@ fn transition_from_xml_raw(e: &El) -> Option<(String, String)> {
             if e.attr("pattern") == Some("hexagon") { (k("glitter"), format!("hex{}", d.to_ascii_uppercase())) } else { (k("glitter"), d) }
         }
         "shred" => {
-            // `crush` is what DeckCraft wrote before it knew PowerPoint's `rectangle`.
+            // `crush` is what Seho wrote before it knew PowerPoint's `rectangle`.
             let particles = matches!(e.attr("pattern"), Some("rectangle" | "crush"));
             let out = e.attr("dir") == Some("out");
             (k("shred"), format!("{}{}", if particles { "particles" } else { "strips" }, if out { "Out" } else { "In" }))
@@ -101,7 +101,7 @@ fn transition_from_xml_raw(e: &El) -> Option<(String, String)> {
             if prst == "pageCurlSingle" {
                 return Some((k("pageCurlDouble"), if inv { k("singleR") } else { k("singleL") }));
             }
-            let known = deckcraft_model::anim::TRANSITIONS.iter().any(|t| t.0 == prst);
+            let known = seho_model::anim::TRANSITIONS.iter().any(|t| t.0 == prst);
             if !known {
                 return None;
             }
@@ -357,7 +357,7 @@ pub fn fallback_effect(class: AnimClass) -> &'static str {
 }
 
 /// The preset id to write for an animation.
-pub fn preset_for(a: &deckcraft_model::Animation) -> u32 {
+pub fn preset_for(a: &seho_model::Animation) -> u32 {
     // Float Down is PowerPoint's preset 47 (Float Up is 42).
     if matches!(a.effect.as_str(), "float" | "floatOut") && a.option == "d" {
         return 47;
@@ -371,7 +371,7 @@ pub fn preset_for(a: &deckcraft_model::Animation) -> u32 {
             return p;
         }
     }
-    match deckcraft_model::anim::animation_info(&a.effect, a.class) {
+    match seho_model::anim::animation_info(&a.effect, a.class) {
         Some(info) if info.2 == a.class => info.3,
         _ => match a.class {
             AnimClass::Entrance | AnimClass::Exit => 10,
@@ -408,7 +408,7 @@ mod tests {
 
     #[test]
     fn every_transition_kind_round_trips() {
-        for (kind, _, _, _, opts) in deckcraft_model::anim::TRANSITIONS {
+        for (kind, _, _, _, opts) in seho_model::anim::TRANSITIONS {
             if *kind == "none" {
                 continue;
             }

@@ -1,6 +1,6 @@
 # Ukrainian (uk) interface catalog. Columns, separated by a TAB:
 #   context <TAB> English source <TAB> translation
-#   context    empty (WordCraft uses no contexts yet)
+#   context    empty (Soratra uses no contexts yet)
 #   source     the English text exactly as in the code (tl!(...), ribbon labels, command labels)
 #   escapes    \n  \t  \\ inside a column. `{name}` placeholders must appear in both columns,
 #              and a trailing "…" in one needs one in the other.
@@ -8,15 +8,15 @@
 #
 # Clean room: translated from the meaning of the English labels in this repository.
 # No Microsoft Word or other product localisation was consulted or copied.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
-# Author: @dmatviichuk with Codex; licensed MIT OR Apache-2.0, like WordCraft.
+# Product, format and technology names (Soratra, PDF, Markdown, MCP …) stay in Latin letters.
+# Author: @dmatviichuk with Codex; licensed MIT OR Apache-2.0, like Soratra.
 
 	(no style)	(без стилю)
 	(no suggestions)	(немає пропозицій)
 	1.5 Line Spacing	Міжрядковий інтервал 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Безкоштовний текстовий процесор із відкритим кодом, написаний з нуля мовою Rust.\nЧастина Crafting Apps від команди ArtCraft.
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Безкоштовний текстовий процесор із відкритим кодом, написаний з нуля мовою Rust.\nЧастина Mahay apps від команди Mahay.
 	About	Про програму
-	About WordCraft	Про WordCraft
+	About Soratra	Про Soratra
 	Accept	Прийняти
 	Accept All Changes	Прийняти всі зміни
 	Accept This Change	Прийняти цю зміну
@@ -289,7 +289,7 @@
 	Copy	Копіювати
 	Copy Formatting	Копіювати форматування
 	Corrections	Виправлення
-	Couldn't make WordCraft the default: {error}	Не вдалося зробити WordCraft типовою програмою: {error}
+	Couldn't make Soratra the default: {error}	Не вдалося зробити Soratra типовою програмою: {error}
 	Count words in text boxes and notes	Рахувати слова в текстових полях і виносках
 	Cover Page	Титульна сторінка
 	Create	Створити
@@ -327,15 +327,15 @@
 	Drag a rectangle to draw a table, or a line across cells to split them. Esc stops.	Перетягніть прямокутник, щоб намалювати таблицю, або лінію через клітинки, щоб їх розділити. Esc завершує.
 	Draw Table	Намалювати таблицю
 	Edit Comment	Редагувати коментар
-	In Default apps, choose WordCraft for the document types you want it to open.	У програмах за замовчуванням виберіть WordCraft для типів документів, які він має відкривати.
+	In Default apps, choose Soratra for the document types you want it to open.	У програмах за замовчуванням виберіть Soratra для типів документів, які він має відкривати.
 	Left Margin	Ліве поле
 	Indents and Spacing	Відступи й інтервали
 	Line breaking	Розрив рядків
-	Make WordCraft the default for Word documents…	Зробити WordCraft типовою програмою для документів Word…
+	Make Soratra the default for Word documents…	Зробити Soratra типовою програмою для документів Word…
 	More templates →	Більше шаблонів →
 	No templates match your search.	Немає шаблонів, що відповідають пошуку.
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	Відтепер файли .docx, .doc, .rtf, .odt і шаблони Word відкриватимуться у WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Відкриває Параметри › Програми за замовчуванням, де ви вибираєте WordCraft для .docx та інших типів документів.
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	Відтепер файли .docx, .doc, .rtf, .odt і шаблони Word відкриватимуться у Soratra.
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	Відкриває Параметри › Програми за замовчуванням, де ви вибираєте Soratra для .docx та інших типів документів.
 	Reopen	Відкрити знову
 	Right Margin	Праве поле
 	Distribute letters	Розподілити літери
@@ -345,8 +345,8 @@
 	Right (vertical)	Праворуч (вертикально)
 	Ruby text:	Текст рубі:
 	Search for templates	Пошук шаблонів
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Щоб документи Word типово відкривалися у WordCraft: виберіть документ у Finder, оберіть Файл › Отримати інфо, виберіть WordCraft у розділі «Відкривати за допомогою» і натисніть «Змінити все».
-	WordCraft is now the default app for Word documents.	WordCraft тепер типова програма для документів Word.
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	Щоб документи Word типово відкривалися у Soratra: виберіть документ у Finder, оберіть Файл › Отримати інфо, виберіть Soratra у розділі «Відкривати за допомогою» і натисніть «Змінити все».
+	Soratra is now the default app for Word documents.	Soratra тепер типова програма для документів Word.
 	development build	Збірка для розробки
 	Diagonal	Діагональ
 	Diamond	Ромб
@@ -401,7 +401,7 @@
 	Equation	Рівняння
 	Eraser	Гумка
 	Even Page	Парна сторінка
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Кожна команда доступна сценаріям і агентам ШІ: запустіть `wordcraft-cli mcp` для сервера MCP або відкрийте програму з `--control <port>` для каналу керування JSON.
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Кожна команда доступна сценаріям і агентам ШІ: запустіть `soratra-cli mcp` для сервера MCP або відкрийте програму з `--control <port>` для каналу керування JSON.
 	Export	Експорт
 	Export a copy to share (PDF, Word document)	Експортувати копію для спільного доступу (PDF, документ Word)
 	Export Page as PNG	Експортувати сторінку у PNG
@@ -517,8 +517,8 @@
 	Inspect Styles at Selection	Переглянути стилі у виділенні
 	Interface language:	Мова інтерфейсу:
 	Italic	Курсив
-	Join the ArtCraft community on Discord	Приєднатися до спільноти ArtCraft у Discord
-	Join us on Discord: discord.gg/artcraft	Приєднуйтеся до нас у Discord: discord.gg/artcraft
+	Join the Mahay community on Discord	Приєднатися до спільноти Mahay у Discord
+	Join us on Discord: discord.gg/mahay	Приєднуйтеся до нас у Discord: discord.gg/mahay
 	Justify	За шириною
 	Keep Lines Together	Не розривати рядки абзацу
 	Keep lines together	Не розривати рядки абзацу
@@ -530,7 +530,7 @@
 	Landscape	Альбомна
 	Language	Мова
 	{language} (no dictionary)	{language} (немає словника)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Орфографічний словник для мови «{language}» не встановлено, тому текст не перевіряється. WordCraft шукає словник Hunspell {name} у теці WORDCRAFT_DICTIONARIES та в звичайних системних розташуваннях.
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	Орфографічний словник для мови «{language}» не встановлено, тому текст не перевіряється. Soratra шукає словник Hunspell {name} у теці SORATRA_DICTIONARIES та в звичайних системних розташуваннях.
 	Lasso	Ласо
 	Last Column	Останній стовпець
 	Last commit	Останній коміт
@@ -577,7 +577,7 @@
 	Merge Formatting	Об'єднати форматування
 	Merged PRs	Об'єднані PR
 	Mirrored	Дзеркальні
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Авторські права (c) 2026 команди ArtCraft і учасників WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0. Авторські права (c) 2026 команди Mahay і учасників Soratra.
 	Moderate	Помірні
 	Modify Style	Змінити стиль
 	Modify…	Змінити…
@@ -856,7 +856,7 @@
 	Small caps	Малі великі літери
 	SmartArt	SmartArt
 	Sort	Сортувати
-	Source code: github.com/storytold/wordcraft	Вихідний код: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	Вихідний код: github.com/raantss18/soratra
 	Space	Пробіл
 	Space before/after:	Інтервал перед/після:
 	Spacing	Інтервал
@@ -997,7 +997,7 @@
 	Word Left	На слово ліворуч
 	Word Right	На слово праворуч
 	WordArt	WordArt
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	Слова
 	Words only	Лише слова
 	Wrap Text	Обтікання текстом
@@ -1060,7 +1060,7 @@
 	Stopped	Зупинено
 	Speed	Швидкість
 	Normal speed	Звичайна швидкість
-	AutoSave documents you have saved in WordCraft	Автоматично зберігати документи, збережені у WordCraft
+	AutoSave documents you have saved in Soratra	Автоматично зберігати документи, збережені у Soratra
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Не вдалося виконати автозбереження: {error}. Збережіть документ, щоб знову ввімкнути автозбереження.
 	Couldn't download {name}: {error}	Не вдалося завантажити {name}: {error}
 	Do you want to save changes to {name}?	Зберегти зміни в {name}?
@@ -1230,7 +1230,7 @@
 	Insert a new equation (Alt+=)	Вставити нове рівняння (Alt+=)
 	Leave the equation (Esc)	Вийти з рівняння (Esc)
 	Preview	Попередній перегляд
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	Малювати чорнилом
 	Erase Ink	Стерти чорнило
 	Hide Ink	Сховати чорнило
@@ -1368,7 +1368,7 @@
 	The document will be saved with a password. Save it to protect it.	Документ буде збережено з паролем. Збережіть його, щоб захистити.
 	The password is removed. Save the document to keep the change.	Пароль видалено. Збережіть документ, щоб зберегти зміну.
 	The passwords don't match.	Паролі не збігаються.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Зберігайте пароль у надійному місці: без нього ніхто, зокрема WordCraft, не зможе відкрити документ. Залиште обидва поля порожніми, щоб видалити пароль.
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	Зберігайте пароль у надійному місці: без нього ніхто, зокрема Soratra, не зможе відкрити документ. Залиште обидва поля порожніми, щоб видалити пароль.
 
 # Interface text routed through translation (#313)
 	Align Top Left	Вирівняти вгорі ліворуч
@@ -1397,7 +1397,7 @@
 	Version	Версія
 	% of all commits	% усіх комітів
 	Lines +/−	Рядки +/−
-	Craft	Ремесло
+	Mahay	Ремесло
 	Studio	Студія
 	Atelier	Ательє
 	Darkroom	Фотолабораторія
@@ -1766,7 +1766,7 @@
 	Word document	Документ Word
 	All files	Усі файли
 	Recipient lists	Списки одержувачів
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Системне діалогове вікно файлів недоступне, тож WordCraft показує власне. Щоб отримати системне вікно, установіть портал вибору файлів (наприклад, xdg-desktop-portal-gtk) або zenity.
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Системне діалогове вікно файлів недоступне, тож Soratra показує власне. Щоб отримати системне вікно, установіть портал вибору файлів (наприклад, xdg-desktop-portal-gtk) або zenity.
 	Up one level	На рівень вище
 	Home folder	Домашня тека
 	{name} wasn't found.	{name} не знайдено.
@@ -1774,8 +1774,8 @@
 	This folder can't be read: {error}	Не вдається прочитати цю теку: {error}
 	Showing the first {count} items.	Показано лише перші елементи: {count}.
 	File name:	Ім'я файлу:
-	Browse in WordCraft…	Огляд у WordCraft…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Відкрити файл власним оглядачем WordCraft, коли системне діалогове вікно файлів не з'являється.
+	Browse in Soratra…	Огляд у Soratra…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	Відкрити файл власним оглядачем Soratra, коли системне діалогове вікно файлів не з'являється.
 	Hide White Space	Приховати порожній простір
 	All pages	Усі сторінки
 	Current page	Поточна сторінка
@@ -2155,8 +2155,8 @@
 	Number only, without the label's words	Лише номер, без слів мітки
 	Add whether it is above or below	Додавати, вище він чи нижче
 	Start-up	Запуск
-	Show the Start screen when WordCraft starts	Показувати початковий екран під час запуску WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Увімкнено: WordCraft відкривається на сторінці Файл › Основне з порожнім документом, шаблонами та нещодавніми документами. Вимкнено: відкривається порожній документ.
+	Show the Start screen when Soratra starts	Показувати початковий екран під час запуску Soratra
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Увімкнено: Soratra відкривається на сторінці Файл › Основне з порожнім документом, шаблонами та нещодавніми документами. Вимкнено: відкривається порожній документ.
 	Copy to	Копіювати до
 
 # Document naming and account controls.
@@ -2187,7 +2187,7 @@
 	{name}   {height} × {width} mm	{name}   {height} × {width} мм
 	{width} × {height} mm	{width} × {height} мм
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	Досліднику потрібна онлайн-служба, а WordCraft працює з документами без підключення до інтернету.
+	Researcher needs an online service; Soratra keeps your documents offline.	Досліднику потрібна онлайн-служба, а Soratra працює з документами без підключення до інтернету.
 	These settings will be used for new documents.	Ці параметри використовуватимуться для нових документів.
 	can't split at the first row	не можна розділити таблицю на першому рядку
 	select two or more cells to merge	виділіть дві або більше клітинок, щоб об'єднати їх

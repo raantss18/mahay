@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 use serde_json::json;
@@ -12,7 +12,7 @@ use crate::{Services, SlideApp};
 
 #[test]
 fn browse_button_applies_the_picked_files_theme() {
-    let dir = std::env::temp_dir().join(format!("deckcraft-thmx-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("seho-thmx-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut brand = Session::with_new();
     brand.execute("design.fonts", &json!({"major": "Lato", "minor": "Lato"})).unwrap();

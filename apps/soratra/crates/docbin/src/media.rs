@@ -121,7 +121,7 @@ impl Pictures {
         let key = format!("image{}.{ext}", self.media.len() + 1);
         if placeholder {
             if self.placeholders < 10 {
-                log::warn!("docbin: picture `{key}` is in a format WordCraft can't draw ({ext}); it shows as a placeholder");
+                log::warn!("docbin: picture `{key}` is in a format Soratra can't draw ({ext}); it shows as a placeholder");
             }
             self.placeholders = self.placeholders.saturating_add(1);
         }

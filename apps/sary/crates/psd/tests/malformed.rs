@@ -1,7 +1,7 @@
 //! Malformed input handling: every error path must return `Err`, never panic.
 
-use photocraft_psd::testgen;
-use photocraft_psd::*;
+use sary_psd::testgen;
+use sary_psd::*;
 use proptest::prelude::*;
 
 fn truncation_sweep(bytes: &[u8], name: &str) {

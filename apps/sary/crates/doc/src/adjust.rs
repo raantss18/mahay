@@ -1,4 +1,4 @@
-//! Adjustment parameters (data only). Evaluation lives in `photocraft-compose`.
+//! Adjustment parameters (data only). Evaluation lives in `sary-compose`.
 
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

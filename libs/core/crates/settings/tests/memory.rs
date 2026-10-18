@@ -3,10 +3,10 @@ mod common;
 use std::time::{Duration, Instant};
 
 use common::{Prefs, Theme, empty_probe, probe_with_env};
-use craft_settings::{Location, OpenOptions, SaveStatus, SettingsStore, Source};
+use mahay_settings::{Location, OpenOptions, SaveStatus, SettingsStore, Source};
 
 /// A probe whose platform folder is `dir`, so any write would land there.
-fn probe_in(dir: &std::path::Path, env: Option<(&'static str, &'static str)>) -> craft_settings::Probe {
+fn probe_in(dir: &std::path::Path, env: Option<(&'static str, &'static str)>) -> mahay_settings::Probe {
     let mut probe = match env {
         Some((name, value)) => probe_with_env(name, value),
         None => empty_probe(),
@@ -68,7 +68,7 @@ fn memory_ignores_legacy_files() {
     let tmp = tempfile::tempdir().unwrap();
     let old = tmp.path().join("prefs.json");
     std::fs::write(&old, "{}").unwrap();
-    let files = vec![craft_settings::LegacyFile { path: old, parse: |_| Ok(Prefs::default()) }];
+    let files = vec![mahay_settings::LegacyFile { path: old, parse: |_| Ok(Prefs::default()) }];
     let (_, report) = SettingsStore::<Prefs>::open_with(OpenOptions::new(Location::Memory).probe(empty_probe()).legacy(files));
     assert_eq!(report.source, Source::Defaults, "an isolated store must not import from the real profile");
 }

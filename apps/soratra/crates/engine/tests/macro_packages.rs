@@ -4,8 +4,8 @@
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Write};
 
-use wordcraft_doc::Document;
-use wordcraft_engine::io::{open_bytes, save_bytes};
+use soratra_doc::Document;
+use soratra_engine::io::{open_bytes, save_bytes};
 
 const CT_DOCX: &str = "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml";
 const CT_DOCM: &str = "application/vnd.ms-word.document.macroEnabled.main+xml";
@@ -55,7 +55,7 @@ fn fake_vba() -> Vec<u8> {
 /// from the document, and `word/vbaData.xml` related from the VBA project.
 fn docm_package(vba: &[u8], main_ct: &str) -> Vec<u8> {
     let doc = Document::from_text("Macro host\nSecond paragraph");
-    let mut files = unzip(&wordcraft_docx::write(&doc).expect("write"));
+    let mut files = unzip(&soratra_docx::write(&doc).expect("write"));
     let ct = text(&files, "[Content_Types].xml")
         .replace(CT_DOCX, main_ct)
         .replace(r#"<Default Extension="xml""#, &format!(r#"<Default Extension="bin" ContentType="{CT_VBA}"/><Default Extension="xml""#))
@@ -231,7 +231,7 @@ fn hostile_vba_parts_never_panic() {
         for name in ["h.docm", "h.dotm", "h.docx"] {
             let out = unzip(&save_bytes(name, &doc).unwrap_or_else(|e| panic!("{label}: save {name}: {e}")));
             assert_package_consistent(&out);
-            assert!(wordcraft_docx::read(&zip(&out)).is_ok(), "{label}: {name} reads back");
+            assert!(soratra_docx::read(&zip(&out)).is_ok(), "{label}: {name} reads back");
             if let Some(bin) = out.get("word/vbaProject.bin") {
                 assert!(name != "h.docx", "{label}: no VBA in a .docx");
                 assert!(!bin.is_empty(), "{label}: never write an empty VBA project");
@@ -395,7 +395,7 @@ fn vba_related_parts_are_bounded_and_never_shadow_ours() {
     let mut add = |id: &str, kind: &str, target: &str| {
         rels = rels.replace("</Relationships>", &format!(r#"<Relationship Id="{id}" Type="{kind}" Target="{target}"/></Relationships>"#));
     };
-    // Targets that are parts WordCraft writes itself, or live outside word/.
+    // Targets that are parts Soratra writes itself, or live outside word/.
     add("rS", "urn:x:clash", "styles.xml");
     add("rD", "urn:x:clash", "document.xml");
     add("rR", "urn:x:clash", "_rels/document.xml.rels");

@@ -1,21 +1,21 @@
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
 use egui_kittest::Harness;
-use photocraft_color::{Color, ColorMode};
-use photocraft_doc::{Fill, LayerContent, LayerId};
+use sary_color::{Color, ColorMode};
+use sary_doc::{Fill, LayerContent, LayerId};
 use serde_json::json;
 
 use super::*;
 
-fn harness(ppp: f32) -> (Harness<'static, PhotocraftApp>, LayerId) {
-    let mut s = photocraft_engine::Session::new();
+fn harness(ppp: f32) -> (Harness<'static, SaryApp>, LayerId) {
+    let mut s = sary_engine::Session::new();
     s.execute("file.new", json!({"width": 64, "height": 48, "depth": 16})).unwrap();
     let id = LayerId(s.execute("layer.newFillLayer.solidColor", json!({"color": "#33669980"})).unwrap()["layer"].as_u64().unwrap());
     s.execute("layer.layerMask.revealAll", json!({})).unwrap();
     s.execute("layer.new.layer", json!({"name": "Other"})).unwrap();
     let mut h =
         Harness::builder().with_size(vec2(1440.0, 900.0)).with_pixels_per_point(ppp).with_step_dt(1.0 / 60.0).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            PhotocraftApp::new(s, crate::Services::default())
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::new(s, crate::Services::default())
         });
     let ctx = h.ctx.clone();
     let (r, _) = crate::control::ControlRequest::new("ui.set", json!({"dock": {"collapsed": ["color", "properties", "history", "navigator"]}}));
@@ -24,7 +24,7 @@ fn harness(ppp: f32) -> (Harness<'static, PhotocraftApp>, LayerId) {
     (h, id)
 }
 
-fn double_click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
+fn double_click(h: &mut Harness<'_, SaryApp>, at: Pos2) {
     h.run_steps(40);
     for _ in 0..2 {
         h.hover_at(at);
@@ -37,7 +37,7 @@ fn double_click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
     }
 }
 
-fn row(h: &Harness<'_, PhotocraftApp>, id: LayerId) -> crate::layer_row_ui::RowRects {
+fn row(h: &Harness<'_, SaryApp>, id: LayerId) -> crate::layer_row_ui::RowRects {
     crate::layer_row_ui::recorded(&h.ctx).into_iter().find(|r| r.layer == id.0).unwrap()
 }
 
@@ -190,12 +190,12 @@ fn picker_previews_without_editing_cancel_discards_and_ok_is_one_step() {
     assert_eq!(app.session.active().unwrap().history.entries().len(), steps + 1);
     assert_eq!(app.session.tools.foreground, tools, "editing a fill doesn't change the tool colour");
     assert_eq!(app.session.active().unwrap().doc.layer(id).unwrap().content, LayerContent::Fill(Fill::Solid(color)));
-    let bytes = photocraft_format::save_to_bytes(&app.session.active().unwrap().doc, &Default::default()).unwrap();
-    let loaded = photocraft_format::load_from_bytes(&bytes).unwrap();
+    let bytes = sary_format::save_to_bytes(&app.session.active().unwrap().doc, &Default::default()).unwrap();
+    let loaded = sary_format::load_from_bytes(&bytes).unwrap();
     assert_eq!(loaded.layer(id).unwrap().content, LayerContent::Fill(Fill::Solid(color)));
     assert_eq!(loaded.layer(id).unwrap().mask, before.layer(id).unwrap().mask);
-    let bytes = photocraft_io::export(&app.session.active().unwrap().doc, "fill.psd", &Default::default()).unwrap().bytes;
-    let loaded = photocraft_io::import("fill.psd", &bytes).unwrap().document;
+    let bytes = sary_io::export(&app.session.active().unwrap().doc, "fill.psd", &Default::default()).unwrap().bytes;
+    let loaded = sary_io::import("fill.psd", &bytes).unwrap().document;
     let fill = loaded.walk().into_iter().find(|(_, _, l)| matches!(l.content, LayerContent::Fill(Fill::Solid(_)))).unwrap().2;
     let LayerContent::Fill(Fill::Solid(saved)) = fill.content else { panic!() };
     // PSD's existing SoCo descriptor stores the fill's colour components, not Color.alpha.

@@ -1,6 +1,6 @@
-//! Portable regressions adapted from PdfCraft 7437bde378f43856eada40af25b983812e615e8a (MIT OR Apache-2.0).
+//! Portable regressions adapted from Taratasy 7437bde378f43856eada40af25b983812e615e8a (MIT OR Apache-2.0).
 #![cfg(feature = "raster")]
-use craft_pdf::{
+use mahay_pdf::{
     open_slice,
     raster::{self, Options, RenderCache},
 };
@@ -197,7 +197,7 @@ trailer << /Root 1 0 R >>
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 fn tiff_predictor_packed_rgb_rows_keep_their_byte_boundaries() {
-    use craft_pdf::syntax::object::{FromBytes, Object};
+    use mahay_pdf::syntax::object::{FromBytes, Object};
     struct RowCase {
         bpc: u8,
         columns: u32,

@@ -2,7 +2,7 @@
 
 This supplements the Korean catalog merged in #582. The existing language
 registry, live language switching and Korean font loading are retained.
-Translations use the meaning of PhotoCraft's English labels and terminology
+Translations use the meaning of Sary's English labels and terminology
 observed in the Korean Photoshop UI in October 2026. No proprietary translation
 resources, fonts, screenshots or user documents are included.
 
@@ -21,7 +21,7 @@ resources, fonts, screenshots or user documents are included.
 | Sharpen (command) | 선명하게 |
 
 Command-ID translations disambiguate menu names from actions. Photoshop terms
-are used when the operation matches; PhotoCraft-specific features retain their
+are used when the operation matches; Sary-specific features retain their
 own meaning. Technology names, units and user-provided names are not translated.
 The terminology test protects representative tool names and this distinction.
 
@@ -53,8 +53,8 @@ On main 7055f0c plus this change:
 - Offscreen French-to-Korean language switching and the Korean brush settings
   panel were rendered and visually inspected for missing glyphs/clipping.
 
-Re-run with `cargo test -p photocraft-ui-egui --locked`,
-`cargo clippy -p photocraft-ui-egui --all-targets --locked -- -D warnings`,
+Re-run with `cargo test -p sary-ui-egui --locked`,
+`cargo clippy -p sary-ui-egui --all-targets --locked -- -D warnings`,
 `cargo test -p xtask i18n_coverage`, `cargo xtask i18n-coverage`,
 `cargo xtask layers`, and `cargo xtask wasm`.
 

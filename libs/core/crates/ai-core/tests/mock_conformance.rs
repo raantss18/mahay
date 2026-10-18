@@ -2,12 +2,12 @@
 //! end to end the way an app would use it: declare roles, resolve through the store, check
 //! consent, submit, poll, cancel. Also proves one library serves different modalities.
 
-use craft_ai_core::conformance::{run_cancel, run_lifecycle, run_rejects, run_unknown_job};
-use craft_ai_core::consent::Disclosure;
-use craft_ai_core::job::{Event, JobState, Output};
-use craft_ai_core::mock::{MockProvider, Outcome, Script};
-use craft_ai_core::role::{Binding, Role};
-use craft_ai_core::*;
+use mahay_ai_core::conformance::{run_cancel, run_lifecycle, run_rejects, run_unknown_job};
+use mahay_ai_core::consent::Disclosure;
+use mahay_ai_core::job::{Event, JobState, Output};
+use mahay_ai_core::mock::{MockProvider, Outcome, Script};
+use mahay_ai_core::role::{Binding, Role};
+use mahay_ai_core::*;
 
 fn cap(s: &str) -> CapabilityId {
     CapabilityId::parse(s).unwrap()
@@ -129,15 +129,15 @@ fn an_app_flow_from_store_to_finished_job() {
     let store = StoreFile::parse(&store.to_json().unwrap()).unwrap();
 
     // Two different apps resolve their own roles from the same store.
-    let photocraft = AppId::new("photocraft").unwrap();
-    let wordcraft = AppId::new("wordcraft").unwrap();
-    let resolved = store.resolve(&photocraft, &fill).unwrap();
+    let sary = AppId::new("sary").unwrap();
+    let soratra = AppId::new("soratra").unwrap();
+    let resolved = store.resolve(&sary, &fill).unwrap();
     assert_eq!(resolved.model.id.as_str(), "img");
-    assert_eq!(store.resolve(&wordcraft, &rewrite).unwrap().model.id.as_str(), "txt");
+    assert_eq!(store.resolve(&soratra, &rewrite).unwrap().model.id.as_str(), "txt");
 
     // Consent is required for a remote connection, shows kinds and sizes, and is remembered.
     let request = inpaint_request().with_input(InputRole::Prompt, Payload::text("remove the lamp"));
-    let disclosure = Disclosure::for_request(&photocraft, resolved.connection, &request);
+    let disclosure = Disclosure::for_request(&sary, resolved.connection, &request);
     let mut ledger = ConsentLedger::default();
     assert!(ledger.needs_consent(&disclosure, 0));
     ledger.grant(&disclosure);

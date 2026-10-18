@@ -1,16 +1,16 @@
 //! Patch Tool drags shown live: while the patch is dragged, the canvas shows the document healed
-//! at the pointer's offset ([`photocraft_engine::retouch_cmds::patch_preview`]) and recomposites
+//! at the pointer's offset ([`sary_engine::retouch_cmds::patch_preview`]) and recomposites
 //! only the healed area. The preview solves the colour fit coarser for large selections, so it
 //! keeps up with the pointer; releasing commits the exact `paint.patch`, whose damage rect then
 //! refreshes the same area.
 
 use std::sync::Arc;
 
-use photocraft_doc::{DocId, Document};
-use photocraft_geom::Rect;
+use sary_doc::{DocId, Document};
+use sary_geom::Rect;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// Preview keys of patch drags: `BASE + n`, one per offset shown (see `canvas::display_doc`).
@@ -30,7 +30,7 @@ pub(crate) struct PatchPreview {
 }
 
 /// The offset of the current Patch drag, if one is dragging the patch (not drawing a lasso).
-fn drag_offset(app: &mut PhotocraftApp) -> Option<[i32; 2]> {
+fn drag_offset(app: &mut SaryApp) -> Option<[i32; 2]> {
     // Content-Aware patches are background jobs: the canvas shows the result when it is done.
     if app.ui.tool_options.patch_content_aware {
         return None;
@@ -46,7 +46,7 @@ fn drag_offset(app: &mut PhotocraftApp) -> Option<[i32; 2]> {
 
 /// The document to show while the patch is dragged on document `idx`: healed at the pointer.
 /// `None` without such a drag, at offset (0, 0), or when the patch can't be applied there.
-pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Document>, u64)> {
+pub(crate) fn display_doc(app: &mut SaryApp, idx: usize) -> Option<(Arc<Document>, u64)> {
     if app.session.active_index() != Some(idx) {
         return None;
     }
@@ -69,12 +69,12 @@ pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Do
         // Zoomed out, a finer colour fit than the screen shows is wasted.
         let min_step = (1.0 / app.point_zoom().max(1e-3)).floor().clamp(1.0, 64.0) as u32;
         let params = json!({"offset": offset, "mode": mode, "target": crate::canvas::paint_target(app)});
-        let result = photocraft_engine::retouch_cmds::patch_preview(&app.session, &params, MAX_CELLS, min_step);
+        let result = sary_engine::retouch_cmds::patch_preview(&app.session, &params, MAX_CELLS, min_step);
         let p = app.patch_preview.as_mut()?;
         match result {
             Ok((d, area)) => {
                 // Duotone documents display through their inks.
-                let d = photocraft_engine::mode_cmds::display_document(&d).unwrap_or(d);
+                let d = sary_engine::mode_cmds::display_document(&d).unwrap_or(d);
                 p.shown = Some(Arc::new(d));
                 p.offsets.push((offset, area));
             }
@@ -92,7 +92,7 @@ pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Do
 /// What changed between preview (or document) key `seen` and `now` of the current Patch drag on
 /// document `doc` at `revision`: the areas both healed. `None` when either key isn't one of this
 /// drag's (the canvas then recomposites everything).
-pub(crate) fn damage(app: &PhotocraftApp, doc: DocId, revision: u64, seen: u64, now: u64) -> Option<Rect> {
+pub(crate) fn damage(app: &SaryApp, doc: DocId, revision: u64, seen: u64, now: u64) -> Option<Rect> {
     let p = app.patch_preview.as_ref().filter(|p| p.doc == doc && p.revision == revision)?;
     let ours = |k: u64| k == 0 || is_preview_key(k);
     if seen == now || !ours(seen) || !ours(now) {
@@ -110,7 +110,7 @@ pub(crate) fn damage(app: &PhotocraftApp, doc: DocId, revision: u64, seen: u64, 
 }
 
 /// Whether the canvas shows a Patch drag's healed preview.
-pub(crate) fn showing(app: &PhotocraftApp) -> bool {
+pub(crate) fn showing(app: &SaryApp) -> bool {
     app.patch_preview.as_ref().is_some_and(|p| p.shown.is_some())
 }
 
@@ -122,13 +122,13 @@ pub(crate) fn is_preview_key(key: u64) -> bool {
 /// Release: after `paint.patch` at `offset` succeeded. If the canvas showed this very offset, its
 /// caches count the preview as the document, so the commit's damage rect (the same healed area,
 /// now solved exactly) refreshes only that area instead of everything.
-pub(crate) fn committed(app: &mut PhotocraftApp, preview: Option<PatchPreview>, offset: [i32; 2]) {
+pub(crate) fn committed(app: &mut SaryApp, preview: Option<PatchPreview>, offset: [i32; 2]) {
     let Some(p) = preview.filter(|p| p.shown.is_some() && p.offsets.last().map(|o| o.0) == Some(offset)) else { return };
     crate::canvas::shown_as_document(app, p.doc, is_preview_key);
 }
 
 /// Take the preview off the app (at release, before the commit changes the document).
-pub(crate) fn take(app: &mut PhotocraftApp) -> Option<PatchPreview> {
+pub(crate) fn take(app: &mut SaryApp) -> Option<PatchPreview> {
     app.patch_preview.take()
 }
 
@@ -143,13 +143,13 @@ mod tests {
 
     #[test]
     fn dragging_the_patch_previews_the_heal_and_release_commits_it() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 100, "height": 60})).unwrap();
         app.run("paint.pencil", json!({"points": [[68, 30], [74, 30]], "size": 6, "color": "#ff0000"})).unwrap();
         app.run("select.lasso", json!({"points": [[60, 20], [84, 20], [84, 40], [60, 40]]})).unwrap();
         app.ui.tool = Tool::Patch;
         let m = egui::Modifiers::NONE;
-        let doc = |app: &PhotocraftApp| app.session.documents()[0].doc.clone();
+        let doc = |app: &SaryApp| app.session.documents()[0].doc.clone();
         let (id, rev) = (doc(&app).id, app.session.documents()[0].revision);
 
         // Nothing to preview before the patch moves, or while a lasso is drawn.

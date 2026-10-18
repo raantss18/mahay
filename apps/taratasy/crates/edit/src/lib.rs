@@ -1,4 +1,4 @@
-//! pdfcraft-edit — page content editing (L4). Today: page marks, Acrobat's Header & footer,
+//! taratasy-edit — page content editing (L4). Today: page marks, Acrobat's Header & footer,
 //! Watermark, Background and Bates numbering (execution plan M7.6).
 //!
 //! **How marks are stored.** Each mark is one content stream appended to (or, for content behind
@@ -14,8 +14,8 @@
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-use pdfcraft_cos::{Dict, Document, Object, Stream};
-use pdfcraft_fonts::{helvetica_width, literal, win_ansi};
+use taratasy_cos::{Dict, Document, Object, Stream};
+use taratasy_fonts::{helvetica_width, literal, win_ansi};
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum EditError {
@@ -25,7 +25,7 @@ pub enum EditError {
     #[error("{0}")]
     Invalid(String),
     #[error("{0}")]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
 }
 
 /// The kinds of page marks.
@@ -80,7 +80,7 @@ impl HeaderFooter {
     /// (and a `\r` that would be drawn is refused too). The dialog asks this too, so its preview
     /// never offers text that applying refuses (#2013).
     pub fn first_undrawable(&self) -> Option<char> {
-        self.text.iter().flat_map(|t| t.lines()).find_map(pdfcraft_fonts::first_non_win_ansi)
+        self.text.iter().flat_map(|t| t.lines()).find_map(taratasy_fonts::first_non_win_ansi)
     }
 }
 
@@ -88,7 +88,7 @@ impl HeaderFooter {
 /// the document, an image (drawn into a unit square) or a form (a page of a PDF).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MarkSource {
-    pub xobject: pdfcraft_cos::ObjRef,
+    pub xobject: taratasy_cos::ObjRef,
     /// Its natural size in points.
     pub size: (f64, f64),
     /// An image XObject (unit square); otherwise a form whose `/Matrix` maps it to `size`.
@@ -121,7 +121,7 @@ impl Watermark {
     pub fn first_undrawable(&self) -> Option<char> {
         match self.source {
             Some(_) => None,
-            None => self.text.trim().lines().find_map(pdfcraft_fonts::first_non_win_ansi),
+            None => self.text.trim().lines().find_map(taratasy_fonts::first_non_win_ansi),
         }
     }
 }
@@ -177,7 +177,7 @@ fn picture(src: &MarkSource, page: (f64, f64), scale: f64, rotation: f64, offset
 }
 
 /// Register a mark picture in the page's own resources (`/PCPic<num>`).
-fn add_picture_resource(doc: &mut Document, page: &pdfcraft_model::Page, src: &MarkSource) -> Result<(), EditError> {
+fn add_picture_resource(doc: &mut Document, page: &taratasy_model::Page, src: &MarkSource) -> Result<(), EditError> {
     let p = doc.get(page.obj).as_dict().cloned().unwrap_or_default();
     let mut res = p.get(b"Resources").map(|r| doc.resolve(r)).and_then(|r| r.as_dict().cloned()).unwrap_or_default();
     let mut xo = res.get(b"XObject").map(|x| doc.resolve(x)).and_then(|x| x.as_dict().cloned()).unwrap_or_default();
@@ -197,7 +197,7 @@ pub struct Context {
 // Model-derived transforms can contain tiny scale factors; retain their PDF decimal precision.
 fn matrix_number(value: f64) -> String {
     let mut bytes = Vec::new();
-    pdfcraft_cos::serialize(&Object::Real(value), &mut bytes);
+    taratasy_cos::serialize(&Object::Real(value), &mut bytes);
     String::from_utf8_lossy(&bytes).into_owned()
 }
 
@@ -268,8 +268,8 @@ fn bates_start(template: &str) -> Option<u64> {
     t.split('#').nth(2).and_then(|s| s.parse().ok()).or(Some(1))
 }
 
-fn page_list(doc: &Document) -> Vec<pdfcraft_model::Page> {
-    pdfcraft_model::pages(doc)
+fn page_list(doc: &Document) -> Vec<taratasy_model::Page> {
+    taratasy_model::pages(doc)
 }
 
 fn check(pages: &[usize], count: usize) -> Result<(), EditError> {
@@ -280,7 +280,7 @@ fn check(pages: &[usize], count: usize) -> Result<(), EditError> {
 }
 
 /// The page's `/Contents` as a list of stream references (inline content is promoted).
-fn contents(doc: &mut Document, page: &pdfcraft_model::Page) -> Result<Vec<Object>, EditError> {
+fn contents(doc: &mut Document, page: &taratasy_model::Page) -> Result<Vec<Object>, EditError> {
     let obj = doc.get(page.obj);
     let d = obj.as_dict().cloned().unwrap_or_default();
     Ok(match d.get(b"Contents").cloned() {
@@ -295,7 +295,7 @@ fn contents(doc: &mut Document, page: &pdfcraft_model::Page) -> Result<Vec<Objec
 }
 
 /// Add the font (and an opacity state) to the page's own resources.
-fn add_resources(doc: &mut Document, page: &pdfcraft_model::Page, opacity: Option<f64>, content: Option<&[u8]>) -> Result<(), EditError> {
+fn add_resources(doc: &mut Document, page: &taratasy_model::Page, opacity: Option<f64>, content: Option<&[u8]>) -> Result<(), EditError> {
     let mut res = page.dict.get(b"Resources").map(|r| doc.resolve(r)).and_then(|r| r.as_dict().cloned()).unwrap_or_default();
     let mut fonts = res.get(b"Font").map(|f| doc.resolve(f)).and_then(|f| f.as_dict().cloned()).unwrap_or_default();
     for (name, base) in [(&b"PCHelv"[..], "Helvetica"), (b"PCTimes", "Times-Roman"), (b"PCCour", "Courier")] {
@@ -326,11 +326,11 @@ fn add_resources(doc: &mut Document, page: &pdfcraft_model::Page, opacity: Optio
     Ok(())
 }
 
-const WRAP_OPEN: &[u8] = b"q %PdfCraft\n";
+const WRAP_OPEN: &[u8] = b"q %Taratasy\n";
 /// Starts with an end of line, so a comment left open at the end of the content before it
 /// can't swallow the `Q`. Older files have the close without it.
-const WRAP_CLOSE: &[u8] = b"\nQ %PdfCraft\n";
-const OLD_WRAP_CLOSE: &[u8] = b"Q %PdfCraft\n";
+const WRAP_CLOSE: &[u8] = b"\nQ %Taratasy\n";
+const OLD_WRAP_CLOSE: &[u8] = b"Q %Taratasy\n";
 
 /// Whether `bytes` are a wrapper's close: [`WRAP_CLOSE`] after a `Q` for each `q` the wrapped
 /// content left open, or [`OLD_WRAP_CLOSE`].
@@ -354,7 +354,7 @@ fn wrapper_role(doc: &Document, o: &Object) -> Option<bool> {
         return None;
     }
     let Object::Stream(stream) = &*doc.resolve(o) else { return None };
-    // Wrappers are a few bytes; one that decodes to more isn't PdfCraft's.
+    // Wrappers are a few bytes; one that decodes to more isn't Taratasy's.
     let bytes = stream.decoded_within(64 * 1024).ok()?;
     if bytes == WRAP_OPEN { Some(true) } else { is_wrap_close(&bytes).then_some(false) }
 }
@@ -386,7 +386,7 @@ enum Isolation {
     /// The content parses cleanly with balanced `q`/`Q` and closed text objects and paths.
     /// `suffix`: the stream from which the content leaves graphics state set (or a comment open)
     /// that a mark on top must not inherit, so it needs a wrapper from there to the end.
-    /// `wrappers`: PdfCraft wrapper pairs (open, close) as stream indexes.
+    /// `wrappers`: Taratasy wrapper pairs (open, close) as stream indexes.
     Clean { suffix: Option<usize>, wrappers: Vec<(usize, usize)> },
     /// The content could not be read that precisely (it doesn't decode, is too large, or has
     /// stray bytes, unbalanced `q`/`Q` or an unfinished text object or path). `unclosed` is
@@ -414,7 +414,7 @@ fn isolation(doc: &Document, list: &[Object]) -> Isolation {
         remaining = left;
         data.push(bytes);
     }
-    let pieces = pdfcraft_content::Pieces::join(&data);
+    let pieces = taratasy_content::Pieces::join(&data);
     let parsed = pieces.parse();
     if parsed.skipped != 0 || parsed.ops.len() > ISOLATION_MAX_OPS {
         return unknown;
@@ -451,7 +451,7 @@ fn isolation(doc: &Document, list: &[Object]) -> Isolation {
             b"q" if op.operands.is_empty() && stack.len() < ISOLATION_MAX_DEPTH => stack.push(first),
             b"Q" if op.operands.is_empty() => match stack.pop() {
                 Some(open) => {
-                    // Only a standalone PdfCraft wrapper pair may later be removed again.
+                    // Only a standalone Taratasy wrapper pair may later be removed again.
                     let wrap = |i: usize| list.get(i).is_some_and(|o| stream_tag(doc, o).as_deref() == Some("Wrap"));
                     if wrap(open)
                         && wrap(first)
@@ -477,15 +477,15 @@ fn isolation(doc: &Document, list: &[Object]) -> Isolation {
 
 /// Put a mark's content on a page: behind (prepended) or on top (appended, after wrapping the
 /// original content in q/Q).
-fn place(doc: &mut Document, page: &pdfcraft_model::Page, kind: MarkKind, content: Vec<u8>, behind: bool) -> Result<(), EditError> {
+fn place(doc: &mut Document, page: &taratasy_model::Page, kind: MarkKind, content: Vec<u8>, behind: bool) -> Result<(), EditError> {
     place_tagged(doc, page, kind.tag(), content, behind)
 }
 
 /// Put content on a page, tagged `tag` (see [`place`]). On top, whatever graphics state the
 /// content before leaves set (a `cm`, a clip, text state…) must not reach the mark, including
-/// content appended after an earlier PdfCraft wrapper by another tool (#3084): the stretch of
+/// content appended after an earlier Taratasy wrapper by another tool (#3084): the stretch of
 /// content that leaves state set is wrapped in q/Q, once.
-fn place_tagged(doc: &mut Document, page: &pdfcraft_model::Page, tag: &str, content: Vec<u8>, behind: bool) -> Result<(), EditError> {
+fn place_tagged(doc: &mut Document, page: &taratasy_model::Page, tag: &str, content: Vec<u8>, behind: bool) -> Result<(), EditError> {
     let mut list = contents(doc, page)?;
     let wrap = if behind {
         None

@@ -2,12 +2,12 @@
 //! screenshots come from `core::details`; the live facts (version, date, download size, release
 //! notes) from the app's latest GitHub release.
 
-use artcraft_launcher_core::CraftApp;
+use trano_core::MahayApp;
 use std::sync::Arc;
 
-use artcraft_launcher_core::details::AppDetails;
-use artcraft_launcher_core::platform::pick_asset;
-use artcraft_launcher_core::protocol::Command;
+use trano_core::details::AppDetails;
+use trano_core::platform::pick_asset;
+use trano_core::protocol::Command;
 use egui::{Color32, CornerRadius, Id, Margin, Order, Rect, RichText, Sense, Stroke, Ui, emath::easing, pos2, vec2};
 
 use crate::app::LauncherUi;
@@ -430,7 +430,7 @@ fn drawer_area(ctx: &egui::Context) -> Rect {
 }
 
 /// The app's links as a row of buttons sharing `row_w`; the ↗ says each opens the browser, like the links on the cards.
-fn link_buttons(ui: &mut Ui, app: &CraftApp, row_w: f32) {
+fn link_buttons(ui: &mut Ui, app: &MahayApp, row_w: f32) {
     let links = [(tl!("Website"), app.website()), (tl!("GitHub"), app.repo_url()), (tl!("Releases"), app.releases_url())];
     let gap = ui.spacing().item_spacing.x;
     let link_w = ((row_w - gap * (links.len() as f32 - 1.0)) / links.len() as f32).floor();
@@ -444,7 +444,7 @@ fn link_buttons(ui: &mut Ui, app: &CraftApp, row_w: f32) {
 }
 
 /// The numbered feature cells.
-fn features(ui: &mut Ui, details: &AppDetails, app: &CraftApp, t: &Tokens) {
+fn features(ui: &mut Ui, details: &AppDetails, app: &MahayApp, t: &Tokens) {
     widgets::eyebrow(ui, "01", tl!("Features"));
     ui.add_space(4.0);
     for (i, f) in details.features.iter().enumerate() {

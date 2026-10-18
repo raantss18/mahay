@@ -4,7 +4,7 @@
 //! radial-axial shadings it's useful if we can instead approximate them by
 //! SVG-like sRGB gradients.
 //!
-//! PdfCraft patch: backported from hayro-interpret 0.8.0 (Apache-2.0 OR MIT), adapted to this
+//! Taratasy patch: backported from hayro-interpret 0.8.0 (Apache-2.0 OR MIT), adapted to this
 //! version's `EncodedShadingType::RadialAxial` variant. Remove when the vendored copy moves to
 //! 0.8. A full-page axial soft mask was sampled pixel by pixel (InDesign fades: 15 s per page).
 

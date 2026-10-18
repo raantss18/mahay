@@ -8,13 +8,13 @@
 //! recomposited per frame.
 
 use egui::{Color32, TextureOptions};
-use photocraft_doc::{AlphaChannel, ColorMode, Document};
-use photocraft_engine::channel_cmds::{ChannelView, color_count};
-use photocraft_engine::mask_view_cmds::MaskViewMode;
-use photocraft_geom::Rect;
-use photocraft_raster::{Surface, from_rgba, to_rgba};
+use sary_doc::{AlphaChannel, ColorMode, Document};
+use sary_engine::channel_cmds::{ChannelView, color_count};
+use sary_engine::mask_view_cmds::MaskViewMode;
+use sary_geom::Rect;
+use sary_raster::{Surface, from_rgba, to_rgba};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Largest overlay texture side; bigger documents show a downsampled overlay.
 const MAX_SIDE: u32 = 4096;
@@ -71,7 +71,7 @@ fn composite(doc: &Document, r: Rect, factor: u32) -> Vec<[f32; 4]> {
     let (w, h) = (r.width().div_ceil(factor), r.height().div_ceil(factor));
     let mut out = Vec::with_capacity((w * h) as usize);
     let f = factor as i32;
-    let _ = photocraft_compose::render_bands(doc, r, 0, |band| -> Result<(), ()> {
+    let _ = sary_compose::render_bands(doc, r, 0, |band| -> Result<(), ()> {
         let first = band.rect.y0 + (r.y0 - band.rect.y0).rem_euclid(f);
         for y in (first..band.rect.y1).step_by(factor as usize) {
             for x in (r.x0..r.x1).step_by(factor as usize) {
@@ -88,7 +88,7 @@ fn composite(doc: &Document, r: Rect, factor: u32) -> Vec<[f32; 4]> {
 /// The channel view of `r` (document pixels, sampled every `factor` px) as premultiplied pixels,
 /// or `None` when the plain composite is all there is to show. `in_color` shows single colour
 /// channels tinted instead of grayscale (Photoshop's "Show Channels in Color").
-pub fn render(doc: &Document, v: &ChannelView, r: Rect, factor: u32, in_color: bool, active: Option<photocraft_doc::LayerId>) -> Option<Vec<Color32>> {
+pub fn render(doc: &Document, v: &ChannelView, r: Rect, factor: u32, in_color: bool, active: Option<sary_doc::LayerId>) -> Option<Vec<Color32>> {
     let mut unused = None;
     render_with_source(doc, v, r, factor, in_color, active, CompositeSource { cached: None, fresh: &mut unused })
 }
@@ -99,7 +99,7 @@ fn render_with_source(
     r: Rect,
     factor: u32,
     in_color: bool,
-    active: Option<photocraft_doc::LayerId>,
+    active: Option<sary_doc::LayerId>,
     source: CompositeSource<'_>,
 ) -> Option<Vec<Color32>> {
     if v.is_plain(doc) || r.is_empty() {
@@ -112,11 +112,11 @@ fn render_with_source(
     let feathered_mask = v
         .layer_mask
         .and_then(|view| doc.layer(view.layer))
-        .filter(|layer| layer.mask.as_ref().is_some_and(|mask| mask.enabled && photocraft_compose::masks::feather_sigma(mask.feather) > 0.0))
+        .filter(|layer| layer.mask.as_ref().is_some_and(|mask| mask.enabled && sary_compose::masks::feather_sigma(mask.feather) > 0.0))
         .and_then(|layer| {
             let mut pixel_mask_layer = layer.clone();
             pixel_mask_layer.vector_mask = None;
-            photocraft_compose::masks::combined_mask(&pixel_mask_layer, doc.bounds())
+            sary_compose::masks::combined_mask(&pixel_mask_layer, doc.bounds())
         });
     let shown_mask = layer_mask.map(|(m, mode)| (feathered_mask.as_ref().unwrap_or(&m.surface), mode));
     let only_mask = ChannelView { layer_mask: None, ..v.clone() }.is_plain(doc);
@@ -193,7 +193,7 @@ fn render_with_source(
         vec![[0.0; 4]; n]
     };
     // Rubylith: `color` at `opacity` × coverage over the accumulated pixels.
-    let mut tint = |values: Vec<f32>, color: photocraft_color::Color, opacity: f32, coverage: &dyn Fn(f32) -> f32| {
+    let mut tint = |values: Vec<f32>, color: sary_color::Color, opacity: f32, coverage: &dyn Fn(f32) -> f32| {
         let c = color.to_rgb();
         for (o, val) in out.iter_mut().zip(values) {
             let a = (coverage(val.clamp(0.0, 1.0)) * opacity).clamp(0.0, 1.0);
@@ -258,7 +258,7 @@ fn view_key(v: &ChannelView, in_color: bool) -> u64 {
 }
 
 /// Make the channel-view texture of document `idx` current; `None` = nothing to draw.
-pub fn ensure(app: &mut PhotocraftApp, ctx: &egui::Context, idx: usize) -> Option<egui::TextureId> {
+pub fn ensure(app: &mut SaryApp, ctx: &egui::Context, idx: usize) -> Option<egui::TextureId> {
     let st = app.session.documents().get(idx)?;
     let view = st.channel_view.clone();
     let active = st.active_layer;
@@ -362,8 +362,8 @@ pub fn ensure(app: &mut PhotocraftApp, ctx: &egui::Context, idx: usize) -> Optio
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_engine::Session;
-    use photocraft_engine::channel_cmds::ChannelTarget;
+    use sary_engine::Session;
+    use sary_engine::channel_cmds::ChannelTarget;
     use serde_json::json;
 
     fn session() -> Session {
@@ -379,7 +379,7 @@ mod tests {
         s.execute("edit.fill", json!({"color": "#398db2"})).unwrap();
         let doc = &s.active().unwrap().doc;
         let rect = doc.bounds();
-        let full = photocraft_compose::render(doc, rect);
+        let full = sary_compose::render(doc, rect);
         let full_ref = &full;
         for factor in [1, 2, 3, 5] {
             let expected: Vec<_> = (0..rect.height())
@@ -398,7 +398,7 @@ mod tests {
 
     #[test]
     fn channel_eyes_reuse_composite_until_pixels_change() {
-        let mut app = PhotocraftApp::new(Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 32})).unwrap();
         app.run("edit.fill", json!({"color": "#4080c0"})).unwrap();
         app.sync_views();
@@ -537,7 +537,7 @@ mod tests {
         let bounds = st.doc.bounds();
         let layer = st.doc.layer(st.active_layer.unwrap()).unwrap();
         let raw = layer.mask.as_ref().unwrap().surface.sample_channel(0, 0, 0);
-        let effective = photocraft_compose::masks::combined_mask(layer, bounds).unwrap();
+        let effective = sary_compose::masks::combined_mask(layer, bounds).unwrap();
         let softened = effective.sample_channel(0, 0, 0);
         assert!((softened - raw).abs() > 0.01, "the fixture has a visible feather at its edge");
 
@@ -552,7 +552,7 @@ mod tests {
         assert_eq!(overlay[0], Color32::from_rgba_premultiplied(q(red[0] * alpha), q(red[1] * alpha), q(red[2] * alpha), q(alpha)));
     }
 
-    /// `cargo test --release -p photocraft-ui-egui --lib mask_view_switch_24mp -- --ignored --nocapture`
+    /// `cargo test --release -p sary-ui-egui --lib mask_view_switch_24mp -- --ignored --nocapture`
     #[test]
     #[ignore = "benchmark"]
     fn mask_view_switch_24mp() {
@@ -623,7 +623,7 @@ mod tests {
     /// The canvas texture cache is keyed by the preference, so toggling it rebuilds the view.
     #[test]
     fn ensure_honours_show_channels_in_color() {
-        let mut app = PhotocraftApp::new(Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 8, "height": 8})).unwrap();
         app.sync_views();
         app.run("channel.target", json!({"channel": "green"})).unwrap();

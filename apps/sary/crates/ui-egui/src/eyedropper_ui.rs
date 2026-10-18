@@ -5,7 +5,7 @@
 //! (`canvas::eyedropper_color`). The Sample Size is shared with the painting tools' ⌥-click
 //! eyedropper, the dialog eyedroppers and the Info panel, as in Photoshop.
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::theme::Tokens;
 use crate::widgets;
 
@@ -39,7 +39,7 @@ fn opt(ui: &mut egui::Ui, text: &str) {
 }
 
 /// The options bar for the Eyedropper tool.
-pub fn options(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn options(app: &mut SaryApp, ui: &mut egui::Ui) {
     let o = &mut app.ui.tool_options;
     opt(ui, tl!("Sample Size:"));
     widgets::dropdown(ui, "eyedropper-size", &mut o.eyedropper_size, &size_options(), 130.0);
@@ -64,20 +64,20 @@ mod tests {
     use egui_kittest::kittest::Queryable;
     use serde_json::json;
 
-    use crate::PhotocraftApp;
+    use crate::SaryApp;
     use crate::canvas::{ToolEvent, tool_event};
     use crate::state::Tool;
 
     /// An app with a 40×40 white document whose top-left 3×3 pixels are black.
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 40, "height": 40, "background": "white"})).unwrap();
         app.run("tools.setColors", json!({"foreground": [0.0, 0.0, 0.0, 1.0]})).unwrap();
         app.session
             .edit("paint", |doc, _| {
                 let bg = doc.layers[0].surface_mut().unwrap();
-                let black = photocraft_raster::from_rgba(&bg.format(), [0.0, 0.0, 0.0, 1.0]);
-                bg.fill_rect(photocraft_geom::Rect::new(0, 0, 3, 3), &black);
+                let black = sary_raster::from_rgba(&bg.format(), [0.0, 0.0, 0.0, 1.0]);
+                bg.fill_rect(sary_geom::Rect::new(0, 0, 3, 3), &black);
                 Ok(())
             })
             .unwrap();
@@ -85,11 +85,11 @@ mod tests {
         app
     }
 
-    fn fg(app: &PhotocraftApp) -> [f32; 4] {
+    fn fg(app: &SaryApp) -> [f32; 4] {
         app.session.tools.foreground
     }
 
-    fn click(app: &mut PhotocraftApp, x: f64, y: f64, mods: egui::Modifiers) {
+    fn click(app: &mut SaryApp, x: f64, y: f64, mods: egui::Modifiers) {
         tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, mods);
         tool_event(app, ToolEvent::Up { x, y }, mods);
     }
@@ -156,10 +156,10 @@ mod tests {
         assert_eq!(back, o);
         // Every menu entry is a size and a layer choice the engine accepts.
         for (size, _) in super::size_options() {
-            assert!(photocraft_engine::sample_cmds::SAMPLE_SIZES.contains(&size));
+            assert!(sary_engine::sample_cmds::SAMPLE_SIZES.contains(&size));
         }
         for (id, _) in super::layer_options() {
-            assert!(photocraft_engine::sample_cmds::SampleLayers::parse(&id).is_some(), "{id}");
+            assert!(sary_engine::sample_cmds::SampleLayers::parse(&id).is_some(), "{id}");
         }
     }
 
@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn the_options_bar_dropdown_sets_the_sample_size() {
         let mut h = Harness::builder().with_size(vec2(1400.0, 600.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
                 }
@@ -176,12 +176,12 @@ mod tests {
             },
             app(),
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
         h.run_steps(4);
         for label in ["Sample Size:", "Sample:", "Show Sampling Ring"] {
             assert!(h.get_by_label(label).rect().is_positive(), "missing Eyedropper option {label}");
         }
-        let combo = |h: &Harness<'static, PhotocraftApp>, i: usize| h.get_all_by_role(egui::accesskit::Role::ComboBox).nth(i).unwrap().click();
+        let combo = |h: &Harness<'static, SaryApp>, i: usize| h.get_all_by_role(egui::accesskit::Role::ComboBox).nth(i).unwrap().click();
         combo(&h, 0);
         h.run_steps(3);
         h.get_by_label("5 by 5 Average").click();

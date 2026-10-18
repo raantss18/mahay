@@ -28,7 +28,7 @@
 //! with the (slightly grown) footprint hard foreground and `d` the distance from it. The
 //! constants were fitted to Photoshop's masks.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 use super::{FREE, HARD_FG, Region, RgbImage, Sampler};
 

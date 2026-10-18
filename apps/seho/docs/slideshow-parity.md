@@ -10,7 +10,7 @@ ready** (estimated), **10–16 h** to parity.
 
 ## Running the show
 
-| Feature | PowerPoint | DeckCraft | Notes |
+| Feature | PowerPoint | Seho | Notes |
 |---|---|---|---|
 | Play from Start / from Current Slide (F5, Shift+F5, Cmd+Enter) | yes | yes | |
 | Next/previous by click, arrows, Space, Page Up/Down, Enter, Backspace | yes | yes | #17 reported arrows not working in v0.3.0 AppImage; recheck |
@@ -39,7 +39,7 @@ ready** (estimated), **10–16 h** to parity.
 
 ## Presenter view
 
-| Feature | PowerPoint | DeckCraft | Notes |
+| Feature | PowerPoint | Seho | Notes |
 |---|---|---|---|
 | Separate presenter window with current slide, next slide, notes | yes | yes (an egui viewport, 1100×700) | |
 | Elapsed timer | yes | yes | |
@@ -55,7 +55,7 @@ ready** (estimated), **10–16 h** to parity.
 
 ## Rehearse and record
 
-| Feature | PowerPoint | DeckCraft |
+| Feature | PowerPoint | Seho |
 |---|---|---|
 | Rehearse Timings, keep timings | yes | yes |
 | Record Slide Show (narration, ink, laser, camera; Cameo) | yes | no |

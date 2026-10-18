@@ -2,22 +2,22 @@
 //! stack like this when several files opened at once): each can be answered with a real click,
 //! one after another, even when an older one has been raised above the live one.
 
-use crate::{PhotocraftApp, Services};
+use crate::{SaryApp, Services};
 use egui::{Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::{
     Harness,
     kittest::{NodeT, Queryable},
 };
-use photocraft_engine::Session;
+use sary_engine::Session;
 
-fn harness(background: bool) -> Harness<'static, PhotocraftApp> {
+fn harness(background: bool) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        PhotocraftApp::new(
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        SaryApp::new(
             Session::new(),
             Services {
                 import: Some(Box::new(|name, bytes, depth| {
-                    photocraft_io::import_with_svg_group_depth(name, bytes, depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())
+                    sary_io::import_with_svg_group_depth(name, bytes, depth).map(|r| (r.document, r.warnings)).map_err(|e| e.to_string())
                 })),
                 ..Default::default()
             },
@@ -31,7 +31,7 @@ fn harness(background: bool) -> Harness<'static, PhotocraftApp> {
 /// Stack `n` identical Embedded Profile Mismatch dialogs (same size, same place; only the newest
 /// is live) and wait until they are up and laid out. Opening files no longer stacks them (they ask
 /// one at a time, `profile_open_tests`), so they are opened directly.
-fn open_together(h: &mut Harness<'static, PhotocraftApp>, n: usize) {
+fn open_together(h: &mut Harness<'static, SaryApp>, n: usize) {
     let message = "The document “shot.png” has an embedded color profile that does not match the current RGB working space.";
     for _ in 0..n {
         crate::prefs_ui::open_mismatch(h.state_mut(), message, "preserve", false, "__stacked", serde_json::json!({}));
@@ -47,12 +47,12 @@ fn open_together(h: &mut Harness<'static, PhotocraftApp>, n: usize) {
     panic!("{n} prompts, got {}", h.state().ui.dialogs.len());
 }
 
-fn press(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, pressed: bool) {
+fn press(h: &mut Harness<'static, SaryApp>, p: Pos2, pressed: bool) {
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Primary, pressed, modifiers: Modifiers::NONE });
 }
 
 /// A real click (pointer events, hit-tested like a mouse) rather than an accessibility action.
-fn click_at(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
+fn click_at(h: &mut Harness<'static, SaryApp>, p: Pos2) {
     h.event(egui::Event::PointerMoved(p));
     h.run_steps(1);
     for pressed in [true, false] {
@@ -63,7 +63,7 @@ fn click_at(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
 }
 
 /// Where the live prompt's `button` is: the one prompt that isn't greyed out.
-fn live_button(h: &Harness<'static, PhotocraftApp>, button: &str) -> Pos2 {
+fn live_button(h: &Harness<'static, SaryApp>, button: &str) -> Pos2 {
     let live: Vec<_> = h.query_all_by_label(button).filter(|n| !n.accesskit_node().is_disabled()).map(|n| n.rect().center()).collect();
     assert_eq!(live.len(), 1, "exactly one prompt is live, {} open", h.state().ui.dialogs.len());
     live[0]

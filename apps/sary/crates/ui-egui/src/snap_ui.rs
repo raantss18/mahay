@@ -1,4 +1,4 @@
-//! Snapping in the shell: builds [`photocraft_engine::snap`] targets from View › Snap To and the
+//! Snapping in the shell: builds [`sary_engine::snap`] targets from View › Snap To and the
 //! document, snaps tool gestures (Move tool, marquees, crop, shapes, pen anchors, Free Transform
 //! handles and guides), and draws smart guides (magenta alignment lines) while layers move.
 //!
@@ -7,10 +7,10 @@
 //! tool to other layers' edges and centres. The threshold is 8 screen pixels at the current zoom.
 
 use egui::{Color32, Stroke, pos2};
-use photocraft_doc::LayerId;
-use photocraft_engine::snap::{SnapKind, SnapLine, SnapOptions, SnapTargets, layer_rect, union};
+use sary_doc::LayerId;
+use sary_engine::snap::{SnapKind, SnapLine, SnapOptions, SnapTargets, layer_rect, union};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::Tool;
 
@@ -50,7 +50,7 @@ pub struct ActiveSnap {
 }
 
 /// Snap To options from the View menu and the Guides/Grid preferences.
-pub fn options(app: &PhotocraftApp) -> SnapOptions {
+pub fn options(app: &SaryApp) -> SnapOptions {
     let st = &app.ui.view.snap_to;
     let e = &app.ui.extras;
     let grid_step = app.session.active().map_or([18.0; 2], |d| {
@@ -70,20 +70,20 @@ pub fn options(app: &PhotocraftApp) -> SnapOptions {
 }
 
 /// Snap tolerance in document pixels at the current zoom.
-pub fn tolerance(app: &PhotocraftApp) -> f64 {
+pub fn tolerance(app: &SaryApp) -> f64 {
     SNAP_PX / app.point_zoom().max(0.01) as f64
 }
 
-fn smart_on(app: &PhotocraftApp) -> bool {
+fn smart_on(app: &SaryApp) -> bool {
     app.ui.view.shows(app.ui.view.show.smart_guides)
 }
 
-fn snap_on(app: &PhotocraftApp) -> bool {
+fn snap_on(app: &SaryApp) -> bool {
     app.ui.extras.snap
 }
 
 /// Targets of the active document (smart = layer alignments only).
-fn build(app: &PhotocraftApp, exclude: &[LayerId], smart: bool) -> SnapTargets {
+fn build(app: &SaryApp, exclude: &[LayerId], smart: bool) -> SnapTargets {
     let Some(st) = app.session.active() else { return SnapTargets::default() };
     let opts =
         if smart { SnapOptions { guides: false, grid: false, layers: true, document: true, selection: false, grid_step: [0.0; 2] } } else { options(app) };
@@ -93,7 +93,7 @@ fn build(app: &PhotocraftApp, exclude: &[LayerId], smart: bool) -> SnapTargets {
 
 /// What a move with `tool` in effect drags: the selection's bounds where its pixels float
 /// (`move_ui`), else the union of the selected layers' bounds.
-fn moving_rect(app: &PhotocraftApp, tool: Tool) -> Option<[f64; 4]> {
+fn moving_rect(app: &SaryApp, tool: Tool) -> Option<[f64; 4]> {
     let st = app.session.active()?;
     if crate::move_ui::moves_selected_pixels_with(app, tool) {
         return selection_rect(app);
@@ -102,9 +102,9 @@ fn moving_rect(app: &PhotocraftApp, tool: Tool) -> Option<[f64; 4]> {
 }
 
 /// The selection's bounds where it is shown: moved by its floating piece's offset.
-fn selection_rect(app: &PhotocraftApp) -> Option<[f64; 4]> {
+fn selection_rect(app: &SaryApp) -> Option<[f64; 4]> {
     let st = app.session.active()?;
-    let (dx, dy) = photocraft_engine::float_cmds::floating(st).map_or((0, 0), |f| f.offset);
+    let (dx, dy) = sary_engine::float_cmds::floating(st).map_or((0, 0), |f| f.offset);
     let r = st.doc.selection.as_ref()?.content_bounds().translate(dx, dy);
     (!r.is_empty()).then(|| [r.x0, r.y0, r.x1, r.y1].map(f64::from))
 }
@@ -166,23 +166,23 @@ fn override_held(mods: egui::Modifiers) -> bool {
     mods.ctrl && !mods.mac_cmd
 }
 
-fn corner_distorts(app: &PhotocraftApp, gesture: &Gesture, mods: egui::Modifiers) -> bool {
+fn corner_distorts(app: &SaryApp, gesture: &Gesture, mods: egui::Modifiers) -> bool {
     matches!(gesture, Gesture::TransformCorner { index, .. } if crate::transform_tool::corner_distorts(app, *index, mods))
 }
 
-fn override_for_gesture(app: &PhotocraftApp, mods: egui::Modifiers) -> bool {
+fn override_for_gesture(app: &SaryApp, mods: egui::Modifiers) -> bool {
     override_held(mods) && !(mods.command && app.prefs_rt.snap.as_ref().is_some_and(|s| corner_distorts(app, &s.gesture, mods)))
 }
 
 /// The Move tool's press at `p` picked other layers (Auto-Select): the drag moves those, so its
 /// box, what it snaps and what it leaves out of the targets are theirs, not the ones selected
 /// before (a group or an empty layer selected before had no box at all).
-pub(crate) fn retarget_move(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) {
+pub(crate) fn retarget_move(app: &mut SaryApp, p: [f64; 2], mods: egui::Modifiers) {
     begin(app, p, mods);
 }
 
 /// Start snapping for a drag beginning at `p` with `mods` held (called on pointer down).
-fn begin(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) {
+fn begin(app: &mut SaryApp, p: [f64; 2], mods: egui::Modifiers) {
     app.prefs_rt.snap = None;
     app.prefs_rt.snap_lines.clear();
     if app.session.active().is_none() {
@@ -260,7 +260,7 @@ fn begin(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) {
 
 /// Snap a guide drag that ⌘ with a selection tool starts at `p` (`canvas::command_guide_at`,
 /// #2690) as the Move tool's guide drag: never to guides, so not back onto itself.
-pub fn begin_guide(app: &mut PhotocraftApp, p: [f64; 2]) {
+pub fn begin_guide(app: &mut SaryApp, p: [f64; 2]) {
     app.prefs_rt.snap_lines.clear();
     let targets = if snap_on(app) { build(app, &[], false).filtered(|k| k != SnapKind::Guide) } else { SnapTargets::default() };
     app.prefs_rt.snap = Some(ActiveSnap { gesture: Gesture::Guide, start: p, targets, smart: SnapTargets::default(), disabled: false });
@@ -268,7 +268,7 @@ pub fn begin_guide(app: &mut PhotocraftApp, p: [f64; 2]) {
 
 /// Round to whole pixels when Preferences › Tools asks vector tools and transforms to snap to
 /// the pixel grid.
-fn pixel_round(app: &PhotocraftApp, p: [f64; 2]) -> [f64; 2] {
+fn pixel_round(app: &SaryApp, p: [f64; 2]) -> [f64; 2] {
     if app.session.prefs().tools.snap_vector_tools_and_transforms_to_pixel_grid
         && matches!(app.ui.tool, Tool::Pen | Tool::CurvaturePen | Tool::Rectangle | Tool::EllipseShape | Tool::Triangle | Tool::Polygon | Tool::Line)
     {
@@ -279,7 +279,7 @@ fn pixel_round(app: &PhotocraftApp, p: [f64; 2]) -> [f64; 2] {
 }
 
 /// Snap one pointer position for the active gesture; records the alignment lines.
-fn apply(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) -> [f64; 2] {
+fn apply(app: &mut SaryApp, p: [f64; 2], mods: egui::Modifiers) -> [f64; 2] {
     let tol = tolerance(app);
     let Some(snap) = app.prefs_rt.snap.as_ref() else { return p };
     if snap.disabled {
@@ -309,7 +309,7 @@ fn apply(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) -> [f64; 2
 
 /// A corner stopped by the transform's convexity constraint is not aligned to the proposed
 /// target. Keep only the lines the final corner actually reaches, after the transform applies.
-pub(crate) fn retain_transform_lines(app: &mut PhotocraftApp, mods: egui::Modifiers) {
+pub(crate) fn retain_transform_lines(app: &mut SaryApp, mods: egui::Modifiers) {
     let Some(snap) = app.prefs_rt.snap.as_ref() else { return };
     let Gesture::TransformCorner { index, .. } = snap.gesture else { return };
     if !corner_distorts(app, &snap.gesture, mods) {
@@ -325,7 +325,7 @@ pub(crate) fn retain_transform_lines(app: &mut PhotocraftApp, mods: egui::Modifi
 /// Center Preview the handle is found on the image, calculated from the original camera: snapping
 /// the pointer in the moving camera feeds the previous frame's pan back into the resize and makes
 /// a stationary pointer oscillate near the canvas edges.
-fn crop_handle(app: &PhotocraftApp, p: [f64; 2], mods: egui::Modifiers, targets: &SnapTargets, tol: f64) -> Option<([f64; 2], Vec<SnapLine>)> {
+fn crop_handle(app: &SaryApp, p: [f64; 2], mods: egui::Modifiers, targets: &SnapTargets, tol: f64) -> Option<([f64; 2], Vec<SnapLine>)> {
     if app.ui.tool != Tool::Crop {
         return None;
     }
@@ -393,7 +393,7 @@ fn crop_handle(app: &PhotocraftApp, p: [f64; 2], mods: egui::Modifiers, targets:
 
 /// The bounds `[x0, y0, x1, y1]` of what drag `d` draws so far, for the tools whose drag Space
 /// repositions and that snap (`None` for the rest, or a shape still too small to draw).
-fn drawn_rect(app: &PhotocraftApp, d: &crate::canvas::Drag) -> Option<[f64; 4]> {
+fn drawn_rect(app: &SaryApp, d: &crate::canvas::Drag) -> Option<[f64; 4]> {
     let last = d.points.last().map_or(d.start, |p| [p[0], p[1]]);
     let (a, b) = match d.tool {
         Tool::RectMarquee | Tool::EllipseMarquee => crate::canvas::marquee_corners(&app.ui.tool_options, d, last),
@@ -407,7 +407,7 @@ fn drawn_rect(app: &PhotocraftApp, d: &crate::canvas::Drag) -> Option<[f64; 4]> 
 /// Space held while a marquee, Object Selection box or shape is drawn moves the whole of it
 /// (`hold_keys`): its edges and centre snap, as a moved selection's do, not just the corner under
 /// the pointer. Releasing Space goes back to snapping that corner.
-fn follow_reposition(app: &mut PhotocraftApp) {
+fn follow_reposition(app: &mut SaryApp) {
     let Some(d) = app.drag.as_ref() else { return };
     let Some(snap) = app.prefs_rt.snap.as_ref() else { return };
     let gesture = match (&snap.gesture, d.reposition) {
@@ -426,7 +426,7 @@ fn follow_reposition(app: &mut PhotocraftApp) {
 }
 
 /// Snap a tool event's coordinates (called by `canvas::tool_event` before the tools see it).
-pub fn filter_event(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> ToolEvent {
+pub fn filter_event(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> ToolEvent {
     match ev {
         ToolEvent::Down { x, y, pressure } => {
             begin(app, [x, y], mods);
@@ -480,7 +480,7 @@ pub fn filter_event(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifier
 }
 
 /// Snap a guide being dragged out of a ruler (`vertical` guides snap their x).
-pub fn snap_guide(app: &mut PhotocraftApp, vertical: bool, pos: f64) -> f64 {
+pub fn snap_guide(app: &mut SaryApp, vertical: bool, pos: f64) -> f64 {
     if !snap_on(app) {
         return pos;
     }
@@ -496,11 +496,11 @@ pub fn snap_guide(app: &mut PhotocraftApp, vertical: bool, pos: f64) -> f64 {
 }
 
 fn hex_color(s: &str, fallback: Color32) -> Color32 {
-    photocraft_engine::prefs::parse_hex(s).map_or(fallback, |c| Color32::from_rgb(c[0], c[1], c[2]))
+    sary_engine::prefs::parse_hex(s).map_or(fallback, |c| Color32::from_rgb(c[0], c[1], c[2]))
 }
 
 /// Draw smart guides (and the moving bounds) for the drag in progress.
-pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     let Some(snap) = &app.prefs_rt.snap else { return };
     let smart_color = hex_color(&app.session.prefs().guides_grid_and_slices.smart_guide_color, Color32::from_rgb(255, 0, 255));
     // The moved layers' bounds follow the Move tool (Free Transform draws its own box).
@@ -538,8 +538,8 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    fn app_with_box() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app_with_box() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
         app.sync_views();
         app.ui.views[0].zoom = 1.0;
@@ -555,7 +555,7 @@ mod tests {
         app
     }
 
-    fn mover_bounds(app: &PhotocraftApp) -> photocraft_geom::Rect {
+    fn mover_bounds(app: &SaryApp) -> sary_geom::Rect {
         let st = app.session.active().unwrap();
         st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().content_bounds()
     }
@@ -565,7 +565,7 @@ mod tests {
         // In both crop modes: the default mode draws a new box inside the untouched frame too.
         for (classic, snap, end) in [(true, false, [300.0, 220.0]), (true, true, [294.0, 217.0]), (false, false, [300.0, 220.0]), (false, true, [294.0, 217.0])]
         {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 640, "height": 480, "background": "white"})).unwrap();
             app.run("shape.create", json!({"kind": "rect", "rect": [100, 80, 200, 140], "fill": "#d59b40"})).unwrap();
             app.sync_views();
@@ -705,7 +705,7 @@ mod tests {
     #[test]
     fn drawing_repositioned_with_space_snaps_its_edges() {
         for tool in [Tool::RectMarquee, Tool::EllipseMarquee, Tool::ObjectSelection, Tool::Rectangle, Tool::Line] {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
             app.sync_views();
             app.ui.views[0].zoom = 1.0;
@@ -736,7 +736,7 @@ mod tests {
     #[test]
     fn selection_drag_snaps_the_selection_bounds() {
         for (tool, cut) in [(Tool::RectMarquee, false), (Tool::Lasso, false), (Tool::RectMarquee, true)] {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 400, "height": 300, "background": "white"})).unwrap();
             app.sync_views();
             app.ui.views[0].zoom = 1.0;
@@ -751,7 +751,7 @@ mod tests {
             crate::canvas::tool_event(&mut app, ToolEvent::Move { x: 193.0, y: 117.0, pressure: 1.0 }, m);
             crate::canvas::tool_event(&mut app, ToolEvent::Up { x: 193.0, y: 117.0 }, m);
             let st = app.session.active().unwrap();
-            let off = photocraft_engine::float_cmds::floating(st).map_or((0, 0), |f| f.offset);
+            let off = sary_engine::float_cmds::floating(st).map_or((0, 0), |f| f.offset);
             let sel = st.doc.selection.as_ref().unwrap().content_bounds().translate(off.0, off.1);
             assert_eq!((sel.x0, sel.y0, sel.x1, sel.y1), (170, 100, 220, 140), "{tool:?} cut: {cut}");
         }
@@ -790,7 +790,7 @@ mod tests {
         assert!(app.prefs_rt.snap.is_none() && app.prefs_rt.snap_lines.is_empty());
     }
 
-    fn app_with_corner_guides(menu: &str) -> PhotocraftApp {
+    fn app_with_corner_guides(menu: &str) -> SaryApp {
         let mut app = app_with_box();
         app.run("view.newGuide", json!({"orientation": "vertical", "position": 110})).unwrap();
         app.run("view.newGuide", json!({"orientation": "horizontal", "position": 30})).unwrap();
@@ -798,7 +798,7 @@ mod tests {
         app
     }
 
-    fn move_corner(app: &mut PhotocraftApp, index: usize, offset: [f64; 2], end: [f64; 2], down: egui::Modifiers, moving: egui::Modifiers) {
+    fn move_corner(app: &mut SaryApp, index: usize, offset: [f64; 2], end: [f64; 2], down: egui::Modifiers, moving: egui::Modifiers) {
         let corner = app.ui.transform.as_ref().unwrap().quad[index];
         crate::canvas::tool_event(app, ToolEvent::Down { x: corner[0] + offset[0], y: corner[1] + offset[1], pressure: 1.0 }, down);
         crate::canvas::tool_event(app, ToolEvent::Move { x: end[0] + offset[0], y: end[1] + offset[1], pressure: 1.0 }, moving);
@@ -1096,7 +1096,7 @@ mod tests {
     #[test]
     fn free_transform_of_a_shape_keeps_whole_pixels() {
         for grid in [true, false] {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 1080, "height": 1080, "resolution": 72})).unwrap();
             app.run("prefs.set", json!({"path": "tools.snapVectorToolsAndTransformsToPixelGrid", "value": grid})).unwrap();
             app.sync_views();
@@ -1125,7 +1125,7 @@ mod tests {
             assert_eq!(whole(q), grid, "grid {grid}: corner {q:?}");
             crate::transform_tool::commit(&mut app);
             let st = app.session.active().unwrap();
-            let photocraft_doc::LayerContent::Shape(sh) = &st.doc.layer(st.active_layer.unwrap()).unwrap().content else { panic!("a shape layer") };
+            let sary_doc::LayerContent::Shape(sh) = &st.doc.layer(st.active_layer.unwrap()).unwrap().content else { panic!("a shape layer") };
             let (x0, y0, x1, y1) = sh.path.control_bounds().unwrap();
             if grid {
                 for v in [x0, y0, x1, y1] {
@@ -1147,7 +1147,7 @@ mod tests {
 
     #[test]
     fn percentage_grid_snaps_at_separate_axis_intervals() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 1280, "height": 720})).unwrap();
         app.ui.extras.grid = true;
         app.ui.view.snap_to.grid = true;

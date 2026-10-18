@@ -1,16 +1,16 @@
 //! WordArt: Insert › WordArt, Home › Font › Text Effects, and Shape Format › WordArt Styles (our
 //! own styles in theme colours, text fill, text outline, Transform).
 //!
-//! Text effects are run properties ([`wordcraft_doc::wordart::TextEffects`]); a Transform is the
-//! text warp of a shape ([`wordcraft_doc::wordart::TextWarp`]). With a shape selected, or the
+//! Text effects are run properties ([`soratra_doc::wordart::TextEffects`]); a Transform is the
+//! text warp of a shape ([`soratra_doc::wordart::TextWarp`]). With a shape selected, or the
 //! caret in a text box, the effects apply to the whole box's text, as WordArt is formatted.
 
 use serde_json::{Value, json};
-use wordcraft_doc::effects::{Glow, Shadow};
-use wordcraft_doc::para::{Anchor, Float, FloatAlign, InlineObject, OBJ, ShapeKind, Wrap};
-use wordcraft_doc::props::{CharProps, Rgb};
-use wordcraft_doc::wordart::{GradStop, Reflection, TextEffects, TextFill, TextOutline, TextWarp, art_style};
-use wordcraft_doc::{Paragraph, PartKind, Pos, StoryRef, para_block};
+use soratra_doc::effects::{Glow, Shadow};
+use soratra_doc::para::{Anchor, Float, FloatAlign, InlineObject, OBJ, ShapeKind, Wrap};
+use soratra_doc::props::{CharProps, Rgb};
+use soratra_doc::wordart::{GradStop, Reflection, TextEffects, TextFill, TextOutline, TextWarp, art_style};
+use soratra_doc::{Paragraph, PartKind, Pos, StoryRef, para_block};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -84,7 +84,7 @@ fn parse_fill(v: Option<&Value>) -> Result<Change<TextFill>, CmdError> {
         Some(Value::String(x)) => Some(Some(TextFill::Solid { color: Rgb::parse(x).ok_or_else(bad)?, transparency: 0.0 })),
         Some(o @ Value::Object(_)) => match o.get("gradient").and_then(Value::as_array) {
             Some(cols) => {
-                let cols: Vec<Rgb> = cols.iter().filter_map(Value::as_str).filter_map(Rgb::parse).take(wordcraft_doc::wordart::MAX_STOPS).collect();
+                let cols: Vec<Rgb> = cols.iter().filter_map(Value::as_str).filter_map(Rgb::parse).take(soratra_doc::wordart::MAX_STOPS).collect();
                 let n = cols.len().max(2) as f32 - 1.0;
                 let stops = cols.iter().enumerate().map(|(i, c)| GradStop { pos: 100.0 * i as f32 / n, color: *c, transparency: 0.0 }).collect();
                 Some(TextFill::Gradient { stops, angle: p::f32(o, "angle").unwrap_or(90.0) }.sanitized())
@@ -257,9 +257,9 @@ fn transform(s: &mut Session, v: &Value) -> CmdResult {
 /// How wide `text` is at `size` points in the document's body font, points.
 fn text_width(s: &Session, text: &str, size: f32, bold: bool) -> f32 {
     let family = s.doc.styles.default_chr.font.clone().unwrap_or_else(|| s.doc.settings.minor_font.clone());
-    let face = wordcraft_fonts::word::resolve(&family, bold, false).face;
+    let face = soratra_fonts::word::resolve(&family, bold, false).face;
     let k = size / face.upem.max(1.0) as f32;
-    wordcraft_fonts::shape(&face, text, &[], |c| c).iter().map(|g| g.x_advance as f32 * k).sum::<f32>()
+    soratra_fonts::shape(&face, text, &[], |c| c).iter().map(|g| g.x_advance as f32 * k).sum::<f32>()
 }
 
 /// `insert.wordArt`: a floating text box without fill or line, its text in a WordArt style (and
@@ -290,9 +290,9 @@ fn insert(s: &mut Session, v: &Value) -> CmdResult {
     let id = s.doc.try_add_part(PartKind::TextBox, vec![para_block(Paragraph::with_text(&text, props))])?;
     if let Some(p) = s.doc.parts.get_mut(&id)
         && let Some(b) = p.blocks.first_mut()
-        && let wordcraft_doc::Block::Para(para) = std::sync::Arc::make_mut(b)
+        && let soratra_doc::Block::Para(para) = std::sync::Arc::make_mut(b)
     {
-        para.props.align = Some(wordcraft_doc::props::Align::Center);
+        para.props.align = Some(soratra_doc::props::Align::Center);
     }
     let obj = InlineObject::Shape {
         kind: ShapeKind::TextBox,
@@ -311,7 +311,7 @@ fn insert(s: &mut Session, v: &Value) -> CmdResult {
         story: Some(id),
         freeform: None,
         effects: Default::default(),
-        extra: wordcraft_doc::connector::ShapeExtra { warp, ..Default::default() },
+        extra: soratra_doc::connector::ShapeExtra { warp, ..Default::default() },
     };
     let typing = s.typing_props();
     let at = super::delete_selection(s)?;

@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use artcraft_launcher_core::PackageKind;
+use trano_core::PackageKind;
 use serde::{Deserialize, Serialize};
 
 use crate::i18n::t;
@@ -71,7 +71,7 @@ impl CheckEvery {
         }
     }
 
-    /// How often to look. Checks ask ArtCraft's release feed (one cheap request; GitHub only as a
+    /// How often to look. Checks ask Mahay's release feed (one cheap request; GitHub only as a
     /// fallback), so automatic checks run every five minutes.
     pub fn seconds(self) -> Option<i64> {
         match self {
@@ -84,7 +84,7 @@ impl CheckEvery {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
-    pub install_locations: artcraft_launcher_core::protocol::InstallLocations,
+    pub install_locations: trano_core::protocol::InstallLocations,
     pub view: ViewMode,
     pub filter: Filter,
     pub sort: SortKey,
@@ -113,7 +113,7 @@ pub struct Settings {
     pub notified: BTreeMap<String, String>,
     /// Unix seconds of the last finished check.
     pub last_check: Option<i64>,
-    /// Catalog ids of apps hidden from the main lists (`photocraft`, …).
+    /// Catalog ids of apps hidden from the main lists (`sary`, …).
     pub hidden: std::collections::BTreeSet<String>,
 }
 

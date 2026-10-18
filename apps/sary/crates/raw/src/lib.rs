@@ -1,4 +1,4 @@
-//! `photocraft-raw`: a clean-room, pure-Rust camera raw decoder and developer.
+//! `sary-raw`: a clean-room, pure-Rust camera raw decoder and developer.
 //!
 //! Implemented only from public specifications and papers: TIFF 6.0,
 //! TIFF/EP (ISO 12234-2), the Adobe DNG Specification 1.7, ITU-T T.81
@@ -20,8 +20,8 @@
 //!   every preview.
 //! * [`fit_look`] fits a per-file colour matrix and tone curve ([`CameraLook`])
 //!   to the camera's own (decoded) JPEG, for files without colour calibration
-//!   (method after LightCraft's `docs/camera-preview-colour.md`,
-//!   storytold/lightcraft#165); pass it in [`DevelopOptions::camera_look`].
+//!   (method after Hazavana's `docs/camera-preview-colour.md`,
+//!   raantss18/hazavana#165); pass it in [`DevelopOptions::camera_look`].
 //! * Raws that carry no colour description (NEF) take a camera profile we
 //!   measured from the camera's own output when there is one (`cameras.rs`:
 //!   image area, levels, ForwardMatrix, tone curve; the Nikon D4 so far).
@@ -142,7 +142,7 @@ impl RawFormat {
 pub const EXTENSIONS: &[&str] = &["dng", "cr2", "cr3", "nef", "nrw", "arw", "srf", "sr2", "pef", "orf", "rw2", "raf"];
 
 /// Decompression-bomb guards, checked on header values before allocating
-/// (the same shape and defaults as `photocraft-codecs`' limits).
+/// (the same shape and defaults as `sary-codecs`' limits).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Limits {
     pub max_width: u32,

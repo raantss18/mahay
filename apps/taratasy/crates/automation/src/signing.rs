@@ -2,8 +2,8 @@
 //! document, and manage trusted certificates. Rectangles are points from the top-left of the
 //! displayed page.
 
-use pdfcraft_engine::sign::{self, Certificate, DigitalId, Modification, Name, PrivateKey};
-use pdfcraft_engine::{SignOptions, SignatureInfo, SignatureStatus};
+use taratasy_engine::sign::{self, Certificate, DigitalId, Modification, Name, PrivateKey};
+use taratasy_engine::{SignOptions, SignatureInfo, SignatureStatus};
 use serde_json::{Value, json};
 
 use crate::{Args, Automation, Result, ToolError, failed, write_atomic};
@@ -67,7 +67,7 @@ fn labels_arg(v: &Value) -> Result<sign::AppearanceLabels> {
     if let Some((field, c)) = labels.first_undrawable() {
         return Err(bad(format!(
             "labels.{field}: {}",
-            pdfcraft_engine::undrawable_message(&format!("the {field} label of the visible signature"), c)
+            taratasy_engine::undrawable_message(&format!("the {field} label of the visible signature"), c)
         )));
     }
     Ok(labels)
@@ -260,7 +260,7 @@ impl Automation {
         };
         let signed = self.session.sign(doc_id, &id, opts).map_err(|e| match e {
             // A graphic the signer refuses is the caller's to fix.
-            pdfcraft_engine::EditError::Sign(m) if m.starts_with("the signature graphic") => bad(m),
+            taratasy_engine::EditError::Sign(m) if m.starts_with("the signature graphic") => bad(m),
             e => failed(e),
         })?;
         write_atomic(&out, &signed)?;
@@ -279,22 +279,22 @@ impl Automation {
         if let Some(path) = o.get("image") {
             let path = self.resolve(path.as_str().ok_or_else(|| bad("graphic.image must be a path"))?, false)?;
             let file = std::fs::File::open(&path).map_err(|e| bad(format!("graphic.image {}: {e}", path.display())))?;
-            return Ok(pdfcraft_engine::SignatureImage::read(file).map_err(|e| bad(e.to_string()))?.graphic());
+            return Ok(taratasy_engine::SignatureImage::read(file).map_err(|e| bad(e.to_string()))?.graphic());
         }
         if let Some(text) = o.get("text") {
             let text = text.as_str().ok_or_else(|| bad("graphic.text must be a string"))?;
             // Nobody sees a preview here: refuse what the script font and its fallback would leave out.
-            if let Some(c) = pdfcraft_engine::script_missing(text) {
+            if let Some(c) = taratasy_engine::script_missing(text) {
                 return Err(bad(format!(
                     "the signature script font can't draw \"{}\" (U+{:04X}) in graphic.text; type it in Latin, Cyrillic or Greek letters, or pass graphic.image instead",
                     c.escape_debug(),
                     u32::from(c)
                 )));
             }
-            return pdfcraft_engine::typed_signature_graphic(text).ok_or_else(|| {
+            return taratasy_engine::typed_signature_graphic(text).ok_or_else(|| {
                 bad(format!(
                     "graphic.text {text:?} has nothing the script font can draw (at most {} characters)",
-                    pdfcraft_engine::MAX_SIGNATURE_CHARS
+                    taratasy_engine::MAX_SIGNATURE_CHARS
                 ))
             });
         }

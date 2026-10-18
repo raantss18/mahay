@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{Array, CellError, CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value, compare};
-use gridcraft_formula::{BinOp, Expr, RefKind, Reference, SheetSel, StructItem, StructRef, UnOp};
-use gridcraft_functions::{Arg, Ctx};
-use gridcraft_model::Workbook;
+use tabilao_core::{Array, CellError, CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value, compare};
+use tabilao_formula::{BinOp, Expr, RefKind, Reference, SheetSel, StructItem, StructRef, UnOp};
+use tabilao_functions::{Arg, Ctx};
+use tabilao_model::Workbook;
 
 /// Largest array a reference may expand to.
 pub const MAX_CELLS: u64 = 16_000_000;
@@ -93,7 +93,7 @@ struct FnCtx<'a, 'h> {
 }
 
 impl Ctx for FnCtx<'_, '_> {
-    fn date_system(&self) -> gridcraft_core::DateSystem {
+    fn date_system(&self) -> tabilao_core::DateSystem {
         self.ev.host.workbook().date_system
     }
     fn now_serial(&self) -> f64 {
@@ -112,7 +112,7 @@ impl Ctx for FnCtx<'_, '_> {
         let area = self.criteria?;
         let at = area.range.start.offset(row as i64, col as i64).filter(|c| area.range.contains(*c))?;
         let expr = self.ev.host.workbook().sheet(area.sheet)?.cell(at)?.formula.as_ref()?.expr_arc()?;
-        let shifted = gridcraft_formula::adjust::shift_relative((*expr).clone(), record as i64 - 1, 0);
+        let shifted = tabilao_formula::adjust::shift_relative((*expr).clone(), record as i64 - 1, 0);
         let env = (0..db.cols)
             .filter_map(|c| match db.get(0, c) {
                 Some(Value::Text(t)) if !t.trim().is_empty() => {
@@ -271,12 +271,12 @@ impl<'h> Evaluator<'h> {
         if let Some(def) = wb.name(bare, scope_sheet) {
             let text = def.formula.clone();
             let scope = def.scope.unwrap_or(self.sheet);
-            return match gridcraft_formula::parse(&text) {
+            return match tabilao_formula::parse(&text) {
                 Ok(expr) => {
                     // Relative references in a name are relative to A1: used here, they move by
                     // this cell's offset from it.
-                    let expr = if gridcraft_formula::adjust::has_relative_refs(&expr) {
-                        gridcraft_formula::adjust::shift_relative_wrapping(expr, self.at.row as i64, self.at.col as i64)
+                    let expr = if tabilao_formula::adjust::has_relative_refs(&expr) {
+                        tabilao_formula::adjust::shift_relative_wrapping(expr, self.at.row as i64, self.at.col as i64)
                     } else {
                         expr
                     };
@@ -612,14 +612,14 @@ impl<'h> Evaluator<'h> {
                 if let Value::Array(_) = index {
                     // An array of indexes picks element by element: `CHOOSE({1,2},A1:A3,B1:B3)`
                     // is a two-column array. The library CHOOSE lifts over its arguments.
-                    let Some(spec) = gridcraft_functions::lookup(name) else { return err(CellError::Name) };
+                    let Some(spec) = tabilao_functions::lookup(name) else { return err(CellError::Name) };
                     let mut evaluated = vec![Arg { value: index, from_ref: false }];
                     for a in &args[1..] {
                         let value = self.value(a);
                         evaluated.push(Arg { value, from_ref: false });
                     }
                     let mut ctx = FnCtx { ev: self, criteria: None };
-                    return gridcraft_functions::call(spec, &evaluated, &mut ctx).pipe(Ev::V);
+                    return tabilao_functions::call(spec, &evaluated, &mut ctx).pipe(Ev::V);
                 }
                 let i = match index.to_number() {
                     Ok(n) => n.trunc() as i64,
@@ -749,7 +749,7 @@ impl<'h> Evaluator<'h> {
                         Ok(c) => c,
                         Err(e) => return Value::Error(e),
                     };
-                    match gridcraft_numfmt::text_function(v, &code, sys) {
+                    match tabilao_numfmt::text_function(v, &code, sys) {
                         Ok(s) => Value::text(s),
                         Err(e) => Value::Error(e),
                     }
@@ -799,7 +799,7 @@ impl<'h> Evaluator<'h> {
     }
 
     fn builtin(&mut self, name: &str, args: &[Expr]) -> Ev {
-        let Some(spec) = gridcraft_functions::lookup(name) else {
+        let Some(spec) = tabilao_functions::lookup(name) else {
             // A defined name holding a LAMBDA, or a LET-bound lambda.
             if let Ev::L(l) = self.name(name) {
                 return self.apply_lambda(&l, args);
@@ -819,7 +819,7 @@ impl<'h> Evaluator<'h> {
         let mut criteria = None;
         for (i, a) in args.iter().enumerate() {
             let mut ev = self.eval(a);
-            if spec.category == gridcraft_functions::Category::Database
+            if spec.category == tabilao_functions::Category::Database
                 && i == 2
                 && let Ev::R(areas) = &ev
                 && let [area] = areas.as_slice()
@@ -854,7 +854,7 @@ impl<'h> Evaluator<'h> {
             evaluated.push(Arg { value, from_ref });
         }
         let mut ctx = FnCtx { ev: self, criteria };
-        gridcraft_functions::call(spec, &evaluated, &mut ctx).pipe(Ev::V)
+        tabilao_functions::call(spec, &evaluated, &mut ctx).pipe(Ev::V)
     }
 
     /// Performs aggregation operations without copying its ranges: blocks are folded over the stored
@@ -902,18 +902,18 @@ impl<'h> Evaluator<'h> {
     /// Adds one argument's value by calling `SUM` and `COUNT` on it, so coercion and error rules
     /// stay in one place (`AVERAGE` of an argument is its `SUM` over its `COUNT`).
     fn aggregate_value(&mut self, kind: Agg, value: Value, from_ref: bool, acc: &mut Acc) -> Result<(), Ev> {
-        let (Some(sum), Some(count)) = (gridcraft_functions::lookup("SUM"), gridcraft_functions::lookup("COUNT")) else {
+        let (Some(sum), Some(count)) = (tabilao_functions::lookup("SUM"), tabilao_functions::lookup("COUNT")) else {
             return Err(err(CellError::Name));
         };
         let args = [Arg { value, from_ref }];
         if kind != Agg::Count {
-            match gridcraft_functions::call(sum, &args, &mut FnCtx { ev: self, criteria: None }) {
+            match tabilao_functions::call(sum, &args, &mut FnCtx { ev: self, criteria: None }) {
                 Value::Number(n) => acc.sum += n,
                 other => return Err(Ev::V(other)),
             }
         }
         if kind != Agg::Sum {
-            match gridcraft_functions::call(count, &args, &mut FnCtx { ev: self, criteria: None }) {
+            match tabilao_functions::call(count, &args, &mut FnCtx { ev: self, criteria: None }) {
                 Value::Number(n) => acc.count = acc.count.saturating_add(n as u64),
                 other => return Err(Ev::V(other)),
             }
@@ -979,7 +979,7 @@ impl<'h> Evaluator<'h> {
             return None;
         }
         let u = n.to_ascii_uppercase();
-        gridcraft_functions::lookup(&u).map(|_| u)
+        tabilao_functions::lookup(&u).map(|_| u)
     }
 
     /// The function argument of a LAMBDA helper; a function given by name takes `arity`
@@ -1177,7 +1177,7 @@ impl<'h> Evaluator<'h> {
                 Err(e) => return err(e),
             }
         };
-        match gridcraft_formula::parse(&text) {
+        match tabilao_formula::parse(&text) {
             Ok(Expr::Ref(_)) if !a1_ok => err(CellError::Ref),
             Ok(e @ (Expr::Ref(_) | Expr::Name(_) | Expr::Struct(_))) => match self.eval(&e) {
                 r @ Ev::R(_) => r,
@@ -1291,7 +1291,7 @@ impl<'h> Evaluator<'h> {
         if (3..=6).contains(&args.len())
             && let (Ev::R(look), Ev::R(ret)) = (self.eval(&args[1]), self.eval(&args[2]))
             && let ([l], [r]) = (look.as_slice(), ret.as_slice())
-            && let Some(spec) = gridcraft_functions::lookup("XMATCH")
+            && let Some(spec) = tabilao_functions::lookup("XMATCH")
         {
             let key = self.value(&args[0]);
             let (l, r) = (*l, *r);
@@ -1319,7 +1319,7 @@ impl<'h> Evaluator<'h> {
                     }
                 }
                 let mut ctx = FnCtx { ev: self, criteria: None };
-                return match gridcraft_functions::call(spec, &xargs, &mut ctx) {
+                return match tabilao_functions::call(spec, &xargs, &mut ctx) {
                     Value::Number(p) if p >= 1.0 => {
                         let k = p as u32 - 1;
                         let range = if vertical {
@@ -1360,7 +1360,7 @@ impl<'h> Evaluator<'h> {
         let wb = self.host.workbook();
         let sheet = wb.sheet(a.sheet);
         match kind.as_str() {
-            "address" => Ev::V(Value::text(format!("${}${}", gridcraft_core::col_to_letters(c.col), c.row + 1))),
+            "address" => Ev::V(Value::text(format!("${}${}", tabilao_core::col_to_letters(c.col), c.row + 1))),
             "row" => Ev::V(Value::number(c.row as f64 + 1.0)),
             "col" => Ev::V(Value::number(c.col as f64 + 1.0)),
             "contents" => Ev::V(self.host.cell_value(a.sheet, c)),
@@ -1372,7 +1372,7 @@ impl<'h> Evaluator<'h> {
                     _ => "v",
                 }))
             }
-            "width" => Ev::V(Value::number(sheet.map_or(8.43, |s| gridcraft_model::points_to_chars(s.col_width(c.col) as f64)).round())),
+            "width" => Ev::V(Value::number(sheet.map_or(8.43, |s| tabilao_model::points_to_chars(s.col_width(c.col) as f64)).round())),
             "filename" => Ev::V(Value::text(String::new())),
             "sheetname" => Ev::V(Value::text(sheet.map(|s| s.name.clone()).unwrap_or_default())),
             "protect" => Ev::V(Value::number(if sheet.is_some_and(|s| wb.styles.get(s.style_id(c)).protection.locked) { 1.0 } else { 0.0 })),
@@ -1458,9 +1458,9 @@ impl<'h> Evaluator<'h> {
         }
         if let Some(k) = k {
             values.push(Value::Empty);
-            return Ev::V(gridcraft_functions::aggregate_values_k(func, &values[..values.len() - 1], &k));
+            return Ev::V(tabilao_functions::aggregate_values_k(func, &values[..values.len() - 1], &k));
         }
-        Ev::V(gridcraft_functions::aggregate_values(func, &values))
+        Ev::V(tabilao_functions::aggregate_values(func, &values))
     }
 }
 
@@ -1529,7 +1529,7 @@ pub fn r1c1_to_a1(s: &str, at: CellRef) -> Result<Option<String>, CellError> {
         };
         let (Some(r), Some(c)) = (num(rpart, at.row, MAX_ROWS), num(cpart, at.col, MAX_COLS)) else { return Ok(None) };
         let (Some((r, ra)), Some((c, ca))) = (r, c) else { return Err(CellError::Ref) };
-        Ok(Some(format!("{}{}{}{}", if ca { "$" } else { "" }, gridcraft_core::col_to_letters(c), if ra { "$" } else { "" }, r + 1)))
+        Ok(Some(format!("{}{}{}{}", if ca { "$" } else { "" }, tabilao_core::col_to_letters(c), if ra { "$" } else { "" }, r + 1)))
     };
     let out = match body.split_once(':') {
         Some((a, b)) => match (conv(a)?, conv(b)?) {
@@ -1597,7 +1597,7 @@ impl Acc {
 
 // ---------------------------------------------------------------- operators
 
-fn map_unary(v: &Value, f: &dyn Fn(f64) -> Value, plus: bool, sys: gridcraft_core::DateSystem) -> Value {
+fn map_unary(v: &Value, f: &dyn Fn(f64) -> Value, plus: bool, sys: tabilao_core::DateSystem) -> Value {
     match v {
         Value::Array(a) => Value::from(Array { rows: a.rows, cols: a.cols, data: a.data.iter().map(|x| map_unary(x, f, plus, sys)).collect() }),
         Value::Error(e) => Value::Error(*e),
@@ -1655,11 +1655,11 @@ fn zip3(c: &Array, t: &Value, f: &Value, g: impl Fn(&Value, &Value, &Value) -> V
     Value::from(Array { rows, cols, data })
 }
 
-pub fn binary_values(op: BinOp, x: &Value, y: &Value, sys: gridcraft_core::DateSystem) -> Value {
+pub fn binary_values(op: BinOp, x: &Value, y: &Value, sys: tabilao_core::DateSystem) -> Value {
     zip2(x, y, |a, b| binary_scalar(op, a, b, sys))
 }
 
-fn binary_scalar(op: BinOp, a: &Value, b: &Value, sys: gridcraft_core::DateSystem) -> Value {
+fn binary_scalar(op: BinOp, a: &Value, b: &Value, sys: tabilao_core::DateSystem) -> Value {
     if let Value::Error(e) = a {
         return Value::Error(*e);
     }
@@ -1769,7 +1769,7 @@ pub fn precedents(wb: &Workbook, sheet: usize, e: &Expr) -> (Vec<Area>, bool) {
             dynamic = true
         }
         Expr::Name(_) | Expr::Struct(_) => dynamic = true,
-        Expr::Call(n, _) if gridcraft_functions::lookup(n).is_none() && !is_special(n) => dynamic = true,
+        Expr::Call(n, _) if tabilao_functions::lookup(n).is_none() && !is_special(n) => dynamic = true,
         // A range ending in a function's result (`A1:INDEX(B1:B9,n)`) covers the cells between
         // the references inside it, not only those references.
         Expr::Binary(BinOp::Range, a, b) if !matches!((&**a, &**b), (Expr::Ref(_), Expr::Ref(_))) => {
@@ -1865,7 +1865,7 @@ pub const SPECIAL_FUNCTIONS: &[&str] = &[
 ];
 
 pub fn is_known_function(n: &str) -> bool {
-    is_special(&n.to_ascii_uppercase()) || gridcraft_functions::lookup(n).is_some()
+    is_special(&n.to_ascii_uppercase()) || tabilao_functions::lookup(n).is_some()
 }
 
 #[allow(dead_code)]

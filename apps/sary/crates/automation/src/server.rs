@@ -28,7 +28,7 @@ pub enum Backend {
 }
 
 #[derive(Clone)]
-pub struct PhotocraftMcp {
+pub struct SaryMcp {
     backend: Arc<Backend>,
     tool_router: ToolRouter<Self>,
 }
@@ -150,11 +150,11 @@ pub struct NewParams {
 pub struct SaveParams {
     /// Target beneath the configured automation write root: relative (forward slashes) or absolute.
     /// The extension selects the format. Omit to write back to the document's own file, which
-    /// works only for a PSD, PSB or .pcraft file kept in its own format; any other save needs
+    /// works only for a PSD, PSB or .sary file kept in its own format; any other save needs
     /// `path`, so a flattened or converted copy never replaces the opened file.
     #[serde(default)]
     pub path: Option<String>,
-    /// Format override as an extension (pcraft, psd, png, jpg, tif, webp, exr, …).
+    /// Format override as an extension (sary, psd, png, jpg, tif, webp, exr, …).
     #[serde(default)]
     pub format: Option<String>,
     /// JPEG or WebP quality 1..100. A WebP saved with a quality is lossy; without one it is lossless.
@@ -452,12 +452,12 @@ fn to_result(r: Result<Value, AutomationError>) -> Result<CallToolResult, McpErr
 fn bridge_only(name: &str) -> Result<CallToolResult, McpError> {
     Ok(fail(format!(
         "`{name}` drives the live GUI and needs bridge mode: start the app with \
-         `photocraft --control <port> --control-token-file <path>`, then run \
-         `photocraft-cli mcp --bridge 127.0.0.1:<port> --control-token-file <path>`"
+         `sary --control <port> --control-token-file <path>`, then run \
+         `sary-cli mcp --bridge 127.0.0.1:<port> --control-token-file <path>`"
     )))
 }
 
-impl PhotocraftMcp {
+impl SaryMcp {
     pub fn headless() -> Self {
         Self::with_backend(Backend::Headless(Arc::new(Mutex::new(Headless::new()))))
     }
@@ -477,7 +477,7 @@ impl PhotocraftMcp {
             strict_schema(&mut schema);
             route.attr.input_schema = Arc::new(schema);
         }
-        PhotocraftMcp { backend: Arc::new(backend), tool_router }
+        SaryMcp { backend: Arc::new(backend), tool_router }
     }
 
     /// Serve MCP over stdin/stdout until the client disconnects.
@@ -544,11 +544,11 @@ impl PhotocraftMcp {
 
 fn downscale_png(png: &[u8], max_side: u32) -> Result<Option<Vec<u8>>, AutomationError> {
     // A compressed reply's byte limit does not bound its decoded pixel allocation.
-    let opts = photocraft_codecs::DecodeOptions {
-        limits: photocraft_codecs::Limits { max_width: 8192, max_height: 8192, max_pixels: 16 << 20, max_alloc: 64 << 20 },
+    let opts = sary_codecs::DecodeOptions {
+        limits: sary_codecs::Limits { max_width: 8192, max_height: 8192, max_pixels: 16 << 20, max_alloc: 64 << 20 },
         ..Default::default()
     };
-    let img = photocraft_codecs::decode_as_with(photocraft_codecs::Format::Png, png, &opts).map_err(|error| AutomationError::Other(error.to_string()))?;
+    let img = sary_codecs::decode_as_with(sary_codecs::Format::Png, png, &opts).map_err(|error| AutomationError::Other(error.to_string()))?;
     let (w, h) = img.dimensions();
     if max_side == 0 || w.max(h) <= max_side {
         return Ok(None);
@@ -567,9 +567,9 @@ fn downscale_png(png: &[u8], max_side: u32) -> Result<Option<Vec<u8>>, Automatio
         }
     }
     let small =
-        photocraft_codecs::Image::from_u8(nw, nh, photocraft_codecs::ChannelLayout::Rgba, out).map_err(|error| AutomationError::Other(error.to_string()))?;
+        sary_codecs::Image::from_u8(nw, nh, sary_codecs::ChannelLayout::Rgba, out).map_err(|error| AutomationError::Other(error.to_string()))?;
     let bytes =
-        photocraft_codecs::encode(&small, photocraft_codecs::Format::Png, &Default::default()).map_err(|error| AutomationError::Other(error.to_string()))?;
+        sary_codecs::encode(&small, sary_codecs::Format::Png, &Default::default()).map_err(|error| AutomationError::Other(error.to_string()))?;
     Ok(Some(bytes))
 }
 
@@ -578,7 +578,7 @@ fn downscale_png(png: &[u8], max_side: u32) -> Result<Option<Vec<u8>>, Automatio
 // ---------------------------------------------------------------------------
 
 #[tool_router]
-impl PhotocraftMcp {
+impl SaryMcp {
     #[tool(description = "List open documents (index, name, size, dirty) and the active index.")]
     async fn session_list(&self) -> Result<CallToolResult, McpError> {
         if let Some(r) = self.headless_op(|h| Ok(h.session_list())).await {
@@ -727,8 +727,8 @@ impl PhotocraftMcp {
         self.run_command("file.new".into(), Value::Object(params), true).await
     }
 
-    #[tool(description = "Save the document. `.pcraft` is the lossless native format (incremental); other extensions \
-        (psd, png, jpg, tif, webp, exr, …) export. Without `path` only a PSD, PSB or .pcraft document is written back to its own         file. Returns warnings about anything the format cannot hold.")]
+    #[tool(description = "Save the document. `.sary` is the lossless native format (incremental); other extensions \
+        (psd, png, jpg, tif, webp, exr, …) export. Without `path` only a PSD, PSB or .sary document is written back to its own         file. Returns warnings about anything the format cannot hold.")]
     async fn doc_save(&self, Parameters(p): Parameters<SaveParams>) -> Result<CallToolResult, McpError> {
         self.save_impl(p).await
     }
@@ -826,7 +826,7 @@ impl PhotocraftMcp {
             .unwrap_or_else(|| all.get("commands").and_then(Value::as_array).cloned().unwrap_or_default())
             .into_iter()
             .filter(|c| {
-                needle.as_ref().is_none_or(|n| photocraft_engine::commands::list_entry_matches(c, n))
+                needle.as_ref().is_none_or(|n| sary_engine::commands::list_entry_matches(c, n))
                     && (!enabled_only || c.get("enabled").and_then(Value::as_bool).unwrap_or(true))
             })
             .collect();
@@ -966,7 +966,7 @@ fn bridge_only_headless(name: &str) -> Result<CallToolResult, McpError> {
     Ok(fail(format!("`{name}` is only available in headless mode (in the GUI use the window/tab UI or control_call)")))
 }
 
-impl PhotocraftMcp {
+impl SaryMcp {
     async fn run_command(&self, id: String, params: Value, wait: bool) -> Result<CallToolResult, McpError> {
         let (id2, params2) = (id.clone(), params.clone());
         if let Some(r) = self.headless_op(move |h| h.command_start(&id2, params2, wait)).await {
@@ -991,12 +991,12 @@ impl PhotocraftMcp {
     }
 
     async fn save_impl(&self, p: SaveParams) -> Result<CallToolResult, McpError> {
-        let tga_bits = match p.tga_bits.map(|b| (b, photocraft_io::TgaBits::from_bits(u64::from(b)))) {
+        let tga_bits = match p.tga_bits.map(|b| (b, sary_io::TgaBits::from_bits(u64::from(b)))) {
             None => None,
             Some((_, Some(bits))) => Some(bits),
             Some((b, None)) => return Ok(fail(format!("`tgaBits` must be 24 or 32, got {b}"))),
         };
-        let dpx_bits = match p.dpx_bits.map(|b| (b, photocraft_io::DpxBits::from_bits(u64::from(b)))) {
+        let dpx_bits = match p.dpx_bits.map(|b| (b, sary_io::DpxBits::from_bits(u64::from(b)))) {
             None => None,
             Some((_, Some(bits))) => Some(bits),
             Some((b, None)) => return Ok(fail(format!("`dpxBits` must be 8, 10, 12 or 16, got {b}"))),
@@ -1030,7 +1030,7 @@ impl PhotocraftMcp {
         }
         let Some(r) = self
             .headless_op(move |h| {
-                let mut opts = photocraft_io::ExportOptions { tiff_layers: p.tiff_layers, tga_bits, ..Default::default() };
+                let mut opts = sary_io::ExportOptions { tiff_layers: p.tiff_layers, tga_bits, ..Default::default() };
                 opts.encode.dpx_bits = dpx_bits;
                 if let Some(q) = p.quality {
                     opts.encode.jpeg_quality = q.clamp(1, 100);
@@ -1053,7 +1053,7 @@ mod progress;
 mod transport;
 
 /// Used by the render helper in tests and the CLI.
-pub fn render_document_png(doc: &photocraft_doc::Document, max_side: u32) -> Result<Vec<u8>, AutomationError> {
+pub fn render_document_png(doc: &sary_doc::Document, max_side: u32) -> Result<Vec<u8>, AutomationError> {
     files::render_png(doc, max_side)
 }
 
@@ -1098,8 +1098,8 @@ mod tests {
 
     #[test]
     fn bridge_screenshot_decode_limits_apply_even_without_downscaling() {
-        let image = photocraft_codecs::Image::from_u8(8193, 1, photocraft_codecs::ChannelLayout::Rgba, vec![0; 8193 * 4]).unwrap();
-        let png = photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap();
+        let image = sary_codecs::Image::from_u8(8193, 1, sary_codecs::ChannelLayout::Rgba, vec![0; 8193 * 4]).unwrap();
+        let png = sary_codecs::encode(&image, sary_codecs::Format::Png, &Default::default()).unwrap();
         assert!(downscale_png(b"not a png", 32).is_err());
         assert!(downscale_png(&png, 0).is_err());
         assert!(downscale_png(&png, 1024).is_err());
@@ -1107,7 +1107,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn mcp_reports_invalid_filter_parameters_without_changing_history() {
-        let mcp = PhotocraftMcp::headless();
+        let mcp = SaryMcp::headless();
         mcp.headless_op(|h| h.command_run("file.new", json!({"width":8,"height":8}))).await.unwrap().unwrap();
         let before = mcp.headless_op(|h| h.inspect(None)).await.unwrap().unwrap();
         for (params, key) in
@@ -1128,7 +1128,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn a_panicking_command_does_not_wedge_the_session() {
-        let mcp = PhotocraftMcp::headless();
+        let mcp = SaryMcp::headless();
         let r = mcp.headless_op(|_| -> Result<(), AutomationError> { panic!("boom") }).await.unwrap();
         assert!(r.is_err());
         let r = mcp.headless_op(|h| h.command_run("file.new", json!({"width": 8, "height": 8}))).await.unwrap();
@@ -1140,7 +1140,7 @@ mod tests {
     /// client lost every step result.
     #[tokio::test(flavor = "multi_thread")]
     async fn mcp_command_batch_stopped_by_the_budget_keeps_its_step_results() {
-        let mcp = PhotocraftMcp::headless();
+        let mcp = SaryMcp::headless();
         let step = |id: &str, params: Value| RunParams { id: id.into(), params: Some(params), wait: None };
         let mut steps: Vec<RunParams> = (0..MAX_BATCH_STEPS - 1).map(|_| step("command.list", json!({}))).collect();
         steps.push(step("file.new", json!({"width": 8, "height": 8})));
@@ -1159,7 +1159,7 @@ mod tests {
     /// The MCP server applies finished jobs before every tool call too (#503).
     #[tokio::test(flavor = "multi_thread")]
     async fn mcp_tools_see_a_finished_background_job() {
-        let mcp = PhotocraftMcp::headless();
+        let mcp = SaryMcp::headless();
         mcp.headless_op(|h| {
             h.command_run("file.new", json!({"width": 64, "height": 48}))?;
             h.command_run("filter.noise.addNoise", json!({"amount": 50}))?;

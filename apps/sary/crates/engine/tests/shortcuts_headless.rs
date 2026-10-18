@@ -2,7 +2,7 @@
 //! listed, imported and exported; tools share keys without conflicts; system keys are refused;
 //! sets read and write files by path.
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 fn ks(s: &mut Session, p: Value) -> Value {
@@ -68,7 +68,7 @@ fn system_keys_are_refused_and_dropped_from_imports() {
 
 #[test]
 fn sets_read_and_write_files_and_export_everything() {
-    let dir = std::env::temp_dir().join(format!("photocraft-shortcuts-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-shortcuts-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let kys = dir.join("mine.kys");
     let html = dir.join("mine.html");
@@ -121,14 +121,14 @@ fn sets_read_and_write_files_and_export_everything() {
     assert!(s.execute("edit.keyboardShortcuts", p.clone()).is_err(), "{p}");
     assert_eq!(std::fs::read_to_string(&mine).unwrap(), "the user's own file");
     let left: Vec<_> =
-        std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).map(|e| e.file_name()).filter(|n| n.to_string_lossy().contains("photocraft-tmp")).collect();
+        std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).map(|e| e.file_name()).filter(|n| n.to_string_lossy().contains("sary-tmp")).collect();
     assert!(left.is_empty(), "{left:?}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]
 fn a_read_only_target_is_refused_before_anything_is_written() {
-    let dir = std::env::temp_dir().join(format!("photocraft-readonly-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-readonly-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let ro = dir.join("locked.kys");
     std::fs::write(&ro, "locked").unwrap();

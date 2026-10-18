@@ -1,7 +1,7 @@
 //! File dialogs that never block the event loop (#673, #574).
 //!
-//! A command that needs a file asks with [`PhotocraftApp::ask_file`] (or one of its wrappers) and
-//! hands over what to do with the answer. [`PhotocraftApp::poll_file_dialog`], every frame, shows
+//! A command that needs a file asks with [`SaryApp::ask_file`] (or one of its wrappers) and
+//! hands over what to do with the answer. [`SaryApp::poll_file_dialog`], every frame, shows
 //! the queued dialog through [`Services::file_dialog`](crate::Services::file_dialog) with the
 //! window as its parent (so it is modal to the window, as Photoshop's are) and continues the
 //! action once the platform shell answers through the [`FileDialogReply`], from any thread. The
@@ -15,10 +15,10 @@
 use std::path::Path;
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
 
-use photocraft_doc::DocId;
+use sary_doc::DocId;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::file_open::display_name;
 
 /// What a file or folder dialog asks the user for.
@@ -71,7 +71,7 @@ impl FileDialogReply {
 pub type FileDialogFn = Box<dyn FnMut(FileDialogRequest, Option<&eframe::Frame>, FileDialogReply)>;
 
 /// What to do with the answer (`None`: cancelled).
-type Then = Box<dyn FnOnce(&mut PhotocraftApp, Option<FileDialogAnswer>) -> Result<Value, String>>;
+type Then = Box<dyn FnOnce(&mut SaryApp, Option<FileDialogAnswer>) -> Result<Value, String>>;
 
 /// The file dialog in progress.
 pub(crate) struct Pending {
@@ -85,7 +85,7 @@ pub(crate) struct Pending {
 pub(crate) const CANCELLED: &str = "cancelled";
 const UNEXPECTED: &str = "the file dialog gave an unexpected answer";
 
-impl PhotocraftApp {
+impl SaryApp {
     /// Whether a file dialog is open (or about to be shown).
     pub fn file_dialog_open(&self) -> bool {
         self.file_dialog.is_some()
@@ -173,7 +173,7 @@ impl PhotocraftApp {
     }
 
     /// `X.PSD` → `X.psd`, only the extension: the stem and the folders keep the user's spelling.
-    fn lowercased_extension(app: &PhotocraftApp, path: String) -> String {
+    fn lowercased_extension(app: &SaryApp, path: String) -> String {
         if !app.session.prefs().file_handling.lowercase_extension {
             return path;
         }
@@ -311,7 +311,7 @@ fn read_picked(answer: FileDialogAnswer) -> Result<(String, Vec<u8>), String> {
         FileDialogAnswer::ContentsMany(files) => files.into_iter().next().ok_or_else(|| CANCELLED.into()),
         FileDialogAnswer::Paths(paths) => {
             let path = paths.into_iter().next().ok_or(CANCELLED)?;
-            let bytes = photocraft_format::read_file(std::path::Path::new(&path)).map_err(|e| format!("{}: {e}", display_name(&path)))?;
+            let bytes = sary_format::read_file(std::path::Path::new(&path)).map_err(|e| format!("{}: {e}", display_name(&path)))?;
             Ok((path, bytes))
         }
         FileDialogAnswer::FolderTo(_) => Err(UNEXPECTED.into()),

@@ -9,7 +9,7 @@
 //! The renderer interpolates linearly in sRGB, so a two-colour gradient is expanded into short
 //! pieces whose colours follow PowerPoint's ramp.
 
-use deckcraft_color::Rgba;
+use seho_color::Rgba;
 
 /// The next stop's share of the linear-light mix at sixteenths of a segment (0 at the first stop,
 /// 1 at the second). Measured, then made symmetric: `w(1 - t) = 1 - w(t)`.

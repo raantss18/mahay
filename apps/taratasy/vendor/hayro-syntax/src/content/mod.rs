@@ -92,7 +92,7 @@ impl<'a> Readable<'a> for Operator<'a> {
     }
 }
 
-/// PdfCraft patch: how many `EI` candidates an inline image examines, and how far past each
+/// Taratasy patch: how many `EI` candidates an inline image examines, and how far past each
 /// one the end-of-data heuristic looks, before taking the current candidate. Unbounded, the
 /// heuristic re-parsed the rest of the stream for every candidate, and each re-parse ran the
 /// heuristic again on the inline images it met: a fuzzed file hung for minutes.
@@ -117,17 +117,17 @@ pub struct UntypedIter<'a> {
     reader: Reader<'a>,
     stack: Stack<'a>,
     operator: Option<Operator<'a>>,
-    /// PdfCraft patch: this iterator only checks whether data reads as content (the
+    /// Taratasy patch: this iterator only checks whether data reads as content (the
     /// end-of-data heuristic below); inline images it meets end at their first `EI`.
     lookahead: bool,
-    /// PdfCraft patch: whether `reader` holds the whole content stream. The end of a window of a
+    /// Taratasy patch: whether `reader` holds the whole content stream. The end of a window of a
     /// longer stream can fall inside an instruction, so nothing that reads up to it is decided
     /// (see `needs_more`).
     complete: bool,
-    /// PdfCraft patch: set when `next` stopped because the window ran out before the next
+    /// Taratasy patch: set when `next` stopped because the window ran out before the next
     /// instruction was decided. The caller reads more data and resumes at `committed`.
     needs_more: bool,
-    /// PdfCraft patch: the offset just after the instruction `next` returned last.
+    /// Taratasy patch: the offset just after the instruction `next` returned last.
     committed: usize,
 }
 
@@ -137,7 +137,7 @@ impl<'a> UntypedIter<'a> {
         Self::new_window(data, true)
     }
 
-    /// PdfCraft patch: an iterator over `data`, which is the whole stream when `complete`, and
+    /// Taratasy patch: an iterator over `data`, which is the whole stream when `complete`, and
     /// otherwise the start of a longer one.
     pub(crate) fn new_window(data: &'a [u8], complete: bool) -> Self {
         Self {
@@ -238,7 +238,7 @@ impl<'a> UntypedIter<'a> {
                     let stream_data = self.reader.tail()?;
                     let start_offset = self.reader.offset();
                     let mut candidates = 0;
-                    // PdfCraft patch: set when a look-ahead below ran into the end of the window.
+                    // Taratasy patch: set when a look-ahead below ran into the end of the window.
                     let mut lookahead_touched = false;
                     let mut accepted = false;
 
@@ -270,7 +270,7 @@ impl<'a> UntypedIter<'a> {
                             // new we don't bother trying to read it.
                             let tail = &self.reader.tail()?[2..];
                             let mut find_reader = Reader::new(tail);
-                            // PdfCraft patch: bounded (see `MAX_EI_CANDIDATES`).
+                            // Taratasy patch: bounded (see `MAX_EI_CANDIDATES`).
                             candidates += 1;
                             let mut steps = 0;
                             let heuristic = !self.lookahead && candidates <= MAX_EI_CANDIDATES;
@@ -375,7 +375,7 @@ impl<'a> UntypedIter<'a> {
                                 find_reader.read_byte()?;
                             }
 
-                            // PdfCraft patch: the end is only certain if no look-ahead needed bytes
+                            // Taratasy patch: the end is only certain if no look-ahead needed bytes
                             // past the window. Otherwise read more and decide again.
                             if !self.complete
                                 && (lookahead_touched || self.reader.looked_past_end())
@@ -395,7 +395,7 @@ impl<'a> UntypedIter<'a> {
                         }
                     }
 
-                    // PdfCraft patch: without an accepted "EI" the image may still end in later data.
+                    // Taratasy patch: without an accepted "EI" the image may still end in later data.
                     if !accepted && !self.complete {
                         self.needs_more = true;
                         return None;
@@ -413,7 +413,7 @@ impl<'a> UntypedIter<'a> {
             self.reader.skip_white_spaces_and_comments();
         }
 
-        // PdfCraft patch: the window ended between instructions, and another may follow.
+        // Taratasy patch: the window ended between instructions, and another may follow.
         if !self.complete {
             self.needs_more = true;
         }
@@ -421,7 +421,7 @@ impl<'a> UntypedIter<'a> {
         None
     }
 
-    /// PdfCraft patch: skips the blanks and comments before an instruction, as
+    /// Taratasy patch: skips the blanks and comments before an instruction, as
     /// `skip_white_spaces_and_comments` does, and returns where a window may be cut: the start of a
     /// comment that runs into the end of the window, or else where the skipping stopped.
     fn skip_blanks_and_comments(&mut self) -> usize {
@@ -441,7 +441,7 @@ impl<'a> UntypedIter<'a> {
         open_comment.unwrap_or(self.reader.offset())
     }
 
-    /// PdfCraft patch: whether the instruction being read ran into the end of a window, so it
+    /// Taratasy patch: whether the instruction being read ran into the end of a window, so it
     /// cannot be decided yet. Records that more data is needed.
     fn undecided(&mut self) -> bool {
         if !self.complete && self.reader.looked_past_end() {
@@ -476,7 +476,7 @@ impl<'a> TypedIter<'a, UntypedIter<'a>> {
         }
     }
 
-    /// PdfCraft patch: an iterator over a window of a content stream: the whole stream when
+    /// Taratasy patch: an iterator over a window of a content stream: the whole stream when
     /// `complete`, and otherwise the start of a longer one (see [`TypedIter::needs_more`]).
     pub fn new_window(data: &'a [u8], complete: bool) -> Self {
         Self {
@@ -485,14 +485,14 @@ impl<'a> TypedIter<'a, UntypedIter<'a>> {
         }
     }
 
-    /// PdfCraft patch: whether the last `next` returned `None` only because the window ran out
+    /// Taratasy patch: whether the last `next` returned `None` only because the window ran out
     /// before the next instruction was decided. Read more of the stream, then resume at
     /// [`TypedIter::committed`] in a window that starts there.
     pub fn needs_more(&self) -> bool {
         self.untyped.needs_more
     }
 
-    /// PdfCraft patch: the offset in the window just after the last instruction `next` returned.
+    /// Taratasy patch: the offset in the window just after the last instruction `next` returned.
     pub fn committed(&self) -> usize {
         self.untyped.committed
     }

@@ -3,7 +3,7 @@
 //! redo restoring the exact document, and periodic save/reopen in both formats.
 //!
 //! Seeded and deterministic. A failure prints the seed and the last commands so it replays.
-//! `DECKCRAFT_SOAK_STEPS=50000 cargo test -p deckcraft-engine soak -- --ignored` runs a long soak.
+//! `SEHO_SOAK_STEPS=50000 cargo test -p seho-engine soak -- --ignored` runs a long soak.
 
 use std::collections::VecDeque;
 
@@ -64,7 +64,7 @@ fn params(r: &mut Rng, s: &Session) -> Value {
     }
 }
 
-fn doc(s: &Session) -> Option<deckcraft_model::Presentation> {
+fn doc(s: &Session) -> Option<seho_model::Presentation> {
     s.active().map(|d| (*d.doc).clone())
 }
 
@@ -123,7 +123,7 @@ fn soak(seed: u64, steps: usize) {
             panic!("documents {} slides {n}; seed {seed} step {step}; {log:?}", s.documents().len());
         }
         if step % 100 == 99 {
-            for format in ["deckcraft", "pptx"] {
+            for format in ["seho", "pptx"] {
                 let data =
                     s.execute("file.saveBytes", &json!({"format": format})).unwrap_or_else(|e| panic!("save {format}: {e}; seed {seed} step {step}"));
                 let b64 = data["data"].as_str().unwrap_or_default().to_string();
@@ -144,7 +144,7 @@ fn soak(seed: u64, steps: usize) {
 }
 
 fn steps(default: usize) -> usize {
-    std::env::var("DECKCRAFT_SOAK_STEPS").ok().and_then(|v| v.parse().ok()).unwrap_or(default)
+    std::env::var("SEHO_SOAK_STEPS").ok().and_then(|v| v.parse().ok()).unwrap_or(default)
 }
 
 #[test]
@@ -155,9 +155,9 @@ fn soak_random_edits_keep_the_document_valid() {
 }
 
 #[test]
-#[ignore = "long soak; set DECKCRAFT_SOAK_STEPS"]
+#[ignore = "long soak; set SEHO_SOAK_STEPS"]
 fn soak_long() {
-    let seed = std::env::var("DECKCRAFT_SOAK_SEED").ok().and_then(|v| v.parse().ok()).unwrap_or(0x5EED);
+    let seed = std::env::var("SEHO_SOAK_SEED").ok().and_then(|v| v.parse().ok()).unwrap_or(0x5EED);
     soak(seed, steps(20_000));
 }
 

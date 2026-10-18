@@ -7,13 +7,13 @@
 //! inks (`Document::duotone`), which display and flat export render through. Like Photoshop the
 //! conversions flatten (Indexed, Bitmap) and require a grayscale source (Bitmap, Duotone).
 
-use photocraft_algo::quantize::{self, BitmapMethod, Dither, Forced, HalftoneShape, PaletteKind};
-use photocraft_algo::transform::{Homography, Interp};
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_doc::adjust::CurvePoint;
-use photocraft_doc::{ColorTable, Document, Duotone, DuotoneInk, Layer, LayerContent, LayerId, Size};
-use photocraft_geom::Affine;
-use photocraft_raster::Surface;
+use sary_algo::quantize::{self, BitmapMethod, Dither, Forced, HalftoneShape, PaletteKind};
+use sary_algo::transform::{Homography, Interp};
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_doc::adjust::CurvePoint;
+use sary_doc::{ColorTable, Document, Duotone, DuotoneInk, Layer, LayerContent, LayerId, Size};
+use sary_geom::Affine;
+use sary_raster::Surface;
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;
@@ -105,9 +105,9 @@ pub(crate) fn rotate_arbitrary(s: &mut Session, p: &Value) -> Result<Value> {
             if background && let Some(surf) = l.surface_mut() {
                 // The Background stays a Background: rotated pixels over the background colour.
                 let src = surf.content_bounds();
-                let rotated = photocraft_algo::transform::warp_surface(surf, src, &h, interp)?;
+                let rotated = sary_algo::transform::warp_surface(surf, src, &h, interp)?;
                 let mut base = Surface::new(fmt);
-                let fill = photocraft_raster::from_rgba(&fmt, bg);
+                let fill = sary_raster::from_rgba(&fmt, bg);
                 base.write_region(canvas, &fill.repeat(canvas.width() as usize * canvas.height() as usize));
                 crate::transform_cmds::composite_over(&mut base, &rotated);
                 base.prune();
@@ -117,7 +117,7 @@ pub(crate) fn rotate_arbitrary(s: &mut Session, p: &Value) -> Result<Value> {
                 }
             } else {
                 // Rotating the whole image moves locked layers too, including inside groups.
-                with_released_movement_locks(l, |l| crate::transform_cmds::transform_layer(None, photocraft_doc::Locks::default(), l, &h, Some(a), interp))?;
+                with_released_movement_locks(l, |l| crate::transform_cmds::transform_layer(None, sary_doc::Locks::default(), l, &h, Some(a), interp))?;
             }
             // What Free Transform leaves alone: unlinked vector masks, gradient angles, artboards…
             crate::canvas_geom::transform_layer_geometry(l, &a, false, dpi);
@@ -160,7 +160,7 @@ fn with_released_movement_locks<R>(l: &mut Layer, f: impl FnOnce(&mut Layer) -> 
 
 /// The flattened image as straight RGBA (over white when `opaque`).
 fn composite(doc: &Document, opaque: bool) -> Vec<[f32; 4]> {
-    let buf = photocraft_compose::flatten(doc);
+    let buf = sary_compose::flatten(doc);
     if opaque { buf.over_background([1.0, 1.0, 1.0]).px } else { buf.px }
 }
 
@@ -173,7 +173,7 @@ fn single_layer(doc: &mut Document, active: &mut Option<LayerId>, mode: ColorMod
     let mut pixel = vec![0.0; fmt.channels()];
     let mut data = Vec::new();
     for q in px {
-        photocraft_raster::from_rgba_into(&fmt, *q, &mut pixel);
+        sary_raster::from_rgba_into(&fmt, *q, &mut pixel);
         data.extend_from_slice(&pixel);
     }
     let mut l = Layer::raster(name, fmt);
@@ -354,7 +354,7 @@ fn color_table(s: &mut Session, p: &Value) -> Result<Value> {
             let n = fmt.channels();
             let mut data = surf.read_region(r);
             for q in data.chunks_exact_mut(n) {
-                let c = photocraft_raster::to_rgba(&fmt, q);
+                let c = sary_raster::to_rgba(&fmt, q);
                 let rgb = [c[0], c[1], c[2]];
                 let i = if c[3] <= 0.0 {
                     let Some(i) = old.transparent.map(usize::from) else { continue };
@@ -374,7 +374,7 @@ fn color_table(s: &mut Session, p: &Value) -> Result<Value> {
                 };
                 let nc = if i < table.colors.len() { table.rgb(i) } else { table.rgb(table.nearest([c[0], c[1], c[2]])) };
                 let mut enc = [0.0f32; 8];
-                let m = photocraft_raster::from_rgba_into(&fmt, [nc[0], nc[1], nc[2], alpha], &mut enc);
+                let m = sary_raster::from_rgba_into(&fmt, [nc[0], nc[1], nc[2], alpha], &mut enc);
                 q.copy_from_slice(&enc[..m]);
             }
             surf.write_region(r, &data);
@@ -411,7 +411,7 @@ fn bitmap(s: &mut Session, p: &Value) -> Result<Value> {
     };
     s.edit("Bitmap", |doc, active| {
         let px = composite(doc, true);
-        let mut gray: Vec<f32> = px.iter().map(|q| photocraft_color::convert::rgb_to_gray([q[0], q[1], q[2]])).collect();
+        let mut gray: Vec<f32> = px.iter().map(|q| sary_color::convert::rgb_to_gray([q[0], q[1], q[2]])).collect();
         quantize::to_bitmap(&mut gray, doc.size.width as usize, method);
         let out: Vec<[f32; 4]> = gray.iter().map(|g| [*g, *g, *g, 1.0]).collect();
         single_layer(doc, active, ColorMode::Bitmap, &out, "Background", true);
@@ -444,7 +444,7 @@ fn parse_inks(cmd: &str, v: &Value, n: usize) -> Result<Vec<DuotoneInk>> {
         if let Some(pts) = ink.get("curve").and_then(Value::as_array) {
             let mut curve: Vec<CurvePoint> =
                 pts.iter().filter_map(|p| Some(CurvePoint { input: p.get(0)?.as_f64()? as f32 / 100.0, output: p.get(1)?.as_f64()? as f32 / 100.0 })).collect();
-            // 1e39 is a valid JSON number but inf as f32, and a .pcraft with an inf curve can't be saved.
+            // 1e39 is a valid JSON number but inf as f32, and a .sary with an inf curve can't be saved.
             if curve.iter().any(|p| !p.input.is_finite() || !p.output.is_finite()) {
                 return Err(bad(cmd, "curve points must be finite numbers 0..100"));
             }

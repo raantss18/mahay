@@ -4,14 +4,14 @@ use serde_json::{Value, json};
 
 use super::*;
 
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
     app.run("file.new", json!({"width": 40, "height": 30, "background": "transparent"})).unwrap();
     app.run("tools.setColors", json!({"foreground": "#ff0000", "background": "#0000ff"})).unwrap();
     app
 }
 
-fn px(app: &PhotocraftApp, x: i32, y: i32) -> [f32; 4] {
+fn px(app: &SaryApp, x: i32, y: i32) -> [f32; 4] {
     let st = app.session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().rgba(x, y)
 }
@@ -21,7 +21,7 @@ fn close(a: [f32; 4], b: [f32; 4]) -> bool {
 }
 
 /// Open the dialog, set `fields`, press OK.
-fn fill(app: &mut PhotocraftApp, fields: Value) -> Result<Value, String> {
+fn fill(app: &mut SaryApp, fields: Value) -> Result<Value, String> {
     let id = open(app);
     let d = app.ui.dialog_mut(id).unwrap();
     for (k, v) in fields.as_object().unwrap() {
@@ -99,9 +99,9 @@ fn choices_persist_across_restarts() {
     fill(&mut app, json!({"contents": "gray", "mode": "multiply", "opacity": 40, "preserveTransparency": true})).unwrap();
     // A fresh app with the saved preferences opens the dialog with the same choices.
     let saved = app.session.prefs_to_json();
-    let mut s = photocraft_engine::Session::new();
+    let mut s = sary_engine::Session::new();
     s.load_prefs_json(&saved).unwrap();
-    let mut again = PhotocraftApp::new(s, Default::default());
+    let mut again = SaryApp::new(s, Default::default());
     again.run("file.new", json!({"width": 10, "height": 10})).unwrap();
     let f = fields(&again);
     assert_eq!(f["contents"], json!("gray"));
@@ -125,10 +125,10 @@ fn bad_fields_fail_gracefully() {
     assert!(app.ui.dialogs.is_empty(), "OK closes the dialog even when the fill fails");
 }
 
-fn harness() -> Harness<'static, PhotocraftApp> {
+fn harness() -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1280.0, 800.0)).with_max_steps(64).build_eframe(|cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 200, "height": 120})).unwrap();
         app
     });
@@ -136,7 +136,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn press(h: &mut Harness<'_, PhotocraftApp>, key: Key, m: Modifiers) {
+fn press(h: &mut Harness<'_, SaryApp>, key: Key, m: Modifiers) {
     let c = h.state().last_canvas_rect.center();
     h.hover_at(c);
     h.run_steps(1);
@@ -172,23 +172,23 @@ fn menu_opens_the_dialog_and_params_skip_it() {
     crate::menus::invoke(h.state_mut(), &ctx, COMMAND, json!({"contents": "black"})).unwrap();
     assert_eq!(h.state().session.active().unwrap().history.past_len(), 1);
     // No document: an error, not a dialog.
-    let mut empty = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    let mut empty = SaryApp::new(sary_engine::Session::new(), Default::default());
     assert!(crate::menus::invoke(&mut empty, &ctx, COMMAND, json!({})).is_err());
     assert!(empty.ui.dialogs.is_empty());
 }
 
 /// The open Fill dialog's id and the top Color Picker, if one is open.
-fn fill_and_picker(h: &Harness<'_, PhotocraftApp>) -> (u64, Option<u64>) {
+fn fill_and_picker(h: &Harness<'_, SaryApp>) -> (u64, Option<u64>) {
     let app = h.state();
     let fill = app.ui.dialogs.iter().find(|d| owns(&d.fields)).map(|d| d.id).expect("the Fill dialog is open");
     (fill, crate::color_picker_ui::top(app))
 }
 
-fn field(h: &Harness<'_, PhotocraftApp>, id: u64, key: &str) -> Value {
+fn field(h: &Harness<'_, SaryApp>, id: u64, key: &str) -> Value {
     h.state().ui.dialogs.iter().find(|d| d.id == id).and_then(|d| d.fields.get(key).cloned()).unwrap_or(Value::Null)
 }
 
-/// Contents › Color… opens PhotoCraft's Color Picker on the dialog's colour (as Photoshop's Fill
+/// Contents › Color… opens Sary's Color Picker on the dialog's colour (as Photoshop's Fill
 /// does), and its OK sets the Fill colour, not the foreground; Fill then fills with it.
 #[test]
 fn choosing_color_opens_the_color_picker() {
@@ -268,7 +268,7 @@ fn the_pattern_is_picked_from_its_swatches() {
     let id = crate::menus::invoke(h.state_mut(), &ctx, COMMAND, json!({})).unwrap()["dialog"].as_u64().unwrap();
     h.state_mut().ui.dialog_mut(id).unwrap().fields.insert("contents".into(), json!("pattern"));
     h.run_steps(3);
-    let pattern = |h: &Harness<'_, PhotocraftApp>| h.state().ui.dialogs.iter().find(|d| d.id == id).unwrap().fields["pattern"].clone();
+    let pattern = |h: &Harness<'_, SaryApp>| h.state().ui.dialogs.iter().find(|d| d.id == id).unwrap().fields["pattern"].clone();
     let ids: Vec<String> = h.state().session.patterns.items.iter().map(|p| p.id.clone()).collect();
     let sky = ids[h.state().session.patterns.items.iter().position(|p| p.name == "Sky").unwrap()].clone();
     assert_ne!(pattern(&h), json!(sky), "starts on another pattern");

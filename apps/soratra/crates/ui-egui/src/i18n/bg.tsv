@@ -11,7 +11,7 @@
 # Bulgarian computing vocabulary. No Microsoft Word (or other product) localisation, string table
 # or translated UI was consulted or copied, and no other catalog in this repository was used;
 # add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
+# Product, format and technology names (Soratra, PDF, Markdown, MCP …) stay in Latin letters.
 # Commands and buttons use verbal nouns (Запазване, Вмъкване на таблица); instructions use the
 # polite imperative (Въведете, Изберете). Counts use count-neutral wording (`Думи: 21`), so no
 # plural forms are needed.
@@ -19,9 +19,9 @@
 	(no style)	(без стил)
 	(no suggestions)	(няма предложения)
 	1.5 Line Spacing	Междуредие 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Безплатен текстообработващ редактор с отворен код, написан от нулата на Rust.\nЧаст от Crafting Apps на екипа на ArtCraft.
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Безплатен текстообработващ редактор с отворен код, написан от нулата на Rust.\nЧаст от Mahay apps на екипа на Mahay.
 	About	Относно
-	About WordCraft	За WordCraft
+	About Soratra	За Soratra
 	Accept	Приемане
 	Accept All Changes	Приемане на всички промени
 	Accept This Change	Приемане на тази промяна
@@ -332,7 +332,7 @@
 	Envelopes	Пликове
 	Eraser	Гума
 	Even Page	Четна страница
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Всяка команда е достъпна за скриптове и AI агенти: изпълнете `wordcraft-cli mcp` за MCP сървър или стартирайте приложението с `--control <port>` за JSON канала за управление.
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Всяка команда е достъпна за скриптове и AI агенти: изпълнете `soratra-cli mcp` за MCP сървър или стартирайте приложението с `--control <port>` за JSON канала за управление.
 	Export	Експортиране
 	Export PDF	Експортиране в PDF
 	Export Page as PNG	Експортиране на страницата като PNG
@@ -447,8 +447,8 @@
 	Inspect Styles at Selection	Проверка на стиловете при селекцията
 	Interface language:	Език на интерфейса:
 	Italic	Курсив
-	Join the ArtCraft community on Discord	Присъединете се към общността на ArtCraft в Discord
-	Join us on Discord: discord.gg/artcraft	Присъединете се към нас в Discord: discord.gg/artcraft
+	Join the Mahay community on Discord	Присъединете се към общността на Mahay в Discord
+	Join us on Discord: discord.gg/mahay	Присъединете се към нас в Discord: discord.gg/mahay
 	Justify	Двустранно подравняване
 	Keep Lines Together	Редовете заедно
 	Keep Text Only	Запазване само на текста
@@ -460,7 +460,7 @@
 	Landscape	Пейзаж
 	Language	Език
 	{language} (no dictionary)	{language} (няма речник)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Не е инсталиран правописен речник за {language}, затова текстът не се проверява. WordCraft търси речника Hunspell {name} в папката WORDCRAFT_DICTIONARIES и на обичайните места в системата.
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	Не е инсталиран правописен речник за {language}, затова текстът не се проверява. Soratra търси речника Hunspell {name} в папката SORATRA_DICTIONARIES и на обичайните места в системата.
 	Lasso	Ласо
 	Last Column	Последна колона
 	Last commit	Последно подаване
@@ -490,7 +490,7 @@
 	Link to Previous	Връзка към предишния
 	Links	Връзки
 	Location: {path}	Местоположение: {path}
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Авторско право (c) 2026 ArtCraft Team и сътрудниците на WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0. Авторско право (c) 2026 Mahay Team и сътрудниците на Soratra.
 	Macros	Макроси
 	Mailings	Кореспонденция
 	Manage Sources	Управление на източниците
@@ -791,7 +791,7 @@
 	Small caps	Малки главни букви
 	SmartArt	SmartArt
 	Sort	Сортиране
-	Source code: github.com/storytold/wordcraft	Изходен код: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	Изходен код: github.com/raantss18/soratra
 	Space	Интервал
 	Space before/after:	Разстояние преди/след:
 	Spacing	Разстояние
@@ -926,7 +926,7 @@
 	Word Right	Дума надясно
 	Word document (*.docx)	Документ на Word (*.docx)
 	WordArt	WordArt
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	Думи
 	Words only	Само думи
 	Wrap Text	Обтичане на текста
@@ -993,7 +993,7 @@
 	Stopped	Спряно
 	Speed	Скорост
 	Normal speed	Нормална скорост
-	AutoSave documents you have saved in WordCraft	Автоматично запазване на документите, които сте запазили в WordCraft
+	AutoSave documents you have saved in Soratra	Автоматично запазване на документите, които сте запазили в Soratra
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Автоматичното запазване е неуспешно: {error}. Запазете документа, за да включите отново автоматичното запазване.
 	Couldn't download {name}: {error}	Неуспешно изтегляне на {name}: {error}
 	Do you want to save changes to {name}?	Искате ли да запазите промените в {name}?
@@ -1162,7 +1162,7 @@
 	Insert a new equation (Alt+=)	Вмъкване на ново уравнение (Alt+=)
 	Leave the equation (Esc)	Излизане от уравнението (Esc)
 	Preview	Визуализация
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	Рисуване с мастило
 	Erase Ink	Изтриване на мастило
 	Hide Ink	Скриване на мастилото
@@ -1298,7 +1298,7 @@
 	The document will be saved with a password. Save it to protect it.	Документът ще бъде запазен с парола. Запазете го, за да го защитите.
 	The password is removed. Save the document to keep the change.	Паролата е премахната. Запазете документа, за да запазите промяната.
 	The passwords don't match.	Паролите не съвпадат.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Съхранявайте паролата на сигурно място: без нея никой, включително WordCraft, не може да отвори документа. Оставете двете полета празни, за да премахнете паролата.
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	Съхранявайте паролата на сигурно място: без нея никой, включително Soratra, не може да отвори документа. Оставете двете полета празни, за да премахнете паролата.
 	Align Top Left	Подравняване горе вляво
 	Align Top Center	Подравняване горе в центъра
 	Align Top Right	Подравняване горе вдясно
@@ -1325,7 +1325,7 @@
 	Version	Версия
 	% of all commits	% от всички къмити
 	Lines +/−	Редове +/−
-	Craft	Занаят
+	Mahay	Занаят
 	Studio	Студио
 	Atelier	Ателие
 	Darkroom	Тъмна стая
@@ -2401,7 +2401,7 @@
 	Word document	Документ на Word
 	All files	Всички файлове
 	Recipient lists	Списъци с получатели
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Системният диалогов прозорец за файлове не е наличен, затова WordCraft показва своя. За да получите системния, инсталирайте портал за избор на файлове (например xdg-desktop-portal-gtk) или zenity.
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Системният диалогов прозорец за файлове не е наличен, затова Soratra показва своя. За да получите системния, инсталирайте портал за избор на файлове (например xdg-desktop-portal-gtk) или zenity.
 	Up one level	Едно ниво нагоре
 	Home folder	Домашна папка
 	{name} wasn't found.	{name} не е намерен.
@@ -2409,8 +2409,8 @@
 	This folder can't be read: {error}	Тази папка не може да бъде прочетена: {error}
 	Showing the first {count} items.	Показани са първите {count} елемента.
 	File name:	Име на файла:
-	Browse in WordCraft…	Разглеждане в WordCraft…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Отваряне на файл чрез собствения браузър на WordCraft, когато системният диалогов прозорец за файлове не се появява.
+	Browse in Soratra…	Разглеждане в Soratra…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	Отваряне на файл чрез собствения браузър на Soratra, когато системният диалогов прозорец за файлове не се появява.
 	Resize Table by Dragging	Преоразмеряване на таблица чрез плъзгане
 	Visual effects	Визуални ефекти
 	Animation effects:	Ефекти на анимация:
@@ -2436,23 +2436,23 @@
 	TOC {n}	Съдържание {n}
 	Good afternoon	Добър ден
 	Context	Според контекста
-	Couldn't make WordCraft the default: {error}	WordCraft не можа да стане приложение по подразбиране: {error}
+	Couldn't make Soratra the default: {error}	Soratra не можа да стане приложение по подразбиране: {error}
 	Do Not Check Spelling or Grammar	Без проверка на правописа и граматиката
 	Hindi	Хинди
-	In Default apps, choose WordCraft for the document types you want it to open.	В „Приложения по подразбиране“ изберете WordCraft за типовете документи, които искате да отваря.
-	Make WordCraft the default for Word documents…	WordCraft по подразбиране за документи на Word…
+	In Default apps, choose Soratra for the document types you want it to open.	В „Приложения по подразбиране“ изберете Soratra за типовете документи, които искате да отваря.
+	Make Soratra the default for Word documents…	Soratra по подразбиране за документи на Word…
 	Numerals	Цифри
 	Numerals:	Цифри:
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	Отсега нататък файловете .docx, .doc, .rtf и .odt и шаблоните на Word ще се отварят с WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Отваря „Настройки › Приложения по подразбиране“, където избирате WordCraft за .docx и другите типове документи.
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	Отсега нататък файловете .docx, .doc, .rtf и .odt и шаблоните на Word ще се отварят с Soratra.
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	Отваря „Настройки › Приложения по подразбиране“, където избирате Soratra за .docx и другите типове документи.
 	Reading	Четене
 	Reading Column Width	Ширина на колоната при четене
 	Reading Line Spacing	Междуредие при четене
 	Reading Text Size	Размер на текста при четене
 	Show KeyTips (Alt or F10)	Показване на клавишните подсказки (Alt или F10)
 	System	Според системата
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	За да се отварят документите на Word с WordCraft по подразбиране: изберете документ във Finder, изберете File › Get Info, изберете WordCraft под Open with и щракнете Change All.
-	WordCraft is now the default app for Word documents.	WordCraft вече е приложението по подразбиране за документи на Word.
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	За да се отварят документите на Word с Soratra по подразбиране: изберете документ във Finder, изберете File › Get Info, изберете Soratra под Open with и щракнете Change All.
+	Soratra is now the default app for Word documents.	Soratra вече е приложението по подразбиране за документи на Word.
 	Correct TWo INitial CApitals	Коригиране на ДВе НАчални ГЛавни букви
 	Correct accidental usage of cAPS LOCK key	Коригиране на случайно използване на клавиша cAPS LOCK
 	Picture	Картина
@@ -2508,8 +2508,8 @@
 	Undo History	История на отмяната
 	Undo {n} Actions	Отмяна на {n} действия
 	Start-up	Стартиране
-	Show the Start screen when WordCraft starts	Показване на началния екран при стартиране на WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Вкл.: WordCraft се отваря на Файл › Начало с празен документ, шаблоните и последните документи. Изкл.: отваря се празен документ.
+	Show the Start screen when Soratra starts	Показване на началния екран при стартиране на Soratra
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Вкл.: Soratra се отваря на Файл › Начало с празен документ, шаблоните и последните документи. Изкл.: отваря се празен документ.
 	Typing	Въвеждане
 	Level 4	Ниво 4
 	Level 5	Ниво 5
@@ -2556,7 +2556,7 @@
 	{name}   {height} × {width} mm	{name}   {height} × {width} мм
 	{width} × {height} mm	{width} × {height} мм
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	Изследователят изисква онлайн услуга, а WordCraft пази документите ви офлайн.
+	Researcher needs an online service; Soratra keeps your documents offline.	Изследователят изисква онлайн услуга, а Soratra пази документите ви офлайн.
 	These settings will be used for new documents.	Тези настройки ще се използват за новите документи.
 	can't split at the first row	таблицата не може да се раздели на първия ред
 	select two or more cells to merge	изберете две или повече клетки за обединяване

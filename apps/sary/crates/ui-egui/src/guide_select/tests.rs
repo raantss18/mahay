@@ -9,8 +9,8 @@ use crate::state::Tool;
 
 /// A 200 × 100 document with the Move tool, a vertical guide at 50 and a magenta horizontal one
 /// at 30.
-fn app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
     app.sync_views();
     app.ui.tool = Tool::Move;
@@ -19,17 +19,17 @@ fn app() -> PhotocraftApp {
     app
 }
 
-fn click(app: &mut PhotocraftApp, x: f64, y: f64) {
+fn click(app: &mut SaryApp, x: f64, y: f64) {
     tool_event(app, ToolEvent::Down { x, y, pressure: 1.0 }, Modifiers::NONE);
     tool_event(app, ToolEvent::Up { x, y }, Modifiers::NONE);
 }
 
-fn guides(app: &PhotocraftApp) -> (Vec<f64>, Vec<f64>) {
+fn guides(app: &SaryApp) -> (Vec<f64>, Vec<f64>) {
     let g = &app.session.active().unwrap().doc.guides;
     (g.vertical.clone(), g.horizontal.clone())
 }
 
-fn past(app: &PhotocraftApp) -> usize {
+fn past(app: &SaryApp) -> usize {
     app.session.active().unwrap().history.past_len()
 }
 
@@ -93,7 +93,7 @@ fn delete_removes_the_selected_guide_and_leaves_the_pixels() {
     let mut app = app();
     app.run("select.all", json!({})).unwrap();
     let ctx = egui::Context::default();
-    let press = |app: &mut PhotocraftApp, key| {
+    let press = |app: &mut SaryApp, key| {
         let modifiers = Modifiers::NONE;
         let raw = egui::RawInput {
             events: vec![egui::Event::ModifiersChanged(modifiers), egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers }],
@@ -118,9 +118,9 @@ fn delete_removes_the_selected_guide_and_leaves_the_pixels() {
     assert_eq!(guides(&app), (vec![50.0], vec![]));
 }
 
-fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+fn harness(app: SaryApp) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -130,12 +130,12 @@ fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
     h.run_steps(4);
     h
 }
 
-fn right_click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
+fn right_click(h: &mut Harness<'static, SaryApp>, p: Pos2) {
     h.event(egui::Event::PointerMoved(p));
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Secondary, pressed: true, modifiers: Modifiers::NONE });
@@ -145,11 +145,11 @@ fn right_click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2) {
 }
 
 /// The vertical guide through the middle of the document, on screen: the view centres the image.
-fn guide_on_screen(h: &Harness<'static, PhotocraftApp>) -> Pos2 {
+fn guide_on_screen(h: &Harness<'static, SaryApp>) -> Pos2 {
     h.state().last_canvas_rect.center() + vec2(0.0, 20.0)
 }
 
-fn centred_guide_app() -> PhotocraftApp {
+fn centred_guide_app() -> SaryApp {
     let mut app = app();
     app.run("view.clearGuides", json!({})).unwrap();
     app.run("view.newGuide", json!({"orientation": "vertical", "position": 100})).unwrap();

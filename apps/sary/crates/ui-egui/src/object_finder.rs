@@ -3,7 +3,7 @@
 //! Finder does. A click (without dragging) commits that object (`select.object` with `"point"`;
 //! ⇧ adds, ⌥ subtracts, ⇧⌥ intersects); dragging keeps the rectangle mode.
 //!
-//! The lookup is `photocraft_engine::smartselect_cmds::find_object`, run after the pointer has
+//! The lookup is `sary_engine::smartselect_cmds::find_object`, run after the pointer has
 //! been still for [`DEBOUNCE`] seconds on a worker thread (inline on the web), so the UI never
 //! waits for it. Results go into the session's `object_finder` cache, which the click reuses and
 //! which serves every point of an object already found; it is keyed by the document's pixels,
@@ -14,11 +14,11 @@
 use std::sync::Arc;
 
 use egui::{Color32, TextureOptions, pos2};
-use photocraft_algo::selection::Region;
-use photocraft_doc::{DocId, Document, LayerId};
-use photocraft_engine::smartselect_cmds::{find_object, sampled_target};
+use sary_algo::selection::Region;
+use sary_doc::{DocId, Document, LayerId};
+use sary_engine::smartselect_cmds::{find_object, sampled_target};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::Tool;
 
@@ -34,7 +34,7 @@ struct Job {
     rx: std::sync::mpsc::Receiver<Option<Region>>,
 }
 
-/// The hover state of the active document (`PhotocraftApp::object_finder`).
+/// The hover state of the active document (`SaryApp::object_finder`).
 pub(crate) struct Finder {
     doc: DocId,
     revision: u64,
@@ -60,7 +60,7 @@ pub(crate) struct Update {
 }
 
 /// Whether the preview applies now (`pressed`: a pointer button is down).
-fn active(app: &PhotocraftApp, pressed: bool) -> bool {
+fn active(app: &SaryApp, pressed: bool) -> bool {
     app.ui.tool == Tool::ObjectSelection
         && app.ui.tool_options.object_finder
         && !pressed
@@ -71,7 +71,7 @@ fn active(app: &PhotocraftApp, pressed: bool) -> bool {
 
 /// Advances the hover preview with the pointer at `at` (document px; `None` = off the canvas)
 /// at time `now` (seconds).
-pub(crate) fn update(app: &mut PhotocraftApp, at: Option<[f64; 2]>, pressed: bool, now: f64) -> Update {
+pub(crate) fn update(app: &mut SaryApp, at: Option<[f64; 2]>, pressed: bool, now: f64) -> Update {
     let at = at.filter(|p| p[0].is_finite() && p[1].is_finite());
     let (Some(at), true) = (at, active(app, pressed)) else {
         app.object_finder = None;
@@ -97,7 +97,7 @@ pub(crate) fn update(app: &mut PhotocraftApp, at: Option<[f64; 2]>, pressed: boo
         match job.rx.try_recv() {
             Ok(found) => {
                 if let Some(r) = found {
-                    if photocraft_engine::layer_multi_cmds::same_pixels(&job.doc, &doc_arc) {
+                    if sary_engine::layer_multi_cmds::same_pixels(&job.doc, &doc_arc) {
                         app.session.object_finder.insert(&doc_arc, target, Arc::new(r));
                     }
                 } else {
@@ -145,7 +145,7 @@ fn spawn(doc: Arc<Document>, layer: Option<LayerId>, all_layers: bool, px: [i32;
 }
 
 /// Clears the preview (a tool switch or an edit made elsewhere is caught by [`update`] too).
-pub(crate) fn clear(app: &mut PhotocraftApp) {
+pub(crate) fn clear(app: &mut SaryApp) {
     app.object_finder = None;
 }
 
@@ -183,7 +183,7 @@ pub(crate) fn overlay_image(r: &Region, accent: Color32) -> egui::ColorImage {
 }
 
 /// Updates the preview for this frame and draws the highlight on the active document's canvas.
-pub(crate) fn draw(app: &mut PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, idx: usize, hover: Option<egui::Pos2>) {
+pub(crate) fn draw(app: &mut SaryApp, painter: &egui::Painter, xf: &ViewXform, idx: usize, hover: Option<egui::Pos2>) {
     if app.session.active_index() != Some(idx) {
         return;
     }
@@ -219,18 +219,18 @@ mod tests {
     use super::*;
 
     /// A 200 × 160 document: a red disc (centre 100, 80, radius 45) on blue.
-    pub(crate) fn disc_app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    pub(crate) fn disc_app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 200, "height": 160})).unwrap();
         app.session
             .edit("paint", |doc, a| {
                 let s = doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap();
-                s.fill_rect(photocraft_geom::Rect::new(0, 0, 200, 160), &[0.2, 0.4, 0.8, 1.0]);
+                s.fill_rect(sary_geom::Rect::new(0, 0, 200, 160), &[0.2, 0.4, 0.8, 1.0]);
                 for y in 0..160 {
                     for x in 0..200 {
                         let (dx, dy) = (x as f32 + 0.5 - 100.0, y as f32 + 0.5 - 80.0);
                         if dx * dx + dy * dy <= 45.0 * 45.0 {
-                            s.fill_rect(photocraft_geom::Rect::new(x, y, x + 1, y + 1), &[0.9, 0.2, 0.1, 1.0]);
+                            s.fill_rect(sary_geom::Rect::new(x, y, x + 1, y + 1), &[0.9, 0.2, 0.1, 1.0]);
                         }
                     }
                 }
@@ -242,7 +242,7 @@ mod tests {
     }
 
     /// Hovers at `at` until the lookup settles (time advances past the debounce).
-    pub(crate) fn hover(app: &mut PhotocraftApp, at: [f64; 2]) -> Update {
+    pub(crate) fn hover(app: &mut SaryApp, at: [f64; 2]) -> Update {
         let mut t = 100.0;
         loop {
             let u = update(app, Some(at), false, t);
@@ -297,11 +297,11 @@ mod tests {
         use crate::canvas::{ToolEvent, tool_event};
         let mut app = disc_app();
         assert!(hover(&mut app, [100.0, 80.0]).shown.is_some());
-        let click = |app: &mut PhotocraftApp, m: egui::Modifiers| {
+        let click = |app: &mut SaryApp, m: egui::Modifiers| {
             tool_event(app, ToolEvent::Down { x: 100.0, y: 80.0, pressure: 1.0 }, m);
             tool_event(app, ToolEvent::Up { x: 100.0, y: 80.0 }, m);
         };
-        let cov = |app: &PhotocraftApp, x: i32, y: i32| app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |s| s.sample_channel(x, y, 0));
+        let cov = |app: &SaryApp, x: i32, y: i32| app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |s| s.sample_channel(x, y, 0));
         click(&mut app, egui::Modifiers::NONE);
         assert_eq!(app.session.journal.last().map(|(id, _)| id.as_str()), Some("select.object"));
         assert!(cov(&app, 100, 80) >= 0.5 && cov(&app, 60, 80) >= 0.5 && cov(&app, 5, 5) < 0.5);
@@ -320,12 +320,12 @@ mod tests {
 
     #[test]
     fn overlay_image_tints_the_object_and_outlines_it() {
-        let r = Region { bbox: photocraft_geom::Rect::new(0, 0, 4, 4), mask: vec![255; 16] };
+        let r = Region { bbox: sary_geom::Rect::new(0, 0, 4, 4), mask: vec![255; 16] };
         let img = overlay_image(&r, Color32::from_rgb(0, 120, 255));
         assert_eq!(img.size, [4, 4]);
         assert!(img.pixels[0].a() > 200, "edge");
         assert!(img.pixels[5].a() > 0 && img.pixels[5].a() < 200, "fill");
-        let big = Region { bbox: photocraft_geom::Rect::new(0, 0, 3000, 10), mask: vec![255; 30_000] };
+        let big = Region { bbox: sary_geom::Rect::new(0, 0, 3000, 10), mask: vec![255; 30_000] };
         assert!(overlay_image(&big, Color32::WHITE).size[0] <= TEX_MAX);
     }
 }

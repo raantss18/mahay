@@ -4,8 +4,8 @@
 //! the panel turns the difference into one `tools.setBrush` call.
 
 use egui::{Color32, RichText, Sense, Stroke, pos2, vec2};
-use photocraft_engine::BrushSettings;
-use photocraft_engine::paint::{self, BrushPreset, Control, Dynamic, MAX_BRUSH_SIZE, MaskMode, Pattern, PatternStyle, TipShape};
+use sary_engine::BrushSettings;
+use sary_engine::paint::{self, BrushPreset, Control, Dynamic, MAX_BRUSH_SIZE, MaskMode, Pattern, PatternStyle, TipShape};
 
 use crate::brush_preview;
 use crate::theme::{self, Tokens};
@@ -657,7 +657,7 @@ mod tests {
         let mut h = Harness::builder().with_size(vec2(340.0, 1100.0)).build_ui_state(
             move |ui, b: &mut BrushSettings| {
                 if !ready {
-                    crate::PhotocraftApp::setup_context(ui.ctx(), theme::ThemeKind::ProMedium);
+                    crate::SaryApp::setup_context(ui.ctx(), theme::ThemeKind::ProMedium);
                     ready = true;
                     return;
                 }
@@ -676,7 +676,7 @@ mod tests {
             let mut b = BrushSettings::default();
             b.color_dynamics.hue_jitter = 0.37;
             let mut h = section_harness(5, b.clone());
-            crate::PhotocraftApp::setup_context(&h.ctx, kind);
+            crate::SaryApp::setup_context(&h.ctx, kind);
             h.run_steps(3);
             let label = h.get_by_label("Hue Jitter").rect();
             let t = Tokens::get(&h.ctx);

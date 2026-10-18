@@ -22,11 +22,11 @@ Command parameters and current document state are untrusted at the command bound
 The ignored `crates/engine/tests/panic_hunt.rs` integration test exercises commands with adversarial parameters. A changed command also needs focused graceful-failure tests and should be verified with:
 
 ```sh
-cargo test -p photocraft-engine
-cargo test -p photocraft-engine --test panic_hunt -- --ignored
+cargo test -p sary-engine
+cargo test -p sary-engine --test panic_hunt -- --ignored
 ```
 
-The exact command-creation checklist is maintained in the existing [contribution guide](https://github.com/storytold/photocraft/blob/main/docs/contributing.md).
+The exact command-creation checklist is maintained in the existing [contribution guide](https://github.com/raantss18/mahay/blob/main/docs/contributing.md).
 
 ## Security boundary note
 

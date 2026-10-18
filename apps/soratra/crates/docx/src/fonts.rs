@@ -4,7 +4,7 @@
 //! back. [`embedded_fonts`] hands their font files to whoever lays the document out, undoing the
 //! obfuscation Word applies to them (ECMA-376 Part 1, 17.8.1).
 
-use wordcraft_doc::Document;
+use soratra_doc::Document;
 
 use crate::package::{EMBEDDED_PARTS, EmbeddedManifest, FONT_TABLE_PART};
 

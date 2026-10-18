@@ -1,11 +1,11 @@
-# Craft UI
+# Mahay UI
 
-`craft-ui` provides small egui components with application-supplied styles. `icons` prepares
+`mahay-ui` provides small egui components with application-supplied styles. `icons` prepares
 embedded SVG catalogs; `buttons` paints accessible icon buttons; `tabs` handles tab fitting and
 interaction; `layout` provides toolbar fitting, split geometry and resize handles; `theme` shares widget-state styling.
 `docking` supplies transactional panel moves and an optional docking surface.
-`printing` supplies printer/job controls and asynchronous feedback used by WordCraft and GridCraft.
-The current delivery covers nine creative apps (DesignCraft, VectorCraft, PhotoCraft, FilmCraft, EffectCraft, CADCraft, PDFCraft, LightCraft and SoundCraft); prior basic and office adapters are separate. The [suite audit](../../docs/ui-components-audit.md#adoption-and-acceptance)
+`printing` supplies printer/job controls and asynchronous feedback used by Soratra and Tabilao.
+The current delivery covers nine creative apps (Pejy, Tsipika, Sary, Hetsika, Tselatra, Drafitra, PDFCraft, Hazavana and Feo); prior basic and office adapters are separate. The [suite audit](../../docs/ui-components-audit.md#adoption-and-acceptance)
 records their scope and acceptance limits. Assets, complete themes, localization and command handling
 remain in each application. No icons, fonts or application engines are bundled.
 
@@ -13,7 +13,7 @@ remain in each application. No icons, fonts or application engines are bundled.
 
 ```rust
 use std::sync::OnceLock;
-use craft_ui::icons::{SvgIconSet, SvgStyle};
+use mahay_ui::icons::{SvgIconSet, SvgStyle};
 
 // Supply the application's own attributed assets here.
 static ICONS: &[(&str, &[u8])] = &[];
@@ -38,9 +38,9 @@ It sets tint and size on the returned image.
 The library does not install loaders or an egui theme.
 
 The catalog is immutable. SVGs are prepared once and held in `Arc<[u8]>`; lookups share those bytes.
-The fallback uses the requested name in its URI, matching PhotoCraft and VectorCraft. Missing both
+The fallback uses the requested name in its URI, matching Sary and Tsipika. Missing both
 the requested name and fallback produces empty bytes for the loader to report as an error, without
-indexed lookups or a panic. `contains` and `canonical_name` inspect only actual catalog entries. PdfCraft resolves an unknown
+indexed lookups or a panic. `contains` and `canonical_name` inspect only actual catalog entries. Taratasy resolves an unknown
 name to `square` before calling `source`, preserving its fallback cache key.
 
 Use a different URI prefix for every catalog/style combination used in the same egui context.
@@ -61,7 +61,7 @@ states. Selection wins over press and hover. `pressed: None` keeps ordinary hove
 `Some` supplies a separate press treatment. egui owns pointer capture and click cancellation.
 
 ```rust
-use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
+use mahay_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
 use egui::{Color32, CornerRadius, Stroke, Vec2};
 
 fn layer_button(ui: &mut egui::Ui, selected: bool) -> egui::Response {
@@ -112,7 +112,7 @@ The work is linear in tab count with at most 32 fitting passes; the caller caps 
 
 ```rust
 fn tab(ui: &mut egui::Ui, rect: egui::Rect, selected: bool) -> egui::Response {
-    craft_ui::tabs::Tab::new(ui.id().with("layers-tab"), "Layers", selected)
+    mahay_ui::tabs::Tab::new(ui.id().with("layers-tab"), "Layers", selected)
         .sense(egui::Sense::click_and_drag())
         .show_at(ui, rect, |ui, response| {
             let fill = if response.hovered() { egui::Color32::GRAY } else { egui::Color32::DARK_GRAY };
@@ -136,7 +136,7 @@ are supplied by the application. Tiny areas relax the minimum to half the space 
 non-finite or inverted input returns `None` instead of panicking.
 
 ```rust
-use craft_ui::layout::{split_rect, SplitAxis, SplitSize};
+use mahay_ui::layout::{split_rect, SplitAxis, SplitSize};
 
 fn two_panes(rect: egui::Rect) -> Option<(egui::Rect, egui::Rect)> {
     let split = split_rect(rect, SplitAxis::Horizontal, SplitSize::Ratio(0.5), 4.0, 20.0)?;
@@ -192,12 +192,12 @@ into silently missing commands. See the API documentation for the accepted numer
 ## Theme mechanisms
 
 `theme::WidgetPalette` applies background colors to egui's five widget states, with a supplied
-corner radius and foreground stroke. VectorCraft, DesignCraft and LightCraft construct it from their existing
+corner radius and foreground stroke. Tsipika, Pejy and Hazavana construct it from their existing
 local tokens. It updates each state's strong/weak background fill, radius and foreground; borders,
 expansion and all other visual settings are retained.
 
 ```rust
-use craft_ui::theme::WidgetPalette;
+use mahay_ui::theme::WidgetPalette;
 use egui::{Color32, CornerRadius, Stroke};
 
 fn style_widgets(visuals: &mut egui::Visuals, palette: WidgetPalette, text: Color32) {
@@ -217,7 +217,7 @@ common operation and the differences preserved by the adapters.
 `printing::State` holds the transient printer selection, copies, duplex and grayscale settings,
 plus discovery and submission receivers. Hosts supply `Discover` and `Submit` workers; neither
 the state nor the controls invokes an OS spooler or generates PDF content. Apps map `Settings`
-to `craft-print::Job` and own the Print action, page selection, preview and export behavior.
+to `mahay-print::Job` and own the Print action, page selection, preview and export behavior.
 
 `State::show` takes a stable `egui::Id` and app-localized `Labels`. It draws the settings only;
 apps render typed `Feedback` using their own translations. `poll` requests occasional repaints
@@ -244,7 +244,7 @@ Validation:
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-cargo check --target wasm32-unknown-unknown -p craft-ui
+cargo check --target wasm32-unknown-unknown -p mahay-ui
 ```
 
 The [visual regression suite](../../docs/ui-visual-regressions.md) compares the actual controls
@@ -252,5 +252,5 @@ against independent reference painters, including exact mesh and RGBA checks, an
 color, spacing and stroke changes fail those comparisons. To retain reviewable PNG pairs:
 
 ```sh
-CRAFT_UI_VISUAL_DIR=/absolute/path/to/visuals cargo test -p craft-ui --test visual_regression
+MAHAY_UI_VISUAL_DIR=/absolute/path/to/visuals cargo test -p mahay-ui --test visual_regression
 ```

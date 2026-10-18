@@ -2,7 +2,7 @@
 //! managers keep their document preferences here (Zotero: `ZOTERO_PREF_1`…), so they must
 //! survive a round trip intact.
 
-use wordcraft_doc::CustomProp;
+use soratra_doc::CustomProp;
 
 use crate::xml::{El, MAX_DEPTH, Node, W, esc};
 

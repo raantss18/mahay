@@ -6,12 +6,12 @@ mod common;
 use std::sync::Arc;
 
 use common::*;
-use photocraft_cms::{Builtin, ColorSpace, Profile};
-use photocraft_color::{ColorMode, SampleType};
-use photocraft_io::*;
+use sary_cms::{Builtin, ColorSpace, Profile};
+use sary_color::{ColorMode, SampleType};
+use sary_io::*;
 
-fn single(mode: ColorMode, depth: SampleType, alpha: bool) -> photocraft_doc::Document {
-    let mut d = photocraft_doc::Document::new("s", photocraft_geom::Size::new(9, 6), mode, depth);
+fn single(mode: ColorMode, depth: SampleType, alpha: bool) -> sary_doc::Document {
+    let mut d = sary_doc::Document::new("s", sary_geom::Size::new(9, 6), mode, depth);
     let fmt = d.pixel_format();
     d.layers.push(raster("Background", fmt, d.bounds(), 3, alpha));
     d
@@ -86,8 +86,8 @@ fn cmyk_to_png_is_colour_managed_and_tagged_srgb() {
 
 #[test]
 fn cmyk_fills_survive_psd_roundtrip_at_every_depth() {
-    use photocraft_doc::{Color, Document, Fill, GradientStyle, Layer, LayerContent};
-    let icc = photocraft_cms::synth::cmyk_profile(&photocraft_cms::synth::CmykParams {
+    use sary_doc::{Color, Document, Fill, GradientStyle, Layer, LayerContent};
+    let icc = sary_cms::synth::cmyk_profile(&sary_cms::synth::CmykParams {
         tvi: [0.26, 0.26, 0.26, 0.3],
         grid_a2b: 5,
         grid_b2a: 9,
@@ -113,19 +113,19 @@ fn cmyk_fills_survive_psd_roundtrip_at_every_depth() {
                     *offset = (0.1, -0.2);
                     *dither = true;
                 }
-                let mut doc = Document::new("CMYK fill", photocraft_geom::Size::new(9, 6), ColorMode::Cmyk, depth);
+                let mut doc = Document::new("CMYK fill", sary_geom::Size::new(9, 6), ColorMode::Cmyk, depth);
                 doc.icc_profile = profile.clone();
                 doc.layers.push(Layer::new("Fill", LayerContent::Fill(fill)));
-                let expected = photocraft_compose::flatten(&doc).px;
-                assert!(max_diff(&expected, &photocraft_compose::render_tiled(&doc, doc.bounds(), 3).px) <= 1e-6);
+                let expected = sary_compose::flatten(&doc).px;
+                assert!(max_diff(&expected, &sary_compose::render_tiled(&doc, doc.bounds(), 3).px) <= 1e-6);
                 let bytes = export(&doc, "x.psd", &ExportOptions::default()).unwrap().bytes;
                 let back = import("x.psd", &bytes).unwrap().document;
-                let actual = photocraft_compose::flatten(&back).px;
+                let actual = sary_compose::flatten(&back).px;
                 let diff = max_diff(&expected, &actual);
                 assert!(diff <= 1e-6, "{depth:?} {style:?}: round-trip error {diff}");
                 assert_eq!(back.icc_profile, doc.icc_profile);
                 if style.is_none() {
-                    let native = photocraft_raster::Surface::with_default(doc.pixel_format(), &[a.c[0], a.c[1], a.c[2], a.c[3], a.alpha]);
+                    let native = sary_raster::Surface::with_default(doc.pixel_format(), &[a.c[0], a.c[1], a.c[2], a.c[3], a.alpha]);
                     let actual = back.layers[0].fill_cache.as_ref().unwrap().surface.read_region(doc.bounds());
                     for (actual, expected) in actual.iter().zip(native.read_region(doc.bounds())) {
                         let tolerance = if depth == SampleType::F32 { 1e-6 } else { 0.0 };
@@ -143,11 +143,11 @@ fn uncached_cmyk_gradient_corpus_roundtrip() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../corpus/psd-tools/colormodes/4x4_16bit_cmyk.psd");
     let bytes = std::fs::read(path).expect("run cargo xtask corpus --all");
     let doc = import("x.psd", &bytes).unwrap().document;
-    assert!(doc.layers.iter().any(|l| matches!(l.content, photocraft_doc::LayerContent::Fill(_)) && l.fill_cache.is_none()));
-    let expected = photocraft_compose::flatten(&doc).px;
+    assert!(doc.layers.iter().any(|l| matches!(l.content, sary_doc::LayerContent::Fill(_)) && l.fill_cache.is_none()));
+    let expected = sary_compose::flatten(&doc).px;
     let saved = export(&doc, "x.psd", &ExportOptions::default()).unwrap().bytes;
     let back = import("x.psd", &saved).unwrap().document;
-    let diff = max_diff(&expected, &photocraft_compose::flatten(&back).px);
+    let diff = max_diff(&expected, &sary_compose::flatten(&back).px);
     eprintln!("uncached 16-bit CMYK gradient round-trip max error: {diff:.8}");
     assert!(diff <= 1e-6, "round-trip error {diff}");
     assert_eq!(back.icc_profile, doc.icc_profile);
@@ -155,15 +155,15 @@ fn uncached_cmyk_gradient_corpus_roundtrip() {
 
 #[test]
 fn rgb_fill_colours_separate_through_the_document_cmyk_profile() {
-    use photocraft_cms::{Intent, Transform, synth};
-    use photocraft_doc::{Color, Document, Fill, Layer, LayerContent};
+    use sary_cms::{Intent, Transform, synth};
+    use sary_doc::{Color, Document, Fill, Layer, LayerContent};
     let profile = synth::cmyk_profile(&synth::CmykParams { tvi: [0.26, 0.26, 0.26, 0.3], grid_a2b: 5, grid_b2a: 9, ..Default::default() });
     let profile = Profile::parse(&profile.to_bytes()).unwrap();
     let rgb = [0.2, 0.4, 0.6];
     let mut expected = [0.0; 4];
     Transform::new(Builtin::Srgb.profile(), &profile, Intent::RelativeColorimetric, true).unwrap().eval_fast(&rgb, &mut expected);
     for depth in SampleType::ALL {
-        let mut doc = Document::new("RGB fill", photocraft_geom::Size::new(1, 1), ColorMode::Cmyk, depth);
+        let mut doc = Document::new("RGB fill", sary_geom::Size::new(1, 1), ColorMode::Cmyk, depth);
         doc.icc_profile = Some(profile.to_bytes());
         doc.layers.push(Layer::new("Fill", LayerContent::Fill(Fill::Solid(Color::rgb(rgb[0], rgb[1], rgb[2])))));
         let bytes = export(&doc, "x.psd", &ExportOptions::default()).unwrap().bytes;
@@ -207,14 +207,14 @@ fn grdm_block(a: (u16, [u16; 4]), b: (u16, [u16; 4])) -> Vec<u8> {
 }
 
 fn saved_grdm(bytes: &[u8]) -> Vec<u8> {
-    let f = photocraft_psd::PsdFile::from_bytes(bytes).unwrap();
+    let f = sary_psd::PsdFile::from_bytes(bytes).unwrap();
     f.layers().iter().find_map(|l| l.block(b"grdm")).map(|b| b.data.clone()).expect("grdm block")
 }
 
 #[test]
 fn gradient_maps_with_cmyk_lab_gray_stops_import_and_keep_their_space() {
-    use photocraft_cms::{Intent, Transform, synth};
-    use photocraft_doc::{Adjustment, Document, Layer, LayerContent};
+    use sary_cms::{Intent, Transform, synth};
+    use sary_doc::{Adjustment, Document, Layer, LayerContent};
     let profile = synth::cmyk_profile(&synth::CmykParams { tvi: [0.26, 0.26, 0.26, 0.3], grid_a2b: 5, grid_b2a: 9, ..Default::default() });
     let profile = Profile::parse(&profile.to_bytes()).unwrap();
     let to_srgb = Transform::new(&profile, Builtin::Srgb.profile(), Intent::RelativeColorimetric, true).unwrap();
@@ -228,7 +228,7 @@ fn gradient_maps_with_cmyk_lab_gray_stops_import_and_keep_their_space() {
     for depth in SampleType::ALL {
         for (mode, stops) in [(ColorMode::Cmyk, (cmyk_stop, paper)), (ColorMode::Lab, (lab_dark, lab_red)), (ColorMode::Grayscale, (gray_white, gray_black))] {
             let block = grdm_block(stops.0, stops.1);
-            let mut doc = Document::new("map", photocraft_geom::Size::new(4, 2), mode, depth);
+            let mut doc = Document::new("map", sary_geom::Size::new(4, 2), mode, depth);
             if mode == ColorMode::Cmyk {
                 doc.icc_profile = Some(profile.to_bytes());
             }
@@ -247,7 +247,7 @@ fn gradient_maps_with_cmyk_lab_gray_stops_import_and_keep_their_space() {
                     let mut expected = [0.0f32; 3];
                     to_srgb.eval_fast(&[0.6, 0.0, 0.0, 0.4], &mut expected);
                     assert!(first.iter().zip(expected).all(|(a, b)| (a - b).abs() < 1e-4), "{depth:?}: {first:?} vs {expected:?}");
-                    let builtin = photocraft_color::convert::cmyk_to_rgb([0.6, 0.0, 0.0, 0.4]);
+                    let builtin = sary_color::convert::cmyk_to_rgb([0.6, 0.0, 0.0, 0.4]);
                     assert!(first.iter().zip(builtin).any(|(a, b)| (a - b).abs() > 1e-3), "the document profile is used");
                 }
                 ColorMode::Lab => {
@@ -258,10 +258,10 @@ fn gradient_maps_with_cmyk_lab_gray_stops_import_and_keep_their_space() {
                 _ => assert_eq!((first, last), ([1.0; 3], [0.0; 3])),
             }
             // The layer now renders: the composite differs from the background alone.
-            let with_map = photocraft_compose::flatten(&back).px;
+            let with_map = sary_compose::flatten(&back).px;
             let mut hidden = back.clone();
             hidden.layers[1].visible = false;
-            assert!(max_diff(&with_map, &photocraft_compose::flatten(&hidden).px) > 0.01, "{mode:?} {depth:?}");
+            assert!(max_diff(&with_map, &sary_compose::flatten(&hidden).px) > 0.01, "{mode:?} {depth:?}");
             // Saving again keeps the block (and so the stops' colour space) byte for byte...
             let again = export(&back, "x.psd", &ExportOptions::default()).unwrap().bytes;
             assert_eq!(saved_grdm(&again), block, "{mode:?} {depth:?}");

@@ -21,7 +21,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use base64::Engine as _;
-use wordcraft_doc::Document;
+use soratra_doc::Document;
 
 use crate::flat::W2003_NS;
 use crate::package::{Package, Rels, rt};

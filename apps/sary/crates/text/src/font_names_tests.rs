@@ -1,6 +1,6 @@
 //! Reproduce numeric subfamilies without redistributing proprietary fonts.
 use super::*;
-use photocraft_doc::text::CharStyle;
+use sary_doc::text::CharStyle;
 
 fn numeric_font(source: &[u8], style: &str, ps: &str) -> Vec<u8> {
     let mut bytes = source.to_vec();
@@ -54,7 +54,7 @@ fn numeric_subfamilies_with_identical_weights_select_distinct_faces() {
     assert_ne!(a.font_family, b.font_family);
     assert_eq!(db.faces(&a.font_family)[0].postscript_name.as_deref(), Some("UnrelatedPS20"));
     assert_eq!(db.faces(&b.font_family)[0].postscript_name.as_deref(), Some("UnrelatedPS30"));
-    assert!(!db.families().iter().any(|f| f.starts_with(".PhotoCraft-face-")));
+    assert!(!db.families().iter().any(|f| f.starts_with(".Sary-face-")));
     let alias = b.font_family.clone();
     b.font_family = "Numeric Test".into();
     db.select_named_face(&mut b);
@@ -63,7 +63,7 @@ fn numeric_subfamilies_with_identical_weights_select_distinct_faces() {
 
 #[test]
 fn numeric_styles_shape_different_outlines_and_keep_psd_identity() {
-    use photocraft_doc::{TextLayer, text::TextRun};
+    use sary_doc::{TextLayer, text::TextRun};
     let mut engine = crate::TextEngine::new();
     engine.fonts.register_font_data(numeric_font(&INTER_REGULAR, "20", "UnrelatedPS20"));
     engine.fonts.register_font_data(numeric_font(&INTER_SEMIBOLD, "30", "UnrelatedPS30"));

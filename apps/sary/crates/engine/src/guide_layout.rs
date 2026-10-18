@@ -1,7 +1,7 @@
 //! Pure guide-layout calculation shared by the command and its non-destructive UI preview.
 
-use photocraft_doc::Guides;
-use photocraft_geom::Rect;
+use sary_doc::Guides;
+use sary_geom::Rect;
 use serde_json::Value;
 
 use crate::{EngineError, Result, Session};

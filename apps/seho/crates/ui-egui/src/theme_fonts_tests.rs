@@ -1,6 +1,6 @@
 //! Design › Fonts › Customize Fonts… opens Create New Theme Fonts and saves in one step.
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
 
@@ -20,7 +20,7 @@ fn harness() -> Harness<'static, SlideApp> {
     h
 }
 
-fn scheme(h: &Harness<'_, SlideApp>) -> deckcraft_model::theme::FontScheme {
+fn scheme(h: &Harness<'_, SlideApp>) -> seho_model::theme::FontScheme {
     h.state().session.active().unwrap().doc.masters[0].theme.fonts.clone()
 }
 

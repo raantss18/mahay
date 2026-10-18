@@ -1,6 +1,6 @@
-# Craft AI model
+# Mahay AI model
 
-`craft-ai-core` is the data model and contract for AI in the Craft Apps: connections, models,
+`mahay-ai-core` is the data model and contract for AI in the Mahay Apps: connections, models,
 capabilities, roles (tools), requests, jobs, consent, request history, the shared store's file
 format, and the declarative route spec. It has no I/O, no async runtime and compiles for
 `wasm32-unknown-unknown`. It depends only on `serde` and `serde_json`.

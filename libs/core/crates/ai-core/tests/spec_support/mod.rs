@@ -1,7 +1,7 @@
 //! Fixtures for the spec tests: the two documented shapes and small edit helpers.
 #![allow(dead_code)]
 
-use craft_ai_core::spec::{Spec, SpecError};
+use mahay_ai_core::spec::{Spec, SpecError};
 use serde_json::{Value, json};
 
 pub fn queue() -> Value {

@@ -174,7 +174,7 @@ mod tests {
     use crate::payload::Payload;
 
     fn app() -> AppId {
-        AppId::new("photocraft").unwrap()
+        AppId::new("sary").unwrap()
     }
 
     fn req() -> Request {
@@ -236,7 +236,7 @@ mod tests {
         let mut ledger = ConsentLedger::default();
         let d = Disclosure::for_request(&app(), &remote("a"), &req());
         ledger.grant(&d);
-        let other = Disclosure::for_request(&AppId::new("wordcraft").unwrap(), &remote("a"), &req());
+        let other = Disclosure::for_request(&AppId::new("soratra").unwrap(), &remote("a"), &req());
         assert!(ledger.needs_consent(&other, 0));
         ledger.revoke(&app(), &remote("a").id);
         assert!(ledger.needs_consent(&d, 0));
@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn a_record_from_before_scoping_loads_but_covers_nothing() {
-        let old = r#"{"records":[{"app":"photocraft","connection":"a","destination":"https://api.example.com","kinds":["text","image"]}]}"#;
+        let old = r#"{"records":[{"app":"sary","connection":"a","destination":"https://api.example.com","kinds":["text","image"]}]}"#;
         let ledger: ConsentLedger = serde_json::from_str(old).unwrap();
         assert_eq!(ledger.records.len(), 1);
         assert_eq!(ledger.records[0].capability, None);

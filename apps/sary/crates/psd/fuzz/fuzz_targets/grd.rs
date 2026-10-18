@@ -6,7 +6,7 @@
 //! a raised limit. The inputs that do reach those caps are in `crates/psd/tests/swatch_malformed.rs`.
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::grd::{self, GrdColor};
+use sary_psd::grd::{self, GrdColor};
 fuzz_target!(|data: &[u8]| {
     let Ok(g) = grd::parse(data) else { return };
     assert!(g.len() <= grd::MAX_GRADIENTS, "{} gradients exceeds MAX_GRADIENTS", g.len());

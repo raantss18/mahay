@@ -15,7 +15,7 @@ use hayro::hayro_syntax::DecryptionError;
 use hayro::hayro_syntax::LoadPdfError;
 use hayro::hayro_syntax::Pdf;
 use lopdf::{Dictionary, Document, LoadOptions, Object, ObjectId};
-use pdfcraft_cos::page_labels::{
+use taratasy_cos::page_labels::{
     MAX_LABEL_BYTES, MAX_LABEL_TOTAL_BYTES, MAX_LABEL_TREE_DEPTH, MAX_LABEL_TREE_WORK, MAX_PREFIX_BYTES, MAX_PREFIX_TOTAL_BYTES, alpha, roman,
 };
 
@@ -38,7 +38,7 @@ const MAX_REMOTE_DESTINATION_NAME_BYTES: usize = 1024;
 const MAX_LAYER_GROUP_ENTRIES: usize = 4096;
 
 /// `DocInfo::outline` holds the first this many bookmarks in outline order. Opening a document
-/// reads only this window; the rest are listed by page through `pdfcraft_organize`.
+/// reads only this window; the rest are listed by page through `taratasy_organize`.
 const OUTLINE_WINDOW: usize = 10_000;
 
 /// Deepest level `DocInfo::outline` nests (the top level is 0); deeper bookmarks are left out.
@@ -381,7 +381,7 @@ pub struct Annotation {
     /// `/IT`, the intent: `FreeTextCallout`, `PolygonCloud`, `FreeTextTypeWriter`…
     pub intent: Option<String>,
     /// A Fill & Sign mark: typed text, a check, cross, dot or line, or a typed, drawn or picture
-    /// signature or initials (the rules of `pdfcraft_annot::is_fill_sign`).
+    /// signature or initials (the rules of `taratasy_annot::is_fill_sign`).
     pub fill_sign: bool,
 }
 
@@ -757,7 +757,7 @@ impl<'a> Inspector<'a> {
     }
 
     /// Whether an annotation is a Fill & Sign mark. Keep in step with
-    /// `pdfcraft_annot::is_fill_sign`, which the engine's comment list uses.
+    /// `taratasy_annot::is_fill_sign`, which the engine's comment list uses.
     fn is_fill_sign(&self, d: &Dictionary, subtype: &str) -> bool {
         let yes = |key: &[u8]| matches!(d.get(key).map(|o| self.resolve(o)), Ok(Object::Boolean(true)));
         if yes(b"PCFillSign") {
@@ -1089,7 +1089,7 @@ impl<'a> Inspector<'a> {
                 }
                 // Not comments: form widgets, pop-ups and non-markup annotations such as the
                 // Screen annotation that drives a LaTeX `animate` player (keep in step with
-                // `pdfcraft_annot::is_comment_subtype`).
+                // `taratasy_annot::is_comment_subtype`).
                 if matches!(subtype.as_str(), "Widget" | "Popup" | "Screen" | "Movie" | "RichMedia" | "3D" | "PrinterMark" | "TrapNet" | "Watermark")
                 {
                     continue;
@@ -1128,7 +1128,7 @@ impl<'a> Inspector<'a> {
                     subtype,
                     author: self.text(d, b"T"),
                     // Acrobat ends lines with CR, which the interface would draw as nothing (keep
-                    // in step with `pdfcraft_annot::summaries`).
+                    // in step with `taratasy_annot::summaries`).
                     contents: self.text(d, b"Contents").map(|s| s.replace("\r\n", "\n").replace('\r', "\n")),
                     modified: self.text(d, b"M").map(|m| pretty_date(&m)),
                     name: self.text(d, b"NM"),
@@ -1468,7 +1468,7 @@ impl<'a> Inspector<'a> {
                     descendant.and_then(|d| d.get(b"CIDSystemInfo").ok()).and_then(|o| self.dict(o)).and_then(|c| self.text(c, b"Ordering"));
                 let subset = base.len() > 7 && base.as_bytes()[6] == b'+' && base[..6].bytes().all(|b| b.is_ascii_uppercase());
                 let name = if subset { base[7..].to_string() } else { base };
-                let chosen = pdfcraft_fonts::fallback::substitute(&pdfcraft_fonts::fallback::Request {
+                let chosen = taratasy_fonts::fallback::substitute(&taratasy_fonts::fallback::Request {
                     base_font: &name,
                     embedded,
                     flags,
@@ -1514,9 +1514,9 @@ impl<'a> Inspector<'a> {
 }
 
 /// A text string's value, decoded by the same rules as the engine's object model
-/// ([`pdfcraft_cos::PdfString::to_text`]) so the panels and outline editing agree.
+/// ([`taratasy_cos::PdfString::to_text`]) so the panels and outline editing agree.
 fn text_string(bytes: &[u8]) -> String {
-    pdfcraft_cos::PdfString::literal(bytes).to_text()
+    taratasy_cos::PdfString::literal(bytes).to_text()
 }
 
 fn limited_pdf_string(bytes: &[u8], max_bytes: usize) -> Option<String> {
@@ -2243,7 +2243,7 @@ trailer << /Root 1 0 R >>
                 subset: true,
                 encoding: None,
                 substitute: Some("Helvetica".into()),
-                substitution: Some(pdfcraft_fonts::fallback::Why::NamedStandard14.note().into()),
+                substitution: Some(taratasy_fonts::fallback::Why::NamedStandard14.note().into()),
             }]
         );
     }
@@ -2396,8 +2396,8 @@ trailer << /Root 1 0 R >>
     fn lazy_structure_matches_the_compatibility_inspector() {
         // Each fixture as lopdf writes it, and with its objects in object streams.
         let packed = |bytes: &[u8]| {
-            let doc = pdfcraft_cos::Document::open(Arc::new(bytes.to_vec())).unwrap();
-            pdfcraft_cos::write_full(&doc, &pdfcraft_cos::SaveOptions { object_streams: true, ..Default::default() }).unwrap()
+            let doc = taratasy_cos::Document::open(Arc::new(bytes.to_vec())).unwrap();
+            taratasy_cos::write_full(&doc, &taratasy_cos::SaveOptions { object_streams: true, ..Default::default() }).unwrap()
         };
         let fixtures = [ATTACHMENTS, LAYERS, DESTS].into_iter().flat_map(|bytes| {
             let mut original = Document::load_mem(bytes).unwrap();
@@ -2946,7 +2946,7 @@ trailer << /Size 13 /Root 1 0 R >>
         assert_eq!(grotesk.substitute.as_deref(), Some("Courier"));
         assert!(grotesk.substitution.as_deref().unwrap_or_default().contains("descriptor flags"), "{grotesk:?}");
 
-        // Japanese depends on the optional craft-fonts build input; either way it is reported,
+        // Japanese depends on the optional mahay-fonts build input; either way it is reported,
         // and never as a Latin face.
         let jpan = font(&info.fonts, "KozMinPro-Regular");
         assert!(jpan.substitution.is_some(), "a substitution is always explained");

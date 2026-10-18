@@ -4,8 +4,8 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use deckcraft_model::style::PictureFill;
-use deckcraft_model::{MediaId, Shape, ShapeId, ShapeKind};
+use seho_model::style::PictureFill;
+use seho_model::{MediaId, Shape, ShapeId, ShapeKind};
 use serde_json::{Value, json};
 
 use super::*;
@@ -291,7 +291,7 @@ mod tests {
     /// keep that media: the effect needs it to be changed or removed.
     #[test]
     fn media_still_used_as_an_artistic_original_is_kept() {
-        use deckcraft_model::style::Artistic;
+        use seho_model::style::Artistic;
         let mut s = Session::with_new();
         let big = png(1200, 600);
         let processed = png(1100, 600);
@@ -299,7 +299,7 @@ mod tests {
             let original = doc.add_media("original.png", "image/png", big.clone()).expect("media");
             let shown = doc.add_media("processed.png", "image/png", processed.clone()).expect("media");
             let slide = Arc::make_mut(doc.slides.first_mut().ok_or_else(|| bad("test", "no slide"))?);
-            let xfrm = Some(deckcraft_geom::Xfrm::new(0.0, 0.0, 72.0, 36.0));
+            let xfrm = Some(seho_geom::Xfrm::new(0.0, 0.0, 72.0, 36.0));
             let with_effect =
                 PictureFill { media: shown, artistic: Some(Artistic { effect: "artisticBlur".into(), original }), ..Default::default() };
             slide.shapes.push(Shape { id: ShapeId(70_001), xfrm, kind: ShapeKind::Picture { fill: with_effect }, ..Default::default() });

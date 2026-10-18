@@ -4,12 +4,12 @@
 //! for it (`canvas::ensure_texture`, the path without a GPU or when the GPU compositor falls back).
 //!
 //! ```sh
-//! cargo run --release -p photocraft-ui-egui --example type_bench -- [--size 6000x4000] [--layers 50] [--steps 30] [--effects] [--typing]
+//! cargo run --release -p sary-ui-egui --example type_bench -- [--size 6000x4000] [--layers 50] [--steps 30] [--effects] [--typing]
 //! ```
 
 use std::time::Instant;
 
-use photocraft_ui_egui::{PhotocraftApp, Services};
+use sary_ui_egui::{SaryApp, Services};
 use serde_json::json;
 
 fn arg(args: &[String], name: &str) -> Option<String> {
@@ -24,15 +24,15 @@ fn median(mut v: Vec<f64>) -> f64 {
 /// `--typing`: per-keystroke cost of typing into a horizontal and a vertical (#199) Japanese type
 /// layer: the edit command (re-layout and re-render), the Type tool's overlay layout and the CPU
 /// canvas refresh, as the Type tool does it for each character.
-fn typing(app: &mut PhotocraftApp, steps: usize) {
-    let text: Vec<char> = "縦書きのテキストは、「右から左へ」進みます。PhotoCraft 2026年ー".chars().collect();
+fn typing(app: &mut SaryApp, steps: usize) {
+    let text: Vec<char> = "縦書きのテキストは、「右から左へ」進みます。Sary 2026年ー".chars().collect();
     for orient in ["horizontal", "vertical"] {
         let r = app.run("type.create", json!({"x": 3000, "y": 200, "text": "", "size": 48, "font": "Hiragino Sans"})).expect("type.create");
         let id = r["layer"].as_u64().unwrap_or(0);
         app.run(&format!("type.orientation.{orient}"), json!({"layer": id})).expect("orientation");
         app.sync_views();
         let ctx = egui::Context::default();
-        let _ = photocraft_ui_egui::canvas::ensure_texture(app, &ctx, 0, None);
+        let _ = sary_ui_egui::canvas::ensure_texture(app, &ctx, 0, None);
         let (mut cmd, mut lay, mut canvas, mut total) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
         for i in 0..steps {
             let c = text.get(i % text.len()).copied().unwrap_or('あ');
@@ -40,9 +40,9 @@ fn typing(app: &mut PhotocraftApp, steps: usize) {
             app.run("type.edit", json!({"layer": id, "replace": {"start": i, "end": i, "text": c.to_string()}, "coalesce": format!("typing-{orient}")}))
                 .expect("type.edit");
             let t1 = Instant::now();
-            let _ = photocraft_ui_egui::type_tool::layout(app, photocraft_doc::LayerId(id));
+            let _ = sary_ui_egui::type_tool::layout(app, sary_doc::LayerId(id));
             let t2 = Instant::now();
-            let _ = photocraft_ui_egui::canvas::ensure_texture(app, &ctx, 0, None);
+            let _ = sary_ui_egui::canvas::ensure_texture(app, &ctx, 0, None);
             let t3 = Instant::now();
             cmd.push((t1 - t0).as_secs_f64() * 1e3);
             lay.push((t2 - t1).as_secs_f64() * 1e3);
@@ -70,7 +70,7 @@ fn main() {
     // `--no-coalesce`: one history step per step, as the options bar did before #124.
     let coalesce = !args.iter().any(|a| a == "--no-coalesce");
 
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), Services::default());
     app.run("file.new", json!({"width": w, "height": h})).expect("new document");
     if args.iter().any(|a| a == "--typing") {
         typing(&mut app, steps);
@@ -92,7 +92,7 @@ fn main() {
     app.sync_views();
     let ctx = egui::Context::default();
     let t0 = Instant::now();
-    let _ = photocraft_ui_egui::canvas::ensure_texture(&mut app, &ctx, 0, None);
+    let _ = sary_ui_egui::canvas::ensure_texture(&mut app, &ctx, 0, None);
     eprintln!("first canvas composite: {:.0} ms", t0.elapsed().as_secs_f64() * 1e3);
 
     let id = ids.get(n / 2).copied().unwrap_or(0);
@@ -108,15 +108,15 @@ fn main() {
         })
         .expect("type.setStyle");
         let t1 = Instant::now();
-        let _ = photocraft_ui_egui::canvas::ensure_texture(&mut app, &ctx, 0, None);
+        let _ = sary_ui_egui::canvas::ensure_texture(&mut app, &ctx, 0, None);
         let t2 = Instant::now();
         cmd.push((t1 - t0).as_secs_f64() * 1e3);
         canvas.push((t2 - t1).as_secs_f64() * 1e3);
         total.push((t2 - t0).as_secs_f64() * 1e3);
     }
     // Undo steps back to the size before the drag.
-    let size = |app: &PhotocraftApp| match app.session.active().and_then(|s| s.doc.layer(photocraft_doc::LayerId(id))).map(|l| &l.content) {
-        Some(photocraft_doc::LayerContent::Text(t)) => t.size_pt,
+    let size = |app: &SaryApp| match app.session.active().and_then(|s| s.doc.layer(sary_doc::LayerId(id))).map(|l| &l.content) {
+        Some(sary_doc::LayerContent::Text(t)) => t.size_pt,
         _ => 0.0,
     };
     let start = 24.0 + ((n / 2) % 5) as f32 * 6.0;
@@ -126,8 +126,8 @@ fn main() {
     }
     // `--json out.json` (`cargo xtask perf`): the per-step samples.
     if let Some(out) = arg(&args, "--json") {
-        use photocraft_testkit::perf::{process_peak_rss_bytes, report, row, write_report};
-        let rss = photocraft_testkit::perf::current_rss_bytes().max(process_peak_rss_bytes());
+        use sary_testkit::perf::{process_peak_rss_bytes, report, row, write_report};
+        let rss = sary_testkit::perf::current_rss_bytes().max(process_peak_rss_bytes());
         let rows = vec![
             row("font size step: command", &cmd, rss, None),
             row("font size step: canvas refresh", &canvas, rss, None),

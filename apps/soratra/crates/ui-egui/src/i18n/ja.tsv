@@ -3,9 +3,9 @@
 	(no style)	(スタイルなし)
 	(no suggestions)	（候補なし）
 	1.5 Line Spacing	1.5 行
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Rust でゼロから書かれた、無料のオープンソース ワープロです。\nArtCraft チームの Crafting Apps のひとつです。
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Rust でゼロから書かれた、無料のオープンソース ワープロです。\nMahay チームの Mahay apps のひとつです。
 	About	情報
-	About WordCraft	WordCraft について
+	About Soratra	Soratra について
 	Accept	承諾
 	Accept All Changes	すべての変更を承諾
 	Accept This Change	この変更を承諾
@@ -63,7 +63,7 @@
 	Automatic Table 1 (3 levels)	自動目次 1（3 レベル）
 	Automatic Table 2 (2 levels)	自動目次 2（2 レベル）
 	AutoSave	自動保存
-	AutoSave documents you have saved in WordCraft	WordCraft で保存した文書を自動保存する
+	AutoSave documents you have saved in Soratra	Soratra で保存した文書を自動保存する
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	自動保存できませんでした: {error}。文書を保存し直すと、自動保存が再開します。
 	Balloons	吹き出し
 	Bottom Margin	下余白
@@ -77,7 +77,7 @@
 	Click to switch back to inserting	クリックすると挿入モードに戻ります
 	Color only	色のみ
 	Compress punctuation at the start of a line	行頭の約物を詰める
-	Couldn't make WordCraft the default: {error}	WordCraft を既定のアプリにできませんでした: {error}
+	Couldn't make Soratra the default: {error}	Soratra を既定のアプリにできませんでした: {error}
 	Custom dictionary	ユーザー辞書
 	Dark page (white text on black)	ダーク ページ (黒地に白い文字)
 	Drag a rectangle to draw a table, or a line across cells to split them. Esc stops.	四角形をドラッグして表を描くか、セルを横切る線を引いて分割します。Esc で終了します。
@@ -107,7 +107,7 @@
 	Inside:	内側:
 	Latin text font:	ラテン文字のフォント:
 	Left border	左罫線
-	In Default apps, choose WordCraft for the document types you want it to open.	既定のアプリで、WordCraft で開きたい文書の種類ごとに WordCraft を選んでください。
+	In Default apps, choose Soratra for the document types you want it to open.	既定のアプリで、Soratra で開きたい文書の種類ごとに Soratra を選んでください。
 	Left Margin	左余白
 	Indents and Spacing	インデントと間隔
 	Legal style numbering	正規形式で番号付け
@@ -130,9 +130,9 @@
 	Number style for this level:	このレベルの番号の種類:
 	Only for the selected text	選択したテキストのみ
 	Outside border	外側の罫線
-	Make WordCraft the default for Word documents…	WordCraft を Word 文書の既定のアプリにする…
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	今後、.docx、.doc、.rtf、.odt ファイルと Word テンプレートを WordCraft で開きます。
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	設定 › 既定のアプリ を開きます。そこで .docx などの文書の種類ごとに WordCraft を選びます。
+	Make Soratra the default for Word documents…	Soratra を Word 文書の既定のアプリにする…
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	今後、.docx、.doc、.rtf、.odt ファイルと Word テンプレートを Soratra で開きます。
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	設定 › 既定のアプリ を開きます。そこで .docx などの文書の種類ごとに Soratra を選びます。
 	Overtype	上書き
 	Overtype (typing replaces the characters after the caret)	上書き (入力した文字がカーソルの後ろの文字を置き換えます)
 	Show alignment guides when moving pictures and shapes	画像や図形を移動するときに配置ガイドを表示する
@@ -335,8 +335,8 @@
 	Delete Style	スタイルの削除
 	Delete Table	表の削除
 	Design	デザイン
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Word 文書を既定で WordCraft で開くには: Finder で文書を選び、ファイル › 情報を見る を選んで、「このアプリケーションで開く」で WordCraft を選び、「すべてを変更」をクリックします。
-	WordCraft is now the default app for Word documents.	WordCraft が Word 文書の既定のアプリになりました。
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	Word 文書を既定で Soratra で開くには: Finder で文書を選び、ファイル › 情報を見る を選んで、「このアプリケーションで開く」で Soratra を選び、「すべてを変更」をクリックします。
+	Soratra is now the default app for Word documents.	Soratra が Word 文書の既定のアプリになりました。
 	development build	開発ビルド
 	Diagonal	対角線
 	Diamond	ひし形
@@ -391,7 +391,7 @@
 	Equation	数式
 	Eraser	消しゴム
 	Even Page	偶数ページから開始
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	すべてのコマンドはスクリプトと AI エージェントから利用できます。`wordcraft-cli mcp` で MCP サーバーを起動するか、`--control <port>` を付けてアプリを起動すると JSON 制御チャネルが使えます。
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	すべてのコマンドはスクリプトと AI エージェントから利用できます。`soratra-cli mcp` で MCP サーバーを起動するか、`--control <port>` を付けてアプリを起動すると JSON 制御チャネルが使えます。
 	Export	エクスポート
 	Export a copy to share (PDF, Word document)	共有用にコピーをエクスポート（PDF、Word 文書）
 	Export Page as PNG	ページを PNG としてエクスポート
@@ -503,8 +503,8 @@
 	Inspect Document	ドキュメント検査
 	Interface language:	表示言語:
 	Italic	斜体
-	Join the ArtCraft community on Discord	Discord の ArtCraft コミュニティに参加
-	Join us on Discord: discord.gg/artcraft	Discord で参加: discord.gg/artcraft
+	Join the Mahay community on Discord	Discord の Mahay コミュニティに参加
+	Join us on Discord: discord.gg/mahay	Discord で参加: discord.gg/mahay
 	Justify	両端揃え
 	Keep Lines Together	段落を分割しない
 	Keep lines together	段落を分割しない
@@ -515,7 +515,7 @@
 	Landscape	横
 	Language	言語
 	{language} (no dictionary)	{language}（辞書なし）
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	{language}のスペルチェック辞書がインストールされていないため、チェックされません。WordCraft は Hunspell 辞書 {name} を WORDCRAFT_DICTIONARIES フォルダーと通常のシステムの場所から探します。
+	No spelling dictionary for {language} is installed, so it isn't checked. Soratra looks for the Hunspell dictionary {name} in the SORATRA_DICTIONARIES folder and in the usual system locations.	{language}のスペルチェック辞書がインストールされていないため、チェックされません。Soratra は Hunspell 辞書 {name} を SORATRA_DICTIONARIES フォルダーと通常のシステムの場所から探します。
 	Lasso	なげなわ
 	Last Column	最後の列
 	Last commit	最後のコミット
@@ -562,7 +562,7 @@
 	Merge Formatting	書式を結合
 	Merged PRs	マージ済みの PR
 	Mirrored	見開きページ
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0。Copyright (c) 2026 ArtCraft チームおよび WordCraft の貢献者。
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0。Copyright (c) 2026 Mahay チームおよび Soratra の貢献者。
 	Moderate	やや狭い
 	Modify Style	スタイルの変更
 	Modify…	変更…
@@ -830,7 +830,7 @@
 	Small caps	小型英大文字
 	SmartArt	SmartArt
 	Sort	並べ替え
-	Source code: github.com/storytold/wordcraft	ソース コード: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	ソース コード: github.com/raantss18/soratra
 	Space	スペース
 	Space before/after:	段落前/後の間隔:
 	Spacing	間隔
@@ -969,7 +969,7 @@
 	Word Left	前の単語へ
 	Word Right	次の単語へ
 	WordArt	ワードアート
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	単語数
 	Words only	単語のみ
 	Wrap Text	文字列の折り返し
@@ -1218,7 +1218,7 @@
 	Insert a new equation (Alt+=)	新しい数式を挿入 (Alt+=)
 	Leave the equation (Esc)	数式を終了 (Esc)
 	Preview	プレビュー
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	インクで描く
 	Erase Ink	インクを消す
 	Hide Ink	インクを隠す
@@ -1356,7 +1356,7 @@
 	The document will be saved with a password. Save it to protect it.	文書はパスワード付きで保存されます。保護するには文書を保存してください。
 	The password is removed. Save the document to keep the change.	パスワードを削除しました。変更を保持するには文書を保存してください。
 	The passwords don't match.	パスワードが一致しません。
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	パスワードは安全な場所に保管してください。パスワードがないと、WordCraft を含め誰も文書を開けません。パスワードを削除するには両方のボックスを空にします。
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	パスワードは安全な場所に保管してください。パスワードがないと、Soratra を含め誰も文書を開けません。パスワードを削除するには両方のボックスを空にします。
 
 # Interface text routed through translation (#313)
 	Align Top Left	上揃え (左)
@@ -1385,7 +1385,7 @@
 	Version	バージョン
 	% of all commits	全コミットに占める割合
 	Lines +/−	行数 +/−
-	Craft	クラフト
+	Mahay	クラフト
 	Studio	スタジオ
 	Atelier	アトリエ
 	Darkroom	暗室
@@ -1754,7 +1754,7 @@
 	Word document	Word 文書
 	All files	すべてのファイル
 	Recipient lists	宛先リスト
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	システムのファイル ダイアログを利用できないため、WordCraft 独自のダイアログを表示しています。システムのダイアログを使うには、ファイル選択ポータル (xdg-desktop-portal-gtk など) または zenity をインストールしてください。
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	システムのファイル ダイアログを利用できないため、Soratra 独自のダイアログを表示しています。システムのダイアログを使うには、ファイル選択ポータル (xdg-desktop-portal-gtk など) または zenity をインストールしてください。
 	Up one level	1 つ上のフォルダー
 	Home folder	ホーム フォルダー
 	{name} wasn't found.	{name} が見つかりません。
@@ -1762,8 +1762,8 @@
 	This folder can't be read: {error}	このフォルダーを読み取れません: {error}
 	Showing the first {count} items.	最初の {count} 項目を表示しています。
 	File name:	ファイル名:
-	Browse in WordCraft…	WordCraft で参照…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	システムのファイル ダイアログが表示されないときに、WordCraft 独自のブラウザーでファイルを開きます。
+	Browse in Soratra…	Soratra で参照…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	システムのファイル ダイアログが表示されないときに、Soratra 独自のブラウザーでファイルを開きます。
 	Hide White Space	余白を非表示
 	All pages	すべてのページ
 	Current page	現在のページ
@@ -2143,8 +2143,8 @@
 	Number only, without the label's words	ラベルの語を除いて番号のみ
 	Add whether it is above or below	上にあるか下にあるかを付け加える
 	Start-up	起動
-	Show the Start screen when WordCraft starts	WordCraft の起動時にスタート画面を表示する
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	オン: WordCraft は [ファイル] › [ホーム] で開き、白紙の文書、テンプレート、最近使った文書を表示します。オフ: 白紙の文書を開きます。
+	Show the Start screen when Soratra starts	Soratra の起動時にスタート画面を表示する
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	オン: Soratra は [ファイル] › [ホーム] で開き、白紙の文書、テンプレート、最近使った文書を表示します。オフ: 白紙の文書を開きます。
 	Copy to	コピー先
 
 # Document naming and account controls.
@@ -2175,7 +2175,7 @@
 	{name}   {height} × {width} mm	{name}   {height} × {width} mm
 	{width} × {height} mm	{width} × {height} mm
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}、{columns} × {rows}、{size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	リサーチツールにはオンライン サービスが必要です。WordCraft では文書はオフラインのままです。
+	Researcher needs an online service; Soratra keeps your documents offline.	リサーチツールにはオンライン サービスが必要です。Soratra では文書はオフラインのままです。
 	These settings will be used for new documents.	これらの設定は新しい文書に使用されます。
 	can't split at the first row	先頭の行では表を分割できません
 	select two or more cells to merge	結合するセルを 2 つ以上選択してください

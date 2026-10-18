@@ -4,7 +4,7 @@
 //! Everything is incremental (feed points in any chunking, get the same dabs) and deterministic:
 //! jitter comes from [`crate::rng`] keyed by the stroke seed and the step/dab index.
 
-use photocraft_geom::Point;
+use sary_geom::Point;
 
 use crate::brush::{BrushSettings, Control, Dynamic, Smoothing};
 use crate::rng::{rand_signed, rand01, stream};

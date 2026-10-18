@@ -101,7 +101,7 @@ mod native {
                 let (to, inbox) = channel::<Box<Script>>();
                 let (reply, from) = channel::<Reply>();
                 let doc = self.doc.clone();
-                let spawned = std::thread::Builder::new().name("pdfcraft-xfa-session".into()).stack_size(crate::SCRIPT_STACK).spawn(move || {
+                let spawned = std::thread::Builder::new().name("taratasy-xfa-session".into()).stack_size(crate::SCRIPT_STACK).spawn(move || {
                     crate::xfa::warm_up();
                     // The caller is gone when a send fails: nothing to report then.
                     let _ = reply.send(Reply::Ready);

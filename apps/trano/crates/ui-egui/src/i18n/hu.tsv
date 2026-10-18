@@ -1,4 +1,4 @@
-# Hungarian (hu) catalog for ArtCraft Launcher.
+# Hungarian (hu) catalog for Mahay Trano.
 # Format: context<TAB>source<TAB>translation
 # Empty context = plain UI string (tl!, t).
 # @id = command-id keyed (tr_id).
@@ -6,21 +6,21 @@
 # @msg = status/error message template (message, msg).
 # Other context = disambiguation for tr_ctx.
 #
-# Clean-room: written from the meaning of ArtCraft Launcher's English labels in neutral Hungarian,
+# Clean-room: written from the meaning of Mahay Trano's English labels in neutral Hungarian,
 # using the terms Hungarian-speaking users of creative software know. The user is addressed with
 # the informal "te", as in most current creative and community software.
 #
 # Coverage: the whole interface — every menu string and tl! literal (complete_menus = true).
-# Left in English on purpose: product name "ArtCraft Launcher" (and its "Launcher" tag), suite
-# name "Craft App Suite",
-# app names (PhotoCraft, LightCraft, FilmCraft, DesignCraft, VectorCraft, PdfCraft, EffectCraft,
-# WordCraft, DeckCraft, GridCraft, CADCraft, SoundCraft, FigCraft), "GitHub", "Discord".
+# Left in English on purpose: product name "Mahay Trano" (and its "Launcher" tag), suite
+# name "Mahay App Suite",
+# app names (Sary, Hazavana, Hetsika, Pejy, Tsipika, Taratasy, Tselatra,
+# Soratra, Seho, Tabilao, Drafitra, Feo, Endrika), "GitHub", "Discord".
 # Shortcut keys keep their key-cap names (Shift, Alt, Ctrl, Cmd, Esc).
 # Trailing "…" (U+2026) must be preserved. Placeholders {name}, {n}, {version}, {count}, {v},
 # {what}, {unit}, {real}, {e} must appear in translation.
 
 	Launcher	Launcher
-	Craft App Suite	Craft App Suite
+	Mahay App Suite	Mahay App Suite
 	Open Source Tools for Creatives, Makers, and Builders	Nyílt forráskódú eszközök alkotóknak, barkácsolóknak és fejlesztőknek
 	Settings	Beállítások
 	Check for updates	Frissítések keresése
@@ -73,7 +73,7 @@
 	Reinstall	Újratelepítés
 	Uninstall…	Eltávolítás…
 	All releases	Minden kiadás
-	ArtCraft Launcher {version} is available.	Elérhető az ArtCraft Launcher új verziója: {version}.
+	Mahay Trano {version} is available.	Elérhető az Mahay Trano új verziója: {version}.
 	Dismiss	Elrejtés
 	Update and restart	Frissítés és újraindítás
 	A new version is available. Would you like to relaunch with the updated version?	Új verzió érhető el. Újraindítod az alkalmazást a frissítéshez?
@@ -83,7 +83,7 @@
 	Released {date}	Megjelent: {date}
 	Open on GitHub	Megnyitás a GitHubon
 	Close	Bezárás
-	ArtCraft Launcher {version}	ArtCraft Launcher {version}
+	Mahay Trano {version}	Mahay Trano {version}
 	Only when I ask	Csak kézi kereséskor
 	Automatically download and install updates	Frissítések automatikus letöltése és telepítése
 	Notify me when an installed app has an update	Értesítés a telepített alkalmazásokhoz elérhető frissítésekről
@@ -96,11 +96,11 @@
 	Running in the background	Futtatás a háttérben
 	Keep running in the tray when the window is closed	Az ablak bezárásakor kerüljön a tálcára
 	Show the window on the current desktop	Ablak megjelenítése az aktuális asztalon
-	Start ArtCraft Launcher when I log in	ArtCraft Launcher indítása bejelentkezéskor
+	Start Mahay Trano when I log in	Mahay Trano indítása bejelentkezéskor
 	Community	Közösség
-	Questions, ideas and news from the ArtCraft team	Kérdések, ötletek és hírek az ArtCraft csapatától
+	Questions, ideas and news from the Mahay team	Kérdések, ötletek és hírek az Mahay csapatától
 	Appearance	Megjelenés
-	Quit ArtCraft Launcher	Kilépés az ArtCraft Launcherből
+	Quit Mahay Trano	Kilépés az Mahay Tranoből
 	Done	Kész
 	Uninstall {name}?	{name} eltávolítása?
 	The app will be moved to the Trash. Your documents and settings stay.	Az alkalmazás a Kukába kerül. A dokumentumaid és beállításaid megmaradnak.
@@ -115,7 +115,7 @@
 	{month} {day}, {year}	{year}. {month} {day}.
 
 	Automatically	Automatikusan
-	Every Craft app	Minden Craft-alkalmazás
+	Every Mahay app	Minden Mahay-alkalmazás
 	Apps on this computer	Alkalmazások ezen a számítógépen
 	Installed apps with a newer version	Telepített alkalmazások, amelyekhez frissítés érhető el
 	Apps you can install	Telepíthető alkalmazások
@@ -135,7 +135,7 @@
 	Open link	Hivatkozás megnyitása
 	Update	Frissítés
 	{name} icon	{name} ikonja
-	Loading ArtCraft Launcher…	ArtCraft Launcher betöltése…
+	Loading Mahay Trano…	Mahay Trano betöltése…
 	Cancel update	Frissítés megszakítása
 	Stop waiting; the update can be started again later	Megszakítja a várakozást. A frissítést később újra elindíthatod.
 	Download again	Újbóli letöltés
@@ -160,19 +160,19 @@
 	Tarball (.tar.gz)	Tömörített archívum (.tar.gz)
 
 # Contextual: each app's tagline, keyed by app id
-photocraft	Image editing	Képszerkesztés
-vectorcraft	Vector illustration	Vektoros illusztráció
-filmcraft	Video editing, color and sound	Videószerkesztés, színkorrekció és hang
-lightcraft	Photo library and raw development	Fotók rendszerezése és RAW-előhívás
-pdfcraft	Reading, organizing and protecting PDFs	PDF-ek olvasása, rendezése és védelme
-effectcraft	Motion graphics and visual effects	Mozgógrafika és vizuális effektek
-designcraft	Page layout and publishing	Oldaltervezés és kiadványszerkesztés
-wordcraft	Writing and document design	Írás és dokumentumtervezés
-deckcraft	Presentations and slide shows	Prezentációk és diavetítések
-gridcraft	Spreadsheets and data	Táblázatok és adatok
-cadcraft	Computer-aided design and drafting	Számítógépes tervezés és műszaki rajz
-soundcraft	Recording, editing and mixing audio	Hangrögzítés, hangszerkesztés és keverés
-figcraft	Interface design and prototyping	Felülettervezés és prototípus-készítés
+sary	Image editing	Képszerkesztés
+tsipika	Vector illustration	Vektoros illusztráció
+hetsika	Video editing, color and sound	Videószerkesztés, színkorrekció és hang
+hazavana	Photo library and raw development	Fotók rendszerezése és RAW-előhívás
+taratasy	Reading, organizing and protecting PDFs	PDF-ek olvasása, rendezése és védelme
+tselatra	Motion graphics and visual effects	Mozgógrafika és vizuális effektek
+pejy	Page layout and publishing	Oldaltervezés és kiadványszerkesztés
+soratra	Writing and document design	Írás és dokumentumtervezés
+seho	Presentations and slide shows	Prezentációk és diavetítések
+tabilao	Spreadsheets and data	Táblázatok és adatok
+drafitra	Computer-aided design and drafting	Számítógépes tervezés és műszaki rajz
+feo	Recording, editing and mixing audio	Hangrögzítés, hangszerkesztés és keverés
+endrika	Interface design and prototyping	Felülettervezés és prototípus-készítés
 
 # Contextual: month abbreviations for date rendering
 month	Jan	jan.
@@ -193,8 +193,8 @@ month	Dec	dec.
 	Installing for {platform}	Telepítés {platform} rendszerre
 	Downloads for {platform}	Letöltések {platform} rendszerre
 	No downloads for this system	Nincsenek letöltések ehhez a rendszerhez
-	Join the ArtCraft community on Discord	Csatlakozz az ArtCraft közösségéhez a Discordon
-	ArtCraft on {name}	ArtCraft – {name}
+	Join the Mahay community on Discord	Csatlakozz az Mahay közösségéhez a Discordon
+	Mahay on {name}	Mahay – {name}
 	Couldn't open {name}: {e}	{name} nem nyitható meg: {e}
 	Download cancelled	Letöltés megszakítva
 	Available to install	Telepíthető
@@ -214,7 +214,7 @@ month	Dec	dec.
 	Version {version} installed	Telepített verzió: {version}
 	Version {latest}	Verzió: {latest}
 	No release published yet	Még nem jelent meg kiadás
-	ArtCraft Launcher	ArtCraft Launcher
+	Mahay Trano	Mahay Trano
 	App	Alkalmazás
 	Latest	Legújabb
 	Released	Megjelent
@@ -236,7 +236,7 @@ month	Dec	dec.
 	Couldn't check for updates: {f}	Nem sikerült frissítéseket keresni: {f}
 	Website (coming soon)	Webhely (hamarosan)
 	GitHub repository	GitHub-tároló
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Update 1 app	1 alkalmazás frissítése
 	Update all ({count})	Összes frissítése ({count})
 	⊞  Grid	⊞  Rács
@@ -249,11 +249,11 @@ month	Dec	dec.
 	Full changelog	Teljes változásnapló
 	link	hivatkozás
 	No apps match	Nincs találat
-	Open ArtCraft Launcher to update.	Nyisd meg az ArtCraft Launchert a frissítéshez.
+	Open Mahay Trano to update.	Nyisd meg az Mahay Tranot a frissítéshez.
 	{name} {v} is available	Elérhető: {name} {v}
 	{count} updates are available	{count} frissítés elérhető
 	These notes weren't fetched (GitHub's request limit was reached). They're on the release page.	A kiadási információkat nem sikerült betölteni, mert elértük a GitHub lekérdezési korlátját. A kiadás oldalán megtalálod őket.
-	When on, opening the launcher from the menu bar brings its window to the desktop you're on. When off, macOS switches you to the desktop the window was on.	Ha be van kapcsolva, a menüsorból megnyitott ArtCraft Launcher ablaka az aktuális asztalon jelenik meg. Ha ki van kapcsolva, a macOS arra az asztalra vált, ahol az ablak található.
+	When on, opening the launcher from the menu bar brings its window to the desktop you're on. When off, macOS switches you to the desktop the window was on.	Ha be van kapcsolva, a menüsorból megnyitott Mahay Trano ablaka az aktuális asztalon jelenik meg. Ha ki van kapcsolva, a macOS arra az asztalra vált, ahol az ablak található.
 	Couldn't change the login item: {e}	Az automatikus indítás beállítását nem sikerült módosítani: {e}
 
 # Contextual: table column headers
@@ -313,7 +313,7 @@ filter	Installed	Telepítve
 @id	launcher.notes	Újdonságok
 @id	launcher.dismiss	Elrejtés
 @id	settings.open	Beállítások
-@id	settings.quit	Kilépés az ArtCraft Launcherből
+@id	settings.quit	Kilépés az Mahay Tranoből
 @id	view.grid	Rács
 @id	view.table	Táblázat
 @id	filter.all	Összes
@@ -337,16 +337,16 @@ filter	Installed	Telepítve
 @id	linux.preferred_kind	Új alkalmazások csomagformátuma
 @id	tray.close_to_tray	Az ablak bezárásakor kerüljön a tálcára
 @id	tray.show_on_current_desktop	Ablak megjelenítése az aktuális asztalon
-@id	tray.login_item	ArtCraft Launcher indítása bejelentkezéskor
+@id	tray.login_item	Mahay Trano indítása bejelentkezéskor
 @id	appearance.theme	Megjelenés
 
 # Tray (menu bar) menu and tooltip
-	Show ArtCraft Launcher	ArtCraft Launcher megjelenítése
+	Show Mahay Trano	Mahay Trano megjelenítése
 	Check for Updates	Frissítések keresése
-	Visit getartcraft.com	getartcraft.com megnyitása
-	ArtCraft on GitHub	ArtCraft a GitHubon
-	Join the ArtCraft Discord	Csatlakozás az ArtCraft Discord-közösségéhez
-@plural	ArtCraft Launcher · {n} update available|ArtCraft Launcher · {n} updates available	ArtCraft Launcher · {n} frissítés elérhető|ArtCraft Launcher · {n} frissítés elérhető
+	Visit mahay.com	mahay.com megnyitása
+	Mahay on GitHub	Mahay a GitHubon
+	Join the Mahay Discord	Csatlakozás az Mahay Discord-közösségéhez
+@plural	Mahay Trano · {n} update available|Mahay Trano · {n} updates available	Mahay Trano · {n} frissítés elérhető|Mahay Trano · {n} frissítés elérhető
 	Install folder	Telepítési mappa
 	Default install folder	Alapértelmezett telepítési mappa
 	System default	Rendszer alapértelmezése
@@ -358,7 +358,7 @@ filter	Installed	Telepítve
 @msg	couldn't use install folder {path}: {reason}	a(z) {path} telepítési mappa nem használható: {reason}
 @msg	this release has no AppImage for a custom install folder	ez a kiadás nem tartalmaz AppImage-fájlt egyéni telepítési mappához
 @msg	custom install folders aren't supported on this system	ezen a rendszeren nem támogatottak az egyéni telepítési mappák
-@msg	{path} already exists and wasn't installed by ArtCraft Launcher	a(z) {path} már létezik, és nem az ArtCraft Launcher telepítette
+@msg	{path} already exists and wasn't installed by Mahay Trano	a(z) {path} már létezik, és nem az Mahay Trano telepítette
 @msg	couldn't move {path} to Trash ({reason}). Remove it in Finder instead.	a(z) {path} nem helyezhető a Kukába ({reason}). Távolítsa el a Finderben.
 	Apps are placed inside this folder.	Az alkalmazások ebbe a mappába kerülnek.
 	Replace what's there?	Lecseréli, ami ott van?

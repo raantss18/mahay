@@ -1,6 +1,6 @@
 [package]
-name = "craft-quit"
-description = "Quit a Craft app the platform's own way: on macOS through `-[NSApplication terminate:]`."
+name = "mahay-quit"
+description = "Quit a Mahay app the platform's own way: on macOS through `-[NSApplication terminate:]`."
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -1,5 +1,5 @@
-use gridcraft_core::{CellError, CellRef, Value};
-use gridcraft_model::{Cell, Formula, Workbook};
+use tabilao_core::{CellError, CellRef, Value};
+use tabilao_model::{Cell, Formula, Workbook};
 
 use crate::Calc;
 
@@ -20,7 +20,7 @@ impl T {
         let cell = if input.starts_with('=') {
             Cell::formula(Formula::new(input))
         } else {
-            Cell::value(gridcraft_core::parse::parse_input(input, self.wb.date_system).value)
+            Cell::value(tabilao_core::parse::parse_input(input, self.wb.date_system).value)
         };
         self.wb.sheet_mut(0).unwrap().cells.set(c(at), cell);
         self.calc.cells_changed(&mut self.wb, &[(0, c(at))]);
@@ -54,7 +54,7 @@ fn spill_range_operator() {
     t.set("D1", "=SUM(A1#)");
     assert_eq!(t.get("D1"), Value::Error(CellError::Ref));
     // Through a defined name.
-    t.wb.names.push(gridcraft_model::DefinedName {
+    t.wb.names.push(tabilao_model::DefinedName {
         name: "Seq".into(),
         scope: None,
         formula: "Sheet1!$B$1#".into(),
@@ -292,7 +292,7 @@ fn circular_references_without_iterative_calculation() {
 
 #[test]
 fn date_text_coerces_in_the_workbook_date_system() {
-    for (sys, serial) in [(gridcraft_core::DateSystem::D1900, 1462.0), (gridcraft_core::DateSystem::D1904, 0.0)] {
+    for (sys, serial) in [(tabilao_core::DateSystem::D1900, 1462.0), (tabilao_core::DateSystem::D1904, 0.0)] {
         let mut t = T::new();
         t.wb.date_system = sys;
         t.set("A1", "'1/1/1904");
@@ -372,10 +372,10 @@ fn spill_into_the_old_area_of_a_blocked_neighbour() {
 fn arrays_do_not_spill_in_tables() {
     // Excel: spilled array formulas aren't supported in tables.
     let mut t = T::new();
-    t.wb.sheet_mut(0).unwrap().tables.push(gridcraft_model::Table {
+    t.wb.sheet_mut(0).unwrap().tables.push(tabilao_model::Table {
         id: 1,
         name: "Table1".into(),
-        range: gridcraft_core::RangeRef::parse("B3:C6").unwrap(),
+        range: tabilao_core::RangeRef::parse("B3:C6").unwrap(),
         header_row: true,
         totals_row: false,
         columns: vec![],
@@ -451,7 +451,7 @@ fn references_functions() {
     t.set("C2", "=INDIRECT(\"A3\",FALSE)");
     assert_eq!(t.get("C2"), Value::Error(CellError::Ref));
     // Defined names don't depend on the reference style.
-    t.wb.names.push(gridcraft_model::DefinedName {
+    t.wb.names.push(tabilao_model::DefinedName {
         name: "Third".into(),
         scope: None,
         formula: "Sheet1!$A$3".into(),
@@ -507,7 +507,7 @@ fn relative_names() {
     // As files store them: relative to A1. `Left` is the cell to the left, `Above3` the three
     // cells above, `Mixed` column A of the same row.
     for (name, formula) in [("Left", "Sheet1!XFD1"), ("Above3", "Sheet1!A1048574:A1048576"), ("Mixed", "Sheet1!$A1")] {
-        t.wb.names.push(gridcraft_model::DefinedName {
+        t.wb.names.push(tabilao_model::DefinedName {
             name: name.into(),
             scope: None,
             formula: formula.into(),
@@ -614,7 +614,7 @@ fn functions_given_by_name() {
 #[test]
 fn lambda_argument_count() {
     let mut t = T::new();
-    t.wb.names.push(gridcraft_model::DefinedName {
+    t.wb.names.push(tabilao_model::DefinedName {
         name: "AddPair".into(),
         scope: None,
         formula: "LAMBDA(a,b,a+b)".into(),
@@ -646,8 +646,8 @@ fn lambda_argument_count() {
 #[test]
 fn names_and_sheets() {
     let mut t = T::new();
-    t.wb.names.push(gridcraft_model::DefinedName { name: "Rate".into(), scope: None, formula: "0.5".into(), comment: String::new(), hidden: false });
-    t.wb.sheets.push(std::sync::Arc::new(gridcraft_model::Sheet::new("Data")));
+    t.wb.names.push(tabilao_model::DefinedName { name: "Rate".into(), scope: None, formula: "0.5".into(), comment: String::new(), hidden: false });
+    t.wb.sheets.push(std::sync::Arc::new(tabilao_model::Sheet::new("Data")));
     t.wb.sheet_mut(1).unwrap().set_value(c("A1"), Value::Number(8.0));
     t.calc.rebuild(&t.wb);
     t.set("A1", "=Rate*Data!A1");
@@ -664,7 +664,7 @@ fn legacy_array_formulas_fill_their_range() {
     t.set("A2", "2");
     let cse = |t: &mut T, at: &str, formula: &str, range: &str| {
         let mut f = Formula::new(formula);
-        f.array = gridcraft_core::RangeRef::parse(range);
+        f.array = tabilao_core::RangeRef::parse(range);
         t.wb.sheet_mut(0).unwrap().cells.set(c(at), Cell::formula(f));
         t.calc.cells_changed(&mut t.wb, &[(0, c(at))]);
     };
@@ -708,7 +708,7 @@ fn subtotal_skips_hidden() {
     t.set("A1", "1");
     t.set("A2", "2");
     t.set("A3", "3");
-    t.wb.sheet_mut(0).unwrap().rows.insert(1, gridcraft_model::LineInfo { hidden: true, ..Default::default() });
+    t.wb.sheet_mut(0).unwrap().rows.insert(1, tabilao_model::LineInfo { hidden: true, ..Default::default() });
     t.set("B1", "=SUBTOTAL(109,A1:A3)");
     t.set("B2", "=SUBTOTAL(9,A1:A3)");
     assert_eq!(t.num("B1"), 4.0);
@@ -731,7 +731,7 @@ fn subtotal_109_skips_nested_subtotal() {
     t.set("A1", "1");
     t.set("A2", "2");
     t.set("A3", "=SUBTOTAL(9,A1:A2)");
-    t.wb.sheet_mut(0).unwrap().rows.insert(1, gridcraft_model::LineInfo { hidden: true, ..Default::default() });
+    t.wb.sheet_mut(0).unwrap().rows.insert(1, tabilao_model::LineInfo { hidden: true, ..Default::default() });
     t.set("B1", "=SUBTOTAL(109,A1:A3)");
     t.set("B2", "=SUBTOTAL(9,A1:A3)");
     assert_eq!(t.num("B1"), 1.0);
@@ -743,7 +743,7 @@ fn subtotal_109_skips_nested_subtotal() {
 /// under a filtered table adds only the visible rows).
 #[test]
 fn subtotal_skips_filtered_rows() {
-    use gridcraft_model::{AutoFilter, FilterCriterion, LineInfo};
+    use tabilao_model::{AutoFilter, FilterCriterion, LineInfo};
     let mut t = T::new();
     for (i, v) in [1, 2, 4, 8, 16, 32].iter().enumerate() {
         t.set(&format!("A{}", i + 2), &v.to_string());
@@ -751,13 +751,13 @@ fn subtotal_skips_filtered_rows() {
     }
     let crit = || vec![(0, FilterCriterion::Custom { a: (">".into(), "1".into()), b: None, and: false })];
     let sh = t.wb.sheet_mut(0).unwrap();
-    sh.tables.push(gridcraft_model::Table {
+    sh.tables.push(tabilao_model::Table {
         id: 1,
         name: "Sales".into(),
-        range: gridcraft_core::RangeRef::parse("A1:A7").unwrap(),
+        range: tabilao_core::RangeRef::parse("A1:A7").unwrap(),
         header_row: true,
         totals_row: false,
-        columns: vec![gridcraft_model::TableColumn {
+        columns: vec![tabilao_model::TableColumn {
             name: "Amount".into(),
             totals: Default::default(),
             totals_label: None,
@@ -775,7 +775,7 @@ fn subtotal_skips_filtered_rows() {
         table_type: None,
         connection_id: None,
     });
-    sh.autofilter = Some(AutoFilter { range: gridcraft_core::RangeRef::parse("C1:C7").unwrap(), criteria: crit() });
+    sh.autofilter = Some(AutoFilter { range: tabilao_core::RangeRef::parse("C1:C7").unwrap(), criteria: crit() });
     // Rows 3 and 5 are filtered out; row 9 (outside both filters) is hidden by hand.
     for row in [2, 4, 8] {
         sh.rows.insert(row, LineInfo { hidden: true, ..Default::default() });
@@ -889,8 +889,8 @@ fn sumif_resized_sum_range_stops_at_the_sheet_edge() {
 #[test]
 fn sumif_resized_sum_range_on_another_sheet_and_through_a_name() {
     let mut t = T::new();
-    t.wb.sheets.push(std::sync::Arc::new(gridcraft_model::Sheet::new("Data")));
-    t.wb.names.push(gridcraft_model::DefinedName {
+    t.wb.sheets.push(std::sync::Arc::new(tabilao_model::Sheet::new("Data")));
+    t.wb.names.push(tabilao_model::DefinedName {
         name: "Amounts".into(),
         scope: None,
         formula: "Data!$B$1".into(),
@@ -1121,7 +1121,7 @@ fn visit_range_declines_when_a_formula_in_the_block_spills_into_it() {
     let sh = wb.sheet_mut(0).unwrap();
     sh.cells.set(c("D1"), Cell::formula(Formula::new("=SEQUENCE(3)")));
     sh.cells.set(c("D4"), Cell::value(Value::Number(10.0)));
-    let block = gridcraft_core::RangeRef::parse("D1:D5").unwrap();
+    let block = tabilao_core::RangeRef::parse("D1:D5").unwrap();
 
     // Reading the block calculates D1, which spills over D2:D3. A walk over the stored cells
     // would never see 2 and 3, so the host must decline and leave the block to `range_values`.
@@ -1178,7 +1178,7 @@ fn cell_width_is_the_column_width_dialog_value_rounded() {
     let mut t = T::new();
     let sh = t.wb.sheet_mut(0).unwrap();
     for (col, px) in [(2, 80.0), (3, 89.0), (4, 79.0), (5, 25.0)] {
-        sh.cols.insert(col, gridcraft_model::LineInfo { size: Some(px), ..Default::default() });
+        sh.cols.insert(col, tabilao_model::LineInfo { size: Some(px), ..Default::default() });
     }
     for (at, col) in [("H1", "B"), ("H2", "C"), ("H3", "D"), ("H4", "E"), ("H5", "F")] {
         t.set(at, &format!("=CELL(\"width\",{col}1)"));

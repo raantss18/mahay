@@ -9,7 +9,7 @@
 //! **Generated.** The tables are data, not typefaces, and are the item AGENTS.md §1.1 permits as
 //! Adobe-authored non-visual technical data; `ATTRIBUTION.toml` carries the entry with
 //! `adobe_data = true`. Each row is indexed by character **code**, not by Unicode: the twelve text
-//! fonts are indexed by WinAnsiEncoding, which is what PdfCraft writes into the appearance streams
+//! fonts are indexed by WinAnsiEncoding, which is what Taratasy writes into the appearance streams
 //! it generates, and Symbol and ZapfDingbats by their own built-in encodings. A zero means the
 //! encoding leaves that code undefined.
 

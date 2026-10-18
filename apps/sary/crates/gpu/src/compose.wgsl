@@ -1,8 +1,8 @@
-// PhotoCraft GPU compositor kernels.
+// Sary GPU compositor kernels.
 //
 // Every pass renders one chunk of the canvas into a straight-alpha RGBA32F accumulator, reading
 // its inputs with `textureLoad` at the same pixel. Effect-map kernels (`fs_m*`) render
-// single-channel maps over a layer's effect region instead (`chunk` = the region). The functions mirror `photocraft-compose`
+// single-channel maps over a layer's effect region instead (`chunk` = the region). The functions mirror `sary-compose`
 // (the CPU reference) operation for operation; keep them in sync.
 
 struct Chunk {
@@ -108,7 +108,7 @@ fn lut(row: i32, v: f32) -> f32 {
 
 fn gray(c: vec3<f32>) -> f32 { return 0.299 * c.r + 0.587 * c.g + 0.114 * c.b; }
 
-// ---- blend modes (photocraft_color::blend + compose::psblend) ------------------------------
+// ---- blend modes (sary_color::blend + compose::psblend) ------------------------------
 
 const M_NORMAL: i32 = 1;
 const M_DISSOLVE: i32 = 2;
@@ -217,7 +217,7 @@ fn blend_channel(mode: i32, cb: f32, cs: f32) -> f32 {
 
 fn lum(c: vec3<f32>) -> f32 { return 0.3 * c.r + 0.59 * c.g + 0.11 * c.b; }
 
-// photocraft_color::blend::clip_color: towards grey until within 0..top; a luminosity outside
+// sary_color::blend::clip_color: towards grey until within 0..top; a luminosity outside
 // that range has no in-gamut colour (and max − lum is rounding noise), so it gives its grey.
 fn clip_color(c: vec3<f32>, top: f32) -> vec3<f32> {
     let l = lum(c);
@@ -340,7 +340,7 @@ fn composite_fill(mode: i32, b: vec4<f32>, s: vec4<f32>, opacity: f32, fill: f32
     return vec4(text_dec(wb * text_enc(b.rgb, g) + wbs * text_enc(bl, g) + ws * text_enc(s.rgb, g), g), ao);
 }
 
-// photocraft_color::convert::{srgb_to_lab, lab_to_srgb} (D50, Bradford to sRGB).
+// sary_color::convert::{srgb_to_lab, lab_to_srgb} (D50, Bradford to sRGB).
 const D50: vec3<f32> = vec3(0.96422, 1.0, 0.82521);
 fn lab_f(t: f32) -> f32 {
     if (t > 0.008856452) { return pow(t, 1.0 / 3.0); }   // (6/29)^3
@@ -762,7 +762,7 @@ fn gradient_t(d: vec2<i32>) -> f32 {
     return t;
 }
 
-// photocraft_color::dither_noise: the gradient dither's position hash, in [0, 1).
+// sary_color::dither_noise: the gradient dither's position hash, in [0, 1).
 fn dither_noise(d: vec2<i32>) -> f32 {
     var h = (bitcast<u32>(d.x) * 0x9E3779B1u) ^ (bitcast<u32>(d.y) * 0x85EBCA77u);
     h = h ^ (h >> 15u);
@@ -902,7 +902,7 @@ fn fs_lerp(in: VOut) -> @location(0) vec4<f32> {
     return vec4((a.rgb * wa + b.rgb * wb) / alpha, alpha);
 }
 
-// ---- Blend If (photocraft_doc::BlendRange, compose::blend_if_weight) ---------------------------
+// ---- Blend If (sary_doc::BlendRange, compose::blend_if_weight) ---------------------------
 
 // 0 at or below `lo`, 1 at or above `hi`; a hard step at `lo` when unsplit.
 fn bi_ramp(lo: f32, hi: f32, x: f32) -> f32 {

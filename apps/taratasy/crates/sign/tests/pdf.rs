@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use pdfcraft_cos::{Document, Object, PdfString, SaveOptions, write_incremental};
-use pdfcraft_sign::{
+use taratasy_cos::{Document, Object, PdfString, SaveOptions, write_incremental};
+use taratasy_sign::{
     Detail, Modification, SignError, SignOptions, Status, Time, TimestampAuthority, TrustStore, WORDINGS, der, in_english, kind, pkcs12, signatures,
 };
 
@@ -46,7 +46,7 @@ fn open(b: &[u8]) -> Document {
 fn standalone_timestamp_scan_survives_cache_batches_and_object_streams() {
     let mut doc = open(&fixture());
     let filler: Vec<_> = (0..300).map(|i| Object::Ref(doc.add(Object::Int(i)))).collect();
-    let mut stamp = pdfcraft_cos::Dict::new();
+    let mut stamp = taratasy_cos::Dict::new();
     stamp.set(b"Type".to_vec(), Object::name("Sig"));
     stamp.set(b"SubFilter".to_vec(), Object::name("ETSI.RFC3161"));
     stamp.set(b"ByteRange".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(1), Object::Int(2), Object::Int(1)]));
@@ -57,7 +57,7 @@ fn standalone_timestamp_scan_survives_cache_batches_and_object_streams() {
         catalog.set(b"UninspectedTimestamp".to_vec(), Object::Ref(stamp));
     })
     .unwrap();
-    let bytes = pdfcraft_cos::write_full(&doc, &SaveOptions::default()).unwrap();
+    let bytes = taratasy_cos::write_full(&doc, &SaveOptions::default()).unwrap();
     let doc = open(&bytes);
     assert!(doc.object_numbers().len() > 300);
     let listed = signatures(&doc, &bytes, &TrustStore::default());
@@ -80,7 +80,7 @@ fn opts() -> SignOptions {
 fn signing_then_validating_with_and_without_trust() {
     for file in ["rsa-aes.p12", "ec-p256.p12", "ec-p384.p12", "chain.p12"] {
         let id = pkcs12::open(&data(file), "test").unwrap();
-        let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
         assert!(signed.starts_with(&fixture()), "{file}: an incremental update");
         let doc = open(&signed);
         let sigs = signatures(&doc, &signed, &TrustStore::default());
@@ -113,9 +113,9 @@ fn signing_then_validating_with_and_without_trust() {
 #[test]
 fn signing_an_existing_field_and_counter_signing() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let first = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
+    let first = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
     let id2 = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
-    let second = pdfcraft_sign::sign(&open(&first), &id2, &opts()).unwrap();
+    let second = taratasy_sign::sign(&open(&first), &id2, &opts()).unwrap();
     let doc = open(&second);
     let sigs = signatures(&doc, &second, &TrustStore::default());
     let a = sigs.iter().find(|s| s.field == "Approval").unwrap();
@@ -127,8 +127,8 @@ fn signing_an_existing_field_and_counter_signing() {
     let b = sigs.iter().find(|s| s.field == "Signature1").unwrap();
     assert_eq!((b.revision, b.modification.clone()), (3, Modification::None));
     assert!(matches!(
-        pdfcraft_sign::sign(&doc, &id, &SignOptions { field: Some("Approval".into()), ..opts() }),
-        Err(pdfcraft_sign::SignError::Pdf(_))
+        taratasy_sign::sign(&doc, &id, &SignOptions { field: Some("Approval".into()), ..opts() }),
+        Err(taratasy_sign::SignError::Pdf(_))
     ));
 }
 
@@ -137,7 +137,7 @@ fn signing_an_existing_field_and_counter_signing() {
 #[test]
 fn a_field_with_a_null_value_is_unsigned_and_can_be_signed() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let field = pdfcraft_cos::ObjRef { num: 6, generation: 0 };
+    let field = taratasy_cos::ObjRef { num: 6, generation: 0 };
     let direct = edit_after(&fixture(), |doc| doc.update_dict(field, |d| d.set(b"V".to_vec(), Object::Null)).unwrap());
     let indirect = edit_after(&fixture(), |doc| {
         let null = doc.add(Object::Null);
@@ -149,7 +149,7 @@ fn a_field_with_a_null_value_is_unsigned_and_can_be_signed() {
         let listed = signatures(&doc, &unsigned, &TrustStore::default());
         assert!(listed.iter().any(|s| s.field == "Approval" && !s.signed), "{what}");
         let signed =
-            pdfcraft_sign::sign(&doc, &id, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap_or_else(|e| panic!("{what}: {e:?}"));
+            taratasy_sign::sign(&doc, &id, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap_or_else(|e| panic!("{what}: {e:?}"));
         let listed = signatures(&open(&signed), &signed, &TrustStore::default());
         assert!(listed.iter().any(|s| s.field == "Approval" && s.signed), "{what}");
         assert!(!listed.iter().any(|s| s.field == "Signature1"), "{what}: no new field");
@@ -161,7 +161,7 @@ fn a_field_with_a_null_value_is_unsigned_and_can_be_signed() {
 #[test]
 fn a_field_whose_value_is_not_a_signature_is_refused_by_name() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let field = pdfcraft_cos::ObjRef { num: 6, generation: 0 };
+    let field = taratasy_cos::ObjRef { num: 6, generation: 0 };
     let values = [
         ("empty string", Object::String(PdfString::literal(""))),
         ("number", Object::Int(5)),
@@ -178,7 +178,7 @@ fn a_field_whose_value_is_not_a_signature_is_refused_by_name() {
             let doc = open(&bytes);
             let listed = signatures(&doc, &bytes, &TrustStore::default());
             assert!(listed.iter().any(|s| s.field == "Approval" && !s.signed), "{how} {what}");
-            match pdfcraft_sign::sign(&doc, &id, &SignOptions { field: Some("Approval".into()), ..opts() }) {
+            match taratasy_sign::sign(&doc, &id, &SignOptions { field: Some("Approval".into()), ..opts() }) {
                 Err(SignError::Pdf(e)) => assert_eq!(e, "the value of the field \"Approval\" is not a signature", "{how} {what}"),
                 other => panic!("{how} {what}: {:?}", other.map(|b| b.len())),
             }
@@ -194,13 +194,13 @@ fn edit_after(signed: &[u8], f: impl FnOnce(&mut Document)) -> Vec<u8> {
 }
 
 fn add_comment(doc: &mut Document) {
-    let mut d = pdfcraft_cos::Dict::new();
+    let mut d = taratasy_cos::Dict::new();
     d.set(b"Type".to_vec(), Object::name("Annot"));
     d.set(b"Subtype".to_vec(), Object::name("Text"));
     d.set(b"Rect".to_vec(), Object::Array(vec![Object::Int(10), Object::Int(10), Object::Int(30), Object::Int(30)]));
     d.set(b"Contents".to_vec(), PdfString::text("A note"));
     let r = doc.add(Object::Dict(d));
-    let page = pdfcraft_cos::ObjRef { num: 3, generation: 0 };
+    let page = taratasy_cos::ObjRef { num: 3, generation: 0 };
     doc.update_dict(page, |p| {
         if let Some(Object::Array(a)) = p.get_mut(b"Annots") {
             a.push(Object::Ref(r));
@@ -210,10 +210,10 @@ fn add_comment(doc: &mut Document) {
 }
 
 fn change_text(doc: &mut Document) {
-    let mut d = pdfcraft_cos::Dict::new();
+    let mut d = taratasy_cos::Dict::new();
     d.set(b"Length".to_vec(), Object::Int(40));
-    let s = pdfcraft_cos::Stream::from_raw(d, b"BT /F1 14 Tf 20 250 Td (Other text) Tj ET".to_vec());
-    doc.set(pdfcraft_cos::ObjRef { num: 4, generation: 0 }, Object::Stream(s));
+    let s = taratasy_cos::Stream::from_raw(d, b"BT /F1 14 Tf 20 250 Td (Other text) Tj ET".to_vec());
+    doc.set(taratasy_cos::ObjRef { num: 4, generation: 0 }, Object::Stream(s));
 }
 
 #[test]
@@ -222,7 +222,7 @@ fn later_changes_are_classified_under_the_signature_permissions() {
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     let check = |bytes: &[u8]| signatures(&open(bytes), bytes, &trust).into_iter().find(|s| s.signed).unwrap();
     // Approval signature: comments are permitted, rewriting page content is not.
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     let s = check(&edit_after(&signed, add_comment));
     assert_eq!(s.status, Status::Valid, "{:?}", s.details);
     assert_eq!(s.modification, Modification::Allowed(vec![kind::COMMENTS]));
@@ -230,31 +230,31 @@ fn later_changes_are_classified_under_the_signature_permissions() {
     assert_eq!(s.status, Status::Invalid);
     assert_eq!(s.modification, Modification::Disallowed(vec![kind::PAGE_CONTENT]));
     // Certified with "no changes allowed": even a comment invalidates it.
-    let certified = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { certify: Some(1), ..opts() }).unwrap();
+    let certified = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { certify: Some(1), ..opts() }).unwrap();
     let s = check(&certified);
     assert_eq!((s.certify, s.status), (Some(1), Status::Valid));
     assert_eq!(check(&edit_after(&certified, add_comment)).status, Status::Invalid);
     // Certified allowing comments: fine.
-    let certified3 = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { certify: Some(3), ..opts() }).unwrap();
+    let certified3 = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { certify: Some(3), ..opts() }).unwrap();
     assert_eq!(check(&edit_after(&certified3, add_comment)).status, Status::Valid);
 }
 
 #[test]
 fn invisible_signatures_and_refusals() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { rect: None, ..opts() }).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { rect: None, ..opts() }).unwrap();
     let s = signatures(&open(&signed), &signed, &TrustStore::default()).into_iter().find(|s| s.signed).unwrap();
     assert!(!s.visible);
-    assert!(pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { page: 5, ..opts() }).is_err());
-    assert_eq!(pdfcraft_sign::pdf::display_date("D:20261002120000+01'00'"), "2026.10.02 12:00:00 +01'00'");
+    assert!(taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { page: 5, ..opts() }).is_err());
+    assert_eq!(taratasy_sign::pdf::display_date("D:20261002120000+01'00'"), "2026.10.02 12:00:00 +01'00'");
 }
 
 /// The normal appearance of the signature field `name`: its decoded content and resources.
-fn appearance_of(bytes: &[u8], name: &str) -> (String, pdfcraft_cos::Dict) {
+fn appearance_of(bytes: &[u8], name: &str) -> (String, taratasy_cos::Dict) {
     appearance_in(&open(bytes), name)
 }
 
-fn appearance_in(doc: &Document, name: &str) -> (String, pdfcraft_cos::Dict) {
+fn appearance_in(doc: &Document, name: &str) -> (String, taratasy_cos::Dict) {
     let catalog = doc.get(doc.root().unwrap()).as_dict().cloned().unwrap();
     let form = doc.resolve(catalog.get(b"AcroForm").unwrap()).as_dict().cloned().unwrap();
     let fields = doc.resolve(form.get(b"Fields").unwrap()).as_array().cloned().unwrap();
@@ -270,20 +270,20 @@ fn appearance_in(doc: &Document, name: &str) -> (String, pdfcraft_cos::Dict) {
 }
 
 /// A 40 x 10 image, opaque or with one translucent pixel.
-fn picture(translucent: bool) -> pdfcraft_sign::Graphic {
+fn picture(translucent: bool) -> taratasy_sign::Graphic {
     let mut rgba: Vec<u8> = (0..400).flat_map(|_| [10, 20, 30, 255]).collect();
     if translucent {
         rgba[3] = 128;
     }
-    pdfcraft_sign::Graphic::Image { width: 40, height: 10, rgba: Arc::new(rgba) }
+    taratasy_sign::Graphic::Image { width: 40, height: 10, rgba: Arc::new(rgba) }
 }
 
 #[test]
 fn visible_signatures_show_a_drawn_typed_or_image_graphic() {
-    use pdfcraft_sign::{Appearance, Graphic};
+    use taratasy_sign::{Appearance, Graphic};
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let name = format!("({})", id.certificate.display_name());
-    let plain = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let plain = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     // Without a graphic the name is large on the left and in the details.
     assert_eq!(appearance_of(&plain, "Signature1").0.matches(&name).count(), 2);
     let strokes = Graphic::Strokes(vec![vec![[0.0, 0.0], [0.3, 0.2], [0.6, 0.0], [1.0, 0.2]], vec![[0.5, 0.1]]]);
@@ -294,7 +294,7 @@ fn visible_signatures_show_a_drawn_typed_or_image_graphic() {
         // 40 x 10 in the left half (94 x 44 inside the padding): 94 wide, centred vertically.
         (picture(true), "q 94 0 0 23.5 3 13.25 cm /Im1 Do Q"),
     ] {
-        let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(graphic.clone()), ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(graphic.clone()), ..opts() }).unwrap();
         let s = signatures(&open(&signed), &signed, &TrustStore::default()).into_iter().find(|s| s.signed).unwrap();
         assert_eq!((s.status, s.modification), (Status::Unknown, Modification::None), "{graphic:?}: {:?}", s.details);
         let (content, res) = appearance_of(&signed, "Signature1");
@@ -305,7 +305,7 @@ fn visible_signatures_show_a_drawn_typed_or_image_graphic() {
     }
     // Translucent images keep their alpha as a soft mask; opaque ones need none.
     for translucent in [true, false] {
-        let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(picture(translucent)), ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(picture(translucent)), ..opts() }).unwrap();
         let doc = open(&signed);
         let (_, res) = appearance_of(&signed, "Signature1");
         let xobjects = doc.resolve(res.get(b"XObject").unwrap()).as_dict().cloned().unwrap();
@@ -316,16 +316,16 @@ fn visible_signatures_show_a_drawn_typed_or_image_graphic() {
     }
     // With no text at all, the graphic has the whole box (194 x 44): 176 x 44, centred.
     let bare = Appearance { name: false, date: false, reason: false, location: false, distinguished_name: false, labels: false };
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(picture(false)), appearance: bare, ..opts() }).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(picture(false)), appearance: bare, ..opts() }).unwrap();
     assert!(appearance_of(&signed, "Signature1").0.contains("q 176 0 0 44 12 3 cm /Im1 Do Q"));
     // An invisible signature has nothing to show: no image is embedded.
-    let invisible = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { rect: None, graphic: Some(picture(false)), ..opts() }).unwrap();
+    let invisible = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { rect: None, graphic: Some(picture(false)), ..opts() }).unwrap();
     assert!(!invisible.windows(6).any(|w| w == b"/Image"));
 }
 
 #[test]
 fn malformed_signature_graphics_are_refused_not_drawn() {
-    use pdfcraft_sign::Graphic;
+    use taratasy_sign::Graphic;
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     let huge = vec![vec![[0.0, 0.0]; 300_001]];
     for graphic in [
@@ -343,12 +343,12 @@ fn malformed_signature_graphics_are_refused_not_drawn() {
     ] {
         let what = format!("{graphic:?}");
         assert!(what.len() < 200, "Debug never dumps pixels or points: {what}");
-        let r = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(graphic), ..opts() });
+        let r = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(graphic), ..opts() });
         assert!(matches!(r, Err(SignError::Pdf(ref m)) if m.contains("signature graphic")), "{what}: {r:?}");
     }
     // A single dot is a (tiny) drawing, not an error.
     let dot = Graphic::Strokes(vec![vec![[0.5, 0.5]]]);
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(dot), ..opts() }).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { graphic: Some(dot), ..opts() }).unwrap();
     let (content, _) = appearance_of(&signed, "Signature1");
     assert!(!content.contains("NaN") && !content.contains("inf"), "{content}");
 }
@@ -362,12 +362,12 @@ struct TestTsa {
 
 impl TimestampAuthority for TestTsa {
     fn timestamp(&self, request: &[u8]) -> Result<Vec<u8>, SignError> {
-        let q = pdfcraft_sign::timestamp::parse_request(request)?;
-        pdfcraft_sign::timestamp::respond(
+        let q = taratasy_sign::timestamp::parse_request(request)?;
+        taratasy_sign::timestamp::respond(
             &self.id.key,
             &self.id.certificate,
             &self.id.chain,
-            pdfcraft_sign::DigestAlg::Sha256,
+            taratasy_sign::DigestAlg::Sha256,
             &q,
             "1.2.3.4",
             self.time,
@@ -383,7 +383,7 @@ fn signing_with_a_timestamp_embeds_a_verified_rfc3161_token() {
         id: pkcs12::open(&data("rsa-aes.p12"), "test").unwrap(),
         time: Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 },
     };
-    let signed = pdfcraft_sign::sign_with_timestamp(&open(&fixture()), &id, &opts(), &tsa).unwrap();
+    let signed = taratasy_sign::sign_with_timestamp(&open(&fixture()), &id, &opts(), &tsa).unwrap();
     assert!(signed.starts_with(&fixture()), "still an incremental update");
     let anchor = id.chain.first().cloned().unwrap_or_else(|| id.certificate.clone());
     let trust = TrustStore { certs: vec![anchor.clone(), tsa.id.certificate.clone()] };
@@ -413,7 +413,7 @@ fn a_malformed_timestamp_response_fails_signing_without_a_file() {
         }
     }
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    assert!(pdfcraft_sign::sign_with_timestamp(&open(&fixture()), &id, &opts(), &Bad).is_err());
+    assert!(taratasy_sign::sign_with_timestamp(&open(&fixture()), &id, &opts(), &Bad).is_err());
 }
 
 #[test]
@@ -422,7 +422,7 @@ fn a_document_timestamp_covers_the_file_and_validates() {
         id: pkcs12::open(&data("rsa-aes.p12"), "test").unwrap(),
         time: Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 },
     };
-    let stamped = pdfcraft_sign::timestamp_document(&open(&fixture()), &tsa, "D:20261006120000Z").unwrap();
+    let stamped = taratasy_sign::timestamp_document(&open(&fixture()), &tsa, "D:20261006120000Z").unwrap();
     assert!(stamped.starts_with(&fixture()), "an incremental update");
     let trust_tsa = TrustStore { certs: vec![tsa.id.certificate.clone()] };
     let s = signatures(&open(&stamped), &stamped, &trust_tsa).into_iter().find(|s| s.doc_timestamp).unwrap();
@@ -440,8 +440,8 @@ fn a_document_timestamp_covers_the_file_and_validates() {
     assert_eq!(s.status, Status::Invalid);
     // Combined with a field signature: both are listed, the stamp covers both revisions.
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
-    let both = pdfcraft_sign::timestamp_document(&open(&signed), &tsa, "D:20261006130000Z").unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let both = taratasy_sign::timestamp_document(&open(&signed), &tsa, "D:20261006130000Z").unwrap();
     let all = signatures(&open(&both), &both, &TrustStore { certs: vec![tsa.id.certificate.clone()] });
     let field = all.iter().find(|s| s.signed && !s.doc_timestamp).unwrap();
     let allowed = match &field.modification {
@@ -465,12 +465,12 @@ fn cached_discovery_still_validates_current_timestamp_bytes_ranges_and_trust() {
             d.remove(b"AcroForm");
         })
         .unwrap();
-    let bytes = pdfcraft_sign::timestamp_document(&source, &tsa, "D:20261006120000Z").unwrap();
+    let bytes = taratasy_sign::timestamp_document(&source, &tsa, "D:20261006120000Z").unwrap();
     let doc = open(&bytes);
-    let cache = pdfcraft_sign::DigestCache::default();
+    let cache = taratasy_sign::DigestCache::default();
     let trusted = TrustStore { certs: vec![tsa.id.certificate.clone()] };
     let check = |doc: &Document, bytes: &[u8], trust: &TrustStore| {
-        let listed = pdfcraft_sign::pdf::list_cached(doc, bytes, trust, &cache);
+        let listed = taratasy_sign::pdf::list_cached(doc, bytes, trust, &cache);
         assert_eq!(listed.len(), 1);
         assert!(listed[0].doc_timestamp);
         listed.into_iter().next().unwrap()
@@ -499,9 +499,9 @@ fn cached_discovery_still_validates_current_timestamp_bytes_ranges_and_trust() {
 
 #[test]
 fn embedding_ltv_evidence_adds_a_dss_and_keeps_signatures_valid() {
-    use pdfcraft_sign::dss::{self, Evidence};
+    use taratasy_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     let evidence =
         Evidence { certs: vec![id.certificate.raw.clone()], ocsps: vec![b"synthetic ocsp".to_vec()], crls: vec![b"synthetic crl".to_vec()] };
     let ltv = dss::embed(&open(&signed), &evidence).unwrap();
@@ -509,7 +509,7 @@ fn embedding_ltv_evidence_adds_a_dss_and_keeps_signatures_valid() {
     let doc = open(&ltv);
     // The store is in the catalog with one certificate and the /VRI entry for the signature.
     let root = doc.root().unwrap();
-    let dss_dict: pdfcraft_cos::Dict =
+    let dss_dict: taratasy_cos::Dict =
         doc.get(root).as_dict().unwrap().get(b"DSS").map(|d| doc.resolve(d)).and_then(|d| d.as_dict().cloned()).unwrap();
     assert_eq!(dss_dict.name(b"Type"), Some(b"DSS".as_slice()));
     assert!(dss_dict.contains(b"Certs") && dss_dict.contains(b"OCSPs") && dss_dict.contains(b"CRLs") && dss_dict.contains(b"VRI"));
@@ -524,7 +524,7 @@ fn embedding_ltv_evidence_adds_a_dss_and_keeps_signatures_valid() {
     // Embedding twice keeps one certificate (byte-identical dedup) and stays valid.
     let twice = dss::embed(&doc, &evidence).unwrap();
     let doc2 = open(&twice);
-    let dss2: pdfcraft_cos::Dict =
+    let dss2: taratasy_cos::Dict =
         doc2.get(doc2.root().unwrap()).as_dict().unwrap().get(b"DSS").map(|d| doc2.resolve(d)).and_then(|d| d.as_dict().cloned()).unwrap();
     let certs = dss2.get(b"Certs").map(|c| doc2.resolve(c)).and_then(|c| c.as_array().cloned()).unwrap();
     assert_eq!(certs.len(), 1, "byte-identical evidence is not duplicated");
@@ -532,15 +532,15 @@ fn embedding_ltv_evidence_adds_a_dss_and_keeps_signatures_valid() {
 
 #[test]
 fn sign_then_ltv_then_timestamp_makes_a_b_lta_file() {
-    use pdfcraft_sign::dss::{self, Evidence};
+    use taratasy_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     let tsa = TestTsa {
         id: pkcs12::open(&data("rsa-aes.p12"), "test").unwrap(),
         time: Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 },
     };
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     let ltv = dss::embed(&open(&signed), &Evidence { certs: vec![id.certificate.raw.clone()], ocsps: Vec::new(), crls: Vec::new() }).unwrap();
-    let lta = pdfcraft_sign::timestamp_document(&open(&ltv), &tsa, "D:20261006120000Z").unwrap();
+    let lta = taratasy_sign::timestamp_document(&open(&ltv), &tsa, "D:20261006120000Z").unwrap();
     let all = signatures(&open(&lta), &lta, &TrustStore { certs: vec![tsa.id.certificate.clone()] });
     assert_eq!(all.iter().filter(|s| s.signed).count(), 2);
     let field = all.iter().find(|s| s.signed && !s.doc_timestamp).unwrap();
@@ -557,14 +557,14 @@ fn sign_then_ltv_then_timestamp_makes_a_b_lta_file() {
 
 #[test]
 fn an_embedded_verified_revocation_invalidates_the_signature() {
-    use pdfcraft_sign::dss::{self, Evidence};
+    use taratasy_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     // The signer's own CRL (self-signed test identity) revokes its certificate, in a window
     // that covers the signing date (October 2026).
     let (this, next) =
         (Time { year: 2026, month: 1, day: 1, hour: 0, minute: 0, second: 0 }, Time { year: 2027, month: 1, day: 1, hour: 0, minute: 0, second: 0 });
-    let alg = id.key.signature_algorithm(pdfcraft_sign::DigestAlg::Sha256);
+    let alg = id.key.signature_algorithm(taratasy_sign::DigestAlg::Sha256);
     let tbs = der::seq(&[
         &der::int(1),
         &alg,
@@ -576,7 +576,7 @@ fn an_embedded_verified_revocation_invalidates_the_signature() {
             &Time { year: 2026, month: 6, day: 1, hour: 8, minute: 0, second: 0 }.encode(),
         ])]),
     ]);
-    let sig = id.key.sign(pdfcraft_sign::DigestAlg::Sha256, &tbs).unwrap();
+    let sig = id.key.sign(taratasy_sign::DigestAlg::Sha256, &tbs).unwrap();
     let crl = der::seq(&[&tbs, &alg, &der::bit_string(&sig)]);
     let ltv = dss::embed(&open(&signed), &Evidence { certs: Vec::new(), ocsps: Vec::new(), crls: vec![crl] }).unwrap();
     let s = signatures(&open(&ltv), &ltv, &TrustStore::default()).into_iter().find(|s| s.signed && !s.doc_timestamp).unwrap();
@@ -594,7 +594,7 @@ fn validates_a_signature_made_by_openssl() {
     assert_eq!(s.signer.as_deref(), Some("Test Signer RSA"));
     assert!(s.signing_time.is_some_and(|t| t.year == 2026), "from the CMS signing-time attribute");
     assert!(!s.visible);
-    let rsa = pdfcraft_sign::Certificate::parse(&pkcs12::open(&data("rsa-aes.p12"), "test").unwrap().certificate.raw).unwrap();
+    let rsa = taratasy_sign::Certificate::parse(&pkcs12::open(&data("rsa-aes.p12"), "test").unwrap().certificate.raw).unwrap();
     let s = signatures(&doc, &bytes, &TrustStore { certs: vec![rsa] }).into_iter().next().unwrap();
     assert_eq!(s.status, Status::Valid, "{:?}", s.details);
     // A later comment is allowed for this approval signature.
@@ -615,7 +615,7 @@ trailer << /Root 1 0 R >>
         .to_vec();
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     for certify in [None, Some(2)] {
-        let signed = pdfcraft_sign::sign(&open(&bytes), &id, &SignOptions { certify, rect: None, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&bytes), &id, &SignOptions { certify, rect: None, ..opts() }).unwrap();
         let s = signatures(&open(&signed), &signed, &TrustStore::default()).into_iter().find(|s| s.signed).unwrap();
         assert_eq!((s.status, s.certify, s.modification.clone()), (Status::Unknown, certify, Modification::None), "{:?}", s.details);
     }
@@ -628,7 +628,7 @@ trailer << /Root 1 0 R >>
 #[ignore = "creates a temporary macOS keychain; run with --ignored"]
 fn signing_with_keychain_identities() {
     use std::process::Command;
-    let dir = std::env::temp_dir().join(format!("pdfcraft-keychain-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-keychain-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let kc = dir.join("test.keychain-db");
     let sec = |args: &[&str]| Command::new("security").args(args).output().unwrap();
@@ -651,11 +651,11 @@ fn signing_with_keychain_identities() {
             let out = sec(&["import", &p, "-k", k, "-P", "test", "-A"]);
             assert!(out.status.success(), "{f}: {}", String::from_utf8_lossy(&out.stderr));
         }
-        let ids = pdfcraft_sign::keychain::identities(Some(&kc)).unwrap();
+        let ids = taratasy_sign::keychain::identities(Some(&kc)).unwrap();
         assert_eq!(ids.len(), 2, "{ids:?}");
         for id in &ids {
             assert!(id.key.is_external());
-            let signed = pdfcraft_sign::sign(&open(&fixture()), id, &opts()).unwrap();
+            let signed = taratasy_sign::sign(&open(&fixture()), id, &opts()).unwrap();
             let trusted = signatures(&open(&signed), &signed, &TrustStore { certs: vec![id.certificate.clone()] });
             let s = trusted.iter().find(|s| s.signed).unwrap();
             assert_eq!(s.status, Status::Valid, "{:?}", s.details);
@@ -700,26 +700,26 @@ fn fixture_with_xobject() -> Vec<u8> {
 /// fill": the signed pages are gone.
 fn xfa_page_swap(doc: &mut Document) {
     let xdp = b"<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\"><template/></xdp:xdp>".to_vec();
-    let mut xd = pdfcraft_cos::Dict::new();
+    let mut xd = taratasy_cos::Dict::new();
     xd.set(b"Length".to_vec(), Object::Int(xdp.len() as i64));
-    let xfa = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(xd, xdp)));
+    let xfa = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(xd, xdp)));
     let body = b"BT /F1 14 Tf 20 250 Td (Forged text) Tj ET".to_vec();
-    let mut cd = pdfcraft_cos::Dict::new();
+    let mut cd = taratasy_cos::Dict::new();
     cd.set(b"Length".to_vec(), Object::Int(body.len() as i64));
-    let contents = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(cd, body)));
+    let contents = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(cd, body)));
     let pages = doc.add(Object::Null);
-    let mut page = pdfcraft_cos::Dict::new();
+    let mut page = taratasy_cos::Dict::new();
     page.set(b"Type".to_vec(), Object::name("Page"));
     page.set(b"Parent".to_vec(), Object::Ref(pages));
     page.set(b"MediaBox".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(0), Object::Int(300), Object::Int(300)]));
     page.set(b"Contents".to_vec(), Object::Ref(contents));
-    let mut font = pdfcraft_cos::Dict::new();
-    font.set(b"F1".to_vec(), Object::Ref(pdfcraft_cos::ObjRef { num: 5, generation: 0 }));
-    let mut res = pdfcraft_cos::Dict::new();
+    let mut font = taratasy_cos::Dict::new();
+    font.set(b"F1".to_vec(), Object::Ref(taratasy_cos::ObjRef { num: 5, generation: 0 }));
+    let mut res = taratasy_cos::Dict::new();
     res.set(b"Font".to_vec(), Object::Dict(font));
     page.set(b"Resources".to_vec(), Object::Dict(res));
     let page = doc.add(Object::Dict(page));
-    let mut tree = pdfcraft_cos::Dict::new();
+    let mut tree = taratasy_cos::Dict::new();
     tree.set(b"Type".to_vec(), Object::name("Pages"));
     tree.set(b"Kids".to_vec(), Object::Array(vec![Object::Ref(page)]));
     tree.set(b"Count".to_vec(), Object::Int(1));
@@ -741,7 +741,7 @@ fn declaring_a_form_xfa_does_not_excuse_replacing_the_pages() {
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     let check = |bytes: &[u8]| signatures(&open(bytes), bytes, &trust).into_iter().find(|s| s.signed).unwrap();
     for certify in [None, Some(2), Some(3)] {
-        let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { certify, ..opts() }).unwrap();
         assert_eq!(check(&signed).status, Status::Valid);
         let s = check(&edit_after(&signed, xfa_page_swap));
         assert_eq!(s.status, Status::Invalid, "{certify:?}: {:?}", s.details);
@@ -752,7 +752,7 @@ fn declaring_a_form_xfa_does_not_excuse_replacing_the_pages() {
 /// Re-encode a DER CMS the way Windows CryptoAPI / Adobe PPKMS / `openssl cms -stream` write it:
 /// indefinite lengths on ContentInfo, [0] and SignedData (the signed attributes stay DER).
 fn to_ber(der_cms: &[u8]) -> Vec<u8> {
-    use pdfcraft_sign::der::Tlv;
+    use taratasy_sign::der::Tlv;
     let ci = Tlv::parse(der_cms).unwrap().0.children().unwrap();
     let sd = ci[1].inner().unwrap().children().unwrap();
     let mut out = vec![0x30, 0x80];
@@ -776,11 +776,11 @@ fn contents_span(pdf: &[u8]) -> (usize, usize) {
 fn validates_signatures_written_with_ber_indefinite_lengths() {
     for file in ["rsa-aes.p12", "ec-p256.p12"] {
         let id = pkcs12::open(&data(file), "test").unwrap();
-        let mut signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+        let mut signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
         let (a, b) = contents_span(&signed);
         let hex = |s: &[u8]| s.iter().map(|x| format!("{x:02x}")).collect::<String>();
         let der: Vec<u8> = (a..b).step_by(2).map(|i| u8::from_str_radix(std::str::from_utf8(&signed[i..i + 2]).unwrap(), 16).unwrap()).collect();
-        let der_len = pdfcraft_sign::der::Tlv::parse(&der).unwrap().0.raw.len();
+        let der_len = taratasy_sign::der::Tlv::parse(&der).unwrap().0.raw.len();
         let mut ber = to_ber(&der[..der_len]);
         assert_eq!(ber[1], 0x80, "indefinite");
         ber.resize((b - a) / 2, 0);
@@ -801,23 +801,23 @@ fn validates_signatures_written_with_ber_indefinite_lengths() {
 #[test]
 fn validation_data_and_xmp_added_after_signing_are_not_tampering() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     // As DocuSign / Acrobat LTV do: a DSS whose /Certs and /VRI are indirect objects, and XMP.
     let edited = edit_after(&signed, |doc| {
-        let mut cert = pdfcraft_cos::Dict::new();
+        let mut cert = taratasy_cos::Dict::new();
         cert.set(b"Length".to_vec(), Object::Int(3));
-        let cert = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(cert, vec![1, 2, 3])));
+        let cert = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(cert, vec![1, 2, 3])));
         let certs = doc.add(Object::Array(vec![Object::Ref(cert)]));
-        let vri = doc.add(Object::Dict(pdfcraft_cos::Dict::new()));
-        let mut dss = pdfcraft_cos::Dict::new();
+        let vri = doc.add(Object::Dict(taratasy_cos::Dict::new()));
+        let mut dss = taratasy_cos::Dict::new();
         dss.set(b"Certs".to_vec(), Object::Ref(certs));
         dss.set(b"VRI".to_vec(), Object::Ref(vri));
         let dss = doc.add(Object::Dict(dss));
-        let mut xmp = pdfcraft_cos::Dict::new();
+        let mut xmp = taratasy_cos::Dict::new();
         xmp.set(b"Type".to_vec(), Object::name("Metadata"));
         xmp.set(b"Subtype".to_vec(), Object::name("XML"));
         xmp.set(b"Length".to_vec(), Object::Int(1));
-        let xmp = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(xmp, b"x".to_vec())));
+        let xmp = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(xmp, b"x".to_vec())));
         let root = doc.root().unwrap();
         doc.update_dict(root, |c| {
             c.set(b"DSS".to_vec(), Object::Ref(dss));
@@ -837,11 +837,11 @@ fn validation_data_and_xmp_added_after_signing_are_not_tampering() {
 // ── DSS and metadata: what later revisions may add ─────────────────────────────────────────
 
 fn oref(num: u32) -> Object {
-    Object::Ref(pdfcraft_cos::ObjRef { num, generation: 0 })
+    Object::Ref(taratasy_cos::ObjRef { num, generation: 0 })
 }
 
-fn dict_of(entries: Vec<(&str, Object)>) -> pdfcraft_cos::Dict {
-    let mut d = pdfcraft_cos::Dict::new();
+fn dict_of(entries: Vec<(&str, Object)>) -> taratasy_cos::Dict {
+    let mut d = taratasy_cos::Dict::new();
     for (k, v) in entries {
         d.set(k.as_bytes().to_vec(), v);
     }
@@ -850,7 +850,7 @@ fn dict_of(entries: Vec<(&str, Object)>) -> pdfcraft_cos::Dict {
 
 fn stream_of(body: &[u8]) -> Object {
     let d = dict_of(vec![("Length", Object::Int(body.len() as i64))]);
-    Object::Stream(pdfcraft_cos::Stream::from_raw(d, body.to_vec()))
+    Object::Stream(taratasy_cos::Stream::from_raw(d, body.to_vec()))
 }
 
 /// Set the catalog's `/DSS`.
@@ -861,7 +861,7 @@ fn set_dss(doc: &mut Document, dss: Object) {
 
 /// Rewrite object `num` (the page's contents) so the page shows other text.
 fn forge_contents(doc: &mut Document, num: u32) {
-    doc.set(pdfcraft_cos::ObjRef { num, generation: 0 }, stream_of(b"BT /F1 14 Tf 20 250 Td (Forged) Tj ET"));
+    doc.set(taratasy_cos::ObjRef { num, generation: 0 }, stream_of(b"BT /F1 14 Tf 20 250 Td (Forged) Tj ET"));
 }
 
 /// `fixture()` with the page's `/Contents` an indirect array (object 7) holding object 4.
@@ -902,7 +902,7 @@ fn assert_refused_at_every_level(base: &[u8], kind: &str, attack: impl Fn(&mut D
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     let check = |bytes: &[u8]| signatures(&open(bytes), bytes, &trust).into_iter().find(|s| s.signed).unwrap();
     for certify in LEVELS {
-        let signed = pdfcraft_sign::sign(&open(base), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(base), &id, &SignOptions { certify, ..opts() }).unwrap();
         assert_eq!(check(&signed).status, Status::Valid, "{certify:?}: untouched");
         let s = check(&edit_after(&signed, &attack));
         assert_eq!(s.status, Status::Invalid, "{certify:?}: {:?} {:?}", s.modification, s.details);
@@ -948,7 +948,7 @@ fn an_existing_dictionary_is_not_a_store_part_because_the_store_names_it() {
         if let Some((k, v)) = extra {
             d.set(k.as_bytes().to_vec(), v);
         }
-        doc.set(pdfcraft_cos::ObjRef { num: 5, generation: 0 }, Object::Dict(d));
+        doc.set(taratasy_cos::ObjRef { num: 5, generation: 0 }, Object::Dict(d));
     };
     assert_refused_at_every_level(&fixture(), "page content", |doc| {
         rewrite_font(doc, Some(("Type", Object::name("DSS"))));
@@ -964,7 +964,7 @@ fn an_existing_dictionary_is_not_a_store_part_because_the_store_names_it() {
     // An existing dictionary with only DSS-looking keys that the signed file never had as a store.
     assert_refused_at_every_level(&fixture(), "page content", |doc| {
         doc.set(
-            pdfcraft_cos::ObjRef { num: 5, generation: 0 },
+            taratasy_cos::ObjRef { num: 5, generation: 0 },
             Object::Dict(dict_of(vec![("Type", Object::name("Font")), ("Cert", Object::Array(vec![]))])),
         );
         set_dss(doc, Object::Dict(dict_of(vec![("VRI", Object::Dict(dict_of(vec![("0123456789ABCDEF0123456789ABCDEF01234567", oref(5))])))])));
@@ -977,7 +977,7 @@ fn an_existing_array_stays_what_it_is_when_the_store_points_at_it() {
     // a new stream still changes what the page shows.
     assert_refused_at_every_level(&fixture_with_contents_array(), "other changes", |doc| {
         let extra = doc.add(stream_of(b"BT /F1 14 Tf 20 200 Td (Forged) Tj ET"));
-        doc.set(pdfcraft_cos::ObjRef { num: 7, generation: 0 }, Object::Array(vec![oref(4), Object::Ref(extra)]));
+        doc.set(taratasy_cos::ObjRef { num: 7, generation: 0 }, Object::Array(vec![oref(4), Object::Ref(extra)]));
         set_dss(doc, Object::Dict(dict_of(vec![("Certs", oref(7))])));
     });
 }
@@ -988,7 +988,7 @@ fn a_dictionary_labelled_metadata_is_not_a_metadata_change() {
     // The dictionary is the page's font, so the rewrite is page content (#1787).
     assert_refused_at_every_level(&fixture(), "page content", |doc| {
         doc.set(
-            pdfcraft_cos::ObjRef { num: 5, generation: 0 },
+            taratasy_cos::ObjRef { num: 5, generation: 0 },
             Object::Dict(dict_of(vec![
                 ("Type", Object::name("Metadata")),
                 ("Subtype", Object::name("Type1")),
@@ -1054,8 +1054,8 @@ fn a_stream_already_labelled_metadata_when_signed_is_not_metadata_unless_the_cat
             ("Length", Object::Int(27)),
         ]);
         doc.set(
-            pdfcraft_cos::ObjRef { num: 7, generation: 0 },
-            Object::Stream(pdfcraft_cos::Stream::from_raw(d, b"1 0 0 rg 10 10 100 100 re f".to_vec())),
+            taratasy_cos::ObjRef { num: 7, generation: 0 },
+            Object::Stream(taratasy_cos::Stream::from_raw(d, b"1 0 0 rg 10 10 100 100 re f".to_vec())),
         );
     });
 }
@@ -1068,10 +1068,10 @@ fn the_catalogs_own_xmp_stream_may_still_be_rewritten_after_signing() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     for certify in LEVELS {
-        let signed = pdfcraft_sign::sign(&open(&base), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&base), &id, &SignOptions { certify, ..opts() }).unwrap();
         let edited = edit_after(&signed, |doc| {
             let d = dict_of(vec![("Type", Object::name("Metadata")), ("Subtype", Object::name("XML")), ("Length", Object::Int(13))]);
-            doc.set(pdfcraft_cos::ObjRef { num: 7, generation: 0 }, Object::Stream(pdfcraft_cos::Stream::from_raw(d, b"<x:xmpmeta />".to_vec())));
+            doc.set(taratasy_cos::ObjRef { num: 7, generation: 0 }, Object::Stream(taratasy_cos::Stream::from_raw(d, b"<x:xmpmeta />".to_vec())));
         });
         let s = signatures(&open(&edited), &edited, &trust).into_iter().find(|s| s.signed).unwrap();
         assert!(matches!(&s.modification, Modification::Allowed(k) if k.contains(&kind::METADATA)), "{certify:?}: {:?}", s.modification);
@@ -1086,7 +1086,7 @@ fn fixture_with_dss() -> (Vec<u8>, u32, u32) {
     let bytes = edit_after(&fixture(), |doc| {
         let cert = doc.add(stream_of(&[1, 2, 3]));
         let certs = doc.add(Object::Array(vec![Object::Ref(cert)]));
-        let vri = doc.add(Object::Dict(pdfcraft_cos::Dict::new()));
+        let vri = doc.add(Object::Dict(taratasy_cos::Dict::new()));
         let dss = doc.add(Object::Dict(dict_of(vec![("Type", Object::name("DSS")), ("Certs", Object::Ref(certs)), ("VRI", Object::Ref(vri))])));
         set_dss(doc, Object::Ref(dss));
         ids = (certs.num, vri.num);
@@ -1101,18 +1101,18 @@ fn a_signed_store_may_grow_but_not_lose_or_swap_entries() {
     let check = |bytes: &[u8]| signatures(&open(bytes), bytes, &trust).into_iter().find(|s| s.signed).unwrap();
     let (base, certs, vri) = fixture_with_dss();
     for certify in LEVELS {
-        let signed = pdfcraft_sign::sign(&open(&base), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&base), &id, &SignOptions { certify, ..opts() }).unwrap();
         assert_eq!(check(&signed).status, Status::Valid, "{certify:?}");
         // Validation data appended to the arrays, and a VRI entry: what Acrobat's LTV does.
         let grown = edit_after(&signed, |doc| {
             let more = doc.add(stream_of(&[4, 5, 6]));
             let entry = doc.add(Object::Dict(dict_of(vec![("Cert", Object::Array(vec![Object::Ref(more)]))])));
             let old = open(&signed);
-            let Object::Array(mut kept) = (*old.get(pdfcraft_cos::ObjRef { num: certs, generation: 0 })).clone() else { panic!("array") };
+            let Object::Array(mut kept) = (*old.get(taratasy_cos::ObjRef { num: certs, generation: 0 })).clone() else { panic!("array") };
             kept.push(Object::Ref(more));
-            doc.set(pdfcraft_cos::ObjRef { num: certs, generation: 0 }, Object::Array(kept));
+            doc.set(taratasy_cos::ObjRef { num: certs, generation: 0 }, Object::Array(kept));
             doc.set(
-                pdfcraft_cos::ObjRef { num: vri, generation: 0 },
+                taratasy_cos::ObjRef { num: vri, generation: 0 },
                 Object::Dict(dict_of(vec![("0123456789ABCDEF0123456789ABCDEF01234567", Object::Ref(entry))])),
             );
         });
@@ -1121,7 +1121,7 @@ fn a_signed_store_may_grow_but_not_lose_or_swap_entries() {
         assert!(matches!(&s.modification, Modification::Allowed(k) if k.contains(&kind::SECURITY_STORE)), "{:?}", s.modification);
         // Dropping what was signed is a change, not an addition.
         let dropped = edit_after(&signed, |doc| {
-            doc.set(pdfcraft_cos::ObjRef { num: certs, generation: 0 }, Object::Array(vec![]));
+            doc.set(taratasy_cos::ObjRef { num: certs, generation: 0 }, Object::Array(vec![]));
         });
         let s = check(&dropped);
         assert_eq!(s.status, Status::Invalid, "{certify:?}: {:?}", s.modification);
@@ -1133,15 +1133,15 @@ fn a_signed_store_may_grow_but_not_lose_or_swap_entries() {
 fn a_form_xobject_relabelled_metadata_is_not_a_metadata_change() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
-    let signed = pdfcraft_sign::sign(&open(&fixture_with_xobject()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture_with_xobject()), &id, &opts()).unwrap();
     let relabel = |doc: &mut Document| {
-        let mut d = pdfcraft_cos::Dict::new();
+        let mut d = taratasy_cos::Dict::new();
         d.set(b"Type".to_vec(), Object::name("Metadata"));
         d.set(b"Subtype".to_vec(), Object::name("Form"));
         d.set(b"BBox".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(0), Object::Int(300), Object::Int(300)]));
         let body = b"BT /F1 14 Tf 20 250 Td (Forged text) Tj ET".to_vec();
         d.set(b"Length".to_vec(), Object::Int(body.len() as i64));
-        doc.set(pdfcraft_cos::ObjRef { num: 7, generation: 0 }, Object::Stream(pdfcraft_cos::Stream::from_raw(d, body)));
+        doc.set(taratasy_cos::ObjRef { num: 7, generation: 0 }, Object::Stream(taratasy_cos::Stream::from_raw(d, body)));
     };
     let edited = edit_after(&signed, relabel);
     let s = signatures(&open(&edited), &edited, &trust).into_iter().find(|s| s.signed).unwrap();
@@ -1150,24 +1150,24 @@ fn a_form_xobject_relabelled_metadata_is_not_a_metadata_change() {
     // The catalog's own XMP stream may still be updated.
     let with_xmp = edit_after(&fixture_with_xobject(), |doc| {
         let xmp = b"<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"/>".to_vec();
-        let mut d = pdfcraft_cos::Dict::new();
+        let mut d = taratasy_cos::Dict::new();
         d.set(b"Type".to_vec(), Object::name("Metadata"));
         d.set(b"Subtype".to_vec(), Object::name("XML"));
         d.set(b"Length".to_vec(), Object::Int(xmp.len() as i64));
-        let r = doc.add(Object::Stream(pdfcraft_cos::Stream::from_raw(d, xmp)));
+        let r = doc.add(Object::Stream(taratasy_cos::Stream::from_raw(d, xmp)));
         let root = doc.root().unwrap();
         doc.update_dict(root, |c| c.set(b"Metadata".to_vec(), Object::Ref(r))).unwrap();
     });
-    let signed_xmp = pdfcraft_sign::sign(&open(&with_xmp), &id, &opts()).unwrap();
+    let signed_xmp = taratasy_sign::sign(&open(&with_xmp), &id, &opts()).unwrap();
     let rewrite_xmp = edit_after(&signed_xmp, |doc| {
         let root = doc.root().unwrap();
         let r = doc.get(root).as_dict().unwrap().get(b"Metadata").and_then(Object::as_ref).unwrap();
         let xmp = b"<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><!-- edited --></x:xmpmeta>".to_vec();
-        let mut d = pdfcraft_cos::Dict::new();
+        let mut d = taratasy_cos::Dict::new();
         d.set(b"Type".to_vec(), Object::name("Metadata"));
         d.set(b"Subtype".to_vec(), Object::name("XML"));
         d.set(b"Length".to_vec(), Object::Int(xmp.len() as i64));
-        doc.set(r, Object::Stream(pdfcraft_cos::Stream::from_raw(d, xmp)));
+        doc.set(r, Object::Stream(taratasy_cos::Stream::from_raw(d, xmp)));
     });
     let s = signatures(&open(&rewrite_xmp), &rewrite_xmp, &trust).into_iter().find(|s| s.signed).unwrap();
     assert_eq!(s.status, Status::Valid, "{:?}", s.details);
@@ -1182,16 +1182,16 @@ fn a_form_xobject_relabelled_as_file_plumbing_is_still_judged() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     for certify in LEVELS {
-        let signed = pdfcraft_sign::sign(&open(&fixture_with_xobject()), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture_with_xobject()), &id, &SignOptions { certify, ..opts() }).unwrap();
         for label in ["ObjStm", "XRef"] {
             let edited = edit_after(&signed, |doc| {
-                let mut d = pdfcraft_cos::Dict::new();
+                let mut d = taratasy_cos::Dict::new();
                 d.set(b"Type".to_vec(), Object::name(label));
                 d.set(b"Subtype".to_vec(), Object::name("Form"));
                 d.set(b"BBox".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(0), Object::Int(300), Object::Int(300)]));
                 let body = b"BT /F1 14 Tf 20 250 Td (Forged text) Tj ET".to_vec();
                 d.set(b"Length".to_vec(), Object::Int(body.len() as i64));
-                doc.set(pdfcraft_cos::ObjRef { num: 7, generation: 0 }, Object::Stream(pdfcraft_cos::Stream::from_raw(d, body)));
+                doc.set(taratasy_cos::ObjRef { num: 7, generation: 0 }, Object::Stream(taratasy_cos::Stream::from_raw(d, body)));
             });
             let s = signatures(&open(&edited), &edited, &trust).into_iter().find(|s| s.signed).unwrap();
             assert_eq!(s.status, Status::Invalid, "{certify:?} /{label}: {:?}", s.details);
@@ -1210,7 +1210,7 @@ fn fixture_with_info() -> Vec<u8> {
         b"<< /Length 44 >>\nstream\nBT /F1 14 Tf 20 250 Td (Contract text) Tj ET\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
         b"<< /Type /Annot /Subtype /Widget /FT /Sig /T (Approval) /Rect [150 20 280 70] /P 3 0 R /F 4 >>",
-        b"<< /Producer (PdfCraft) /CreationDate (D:20260101000000Z) >>",
+        b"<< /Producer (Taratasy) /CreationDate (D:20260101000000Z) >>",
     ];
     let mut out = b"%PDF-1.7\n".to_vec();
     let mut offsets = Vec::new();
@@ -1249,7 +1249,7 @@ fn a_signed_page_relabelled_or_stripped_of_type_is_still_page_content() {
                 Some(name) => entries.insert(0, ("Type", Object::name(name))),
                 None => entries.push(("ModDate", Object::String(PdfString::literal("D:20261003000000Z")))),
             }
-            doc.set(pdfcraft_cos::ObjRef { num: 3, generation: 0 }, Object::Dict(dict_of(entries)));
+            doc.set(taratasy_cos::ObjRef { num: 3, generation: 0 }, Object::Dict(dict_of(entries)));
         }
     };
     assert_refused_at_every_level(&fixture(), "page content", forge_page(Some("Sig")));
@@ -1260,9 +1260,9 @@ fn a_signed_page_relabelled_or_stripped_of_type_is_still_page_content() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     for certify in LEVELS {
-        let signed = pdfcraft_sign::sign(&open(&fixture_with_info()), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture_with_info()), &id, &SignOptions { certify, ..opts() }).unwrap();
         let bumped = edit_after(&signed, |doc| {
-            doc.update_dict(pdfcraft_cos::ObjRef { num: 7, generation: 0 }, |d| {
+            doc.update_dict(taratasy_cos::ObjRef { num: 7, generation: 0 }, |d| {
                 d.set(b"ModDate".to_vec(), Object::String(PdfString::literal("D:20261003120000Z")));
             })
             .unwrap();
@@ -1275,7 +1275,7 @@ fn a_signed_page_relabelled_or_stripped_of_type_is_still_page_content() {
 
 /// A self-signed CRL from `id` revoking its own certificate, valid from `this` to `next`.
 fn self_crl(id: &pkcs12::DigitalId, this: Time, next: Time, revoked_at: Time) -> Vec<u8> {
-    let alg = id.key.signature_algorithm(pdfcraft_sign::DigestAlg::Sha256);
+    let alg = id.key.signature_algorithm(taratasy_sign::DigestAlg::Sha256);
     let tbs = der::seq(&[
         &der::int(1),
         &alg,
@@ -1284,17 +1284,17 @@ fn self_crl(id: &pkcs12::DigitalId, this: Time, next: Time, revoked_at: Time) ->
         &next.encode(),
         &der::seq(&[&der::seq(&[&der::uint(&id.certificate.serial), &revoked_at.encode()])]),
     ]);
-    let sig = id.key.sign(pdfcraft_sign::DigestAlg::Sha256, &tbs).unwrap();
+    let sig = id.key.sign(taratasy_sign::DigestAlg::Sha256, &tbs).unwrap();
     der::seq(&[&tbs, &alg, &der::bit_string(&sig)])
 }
 
 #[test]
 fn a_revoked_certificate_stays_invalid_when_it_was_also_expired_at_signing() {
-    use pdfcraft_sign::dss::{self, Evidence};
+    use taratasy_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     // Signed in 2040, after the test certificate expired (2036).
     let late = SignOptions { date: "D:20400101120000Z".into(), ..opts() };
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &late).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &late).unwrap();
     let t = |year| Time { year, month: 1, day: 1, hour: 0, minute: 0, second: 0 };
     let crl = self_crl(&id, t(2039), t(2041), t(2039));
     let ltv = dss::embed(&open(&signed), &Evidence { certs: Vec::new(), ocsps: Vec::new(), crls: vec![crl] }).unwrap();
@@ -1317,7 +1317,7 @@ fn an_untrusted_timestamp_does_not_set_the_validation_time() {
         time: Time { year: 2027, month: 1, day: 1, hour: 0, minute: 0, second: 0 },
     };
     let late = SignOptions { date: "D:20400101120000Z".into(), ..opts() };
-    let signed = pdfcraft_sign::sign_with_timestamp(&open(&fixture()), &id, &late, &tsa).unwrap();
+    let signed = taratasy_sign::sign_with_timestamp(&open(&fixture()), &id, &late, &tsa).unwrap();
     let anchor = id.chain.first().cloned().unwrap_or_else(|| id.certificate.clone());
     let s = signatures(&open(&signed), &signed, &TrustStore { certs: vec![anchor.clone()] }).into_iter().find(|s| s.signed).unwrap();
     assert_ne!(s.status, Status::Valid, "{:?}", s.details);
@@ -1335,25 +1335,25 @@ fn an_untrusted_timestamp_does_not_set_the_validation_time() {
 #[test]
 fn a_timestamp_token_may_sign_with_a_different_digest_than_its_imprint() {
     let tsa = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
-    let imprint = pdfcraft_sign::DigestAlg::Sha1.digest(&[b"document"]);
-    let q = pdfcraft_sign::timestamp::TimestampQuery::new(pdfcraft_sign::DigestAlg::Sha1, imprint.clone()).unwrap();
+    let imprint = taratasy_sign::DigestAlg::Sha1.digest(&[b"document"]);
+    let q = taratasy_sign::timestamp::TimestampQuery::new(taratasy_sign::DigestAlg::Sha1, imprint.clone()).unwrap();
     let time = Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 };
     let resp =
-        pdfcraft_sign::timestamp::respond(&tsa.key, &tsa.certificate, &tsa.chain, pdfcraft_sign::DigestAlg::Sha256, &q, "1.2.3.4", time, 9).unwrap();
-    let token = pdfcraft_sign::timestamp::parse_response(&resp, &q).unwrap();
-    assert_eq!((token.digest, token.imprint, token.gen_time), (pdfcraft_sign::DigestAlg::Sha1, imprint, time));
+        taratasy_sign::timestamp::respond(&tsa.key, &tsa.certificate, &tsa.chain, taratasy_sign::DigestAlg::Sha256, &q, "1.2.3.4", time, 9).unwrap();
+    let token = taratasy_sign::timestamp::parse_response(&resp, &q).unwrap();
+    assert_eq!((token.digest, token.imprint, token.gen_time), (taratasy_sign::DigestAlg::Sha1, imprint, time));
 }
 
 #[cfg(windows)]
 #[test]
 fn windows_store_enumeration_and_missing_identity() {
-    let listing = pdfcraft_sign::windows::list().unwrap();
-    assert_eq!(listing.ids.len(), pdfcraft_sign::windows::identities().unwrap().len());
+    let listing = taratasy_sign::windows::list().unwrap();
+    assert_eq!(listing.ids.len(), taratasy_sign::windows::identities().unwrap().len());
     // Whatever this machine's store holds, every certificate left out is named and explained.
     for u in &listing.unusable {
         assert!(!u.subject.is_empty() && !u.reason.is_empty() && u.fingerprint.len() == 95, "{u:?}");
     }
-    assert!(pdfcraft_sign::windows::find("windows:no such signer").is_err());
+    assert!(taratasy_sign::windows::find("windows:no such signer").is_err());
 }
 
 #[cfg(windows)]
@@ -1396,7 +1396,7 @@ fn signing_with_windows_store_identities() {
     getrandom::fill(&mut random).unwrap();
     let unique: String = random.iter().map(|b| format!("{b:02x}")).collect();
     for algorithm in ["RSA", "ECDSA_nistP256", "ECDSA_nistP384"] {
-        let name = format!("PdfCraft Test {unique} {algorithm}");
+        let name = format!("Taratasy Test {unique} {algorithm}");
         let rsa = if algorithm == "RSA" { "-KeyLength 2048" } else { "" };
         let out = powershell(&format!(
             "$ErrorActionPreference='Stop'; $c=New-SelfSignedCertificate -Subject 'CN={name}' -CertStoreLocation 'Cert:\\CurrentUser\\My' -Provider 'Microsoft Software Key Storage Provider' -KeyAlgorithm {algorithm} {rsa} -KeyUsage DigitalSignature -KeyExportPolicy NonExportable; $c.Thumbprint"
@@ -1406,17 +1406,17 @@ fn signing_with_windows_store_identities() {
         assert_eq!(thumbprint.len(), 40);
         assert!(thumbprint.bytes().all(|b| b.is_ascii_hexdigit()));
         created.0.push(thumbprint);
-        let listed = pdfcraft_sign::windows::identities().unwrap();
+        let listed = taratasy_sign::windows::identities().unwrap();
         let listed_id = listed.iter().find(|id| id.certificate.subject.common_name() == Some(name.as_str())).expect("new identity listed");
-        let reference = pdfcraft_sign::windows::reference(&listed_id.certificate);
-        let id = pdfcraft_sign::windows::find(&reference).unwrap();
-        assert_eq!(pdfcraft_sign::windows::find(&format!("windows:{name}")).unwrap().certificate.raw, id.certificate.raw);
+        let reference = taratasy_sign::windows::reference(&listed_id.certificate);
+        let id = taratasy_sign::windows::find(&reference).unwrap();
+        assert_eq!(taratasy_sign::windows::find(&format!("windows:{name}")).unwrap().certificate.raw, id.certificate.raw);
         assert!(id.key.is_external());
         let mut options = opts();
         let now = powershell("(Get-Date).ToUniversalTime().ToString('yyyyMMddHHmmss')");
         assert!(now.status.success());
         options.date = format!("D:{}Z", String::from_utf8(now.stdout).unwrap().trim());
-        let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &options).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture()), &id, &options).unwrap();
         let validated = signatures(&open(&signed), &signed, &TrustStore { certs: vec![id.certificate.clone()] });
         let signature = validated.iter().find(|s| s.signed).unwrap();
         assert_eq!(signature.status, Status::Valid, "{:?}", signature.details);
@@ -1426,13 +1426,13 @@ fn signing_with_windows_store_identities() {
     // A certificate without a private key (issued to someone else, filed under Personal) is
     // reported as such rather than listed or dropped silently (issue #179).
     let ada = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap().certificate;
-    let cer = std::env::temp_dir().join(format!("pdfcraft-windows-store-{unique}.cer"));
+    let cer = std::env::temp_dir().join(format!("taratasy-windows-store-{unique}.cer"));
     std::fs::write(&cer, &ada.raw).unwrap();
     let out = powershell(&format!("(Import-Certificate -FilePath '{}' -CertStoreLocation 'Cert:\\CurrentUser\\My').Thumbprint", cer.display()));
     let _ = std::fs::remove_file(&cer);
     assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
     created.0.push(String::from_utf8(out.stdout).unwrap().trim().to_string());
-    let listing = pdfcraft_sign::windows::list().unwrap();
+    let listing = taratasy_sign::windows::list().unwrap();
     let reported = listing.unusable.iter().find(|u| u.fingerprint == ada.fingerprint()).expect("key-less certificate reported");
     assert!(reported.no_private_key, "{reported:?}");
     assert_eq!(reported.subject, ada.display_name());
@@ -1457,7 +1457,7 @@ fn a_windows_store_identity_signs_with_its_issuers() {
     let mut random = [0u8; 16];
     getrandom::fill(&mut random).unwrap();
     let unique: String = random.iter().map(|b| format!("{b:02x}")).collect();
-    let [root, issuer, signer] = ["Root", "Issuer", "Signer"].map(|role| format!("PdfCraft Test {unique} {role}"));
+    let [root, issuer, signer] = ["Root", "Issuer", "Signer"].map(|role| format!("Taratasy Test {unique} {role}"));
     let mut create = |name: &str, signed_by: Option<&str>, extra: &str| {
         let by = signed_by.map(|t| format!("-Signer (Get-Item -LiteralPath 'Cert:\\CurrentUser\\My\\{t}')")).unwrap_or_default();
         let out = powershell(&format!(
@@ -1474,11 +1474,11 @@ fn a_windows_store_identity_signs_with_its_issuers() {
     let issuer_thumbprint = create(&issuer, Some(&root_thumbprint), ca);
     create(&signer, Some(&issuer_thumbprint), "-KeyUsage DigitalSignature");
 
-    let listed = pdfcraft_sign::windows::identities().unwrap();
+    let listed = taratasy_sign::windows::identities().unwrap();
     let anchor = listed.iter().find(|id| id.certificate.subject.common_name() == Some(root.as_str())).expect("root listed").certificate.clone();
     // Listing builds no chains; finding the identity to sign with does.
     assert!(listed.iter().all(|id| id.chain.is_empty()));
-    let id = pdfcraft_sign::windows::find(&format!("windows:{signer}")).unwrap();
+    let id = taratasy_sign::windows::find(&format!("windows:{signer}")).unwrap();
     let chain: Vec<_> = id.chain.iter().map(|c| c.subject.common_name()).collect();
     assert_eq!(chain, [Some(issuer.as_str())], "the issuer, without the signer's own certificate or the root");
 
@@ -1486,7 +1486,7 @@ fn a_windows_store_identity_signs_with_its_issuers() {
     let now = powershell("(Get-Date).ToUniversalTime().ToString('yyyyMMddHHmmss')");
     assert!(now.status.success());
     options.date = format!("D:{}Z", String::from_utf8(now.stdout).unwrap().trim());
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &options).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &options).unwrap();
     let validated = signatures(&open(&signed), &signed, &TrustStore { certs: vec![anchor] });
     let signature = validated.iter().find(|s| s.signed).unwrap();
     assert_eq!(signature.status, Status::Valid, "{:?}", signature.details);
@@ -1501,8 +1501,8 @@ fn fixture_timestamped_in_a_field(tsa: &TestTsa) -> Vec<u8> {
         let field = doc.add(Object::Null);
         // `timestamp_document` adds its dictionary next.
         value_num = field.num + 1;
-        let at = |num| Object::Ref(pdfcraft_cos::ObjRef { num, generation: 0 });
-        let mut widget = pdfcraft_cos::Dict::new();
+        let at = |num| Object::Ref(taratasy_cos::ObjRef { num, generation: 0 });
+        let mut widget = taratasy_cos::Dict::new();
         for (k, v) in [
             ("Type", Object::name("Annot")),
             ("Subtype", Object::name("Widget")),
@@ -1526,8 +1526,8 @@ fn fixture_timestamped_in_a_field(tsa: &TestTsa) -> Vec<u8> {
         })
         .unwrap();
     });
-    let stamped = pdfcraft_sign::timestamp_document(&open(&base), tsa, "D:20261006120000Z").unwrap();
-    let held = open(&stamped).get(pdfcraft_cos::ObjRef { num: value_num, generation: 0 });
+    let stamped = taratasy_sign::timestamp_document(&open(&base), tsa, "D:20261006120000Z").unwrap();
+    let held = open(&stamped).get(taratasy_cos::ObjRef { num: value_num, generation: 0 });
     assert_eq!(held.as_dict().and_then(|d| d.name(b"Type")), Some(&b"DocTimeStamp"[..]), "the field holds the timestamp");
     stamped
 }
@@ -1586,7 +1586,7 @@ fn a_standalone_timestamp_typed_sig_by_an_older_writer_is_still_a_timestamp() {
         id: pkcs12::open(&data("rsa-aes.p12"), "test").unwrap(),
         time: Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 },
     };
-    let stamped = pdfcraft_sign::timestamp_document(&open(&fixture()), &tsa, "D:20261006120000Z").unwrap();
+    let stamped = taratasy_sign::timestamp_document(&open(&fixture()), &tsa, "D:20261006120000Z").unwrap();
     let s = signatures(&open(&stamped), &stamped, &TrustStore::default()).into_iter().find(|s| s.doc_timestamp).unwrap();
     assert_eq!(s.status, Status::Unknown, "{:?}", s.details);
     // The same bytes with `/Type /Sig` in place of `/Type /DocTimeStamp` (padded to the same
@@ -1640,14 +1640,14 @@ fn validates_the_legacy_adbe_x509_rsa_sha1_format() {
 
 /// `fixture()` protected with an empty user password (opens without asking, like most
 /// "secured" forms) and an owner password, then saved.
-fn protected(alg: pdfcraft_cos::Algorithm, permissions: i32) -> Vec<u8> {
+fn protected(alg: taratasy_cos::Algorithm, permissions: i32) -> Vec<u8> {
     protected_with(alg, "", permissions)
 }
 
 /// `fixture()` protected with the user password `user` and an owner password, then saved.
-fn protected_with(alg: pdfcraft_cos::Algorithm, user: &str, permissions: i32) -> Vec<u8> {
+fn protected_with(alg: taratasy_cos::Algorithm, user: &str, permissions: i32) -> Vec<u8> {
     let mut doc = open(&fixture());
-    doc.set_encryption(&pdfcraft_cos::NewEncryption {
+    doc.set_encryption(&taratasy_cos::NewEncryption {
         algorithm: alg,
         user_password: user,
         owner_password: "owner",
@@ -1656,7 +1656,7 @@ fn protected_with(alg: pdfcraft_cos::Algorithm, user: &str, permissions: i32) ->
         seed: [17; 32],
     })
     .unwrap();
-    pdfcraft_cos::write_full(&doc, &SaveOptions::default()).unwrap()
+    taratasy_cos::write_full(&doc, &SaveOptions::default()).unwrap()
 }
 
 /// #1808: a document that asks for its user password, signed and then counter-signed. The
@@ -1671,8 +1671,8 @@ fn a_user_password_document_keeps_its_earlier_signature_valid_when_counter_signe
     for alg in ALL_ALGORITHMS {
         let base = protected_with(alg, "secret", -1);
         assert!(Document::open_with_password(Arc::new(base.clone()), None).is_err(), "{alg:?}: the file asks for its password");
-        let signed = pdfcraft_sign::sign(&open_pw(&base, Some("secret")), &id, &opts()).unwrap();
-        let both = pdfcraft_sign::sign(&open_pw(&signed, Some("secret")), &id2, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open_pw(&base, Some("secret")), &id, &opts()).unwrap();
+        let both = taratasy_sign::sign(&open_pw(&signed, Some("secret")), &id2, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
         let sigs = signatures(&open_pw(&both, Some("secret")), &both, &trust);
         let first = sigs.iter().find(|s| s.field == "Signature1").unwrap();
         assert_eq!(first.modification, Modification::Allowed(vec![kind::SIGNATURE]), "{alg:?}: {:?}", first.details);
@@ -1699,8 +1699,8 @@ fn open_pw(b: &[u8], pw: Option<&str>) -> Document {
 /// in form fields, and signing existing signature fields" writes.
 const FILL_AND_SIGN_ONLY: i32 = -3132;
 
-const ALL_ALGORITHMS: [pdfcraft_cos::Algorithm; 4] =
-    [pdfcraft_cos::Algorithm::Rc4_40, pdfcraft_cos::Algorithm::Rc4_128, pdfcraft_cos::Algorithm::Aes128, pdfcraft_cos::Algorithm::Aes256];
+const ALL_ALGORITHMS: [taratasy_cos::Algorithm; 4] =
+    [taratasy_cos::Algorithm::Rc4_40, taratasy_cos::Algorithm::Rc4_128, taratasy_cos::Algorithm::Aes128, taratasy_cos::Algorithm::Aes256];
 
 #[test]
 fn encrypted_documents_are_signed_with_an_unencrypted_contents() {
@@ -1710,8 +1710,8 @@ fn encrypted_documents_are_signed_with_an_unencrypted_contents() {
     for alg in ALL_ALGORITHMS {
         let base = protected(alg, -1);
         let doc = open_pw(&base, None);
-        assert_eq!(doc.security().unwrap().auth(), pdfcraft_cos::Auth::User);
-        let signed = pdfcraft_sign::sign(&doc, &id, &opts()).unwrap();
+        assert_eq!(doc.security().unwrap().auth(), taratasy_cos::Auth::User);
+        let signed = taratasy_sign::sign(&doc, &id, &opts()).unwrap();
         assert!(signed.starts_with(&base), "{alg:?}: an incremental update");
         let added = String::from_utf8_lossy(&signed[base.len()..]);
         assert!(added.contains("/Encrypt") && added.contains("/ID"), "{alg:?}: the update keeps the file's security");
@@ -1733,7 +1733,7 @@ fn encrypted_documents_are_signed_with_an_unencrypted_contents() {
             .unwrap();
         assert_eq!(cms.as_string().unwrap().bytes.first(), Some(&0x30), "{alg:?}");
         // Counter-signing the existing field keeps the first signature valid.
-        let both = pdfcraft_sign::sign(&reopened, &id2, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
+        let both = taratasy_sign::sign(&reopened, &id2, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
         let sigs = signatures(&open_pw(&both, None), &both, &trust);
         let first = sigs.iter().find(|s| s.field == "Signature1").unwrap();
         assert_eq!(first.status, Status::Valid, "{alg:?}: {:?}", first.details);
@@ -1756,7 +1756,7 @@ fn an_encrypted_documents_signature_graphic_is_encrypted_with_it() {
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     for alg in ALL_ALGORITHMS {
         let base = protected(alg, -1);
-        let signed = pdfcraft_sign::sign(&open_pw(&base, None), &id, &SignOptions { graphic: Some(picture(true)), ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open_pw(&base, None), &id, &SignOptions { graphic: Some(picture(true)), ..opts() }).unwrap();
         let doc = open_pw(&signed, None);
         let s = signatures(&doc, &signed, &trust).into_iter().find(|s| s.signed).unwrap();
         assert_eq!((s.status, s.modification), (Status::Valid, Modification::None), "{alg:?}");
@@ -1776,26 +1776,26 @@ fn an_encrypted_documents_signature_graphic_is_encrypted_with_it() {
 fn encrypted_documents_are_signed_only_as_their_permissions_allow() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
-    let base = protected(pdfcraft_cos::Algorithm::Aes256, FILL_AND_SIGN_ONLY);
+    let base = protected(taratasy_cos::Algorithm::Aes256, FILL_AND_SIGN_ONLY);
     let user = open_pw(&base, None);
     let refused = |r: Result<Vec<u8>, SignError>, what: &str| match r {
         Err(SignError::Pdf(m)) => assert!(m.contains(what) && m.contains("permissions password"), "{m}"),
         other => panic!("expected a refusal, got {:?}", other.map(|b| b.len())),
     };
     // A new field is a form change the settings don't allow.
-    refused(pdfcraft_sign::sign(&user, &id, &opts()), "adding new signature fields");
+    refused(taratasy_sign::sign(&user, &id, &opts()), "adding new signature fields");
     // So is certifying, even in an existing field.
-    refused(pdfcraft_sign::sign(&user, &id, &SignOptions { field: Some("Approval".into()), certify: Some(2), ..opts() }), "certifying");
+    refused(taratasy_sign::sign(&user, &id, &SignOptions { field: Some("Approval".into()), certify: Some(2), ..opts() }), "certifying");
     // Signing the existing field is allowed.
-    let signed = pdfcraft_sign::sign(&user, &id, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
+    let signed = taratasy_sign::sign(&user, &id, &SignOptions { field: Some("Approval".into()), ..opts() }).unwrap();
     let s = signatures(&open_pw(&signed, None), &signed, &trust).into_iter().find(|s| s.signed).unwrap();
     assert_eq!((s.field.as_str(), s.status), ("Approval", Status::Valid), "{:?}", s.details);
     // Settings that allow no form filling refuse even that (print only).
-    let print_only = open_pw(&protected(pdfcraft_cos::Algorithm::Aes256, -3900), None);
-    refused(pdfcraft_sign::sign(&print_only, &id, &SignOptions { field: Some("Approval".into()), ..opts() }), "signing");
+    let print_only = open_pw(&protected(taratasy_cos::Algorithm::Aes256, -3900), None);
+    refused(taratasy_sign::sign(&print_only, &id, &SignOptions { field: Some("Approval".into()), ..opts() }), "signing");
     // The owner may do anything: a new, certifying signature.
     let owner = open_pw(&base, Some("owner"));
-    let certified = pdfcraft_sign::sign(&owner, &id, &SignOptions { certify: Some(2), ..opts() }).unwrap();
+    let certified = taratasy_sign::sign(&owner, &id, &SignOptions { certify: Some(2), ..opts() }).unwrap();
     let s = signatures(&open_pw(&certified, None), &certified, &trust).into_iter().find(|s| s.signed).unwrap();
     assert_eq!(s.status, Status::Valid, "{:?}", s.details);
     assert_eq!(s.certify, Some(2), "{:?}", s.details);
@@ -1806,9 +1806,9 @@ fn encrypted_documents_are_signed_only_as_their_permissions_allow() {
 #[test]
 fn signing_waits_for_a_pending_security_change_to_be_saved() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let mut owner = open_pw(&protected(pdfcraft_cos::Algorithm::Aes256, FILL_AND_SIGN_ONLY), Some("owner"));
+    let mut owner = open_pw(&protected(taratasy_cos::Algorithm::Aes256, FILL_AND_SIGN_ONLY), Some("owner"));
     owner.remove_encryption();
-    match pdfcraft_sign::sign(&owner, &id, &opts()) {
+    match taratasy_sign::sign(&owner, &id, &opts()) {
         Err(SignError::Pdf(m)) => assert!(m.contains("save the document's new security settings"), "{m}"),
         other => panic!("expected a refusal, got {:?}", other.map(|b| b.len())),
     }
@@ -1820,16 +1820,16 @@ fn encrypted_documents_take_a_document_timestamp() {
         id: pkcs12::open(&data("rsa-aes.p12"), "test").unwrap(),
         time: Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 },
     };
-    let base = protected(pdfcraft_cos::Algorithm::Aes128, FILL_AND_SIGN_ONLY);
-    let stamped = pdfcraft_sign::timestamp_document(&open_pw(&base, None), &tsa, "D:20261006120000Z").unwrap();
+    let base = protected(taratasy_cos::Algorithm::Aes128, FILL_AND_SIGN_ONLY);
+    let stamped = taratasy_sign::timestamp_document(&open_pw(&base, None), &tsa, "D:20261006120000Z").unwrap();
     assert!(stamped.starts_with(&base));
     let s = signatures(&open_pw(&stamped, None), &stamped, &TrustStore { certs: vec![tsa.id.certificate.clone()] })
         .into_iter()
         .find(|s| s.doc_timestamp)
         .unwrap();
     assert_eq!((s.status, s.timestamp_time), (Status::Valid, Some(tsa.time)), "{:?}", s.details);
-    let print_only = open_pw(&protected(pdfcraft_cos::Algorithm::Aes128, -3900), None);
-    assert!(matches!(pdfcraft_sign::timestamp_document(&print_only, &tsa, "D:20261006120000Z"), Err(SignError::Pdf(_))));
+    let print_only = open_pw(&protected(taratasy_cos::Algorithm::Aes128, -3900), None);
+    assert!(matches!(taratasy_sign::timestamp_document(&print_only, &tsa, "D:20261006120000Z"), Err(SignError::Pdf(_))));
 }
 
 /// A visible signature draws its details in Helvetica: a reason or location it can't draw is
@@ -1838,18 +1838,18 @@ fn encrypted_documents_take_a_document_timestamp() {
 #[test]
 fn visible_appearance_text_helvetica_cannot_draw_is_refused() {
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let shown = pdfcraft_sign::Appearance { reason: true, location: true, ..pdfcraft_sign::Appearance::default() };
+    let shown = taratasy_sign::Appearance { reason: true, location: true, ..taratasy_sign::Appearance::default() };
     let chinese = SignOptions { reason: Some("同意此文件".into()), appearance: shown.clone(), ..opts() };
-    let err = pdfcraft_sign::sign(&open(&fixture()), &id, &chinese).unwrap_err().to_string();
+    let err = taratasy_sign::sign(&open(&fixture()), &id, &chinese).unwrap_err().to_string();
     assert!(err.contains("\"同\" (U+540C)") && err.contains("the reason") && err.contains("sign without a visible appearance"), "{err}");
     let located = SignOptions { location: Some("北京".into()), appearance: shown, ..opts() };
-    assert!(pdfcraft_sign::sign(&open(&fixture()), &id, &located).unwrap_err().to_string().contains("the location"));
+    assert!(taratasy_sign::sign(&open(&fixture()), &id, &located).unwrap_err().to_string().contains("the location"));
     // Left out of the appearance, or signed invisibly: it signs, and the reason is kept as text.
     let hidden = SignOptions { reason: Some("同意此文件".into()), ..opts() };
     assert!(!hidden.appearance.reason, "the default appearance doesn't show the reason");
-    pdfcraft_sign::sign(&open(&fixture()), &id, &hidden).unwrap();
+    taratasy_sign::sign(&open(&fixture()), &id, &hidden).unwrap();
     let invisible = SignOptions { rect: None, ..chinese };
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &invisible).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &invisible).unwrap();
     let doc = open(&signed);
     let s = signatures(&doc, &signed, &TrustStore::default()).into_iter().find(|s| s.signed).unwrap();
     assert_eq!(s.reason.as_deref(), Some("同意此文件"));
@@ -1861,13 +1861,13 @@ fn visible_appearance_text_helvetica_cannot_draw_is_refused() {
 /// turned off or the signature invisible, signs. Labels it can draw are what the stamp says.
 #[test]
 fn appearance_labels_helvetica_cannot_draw_are_refused() {
-    use pdfcraft_sign::{Appearance, AppearanceLabels};
+    use taratasy_sign::{Appearance, AppearanceLabels};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     assert_eq!(AppearanceLabels::default().first_undrawable(), None, "the English labels are drawable");
     let chinese = AppearanceLabels { signed_by: "数字签名者".into(), reason: "原因：".into(), ..AppearanceLabels::default() };
     assert_eq!(chinese.first_undrawable(), Some(("signed_by", '数')));
     let sign = |labels: AppearanceLabels, appearance: Appearance, o: SignOptions| {
-        pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { appearance_labels: labels, appearance, ..o })
+        taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { appearance_labels: labels, appearance, ..o })
     };
 
     // The name is shown with its label (the default appearance): refused, saying which and what.
@@ -1975,7 +1975,7 @@ fn wordings_are_complete() {
 #[test]
 fn details_say_themselves() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     let sigs = signatures(&open(&signed), &signed, &TrustStore::default());
     let details: Vec<&Detail> = sigs.iter().flat_map(|s| s.details.iter()).collect();
     assert!(!details.is_empty());
@@ -1985,8 +1985,8 @@ fn details_say_themselves() {
         // A wording has exactly as many holes as its fill has things to put in them.
         let holes = d.pattern.matches("{}").count();
         let wanted = match &d.fill {
-            pdfcraft_sign::Fill::Nothing => 0,
-            pdfcraft_sign::Fill::Names(..) => 2,
+            taratasy_sign::Fill::Nothing => 0,
+            taratasy_sign::Fill::Names(..) => 2,
             _ => 1,
         };
         assert_eq!(holes, wanted, "{:?} has {holes} holes", d.pattern);
@@ -2025,7 +2025,7 @@ fn a_cross_reference_entry_the_reader_sets_aside_does_not_hide_new_page_content(
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
     for certify in LEVELS {
-        let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &SignOptions { certify, ..opts() }).unwrap();
+        let signed = taratasy_sign::sign(&open(&fixture()), &id, &SignOptions { certify, ..opts() }).unwrap();
         // Where the signed revision keeps the page's content stream.
         let signed_at = signed.windows(8).position(|w| w == b"\n4 0 obj").unwrap() + 1;
         // Each writes the section's subsections, given where the new object 4 was put.
@@ -2056,7 +2056,7 @@ fn a_cross_reference_entry_the_reader_sets_aside_does_not_hide_new_page_content(
 fn a_cross_reference_entry_that_misses_its_object_is_not_an_unchanged_object() {
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     // A copy of the signed content, named by an entry two bytes into its `4 0 obj` header.
     let edited = append_content_revision(&signed, "Contract text", |new| format!("4 1\n{}", xref_entry(new + 2)));
     let doc = open(&edited);
@@ -2113,10 +2113,10 @@ fn rewritten_page_resources_are_page_content_whatever_keys_they_carry() {
     /// Replace object `num` with a dictionary; each attack runs once per certification level,
     /// so the entries are cloned into each.
     fn set(num: u32, entries: Vec<(&'static str, Object)>) -> impl Fn(&mut Document) {
-        move |doc| doc.set(pdfcraft_cos::ObjRef { num, generation: 0 }, Object::Dict(dict_of(entries.clone())))
+        move |doc| doc.set(taratasy_cos::ObjRef { num, generation: 0 }, Object::Dict(dict_of(entries.clone())))
     }
     /// A second font, so a name can be made to resolve elsewhere.
-    fn courier(doc: &mut Document) -> pdfcraft_cos::ObjRef {
+    fn courier(doc: &mut Document) -> taratasy_cos::ObjRef {
         doc.add(Object::Dict(dict_of(vec![
             ("Type", Object::name("Font")),
             ("Subtype", Object::name("Type1")),
@@ -2176,7 +2176,7 @@ fn rewritten_page_resources_are_page_content_whatever_keys_they_carry() {
     // The same page resources inline in the page keep being page content through the page itself.
     assert_refused_at_every_level(&fixture(), "page content", |doc| {
         let f = courier(doc);
-        doc.update_dict(pdfcraft_cos::ObjRef { num: 3, generation: 0 }, |page| {
+        doc.update_dict(taratasy_cos::ObjRef { num: 3, generation: 0 }, |page| {
             page.set(b"Resources".to_vec(), Object::Dict(dict_of(vec![("Font", Object::Dict(dict_of(vec![("F1", Object::Ref(f))])))])));
         })
         .unwrap();
@@ -2187,7 +2187,7 @@ fn rewritten_page_resources_are_page_content_whatever_keys_they_carry() {
     // "other", as before).
     let id = pkcs12::open(&data("rsa-aes.p12"), "test").unwrap();
     let trust = TrustStore { certs: vec![id.certificate.clone()] };
-    let signed = pdfcraft_sign::sign(&open(&fixture_with_indirect_resources()), &id, &SignOptions { certify: Some(3), ..opts() }).unwrap();
+    let signed = taratasy_sign::sign(&open(&fixture_with_indirect_resources()), &id, &SignOptions { certify: Some(3), ..opts() }).unwrap();
     let grown = edit_after(&signed, |doc| {
         let f = courier(doc);
         set(8, vec![("F1", oref(5)), ("F2", Object::Ref(f))])(doc);

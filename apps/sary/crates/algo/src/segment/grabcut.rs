@@ -6,8 +6,8 @@
 //! "assign components → learn GMMs → min cut" steps with the contrast-sensitive smoothness term
 //! `γ e^{−β‖z_m − z_n‖²} / dist(m, n)` (γ = 50, β from the mean squared neighbour difference).
 
-use photocraft_geom::Rect;
-use photocraft_raster::{Cancelled, Interrupt};
+use sary_geom::Rect;
+use sary_raster::{Cancelled, Interrupt};
 
 use super::gmm::{DEFAULT_REG, Gmm};
 use super::{FREE, HARD_BG, HARD_FG, Region, RgbImage, Sampler, contrast_beta, data_costs, grid_cut_cancellable, subsample};

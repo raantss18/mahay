@@ -1,5 +1,5 @@
 //! Table styles: our style ids ↔ table style GUIDs, and `tableStyles.xml` definitions for the
-//! styles we write (generated from theme accents, matching how DeckCraft draws them).
+//! styles we write (generated from theme accents, matching how Seho draws them).
 
 use crate::opc::NS_A;
 use crate::xml::{A, W};
@@ -44,13 +44,13 @@ pub fn guid(text: &str) -> String {
 }
 
 fn own_guid(style: &str) -> String {
-    guid(&format!("deckcraft-table-style:{style}"))
+    guid(&format!("seho-table-style:{style}"))
 }
 
-/// Is `g` the GUID DeckCraft writes for one of its own styles?
+/// Is `g` the GUID Seho writes for one of its own styles?
 pub fn is_own_guid(g: &str) -> bool {
     let up = g.to_ascii_uppercase();
-    deckcraft_model::table::table_styles().iter().any(|(id, _)| own_guid(id) == up)
+    seho_model::table::table_styles().iter().any(|(id, _)| own_guid(id) == up)
 }
 
 /// Table style GUID → our style id (or the GUID itself when unknown).
@@ -59,7 +59,7 @@ pub fn style_from_guid(g: &str) -> String {
     if let Some((_, s)) = KNOWN.iter().find(|(k, _)| *k == up) {
         return s.to_string();
     }
-    for (id, _) in deckcraft_model::table::table_styles() {
+    for (id, _) in seho_model::table::table_styles() {
         if own_guid(&id) == up {
             return id;
         }
@@ -77,7 +77,7 @@ pub fn guid_for_style(style: &str) -> (String, bool) {
     {
         return (g.to_string(), false);
     }
-    let known = deckcraft_model::table::table_styles().iter().any(|(id, _)| id == style);
+    let known = seho_model::table::table_styles().iter().any(|(id, _)| id == style);
     if known { (own_guid(style), true) } else { ("{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}".into(), false) }
 }
 
@@ -206,10 +206,10 @@ fn style_def(w: &mut W, id: &str, name: &str) {
 
 /// `ppt/tableStyles.xml` with definitions for the styles in `used`: ours, generated, and those the
 /// opened file defined (`defs`), written back as they were read.
-pub fn table_styles_xml(used: &[String], defs: &[deckcraft_model::table::TableStyleDef]) -> Vec<u8> {
+pub fn table_styles_xml(used: &[String], defs: &[seho_model::table::TableStyleDef]) -> Vec<u8> {
     let mut w = W::new();
     w.open("a:tblStyleLst", A::new().a("xmlns:a", NS_A).a("def", "{5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"));
-    let names = deckcraft_model::table::table_styles();
+    let names = seho_model::table::table_styles();
     let mut done: Vec<&str> = vec![];
     for s in used {
         if done.contains(&s.as_str()) {
@@ -226,7 +226,7 @@ pub fn table_styles_xml(used: &[String], defs: &[deckcraft_model::table::TableSt
         if !define {
             continue;
         }
-        let name = names.iter().find(|(id, _)| id == s).map(|(_, n)| format!("DeckCraft {n}")).unwrap_or_else(|| s.clone());
+        let name = names.iter().find(|(id, _)| id == s).map(|(_, n)| format!("Seho {n}")).unwrap_or_else(|| s.clone());
         style_def(&mut w, s, &name);
     }
     // Styles the file defined but no table uses still belong to the deck.
@@ -253,7 +253,7 @@ mod tests {
             "tblBg", "wholeTbl", "band1H", "band2H", "band1V", "band2V", "lastCol", "firstCol", "lastRow", "seCell", "swCell", "firstRow", "neCell",
             "nwCell",
         ];
-        let used: Vec<String> = deckcraft_model::table::table_styles().into_iter().map(|(id, _)| id).collect();
+        let used: Vec<String> = seho_model::table::table_styles().into_iter().map(|(id, _)| id).collect();
         let d = crate::xml::parse(&table_styles_xml(&used, &[])).unwrap();
         let mut n = 0;
         for st in d.root.children_named("tblStyle") {
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn guids_round_trip() {
-        for (id, _) in deckcraft_model::table::table_styles() {
+        for (id, _) in seho_model::table::table_styles() {
             let (g, _) = guid_for_style(&id);
             assert_eq!(style_from_guid(&g), id, "{id} via {g}");
             assert_eq!(g.len(), 38);

@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use photocraft_io::{ExportOptions, export, import};
+use sary_io::{ExportOptions, export, import};
 
 /// (file, ceiling). Measured differences when the importer landed are in the comments.
 const FILES: &[(&str, f64)] = &[
@@ -110,13 +110,13 @@ fn public_affinity_documents_match_their_render_reference() {
             } else {
                 format!("{}.png", &name[..name.len() - 3])
             };
-            photocraft_codecs::decode(&corpus(&path)).unwrap()
+            sary_codecs::decode(&corpus(&path)).unwrap()
         } else {
-            photocraft_codecs::decode(photocraft_affinity::preview(&bytes).unwrap().png).unwrap()
+            sary_codecs::decode(sary_affinity::preview(&bytes).unwrap().png).unwrap()
         };
         let (tw, th) = reference.dimensions();
         let png = export(&r.document, "x.png", &ExportOptions::default()).unwrap().bytes;
-        let flat = photocraft_codecs::decode(&png).unwrap();
+        let flat = sary_codecs::decode(&png).unwrap();
         let (fw, fh) = flat.dimensions();
         // Several pages sit side by side; the thumbnail shows the first.
         let fw_first = ((f64::from(fh) * f64::from(tw) / f64::from(th)).round() as u32).min(fw);
@@ -145,8 +145,8 @@ fn issue_1606_special_shapes_match_the_exported_sample() {
         "supported special-shape sample still reports a bounding-ellipse fallback: {:?}",
         imported.warnings
     );
-    let rendered = photocraft_codecs::decode(&export(&imported.document, "x.png", &ExportOptions::default()).unwrap().bytes).unwrap();
-    let reference = photocraft_codecs::decode(&corpus("affinity-samples/06-special-shapes.png")).unwrap();
+    let rendered = sary_codecs::decode(&export(&imported.document, "x.png", &ExportOptions::default()).unwrap().bytes).unwrap();
+    let reference = sary_codecs::decode(&corpus("affinity-samples/06-special-shapes.png")).unwrap();
     let (rw, rh) = reference.dimensions();
     let (ow, oh) = rendered.dimensions();
     let (w, h) = (rw.min(ow), rh.min(oh));

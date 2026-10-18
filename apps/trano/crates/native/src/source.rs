@@ -3,14 +3,14 @@
 //! [`GitHubSource`] asks the GitHub REST API (one request per app, revalidated with ETags) and,
 //! when the API is out of quota, falls back to github.com's release pages: the
 //! `releases/latest` redirect names the tag and `SHA256SUMS.txt` lists every file with its
-//! checksum, which costs no API quota at all. A later [`ReleaseSource`] will ask the ArtCraft
+//! checksum, which costs no API quota at all. A later [`ReleaseSource`] will ask the Mahay
 //! catalog API for every app in one request.
 
 use std::collections::BTreeMap;
 use std::sync::{Mutex, PoisonError};
 
-use artcraft_launcher_core::protocol::{LatestRelease, Source};
-use artcraft_launcher_core::release::{self, Release};
+use trano_core::protocol::{LatestRelease, Source};
+use trano_core::release::{self, Release};
 use serde::{Deserialize, Serialize};
 
 use crate::http::{Fetched, Http};

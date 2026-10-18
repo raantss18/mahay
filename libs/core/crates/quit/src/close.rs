@@ -23,7 +23,7 @@ pub fn on_close_request(ctx: &Context) -> bool {
 /// instead of using muda's `PredefinedMenuItem::quit`, which ends the process without asking, and
 /// passes its menu events to [`on_menu_event`]. Apps without their own menu use
 /// [`crate::install_app_menu`], which does both.
-pub const QUIT_MENU_ID: &str = "craft-quit.quit";
+pub const QUIT_MENU_ID: &str = "mahay-quit.quit";
 
 /// Handle a native menu event by the id of the item chosen. For [`QUIT_MENU_ID`], asks the root
 /// window to close (`ViewportCommand::Close`), so the app's unsaved-changes check runs as it does

@@ -3,13 +3,13 @@
 use egui::Pos2;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_engine::LinkAction;
-use pdfcraft_ui_egui::{Dialog, PdfCraftApp};
+use taratasy_engine::LinkAction;
+use taratasy_ui_egui::{Dialog, TaratasyApp};
 
-fn harness() -> Harness<'static, PdfCraftApp> {
+fn harness() -> Harness<'static, TaratasyApp> {
     // 60 fps steps, so two clicks fall inside egui's double-click window.
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(1.0 / 60.0).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, include_bytes!("../data/form.pdf").to_vec()).unwrap();
         app.set_option("zoom", "150").unwrap();
@@ -19,13 +19,13 @@ fn harness() -> Harness<'static, PdfCraftApp> {
     h
 }
 
-fn at(h: &Harness<'static, PdfCraftApp>, x: f32, y: f32) -> Pos2 {
+fn at(h: &Harness<'static, TaratasyApp>, x: f32, y: f32) -> Pos2 {
     let r = h.state().views[0].page_screen_rect(0).unwrap();
     let k = r.width() / 300.0;
     r.min + egui::vec2(x * k, y * k)
 }
 
-fn drag(h: &mut Harness<'static, PdfCraftApp>, a: Pos2, b: Pos2) {
+fn drag(h: &mut Harness<'static, TaratasyApp>, a: Pos2, b: Pos2) {
     h.hover_at(a);
     h.run_steps(1);
     h.drag_at(a);
@@ -38,7 +38,7 @@ fn drag(h: &mut Harness<'static, PdfCraftApp>, a: Pos2, b: Pos2) {
     h.run_steps(3);
 }
 
-fn links(h: &Harness<'static, PdfCraftApp>) -> Vec<pdfcraft_engine::LinkItem> {
+fn links(h: &Harness<'static, TaratasyApp>) -> Vec<taratasy_engine::LinkItem> {
     let s = h.state();
     s.session.get(s.views[0].id).unwrap().links().to_vec()
 }
@@ -106,7 +106,7 @@ fn removing_all_links_and_undo() {
     assert_eq!(links(&h).len(), 1);
 }
 
-fn right_click(h: &mut Harness<'static, PdfCraftApp>, p: Pos2) {
+fn right_click(h: &mut Harness<'static, TaratasyApp>, p: Pos2) {
     h.hover_at(p);
     h.run_steps(1);
     h.event(egui::Event::PointerButton { pos: p, button: egui::PointerButton::Secondary, pressed: true, modifiers: Default::default() });
@@ -137,7 +137,7 @@ fn the_link_context_menu_shows_only_for_a_right_click_on_a_link() {
     h.key_press(egui::Key::Escape);
     h.run_steps(3);
     // A right-click on the link gets it, with the Select tool too.
-    h.state_mut().quick_tool = pdfcraft_ui_egui::QuickTool::Select;
+    h.state_mut().quick_tool = taratasy_ui_egui::QuickTool::Select;
     h.run_steps(2);
     right_click(&mut h, on_link);
     h.get_by_label("Remove all links").click();

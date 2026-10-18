@@ -1,6 +1,6 @@
 //! Localized print-page wording around the shared, backend-independent controls.
-use craft_ui::printing::Labels;
-pub use craft_ui::printing::{Discover, Duplex, Feedback, Printer, Settings, State, Submit};
+use mahay_ui::printing::Labels;
+pub use mahay_ui::printing::{Discover, Duplex, Feedback, Printer, Settings, State, Submit};
 
 pub fn show(state: &mut State, ui: &mut egui::Ui, discover: &Discover, translate: impl Fn(&str) -> String) {
     let labels = Labels {
@@ -15,7 +15,7 @@ pub fn show(state: &mut State, ui: &mut egui::Ui, discover: &Discover, translate
         short_edge: &translate("Two-sided: short edge"),
         grayscale: &translate("Grayscale"),
     };
-    state.show(ui, egui::Id::new("gridcraft_print_settings"), discover, &labels);
+    state.show(ui, egui::Id::new("tabilao_print_settings"), discover, &labels);
     if let Some(message) = &state.message {
         ui.label(feedback(message, translate));
     }

@@ -10,7 +10,7 @@
 /// Largest clipboard HTML we look at; past this the paste uses the plain text alone.
 const MAX_HTML: usize = 16 * 1024 * 1024;
 /// Widest `colspan` honoured (the sheet's column count).
-const MAX_SPAN: usize = gridcraft_core::MAX_COLS as usize;
+const MAX_SPAN: usize = tabilao_core::MAX_COLS as usize;
 
 /// One table cell: its visible text and the number the source recorded for it, if any.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -263,7 +263,7 @@ pub(crate) fn format_for(shown: &str, n: f64) -> Option<String> {
         code.push_str(&"0".repeat(decimals.min(30)));
     }
     code.push_str(&quote(suffix));
-    let rendered = gridcraft_numfmt::text_function(&gridcraft_core::Value::number(n), &code, gridcraft_core::date::DateSystem::D1900).ok()?;
+    let rendered = tabilao_numfmt::text_function(&tabilao_core::Value::number(n), &code, tabilao_core::date::DateSystem::D1900).ok()?;
     (normalized(&rendered) == shown).then_some(code)
 }
 

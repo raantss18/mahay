@@ -139,7 +139,7 @@ pub(crate) fn findr_needle(haystack: &[u8], needle: &[u8]) -> Option<usize> {
 /// Indices should be used in order. Usage of higher indices implies more memory
 /// usage (even if lower indices are not in use).
 ///
-/// The capacity is limited at 2^C - 1. Out-of-range indices return `None` (PdfCraft patch:
+/// The capacity is limited at 2^C - 1. Out-of-range indices return `None` (Taratasy patch:
 /// upstream panics; #307 reaches this with object-stream slot numbers from the file).
 pub(crate) struct SegmentList<T, const C: usize>([OnceLock<Box<[OnceLock<T>]>>; C]);
 

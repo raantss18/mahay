@@ -4,11 +4,11 @@
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
-use wordcraft_doc::collate::{SortKey, heading_letter, sort_key};
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{CharProps, TabAlign, TabLeader, TabStop};
-use wordcraft_doc::section::SectionStart;
-use wordcraft_doc::{Block, Paragraph, Path, Pos, StoryRef};
+use soratra_doc::collate::{SortKey, heading_letter, sort_key};
+use soratra_doc::para::InlineObject;
+use soratra_doc::props::{CharProps, TabAlign, TabLeader, TabStop};
+use soratra_doc::section::SectionStart;
+use soratra_doc::{Block, Paragraph, Path, Pos, StoryRef};
 
 use super::references::{FieldCode, leader};
 use super::sel_result;
@@ -347,7 +347,7 @@ pub fn rebuild(s: &mut Session, i: usize, leader: Option<TabLeader>) -> Result<(
 /// Put the `n` entries after the index field's paragraph `i` in a continuous section with `cols`
 /// columns (the field's paragraph ends the section before), or merge that section back when the
 /// index has one column again.
-fn columns(s: &mut Session, i: usize, n: usize, cols: u32, old: Option<wordcraft_doc::section::SectionProps>) -> Result<(), CmdError> {
+fn columns(s: &mut Session, i: usize, n: usize, cols: u32, old: Option<soratra_doc::section::SectionProps>) -> Result<(), CmdError> {
     let last = i + n;
     if cols > 1 && n > 0 {
         // A paragraph after the index keeps the following section from being empty.
@@ -398,7 +398,7 @@ mod tests {
     /// before right-aligned page numbers, and two columns in a continuous section.
     #[test]
     fn index_switches_shape_the_index() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("Kilns are hot.\nGlaze the kilns.\nKilns again.\nPresses."));
+        let mut s = Session::new(soratra_doc::Document::from_text("Kilns are hot.\nGlaze the kilns.\nKilns again.\nPresses."));
         s.run("select.text", &json!({"text": "Kilns"})).unwrap();
         s.run("references.markEntry", &json!({"subentry": "firing", "bold": true})).unwrap();
         s.run("select.text", &json!({"text": "Presses"})).unwrap();

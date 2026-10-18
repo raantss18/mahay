@@ -2,8 +2,8 @@
 //! A separate point-by-point convolution also checks normalization and sampling.
 use super::*;
 use crate::{FilterParams, apply_tiled, kernel};
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_raster::Surface;
 
 const SHAPES: [BlurShape; 9] = [
     BlurShape::Circle,
@@ -217,7 +217,7 @@ fn shape_tile_overrides_and_cancel_preserve_input() {
         for tile in [i32::MIN, -1, 0, 256, i32::MAX] {
             exact(&apply_tiled(&s, &p, r, r, None, tile, Some(r)).read_region(r), &before);
         }
-        let ctl = photocraft_raster::Interrupt::cancel_only(&|| true);
+        let ctl = sary_raster::Interrupt::cancel_only(&|| true);
         assert!(crate::apply_tiled_with(&s, &p, r, r, None, 256, Some(r), &ctl).is_none());
         exact(&s.read_region(r), &before);
     }

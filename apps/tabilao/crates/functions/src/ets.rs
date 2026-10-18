@@ -25,8 +25,8 @@
 //! Prediction intervals use the model's h-step forecast variance (the book's Table 6.1, class 1):
 //! `σ²·(1 + Σ_{j=1}^{h−1} (α + αβ·j + γ·[j mod m = 0])²)`, σ² = SSE / n, with the normal quantile.
 
-use gridcraft_core::date::{datetime_from_serial, days_in_month_in, serial_from_ymd};
-use gridcraft_core::{CellError, DateSystem, Value};
+use tabilao_core::date::{datetime_from_serial, days_in_month_in, serial_from_ymd};
+use tabilao_core::{CellError, DateSystem, Value};
 
 use crate::special::norm_inv;
 use crate::util::{R, arg, as_array, has, num, num_val};
@@ -1008,7 +1008,7 @@ mod tests {
         for i in 0..24 {
             ts.push(serial);
             let (y, m) = (2024 + i / 12, (i % 12) as u32 + 1);
-            serial += f64::from(gridcraft_core::date::days_in_month(y, m));
+            serial += f64::from(tabilao_core::date::days_in_month(y, m));
         }
         let ys: Vec<f64> = (0..24).map(|i| 100.0 + 5.0 * i as f64).collect();
         // 2026-01-01 = 46023, 2026-03-01 = 46082.

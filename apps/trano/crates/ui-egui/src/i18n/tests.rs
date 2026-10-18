@@ -132,7 +132,7 @@ fn complete_catalogs_cover_every_ui_literal() {
         include_str!("../views.rs"),
         include_str!("../widgets.rs"),
         // The desktop shell's tray menu and tooltip.
-        include_str!("../../../../apps/artcraft-launcher/src/tray.rs"),
+        include_str!("../../../../apps/trano/src/tray.rs"),
     ];
     let mut keys = BTreeSet::new();
     for source in sources {
@@ -179,7 +179,7 @@ fn complete_catalogs_cover_every_ui_literal() {
 #[test]
 fn complete_catalogs_translate_every_tagline() {
     for lang in Lang::all().filter(|l| l.complete_menus()) {
-        for app in &artcraft_launcher_core::SUITE {
+        for app in &trano_core::SUITE {
             assert_ne!(super::tr_ctx(lang, app.id, app.tagline), app.tagline, "{}: {}", lang.code(), app.id);
         }
     }
@@ -188,7 +188,7 @@ fn complete_catalogs_translate_every_tagline() {
 #[test]
 fn product_names_stay_in_english() {
     for lang in Lang::all() {
-        for name in ["ArtCraft Launcher", "Craft App Suite", "Launcher"] {
+        for name in ["Mahay Trano", "Mahay App Suite", "Launcher"] {
             assert_eq!(tr(lang, name), name, "{}", lang.code());
         }
     }
@@ -286,7 +286,7 @@ fn german_counts_dates_and_messages_work() {
     assert_eq!(trn(Lang::DE, 1, "{n} day ago", "{n} days ago"), "vor 1 Tag");
     assert_eq!(super::tr_ctx(Lang::DE, "month", "Mar"), "März");
     assert_eq!(tr(Lang::DE, "{month} {day}, {year}"), "{day}. {month} {year}");
-    assert_eq!(message(Lang::DE, "PhotoCraft updated to 0.5.0"), "PhotoCraft auf 0.5.0 aktualisiert");
+    assert_eq!(message(Lang::DE, "Sary updated to 0.5.0"), "Sary auf 0.5.0 aktualisiert");
     assert_eq!(tr(Lang::DE, "Untranslated diagnostic"), "Untranslated diagnostic");
 }
 
@@ -304,7 +304,7 @@ fn hungarian_locales_and_plurals_work() {
     assert_eq!(trn(Lang::HU, 1, "{n} day ago", "{n} days ago"), "1 napja");
     assert_eq!(super::tr_ctx(Lang::HU, "month", "Mar"), "márc.");
     assert_eq!(tr(Lang::HU, "{month} {day}, {year}"), "{year}. {month} {day}.");
-    assert_eq!(message(Lang::HU, "PhotoCraft updated to 0.5.0"), "PhotoCraft frissítve. Verzió: 0.5.0");
+    assert_eq!(message(Lang::HU, "Sary updated to 0.5.0"), "Sary frissítve. Verzió: 0.5.0");
     assert_eq!(tr(Lang::HU, "Untranslated diagnostic"), "Untranslated diagnostic");
 }
 
@@ -332,7 +332,7 @@ fn spanish_locales_and_plurals_work() {
     assert_eq!(trn(Lang::ES, 1, "{n} app", "{n} apps"), "1 aplicación");
     assert_eq!(trn(Lang::ES, 3, "{n} day ago", "{n} days ago"), "hace 3 días");
     assert_eq!(tr(Lang::ES, "{month} {day}, {year}"), "{day} {month} {year}");
-    assert_eq!(message(Lang::ES, "PhotoCraft updated to 0.5.0"), "PhotoCraft actualizada a 0.5.0");
+    assert_eq!(message(Lang::ES, "Sary updated to 0.5.0"), "Sary actualizada a 0.5.0");
 }
 
 #[test]
@@ -363,7 +363,7 @@ fn chinese_counts_and_english_fallback_work() {
     }
     assert_eq!(trn(Lang::ZH_CN, 2, "{n} unknown item", "{n} unknown items"), "2 unknown items");
     assert_eq!(tr(Lang::ZH_CN, "Untranslated diagnostic"), "Untranslated diagnostic");
-    assert_eq!(message(Lang::ZH_CN, "PhotoCraft updated to 0.5.0"), "PhotoCraft 已更新至 0.5.0");
+    assert_eq!(message(Lang::ZH_CN, "Sary updated to 0.5.0"), "Sary 已更新至 0.5.0");
 }
 
 #[test]
@@ -381,7 +381,7 @@ fn japanese_locales_and_counts_work() {
     assert_eq!(tr(Lang::JA, "Untranslated diagnostic"), "Untranslated diagnostic");
     assert_eq!(super::tr_ctx(Lang::JA, "month", "Mar"), "3月");
     assert_eq!(tr(Lang::JA, "{month} {day}, {year}"), "{year}年{month}{day}日");
-    assert_eq!(message(Lang::JA, "PhotoCraft updated to 0.5.0"), "PhotoCraft を 0.5.0 に更新しました");
+    assert_eq!(message(Lang::JA, "Sary updated to 0.5.0"), "Sary を 0.5.0 に更新しました");
 }
 
 /// With the system's Chinese font installed, every UI family can draw the whole Chinese catalog.
@@ -502,10 +502,10 @@ fn message_templates_match_real_messages() {
          @msg\t{a}{b}\tnever\n",
     );
     assert_eq!(cat.message("Download cancelled").as_deref(), Some("Скачивание отменено"));
-    assert_eq!(cat.message("Couldn't open PhotoCraft: no such file: x").as_deref(), Some("Не удалось открыть PhotoCraft: no such file: x"));
-    assert_eq!(cat.message("PhotoCraft updated to 0.5.0").as_deref(), Some("PhotoCraft обновлено до 0.5.0"));
+    assert_eq!(cat.message("Couldn't open Sary: no such file: x").as_deref(), Some("Не удалось открыть Sary: no such file: x"));
+    assert_eq!(cat.message("Sary updated to 0.5.0").as_deref(), Some("Sary обновлено до 0.5.0"));
     // The template that spells out more of the message wins.
-    assert_eq!(cat.message("PhotoCraft updated to 0.5.0 (no checksum)").as_deref(), Some("PhotoCraft обновлено до 0.5.0 (без суммы)"));
+    assert_eq!(cat.message("Sary updated to 0.5.0 (no checksum)").as_deref(), Some("Sary обновлено до 0.5.0 (без суммы)"));
     // Placeholders never match nothing, and unknown messages aren't touched.
     assert_eq!(cat.message("Couldn't open : x"), None);
     assert_eq!(cat.message("Something else"), None);
@@ -514,7 +514,7 @@ fn message_templates_match_real_messages() {
 
 #[test]
 fn complete_catalogs_translate_package_formats() {
-    use artcraft_launcher_core::PackageKind;
+    use trano_core::PackageKind;
     let kinds = [
         PackageKind::Msi,
         PackageKind::PortableZip,

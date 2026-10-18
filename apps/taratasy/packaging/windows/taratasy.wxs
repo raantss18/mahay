@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Taratasy MSI (WiX Toolset v5: `dotnet tool install -g wix`). Built by package.ps1:
+
+    wix build taratasy.wxs installer-ui.wxs -arch x64 -d Version=1.2.3 -d BinDir=... -d ModelsDir=... -d IconPath=... -o out.msi
+
+  Per-machine install into Program Files, a Start Menu shortcut, a desktop shortcut (on by default,
+  optional, and an update keeps it only if it is still there), an App Paths entry, Taratasy registered as a PDF handler (offered under "Open with"
+  and in Default apps, never forced as the default), "Edit with Taratasy" on PDF files'
+  right-click menu and "Create PDF with Taratasy…" on image files' right-click menu (both on by
+  default, optional, and an update keeps the installed version's choice). Files opened with
+  Taratasy arrive on its command line.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package
+      Name="Taratasy"
+      Manufacturer="Learning Machines LLC"
+      Version="$(var.Version)"
+      UpgradeCode="EA00C367-7270-4C50-9D8B-A7A5C88AD27F"
+      Scope="perMachine"
+      Compressed="yes"
+      Language="1033">
+    <SummaryInformation Description="Taratasy PDF workbench" Manufacturer="Learning Machines LLC" />
+    <!-- HKLM registrations must never point into a per-user installation (#305). Allow removal
+         of an existing installation even if an older MSI let it install per-user. -->
+    <Launch Condition="ALLUSERS = 1 OR (Installed AND REMOVE = &quot;ALL&quot;)"
+        Message="Taratasy must be installed for all users. Run setup with administrator privileges and ALLUSERS=1; per-user installation is not supported." />
+    <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
+         (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+        DowngradeErrorMessage="A newer version of Taratasy is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Windows Installer requires an Icon id ending in .ico or .exe, or advertised shortcuts and
+         Add/Remove Programs show a blank icon (#57). -->
+    <Icon Id="TaratasyIcon.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="TaratasyIcon.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/raantss18/mahay" />
+    <Property Id="ARPHELPLINK" Value="https://discord.gg/mahay" />
+    <!-- Desktop shortcut (#143): on by default for a first install, a checkbox in the full-UI
+         welcome dialog, and INSTALLDESKTOPSHORTCUT=0 on the msiexec command line for unattended
+         installs. Secure, so the choice made in the (unelevated) UI reaches the elevated install.
+         An update keeps the shortcut only if it is still on the desktop (#1058): the launcher
+         updates with /passive and no properties, so deleting the shortcut is the only way its
+         users can say no. A value given on the command line wins. -->
+    <Property Id="INSTALLDESKTOPSHORTCUT" Secure="yes" />
+    <Property Id="EXISTINGDESKTOPSHORTCUT">
+      <DirectorySearch Id="DesktopSearch" Path="[DesktopFolder]" Depth="0">
+        <FileSearch Name="Taratasy.lnk" />
+      </DirectorySearch>
+    </Property>
+    <SetProperty Id="INSTALLDESKTOPSHORTCUT" Value="1" After="AppSearch" Sequence="first"
+        Condition="NOT INSTALLDESKTOPSHORTCUT AND (NOT WIX_UPGRADE_DETECTED OR EXISTINGDESKTOPSHORTCUT)" />
+    <!-- The File Explorer menus: "Edit with Taratasy" for PDF files (#682) and "Create PDF with
+         Taratasy…" for images (#190). Each is on by default for a first install and has a property
+         to leave it out of unattended installs: INSTALLPDFCONTEXTMENU=0 (also a welcome-dialog
+         checkbox) and INSTALLIMAGECONTEXTMENU=0. Secure, like the desktop shortcut's.
+         An update keeps the installed version's choice (#305) by looking for the menu's registry
+         key, the way the desktop shortcut looks for its file: AppSearch runs before the old version
+         is removed. Releases from before a menu existed (the PDF one came in 0.7.1, the image one in
+         0.4.0) never had the key, so updating from one of them counts as a first install; the
+         OnlyDetect rows below tell them apart. A value given on the command line wins. -->
+    <Upgrade Id="EA00C367-7270-4C50-9D8B-A7A5C88AD27F">
+      <UpgradeVersion Minimum="0.7.1" IncludeMinimum="yes" OnlyDetect="yes" Property="PDFCONTEXTMENURELEASE" />
+      <UpgradeVersion Minimum="0.4.0" IncludeMinimum="yes" OnlyDetect="yes" Property="IMAGECONTEXTMENURELEASE" />
+    </Upgrade>
+    <Property Id="INSTALLPDFCONTEXTMENU" Secure="yes" />
+    <Property Id="EXISTINGPDFCONTEXTMENU">
+      <RegistrySearch Id="PdfContextMenuSearch" Root="HKLM" Key="Software\Classes\SystemFileAssociations\.pdf\shell\Taratasy.Edit" Type="raw" />
+    </Property>
+    <SetProperty Id="INSTALLPDFCONTEXTMENU" Value="1" After="AppSearch" Sequence="first"
+        Condition="NOT INSTALLPDFCONTEXTMENU AND (NOT PDFCONTEXTMENURELEASE OR EXISTINGPDFCONTEXTMENU)" />
+    <Property Id="INSTALLIMAGECONTEXTMENU" Secure="yes" />
+    <Property Id="EXISTINGIMAGECONTEXTMENU">
+      <RegistrySearch Id="ImageContextMenuSearch" Root="HKLM" Key="Software\Classes\SystemFileAssociations\.png\shell\Taratasy.CreatePdf" Type="raw" />
+    </Property>
+    <SetProperty Id="INSTALLIMAGECONTEXTMENU" Value="1" After="AppSearch" Sequence="first"
+        Condition="NOT INSTALLIMAGECONTEXTMENU AND (NOT IMAGECONTEXTMENURELEASE OR EXISTINGIMAGECONTEXTMENU)" />
+    <UIRef Id="TaratasyInstallerUI" />
+
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Taratasy">
+        <Directory Id="ModelsFolder" Name="models" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="Main" Title="Taratasy" Level="1">
+      <ComponentGroupRef Id="TaratasyFiles" />
+      <ComponentGroupRef Id="TaratasyModels" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="TaratasyFiles" Directory="INSTALLFOLDER">
+      <Component Id="TaratasyApp" Guid="E724C1C6-091F-4E21-A685-80D089FDBE21">
+        <File Id="TaratasyExe" Source="$(var.BinDir)\taratasy.exe" KeyPath="yes" />
+
+        <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\taratasy.exe" Value="[#TaratasyExe]" Type="string" />
+
+        <!-- PDF files (#107): Taratasy is offered under "Open with" and in Settings ▸ Default
+             apps, through Windows' Default Programs registration (a ProgID, OpenWithProgids,
+             Capabilities and RegisteredApplications). It never takes over an existing default:
+             .pdf's own default value is left alone, and the user chooses. Without this, the only
+             Taratasy entry to pick was the advertised Start Menu shortcut, which Windows can't
+             run as a file handler ("This app can't run on your PC"). -->
+        <RegistryValue Root="HKLM" Key="Software\Classes\Taratasy.Document" Value="PDF Document" Type="string" />
+        <!-- A negative index selects the stable icon resource ID, rather than its position.
+             Resource 1 is the app's lion; resource 2 is the PDF document (build.rs). -->
+        <RegistryValue Root="HKLM" Key="Software\Classes\Taratasy.Document\DefaultIcon" Value="&quot;[#TaratasyExe]&quot;,-2" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Taratasy.Document\shell\open\command" Value="&quot;[#TaratasyExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\.pdf\OpenWithProgids" Name="Taratasy.Document" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\taratasy.exe" Name="FriendlyAppName" Value="Taratasy" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\taratasy.exe\DefaultIcon" Value="&quot;[#TaratasyExe]&quot;,-2" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\taratasy.exe\SupportedTypes" Name=".pdf" Value="" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\taratasy.exe\shell\open\command" Value="&quot;[#TaratasyExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Taratasy\Capabilities" Name="ApplicationName" Value="Taratasy" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Taratasy\Capabilities" Name="ApplicationDescription" Value="Open-source PDF workbench" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Taratasy\Capabilities" Name="ApplicationIcon" Value="[#TaratasyExe],0" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Taratasy\Capabilities\FileAssociations" Name=".pdf" Value="Taratasy.Document" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\RegisteredApplications" Name="Taratasy" Value="Software\Taratasy\Capabilities" Type="string" />
+      </Component>
+
+      <!-- Shortcuts (#143) are plain links to taratasy.exe, not advertised MSI shortcuts: advertised
+           ones point at a Windows Installer descriptor rather than the program, which Windows can't
+           use as a file handler (#107), and 0.2.1's advertised one went missing from the Start menu
+           (#143). Each has its own component with an HKLM key path, so Windows Installer removes it
+           on uninstall; in this per-machine package both folders are the all-users ones. -->
+      <Component Id="TaratasyStartMenuShortcut" Directory="ProgramMenuFolder" Guid="DC028192-C233-4F99-9A77-ED458C60DF26">
+        <Shortcut Id="StartMenuShortcut" Name="Taratasy" Description="Taratasy PDF workbench"
+            Target="[#TaratasyExe]" WorkingDirectory="INSTALLFOLDER" Icon="TaratasyIcon.ico" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Taratasy\Shortcuts" Name="StartMenu" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+
+      <Component Id="TaratasyDesktopShortcut" Directory="DesktopFolder" Guid="F6948627-32AB-4D78-8865-0FDF417CE442"
+          Condition="INSTALLDESKTOPSHORTCUT = 1">
+        <Shortcut Id="DesktopShortcut" Name="Taratasy" Description="Taratasy PDF workbench"
+            Target="[#TaratasyExe]" WorkingDirectory="INSTALLFOLDER" Icon="TaratasyIcon.ico" IconIndex="0" />
+        <RegistryValue Root="HKLM" Key="Software\Taratasy\Shortcuts" Name="Desktop" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+
+      <!-- PDF context menu (#682): "Edit with Taratasy" opens the file in Taratasy whichever app is
+           the default for .pdf, which it leaves alone (SystemFileAssociations, like the image
+           menu). Several PDFs selected (up to 15, Windows' limit for this kind of entry) start one
+           launch each, and the single-instance hand-off opens them as tabs of one window. On
+           Windows 11 the entry is under "Show more options": the first-level menu only takes
+           packaged apps' (IExplorerCommand) entries. Its own component with an HKLM key path, so
+           INSTALLPDFCONTEXTMENU=0 leaves it out and uninstall removes it. -->
+      <Component Id="TaratasyPdfContextMenu" Guid="439F084F-657D-4AC2-A4CC-F099C518D71F"
+          Condition="INSTALLPDFCONTEXTMENU = 1">
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.pdf\shell\Taratasy.Edit" Value="Edit with Taratasy" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.pdf\shell\Taratasy.Edit" Name="Icon" Value="&quot;[#TaratasyExe]&quot;,0" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.pdf\shell\Taratasy.Edit" Name="MultiSelectModel" Value="Document" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.pdf\shell\Taratasy.Edit\command" Value="&quot;[#TaratasyExe]&quot; &quot;%1&quot;" Type="string" />
+      </Component>
+
+      <!-- Image context menu (#190): "Create PDF with Taratasy…" opens the DPI chooser, without
+           changing image file defaults. Its own component with an HKLM key path, so
+           INSTALLIMAGECONTEXTMENU=0 leaves it out and uninstall removes it. These rows were in
+           TaratasyApp up to 0.7.1; moving them is safe because MajorUpgrade removes the old version
+           before installing (afterInstallValidate), so no old row is left behind. -->
+      <Component Id="TaratasyImageContextMenu" Guid="1B783BF3-12DF-4588-AF80-E2CEA8BC1E5A"
+          Condition="INSTALLIMAGECONTEXTMENU = 1">
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.png\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.png\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.png\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpg\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpg\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpg\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpeg\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpeg\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpeg\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tif\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tif\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tif\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tiff\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tiff\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.tiff\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.gif\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.gif\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.gif\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.bmp\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.bmp\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.bmp\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jp2\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jp2\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jp2\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.j2k\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.j2k\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.j2k\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpx\shell\Taratasy.CreatePdf" Value="Create PDF with Taratasy…" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpx\shell\Taratasy.CreatePdf" Name="MultiSelectModel" Value="Single" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\SystemFileAssociations\.jpx\shell\Taratasy.CreatePdf\command" Value="&quot;[#TaratasyExe]&quot; --create-images &quot;%1&quot;" Type="string" />
+      </Component>
+
+      <Component Id="TaratasyCli">
+        <File Id="TaratasyCliExe" Source="$(var.BinDir)\taratasy-cli.exe" KeyPath="yes" />
+      </Component>
+      <!-- The embedded PDF icon's ISC notice and project licences travel with the binaries. -->
+      <Component Id="TaratasyDocumentIconLicense">
+        <File Id="TaratasyDocumentIconLicenseFile" Source="$(var.BinDir)\LICENSE-document.txt" KeyPath="yes" />
+      </Component>
+      <Component Id="TaratasyMitLicense">
+        <File Id="TaratasyMitLicenseFile" Source="$(var.BinDir)\LICENSE-MIT" KeyPath="yes" />
+      </Component>
+      <Component Id="TaratasyApacheLicense">
+        <File Id="TaratasyApacheLicenseFile" Source="$(var.BinDir)\LICENSE-APACHE" KeyPath="yes" />
+      </Component>
+      <Component Id="TaratasyNotice">
+        <File Id="TaratasyNoticeFile" Source="$(var.BinDir)\NOTICE" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- OCR models (#103), with their licences and ATTRIBUTION.txt, in models\ beside taratasy.exe
+         where the app looks for them: every file `cargo xtask models` fetched (package.ps1), one
+         component each, so new models ship without naming them here. -->
+    <ComponentGroup Id="TaratasyModels" Directory="ModelsFolder">
+      <Files Include="$(var.ModelsDir)\*" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use wordcraft_doc::graphic::{Embedded, EmbeddedRef, Graphic};
-use wordcraft_doc::props::CharProps;
-use wordcraft_doc::{Block, Document, InlineObject};
+use soratra_doc::graphic::{Embedded, EmbeddedRef, Graphic};
+use soratra_doc::props::CharProps;
+use soratra_doc::{Block, Document, InlineObject};
 
 /// Original synthetic model data: sample formatting/tables/footer plus picture and source parts.
 fn complete_document() -> Document {
-    let mut doc = wordcraft_engine::sample::sample_document();
+    let mut doc = soratra_engine::sample::sample_document();
     let picture = Arc::new(vec![0, 1, 127, 128, 254, 255]);
     doc.media.insert("synthetic.png".into(), picture);
     doc.passthrough.insert("word/embeddings/synthetic.bin".into(), Arc::new(vec![9, 0, 255, 7]));
@@ -52,8 +52,8 @@ fn complete_document() -> Document {
 #[test]
 fn native_json_preserves_the_entire_document() {
     let doc = complete_document();
-    let bytes = wordcraft_engine::io::save_bytes("recovery.json", &doc).unwrap();
-    let restored = wordcraft_engine::io::open_bytes("recovery.json", &bytes).unwrap();
+    let bytes = soratra_engine::io::save_bytes("recovery.json", &doc).unwrap();
+    let restored = soratra_engine::io::open_bytes("recovery.json", &bytes).unwrap();
     assert_eq!(restored.media, doc.media, "picture bytes must survive");
     assert_eq!(restored.passthrough, doc.passthrough, "opaque parts must survive");
     assert_eq!(restored, doc, "object markup and relationships, stories and formatting must survive");
@@ -64,6 +64,6 @@ fn existing_native_json_without_byte_stores_still_opens() {
     let mut value = serde_json::to_value(Document::from_text("Old native document")).unwrap();
     value.as_object_mut().unwrap().remove("media");
     value.as_object_mut().unwrap().remove("passthrough");
-    let doc = wordcraft_engine::io::open_bytes("old.json", &serde_json::to_vec(&value).unwrap()).unwrap();
-    assert_eq!(doc.plain_text(wordcraft_doc::StoryRef::Body), "Old native document");
+    let doc = soratra_engine::io::open_bytes("old.json", &serde_json::to_vec(&value).unwrap()).unwrap();
+    assert_eq!(doc.plain_text(soratra_doc::StoryRef::Body), "Old native document");
 }

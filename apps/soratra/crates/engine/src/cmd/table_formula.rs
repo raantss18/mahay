@@ -8,8 +8,8 @@
 //! the numbers are summed up to the next cell that holds none. A function needs its arguments:
 //! `=SUM()` is a syntax error, as it is in Word.
 
-use wordcraft_doc::table::{MAX_COLS, MAX_ROWS};
-use wordcraft_doc::{Cell, Table};
+use soratra_doc::table::{MAX_COLS, MAX_ROWS};
+use soratra_doc::{Cell, Table};
 
 use crate::CmdError;
 
@@ -30,7 +30,7 @@ pub fn evaluate(t: &Table, r: usize, c: usize, formula: &str) -> Result<f64, Cmd
 
 pub fn evaluate_with(
     t: &Table,
-    doc: Option<&wordcraft_doc::Document>,
+    doc: Option<&soratra_doc::Document>,
     default_lang: Option<&str>,
     r: usize,
     c: usize,
@@ -55,7 +55,7 @@ pub fn evaluate_with(
 
 /// The text a formula result shows: a whole number as is, otherwise two decimals.
 pub fn format_result(v: f64) -> String {
-    wordcraft_doc::locale_number::format_number(v, None)
+    soratra_doc::locale_number::format_number(v, None)
 }
 
 /// The text a formula field shows: its result under its `\#` numeric picture when it has one (see
@@ -66,7 +66,7 @@ pub fn evaluate_field(t: &Table, r: usize, c: usize, instr: &str) -> Result<Stri
 
 pub fn evaluate_field_with(
     t: &Table,
-    doc: Option<&wordcraft_doc::Document>,
+    doc: Option<&soratra_doc::Document>,
     default_lang: Option<&str>,
     r: usize,
     c: usize,
@@ -95,7 +95,7 @@ pub fn evaluate_field_with(
                     })
                 })
                 .or_else(|| default_lang.map(str::to_string));
-            wordcraft_doc::locale_number::format_number(value, out_lang.as_deref())
+            soratra_doc::locale_number::format_number(value, out_lang.as_deref())
         }
     })
 }
@@ -192,7 +192,7 @@ pub fn parse_number(text: &str, lang: Option<&str>) -> Option<f64> {
         Some(inner) => (inner.trim(), true),
         None => (t, false),
     };
-    if let Some(x) = wordcraft_doc::locale_number::parse_number(t, lang) {
+    if let Some(x) = soratra_doc::locale_number::parse_number(t, lang) {
         let x = if negative { -x.abs() } else { x };
         return x.is_finite().then_some(x);
     }
@@ -481,7 +481,7 @@ fn cell_ref(name: &str) -> Option<(usize, usize)> {
 /// Where the formula's cell sits.
 struct Here<'a> {
     t: &'a Table,
-    doc: Option<&'a wordcraft_doc::Document>,
+    doc: Option<&'a soratra_doc::Document>,
     default_lang: Option<&'a str>,
     r: usize,
     c: usize,
@@ -752,7 +752,7 @@ mod tests {
         for (r, row) in rows.iter().enumerate() {
             for (c, text) in row.iter().enumerate() {
                 if let Some(cl) = t.rows.get_mut(r).and_then(|x| x.cells.get_mut(c)) {
-                    cl.blocks = vec![wordcraft_doc::para_block(wordcraft_doc::Paragraph::with_text(text, Default::default()))];
+                    cl.blocks = vec![soratra_doc::para_block(soratra_doc::Paragraph::with_text(text, Default::default()))];
                 }
             }
         }

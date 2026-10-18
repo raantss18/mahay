@@ -1,7 +1,7 @@
 //! `cargo xtask assets`: enforce the asset policy (AGENTS.md §1).
 //!
 //! `ATTRIBUTION.toml` lists every asset: committed or vendored files (`[[asset]]`), files that
-//! Cargo dependencies compile into PdfCraft (`[[bundled]]`), and files xtask downloads at build
+//! Cargo dependencies compile into Taratasy (`[[bundled]]`), and files xtask downloads at build
 //! time (`[[fetched]]`). This gate fails when:
 //! - an asset-like file in the repository has no entry, or its SHA-256 differs;
 //! - a licence is not on the allowlist, or a declared licence file is missing;
@@ -36,7 +36,7 @@ pub const ALLOWED_LICENCES: &[&str] = &[
 ];
 
 /// The closed list of Adobe-authored, non-visual technical data (AGENTS.md §1.1): (crate, path).
-/// Storyteller's own brand marks (the ArtCraft name and logos): shipped in the app and docs, but
+/// Storyteller's own brand marks (the Mahay name and logos): shipped in the app and docs, but
 /// not licensed for reuse by forks. Allowed only for `kind = "logo"` entries under `docs/brand/`
 /// (AGENTS.md §1.2).
 pub const BRAND_LICENCE: &str = "LicenseRef-Storyteller-Trademark";
@@ -68,7 +68,7 @@ pub struct Manifest {
     pub build_input: Vec<BuildInput>,
 }
 
-/// Material compiled in only when the builder opts in (e.g. `CRAFT_FONTS_DIR`): not in this
+/// Material compiled in only when the builder opts in (e.g. `MAHAY_FONTS_DIR`): not in this
 /// repository, not downloaded by it. Its own repository attributes each file.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -357,7 +357,7 @@ pub fn models(args: &[String]) -> Result<()> {
 
 /// The credits shipped beside the models (their licences require attribution).
 fn models_attribution(m: &Manifest) -> String {
-    let mut s = String::from("PdfCraft's text recognition (Scan & OCR) uses these models, unmodified.\n");
+    let mut s = String::from("Taratasy's text recognition (Scan & OCR) uses these models, unmodified.\n");
     for f in m.fetched.iter().filter(|f| f.kind == "model") {
         let _ = write!(
             s,
@@ -373,7 +373,7 @@ pub fn render_markdown(m: &Manifest) -> String {
     let mut s = String::new();
     s.push_str("# Attribution\n\n");
     s.push_str("<!-- Generated from ATTRIBUTION.toml by `cargo xtask assets --write`. Do not edit by hand. -->\n\n");
-    s.push_str("Every asset PdfCraft includes, bundles or uses to build its published material, with its author, source and licence. ");
+    s.push_str("Every asset Taratasy includes, bundles or uses to build its published material, with its author, source and licence. ");
     s.push_str(
         "The policy is in [AGENTS.md](AGENTS.md) §1. The machine-readable list, with SHA-256 hashes, is [ATTRIBUTION.toml](ATTRIBUTION.toml). ",
     );
@@ -484,11 +484,11 @@ mod tests {
     #[test]
     fn build_inputs_need_an_open_licence_and_https_links() {
         let input = |licence: &str, attribution: &str| BuildInput {
-            name: "craft-fonts".into(),
-            option: "CRAFT_FONTS_DIR".into(),
+            name: "mahay-fonts".into(),
+            option: "MAHAY_FONTS_DIR".into(),
             title: "t".into(),
             author: "a".into(),
-            source: "https://github.com/storytold/craft-fonts".into(),
+            source: "https://github.com/raantss18/mahay".into(),
             licence: licence.into(),
             attribution: attribution.into(),
             kind: "font".into(),
@@ -553,8 +553,8 @@ mod tests {
     fn brand_licence_only_for_brand_logos() {
         let root = super::root();
         for (path, kind, pass) in [
-            ("docs/brand/artcraft-mark.svg", "logo", true),
-            ("docs/brand/artcraft-mark.svg", "icon", false),
+            ("docs/brand/mahay-mark.svg", "logo", true),
+            ("docs/brand/mahay-mark.svg", "icon", false),
             ("assets/icons/mark.svg", "logo", false),
         ] {
             let mut a = asset(path, "Storyteller", kind, BRAND_LICENCE);
@@ -580,7 +580,7 @@ mod tests {
     fn first_party_adobe_data_only_on_the_closed_list() {
         let l = lock(&[]);
         // The generated standard-14 table is on the list, as `kind = "data"`.
-        let mut ok = asset("crates/fonts/src/std14_metrics.rs", "Adobe (Core14 AFM metrics); tables by the PdfCraft contributors", "data", "MIT");
+        let mut ok = asset("crates/fonts/src/std14_metrics.rs", "Adobe (Core14 AFM metrics); tables by the Taratasy contributors", "data", "MIT");
         ok.adobe_data = true;
         let m = Manifest { asset: vec![ok], ..Default::default() };
         assert!(check(&root(), &m, &[], &l).is_empty(), "{:?}", check(&root(), &m, &[], &l));

@@ -4,22 +4,22 @@
 
 use egui::{Modifiers, PointerButton, Pos2, vec2};
 use egui_kittest::Harness;
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::Tool;
 
-fn harness() -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness() -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
     app.sync_views();
     app.ui.extras.rulers = false;
     app.ui.tool = Tool::PolygonLasso;
     // 60 fps, so a double-click's two clicks fall inside egui's 0.3 s window.
     let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -29,7 +29,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     // 100 %: one document pixel per point.
     let v = &mut h.state_mut().ui.views[0];
@@ -40,7 +40,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn screen(h: &Harness<'static, PhotocraftApp>, x: f32, y: f32) -> Pos2 {
+fn screen(h: &Harness<'static, SaryApp>, x: f32, y: f32) -> Pos2 {
     let app = h.state();
     let v = &app.ui.views[0];
     let xf = ViewXform {
@@ -54,13 +54,13 @@ fn screen(h: &Harness<'static, PhotocraftApp>, x: f32, y: f32) -> Pos2 {
     xf.to_screen(x, y)
 }
 
-fn button(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, down: bool, m: Modifiers) {
+fn button(h: &mut Harness<'static, SaryApp>, p: Pos2, down: bool, m: Modifiers) {
     h.event(egui::Event::PointerButton { pos: p, button: PointerButton::Primary, pressed: down, modifiers: m });
     h.run_steps(1);
 }
 
 /// A click at document point `(x, y)`, the pointer still between press and release.
-fn click(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifiers) {
+fn click(h: &mut Harness<'static, SaryApp>, x: f32, y: f32, m: Modifiers) {
     let p = screen(h, x, y);
     h.event(egui::Event::PointerMoved(p));
     h.run_steps(1);
@@ -68,13 +68,13 @@ fn click(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifiers) 
     button(h, p, false, m);
 }
 
-fn double_click(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32) {
+fn double_click(h: &mut Harness<'static, SaryApp>, x: f32, y: f32) {
     click(h, x, y, Modifiers::NONE);
     click(h, x, y, Modifiers::NONE);
     h.run_steps(1);
 }
 
-fn selection(h: &Harness<'static, PhotocraftApp>) -> Option<Rect> {
+fn selection(h: &Harness<'static, SaryApp>) -> Option<Rect> {
     h.state().session.active().unwrap().doc.selection.as_ref().map(|s| s.content_bounds())
 }
 
@@ -153,7 +153,7 @@ fn double_click_on_the_first_vertex_keeps_the_new_selection() {
 }
 
 /// Three clicks and Enter: a triangle with corners at the first three points.
-fn triangle(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifiers) {
+fn triangle(h: &mut Harness<'static, SaryApp>, x: f32, y: f32, m: Modifiers) {
     h.event(egui::Event::ModifiersChanged(m));
     h.run_steps(1);
     for (dx, dy) in [(0.0, 0.0), (100.0, 0.0), (100.0, 100.0)] {
@@ -166,7 +166,7 @@ fn triangle(h: &mut Harness<'static, PhotocraftApp>, x: f32, y: f32, m: Modifier
     h.run_steps(2);
 }
 
-fn steps(h: &Harness<'static, PhotocraftApp>) -> usize {
+fn steps(h: &Harness<'static, SaryApp>) -> usize {
     h.state().session.active().unwrap().history.entries().len()
 }
 
@@ -245,13 +245,13 @@ fn a_new_polygon_without_a_selection_adds_one_step() {
 #[test]
 fn lasso_tools_apply_the_options_bar_feather() {
     use crate::canvas::{ToolEvent, tool_event};
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 150})).unwrap();
     app.sync_views();
     app.ui.tool_options.feather = 4.0;
     let corners = [(40.0, 30.0), (160.0, 30.0), (160.0, 120.0), (40.0, 120.0)];
-    let coverage = |app: &PhotocraftApp, x: i32| app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |m| m.sample_channel(x, 75, 0));
-    let drag = |app: &mut PhotocraftApp, tool: Tool| {
+    let coverage = |app: &SaryApp, x: i32| app.session.active().unwrap().doc.selection.as_ref().map_or(0.0, |m| m.sample_channel(x, 75, 0));
+    let drag = |app: &mut SaryApp, tool: Tool| {
         app.run("select.deselect", json!({})).ok();
         app.ui.tool = tool;
         tool_event(app, ToolEvent::Down { x: 40.0, y: 30.0, pressure: 1.0 }, Modifiers::NONE);
@@ -260,7 +260,7 @@ fn lasso_tools_apply_the_options_bar_feather() {
         }
         tool_event(app, ToolEvent::Up { x: 40.0, y: 120.0 }, Modifiers::NONE);
     };
-    let soft = |app: &PhotocraftApp| coverage(app, 37) > 0.05 && coverage(app, 41) < 0.95;
+    let soft = |app: &SaryApp| coverage(app, 37) > 0.05 && coverage(app, 41) < 0.95;
     drag(&mut app, Tool::Lasso);
     assert!(soft(&app), "lasso: {} {}", coverage(&app, 37), coverage(&app, 41));
     app.ui.tool = Tool::PolygonLasso;
@@ -274,8 +274,8 @@ fn lasso_tools_apply_the_options_bar_feather() {
     assert_eq!((coverage(&app, 37), coverage(&app, 41)), (0.0, 1.0), "patch: a hard edge");
 }
 
-fn polygon_app() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn polygon_app() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 300, "background": "transparent"})).unwrap();
     app.sync_views();
     app.ui.extras.snap = false;
@@ -283,7 +283,7 @@ fn polygon_app() -> PhotocraftApp {
     app
 }
 
-fn ev(app: &mut PhotocraftApp, kind: &str, x: f64, y: f64, m: Modifiers) {
+fn ev(app: &mut SaryApp, kind: &str, x: f64, y: f64, m: Modifiers) {
     use crate::canvas::{ToolEvent, tool_event};
     let e = match kind {
         "down" => ToolEvent::Down { x, y, pressure: 1.0 },
@@ -309,7 +309,7 @@ fn cmd_drag_inside_the_selection_floats_it_with_the_polygonal_lasso() {
     ev(&mut app, "down", 20.0, 20.0, Modifiers::COMMAND);
     ev(&mut app, "move", 40.0, 20.0, Modifiers::COMMAND);
     ev(&mut app, "up", 40.0, 20.0, Modifiers::COMMAND);
-    let f = photocraft_engine::float_cmds::floating(app.session.active().unwrap()).map(|f| f.offset);
+    let f = sary_engine::float_cmds::floating(app.session.active().unwrap()).map(|f| f.offset);
     assert_eq!(f, Some((20, 0)));
     assert!(app.ui.polygon.is_empty(), "no polygon point was placed");
     app.run("select.drop", json!({})).unwrap();
@@ -407,7 +407,7 @@ fn shift_polygonal_lasso_snap_has_all_eight_directions_and_handles_zero_length()
 }
 
 /// Two vertices placed with the Polygonal Lasso, well apart in time so they aren't a double-click.
-fn two_vertices(h: &mut Harness<'static, PhotocraftApp>) {
+fn two_vertices(h: &mut Harness<'static, SaryApp>) {
     click(h, 50.0, 50.0, Modifiers::NONE);
     h.run_steps(30);
     click(h, 150.0, 50.0, Modifiers::NONE);
@@ -417,7 +417,7 @@ fn two_vertices(h: &mut Harness<'static, PhotocraftApp>) {
 
 /// The polygon, its mode and its document are all gone, and the selection it would have replaced
 /// is shown again.
-fn assert_polygon_dropped(h: &Harness<'static, PhotocraftApp>, what: &str) {
+fn assert_polygon_dropped(h: &Harness<'static, SaryApp>, what: &str) {
     let app = h.state();
     assert!(app.ui.polygon.is_empty(), "{what}: the outline is gone: {:?}", app.ui.polygon);
     assert!(app.ui.polygon_mode.is_empty(), "{what}: the mode is gone");

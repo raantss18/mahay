@@ -1,29 +1,29 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
-default-members = ["crates/*", "apps/gridcraft", "apps/gridcraft-cli", "xtask"]
+default-members = ["crates/*", "apps/tabilao", "apps/tabilao-cli", "xtask"]
 
 [workspace.package]
 version = "0.8.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.90"
-repository = "https://github.com/storytold/gridcraft"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
 # internal
-gridcraft-core = { path = "crates/core" }
-gridcraft-numfmt = { path = "crates/numfmt" }
-gridcraft-formula = { path = "crates/formula" }
-gridcraft-functions = { path = "crates/functions" }
-gridcraft-model = { path = "crates/model" }
-gridcraft-calc = { path = "crates/calc" }
-gridcraft-xlsx = { path = "crates/xlsx" }
-gridcraft-chart = { path = "crates/chart" }
-gridcraft-engine = { path = "crates/engine" }
-gridcraft-ui-egui = { path = "crates/ui-egui" }
-gridcraft-mcp = { path = "crates/mcp" }
-gridcraft-pdf = { path = "crates/pdf" }
+tabilao-core = { path = "crates/core" }
+tabilao-numfmt = { path = "crates/numfmt" }
+tabilao-formula = { path = "crates/formula" }
+tabilao-functions = { path = "crates/functions" }
+tabilao-model = { path = "crates/model" }
+tabilao-calc = { path = "crates/calc" }
+tabilao-xlsx = { path = "crates/xlsx" }
+tabilao-chart = { path = "crates/chart" }
+tabilao-engine = { path = "crates/engine" }
+tabilao-ui-egui = { path = "crates/ui-egui" }
+tabilao-mcp = { path = "crates/mcp" }
+tabilao-pdf = { path = "crates/pdf" }
 
 # foundation
 thiserror = "2"
@@ -75,3 +75,15 @@ opt-level = 3
 lto = "thin"
 codegen-units = 16
 debug = 0
+
+# Android release: whole-program LTO and no symbols, for the smallest .so.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true
+
+[patch.crates-io]
+# Android backends through mahay-android (system document picker, clipboard); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+arboard = { path = "../../libs/core/vendor/arboard" }

@@ -1,7 +1,7 @@
 //! Slide transitions (`p:transition`) and animations (`p:timing`).
 
-use deckcraft_model::Shape;
-use deckcraft_model::anim::{AnimClass, AnimStart, Animation, TextBuild, Transition};
+use seho_model::Shape;
+use seho_model::anim::{AnimClass, AnimStart, Animation, TextBuild, Transition};
 
 use super::shapes::IdCtx;
 use super::{Imp, Part, dml};
@@ -32,7 +32,7 @@ pub fn transition(imp: &mut Imp, part: &Part, t: &El) -> Option<Transition> {
             None => tr.kind = "none".into(),
         },
     }
-    let default_dur = deckcraft_model::anim::TRANSITIONS.iter().find(|x| x.0 == tr.kind).map(|x| x.3).unwrap_or(1000);
+    let default_dur = seho_model::anim::TRANSITIONS.iter().find(|x| x.0 == tr.kind).map(|x| x.3).unwrap_or(1000);
     // `spd` defaults to "fast" in the schema; PowerPoint omits both attributes for 0.5 s.
     tr.duration_ms = ms_attr(t, "dur").unwrap_or(match t.attr("spd") {
         Some("med") => 750,

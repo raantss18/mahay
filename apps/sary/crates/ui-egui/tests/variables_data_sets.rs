@@ -1,11 +1,11 @@
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use photocraft_ui_egui::PhotocraftApp;
-use photocraft_ui_egui::state::DialogKind;
+use sary_ui_egui::SaryApp;
+use sary_ui_egui::state::DialogKind;
 use serde_json::{Map, json};
 
-fn app_with_variables_dialog(cur: u64) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), photocraft_ui_egui::Services::default());
+fn app_with_variables_dialog(cur: u64) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), sary_ui_egui::Services::default());
     app.run("file.new", json!({"width": 64, "height": 64})).unwrap();
     app.run("layer.new.layer", json!({})).unwrap();
     let state = json!({
@@ -27,18 +27,18 @@ fn app_with_variables_dialog(cur: u64) -> PhotocraftApp {
     app
 }
 
-fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+fn harness(app: SaryApp) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(egui::vec2(900.0, 700.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
             }
-            photocraft_ui_egui::dialogs::show(app, &ctx);
+            sary_ui_egui::dialogs::show(app, &ctx);
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, photocraft_ui_egui::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, sary_ui_egui::theme::ThemeKind::ALL[0]);
     h.run_steps(3);
     h
 }
@@ -57,8 +57,8 @@ fn out_of_range_data_set_index_is_clamped_before_delete() {
 }
 
 /// `ui.dialog.set` can store any JSON in `__variables`; the editors write into its entries.
-fn app_with_malformed_variables(page: &str) -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), photocraft_ui_egui::Services::default());
+fn app_with_malformed_variables(page: &str) -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), sary_ui_egui::Services::default());
     app.run("file.new", json!({"width": 64, "height": 64})).unwrap();
     app.run("layer.new.layer", json!({})).unwrap();
     let mut fields = Map::new();
@@ -71,7 +71,7 @@ fn app_with_malformed_variables(page: &str) -> PhotocraftApp {
     app
 }
 
-fn type_into_first_text_field(h: &mut Harness<'static, PhotocraftApp>) {
+fn type_into_first_text_field(h: &mut Harness<'static, SaryApp>) {
     h.query_all_by_role(egui::accesskit::Role::TextInput).next().expect("a text field").click();
     h.run_steps(2);
     h.query_all_by_role(egui::accesskit::Role::TextInput).next().expect("a text field").type_text("z");

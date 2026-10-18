@@ -60,7 +60,7 @@ pub(crate) trait MutexExt<T> {
 #[cfg(feature = "std")]
 impl<T> MutexExt<T> for Mutex<T> {
     fn get(&self) -> MutexGuard<'_, T> {
-        // PdfCraft patch: (#307) cached values remain owned after an unwinding caller; do not cascade a
+        // Taratasy patch: (#307) cached values remain owned after an unwinding caller; do not cascade a
         // worker panic into unrelated readers. Initialization has its own failure state.
         self.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
     }
@@ -80,7 +80,7 @@ pub(crate) trait RwLockExt<T> {
 
 #[cfg(feature = "std")]
 impl<T> RwLockExt<T> for RwLock<T> {
-    // PdfCraft patch: (#307) poisoned locks are recovered rather than unwrapped, and the
+    // Taratasy patch: (#307) poisoned locks are recovered rather than unwrapped, and the
     // non-blocking try_get/try_put (which repair asserted could not fail) become blocking.
     fn get(&self) -> RwLockReadGuard<'_, T> {
         self.read().unwrap_or_else(|poisoned| poisoned.into_inner())

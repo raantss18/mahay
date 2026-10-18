@@ -1,9 +1,9 @@
 //! #1691: a camera JPEG with its resolution only in EXIF opens at that resolution, and a JPEG
 //! saved after Image Size (resolution only) carries the new resolution in JFIF and EXIF alike.
 
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, Metadata, SampleType, exif_resolution};
-use photocraft_engine::Session;
-use photocraft_engine::file_cmds::open_bytes_as;
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, Metadata, SampleType, exif_resolution};
+use sary_engine::Session;
+use sary_engine::file_cmds::open_bytes_as;
 use serde_json::json;
 
 /// Little-endian EXIF: Make "NIKON", XResolution 300/1, YResolution 300/1, ResolutionUnit 2.
@@ -35,7 +35,7 @@ fn camera_exif() -> Vec<u8> {
 fn camera_jpeg() -> Vec<u8> {
     let meta = Metadata { exif: Some(camera_exif()), ..Default::default() };
     let img = Image::from_raw(16, 8, ChannelLayout::Rgb, SampleType::U8, vec![120; 16 * 8 * 3]).unwrap().with_meta(meta);
-    let b = photocraft_codecs::encode(&img, Format::Jpeg, &EncodeOptions::default()).unwrap();
+    let b = sary_codecs::encode(&img, Format::Jpeg, &EncodeOptions::default()).unwrap();
     assert_eq!(&b[2..4], &[0xFF, 0xE0], "the encoder starts with JFIF");
     let len = u16::from_be_bytes([b[4], b[5]]) as usize;
     [&b[..2], &b[4 + len..]].concat()
@@ -67,7 +67,7 @@ fn exif_resolution_opens_and_saves_consistently() {
     let d = &s.active().unwrap().doc;
     assert_eq!((d.resolution_dpi, d.size.width, d.size.height), (240.0, 16, 8));
 
-    let dir = std::env::temp_dir().join(format!("photocraft-1691-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-1691-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let out = dir.join("saved.jpg");
     s.execute("file.saveACopy", json!({"path": out.to_string_lossy()})).unwrap();
@@ -80,5 +80,5 @@ fn exif_resolution_opens_and_saves_consistently() {
     let (_, exif) = segs.iter().find(|(m, p)| *m == 0xE1 && p.starts_with(b"Exif\0\0")).unwrap();
     assert_eq!(exif_resolution(exif), Some((240.0, 240.0)));
     assert!(exif.windows(6).any(|w| w == b"NIKON\0"), "the rest of the EXIF is kept");
-    assert_eq!(photocraft_io::import("saved.jpg", &saved).unwrap().document.resolution_dpi, 240.0);
+    assert_eq!(sary_io::import("saved.jpg", &saved).unwrap().document.resolution_dpi, 240.0);
 }

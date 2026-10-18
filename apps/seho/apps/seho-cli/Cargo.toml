@@ -1,0 +1,19 @@
+[package]
+name = "seho-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Seho on the command line: render, convert, run commands, inspect, and serve MCP"
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "seho-cli"
+path = "src/main.rs"
+
+[dependencies]
+seho-engine = { workspace = true }
+seho-mcp = { workspace = true }
+serde_json = { workspace = true }

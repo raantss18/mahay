@@ -12,12 +12,12 @@
 #[cfg(test)]
 mod tests;
 
-use photocraft_codecs::{self as codecs, ChannelLayout, Format, Image, SampleType as CSample};
-use photocraft_color::{BlendMode, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Document, Layer, LayerContent};
-use photocraft_format::zip::{ZipReader, ZipWriter};
-use photocraft_geom::{Rect, Size};
-use photocraft_raster::{Interrupt, Surface};
+use sary_codecs::{self as codecs, ChannelLayout, Format, Image, SampleType as CSample};
+use sary_color::{BlendMode, ColorMode, PixelFormat, SampleType};
+use sary_doc::{Document, Layer, LayerContent};
+use sary_format::zip::{ZipReader, ZipWriter};
+use sary_geom::{Rect, Size};
+use sary_raster::{Interrupt, Surface};
 
 use crate::{ExportResult, ImportResult, IoError};
 
@@ -311,8 +311,8 @@ impl Reader<'_, '_> {
     }
 
     fn stack(&mut self, stack: roxmltree::Node<'_, '_>, depth: usize) -> Result<Vec<Node>> {
-        if depth > photocraft_doc::MAX_GROUP_DEPTH {
-            return Err(IoError::Unsupported(format!("layer groups nested deeper than {}", photocraft_doc::MAX_GROUP_DEPTH)));
+        if depth > sary_doc::MAX_GROUP_DEPTH {
+            return Err(IoError::Unsupported(format!("layer groups nested deeper than {}", sary_doc::MAX_GROUP_DEPTH)));
         }
         let mut out = Vec::new();
         for child in stack.children().filter(roxmltree::Node::is_element) {
@@ -617,7 +617,7 @@ impl Writer<'_> {
         let (rect, mut buf) = match &layer.content {
             LayerContent::Raster(s) => {
                 let r = s.content_bounds();
-                (r, photocraft_compose::surface_to_buffer(s, r).px)
+                (r, sary_compose::surface_to_buffer(s, r).px)
             }
             _ => {
                 // Rendered as it shows on its own, before the layer's blending options.
@@ -629,8 +629,8 @@ impl Writer<'_> {
                 solo.clipped = false;
                 solo.mask = None;
                 solo.effects = Default::default();
-                let r = photocraft_compose::composite_bounds(&solo, canvas).unwrap_or(canvas).intersect(&canvas);
-                (r, photocraft_compose::render_layer(&solo, r).px)
+                let r = sary_compose::composite_bounds(&solo, canvas).unwrap_or(canvas).intersect(&canvas);
+                (r, sary_compose::render_layer(&solo, r).px)
             }
         };
         if let Some(mask) = layer.mask.as_ref().filter(|m| m.enabled) {
@@ -649,8 +649,8 @@ impl Writer<'_> {
     }
 
     fn layers(&mut self, layers: &[Layer], depth: usize) -> Result<()> {
-        if depth > photocraft_doc::MAX_GROUP_DEPTH {
-            return Err(IoError::Unsupported(format!("layer groups nested deeper than {}", photocraft_doc::MAX_GROUP_DEPTH)));
+        if depth > sary_doc::MAX_GROUP_DEPTH {
+            return Err(IoError::Unsupported(format!("layer groups nested deeper than {}", sary_doc::MAX_GROUP_DEPTH)));
         }
         // stack.xml lists the topmost layer first.
         for layer in layers.iter().rev() {
@@ -712,9 +712,9 @@ pub(crate) fn export(doc: &Document) -> Result<ExportResult> {
     w.xml.push_str("</stack></image>\n");
     let Writer { mut zip, xml, warnings, .. } = w;
     zip.add("stack.xml", xml.as_bytes())?;
-    let merged = photocraft_compose::flatten(doc);
+    let merged = sary_compose::flatten(doc);
     zip.add("mergedimage.png", &png(doc.size.width, doc.size.height, &merged.px, sample)?)?;
-    let thumb = photocraft_compose::thumbnail(doc, THUMBNAIL_SIDE);
+    let thumb = sary_compose::thumbnail(doc, THUMBNAIL_SIDE);
     let thumb = Image::from_raw(thumb.width, thumb.height, ChannelLayout::Rgba, CSample::U8, thumb.pixels)?;
     zip.add("Thumbnails/thumbnail.png", &codecs::encode(&thumb, Format::Png, &codecs::EncodeOptions::default())?)?;
     Ok(ExportResult { bytes: zip.finish()?, warnings: warnings.finish() })
@@ -732,7 +732,7 @@ fn document_warnings(doc: &Document, warnings: &mut Warnings) {
         warnings.note("metadata (XMP, EXIF, text) is not saved to OpenRaster");
     }
     // Readers assume sRGB, so an sRGB document loses nothing by the missing tag.
-    let srgb = |bytes: &[u8]| photocraft_cms::Profile::parse(bytes).is_ok_and(|p| p.same_colors(photocraft_cms::Builtin::Srgb.profile()));
+    let srgb = |bytes: &[u8]| sary_cms::Profile::parse(bytes).is_ok_and(|p| p.same_colors(sary_cms::Builtin::Srgb.profile()));
     if doc.icc_profile.as_deref().is_some_and(|b| !srgb(b)) {
         warnings.note("the colour profile is not saved to OpenRaster; readers assume sRGB");
     }

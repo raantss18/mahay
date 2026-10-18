@@ -1,7 +1,7 @@
 //! Page Layout view (View › Workbook Views › Page Layout): the sheet drawn as printed pages on a
 //! desk, with rulers, margins, headers and footers.
 //!
-//! Pagination and the cell ↔ page mapping come from [`gridcraft_engine::paper::PageGrid`] (the
+//! Pagination and the cell ↔ page mapping come from [`tabilao_engine::paper::PageGrid`] (the
 //! print pagination, so pages here are the printed pages). [`crate::grid::Geo`] carries the grid,
 //! so painting, hit-testing, selection and editing work as in Normal view. Headers and footers are
 //! edited in place: clicking a page's top or bottom margin edits that section, and the edit is
@@ -10,10 +10,10 @@
 use std::sync::Arc;
 
 use egui::{Align2, Color32, FontId, Key, Painter, Pos2, Rect, Stroke, StrokeKind, TextEdit, pos2, vec2};
-use gridcraft_engine::cf::CfCache;
-use gridcraft_engine::cmd::print::{self, HfContext};
-use gridcraft_engine::model::{HfPage, Sheet, SheetViewMode, Workbook};
-use gridcraft_engine::paper::{self, HfZone, PageGrid};
+use tabilao_engine::cf::CfCache;
+use tabilao_engine::cmd::print::{self, HfContext};
+use tabilao_engine::model::{HfPage, Sheet, SheetViewMode, Workbook};
+use tabilao_engine::paper::{self, HfZone, PageGrid};
 use serde_json::json;
 
 use crate::SheetApp;
@@ -65,7 +65,7 @@ fn cache_key(app: &SheetApp, wb: &Workbook, si: usize) -> Option<(u64, u64, usiz
 }
 
 /// Paginates at least as far as `cell` (before scrolling to it).
-pub fn ensure_covers(app: &mut SheetApp, wb: &Workbook, si: usize, cell: gridcraft_engine::core::CellRef) {
+pub fn ensure_covers(app: &mut SheetApp, wb: &Workbook, si: usize, cell: tabilao_engine::core::CellRef) {
     let Some(key) = cache_key(app, wb, si) else { return };
     let (rows, cols) = match app.grid.paper.as_ref().filter(|(k, _)| *k == key) {
         Some((_, g)) if g.covers(cell.row, cell.col) => return,
@@ -128,7 +128,7 @@ pub(crate) fn paint_pages(
     wb: &Workbook,
     si: usize,
     sh: &Sheet,
-    sel: &gridcraft_engine::Selection,
+    sel: &tabilao_engine::Selection,
     outline: Rect,
     cf: &mut CfCache,
     t: &Tokens,
@@ -476,7 +476,7 @@ fn editor(app: &mut SheetApp, ui: &mut egui::Ui, geo: &Geo, pg: &PageGrid) {
         app.grid.hf_edit = Some(e);
         return;
     };
-    let id = egui::Id::new("gridcraft.header_footer_editor");
+    let id = egui::Id::new("tabilao.header_footer_editor");
     let mut child = ui.new_child(egui::UiBuilder::new().max_rect(r.shrink2(vec2(3.0, 2.0)).intersect(geo.cells)));
     let align = [egui::Align::LEFT, egui::Align::Center, egui::Align::RIGHT][e.section.min(2)];
     if let Some(text) = e.texts.get_mut(e.section) {

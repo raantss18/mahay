@@ -1,7 +1,7 @@
-use photocraft_color::{Color, PixelFormat, SampleType};
-use photocraft_doc::TextLayer;
-use photocraft_doc::text::{Caps, CharStyle, FontFeature, Orientation, ParagraphRun, ParagraphStyle, TextAlign, TextDirection, TextRun, TextShape};
-use photocraft_geom::Affine;
+use sary_color::{Color, PixelFormat, SampleType};
+use sary_doc::TextLayer;
+use sary_doc::text::{Caps, CharStyle, FontFeature, Orientation, ParagraphRun, ParagraphStyle, TextAlign, TextDirection, TextRun, TextShape};
+use sary_geom::Affine;
 
 use crate::{TextEngine, fonts};
 
@@ -60,7 +60,7 @@ fn width(l: &crate::TextLayout) -> f32 {
     l.lines.iter().map(|l| l.x1 - l.x0).fold(0.0, f32::max)
 }
 
-fn alpha_sum(s: &photocraft_raster::Surface, r: photocraft_geom::Rect) -> f64 {
+fn alpha_sum(s: &sary_raster::Surface, r: sary_geom::Rect) -> f64 {
     let n = s.channels();
     s.read_region(r).chunks_exact(n).map(|p| f64::from(p[n - 1])).sum()
 }
@@ -487,7 +487,7 @@ fn faux_bold_keeps_antialiased_edges_at_small_sizes() {
             for x in 0..w {
                 let a = alpha_sum(
                     &r.surface,
-                    photocraft_geom::Rect::new(r.rect.x0 + x as i32, r.rect.y0 + y as i32, r.rect.x0 + x as i32 + 1, r.rect.y0 + y as i32 + 1),
+                    sary_geom::Rect::new(r.rect.x0 + x as i32, r.rect.y0 + y as i32, r.rect.x0 + x as i32 + 1, r.rect.y0 + y as i32 + 1),
                 );
                 if a > 0.05 && a < 0.95 {
                     partial += 1;
@@ -658,11 +658,11 @@ fn forced_line_break_starts_a_line_in_the_same_paragraph() {
         let (l, r) = e.render(&TextLayer { transform: Affine::translate(0.0, 40.0), ..point(text, 20.0) }, 72.0, fmt);
         let row = |i: usize| {
             let ln = &l.lines[i];
-            photocraft_geom::Rect::new(-2, (ln.baseline - ln.ascent + 40.0) as i32, 200, (ln.baseline + 40.0) as i32)
+            sary_geom::Rect::new(-2, (ln.baseline - ln.ascent + 40.0) as i32, 200, (ln.baseline + 40.0) as i32)
         };
         assert!(alpha_sum(&r.surface, row(0)) > 1.0 && alpha_sum(&r.surface, row(1)) > 1.0, "{fmt:?}");
         let one_end = l.lines[0].x1.ceil() as i32 + 2;
-        assert!(alpha_sum(&r.surface, photocraft_geom::Rect::new(one_end, row(0).y0, 200, row(0).y1)) < 1e-3, "{fmt:?}: ink after the first line's text");
+        assert!(alpha_sum(&r.surface, sary_geom::Rect::new(one_end, row(0).y0, 200, row(0).y1)) < 1e-3, "{fmt:?}: ink after the first line's text");
     }
 }
 
@@ -713,18 +713,18 @@ fn depth_is_respected() {
     assert!(r.surface.format().alpha);
 }
 
-/// Visual check: `PHOTOCRAFT_TEXT_DUMP=/tmp/t.ppm cargo test -p photocraft-text dump -- --ignored`.
+/// Visual check: `SARY_TEXT_DUMP=/tmp/t.ppm cargo test -p sary-text dump -- --ignored`.
 #[test]
 #[ignore]
 fn dump_sample() {
-    use photocraft_doc::text::{Caps, TextAlign};
-    let Some(path) = std::env::var_os("PHOTOCRAFT_TEXT_DUMP") else {
+    use sary_doc::text::{Caps, TextAlign};
+    let Some(path) = std::env::var_os("SARY_TEXT_DUMP") else {
         return;
     };
-    let mut e = if std::env::var_os("PHOTOCRAFT_TEXT_SYSTEM").is_some() { TextEngine::with_system_fonts() } else { TextEngine::new() };
+    let mut e = if std::env::var_os("SARY_TEXT_SYSTEM").is_some() { TextEngine::with_system_fonts() } else { TextEngine::new() };
     let s = CharStyle { size_pt: 28.0, ..Default::default() };
     let text =
-        "Photocraft Type\nBold faux, italic faux, underline\nשלום عربي mixed ✓\nJustified paragraph text wraps inside the box nicely and evenly across lines.";
+        "Sary Type\nBold faux, italic faux, underline\nשלום عربي mixed ✓\nJustified paragraph text wraps inside the box nicely and evenly across lines.";
     let runs = vec![
         TextRun { len: 16, style: CharStyle { size_pt: 40.0, color: Color::rgb(0.1, 0.3, 0.9), caps: Caps::Normal, ..s.clone() } },
         TextRun { len: 5, style: CharStyle { faux_bold: true, ..s.clone() } },
@@ -778,7 +778,7 @@ fn variable_font_axes() {
         let s = CharStyle {
             font_family: fam.clone(),
             size_pt: 40.0,
-            variations: vec![photocraft_doc::text::FontVariation { axis: "wght".into(), value: w }],
+            variations: vec![sary_doc::text::FontVariation { axis: "wght".into(), value: w }],
             ..Default::default()
         };
         let (_, r) = e.render(&TextLayer { transform: Affine::translate(0.0, 50.0), ..styled("Weight", s) }, 72.0, PixelFormat::RGBA8);
@@ -791,7 +791,7 @@ fn variable_font_axes() {
 
 #[test]
 fn warp_bends_rendered_text_and_outlines() {
-    use photocraft_doc::text::TextWarp;
+    use sary_doc::text::TextWarp;
     let mut e = TextEngine::new();
     let mut t = point("WARPED TEXT", 24.0);
     t.transform = Affine::translate(20.0, 60.0);
@@ -856,7 +856,7 @@ fn txt2_with_styles(text: &str, styles: &[(usize, String)]) -> Vec<u8> {
 fn with_text_index(tysh: &[u8], index: i32) -> Vec<u8> {
     let mut t = crate::psd::parse_tysh(tysh).unwrap();
     t.text.items.retain(|(k, _)| !k.is("TextIndex"));
-    t.text.items.push((photocraft_psd::descriptor::Id::new("TextIndex"), photocraft_psd::descriptor::Value::Integer(index)));
+    t.text.items.push((sary_psd::descriptor::Id::new("TextIndex"), sary_psd::descriptor::Value::Integer(index)));
     crate::psd::write_tysh(&t)
 }
 
@@ -864,7 +864,7 @@ fn with_text_index(tysh: &[u8], index: i32) -> Vec<u8> {
 /// `TextIndex` object still holds the same text.
 #[test]
 fn txt2_carries_optical_kerning() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let t = styled("AVA", CharStyle::default());
     let tysh = with_text_index(&crate::psd::build_tysh(&t, 72.0, None), 0);
     let mut back = crate::psd::text_layer_from_tysh(&tysh, 72.0).unwrap();
@@ -948,7 +948,7 @@ fn txt2_carries_opentype_features() {
 /// Metrics, because EngineData's `AutoKerning true` covers both).
 #[test]
 fn build_txt2_round_trips_kerning_modes() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let style = |kerning: Kerning, kern: f32| CharStyle { kerning, kern, ..Default::default() };
     let t = runs_of("AVAT", &[(2, style(Kerning::Optical, 0.0)), (1, style(Kerning::Metrics, 0.0)), (1, style(Kerning::Off, 0.0))]);
     let tysh = with_text_index(&crate::psd::build_tysh(&t, 72.0, None), 0);
@@ -977,7 +977,7 @@ fn build_txt2_round_trips_kerning_modes() {
 /// stub, which some readers (Photopea) reject.
 #[test]
 fn needs_txt2_only_for_optical() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let style = |kerning: Kerning| CharStyle { kerning, ..Default::default() };
     let metrics = runs_of("AV", &[(2, style(Kerning::Metrics))]);
     assert!(!crate::psd::needs_txt2(&[(0, &metrics)]));
@@ -994,7 +994,7 @@ fn needs_txt2_only_for_optical() {
 #[test]
 fn txt2_keeps_a_kept_objects_extras_and_drops_them_with_its_text() {
     use crate::engine_data::Value as E;
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let style = |kerning: Kerning, kern: f32| CharStyle { kerning, kern, ..Default::default() };
     // The file's block: object 0 with `/21 /1` pen positions, a model extra, and a block extra.
     let obj = E::Dict(vec![
@@ -1047,7 +1047,7 @@ fn photoshop_txt2(modes: &[(usize, i64)]) -> Vec<u8> {
 /// auto-kern mode, and Photoshop refused to open the file.
 #[test]
 fn unchanged_txt2_is_written_back_byte_for_byte() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let prev = photoshop_txt2(&[(2, 1), (2, 1)]);
     let tysh = with_text_index(&crate::psd::build_tysh(&styled("AVA", CharStyle::default()), 72.0, None), 0);
     let mut t = crate::psd::text_layer_from_tysh(&tysh, 72.0).unwrap();
@@ -1066,7 +1066,7 @@ fn unchanged_txt2_is_written_back_byte_for_byte() {
 #[test]
 fn edited_txt2_keeps_the_files_styles_and_objects() {
     use crate::engine_data::Value as E;
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let prev = photoshop_txt2(&[(4, 1)]);
     let style = |kerning: Kerning| CharStyle { kerning, ..Default::default() };
     let t = runs_of("AVA", &[(1, style(Kerning::Optical)), (2, style(Kerning::Metrics))]);
@@ -1171,7 +1171,7 @@ fn psd_text_fill_is_enabled_in_runs_and_new_default_styles() {
 #[test]
 fn psd_text_fill_is_enabled_after_editing_a_legacy_export() {
     use crate::engine_data::Value as E;
-    // A legacy PhotoCraft export has a normal style and character runs without FillFlag.
+    // A legacy Sary export has a normal style and character runs without FillFlag.
     let mut t = point("Before", 40.0);
     let mut legacy = crate::psd::parse_tysh(&crate::psd::build_tysh(&t, 72.0, None)).unwrap();
     fn remove_fill_flags(value: &mut E) {
@@ -1190,7 +1190,7 @@ fn psd_text_fill_is_enabled_after_editing_a_legacy_export() {
     remove_fill_flags(&mut data);
     for (key, value) in &mut legacy.text.items {
         if key.as_bytes() == b"EngineData" {
-            *value = photocraft_psd::descriptor::Value::RawData(crate::engine_data::write(&data));
+            *value = sary_psd::descriptor::Value::RawData(crate::engine_data::write(&data));
         }
     }
     t.psd_raw = Some(crate::psd::write_tysh(&legacy).into());
@@ -1208,9 +1208,9 @@ fn psd_text_fill_is_enabled_after_editing_a_legacy_export() {
 /// Photoshop's form (see `psd::pair_runs`).
 #[test]
 fn psd_round_trips_manual_kerning() {
-    use photocraft_doc::text::Kerning::{Metrics as M, Off as O};
+    use sary_doc::text::Kerning::{Metrics as M, Off as O};
     let s = CharStyle::default();
-    let cases: Vec<Vec<(usize, photocraft_doc::text::Kerning, f32)>> = vec![
+    let cases: Vec<Vec<(usize, sary_doc::text::Kerning, f32)>> = vec![
         vec![(1, O, 100.0), (1, O, -50.0), (2, M, 0.0)],
         vec![(1, M, 0.0), (1, O, 0.0), (2, M, 0.0)],
         vec![(4, O, 0.0)],
@@ -1235,7 +1235,7 @@ fn psd_round_trips_manual_kerning() {
 
 #[test]
 fn psd_round_trips_antialias_opentype_and_warp() {
-    use photocraft_doc::text::{AntiAlias, TextWarp};
+    use sary_doc::text::{AntiAlias, TextWarp};
     let style = CharStyle {
         font_family: "Inter".into(),
         size_pt: 20.0,
@@ -1265,7 +1265,7 @@ fn psd_round_trips_antialias_opentype_and_warp() {
 /// round trip so every editing and export path uses the same position.
 #[test]
 fn legacy_tysh_point_origin_imports_and_round_trips_on_canvas() {
-    use photocraft_psd::descriptor::{Descriptor, Id, Value as D};
+    use sary_psd::descriptor::{Descriptor, Id, Value as D};
 
     let source = styled("Name", CharStyle { font_family: "Inter".into(), size_pt: 120.0, ..Default::default() });
     let mut tysh = crate::psd::parse_tysh(&crate::psd::build_tysh(&source, 72.0, None)).unwrap();
@@ -1333,7 +1333,7 @@ fn clusters_sit_on_rendered_glyphs() {
         ("plain", styled("HOHOH", big.clone())),
         ("tracking", styled("HOHOH", CharStyle { tracking: 300.0, ..big.clone() })),
         ("hscale", styled("HOHOH", CharStyle { horizontal_scale: 1.6, ..big.clone() })),
-        ("kerned", styled("HOHOH", CharStyle { kern: 250.0, kerning: photocraft_doc::text::Kerning::Optical, ..big.clone() })),
+        ("kerned", styled("HOHOH", CharStyle { kern: 250.0, kerning: sary_doc::text::Kerning::Optical, ..big.clone() })),
         ("mixed", mixed),
         ("box", boxed),
     ];
@@ -1344,7 +1344,7 @@ fn clusters_sit_on_rendered_glyphs() {
         for c in l.clusters.iter().filter(|c| !t.text[c.range.clone()].trim().is_empty()) {
             let ln = &l.lines[c.line];
             // Ink under the cluster's middle, between the line's ascent and descent.
-            let col = photocraft_geom::Rect::new(
+            let col = sary_geom::Rect::new(
                 (c.x + c.advance * 0.3 + 7.0).floor() as i32,
                 (ln.baseline - ln.ascent + 60.0).floor() as i32,
                 (c.x + c.advance * 0.55 + 7.0).ceil() as i32,
@@ -1367,7 +1367,7 @@ fn runs_of(text: &str, styles: &[(usize, CharStyle)]) -> TextLayer {
 /// Manual kerning (1/1000 em) after a character moves everything after it by kern × size.
 #[test]
 fn manual_kerning_moves_the_next_glyph() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let mut e = TextEngine::new();
     let s = CharStyle { size_pt: 100.0, ..Default::default() };
     let plain = e.layout(&styled("HOH", s.clone()), 72.0);
@@ -1403,7 +1403,7 @@ fn manual_kerning_moves_the_next_glyph() {
 /// than the unkerned advance, about neutral for straight stems, and never absurd.
 #[test]
 fn optical_kerning_tightens_open_pairs() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let mut e = TextEngine::new();
     let s = CharStyle { size_pt: 100.0, ..Default::default() };
     let gap = |e: &mut TextEngine, text: &str, k: Kerning| {
@@ -1433,7 +1433,7 @@ fn optical_kerning_tightens_open_pairs() {
 /// lose their automatic kerning (Photoshop renders it the same way).
 #[test]
 fn kerning_modes_split_pairs() {
-    use photocraft_doc::text::Kerning;
+    use sary_doc::text::Kerning;
     let mut e = TextEngine::new();
     let s = CharStyle { size_pt: 100.0, ..Default::default() };
     let off = CharStyle { kerning: Kerning::Off, ..s.clone() };
@@ -1490,13 +1490,13 @@ fn japanese_box_text_preserves_wrap_boundaries() {
     assert_eq!(end, text.text.len());
 }
 
-/// Which craft-fonts family drew the glyphs of `l` (matched by the embedded bytes).
-fn craft_family_of(l: &crate::TextLayout) -> Vec<&'static str> {
+/// Which mahay-fonts family drew the glyphs of `l` (matched by the embedded bytes).
+fn mahay_family_of(l: &crate::TextLayout) -> Vec<&'static str> {
     let mut v = Vec::new();
     for g in &l.glyphs {
         let Some(face) = l.faces.get(g.face as usize) else { continue };
         let data: &[u8] = face.font.data.as_ref();
-        if let Some(f) = crate::CRAFT_FONTS.iter().find(|f| std::ptr::eq(f.bytes.as_ptr(), data.as_ptr()) && f.bytes.len() == data.len())
+        if let Some(f) = crate::MAHAY_FONTS.iter().find(|f| std::ptr::eq(f.bytes.as_ptr(), data.as_ptr()) && f.bytes.len() == data.len())
             && !v.contains(&f.family)
         {
             v.push(f.family);
@@ -1506,45 +1506,45 @@ fn craft_family_of(l: &crate::TextLayout) -> Vec<&'static str> {
 }
 
 #[test]
-fn craft_fonts_cover_japanese_without_system_fonts() {
-    if !crate::CRAFT_FONTS.iter().any(|f| f.is_japanese()) {
-        eprintln!("skipping: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout)");
+fn mahay_fonts_cover_japanese_without_system_fonts() {
+    if !crate::MAHAY_FONTS.iter().any(|f| f.is_japanese()) {
+        eprintln!("skipping: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout)");
         return;
     }
     let mut e = TextEngine::new();
     let text = "日本語の文字、カタカナ。";
     let l = e.layout(&point(text, 24.0), 72.0);
     assert_eq!(l.glyphs.len(), text.chars().count());
-    assert!(l.glyphs.iter().all(|g| g.id != 0), "no .notdef with craft-fonts");
+    assert!(l.glyphs.iter().all(|g| g.id != 0), "no .notdef with mahay-fonts");
     // Sans (Inter) runs fall back to the Gothic UI family.
-    assert_eq!(craft_family_of(&l), vec![crate::craft_fonts::UI_JAPANESE_FAMILY]);
+    assert_eq!(mahay_family_of(&l), vec![crate::mahay_fonts::UI_JAPANESE_FAMILY]);
     // Serif runs fall back to a Mincho face when the build has one (not the web build).
-    if crate::CRAFT_FONTS.iter().any(|f| f.is_mincho()) {
+    if crate::MAHAY_FONTS.iter().any(|f| f.is_mincho()) {
         let mut t = point(text, 24.0);
         t.font_family = "Times New Roman".into();
         let l = e.layout(&t, 72.0);
         assert!(l.glyphs.iter().all(|g| g.id != 0));
-        let fams = craft_family_of(&l);
+        let fams = mahay_family_of(&l);
         assert!(fams.len() == 1 && fams[0].contains("Mincho"), "{fams:?}");
     }
     // Latin keeps Inter.
     let l = e.layout(&point("Layer 1", 24.0), 72.0);
-    assert!(craft_family_of(&l).is_empty());
+    assert!(mahay_family_of(&l).is_empty());
 }
 
 #[test]
-fn works_without_craft_fonts() {
+fn works_without_mahay_fonts() {
     // Whatever the build: the bundled fonts load, Latin lays out, and Japanese never panics
-    // (without craft-fonts or system fonts it may be .notdef).
+    // (without mahay-fonts or system fonts it may be .notdef).
     let mut e = TextEngine::new();
     assert!(e.fonts.has_family("Inter"));
     let l = e.layout(&point("日本語 Latin", 12.0), 72.0);
     assert_eq!(l.glyphs.len(), "日本語 Latin".chars().count());
-    for f in crate::CRAFT_FONTS {
+    for f in crate::MAHAY_FONTS {
         assert!(e.fonts.has_family(f.family), "{} registered under its manifest name", f.family);
     }
-    if crate::CRAFT_FONTS.is_empty() {
-        assert!(crate::craft_fonts::japanese_families().is_empty());
+    if crate::MAHAY_FONTS.is_empty() {
+        assert!(crate::mahay_fonts::japanese_families().is_empty());
         let fb = fonts::fallback_candidates(&crate::cjk::script_order(Some("ja")));
         assert!(!fb.iter().any(|f| f.contains("BIZ UD")));
     }
@@ -1770,8 +1770,8 @@ fn indic_fallback_candidates_cover_every_platform() {
 
 #[test]
 fn a_served_script_fallback_joins_the_fallback_stack_once_it_arrives() {
-    let Some(cairo) = crate::CRAFT_FONTS.iter().find(|f| f.family == "Cairo") else {
-        eprintln!("skipping: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout)");
+    let Some(cairo) = crate::MAHAY_FONTS.iter().find(|f| f.family == "Cairo") else {
+        eprintln!("skipping: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout)");
         return;
     };
     crate::served::add_fonts(&crate::served::parse_manifest("Cairo | Regular | fonts/cairo/Cairo.ttf | Arab,Latn\n").0);
@@ -1826,7 +1826,7 @@ fn txt2_frame_places_point_text_at_its_anchor() {
     let txt2 = crate::psd::parse_txt2(&txt2_with_frame("2", Some([1000.0, 2100.0]), [1.0, 0.0, 0.0, 1.0, 100.0, -50.0])).unwrap();
     let mut l = crate::psd::text_layer_from_tysh(&tysh, 72.0).unwrap();
     crate::psd::apply_txt2_frame(&mut l, &tysh, &txt2);
-    let o = l.transform.apply(photocraft_geom::Point::new(0.0, 0.0));
+    let o = l.transform.apply(sary_geom::Point::new(0.0, 0.0));
     assert!((o.x - 100.0).abs() < 1e-3 && (o.y - 50.0).abs() < 1e-3, "anchor at {o:?}");
     // Already folded in (bounds near the origin): unchanged; another text: unchanged.
     let tysh = with_text_index(&crate::psd::build_tysh(&t, 72.0, Some([0.0, -70.0, 60.0, 0.0])), 0);
@@ -1844,7 +1844,7 @@ fn txt2_frame_places_point_text_at_its_anchor() {
 
 /// `tysh` with its text-space `bounds` set to `r` (Photoshop's, where it drew the text).
 fn with_bounds(tysh: &[u8], r: [f64; 4]) -> Vec<u8> {
-    use photocraft_psd::descriptor::{Descriptor, Id, Value};
+    use sary_psd::descriptor::{Descriptor, Id, Value};
     let mut t = crate::psd::parse_tysh(tysh).unwrap();
     let mut d = Descriptor::default();
     for (k, v) in ["Left", "Top ", "Rght", "Btom"].iter().zip(r) {
@@ -1870,9 +1870,9 @@ fn txt2_frame_moves_box_text_onto_its_bounds() {
     assert!(matches!(l.shape, TextShape::Box { .. }));
     crate::psd::apply_txt2_frame(&mut l, &tysh, &txt2);
     let TextShape::Box { x, y, .. } = l.shape else { panic!("not a box") };
-    let o = l.transform.apply(photocraft_geom::Point::new(f64::from(x), f64::from(y)));
+    let o = l.transform.apply(sary_geom::Point::new(f64::from(x), f64::from(y)));
     assert!((o.x - 260.0).abs() < 1e-3 && (o.y - 0.0).abs() < 1e-3, "box top left at {o:?}");
-    // PhotoCraft's own `TySh` (bounds = the box, frame already folded in): unchanged.
+    // Sary's own `TySh` (bounds = the box, frame already folded in): unchanged.
     let mut l = crate::psd::text_layer_from_tysh(&built, 72.0).unwrap();
     let before = l.transform;
     crate::psd::apply_txt2_frame(&mut l, &built, &txt2);
@@ -1884,8 +1884,8 @@ fn txt2_frame_moves_box_text_onto_its_bounds() {
 /// fallback's glyph (#1909).
 #[test]
 fn missing_glyph_protection_can_turn_the_fallback_stack_off() {
-    let Some(cairo) = crate::CRAFT_FONTS.iter().find(|f| f.family == "Cairo") else {
-        eprintln!("skipping: built without craft-fonts (set CRAFT_FONTS_DIR to a craft-fonts checkout)");
+    let Some(cairo) = crate::MAHAY_FONTS.iter().find(|f| f.family == "Cairo") else {
+        eprintln!("skipping: built without mahay-fonts (set MAHAY_FONTS_DIR to a mahay-fonts checkout)");
         return;
     };
     let mut db = fonts::FontDb::new();
@@ -1932,7 +1932,7 @@ fn translate_tysh_moves_only_the_translation() {
 /// zeros for unwarped type, the text-space bounds for warped type.
 #[test]
 fn tysh_trailing_bounds_are_f32() {
-    use photocraft_doc::text::TextWarp;
+    use sary_doc::text::TextWarp;
     let tail = |b: &[u8]| -> [f32; 4] {
         let t = b.get(b.len() - 16..).unwrap();
         std::array::from_fn(|i| f32::from_be_bytes(t[i * 4..i * 4 + 4].try_into().unwrap()))
@@ -1956,7 +1956,7 @@ fn tysh_trailing_bounds_are_f32() {
 /// every mode survives.
 #[test]
 fn engine_data_antialias_numbers_match_photoshop() {
-    use photocraft_doc::text::AntiAlias;
+    use sary_doc::text::AntiAlias;
     for (mode, n) in [(AntiAlias::None, 0), (AntiAlias::Crisp, 1), (AntiAlias::Strong, 2), (AntiAlias::Smooth, 3), (AntiAlias::Sharp, 4)] {
         let t = TextLayer { antialias: mode, ..point("Type", 20.0) };
         let mut tysh = crate::psd::parse_tysh(&crate::psd::build_tysh(&t, 72.0, None)).unwrap();
@@ -1972,7 +1972,7 @@ fn engine_data_antialias_numbers_match_photoshop() {
 /// turned, along a curve it follows the curve, and glyphs beyond the end are not drawn.
 #[test]
 fn type_on_a_path_follows_the_curve() {
-    use photocraft_doc::vector::{Knot, Subpath};
+    use sary_doc::vector::{Knot, Subpath};
     let fmt = PixelFormat::RGBA8;
     let mut eng = TextEngine::new();
     let ink = |eng: &mut TextEngine, t: &TextLayer| {
@@ -1995,21 +1995,21 @@ fn type_on_a_path_follows_the_curve() {
         closed: false,
         knots: vec![
             Knot {
-                anchor: photocraft_geom::Point::new(-60.0, 0.0),
-                in_ctrl: photocraft_geom::Point::new(-60.0, 0.0),
-                out_ctrl: photocraft_geom::Point::new(-60.0, -k),
+                anchor: sary_geom::Point::new(-60.0, 0.0),
+                in_ctrl: sary_geom::Point::new(-60.0, 0.0),
+                out_ctrl: sary_geom::Point::new(-60.0, -k),
                 smooth: true,
             },
             Knot {
-                anchor: photocraft_geom::Point::new(0.0, -60.0),
-                in_ctrl: photocraft_geom::Point::new(-k, -60.0),
-                out_ctrl: photocraft_geom::Point::new(k, -60.0),
+                anchor: sary_geom::Point::new(0.0, -60.0),
+                in_ctrl: sary_geom::Point::new(-k, -60.0),
+                out_ctrl: sary_geom::Point::new(k, -60.0),
                 smooth: true,
             },
             Knot {
-                anchor: photocraft_geom::Point::new(60.0, 0.0),
-                in_ctrl: photocraft_geom::Point::new(60.0, -k),
-                out_ctrl: photocraft_geom::Point::new(60.0, 0.0),
+                anchor: sary_geom::Point::new(60.0, 0.0),
+                in_ctrl: sary_geom::Point::new(60.0, -k),
+                out_ctrl: sary_geom::Point::new(60.0, 0.0),
                 smooth: true,
             },
         ],

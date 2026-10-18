@@ -3,7 +3,7 @@ mod common;
 use std::time::{Duration, Instant};
 
 use common::{Theme, config_path, open_in, read_config, write_config};
-use craft_settings::{SaveStatus, Source};
+use mahay_settings::{SaveStatus, Source};
 
 #[test]
 fn first_run_gives_defaults_and_writes_the_file_on_flush() {
@@ -137,7 +137,7 @@ fn failed_save_is_retried_with_backoff() {
 
 #[test]
 fn retry_delay_doubles_and_caps() {
-    use craft_settings::store::retry_delay;
+    use mahay_settings::store::retry_delay;
     assert_eq!(retry_delay(1), Duration::from_secs(1));
     assert_eq!(retry_delay(2), Duration::from_secs(2));
     assert_eq!(retry_delay(3), Duration::from_secs(4));
@@ -206,7 +206,7 @@ fn read_only_file_makes_the_save_fail_visibly() {
     std::fs::set_permissions(config_path(tmp.path()), std::fs::Permissions::from_mode(0o400)).unwrap();
     store.update(|p| p.general.language = "fr".into());
     let r = store.tick(Instant::now() + Duration::from_secs(1));
-    assert!(matches!(r.status, SaveStatus::Failed(craft_settings::SettingsError::Io(_))), "{r:?}");
+    assert!(matches!(r.status, SaveStatus::Failed(mahay_settings::SettingsError::Io(_))), "{r:?}");
     assert!(!read_config(tmp.path()).contains("language = \"fr\""));
 }
 

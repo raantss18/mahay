@@ -1,10 +1,10 @@
 //! WordArt and connectors through the commands.
 
 use serde_json::json;
-use wordcraft_doc::connector::{ConnEnd, ShapeExtra, ends};
-use wordcraft_doc::para::{Anchor, Float, InlineObject, ShapeKind, Wrap};
-use wordcraft_doc::props::CharProps;
-use wordcraft_doc::{Document, Paragraph, Pos, StoryRef, para_block};
+use soratra_doc::connector::{ConnEnd, ShapeExtra, ends};
+use soratra_doc::para::{Anchor, Float, InlineObject, ShapeKind, Wrap};
+use soratra_doc::props::CharProps;
+use soratra_doc::{Document, Paragraph, Pos, StoryRef, para_block};
 
 use crate::Session;
 
@@ -111,19 +111,19 @@ fn wordart_is_inserted_styled_and_bent() {
     let id = r["story"].as_u64().unwrap() as u32;
     assert_eq!(s.doc.plain_text(StoryRef::Part(id)), "Hello");
     let props = s.doc.para_at(&s.doc.start_of(StoryRef::Part(id))).unwrap().props_at(0).clone();
-    assert!(matches!(props.text_effects.as_deref().and_then(|f| f.fill.as_ref()), Some(wordcraft_doc::wordart::TextFill::Gradient { .. })));
+    assert!(matches!(props.text_effects.as_deref().and_then(|f| f.fill.as_ref()), Some(soratra_doc::wordart::TextFill::Gradient { .. })));
     // Its text is drawn from outlines, bent.
     let layout = s.layout();
-    let draws = wordcraft_layout::display::page_display(&s.doc, &layout.pages[0], &Default::default());
-    assert!(draws.iter().any(|d| matches!(d, wordcraft_layout::display::Draw::Art { .. })));
+    let draws = soratra_layout::display::page_display(&s.doc, &layout.pages[0], &Default::default());
+    assert!(draws.iter().any(|d| matches!(d, soratra_layout::display::Draw::Art { .. })));
     // The PDF draws the gradient and keeps the text.
-    let pdf = wordcraft_pdf::export(&s.doc, &Default::default()).unwrap();
+    let pdf = soratra_pdf::export(&s.doc, &Default::default()).unwrap();
     assert!(pdf.starts_with(b"%PDF"));
     // Effects and transforms on the selected text box's text; hostile values are refused or capped.
     run(&mut s, "format.textEffects", json!({"outline": {"color": "C00000", "width": 1e9}, "glow": 5}));
     let props = s.doc.para_at(&s.doc.start_of(StoryRef::Part(id))).unwrap().props_at(0).clone();
     let fx = props.text_effects.unwrap();
-    assert_eq!(fx.outline.map(|o| o.width), Some(wordcraft_doc::wordart::MAX_OUTLINE));
+    assert_eq!(fx.outline.map(|o| o.width), Some(soratra_doc::wordart::MAX_OUTLINE));
     assert!(fx.glow.is_some() && fx.fill.is_some());
     run(&mut s, "wordArt.transform", json!({"preset": "textWave1", "adj": 1e300}));
     assert!(s.run("wordArt.transform", &json!({"preset": "textBogus"})).is_err());
@@ -135,7 +135,7 @@ fn wordart_is_inserted_styled_and_bent() {
     });
     assert_eq!(
         warp.map(|w| (w.adj_value("adj"), w.preset)).map(|(a, p)| (p, a)),
-        Some(("textWave1".into(), Some(wordcraft_doc::wordart::MAX_ADJ_VALUE)))
+        Some(("textWave1".into(), Some(soratra_doc::wordart::MAX_ADJ_VALUE)))
     );
     run(&mut s, "wordArt.transform", json!({"preset": "none"}));
 }

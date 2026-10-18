@@ -4,8 +4,8 @@
 use egui::accesskit::Role;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_engine::a11y::{Rule, Status};
-use pdfcraft_ui_egui::{Dialog, PdfCraftApp, RightPanel};
+use taratasy_engine::a11y::{Rule, Status};
+use taratasy_ui_egui::{Dialog, TaratasyApp, RightPanel};
 
 const FIXTURE: &[u8] = b"%PDF-1.7
 1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
@@ -26,11 +26,11 @@ const FORM_FIXTURE: &[u8] = b"%PDF-1.7
 trailer << /Root 1 0 R >>
 %%EOF";
 
-fn status(h: &Harness<'static, PdfCraftApp>, rule: Rule) -> Status {
+fn status(h: &Harness<'static, TaratasyApp>, rule: Rule) -> Status {
     h.state().a11y.report.as_ref().unwrap().1.result(rule).unwrap().status
 }
 
-fn right_click(h: &mut Harness<'static, PdfCraftApp>, label: &str) {
+fn right_click(h: &mut Harness<'static, TaratasyApp>, label: &str) {
     let at = h.get_by_label(label).rect().center();
     h.hover_at(at);
     h.run_steps(1);
@@ -42,7 +42,7 @@ fn right_click(h: &mut Harness<'static, PdfCraftApp>, label: &str) {
 #[test]
 fn automatic_text_tagging_opens_reviewable_tags() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.pdf", None, FIXTURE.to_vec()).unwrap();
         app
@@ -60,12 +60,12 @@ fn automatic_text_tagging_opens_reviewable_tags() {
 
 #[test]
 fn checking_fixing_skipping_and_reporting() {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-a11y-ui-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-a11y-ui-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let d = dir.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.pdf", None, FIXTURE.to_vec()).unwrap();
         app.export_dir_override = Some(d.to_string_lossy().into_owned());
@@ -91,7 +91,7 @@ fn checking_fixing_skipping_and_reporting() {
     assert_eq!(status(&h, Rule::Title), Status::Passed);
     assert_eq!(h.state().a11y.previous.as_ref().unwrap().1.result(Rule::Title).unwrap().status, Status::Failed);
     assert!(matches!(h.state().dialog, Some(Dialog::Properties(_))));
-    assert_eq!(h.state().window_title, "notes — PdfCraft");
+    assert_eq!(h.state().window_title, "notes — Taratasy");
     h.state_mut().dialog = None;
     h.run_steps(2);
     h.get_by_label("Compare");
@@ -125,7 +125,7 @@ fn checking_fixing_skipping_and_reporting() {
 #[test]
 fn a_rule_skipped_in_one_document_is_not_skipped_in_another() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("a.pdf", None, FIXTURE.to_vec()).unwrap();
         app.open_bytes("b.pdf", None, FIXTURE.to_vec()).unwrap();
@@ -134,7 +134,7 @@ fn a_rule_skipped_in_one_document_is_not_skipped_in_another() {
         app
     });
     h.run_steps(4);
-    let tagged = |h: &Harness<'static, PdfCraftApp>| {
+    let tagged = |h: &Harness<'static, TaratasyApp>| {
         let (id, report) = h.state().a11y.report.as_ref().unwrap();
         assert_eq!(Some(*id), h.state().active_ids().map(|(_, id)| id), "the report is the active document's");
         let r = report.result(Rule::TaggedPdf).unwrap();
@@ -176,7 +176,7 @@ fn a_rule_skipped_in_one_document_is_not_skipped_in_another() {
 #[test]
 fn checker_summary_does_not_hide_manual_review() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.pdf", None, FIXTURE.to_vec()).unwrap();
         app
@@ -204,7 +204,7 @@ fn a_saved_page_range_past_the_document_still_checks_its_pages() {
     // dialog is turned off. Unclamped, it selected no page, and the page rules came out Passed
     // without having looked at the untagged text (#1300).
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.pdf", None, FIXTURE.to_vec()).unwrap();
         app
@@ -221,7 +221,7 @@ fn a_saved_page_range_past_the_document_still_checks_its_pages() {
 #[test]
 fn tagging_form_fields_opens_the_tags_panel() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, FORM_FIXTURE.to_vec()).unwrap();
         app
@@ -236,7 +236,7 @@ fn tagging_form_fields_opens_the_tags_panel() {
         .session
         .get(id)
         .unwrap()
-        .accessibility_check(&pdfcraft_engine::a11y::Options { rules: [Rule::TaggedFormFields].into(), pages: None });
+        .accessibility_check(&taratasy_engine::a11y::Options { rules: [Rule::TaggedFormFields].into(), pages: None });
     assert_eq!(report.unwrap().result(Rule::TaggedFormFields).unwrap().status, Status::Passed);
 }
 
@@ -262,7 +262,7 @@ trailer << /Root 1 0 R >>
 #[test]
 fn checker_shows_a_figure_finding_on_its_page() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figures.pdf", None, FIGURES.to_vec()).unwrap();
         app
@@ -281,7 +281,7 @@ fn checker_shows_a_figure_finding_on_its_page() {
 #[test]
 fn setting_alternate_text_figure_by_figure() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figures.pdf", None, FIGURES.to_vec()).unwrap();
         app
@@ -311,7 +311,7 @@ fn setting_alternate_text_figure_by_figure() {
 #[test]
 fn tags_panel_edits_a_tag_property_and_undoes_it() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figures.pdf", None, FIGURES.to_vec()).unwrap();
         app
@@ -350,7 +350,7 @@ fn tags_panel_edits_a_tag_property_and_undoes_it() {
 #[test]
 fn tags_panel_moves_a_tag_within_its_siblings() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figures.pdf", None, FIGURES.to_vec()).unwrap();
         app
@@ -371,7 +371,7 @@ fn tags_panel_moves_a_tag_within_its_siblings() {
 #[test]
 fn tags_panel_marks_a_leaf_tag_as_an_artifact() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figures.pdf", None, FIGURES.to_vec()).unwrap();
         app
@@ -392,7 +392,7 @@ fn tags_panel_marks_a_leaf_tag_as_an_artifact() {
 #[test]
 fn checker_finding_opens_its_structure_tag() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("figures.pdf", None, FIGURES.to_vec()).unwrap();
         app
@@ -421,7 +421,7 @@ fn checker_finding_opens_its_structure_tag() {
 #[test]
 fn finding_untagged_content_shows_the_focused_accessibility_results() {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("notes.pdf", None, FIXTURE.to_vec()).unwrap();
         app

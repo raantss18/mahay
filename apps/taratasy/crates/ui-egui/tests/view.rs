@@ -2,7 +2,7 @@
 
 use egui::{Key, Modifiers, MouseWheelUnit, TouchPhase};
 use egui_kittest::Harness;
-use pdfcraft_ui_egui::PdfCraftApp;
+use taratasy_ui_egui::TaratasyApp;
 
 /// Three 300×400 pt pages. Page 1 links to page 3.
 const PAGES: &[u8] = b"%PDF-1.7
@@ -27,14 +27,14 @@ fn gpu() -> std::sync::MutexGuard<'static, ()> {
     GPU.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-fn harness(options: &'static [(&'static str, &'static str)]) -> Harness<'static, PdfCraftApp> {
+fn harness(options: &'static [(&'static str, &'static str)]) -> Harness<'static, TaratasyApp> {
     harness_stepping(1.0 / 4.0, options)
 }
 
 /// [`harness`] with frames `step_dt` seconds apart (a quarter second is kittest's default).
-fn harness_stepping(step_dt: f32, options: &'static [(&'static str, &'static str)]) -> Harness<'static, PdfCraftApp> {
+fn harness_stepping(step_dt: f32, options: &'static [(&'static str, &'static str)]) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(step_dt).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("pages.pdf", None, PAGES.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -48,7 +48,7 @@ fn harness_stepping(step_dt: f32, options: &'static [(&'static str, &'static str
     h
 }
 
-fn rect(h: &Harness<'static, PdfCraftApp>, page: usize) -> Option<egui::Rect> {
+fn rect(h: &Harness<'static, TaratasyApp>, page: usize) -> Option<egui::Rect> {
     h.state().views[0].page_screen_rect(page)
 }
 
@@ -61,9 +61,9 @@ const MIXED: &[u8] = b"%PDF-1.7
 trailer << /Root 1 0 R >>
 %%EOF";
 
-fn mixed_harness(options: &'static [(&'static str, &'static str)]) -> Harness<'static, PdfCraftApp> {
+fn mixed_harness(options: &'static [(&'static str, &'static str)]) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("mixed.pdf", None, MIXED.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -159,7 +159,7 @@ fn two_up_layout_places_pages_side_by_side() {
 
 #[test]
 fn two_page_view_shows_one_spread_at_a_time_until_continuous() {
-    use pdfcraft_ui_egui::canvas::PageLayout;
+    use taratasy_ui_egui::canvas::PageLayout;
     // Two-page view without continuous scrolling shows just the current spread; the continuous
     // checkbox reveals the rest (#752).
     let mut h = harness(&[("layout", "two-page"), ("zoom", "50")]);
@@ -238,7 +238,7 @@ fn single_page_swipe_that_reaches_the_edge_does_not_turn_but_a_fresh_one_does() 
     let at = h.state().views[0].viewport_rect().center();
     h.hover_at(at);
     h.run_steps(4);
-    let send = |h: &mut Harness<'static, PdfCraftApp>, phase, dy| {
+    let send = |h: &mut Harness<'static, TaratasyApp>, phase, dy| {
         h.event(wheel(MouseWheelUnit::Point, dy, phase));
         h.step();
     };
@@ -349,8 +349,8 @@ fn precise_touchpad_wheel_scrolls_one_to_one() {
 /// pages on screen in each pair of consecutive frames (a page can leave the screen on the way).
 /// Only the non-macOS glide tests below use it, hence the matching gate.
 #[cfg(not(target_os = "macos"))]
-fn scroll_over(h: &mut Harness<'static, PdfCraftApp>, frames: usize) -> f32 {
-    let tops = |h: &Harness<'static, PdfCraftApp>| (0..3).map(|p| rect(h, p).map(|r| r.min.y)).collect::<Vec<_>>();
+fn scroll_over(h: &mut Harness<'static, TaratasyApp>, frames: usize) -> f32 {
+    let tops = |h: &Harness<'static, TaratasyApp>| (0..3).map(|p| rect(h, p).map(|r| r.min.y)).collect::<Vec<_>>();
     let mut moved = 0.0;
     for _ in 0..frames {
         let before = tops(h);
@@ -367,7 +367,7 @@ fn scroll_over(h: &mut Harness<'static, PdfCraftApp>, frames: usize) -> f32 {
 /// it scrolled by the frame after the lift (the page is drawn a frame behind its scroll).
 /// Same gate as its callers below.
 #[cfg(not(target_os = "macos"))]
-fn swipe_and_lift(h: &mut Harness<'static, PdfCraftApp>) -> f32 {
+fn swipe_and_lift(h: &mut Harness<'static, TaratasyApp>) -> f32 {
     let at = h.state().views[0].viewport_rect().center();
     h.hover_at(at);
     h.run_steps(2);
@@ -459,7 +459,7 @@ const EASED: [(bool, &str); 3] = [(false, "system"), (false, "on"), (true, "on")
 fn a_wheel_notch_scrolls_at_once_with_animation_effects_off() {
     // Eased, egui spreads a notch over about a quarter of a second. At once, the page moves the
     // notch's whole distance in one frame.
-    let notch = pdfcraft_ui_egui::scroll_speed::ScrollSpeed::default().line_points();
+    let notch = taratasy_ui_egui::scroll_speed::ScrollSpeed::default().line_points();
     for (system_reduced, effects) in AT_ONCE {
         let moved = frames_after_a_notch(system_reduced, effects, false);
         // The frame the notch arrives in scrolls; the next one draws the page where it stays.
@@ -507,13 +507,13 @@ fn the_wheel_zooms_a_whole_step_at_once_with_animation_effects_off() {
 fn page_display_commands_switch_layouts() {
     let mut h = harness(&[]);
     h.state_mut().execute("view.layout.single");
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::Single);
     // The cover toggle refuses outside two-page view instead of arming a hidden flag.
     assert!(!h.state().views[0].cover);
     assert!(!h.state_mut().execute("view.layout.cover"));
     assert!(!h.state().views[0].cover);
     h.state_mut().execute("view.layout.two_up");
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::TwoUp);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::TwoUp);
     assert!(h.state_mut().execute("view.layout.cover"));
     assert!(h.state().views[0].cover, "the cover toggle flips");
     assert!(h.state_mut().execute("view.layout.cover"));
@@ -523,9 +523,9 @@ fn page_display_commands_switch_layouts() {
     h.state_mut().execute("view.continuous");
     h.run_steps(3);
     assert!(!h.state().views[0].continuous(), "the checkbox turns continuous scrolling off");
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::TwoUp, "toggling scrolling leaves the base layout");
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::TwoUp, "toggling scrolling leaves the base layout");
     h.state_mut().execute("view.layout.single");
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::Single);
     assert!(!h.state().views[0].continuous(), "switching the base layout leaves scrolling off");
 }
 
@@ -535,7 +535,7 @@ fn layout_option_rejects_typos() {
     assert!(h.state_mut().set_option("layout", "singel").is_err());
     assert!(h.state_mut().set_option("default-layout", "bogus").is_err());
     assert!(h.state_mut().set_option("cover", "maybe").is_err());
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::Single);
     assert!(h.state().views[0].continuous(), "a rejected typo leaves the default display unchanged");
     assert!(h.state_mut().set_option("cover", "on").is_err(), "cover needs two-page view first");
     h.state_mut().set_option("layout", "two-up").unwrap();
@@ -547,20 +547,20 @@ fn layout_option_rejects_typos() {
 
 #[test]
 fn view_options_without_a_document() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     assert!(app.set_option("default-layout", "single").is_ok(), "the default needs no document");
-    assert_eq!(app.view_defaults.layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(app.view_defaults.layout, taratasy_ui_egui::canvas::PageLayout::Single);
     assert!(app.set_option("cover", "on").is_err(), "cover needs an open document");
     assert!(app.set_option("layout", "single").is_err(), "layout needs an open document");
 }
 
 #[test]
 fn default_page_display_is_used_for_new_documents() {
-    use pdfcraft_ui_egui::canvas::PageLayout;
+    use taratasy_ui_egui::canvas::PageLayout;
     // The factory default is single page, scrolling continuously, without snap jumps.
-    assert_eq!(PdfCraftApp::new().view_defaults.layout, PageLayout::Single);
-    assert!(PdfCraftApp::new().view_defaults.continuous);
+    assert_eq!(TaratasyApp::new().view_defaults.layout, PageLayout::Single);
+    assert!(TaratasyApp::new().view_defaults.continuous);
     let mut h = harness(&[]);
     h.state_mut().set_option("default-layout", "single").unwrap();
     h.state_mut().open_bytes("other.pdf", None, PAGES.to_vec()).expect("opens");
@@ -570,7 +570,7 @@ fn default_page_display_is_used_for_new_documents() {
     assert_eq!(h.state().views[2].layout, PageLayout::Single);
     // Persisted preferences survive a restart.
     let saved = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.set_option("language", "en").unwrap();
     fresh.restore(&saved);
     assert_eq!(fresh.view_defaults.layout, PageLayout::Single);
@@ -579,7 +579,7 @@ fn default_page_display_is_used_for_new_documents() {
     assert_eq!(fresh.view_defaults.layout, PageLayout::Single);
     fresh.restore(r#"{"default_layout":"TWO-UP"}"#);
     assert_eq!(fresh.view_defaults.layout, PageLayout::TwoUp);
-    let mut legacy = PdfCraftApp::new();
+    let mut legacy = TaratasyApp::new();
     legacy.set_option("language", "en").unwrap();
     legacy.restore("{}");
     assert_eq!(legacy.view_defaults.layout, PageLayout::Single);
@@ -588,8 +588,8 @@ fn default_page_display_is_used_for_new_documents() {
 
 #[test]
 fn default_zoom_is_used_for_new_documents() {
-    use pdfcraft_ui_egui::canvas::Fit;
-    let fit_zoom = |app: &PdfCraftApp, i: usize| (app.views[i].fit, app.views[i].zoom);
+    use taratasy_ui_egui::canvas::Fit;
+    let fit_zoom = |app: &TaratasyApp, i: usize| (app.views[i].fit, app.views[i].zoom);
     let mut h = harness(&[]);
     // The factory default fits the width.
     assert_eq!(h.state().views[0].fit, Fit::Width);
@@ -609,7 +609,7 @@ fn default_zoom_is_used_for_new_documents() {
     }
     // Saved settings keep it, and garbage leaves it alone.
     let saved = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.set_option("language", "en").unwrap();
     fresh.restore(&saved);
     fresh.restore(r#"{"default_zoom":"bogus"}"#);
@@ -628,22 +628,22 @@ fn preferences_set_the_default_zoom() {
     h.get_by_label("Zoom to page level").click();
     h.run_steps(2);
     assert!(h.state_mut().execute("create.blank"));
-    assert_eq!(h.state().views[1].fit, pdfcraft_ui_egui::canvas::Fit::Page);
+    assert_eq!(h.state().views[1].fit, taratasy_ui_egui::canvas::Fit::Page);
 }
 
 #[test]
 fn rail_page_display_menu_offers_acrobats_view_choices() {
     use egui_kittest::kittest::Queryable;
-    use pdfcraft_ui_egui::canvas::{Fit, PageLayout};
+    use taratasy_ui_egui::canvas::{Fit, PageLayout};
     let mut h = harness(&[]);
     h.run_steps(4);
-    let pick = |h: &mut Harness<'static, PdfCraftApp>, item: &str| {
+    let pick = |h: &mut Harness<'static, TaratasyApp>, item: &str| {
         h.get_by_label_contains("Page display:").click();
         h.run_steps(3);
         h.get_by_label(item).click();
         h.run_steps(4);
     };
-    let shown = |h: &Harness<'static, PdfCraftApp>| (h.state().views[0].layout, h.state().views[0].continuous(), h.state().views[0].fit);
+    let shown = |h: &Harness<'static, TaratasyApp>| (h.state().views[0].layout, h.state().views[0].continuous(), h.state().views[0].fit);
     pick(&mut h, "Fit one full page");
     assert_eq!(shown(&h), (PageLayout::Single, false, Fit::Page), "one full page at a time, not scrolling");
     // The whole page fits at once, so the wheel turns pages without zooming out first.
@@ -670,7 +670,7 @@ fn rail_page_display_button_switches_layouts() {
     h.run_steps(3);
     h.get_by_label("Single page").click();
     h.run_steps(4);
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::Single);
 }
 
 #[test]
@@ -684,7 +684,7 @@ fn view_menu_page_display_uses_the_same_commands() {
     h.run_steps(3);
     h.get_by_label("Single page").click();
     h.run_steps(4);
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::Single);
 }
 
 #[test]
@@ -697,7 +697,7 @@ fn palette_runs_page_display_commands_from_the_keyboard() {
     h.key_press(Key::Enter);
     h.run_steps(3);
     assert!(!h.state().palette_open, "Enter runs the top hit and closes the palette");
-    assert_eq!(h.state().views[0].layout, pdfcraft_ui_egui::canvas::PageLayout::Single);
+    assert_eq!(h.state().views[0].layout, taratasy_ui_egui::canvas::PageLayout::Single);
 }
 
 #[test]
@@ -787,9 +787,9 @@ const DESTS: &[u8] = b"%PDF-1.7
 trailer << /Root 1 0 R >>
 %%EOF";
 
-fn dests_harness() -> Harness<'static, PdfCraftApp> {
+fn dests_harness() -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("dests.pdf", None, DESTS.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -812,7 +812,7 @@ fn dests_harness() -> Harness<'static, PdfCraftApp> {
 
 /// Where the point a fraction (`fx`, `fy`) across and down `page` is on screen, relative to the
 /// viewport's top-left corner.
-fn from_viewport_corner(h: &Harness<'static, PdfCraftApp>, page: usize, fx: f32, fy: f32) -> egui::Vec2 {
+fn from_viewport_corner(h: &Harness<'static, TaratasyApp>, page: usize, fx: f32, fy: f32) -> egui::Vec2 {
     let (r, vp) = (rect(h, page).expect("page on screen"), h.state().views[0].viewport_rect());
     egui::pos2(r.min.x + fx * r.width(), r.min.y + fy * r.height()) - vp.min
 }
@@ -820,7 +820,7 @@ fn from_viewport_corner(h: &Harness<'static, PdfCraftApp>, page: usize, fx: f32,
 #[test]
 fn bookmark_destinations_scroll_to_their_position() {
     use egui_kittest::kittest::Queryable;
-    use pdfcraft_ui_egui::canvas::Fit;
+    use taratasy_ui_egui::canvas::Fit;
     let mut h = dests_harness();
     // Fit width: the pages are taller than the window, so any point of them can reach its top.
     h.get_by_label("Section 1.1 Shapes").click();
@@ -852,7 +852,7 @@ fn bookmark_destinations_scroll_to_their_position() {
 
 #[test]
 fn link_destinations_scroll_to_their_position() {
-    use pdfcraft_ui_egui::canvas::Fit;
+    use taratasy_ui_egui::canvas::Fit;
     let mut h = dests_harness();
     h.state_mut().set_option("zoom", "100%").unwrap();
     h.run_steps(4);
@@ -885,9 +885,9 @@ endstream endobj
 trailer << /Root 1 0 R >>
 %%EOF";
 
-fn form_harness() -> Harness<'static, PdfCraftApp> {
+fn form_harness() -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("form.pdf", None, FORM.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -925,7 +925,7 @@ fn highlight_fields_tints_the_field_area() {
     let r = rect(&h, 0).expect("page 1");
     // The field spans x 50..250, y 300..330 (PDF space, y up) on a 300×400 page; sample inside it.
     let at = egui::pos2(r.min.x + r.width() * (60.0 / 300.0), r.min.y + r.height() * (1.0 - 305.0 / 400.0));
-    let pixel = |h: &mut Harness<'static, PdfCraftApp>| {
+    let pixel = |h: &mut Harness<'static, TaratasyApp>| {
         let img = h.render().expect("renders");
         let ppp = h.ctx.pixels_per_point();
         *img.get_pixel((at.x * ppp) as u32, (at.y * ppp) as u32)
@@ -956,7 +956,7 @@ trailer << /Root 1 0 R >>
 fn required_radio_buttons_get_a_round_red_border() {
     let _gpu = gpu();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("radios.pdf", None, RADIOS.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -1008,7 +1008,7 @@ fn field_highlighting_is_remembered() {
     h.run_steps(4);
     assert!(h.state().views[1].highlight_fields, "the next document opens highlighted");
     let saved = h.state().persist();
-    let mut next = PdfCraftApp::new();
+    let mut next = TaratasyApp::new();
     next.set_option("language", "en").unwrap();
     next.restore(&saved);
     next.open_bytes("form.pdf", None, FORM.to_vec()).expect("opens");
@@ -1057,7 +1057,7 @@ fn the_hand_tool_moves_the_page_with_the_pointer() {
     let start = h.state().views[0].viewport_rect().center();
     h.hover_at(start);
     h.run_steps(2);
-    let page = |h: &Harness<'static, PdfCraftApp>| rect(h, 0).expect("page 1 on screen").min;
+    let page = |h: &Harness<'static, TaratasyApp>| rect(h, 0).expect("page 1 on screen").min;
     let grabbed = page(&h);
     let click_dist = h.ctx.options(|o| o.input_options.max_click_dist);
     let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
@@ -1093,8 +1093,8 @@ fn required_fields_get_a_red_border_when_highlighting() {
     let mut h = form_harness();
     h.state_mut().set_option("panel", "none").unwrap();
     h.state_mut().set_option("fields", "on").unwrap();
-    let props = pdfcraft_engine::FieldProps { required: Some(true), ..Default::default() };
-    h.state_mut().apply_edit(pdfcraft_engine::Edit::SetFieldProps { name: "fullname".into(), props: Box::new(props) });
+    let props = taratasy_engine::FieldProps { required: Some(true), ..Default::default() };
+    h.state_mut().apply_edit(taratasy_engine::Edit::SetFieldProps { name: "fullname".into(), props: Box::new(props) });
     for _ in 0..100 {
         h.run_steps(2);
         if !h.state().render_pending() {
@@ -1141,7 +1141,7 @@ trailer << /Root 1 0 R >>
     for ppp in [1.0, 2.0] {
         let bytes = pdf.clone();
         let mut h = Harness::builder().with_size(egui::vec2(1000.0, 800.0)).with_pixels_per_point(ppp).build_eframe(move |_cc| {
-            let mut app = PdfCraftApp::new();
+            let mut app = TaratasyApp::new();
             app.set_option("language", "en").unwrap();
             app.open_bytes("lines.pdf", None, bytes.clone()).expect("opens");
             app.set_option("left", "closed").unwrap();
@@ -1156,7 +1156,7 @@ trailer << /Root 1 0 R >>
 
 /// Mean and largest difference between page 1 on screen and the page rendered directly at the
 /// view's exact device scale, over the lined area of `page_raster_maps_one_to_one_onto_screen_pixels`.
-fn compare_page_with_raster(h: &mut Harness<'static, PdfCraftApp>, pdf: &[u8], zoom: f32) -> (f64, u8) {
+fn compare_page_with_raster(h: &mut Harness<'static, TaratasyApp>, pdf: &[u8], zoom: f32) -> (f64, u8) {
     for _ in 0..100 {
         h.run_steps(2);
         if !h.state().render_pending() {
@@ -1168,10 +1168,10 @@ fn compare_page_with_raster(h: &mut Harness<'static, PdfCraftApp>, pdf: &[u8], z
     let r = rect(h, 0).expect("page 1");
     let img = h.render().expect("renders");
     let scale = zoom * 96.0 / 72.0 * ppp;
-    let mut renderer = pdfcraft_render::PageRenderer::new(std::sync::Arc::new(pdf.to_vec()), pdfcraft_render::RenderConfig::default());
-    let page = renderer.render(pdfcraft_render::RenderRequest {
+    let mut renderer = taratasy_render::PageRenderer::new(std::sync::Arc::new(pdf.to_vec()), taratasy_render::RenderConfig::default());
+    let page = renderer.render(taratasy_render::RenderRequest {
         page: 0,
-        kind: pdfcraft_render::RequestKind::Pixels,
+        kind: taratasy_render::RequestKind::Pixels,
         tile: None,
         scale,
         tag: 0,
@@ -1217,9 +1217,9 @@ trailer << /Root 1 0 R >>
     .into_bytes()
 }
 
-fn grid_harness(pdf: Vec<u8>, zoom: &str) -> Harness<'static, PdfCraftApp> {
+fn grid_harness(pdf: Vec<u8>, zoom: &str) -> Harness<'static, TaratasyApp> {
     Harness::builder().with_size(egui::vec2(1000.0, 800.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.open_bytes("grid.pdf", None, pdf.clone()).expect("opens");
         app.set_option("left", "closed").unwrap();
         app.set_option("panel", "none").unwrap();
@@ -1228,7 +1228,7 @@ fn grid_harness(pdf: Vec<u8>, zoom: &str) -> Harness<'static, PdfCraftApp> {
     })
 }
 
-fn settle(h: &mut Harness<'static, PdfCraftApp>) {
+fn settle(h: &mut Harness<'static, TaratasyApp>) {
     for _ in 0..400 {
         h.run_steps(2);
         if !h.state().render_pending() {
@@ -1239,7 +1239,7 @@ fn settle(h: &mut Harness<'static, PdfCraftApp>) {
 }
 
 /// Detail in the middle of the window: the summed difference between neighbouring pixels.
-fn centre_detail(h: &mut Harness<'static, PdfCraftApp>) -> u64 {
+fn centre_detail(h: &mut Harness<'static, TaratasyApp>) -> u64 {
     let img = h.render().expect("renders");
     let (cx, cy) = (img.width() / 2, img.height() / 2);
     let mut sum = 0u64;
@@ -1290,9 +1290,9 @@ fn returning_to_a_visited_zoom_reuses_its_cached_tiles() {
 
 #[test]
 fn sidebar_collapse_and_resize_preserves_scroll_position() {
-    use pdfcraft_ui_egui::canvas::Fit;
+    use taratasy_ui_egui::canvas::Fit;
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("pages.pdf", None, PAGES.to_vec()).expect("opens");
         app.set_option("left", "closed").unwrap();
@@ -1363,7 +1363,7 @@ fn final_spread_at_scroll_end(heights: &[u32], cover: bool) -> (Vec<(usize, egui
     }
     pdf += "trailer << /Root 1 0 R >>\n%%EOF";
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).with_step_dt(1.0 / 60.0).build_eframe(move |_| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.open_bytes("unequal-spreads.pdf", None, pdf.as_bytes().to_vec()).unwrap();
         for (key, value) in [("left", "closed"), ("panel", "none"), ("layout", "two-up"), ("zoom", "200")] {

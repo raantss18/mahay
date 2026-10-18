@@ -19,7 +19,7 @@
 
 use std::collections::HashMap;
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object};
+use taratasy_cos::{Dict, Document, ObjRef, Object};
 
 use crate::{INHERITABLE, OrganizeError, pages_root, rebuild, walk};
 
@@ -291,7 +291,7 @@ fn insert_file_bookmark(doc: &mut Document, mark: &Mark, after: usize) -> Result
     let root = crate::outline::container(doc, &[])?;
     let item = doc.add(Object::Null);
     let mut d = Dict::new();
-    d.set(b"Title".to_vec(), Object::String(pdfcraft_cos::PdfString::text(&mark.title)));
+    d.set(b"Title".to_vec(), Object::String(taratasy_cos::PdfString::text(&mark.title)));
     d.set(b"Dest".to_vec(), Object::Array(vec![Object::Ref(mark.page), Object::name("Fit")]));
     if let Some((f, l, n)) = write_outline_level(doc, item, &mark.outline)? {
         d.set(b"First".to_vec(), Object::Ref(f));
@@ -633,7 +633,7 @@ fn resolve_field_conflicts(dst: &mut Document, fields: &[ObjRef]) -> Result<Vec<
     let planned = plan_renames(dst, fields, &mut taken);
     let mut renamed = Vec::new();
     for (node, new_t, old, new) in planned {
-        dst.update_dict(node, |d| d.set(b"T".to_vec(), Object::String(pdfcraft_cos::PdfString::text(&new_t))))?;
+        dst.update_dict(node, |d| d.set(b"T".to_vec(), Object::String(taratasy_cos::PdfString::text(&new_t))))?;
         renamed.push((old, new));
     }
     Ok(renamed)
@@ -1162,7 +1162,7 @@ fn set_attachments(dst: &mut Document, mut entries: Vec<(Vec<u8>, Object)>) -> R
     entries.sort_by(|a, b| a.0.cmp(&b.0));
     let mut names = Vec::new();
     for (k, v) in entries {
-        names.push(Object::String(pdfcraft_cos::PdfString::literal(k)));
+        names.push(Object::String(taratasy_cos::PdfString::literal(k)));
         names.push(v);
     }
     let mut tree = Dict::new();
@@ -1296,7 +1296,7 @@ fn add_outline(doc: &mut Document, marks: &[Mark]) -> Result<(), OrganizeError> 
     let (Some(&first_item), Some(&last_item)) = (items.first(), items.last()) else { return Ok(()) };
     for (i, (mark, r)) in marks.iter().zip(&items).enumerate() {
         let mut d = Dict::new();
-        d.set(b"Title".to_vec(), Object::String(pdfcraft_cos::PdfString::text(&mark.title)));
+        d.set(b"Title".to_vec(), Object::String(taratasy_cos::PdfString::text(&mark.title)));
         d.set(b"Parent".to_vec(), Object::Ref(outlines));
         d.set(b"Dest".to_vec(), Object::Array(vec![Object::Ref(mark.page), Object::name("Fit")]));
         if i > 0 {
@@ -1331,7 +1331,7 @@ fn add_outline(doc: &mut Document, marks: &[Mark]) -> Result<(), OrganizeError> 
 /// and its `/Matrix` undoes the page rotation, so it draws upright as displayed. Returns the
 /// form and its displayed size in points.
 pub fn page_as_form(dst: &mut Document, src: &Document, page: usize) -> Result<(ObjRef, (f64, f64)), OrganizeError> {
-    use pdfcraft_cos::Stream;
+    use taratasy_cos::Stream;
     let all = walk(src)?;
     // `walk` gives the inheritable attributes (resources, boxes, rotation); the content is
     // the page's own.

@@ -3,12 +3,12 @@
 
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 use crate::theme::Tokens;
 use crate::{icons, widgets};
 
-fn report(app: &mut PhotocraftApp, r: Result<Value, String>) {
+fn report(app: &mut SaryApp, r: Result<Value, String>) {
     if let Err(e) = r {
         app.ui.status = e;
         app.ui.status_error = true;
@@ -16,7 +16,7 @@ fn report(app: &mut PhotocraftApp, r: Result<Value, String>) {
 }
 
 /// Magic Eraser click at document `(x, y)`. Returns false for other tools.
-pub fn click(app: &mut PhotocraftApp, tool: Tool, x: f64, y: f64) -> bool {
+pub fn click(app: &mut SaryApp, tool: Tool, x: f64, y: f64) -> bool {
     if tool != Tool::MagicEraser {
         return false;
     }
@@ -36,7 +36,7 @@ pub fn click(app: &mut PhotocraftApp, tool: Tool, x: f64, y: f64) -> bool {
 }
 
 /// Finishes a Background Eraser stroke. Returns false for other tools.
-pub fn finish_stroke(app: &mut PhotocraftApp, tool: Tool, points: &[[f64; 3]]) -> bool {
+pub fn finish_stroke(app: &mut SaryApp, tool: Tool, points: &[[f64; 3]]) -> bool {
     if tool != Tool::BackgroundEraser {
         return false;
     }
@@ -55,20 +55,20 @@ pub fn finish_stroke(app: &mut PhotocraftApp, tool: Tool, points: &[[f64; 3]]) -
 
 /// Whether `tool` is the Eraser in Pencil mode: it erases hard, aliased pixels through
 /// `paint.pencil` (`"erase": true`) and shows the Pencil's pixel-grid cursor (#2662).
-pub fn pencil_mode(app: &PhotocraftApp, tool: Tool) -> bool {
+pub fn pencil_mode(app: &SaryApp, tool: Tool) -> bool {
     tool == Tool::Eraser && app.ui.tool_options.eraser_mode == "pencil"
 }
 
 /// Whether `tool` is the Eraser in Block mode: it erases a hard square of 16 screen pixels
 /// (`16 / zoom` document pixels) through `paint.pencil` (`"block": true`); Size, Hardness,
 /// Opacity and Flow don't apply (#2770).
-pub fn block_mode(app: &PhotocraftApp, tool: Tool) -> bool {
+pub fn block_mode(app: &SaryApp, tool: Tool) -> bool {
     tool == Tool::Eraser && app.ui.tool_options.eraser_mode == "block"
 }
 
 /// The Block's edge in document pixels at the current zoom (what the engine erases).
-pub fn block_size(app: &PhotocraftApp) -> f32 {
-    photocraft_engine::brush_cmds::block_size(f64::from(app.point_zoom()))
+pub fn block_size(app: &SaryApp) -> f32 {
+    sary_engine::brush_cmds::block_size(f64::from(app.point_zoom()))
 }
 
 /// The Eraser's Mode dropdown (Brush / Pencil / Block). Returns whether it changed.
@@ -84,7 +84,7 @@ fn opt(ui: &mut egui::Ui, text: &str) {
 }
 
 /// Options bar for the Magic Eraser and Background Eraser. Returns false for other tools.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui, tool: Tool) -> bool {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui, tool: Tool) -> bool {
     let o = &mut app.ui.tool_options;
     match tool {
         Tool::MagicEraser => {

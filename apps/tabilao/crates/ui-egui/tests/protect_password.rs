@@ -2,8 +2,8 @@
 
 use egui::accesskit::Role;
 use egui_kittest::kittest::Queryable as _;
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::SheetApp;
+use tabilao_engine::Session;
+use tabilao_ui_egui::SheetApp;
 use serde_json::json;
 
 const SECRET: &str = "s3cret";

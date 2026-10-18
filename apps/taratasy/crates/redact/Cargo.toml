@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-redact"
+name = "taratasy-redact"
 description = "Redaction (architecture §11.2): marks, apply (glyphs, images, vectors, XObjects, annotations, fields), verification"
 version.workspace = true
 edition.workspace = true
@@ -9,15 +9,15 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
-pdfcraft-content = { workspace = true }
-pdfcraft-fonts = { workspace = true }
-pdfcraft-model = { workspace = true }
-pdfcraft-forms = { workspace = true }
-pdfcraft-edit = { workspace = true }
-pdfcraft-annot = { workspace = true }
-pdfcraft-xfa = { workspace = true }
+taratasy-cos = { workspace = true }
+taratasy-content = { workspace = true }
+taratasy-fonts = { workspace = true }
+taratasy-model = { workspace = true }
+taratasy-forms = { workspace = true }
+taratasy-edit = { workspace = true }
+taratasy-annot = { workspace = true }
+taratasy-xfa = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-pdfcraft-testkit = { workspace = true }
+taratasy-testkit = { workspace = true }

@@ -1,5 +1,5 @@
 //! Mesh warps (Edit › Transform › Warp, smart-object warps): resampling a surface through any
-//! forward map, such as a [`photocraft_geom::warp::Warp`] (bicubic Bezier patches or a preset).
+//! forward map, such as a [`sary_geom::warp::Warp`] (bicubic Bezier patches or a preset).
 //!
 //! The source rectangle is subdivided into a fine grid whose vertices are mapped forward; each
 //! cell's two triangles are rasterized in destination space with the source position
@@ -13,9 +13,9 @@
 //! source pixel), so thin lines don't alias. Where the warp folds over itself the
 //! later (lower-right) cell wins. Work is split per destination tile (parallel on native).
 
-use photocraft_color::PixelFormat;
-use photocraft_geom::Rect;
-use photocraft_raster::Surface;
+use sary_color::PixelFormat;
+use sary_geom::Rect;
+use sary_raster::Surface;
 
 use crate::transform::{Interp, bicubic};
 
@@ -34,9 +34,9 @@ const MAX_SS: f64 = 8.0;
 pub fn place_source(
     src: &Surface,
     src_rect: Rect,
-    t: &photocraft_geom::Affine,
-    warp: Option<&photocraft_geom::warp::Warp>,
-) -> Result<Surface, photocraft_raster::AllocationError> {
+    t: &sary_geom::Affine,
+    warp: Option<&sary_geom::warp::Warp>,
+) -> Result<Surface, sary_raster::AllocationError> {
     let [a, b, c, d, e, f] = t.m;
     if let Some(w) = warp.filter(|w| !w.is_identity()) {
         let map = |x: f64, y: f64| {
@@ -58,8 +58,8 @@ pub fn place_source_projective(
     src: &Surface,
     src_rect: Rect,
     h: &crate::transform::Homography,
-    warp: Option<&photocraft_geom::warp::Warp>,
-) -> Result<Surface, photocraft_raster::AllocationError> {
+    warp: Option<&sary_geom::warp::Warp>,
+) -> Result<Surface, sary_raster::AllocationError> {
     if let Some(w) = warp.filter(|w| !w.is_identity()) {
         let map = |x: f64, y: f64| {
             let (u, v) = w.map(x, y);
@@ -176,7 +176,7 @@ pub fn warp_triangles(src: &Surface, src_rect: Rect, verts: &[([f64; 2], [f64; 2
     // Triangles: (vertex indices), binned per destination tile.
     let tiles: Vec<Rect> = dst.tiles().map(|tc| tc.rect().intersect(&dst)).filter(|r| !r.is_empty()).collect();
     let mut bins: Vec<Vec<[usize; 3]>> = vec![Vec::new(); tiles.len()];
-    let ts = photocraft_geom::TILE_SIZE;
+    let ts = sary_geom::TILE_SIZE;
     // Bin origin on the tile grid (the first tile is clipped to `dst`, so its x0/y0 may not be).
     let tx0 = tiles.iter().map(|t| t.x0).min().unwrap_or(0).div_euclid(ts) * ts;
     let ty0 = tiles.iter().map(|t| t.y0).min().unwrap_or(0).div_euclid(ts) * ts;
@@ -427,8 +427,8 @@ pub fn warp_mesh_gray(s: &Surface, f: &(dyn Fn(f64, f64) -> (f64, f64) + Sync), 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_color::{ColorMode, SampleType};
-    use photocraft_geom::warp::{BezierMesh, Warp, WarpStyle};
+    use sary_color::{ColorMode, SampleType};
+    use sary_geom::warp::{BezierMesh, Warp, WarpStyle};
 
     fn sample(s: SampleType) -> Surface {
         let mut surf = Surface::new(PixelFormat::new(ColorMode::Rgb, s, true));
@@ -531,7 +531,7 @@ mod tests {
             let r = Rect::new(0, 0, w, h);
             src.write_region(r, &px);
             let warp = Warp::preset(WarpStyle::Arc, 15.0, [0.0, 0.0, f64::from(w), f64::from(h)]);
-            let t = photocraft_geom::Affine { m: [0.2, 0.0, 0.0, 0.2, 7.0, 5.0] };
+            let t = sary_geom::Affine { m: [0.2, 0.0, 0.0, 0.2, 7.0, 5.0] };
             let out = place_source(&src, r, &t, Some(&warp)).unwrap();
             let b = out.content_bounds();
             let o = out.read_region(b);

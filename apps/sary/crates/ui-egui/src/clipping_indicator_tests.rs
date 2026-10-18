@@ -4,7 +4,7 @@ use egui::{Event, Modifiers, PointerButton, pos2, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 #[test]
 fn clipping_indicator_points_down_inside_the_existing_row_slot() {
@@ -20,8 +20,8 @@ fn clipping_indicator_points_down_inside_the_existing_row_slot() {
     assert!(paths.iter().flat_map(|path| &path.points).all(|point| slot.contains(*point)), "the marker does not shift or overlap the thumbnail");
 }
 
-fn harness(theme: crate::theme::ThemeKind, width: f32, scale: f32, gpu: bool) -> Harness<'static, PhotocraftApp> {
-    let mut session = photocraft_engine::Session::new();
+fn harness(theme: crate::theme::ThemeKind, width: f32, scale: f32, gpu: bool) -> Harness<'static, SaryApp> {
+    let mut session = sary_engine::Session::new();
     session.execute("prefs.set", json!({"path": "interface.language", "value": "en"})).unwrap();
     session.execute("file.new", json!({"width": 64, "height": 64, "background": "white"})).unwrap();
     let upper = session.execute("layer.newFillLayer.gradient", json!({"from": "#235b49", "to": "#a7d4ab", "angle": 90})).unwrap()["layer"].as_u64().unwrap();
@@ -29,7 +29,7 @@ fn harness(theme: crate::theme::ThemeKind, width: f32, scale: f32, gpu: bool) ->
     let builder = Harness::builder().with_size(vec2(width, 250.0)).with_pixels_per_point(scale);
     let builder = if gpu { builder.wgpu() } else { builder };
     let mut h = builder.build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             if !ui.ctx().fonts(|fonts| fonts.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
             }
@@ -39,14 +39,14 @@ fn harness(theme: crate::theme::ThemeKind, width: f32, scale: f32, gpu: bool) ->
                 super::layers(app, ui);
             });
         },
-        PhotocraftApp::new(session, Default::default()),
+        SaryApp::new(session, Default::default()),
     );
-    PhotocraftApp::setup_context(&h.ctx, theme);
+    SaryApp::setup_context(&h.ctx, theme);
     h.run_steps(4);
     h
 }
 
-fn alt_click_line(h: &mut Harness<'_, PhotocraftApp>) {
+fn alt_click_line(h: &mut Harness<'_, SaryApp>) {
     let rows = crate::layer_row_ui::recorded(&h.ctx);
     assert_eq!(rows.len(), 2);
     let p = pos2(rows[1].row.left() + 100.0, rows[1].row.top());
@@ -83,7 +83,7 @@ fn alt_click_clipping_still_creates_releases_and_undoes_without_moving_rows() {
 #[test]
 #[ignore = "writes synthetic English Layers-panel screenshots for before/after inspection"]
 fn write_clipping_indicator_preview() {
-    let _gpu = photocraft_testkit::gpu_lock();
+    let _gpu = sary_testkit::gpu_lock();
     let output = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../plan/evidence/clipping");
     std::fs::create_dir_all(&output).unwrap();
     for theme in crate::theme::ThemeKind::ALL {
@@ -100,8 +100,8 @@ fn write_clipping_indicator_preview() {
                     .unwrap();
                 let rgba = image.pixels.iter().flat_map(|pixel| pixel.to_array()).collect();
                 let image =
-                    photocraft_codecs::Image::from_u8(image.size[0] as u32, image.size[1] as u32, photocraft_codecs::ChannelLayout::Rgba, rgba).unwrap();
-                let png = photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).unwrap();
+                    sary_codecs::Image::from_u8(image.size[0] as u32, image.size[1] as u32, sary_codecs::ChannelLayout::Rgba, rgba).unwrap();
+                let png = sary_codecs::encode(&image, sary_codecs::Format::Png, &Default::default()).unwrap();
                 std::fs::write(output.join(format!("{}-{width:.0}-{scale:.0}x.png", theme.id())), png).unwrap();
             }
         }

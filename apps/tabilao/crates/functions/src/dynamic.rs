@@ -9,7 +9,7 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
-use gridcraft_core::{Array, CellError, Value, sort_compare};
+use tabilao_core::{Array, CellError, Value, sort_compare};
 
 use crate::util::{A, MAX_CELLS, R, arg, array_val, as_array, has, num, opt_bool, scalar};
 use crate::{Arg, Ctx, FnSpec, VAR};
@@ -1048,7 +1048,7 @@ pub(crate) fn specs() -> Vec<FnSpec> {
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::{CellError, Value};
+    use tabilao_core::{CellError, Value};
 
     use crate::util::testutil::*;
 
@@ -1156,7 +1156,7 @@ mod tests {
         assert_eq!(super::check_output_size(usize::MAX, 2), Err(CellError::Num));
         assert_eq!(super::check_output_size(1_000_000, 10), Ok(()));
         // A 1M-row column beside a 9-wide row: ~1M input cells, but the padded result would be 10,000,010.
-        let tall = Value::from(gridcraft_core::Array::column(vec![nv(1.0); 1_000_001]));
+        let tall = Value::from(tabilao_core::Array::column(vec![nv(1.0); 1_000_001]));
         let wide = row(&[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
         is_err(ev("HSTACK", vec![av(tall), av(wide)]), CellError::Num);
     }

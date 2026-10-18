@@ -268,7 +268,7 @@ const DUMMY_XREF: XRef = XRef(Inner::Dummy);
 pub struct XRef(Inner);
 
 impl XRef {
-    // PdfCraft patch: keep the bounded dictionary-index cache local to this PDF.
+    // Taratasy patch: keep the bounded dictionary-index cache local to this PDF.
     pub(crate) fn with_dict_cache<T>(&self, f: impl FnOnce(&mut DictCache) -> T) -> Option<T> {
         let Inner::Some(repr) = &self.0 else {
             return None;

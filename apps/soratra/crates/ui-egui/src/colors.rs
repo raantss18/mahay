@@ -12,7 +12,7 @@
 
 use egui::{Color32, Id, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use wordcraft_doc::Rgb;
+use soratra_doc::Rgb;
 
 use crate::WordApp;
 use crate::theme::{Tokens, c32};
@@ -248,15 +248,15 @@ pub enum Pick {
 }
 
 fn recent_id() -> Id {
-    Id::new("wordcraft.recentColors")
+    Id::new("soratra.recentColors")
 }
 
 fn request_id() -> Id {
-    Id::new("wordcraft.moreColorsRequest")
+    Id::new("soratra.moreColorsRequest")
 }
 
 fn open_flag_id() -> Id {
-    Id::new("wordcraft.colorsDialogOpen")
+    Id::new("soratra.colorsDialogOpen")
 }
 
 /// Removes and returns a temporary value.
@@ -449,7 +449,7 @@ pub fn show(app: &mut WordApp, ctx: &egui::Context) {
         ctx.data_mut(|m| m.insert_temp(open_flag_id(), false));
         return;
     };
-    let resp = egui::Modal::new(Id::new("wordcraft.colorsDialog")).show(ctx, |ui| body(ui, &mut d));
+    let resp = egui::Modal::new(Id::new("soratra.colorsDialog")).show(ctx, |ui| body(ui, &mut d));
     let mut done = resp.inner;
     if done.is_none() && resp.should_close() {
         done = Some(false);
@@ -732,7 +732,7 @@ fn custom(ui: &mut Ui, d: &mut ColorsDialog) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_engine::Session;
+    use soratra_engine::Session;
 
     #[test]
     fn parse_accepts_hex_short_hex_and_rgb_triples() {
@@ -820,7 +820,7 @@ mod tests {
     /// first in Recent Colors.
     #[test]
     fn custom_font_color_applies_and_joins_recent_colors() {
-        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = WordApp::new(Session::new(soratra_doc::Document::new()), crate::Services::default());
         let _ = app.run("document.setText", json!({"text": "Custom colour"}));
         let _ = app.run("select.all", json!({}));
         let _ = app.run("format.color", json!({"color": "112233"}));

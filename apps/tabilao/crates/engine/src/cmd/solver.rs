@@ -7,7 +7,7 @@
 //! - **Simplex LP**: the model is linearised from `n + 1` evaluations and checked for linearity
 //!   at one more point; then a dense two-phase simplex (Dantzig's rule, Bland's rule when it
 //!   stalls) solves it exactly. Integer and binary constraints use depth-first branch and bound.
-//! - **GRG Nonlinear** (the name Excel's dialog uses): GridCraft's method is *not* a generalised
+//! - **GRG Nonlinear** (the name Excel's dialog uses): Tabilao's method is *not* a generalised
 //!   reduced gradient. It is an augmented-Lagrangian method (Powell–Hestenes–Rockafellar) whose
 //!   inner problems are solved by projected gradient descent with Barzilai–Borwein steps and an
 //!   Armijo line search, on central-difference gradients. Variable bounds are kept by
@@ -24,8 +24,8 @@
 //! saved as hidden sheet-scoped names (`solver_opt`, `solver_adj`, `solver_lhs1`…), so it
 //! travels with the workbook through XLSX.
 
-use gridcraft_core::{CellRef, RangeRef, Value};
-use gridcraft_model::{Cell, DefinedName, Sheet, Workbook};
+use tabilao_core::{CellRef, RangeRef, Value};
+use tabilao_model::{Cell, DefinedName, Sheet, Workbook};
 use serde_json::{Value as Json, json};
 
 use super::whatif::Trial;
@@ -226,7 +226,7 @@ fn cells_of(wb: &Workbook, t: &str, default_sheet: usize, cap: usize) -> Result<
 }
 
 fn num_text(t: &str) -> Option<f64> {
-    gridcraft_core::parse::parse_number_text(t.trim()).filter(|v| v.is_finite())
+    tabilao_core::parse::parse_number_text(t.trim()).filter(|v| v.is_finite())
 }
 
 /// Splits `"B5 <= 10"` / `"B2 int"` into (lhs, relation, rhs).
@@ -371,7 +371,7 @@ fn ref_text(sheet_name: &str, cells: &str) -> String {
         .filter(|x| !x.is_empty())
         .filter_map(|part| {
             let r = RangeRef::parse(split_sheet(part).1.trim())?;
-            let abs = |c: CellRef| format!("${}${}", gridcraft_core::col_to_letters(c.col), c.row as u64 + 1);
+            let abs = |c: CellRef| format!("${}${}", tabilao_core::col_to_letters(c.col), c.row as u64 + 1);
             Some(if r.is_single() { format!("{q}!{}", abs(r.start)) } else { format!("{q}!{}:{}", abs(r.start), abs(r.end)) })
         })
         .collect::<Vec<_>>()
@@ -1652,7 +1652,7 @@ fn report_kinds(cmd: &'static str, p: &Json) -> Result<Option<Vec<ReportKind>>> 
 type Lines = Vec<(u32, u32, Value, bool)>;
 
 fn abs_ref(c: CellRef) -> String {
-    format!("${}${}", gridcraft_core::col_to_letters(c.col), u64::from(c.row) + 1)
+    format!("${}${}", tabilao_core::col_to_letters(c.col), u64::from(c.row) + 1)
 }
 
 /// A cell's name in the reports: the nearest text to its left and the nearest text above it.
@@ -1700,7 +1700,7 @@ struct ReportInput<'a> {
 }
 
 fn title(out: &mut Lines, kind: ReportKind, sheet: &str) -> u32 {
-    out.push((0, 0, Value::text(format!("GridCraft {} Report", kind.title())), true));
+    out.push((0, 0, Value::text(format!("Tabilao {} Report", kind.title())), true));
     out.push((1, 0, Value::text(format!("Worksheet: {sheet}")), false));
     3
 }
@@ -1725,7 +1725,7 @@ fn answer_report(d: &DocState, sh: &Sheet, inp: &ReportInput) -> Lines {
     let vals = read(&mut trial, &inp.solution, &cells);
     let mut at = vals.iter().copied();
     let f1 = at.next().unwrap_or(f64::NAN);
-    let num = |v: f64| if v.is_finite() { Value::number(v) } else { Value::Error(gridcraft_core::CellError::Value) };
+    let num = |v: f64| if v.is_finite() { Value::number(v) } else { Value::Error(tabilao_core::CellError::Value) };
     let mut out = Lines::new();
     let mut r = title(&mut out, ReportKind::Answer, &sh.name);
     out.push((r, 0, Value::text(format!("Result: {}", inp.message)), false));
@@ -1775,7 +1775,7 @@ fn answer_report(d: &DocState, sh: &Sheet, inp: &ReportInput) -> Lines {
                     let b = rhs.get(k).or_else(|| rhs.first()).copied().unwrap_or(f64::NAN);
                     let rhs_text = match rhs_cells {
                         Rhs::Cells(cells) => cells.get(k).or_else(|| cells.first()).map(|c| abs_ref(*c)).unwrap_or_default(),
-                        _ => gridcraft_core::number_to_text(b),
+                        _ => tabilao_core::number_to_text(b),
                     };
                     let slack = (v - b).abs();
                     let binding = rel == Rel::Eq || slack <= PRECISION * (1.0 + b.abs());
@@ -1824,7 +1824,7 @@ fn limits_report(d: &DocState, sh: &Sheet, inp: &ReportInput) -> Result<Lines> {
         ev.budget = ev.evals.saturating_add(1);
         ev.eval(x).map(|p| p.f).unwrap_or(f64::NAN)
     };
-    let num = |v: f64| if v.is_finite() { Value::number(v) } else { Value::Error(gridcraft_core::CellError::Value) };
+    let num = |v: f64| if v.is_finite() { Value::number(v) } else { Value::Error(tabilao_core::CellError::Value) };
     let f = objective_at(&mut ev, x);
     let mut rows = Vec::new();
     for (j, c) in m.vars.iter().enumerate() {
@@ -1845,7 +1845,7 @@ fn limits_report(d: &DocState, sh: &Sheet, inp: &ReportInput) -> Result<Lines> {
                     (num(v), num(objective_at(&mut ev, &p)))
                 }
                 Outcome::Unbounded => (Value::text("Unbounded"), Value::Empty),
-                _ => (Value::Error(gridcraft_core::CellError::NA), Value::Empty),
+                _ => (Value::Error(tabilao_core::CellError::NA), Value::Empty),
             });
         }
         let mut row = vec![Value::text(abs_ref(*c)), Value::text(cell_name(sh, *c)), num(x.get(j).copied().unwrap_or(f64::NAN))];
@@ -1890,15 +1890,15 @@ fn write_reports(s: &mut Session, kinds: &[ReportKind], inp: &ReportInput) -> Re
     let at = inp.model.sheet;
     let count = built.len();
     edit(s, |cx| {
-        let bold = cx.wb.styles.derive(gridcraft_model::StyleId::DEFAULT, |st| st.font.bold = true);
+        let bold = cx.wb.styles.derive(tabilao_model::StyleId::DEFAULT, |st| st.font.bold = true);
         for (i, (name, lines)) in built.into_iter().enumerate() {
             let mut sheet = Sheet::new(name);
             for (r, c, v, b) in lines {
-                let style = if b { bold } else { gridcraft_model::StyleId::DEFAULT };
+                let style = if b { bold } else { tabilao_model::StyleId::DEFAULT };
                 sheet.set_cell(CellRef::new(r, c), Cell { value: v, formula: None, style });
             }
             for (c, w) in [(0u32, 14.0f32), (1, 110.0), (2, 140.0), (3, 120.0), (4, 120.0), (5, 120.0), (6, 120.0), (7, 120.0)] {
-                sheet.cols.insert(c, gridcraft_model::LineInfo { size: Some(w), ..Default::default() });
+                sheet.cols.insert(c, tabilao_model::LineInfo { size: Some(w), ..Default::default() });
             }
             cx.wb.sheets.insert(at + i, std::sync::Arc::new(sheet));
         }
@@ -2109,7 +2109,7 @@ fn run(s: &mut Session, p: &Json) -> Result<Json> {
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::{CellRef, Value};
+    use tabilao_core::{CellRef, Value};
     use serde_json::json;
 
     use crate::Session;
@@ -2333,7 +2333,7 @@ mod tests {
         assert_eq!(d.wb.active().unwrap().name, "Sheet1", "the model's sheet stays active");
         assert_eq!(saved(&s), "solver_opt", "the saved model follows its sheet");
         let a = "Answer Report 1";
-        assert_eq!(at(&s, a, "A1"), Value::text("GridCraft Answer Report"));
+        assert_eq!(at(&s, a, "A1"), Value::text("Tabilao Answer Report"));
         // Objective: $D$6 "Profit Used", from 0 to 36.
         let r = row_of(&s, a, "$D$6");
         assert_eq!(at(&s, a, &format!("C{}", r + 1)), Value::text("Profit Used"));

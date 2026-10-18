@@ -1,5 +1,5 @@
-//! Quality of the Remove Tool's fill (`photocraft_algo::remove::remove_with`) on real photos.
-//! `cargo run --release -p photocraft-engine --example remove_quality -- <images dir> [out dir]`
+//! Quality of the Remove Tool's fill (`sary_algo::remove::remove_with`) on real photos.
+//! `cargo run --release -p sary-engine --example remove_quality -- <images dir> [out dir]`
 //!
 //! The images are `01.jpg`, `02.jpg`, `03.jpg`, `04.jpg` and `06.jpg`: public-domain photos from
 //! Wikimedia Commons, not committed (the list is in `docs/development.md` › Remove Tool quality).
@@ -14,8 +14,8 @@
 //! With an out dir, each case is also written as `<image>-<case>.png`: original | hole | fill.
 use std::time::Instant;
 
-use photocraft_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
-use photocraft_raster::Interrupt;
+use sary_codecs::{ChannelLayout, EncodeOptions, Format, Image, SampleType};
+use sary_raster::Interrupt;
 
 /// A hole: a disc (centre in fractions of the width and height, radius in fractions of the width)
 /// or a line (ends in fractions, width in pixels).
@@ -134,10 +134,10 @@ fn score(orig: &[f32], out: &[f32], hole: &[bool], w: usize, h: usize, ch: usize
     let psnr = if se == 0.0 { 99.0 } else { 10.0 * (n as f64 / se).log10() };
     let (go, gf) = (gradient(orig, w, h, ch), gradient(out, w, h, ch));
     // The edge band: cells within 2 px of the hole's boundary, on both sides.
-    let grown = photocraft_algo::remove::dilate(w, h, hole, 2);
+    let grown = sary_algo::remove::dilate(w, h, hole, 2);
     let inner: Vec<bool> = {
         let outside: Vec<bool> = hole.iter().map(|m| !*m).collect();
-        photocraft_algo::remove::dilate(w, h, &outside, 2).iter().map(|o| !*o).collect()
+        sary_algo::remove::dilate(w, h, &outside, 2).iter().map(|o| !*o).collect()
     };
     let band: Vec<bool> = grown.iter().zip(&inner).map(|(g, i)| *g && !*i).collect();
     let ratio = |m: &[bool]| {
@@ -150,7 +150,7 @@ fn score(orig: &[f32], out: &[f32], hole: &[bool], w: usize, h: usize, ch: usize
 fn write_png(path: &std::path::Path, data: &[f32], w: usize, h: usize, ch: usize) {
     let layout = if ch == 1 { ChannelLayout::Gray } else { ChannelLayout::Rgb };
     let img = Image::from_normalized(w as u32, h as u32, layout, SampleType::U8, data).expect("image");
-    std::fs::write(path, photocraft_codecs::encode(&img, Format::Png, &EncodeOptions::default()).expect("encode")).expect("write");
+    std::fs::write(path, sary_codecs::encode(&img, Format::Png, &EncodeOptions::default()).expect("encode")).expect("write");
 }
 
 fn main() {
@@ -167,7 +167,7 @@ fn main() {
             println!("{name}: missing, skipped");
             continue;
         };
-        let img = photocraft_codecs::decode(&bytes).expect("decode");
+        let img = sary_codecs::decode(&bytes).expect("decode");
         let (w, h) = (img.width() as usize, img.height() as usize);
         let ch = img.layout().channels();
         let px = img.to_normalized();
@@ -186,7 +186,7 @@ fn main() {
                 holed[i * ch..(i + 1) * ch].fill(1.0);
             }
             let t = Instant::now();
-            let out = photocraft_algo::remove::remove_with(ww, wh, ch, &holed, &hole, 0x0052_e30e, &Interrupt::NONE).expect("never cancelled");
+            let out = sary_algo::remove::remove_with(ww, wh, ch, &holed, &hole, 0x0052_e30e, &Interrupt::NONE).expect("never cancelled");
             let ms = t.elapsed().as_secs_f64() * 1000.0;
             let s = score(&orig, &out, &hole, ww, wh, ch);
             println!("{name:<4} {case:<11} {:>7.2} {:>8.3} {:>6.3} {ms:>9.1}", s.psnr, s.texture, s.seam);

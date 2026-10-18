@@ -1,11 +1,11 @@
 kind = "app"
 categories = ["Office"]
-icon = "assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png"
+icon = "assets/app-icon/hicolor/256x256/apps/ai.storyteller.seho.png"
 
 [linux.x86_64]
-asset = "deckcraft-{version}-linux-x86_64.tar.gz"
-exec = "deckcraft-{version}-linux-x86_64/bin/deckcraft"
+asset = "seho-{version}-linux-x86_64.tar.gz"
+exec = "seho-{version}-linux-x86_64/bin/seho"
 
 [linux.aarch64]
-asset = "deckcraft-{version}-linux-aarch64.tar.gz"
-exec = "deckcraft-{version}-linux-aarch64/bin/deckcraft"
+asset = "seho-{version}-linux-aarch64.tar.gz"
+exec = "seho-{version}-linux-aarch64/bin/seho"

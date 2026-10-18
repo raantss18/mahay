@@ -24,12 +24,12 @@ from PIL import Image, ImageCms
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 # Keep in sync with package.sh (volume name) and README.md (layout).
-VOLUME = "GridCraft"
+VOLUME = "Tabilao"
 WIDTH, HEIGHT = 660, 400  # window content, pt; the background's 1x size
 TITLE_BAR = 32
 ICON_SIZE = 128
 PALETTE = 16  # colours in background.tiff
-ICONS = {"GridCraft.app": (326, 205), "Applications": (574, 205)}
+ICONS = {"Tabilao.app": (326, 205), "Applications": (574, 205)}
 # A fixed date for the alias and the colour profile. Finder never matches it against the image
 # (each build is a new volume): it finds the background by volume name and path.
 FIXED_DATE = datetime.datetime(2026, 10, 8, tzinfo=datetime.timezone.utc)
@@ -69,7 +69,7 @@ def write_tiff(svg, out):
         )
     two.encoderinfo = {"dpi": (144, 144)}  # the rest as the first page
     # Opaque 16-colour palette, Deflate: the artwork is three inks plus antialiasing, and a palette
-    # keeps the file under ~100 KB (repository assets must stay small). As PhotoCraft's.
+    # keeps the file under ~100 KB (repository assets must stay small). As Sary's.
     one.save(
         out,
         "TIFF",

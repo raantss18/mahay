@@ -138,7 +138,7 @@ mod tests {
     /// The Read Aloud player and the file browser use the same box, and close from it.
     #[test]
     fn the_player_and_the_file_browser_close_from_the_box() {
-        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         app.session.read_aloud.open = true;
         let mut h = harness(app);
         for _ in 0..4 {
@@ -159,7 +159,7 @@ mod tests {
     /// can't close a dialog by accident.
     #[test]
     fn the_box_is_not_in_the_tab_order() {
-        let mut app = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::new()), crate::Services::default());
         let _ = app.run("ui.dialog", json!({"name": "wordCount"}));
         let mut h = harness(app);
         for _ in 0..4 {

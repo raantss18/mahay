@@ -5,7 +5,7 @@
 //! would also hold if the writer silently normalised a field away.
 #![no_main]
 use libfuzzer_sys::fuzz_target;
-use photocraft_psd::patterns::{parse_pat_file, parse_pattern_block, write_pat_file, write_pattern_block};
+use sary_psd::patterns::{parse_pat_file, parse_pattern_block, write_pat_file, write_pattern_block};
 fuzz_target!(|data: &[u8]| {
     if let Ok(ps) = parse_pattern_block(data) {
         let out = write_pattern_block(&ps).expect("a parsed pattern block must be writable");

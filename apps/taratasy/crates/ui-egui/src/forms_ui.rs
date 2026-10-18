@@ -9,8 +9,8 @@
 use std::collections::HashSet;
 
 use egui::{Color32, CornerRadius, Rect, Stroke, vec2};
-use pdfcraft_engine::{Edit, FieldValue, FormField, FormFieldKind, FormWidget, field_flags, form_appearance};
-use pdfcraft_render::DocInfo;
+use taratasy_engine::{Edit, FieldValue, FormField, FormFieldKind, FormWidget, field_flags, form_appearance};
+use taratasy_render::DocInfo;
 
 use crate::canvas::{DocView, PageXform};
 use crate::theme::Tokens;
@@ -56,7 +56,7 @@ pub struct FormView {
     /// A message for the app to show (e.g. "buttons run JavaScript").
     pub notice: Option<FormNotice>,
     /// A push button was clicked: (its field name, what it does).
-    pub button: Option<(String, pdfcraft_engine::form_scripts::ButtonAction)>,
+    pub button: Option<(String, taratasy_engine::form_scripts::ButtonAction)>,
 }
 
 /// A form message for the app to show, with document data kept separate so the visible
@@ -253,7 +253,7 @@ const MONTHS: [&str; 12] = ["January", "February", "March", "April", "May", "Jun
 /// The date picker under a focused date field. Returns the picked date, formatted with the
 /// field's own format.
 fn calendar(ctx: &egui::Context, view: &mut DocView, field: egui::Rect, fmt: &str, today: (i64, u32, u32)) -> Option<String> {
-    use pdfcraft_engine::form_scripts::{DateTime, format_date, parse_date};
+    use taratasy_engine::form_scripts::{DateTime, format_date, parse_date};
     let fx = view.forms.focus.as_mut()?;
     let (mut y, mut m) = fx.calendar.unwrap_or_else(|| match parse_date(&fx.text, fmt) {
         Some(d) => (d.y, d.m),
@@ -379,7 +379,7 @@ pub fn field_text_size(painter: &egui::Painter, f: &FormField, w: &FormWidget, t
         // Wrapped as the editor and the page preview wrap it.
         let wrap = width.max(1.0) as f32;
         let wrapped_height = |size: f64| f64::from(painter.layout(fit.to_string(), font(size), Color32::BLACK, wrap).size().y);
-        pdfcraft_engine::field_auto_text_size_by(width, height, f.has(field_flags::MULTILINE), line_width, wrapped_height)
+        taratasy_engine::field_auto_text_size_by(width, height, f.has(field_flags::MULTILINE), line_width, wrapped_height)
     });
     size.min(300.0) as f32
 }
@@ -558,7 +558,7 @@ pub(crate) fn overlay(ctx: &egui::Context, view: &mut DocView, info: &DocInfo, f
                 }
             });
             // Date fields: a calendar under the field (Acrobat's date picker).
-            if let pdfcraft_engine::form_scripts::Format::Date(fmt) = &f.actions.format
+            if let taratasy_engine::form_scripts::Format::Date(fmt) = &f.actions.format
                 && let Some(picked) = calendar(ctx, view, rect, fmt, today)
             {
                 if let Some(fx) = view.forms.focus.as_mut() {

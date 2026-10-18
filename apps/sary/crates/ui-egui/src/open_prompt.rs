@@ -6,10 +6,10 @@
 
 use std::sync::Arc;
 
-use photocraft_doc::{ColorMode, Document};
+use sary_doc::{ColorMode, Document};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// The field that marks a prompt as this module's.
 const FIELD: &str = "__heldOpen";
@@ -26,7 +26,7 @@ pub struct Held {
     pub bytes: Option<Arc<Vec<u8>>>,
     /// The tab position a reopened file keeps.
     pub slot: Option<usize>,
-    /// The profile question ([`photocraft_engine::color_cmds::ColorState::open_question`]), or
+    /// The profile question ([`sary_engine::color_cmds::ColorState::open_question`]), or
     /// `None` to open without asking.
     pub question: Option<Value>,
     /// The Color Settings policy was already applied (a background open added it before it had
@@ -35,18 +35,18 @@ pub struct Held {
 }
 
 /// Whether a file that just finished reading has to wait: one earlier in the queue does.
-pub fn waiting(app: &PhotocraftApp) -> bool {
+pub fn waiting(app: &SaryApp) -> bool {
     !app.held_opens.is_empty()
 }
 
 /// Opens `held` now, or queues it behind the file whose prompt is up.
-pub fn arrive(app: &mut PhotocraftApp, held: Held) {
+pub fn arrive(app: &mut SaryApp, held: Held) {
     app.held_opens.push_back(held);
     advance(app);
 }
 
 /// Opens queued files in order until one needs its prompt, which is shown if it isn't yet.
-fn advance(app: &mut PhotocraftApp) {
+fn advance(app: &mut SaryApp) {
     while let Some(front) = app.held_opens.front() {
         if front.question.is_some() {
             if !app.ui.dialogs.iter().any(|d| d.fields.contains_key(FIELD)) {
@@ -62,7 +62,7 @@ fn advance(app: &mut PhotocraftApp) {
 }
 
 /// Shows the Embedded Profile Mismatch (or missing profile) prompt for the first queued file.
-fn show(app: &mut PhotocraftApp) {
+fn show(app: &mut SaryApp) {
     let Some(front) = app.held_opens.front() else { return };
     let Some(q) = &front.question else { return };
     // The mode reads as the catalogs name it (French "RVB"); the file name goes in last, so
@@ -96,10 +96,10 @@ fn show(app: &mut PhotocraftApp) {
 
 /// The Color Settings policy that answers this mode's files when Ask On Mismatch is off.
 fn policy_key(mode: ColorMode) -> Option<&'static str> {
-    match photocraft_engine::color_cmds::mode_space(mode) {
-        photocraft_cms::ColorSpace::Rgb => Some("policyRgb"),
-        photocraft_cms::ColorSpace::Cmyk => Some("policyCmyk"),
-        photocraft_cms::ColorSpace::Gray => Some("policyGray"),
+    match sary_engine::color_cmds::mode_space(mode) {
+        sary_cms::ColorSpace::Rgb => Some("policyRgb"),
+        sary_cms::ColorSpace::Cmyk => Some("policyCmyk"),
+        sary_cms::ColorSpace::Gray => Some("policyGray"),
         _ => None,
     }
 }
@@ -111,7 +111,7 @@ pub fn owns(fields: &serde_json::Map<String, Value>) -> bool {
 
 /// The prompt's answer: `Some(action)` (OK) opens the first queued file with it and moves on to
 /// the next; `None` (Cancel) drops every queued file and stops the reads still running.
-pub fn answer(app: &mut PhotocraftApp, action: Option<&str>) -> Result<Value, String> {
+pub fn answer(app: &mut SaryApp, action: Option<&str>) -> Result<Value, String> {
     let Some(action) = action else {
         let dropped = app.held_opens.len();
         let name = app.held_opens.front().map(|h| h.name.clone()).unwrap_or_default();
@@ -133,7 +133,7 @@ pub fn answer(app: &mut PhotocraftApp, action: Option<&str>) -> Result<Value, St
 /// mode and Ask On Mismatch turns off, so files read from now on open without asking. Files
 /// already waiting with a mismatch in the same mode were asked before that and get the same
 /// answer; any other question still asks.
-pub fn answer_remembering(app: &mut PhotocraftApp, action: &str) -> Result<Value, String> {
+pub fn answer_remembering(app: &mut SaryApp, action: &str) -> Result<Value, String> {
     let Some(key) = app.held_opens.front().and_then(|h| policy_key(h.doc.mode)) else { return answer(app, Some(action)) };
     let policy = match action {
         "convert" => "convert",
@@ -156,7 +156,7 @@ pub fn answer_remembering(app: &mut PhotocraftApp, action: &str) -> Result<Value
 
 /// Opens a queued file, applying `action` (the prompt's answer) or else the Color Settings
 /// policy, then does what any open does afterwards.
-fn open(app: &mut PhotocraftApp, held: Held, action: Option<&str>) -> Result<Value, String> {
+fn open(app: &mut SaryApp, held: Held, action: Option<&str>) -> Result<Value, String> {
     let Held { mut doc, read_only, name, path, warnings, bytes, slot, question, policy_applied } = held;
     let index = if question.is_some() || policy_applied {
         if let Some(action) = action

@@ -41,7 +41,7 @@ pub(super) fn prepare(pins: &[SpinPin]) -> Option<Vec<Plan>> {
 
 /// Fixed channels keep the bilinear accumulators in registers. Tap and multiply order
 /// stay identical to add_sample_premul; alpha is still multiplied by the tap weight first.
-pub(super) fn sample<const N: usize>(src: &crate::image::Image, x: f32, y: f32, clip: photocraft_geom::Rect, alpha: bool, acc: &mut [f32; 8]) {
+pub(super) fn sample<const N: usize>(src: &crate::image::Image, x: f32, y: f32, clip: sary_geom::Rect, alpha: bool, acc: &mut [f32; 8]) {
     if !x.is_finite() || !y.is_finite() || clip.is_empty() {
         return;
     }

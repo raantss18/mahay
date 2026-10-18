@@ -3,7 +3,7 @@
 # keep Cargo's standalone lock resolution from modifying the vendored source.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-test_root=$(mktemp -d "${TMPDIR:-/tmp}/craft-pdf-backends.XXXXXX")
+test_root=$(mktemp -d "${TMPDIR:-/tmp}/mahay-pdf-backends.XXXXXX")
 trap 'rm -rf "$test_root"' EXIT
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$root/target}"
 patches=()

@@ -10,7 +10,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Photoshop draws a selected guide in this blue, whatever the guide's own colour.
 pub const SELECTED_COLOR: egui::Color32 = egui::Color32::from_rgb(0x00, 0x00, 0xff);
@@ -25,7 +25,7 @@ pub struct SelectedGuide {
 
 /// The selected guide's orientation and index in the active document, while guides can be
 /// interacted with (shown, unlocked).
-pub fn selected(app: &PhotocraftApp) -> Option<(bool, usize)> {
+pub fn selected(app: &SaryApp) -> Option<(bool, usize)> {
     let sel = app.ui.selected_guide?;
     if !interactive(app) || app.session.active_index() != Some(sel.doc) {
         return None;
@@ -36,29 +36,29 @@ pub fn selected(app: &PhotocraftApp) -> Option<(bool, usize)> {
 }
 
 /// Is the guide at `position` the selected one (drawn blue)?
-pub fn is_selected(app: &PhotocraftApp, vertical: bool, position: f64) -> bool {
+pub fn is_selected(app: &SaryApp, vertical: bool, position: f64) -> bool {
     selected(app).is_some() && app.ui.selected_guide.is_some_and(|s| s.vertical == vertical && s.position == position)
 }
 
 /// Guides take clicks only while they're shown and unlocked (as `rulers::guide_at` requires).
-fn interactive(app: &PhotocraftApp) -> bool {
+fn interactive(app: &SaryApp) -> bool {
     app.ui.extras.guides && app.ui.view.shows(app.ui.view.show.canvas_guides) && !app.ui.extras.lock_guides
 }
 
 /// Select guide `index` of the active document.
-pub fn select(app: &mut PhotocraftApp, vertical: bool, index: usize) {
+pub fn select(app: &mut SaryApp, vertical: bool, index: usize) {
     let Some(doc) = app.session.active_index() else { return };
     let Some(guides) = app.session.active().map(|st| &st.doc.guides) else { return };
     let list = if vertical { &guides.vertical } else { &guides.horizontal };
     app.ui.selected_guide = list.get(index).map(|position| SelectedGuide { doc, vertical, position: *position });
 }
 
-pub fn clear(app: &mut PhotocraftApp) {
+pub fn clear(app: &mut SaryApp) {
     app.ui.selected_guide = None;
 }
 
 /// Delete the selected guide (Delete, Clear Selected Guides). False when no guide is selected.
-pub fn delete_selected(app: &mut PhotocraftApp) -> Result<bool, String> {
+pub fn delete_selected(app: &mut SaryApp) -> Result<bool, String> {
     let Some((vertical, index)) = selected(app) else { return Ok(false) };
     app.run("view.deleteGuide", delete_params(vertical, index))?;
     clear(app);
@@ -72,7 +72,7 @@ pub fn delete_params(vertical: bool, index: usize) -> serde_json::Value {
 /// ⌥-click on guide `index`: turn it, so a vertical guide becomes horizontal through the point
 /// clicked (`at`, document pixels) and the other way round, as one undoable step (`view.editGuide`);
 /// it stays selected.
-pub fn flip(app: &mut PhotocraftApp, vertical: bool, index: usize, at: [f64; 2]) {
+pub fn flip(app: &mut SaryApp, vertical: bool, index: usize, at: [f64; 2]) {
     let (from, to) = if vertical { ("vertical", "horizontal") } else { ("horizontal", "vertical") };
     let position = if vertical { at[1] } else { at[0] };
     let params = json!({"orientation": from, "index": index, "newOrientation": to, "position": (position * 1000.0).round() / 1000.0});
@@ -89,7 +89,7 @@ pub fn flip(app: &mut PhotocraftApp, vertical: bool, index: usize, at: [f64; 2])
 
 /// Delete or Backspace with no modifiers while a guide is selected deletes the guide, before Edit ›
 /// Clear can reach the pixels, as in Photoshop.
-pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     use crate::shortcut_dispatch::Focus;
     // Text fields and widgets that delete with these keys themselves keep them (#1534).
     if selected(app).is_none() || app.ui.text_edit.is_some() || matches!(Focus::of(ctx), Focus::Text | Focus::DeletingWidget) {

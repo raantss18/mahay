@@ -48,7 +48,7 @@ pub(crate) struct CursorLifecycle;
 
 impl egui::plugin::Plugin for CursorLifecycle {
     fn debug_name(&self) -> &'static str {
-        "PhotoCraft tool cursor"
+        "Sary tool cursor"
     }
 
     fn on_begin_pass(&mut self, ui: &mut egui::Ui) {
@@ -105,12 +105,12 @@ fn native(ctx: &egui::Context) -> bool {
 
 /// Mark this window as a Wayland surface (or not), for [`native`]; the shell calls it every pass.
 pub(crate) fn set_wayland(ctx: &egui::Context, wayland: bool) {
-    ctx.data_mut(|d| d.insert_temp(egui::Id::new("photocraft-cursor-wayland"), wayland));
+    ctx.data_mut(|d| d.insert_temp(egui::Id::new("sary-cursor-wayland"), wayland));
 }
 
 /// A Wayland window whose scale is not 1, where winit's cursor bitmaps are unreliable.
 fn scaled_wayland(ctx: &egui::Context) -> bool {
-    let wayland = cfg!(target_os = "linux") && ctx.data(|d| d.get_temp::<bool>(egui::Id::new("photocraft-cursor-wayland"))).unwrap_or(false);
+    let wayland = cfg!(target_os = "linux") && ctx.data(|d| d.get_temp::<bool>(egui::Id::new("sary-cursor-wayland"))).unwrap_or(false);
     wayland && ctx.native_pixels_per_point().unwrap_or_else(|| ctx.pixels_per_point() / ctx.zoom_factor()) != 1.0
 }
 
@@ -189,7 +189,7 @@ fn show(painter: &Painter, at: Pos2, shape: Shape) -> CursorIcon {
 }
 
 fn cached_image(ctx: &egui::Context, shape: &Shape, scale: f32) -> Option<CustomCursorImage> {
-    let id = egui::Id::new("photocraft-tool-cursor");
+    let id = egui::Id::new("sary-tool-cursor");
     if let Some(cached) = ctx.data(|d| d.get_temp::<Cached>(id))
         && cached.shape == *shape
         && cached.scale == scale

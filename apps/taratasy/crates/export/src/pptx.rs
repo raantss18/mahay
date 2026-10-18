@@ -714,7 +714,7 @@ mod tests {
     fn pptx_opens_in_libreoffice() {
         let p = sample_page();
         let bytes = pptx(&[p], "LibreOffice Check");
-        let dir = std::env::temp_dir().join(format!("pdfcraft-pptx-lo-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-pptx-lo-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         let _ = std::fs::create_dir_all(&dir);
         let pptx_path = dir.join("test.pptx");

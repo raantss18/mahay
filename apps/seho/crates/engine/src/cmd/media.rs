@@ -2,7 +2,7 @@
 //! requests the UI host carries out with its player ([`crate::UiRequest::Media`]); the host reports
 //! back through [`Session::media_status`], which `media.info` returns with the probe.
 
-use deckcraft_model::{MediaClip, ShapeId, ShapeKind};
+use seho_model::{MediaClip, ShapeId, ShapeKind};
 use serde_json::{Value, json};
 
 use super::*;
@@ -84,7 +84,7 @@ fn seek(s: &mut Session, p: &Value) -> Result<Value> {
     request(s, p, "media.seek", "seek", Some(ms))
 }
 
-pub(crate) fn probe_json(info: &deckcraft_media::MediaInfo) -> Value {
+pub(crate) fn probe_json(info: &seho_media::MediaInfo) -> Value {
     json!({
         "container": info.container,
         "durationMs": info.duration_ms,
@@ -98,7 +98,7 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
     let (id, m) = target(s, p, "media.info")?;
     let st = s.doc()?;
     let item = st.doc.media(m.media).ok_or_else(|| EngineError::Other("the media data is missing".into()))?;
-    let probe = deckcraft_media::probe(&item.data).map(|i| probe_json(&i)).unwrap_or_else(|e| json!({"error": e.to_string()}));
+    let probe = seho_media::probe(&item.data).map(|i| probe_json(&i)).unwrap_or_else(|e| json!({"error": e.to_string()}));
     Ok(json!({
         "id": id,
         "name": item.name,
@@ -120,8 +120,8 @@ fn info(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// A poster frame PNG for video bytes at `ms`.
-pub(crate) fn poster_png(bytes: &deckcraft_media::Bytes, ms: u64) -> Option<Vec<u8>> {
-    match deckcraft_media::poster_png(bytes, ms as f64 / 1000.0) {
+pub(crate) fn poster_png(bytes: &seho_media::Bytes, ms: u64) -> Option<Vec<u8>> {
+    match seho_media::poster_png(bytes, ms as f64 / 1000.0) {
         Ok(png) => Some(png),
         Err(e) => {
             log::info!("no poster frame: {e}");

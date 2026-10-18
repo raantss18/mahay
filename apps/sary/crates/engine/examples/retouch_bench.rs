@@ -1,13 +1,13 @@
 //! Timing: Healing Brush and Spot Healing dab cost, and Patch and Content-Aware Move cost, on a
 //! 6016×6016 document.
-//! `cargo run --release -p photocraft-engine --example retouch_bench [side] [depth]`
+//! `cargo run --release -p sary-engine --example retouch_bench [side] [depth]`
 //!
 //! Each measurement is one single-dab stroke through the full command path (`Session::execute`:
 //! undo snapshot, source sampling, solve/fill, composite), on a textured area of the canvas.
 use std::time::Instant;
 
-use photocraft_engine::Session;
-use photocraft_geom::Rect;
+use sary_engine::Session;
+use sary_geom::Rect;
 use serde_json::json;
 
 fn main() {
@@ -27,7 +27,7 @@ fn main() {
                 let blemish = (x % 400 - 200).abs() < 8 && (y % 400 - 200).abs() < 8;
                 let v =
                     if blemish { [0.05, 0.05, 0.05, 1.0] } else { [0.3 + 0.0002 * x as f32 + n, 0.4 + ((x + y) as f32 * 0.01).sin() * 0.1 + n, 0.5 + n, 1.0] };
-                data.extend(photocraft_raster::from_rgba(&fmt, v));
+                data.extend(sary_raster::from_rgba(&fmt, v));
             }
         }
         surf.write_region(area, &data);
@@ -67,7 +67,7 @@ fn main() {
         println!("patch ellipse {size:>4}×{size:<4}: {:>8.1?}", t.elapsed());
         // The Patch Tool's live preview of the same patch (coarse solve, 128² cells, at 100 % zoom).
         let t = Instant::now();
-        photocraft_engine::retouch_cmds::patch_preview(&s, &json!({"offset": [300, 200]}), 128 * 128, 1).unwrap();
+        sary_engine::retouch_cmds::patch_preview(&s, &json!({"offset": [300, 200]}), 128 * 128, 1).unwrap();
         println!("patch preview {size:>4}×{size:<4}: {:>8.1?}", t.elapsed());
     }
     // Content-Aware Move: the same selections dragged 300 px, then undone (both fills: the edge band

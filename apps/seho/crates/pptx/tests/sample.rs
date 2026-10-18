@@ -1,25 +1,25 @@
-//! The engine's sample deck: export, re-import, compare. Set `DECKCRAFT_PPTX_OUT=<dir>` to also
+//! The engine's sample deck: export, re-import, compare. Set `SEHO_PPTX_OUT=<dir>` to also
 //! write the exported file there (for checking it in other applications).
 
-use deckcraft_engine::Session;
-use deckcraft_model::{Presentation, ShapeKind};
+use seho_engine::Session;
+use seho_model::{Presentation, ShapeKind};
 
 fn sample() -> Presentation {
     let mut s = Session::new();
-    deckcraft_engine::sample::open_sample(&mut s).expect("sample");
+    seho_engine::sample::open_sample(&mut s).expect("sample");
     s.doc().expect("doc").doc.as_ref().clone()
 }
 
 #[test]
 fn sample_deck_round_trips() {
     let p = sample();
-    let bytes = deckcraft_pptx::export(&p).expect("export");
-    if let Ok(dir) = std::env::var("DECKCRAFT_PPTX_OUT") {
+    let bytes = seho_pptx::export(&p).expect("export");
+    if let Ok(dir) = std::env::var("SEHO_PPTX_OUT") {
         std::fs::create_dir_all(&dir).ok();
         std::fs::write(format!("{dir}/sample.pptx"), &bytes).expect("write");
     }
-    assert!(deckcraft_pptx::sniff(&bytes));
-    let q = deckcraft_pptx::import(&bytes).expect("import");
+    assert!(seho_pptx::sniff(&bytes));
+    let q = seho_pptx::import(&bytes).expect("import");
     assert_eq!(q.slides.len(), p.slides.len());
     assert!(q.validate().is_empty(), "{:?}", q.validate());
     for (a, b) in p.slides.iter().zip(q.slides.iter()) {
@@ -62,26 +62,26 @@ fn sample_deck_round_trips() {
         assert_eq!(a.slides.len(), b.slides.len());
     }
     // A second round trip is stable.
-    let bytes2 = deckcraft_pptx::export(&q).expect("export 2");
-    let r = deckcraft_pptx::import(&bytes2).expect("import 2");
+    let bytes2 = seho_pptx::export(&q).expect("export 2");
+    let r = seho_pptx::import(&bytes2).expect("import 2");
     assert_eq!(r.slides.len(), q.slides.len());
 }
 
-/// Reads any file named by `DECKCRAFT_PPTX_IN` (for checking decks made by other applications).
+/// Reads any file named by `SEHO_PPTX_IN` (for checking decks made by other applications).
 #[test]
 fn external_file_imports() {
-    let Ok(path) = std::env::var("DECKCRAFT_PPTX_IN") else { return };
+    let Ok(path) = std::env::var("SEHO_PPTX_IN") else { return };
     let bytes = std::fs::read(&path).expect("read");
-    let p = deckcraft_pptx::import(&bytes).expect("import");
+    let p = seho_pptx::import(&bytes).expect("import");
     println!("{path}: {} slides, {} masters, {} layouts", p.slides.len(), p.masters.len(), p.masters.iter().map(|m| m.layouts.len()).sum::<usize>());
     for (i, s) in p.slides.iter().enumerate() {
         let kinds: Vec<&str> = s.shapes.iter().map(|s| s.kind_name()).collect();
         println!("  slide {}: title {:?} shapes {:?} layout {:?}", i + 1, s.title(), kinds, p.layout(s.layout).map(|(_, l)| l.name.clone()));
     }
     assert!(p.validate().is_empty());
-    let again = deckcraft_pptx::import(&deckcraft_pptx::export(&p).expect("export")).expect("reimport");
+    let again = seho_pptx::import(&seho_pptx::export(&p).expect("export")).expect("reimport");
     assert_eq!(again.slides.len(), p.slides.len());
-    if let Ok(dir) = std::env::var("DECKCRAFT_PPTX_OUT") {
-        std::fs::write(format!("{dir}/reexport.pptx"), deckcraft_pptx::export(&p).expect("export")).expect("write");
+    if let Ok(dir) = std::env::var("SEHO_PPTX_OUT") {
+        std::fs::write(format!("{dir}/reexport.pptx"), seho_pptx::export(&p).expect("export")).expect("write");
     }
 }

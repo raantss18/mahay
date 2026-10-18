@@ -10,7 +10,7 @@
 
 mod common;
 use common::*;
-use photocraft_codecs::*;
+use sary_codecs::*;
 use std::sync::LazyLock;
 
 /// A file of `corpus/heif/`.

@@ -6,12 +6,12 @@ use egui::{Modifiers, PointerButton, Pos2, Rect, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::Tool;
 
-fn harness() -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness() -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 200, "height": 100, "background": "transparent"})).unwrap();
     app.run("tools.setColors", json!({"foreground": "#000000"})).unwrap();
     app.ui.tool = Tool::Pencil;
@@ -19,7 +19,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
     app.run("tools.setBrush", json!({"brush": {"size": 1, "smoothing": {"amount": 0.0}}})).unwrap();
     app.sync_views();
     let mut h = Harness::builder().with_size(vec2(1200.0, 800.0)).with_step_dt(1.0 / 60.0).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -28,25 +28,25 @@ fn harness() -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     h
 }
 
-fn menu(h: &mut Harness<'static, PhotocraftApp>, id: &str, params: serde_json::Value) {
+fn menu(h: &mut Harness<'static, SaryApp>, id: &str, params: serde_json::Value) {
     let ctx = h.ctx.clone();
     crate::menus::invoke(h.state_mut(), &ctx, id, params).unwrap();
     h.run_steps(3);
 }
 
 /// The image's screen rectangle, as the canvas draws it.
-fn image_rect(h: &Harness<'static, PhotocraftApp>) -> Rect {
+fn image_rect(h: &Harness<'static, SaryApp>) -> Rect {
     let app = h.state();
     let doc = &app.session.active().unwrap().doc;
     ViewXform::active(app).unwrap().doc_rect(doc.bounds())
 }
 
-fn click(h: &mut Harness<'static, PhotocraftApp>, pos: Pos2) {
+fn click(h: &mut Harness<'static, SaryApp>, pos: Pos2) {
     h.event(egui::Event::PointerMoved(pos));
     h.run_steps(1);
     for pressed in [true, false] {
@@ -55,7 +55,7 @@ fn click(h: &mut Harness<'static, PhotocraftApp>, pos: Pos2) {
     }
 }
 
-fn alpha(h: &Harness<'static, PhotocraftApp>, x: i32, y: i32) -> f32 {
+fn alpha(h: &Harness<'static, SaryApp>, x: i32, y: i32) -> f32 {
     let st = h.state().session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap().rgba(x, y)[3]
 }
@@ -65,9 +65,9 @@ fn the_mapping_stretches_document_x_and_inverts_exactly() {
     let rect = Rect::from_min_size(Pos2::new(10.0, 20.0), vec2(800.0, 600.0));
     let square = ViewXform { rect, zoom: 1.5, center: [100.0, 50.0], flip: false, rotation: 0.0, aspect: 1.0 };
     let wide = ViewXform { aspect: 2.0, ..square };
-    let r = wide.doc_rect(photocraft_geom::Rect::new(0, 0, 200, 100));
+    let r = wide.doc_rect(sary_geom::Rect::new(0, 0, 200, 100));
     assert!((r.width() - 600.0).abs() < 1e-3 && (r.height() - 150.0).abs() < 1e-3, "{r:?}");
-    assert_eq!(r.center(), square.doc_rect(photocraft_geom::Rect::new(0, 0, 200, 100)).center());
+    assert_eq!(r.center(), square.doc_rect(sary_geom::Rect::new(0, 0, 200, 100)).center());
     assert!((wide.zoom_x() - 3.0).abs() < 1e-6);
     for flip in [false, true] {
         for rotation in [0.0, 30.0, -90.0] {
@@ -127,7 +127,7 @@ fn a_click_paints_the_pixel_drawn_under_the_pointer() {
 
 #[test]
 fn fit_and_fill_on_screen_use_the_stretched_width() {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 1000, "height": 500})).unwrap();
     let doc = app.session.active().unwrap().doc.clone();
     // Fit keeps 20 points of margin per side: 1000 points across for 1000 px wide, 2000 shown.

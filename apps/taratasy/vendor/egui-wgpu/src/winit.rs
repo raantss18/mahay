@@ -17,7 +17,7 @@ struct SurfaceState {
     alpha_mode: wgpu::CompositeAlphaMode,
     width: u32,
     height: u32,
-    // PdfCraft patch (#577): `width` and `height` are the size the surface is configured at,
+    // Taratasy patch (#577): `width` and `height` are the size the surface is configured at,
     // which `surface_fit` keeps within the device's `max_texture_dimension_2d`; these are the
     // window's own size, and `render_scale` is how much smaller the surface is drawn.
     window_width: u32,
@@ -28,7 +28,7 @@ struct SurfaceState {
     needs_recreate: bool,
 }
 
-/// PdfCraft patch (#577): the size to configure a window's surface at, and the factor egui
+/// Taratasy patch (#577): the size to configure a window's surface at, and the factor egui
 /// draws it at, so that neither side exceeds `max_side` (the device's
 /// `max_texture_dimension_2d`).
 ///
@@ -63,14 +63,14 @@ pub fn surface_fit(width: u32, height: u32, max_side: u32) -> (u32, u32, f32) {
     (fit(width), fit(height), scale as f32)
 }
 
-/// PdfCraft patch (#519): runs `f` and returns an error it raises on `device`, instead of
+/// Taratasy patch (#519): runs `f` and returns an error it raises on `device`, instead of
 /// handing it to wgpu's uncaptured-error handler, which panics by default.
 ///
 /// eframe configures a window's surface before the app is created, so no app code can install
 /// a handler in time, and a surface the device can't configure closed the app before its window
 /// appeared: wgpu's GL backend on a 2015 Intel driver timed out waiting for the GPU to go idle
 /// (`ConfigureSurfaceError::GpuWaitTimeout`). Returned as an error instead, eframe returns
-/// `Error::Wgpu` and the app can fall back (PdfCraft retries with OpenGL).
+/// `Error::Wgpu` and the app can fall back (Taratasy retries with OpenGL).
 ///
 /// Validation, out-of-memory and internal errors are caught, one scope each; each scope keeps
 /// the first error of its kind, and a validation error is returned before an out-of-memory one,
@@ -231,7 +231,7 @@ impl Painter {
         };
 
         let surface = self.instance.create_surface(Arc::clone(window))?;
-        // PdfCraft patch (#577): the window's size; `width` and `height` may have been fitted.
+        // Taratasy patch (#577): the window's size; `width` and `height` may have been fitted.
         self.install_surface(
             surface,
             viewport_id,
@@ -318,7 +318,7 @@ impl Painter {
         viewport_id: ViewportId,
         size: winit::dpi::PhysicalSize<u32>,
     ) -> Result<(), crate::WgpuError> {
-        // PdfCraft patch (#519): the device is kept for `catch_errors` below.
+        // Taratasy patch (#519): the device is kept for `catch_errors` below.
         let render_state = match self.render_state.take() {
             Some(render_state) => render_state,
             None => {
@@ -328,7 +328,7 @@ impl Painter {
         };
         let device = render_state.device.clone();
         self.render_state = Some(render_state);
-        // PdfCraft patch (#519): a surface the device can't configure is returned as an error
+        // Taratasy patch (#519): a surface the device can't configure is returned as an error
         // instead of wgpu's default handler panicking; for the root window at start-up, eframe
         // returns it as `Error::Wgpu` before the app is created, and the app can fall back.
         // Nothing is kept for the window. A window whose size is zero here is first configured
@@ -383,7 +383,7 @@ impl Painter {
                 wgpu::CompositeAlphaMode::Auto
             }
         };
-        // PdfCraft patch (#577): store the fitted size, so nothing configures the window's own.
+        // Taratasy patch (#577): store the fitted size, so nothing configures the window's own.
         // `render_scale` starts at 1 so that the resize below, which sets it, logs the fit once.
         let (fit_width, fit_height, _) = surface_fit(width, height, self.max_surface_side());
         self.surfaces.insert(
@@ -423,7 +423,7 @@ impl Painter {
             .map(|rs| rs.device.limits().max_texture_dimension_2d as usize)
     }
 
-    /// PdfCraft patch (#577): the largest side a surface may be configured at, or no limit
+    /// Taratasy patch (#577): the largest side a surface may be configured at, or no limit
     /// before the device exists (nothing is configured then).
     fn max_surface_side(&self) -> u32 {
         self.render_state
@@ -439,7 +439,7 @@ impl Painter {
     ) {
         profiling::function_scope!();
 
-        // PdfCraft patch (#577): configure the surface, and size the depth and MSAA textures,
+        // Taratasy patch (#577): configure the surface, and size the depth and MSAA textures,
         // within the device's limit; `surface_fit` keeps a non-zero side non-zero.
         let max_side = self.max_surface_side();
         let (window_width, window_height) = (width_in_pixels.get(), height_in_pixels.get());
@@ -679,7 +679,7 @@ impl Painter {
                 });
 
         // Upload all resources for the GPU.
-        // PdfCraft patch (#577): a surface fitted within the GPU's limit is drawn smaller.
+        // Taratasy patch (#577): a surface fitted within the GPU's limit is drawn smaller.
         let screen_descriptor = renderer::ScreenDescriptor {
             size_in_pixels: [surface_state.width, surface_state.height],
             pixels_per_point: pixels_per_point * surface_state.render_scale,

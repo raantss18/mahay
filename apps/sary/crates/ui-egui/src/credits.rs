@@ -1,13 +1,13 @@
 //! The About window's credits: every contributor (GitHub login always; display and real names only
 //! with recorded consent) and the AI models that helped. The tables are baked into the binary by
-//! build.rs from contributors/contributors.json (craftrules standards/contributors.md); nothing is
+//! build.rs from contributors/contributors.json (mahay-rules standards/contributors.md); nothing is
 //! read at run time. UI strings go through `tl!` (column abbreviations like `+LOC` stay as they are).
 
 use std::cmp::Ordering;
 
 use egui::RichText;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Contributor {
@@ -248,12 +248,12 @@ const CELL_PAD: f32 = 6.0;
 const NAME_MIN_W: f32 = 110.0;
 
 /// About ▸ Contributors: a name toggle, a sort, and the list as a grab bag or a table.
-pub fn contributors_ui(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn contributors_ui(app: &mut SaryApp, ui: &mut egui::Ui) {
     contributors_in(app, ui, CONTRIBUTORS, TOTAL_COMMITS);
 }
 
 /// [`contributors_ui`] over a given list (tests pass their own).
-fn contributors_in(app: &mut PhotocraftApp, ui: &mut egui::Ui, contributors: &[Contributor], total_commits: u64) {
+fn contributors_in(app: &mut SaryApp, ui: &mut egui::Ui, contributors: &[Contributor], total_commits: u64) {
     let id = egui::Id::new("credits_view");
     let mut v = ui.data_mut(|d| d.get_temp::<View>(id)).unwrap_or_default();
     ui.horizontal_wrapped(|ui| {
@@ -330,7 +330,7 @@ fn table_height(ui: &egui::Ui, rows: usize) -> f32 {
 /// A contributor's name, linking to their GitHub profile. Routes through [`crate::links::open`]
 /// (the platform browser service) rather than `ui.hyperlink_to`'s `ctx.open_url`, which the
 /// desktop build can't rely on (egui_winit needs its "links" feature, which we don't enable).
-fn link(app: &mut PhotocraftApp, ui: &mut egui::Ui, c: &Contributor, names: NameMode) -> egui::Response {
+fn link(app: &mut SaryApp, ui: &mut egui::Ui, c: &Contributor, names: NameMode) -> egui::Response {
     let url = format!("https://github.com/{}", c.login);
     let r = ui.add(egui::Link::new(c.name(names))).on_hover_text(c.summary());
     if r.clicked() {
@@ -392,7 +392,7 @@ fn credits_table(
 }
 
 /// The Contributors table; clicking a header sorts by it (again reverses it).
-fn table(app: &mut PhotocraftApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View, height: f32) {
+fn table(app: &mut SaryApp, ui: &mut egui::Ui, list: &[&Contributor], v: &mut View, height: f32) {
     let t = crate::theme::Tokens::get(ui.ctx());
     let names = v.names;
     let widths: Vec<Option<f32>> = SortKey::ALL

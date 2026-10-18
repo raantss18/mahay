@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::fmt::Write as _;
 use std::sync::Arc;
 
-use gridcraft_model::CellPicture;
+use tabilao_model::CellPicture;
 
 use crate::IoError;
 use crate::package::{Rel, normalize};

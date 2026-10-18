@@ -2,11 +2,11 @@
 
 use std::sync::Arc;
 
-use deckcraft_geom::{Affine, Point, Rect};
-use deckcraft_model::edit::{self as ed, Pos};
-use deckcraft_model::resolve::{self, Ctx};
-use deckcraft_model::text::{Align, AutoFit, Hyperlink, Paragraph, Run, RunKind, RunProps, TextBody};
-use deckcraft_model::{Presentation, Shape, ShapeId, ShapeKind};
+use seho_geom::{Affine, Point, Rect};
+use seho_model::edit::{self as ed, Pos};
+use seho_model::resolve::{self, Ctx};
+use seho_model::text::{Align, AutoFit, Hyperlink, Paragraph, Run, RunKind, RunProps, TextBody};
+use seho_model::{Presentation, Shape, ShapeId, ShapeKind};
 use serde_json::{Value, json};
 
 use super::*;
@@ -101,7 +101,7 @@ fn body_mut<'a>(doc: &'a mut Presentation, sel: &Selection, t: &TextSel) -> Opti
         return doc.slides.get_mut(sel.slide).map(|s| &mut Arc::make_mut(s).notes);
     }
     let shapes = crate::shapes_mut(doc, sel)?;
-    let sh = deckcraft_model::find_shape_mut(shapes, t.shape)?;
+    let sh = seho_model::find_shape_mut(shapes, t.shape)?;
     if let Some((r, c)) = t.cell {
         if let ShapeKind::Table(tb) = &mut sh.kind {
             return tb.cell_mut(r, c).map(|x| &mut x.text);
@@ -153,14 +153,14 @@ pub fn fit_text_box(s: &mut Session, id: ShapeId) -> Result<()> {
         return Ok(());
     }
     let x = xfrm_of(&doc, &sel, &sh);
-    let geo = deckcraft_render::shape_geometry(&sh, x.w, x.h);
-    let fields = deckcraft_text::NoFields;
+    let geo = seho_render::shape_geometry(&sh, x.w, x.h);
+    let fields = seho_text::NoFields;
     let mut nx = x;
     if bp.wrap == Some(false) {
-        nx.w = deckcraft_text::fit_width(&ctx, &sh, &body, geo.text_rect, &fields).max(20.0);
+        nx.w = seho_text::fit_width(&ctx, &sh, &body, geo.text_rect, &fields).max(20.0);
     }
-    let geo = deckcraft_render::shape_geometry(&sh, nx.w, nx.h);
-    let need = deckcraft_text::fit_height(&ctx, &sh, &body, geo.text_rect, &fields);
+    let geo = seho_render::shape_geometry(&sh, nx.w, nx.h);
+    let need = seho_text::fit_height(&ctx, &sh, &body, geo.text_rect, &fields);
     let extra = (nx.h - geo.text_rect.height()).max(0.0);
     nx.h = (need + extra).max(8.0);
     if (nx.h - x.h).abs() < 0.01 && (nx.w - x.w).abs() < 0.01 && sh.xfrm.is_some() {
@@ -170,7 +170,7 @@ pub fn fit_text_box(s: &mut Session, id: ShapeId) -> Result<()> {
     let st = s.doc_mut()?;
     let mut d = (*st.doc).clone();
     if let Some(list) = crate::shapes_mut(&mut d, &st.selection)
-        && let Some(target) = deckcraft_model::find_shape_mut(list, id)
+        && let Some(target) = seho_model::find_shape_mut(list, id)
     {
         target.xfrm = Some(nx);
     }
@@ -180,7 +180,7 @@ pub fn fit_text_box(s: &mut Session, id: ShapeId) -> Result<()> {
 }
 
 /// Store the shrink-on-overflow scale the layout computes for `id`, so a save keeps
-/// `fontScale`/`lnSpcReduction` in step with what DeckCraft draws (#724). Runs after a text
+/// `fontScale`/`lnSpcReduction` in step with what Seho draws (#724). Runs after a text
 /// change: a body with no meaningful saved scale — a file's bare `<a:normAutofit/>` (`None`) or
 /// the reset an edit leaves (`1.0`, no reduction) — is fitted afresh; a scale the file saved is
 /// left as it is, as PowerPoint draws it.
@@ -196,13 +196,13 @@ fn fit_shrink_scale(s: &mut Session, id: ShapeId) -> Result<()> {
     let sel = st.selection.clone();
     let Some(ctx) = ctx_for(&doc, &sel) else { return Ok(()) };
     let x = xfrm_of(&doc, &sel, &sh);
-    let tr = deckcraft_render::shape_geometry(&sh, x.w, x.h).text_rect;
+    let tr = seho_render::shape_geometry(&sh, x.w, x.h).text_rect;
     // Lay out as if the scale had just been reset, so the fit is computed even for `None` (which
     // is drawn at 100 % and only fitted again when its text changes).
     let mut probe = body.clone();
     probe.body.autofit = Some(AutoFit::Shrink { font_scale: Some(1.0), line_reduction: 0.0 });
-    let opts = deckcraft_text::Opts { rect: tr, fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false };
-    let l = deckcraft_text::layout(&ctx, &sh, &probe, &opts);
+    let opts = seho_text::Opts { rect: tr, fields: &seho_text::NoFields, prompt_color: None, no_shrink: false };
+    let l = seho_text::layout(&ctx, &sh, &probe, &opts);
     if l.font_scale >= 1.0 && l.line_reduction <= 0.0 {
         return Ok(());
     }
@@ -210,7 +210,7 @@ fn fit_shrink_scale(s: &mut Session, id: ShapeId) -> Result<()> {
     let st = s.doc_mut()?;
     let mut d = (*st.doc).clone();
     let stored = if let Some(list) = crate::shapes_mut(&mut d, &st.selection)
-        && let Some(target) = deckcraft_model::find_shape_mut(list, id)
+        && let Some(target) = seho_model::find_shape_mut(list, id)
         && let Some(t) = target.text.as_mut()
         && let Some(AutoFit::Shrink { font_scale, line_reduction }) = &mut t.body.autofit
     {
@@ -236,21 +236,21 @@ pub(crate) fn ctx_for<'a>(doc: &'a Presentation, sel: &Selection) -> Option<Ctx<
 }
 
 /// Lay out the text being edited (for vertical caret movement and hit testing).
-pub fn layout_for(st: &DocState, t: &TextSel) -> Option<deckcraft_text::TextLayout> {
+pub fn layout_for(st: &DocState, t: &TextSel) -> Option<seho_text::TextLayout> {
     text_frame(st, t).map(|f| f.0)
 }
 
 /// The text being edited as it is drawn: its layout, and the transform from layout space to the
 /// slide (flips don't mirror text, vertical text is turned). Shapes and table cells alike; the
 /// caret, the text selection, hit testing and caret movement all use it. `None` for notes.
-pub fn text_frame(st: &DocState, t: &TextSel) -> Option<(deckcraft_text::TextLayout, Affine)> {
+pub fn text_frame(st: &DocState, t: &TextSel) -> Option<(seho_text::TextLayout, Affine)> {
     if t.notes {
         return None;
     }
     let sh = st.shape(t.shape)?;
     let ctx = ctx_for(&st.doc, &st.selection)?;
     let lay = |s: &Shape, body: &TextBody, rect: Rect| {
-        deckcraft_text::layout(&ctx, s, body, &deckcraft_text::Opts { rect, fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false })
+        seho_text::layout(&ctx, s, body, &seho_text::Opts { rect, fields: &seho_text::NoFields, prompt_color: None, no_shrink: false })
     };
     if let Some((r, c)) = t.cell {
         // A cell's text is laid out in the cell's rect with the cell's margins, anchor and the
@@ -260,9 +260,9 @@ pub fn text_frame(st: &DocState, t: &TextSel) -> Option<(deckcraft_text::TextLay
     }
     let body = sh.text.as_ref()?;
     let x = xfrm_of(&st.doc, &st.selection, sh);
-    let tr = deckcraft_render::shape_geometry(sh, x.w, x.h).text_rect;
+    let tr = seho_render::shape_geometry(sh, x.w, x.h).text_rect;
     let l = lay(sh, body, tr);
-    let m = deckcraft_render::text_transform(x.affine(), tr, l.rotation);
+    let m = seho_render::text_transform(x.affine(), tr, l.rotation);
     Some((l, m))
 }
 
@@ -281,41 +281,41 @@ pub fn text_pos_at(st: &DocState, t: &TextSel, p: Point) -> Pos {
 /// vertical text as drawn). Text with no paragraph yet (a placeholder about to be typed in) is
 /// measured as one empty paragraph, so the caret shows where typing begins. `None` for notes,
 /// which are an egui text field.
-pub fn caret_line(st: &DocState, t: &TextSel) -> Option<(deckcraft_geom::Point, deckcraft_geom::Point)> {
+pub fn caret_line(st: &DocState, t: &TextSel) -> Option<(seho_geom::Point, seho_geom::Point)> {
     if t.notes {
         return None;
     }
     if let Some((row, col)) = t.cell {
         let placed = cell_on_slide(st, t.shape, row, col)?;
-        let aff = if t.at_line_end() { deckcraft_text::Affinity::Upstream } else { deckcraft_text::Affinity::Downstream };
-        let (cx, top, bot) = placed.layout.caret_drawn(deckcraft_text::Pos { para: t.caret.0, ch: t.caret.1 }, aff)?;
-        return Some((placed.to_slide * deckcraft_geom::Point::new(cx, top), placed.to_slide * deckcraft_geom::Point::new(cx, bot)));
+        let aff = if t.at_line_end() { seho_text::Affinity::Upstream } else { seho_text::Affinity::Downstream };
+        let (cx, top, bot) = placed.layout.caret_drawn(seho_text::Pos { para: t.caret.0, ch: t.caret.1 }, aff)?;
+        return Some((placed.to_slide * seho_geom::Point::new(cx, top), placed.to_slide * seho_geom::Point::new(cx, bot)));
     }
     let sh = st.shape(t.shape)?;
     let ctx = ctx_for(&st.doc, &st.selection)?;
     let x = xfrm_of(&st.doc, &st.selection, sh);
-    let geo = deckcraft_render::shape_geometry(sh, x.w, x.h);
+    let geo = seho_render::shape_geometry(sh, x.w, x.h);
     let mut body = sh.text.clone().unwrap_or_default();
     if body.paragraphs.is_empty() {
-        body.paragraphs.push(deckcraft_model::text::Paragraph::default());
+        body.paragraphs.push(seho_model::text::Paragraph::default());
     }
-    let l = deckcraft_text::layout(
+    let l = seho_text::layout(
         &ctx,
         sh,
         &body,
-        &deckcraft_text::Opts { rect: geo.text_rect, fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false },
+        &seho_text::Opts { rect: geo.text_rect, fields: &seho_text::NoFields, prompt_color: None, no_shrink: false },
     );
     // After End on a wrapped line the caret is drawn at that line's end.
-    let aff = if t.at_line_end() { deckcraft_text::Affinity::Upstream } else { deckcraft_text::Affinity::Downstream };
-    let (cx, top, bot) = l.caret_drawn(deckcraft_text::Pos { para: t.caret.0, ch: t.caret.1 }, aff)?;
-    let m = deckcraft_render::text_transform(x.affine(), geo.text_rect, l.rotation);
-    Some((m * deckcraft_geom::Point::new(cx, top), m * deckcraft_geom::Point::new(cx, bot)))
+    let aff = if t.at_line_end() { seho_text::Affinity::Upstream } else { seho_text::Affinity::Downstream };
+    let (cx, top, bot) = l.caret_drawn(seho_text::Pos { para: t.caret.0, ch: t.caret.1 }, aff)?;
+    let m = seho_render::text_transform(x.affine(), geo.text_rect, l.rotation);
+    Some((m * seho_geom::Point::new(cx, top), m * seho_geom::Point::new(cx, bot)))
 }
 
 /// The colour of text typed at the caret. The canvas draws the caret in it, so the caret shows
 /// wherever the text does: light on a dark slide, dark on a light one. `None` when that text
 /// has no fill to take a colour from.
-pub fn caret_color(st: &DocState, t: &TextSel) -> Option<deckcraft_color::Rgba> {
+pub fn caret_color(st: &DocState, t: &TextSel) -> Option<seho_color::Rgba> {
     if t.notes || t.cell.is_some() {
         return None;
     }
@@ -359,7 +359,7 @@ fn edit(s: &mut Session, p: &Value) -> Result<Value> {
     if sh.text.is_none() && cell.is_none() {
         s.edit(|doc, sel| {
             if let Some(list) = crate::shapes_mut(doc, sel)
-                && let Some(x) = deckcraft_model::find_shape_mut(list, id)
+                && let Some(x) = seho_model::find_shape_mut(list, id)
             {
                 x.text = Some(TextBody::default());
             }
@@ -437,7 +437,7 @@ fn inherited_aligns(s: &Session, id: ShapeId) -> [bool; 9] {
     let Some(sh) = st.shape(id) else { return out };
     let Some(ctx) = ctx_for(&st.doc, &st.selection) else { return out };
     for (lvl, set) in out.iter_mut().enumerate() {
-        let para = deckcraft_model::text::Paragraph { level: lvl as u8, ..Default::default() };
+        let para = seho_model::text::Paragraph { level: lvl as u8, ..Default::default() };
         *set = resolve::para(&ctx, sh, &para).align.is_some();
     }
     out
@@ -454,8 +454,8 @@ fn inherited_aligns_for_edit(s: &Session) -> [bool; 9] {
 /// A paragraph with no direction of its own whose first strong character is right-to-left
 /// (Arabic, Hebrew, Kurdish…) becomes right-to-left, and right-aligned when nothing (the
 /// paragraph or what it inherits, `inherited`) sets its alignment.
-fn promote_rtl_if_needed(para: &mut deckcraft_model::text::Paragraph, inherited: &[bool; 9]) {
-    if para.props.rtl.is_none() && deckcraft_model::bidi::first_strong_is_rtl(&para.text()) {
+fn promote_rtl_if_needed(para: &mut seho_model::text::Paragraph, inherited: &[bool; 9]) {
+    if para.props.rtl.is_none() && seho_model::bidi::first_strong_is_rtl(&para.text()) {
         para.props.rtl = Some(true);
         let inherits_align = inherited.get(usize::from(para.level)).copied().unwrap_or(false);
         if para.props.align.is_none() && !inherits_align {
@@ -759,7 +759,7 @@ pub(crate) fn insert_field(s: &mut Session, field: &str, text: &str) -> Result<V
         let at = ed::delete(body, a, b);
         let props = ed::props_at(body, at);
         let src = TextBody {
-            paragraphs: vec![deckcraft_model::text::Paragraph {
+            paragraphs: vec![seho_model::text::Paragraph {
                 runs: vec![Run { text: text.clone(), props, kind: RunKind::Field { field: field.clone() } }],
                 ..Default::default()
             }],
@@ -858,18 +858,18 @@ fn commit(s: &mut Session, p: &Value) -> Result<Value> {
 /// text as laid out on the current slide: where spelling squiggles go.
 pub fn range_underlines(
     st: &DocState,
-    id: deckcraft_model::ShapeId,
+    id: seho_model::ShapeId,
     ranges: &[(usize, usize, usize)],
-) -> Vec<(deckcraft_geom::Point, deckcraft_geom::Point)> {
+) -> Vec<(seho_geom::Point, seho_geom::Point)> {
     let Some(sh) = st.shape(id) else { return vec![] };
     let Some(l) = layout_for(st, &TextSel { shape: id, ..Default::default() }) else { return vec![] };
     let x = xfrm_of(&st.doc, &st.selection, sh);
-    let tr = deckcraft_render::shape_geometry(sh, x.w, x.h).text_rect;
-    let m = deckcraft_render::text_transform(x.affine(), tr, l.rotation);
+    let tr = seho_render::shape_geometry(sh, x.w, x.h).text_rect;
+    let m = seho_render::text_transform(x.affine(), tr, l.rotation);
     let mut out = vec![];
     for &(para, a, b) in ranges {
-        for (x0, x1, y) in l.composition_underlines(deckcraft_text::Pos { para, ch: a }, deckcraft_text::Pos { para, ch: b }) {
-            out.push((m * deckcraft_geom::Point::new(x0, y), m * deckcraft_geom::Point::new(x1, y)));
+        for (x0, x1, y) in l.composition_underlines(seho_text::Pos { para, ch: a }, seho_text::Pos { para, ch: b }) {
+            out.push((m * seho_geom::Point::new(x0, y), m * seho_geom::Point::new(x1, y)));
         }
     }
     out
@@ -878,32 +878,32 @@ pub fn range_underlines(
 /// Like [`range_underlines`], for the text of table `id`'s cell at `row`, `col`.
 pub fn cell_range_underlines(
     st: &DocState,
-    id: deckcraft_model::ShapeId,
+    id: seho_model::ShapeId,
     row: usize,
     col: usize,
     ranges: &[(usize, usize, usize)],
-) -> Vec<(deckcraft_geom::Point, deckcraft_geom::Point)> {
+) -> Vec<(seho_geom::Point, seho_geom::Point)> {
     let Some(sh) = st.shape(id) else { return vec![] };
-    let deckcraft_model::ShapeKind::Table(tb) = &sh.kind else { return vec![] };
+    let seho_model::ShapeKind::Table(tb) = &sh.kind else { return vec![] };
     let (Some(cell), Some(ctx)) = (tb.cell(row, col), ctx_for(&st.doc, &st.selection)) else { return vec![] };
     let heights = crate::cmd::table_drawn_heights(&st.doc, &st.selection, tb);
-    let Some(rect) = deckcraft_render::table_cell_rects(tb, &heights).into_iter().find(|(r, c, _)| *r == row && *c == col).map(|(_, _, r)| r) else {
+    let Some(rect) = seho_render::table_cell_rects(tb, &heights).into_iter().find(|(r, c, _)| *r == row && *c == col).map(|(_, _, r)| r) else {
         return vec![];
     };
-    let body = deckcraft_render::table_cell_body(&ctx, tb, row, col, cell);
-    let tmp = deckcraft_model::Shape { text: Some(body.clone()), ..Default::default() };
-    let l = deckcraft_text::layout(
+    let body = seho_render::table_cell_body(&ctx, tb, row, col, cell);
+    let tmp = seho_model::Shape { text: Some(body.clone()), ..Default::default() };
+    let l = seho_text::layout(
         &ctx,
         &tmp,
         &body,
-        &deckcraft_text::Opts { rect, fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false },
+        &seho_text::Opts { rect, fields: &seho_text::NoFields, prompt_color: None, no_shrink: false },
     );
     let x = xfrm_of(&st.doc, &st.selection, sh);
-    let m = deckcraft_render::text_transform(x.affine(), rect, l.rotation);
+    let m = seho_render::text_transform(x.affine(), rect, l.rotation);
     let mut out = vec![];
     for &(para, a, b) in ranges {
-        for (x0, x1, y) in l.composition_underlines(deckcraft_text::Pos { para, ch: a }, deckcraft_text::Pos { para, ch: b }) {
-            out.push((m * deckcraft_geom::Point::new(x0, y), m * deckcraft_geom::Point::new(x1, y)));
+        for (x0, x1, y) in l.composition_underlines(seho_text::Pos { para, ch: a }, seho_text::Pos { para, ch: b }) {
+            out.push((m * seho_geom::Point::new(x0, y), m * seho_geom::Point::new(x1, y)));
         }
     }
     out
@@ -912,7 +912,7 @@ pub fn cell_range_underlines(
 /// Underlines under an input method's composition (#101), in slide coordinates: `(from, to,
 /// thick)` per line, thick under the part being converted. Empty without a composition, or for
 /// notes (an egui text field draws its own composition).
-pub fn composition_underlines(st: &DocState) -> Vec<(deckcraft_geom::Point, deckcraft_geom::Point, bool)> {
+pub fn composition_underlines(st: &DocState) -> Vec<(seho_geom::Point, seho_geom::Point, bool)> {
     let (Some(c), Some(t)) = (&st.composition, &st.selection.text) else { return vec![] };
     if t.notes {
         return vec![];
@@ -924,21 +924,21 @@ pub fn composition_underlines(st: &DocState) -> Vec<(deckcraft_geom::Point, deck
     let Some(sh) = st.shape(t.shape) else { return vec![] };
     let Some(l) = layout_for(st, t) else { return vec![] };
     let x = xfrm_of(&st.doc, &st.selection, sh);
-    let tr = deckcraft_render::shape_geometry(sh, x.w, x.h).text_rect;
-    let m = deckcraft_render::text_transform(x.affine(), tr, l.rotation);
+    let tr = seho_render::shape_geometry(sh, x.w, x.h).text_rect;
+    let m = seho_render::text_transform(x.affine(), tr, l.rotation);
     underline_segments(&l, m, c)
 }
 
 fn underline_segments(
-    layout: &deckcraft_text::TextLayout,
-    to_slide: deckcraft_geom::Affine,
+    layout: &seho_text::TextLayout,
+    to_slide: seho_geom::Affine,
     c: &crate::Composition,
-) -> Vec<(deckcraft_geom::Point, deckcraft_geom::Point, bool)> {
-    let pos = |ch: usize| deckcraft_text::Pos { para: c.start.0, ch: c.start.1 + ch };
+) -> Vec<(seho_geom::Point, seho_geom::Point, bool)> {
+    let pos = |ch: usize| seho_text::Pos { para: c.start.0, ch: c.start.1 + ch };
     let mut out = vec![];
     let mut add = |a: usize, b: usize, thick: bool| {
         for (x0, x1, y) in layout.composition_underlines(pos(a), pos(b)) {
-            out.push((to_slide * deckcraft_geom::Point::new(x0, y), to_slide * deckcraft_geom::Point::new(x1, y), thick));
+            out.push((to_slide * seho_geom::Point::new(x0, y), to_slide * seho_geom::Point::new(x1, y), thick));
         }
     };
     add(0, c.len, false);
@@ -955,26 +955,26 @@ fn cell_on_slide(st: &DocState, id: ShapeId, row: usize, col: usize) -> Option<C
     let cell = tb.cell(row, col)?;
     let ctx = ctx_for(&st.doc, &st.selection)?;
     let heights = super::table_drawn_heights(&st.doc, &st.selection, tb);
-    let rect = deckcraft_render::table_cell_rects(tb, &heights).into_iter().find(|(r, c, _)| *r == row && *c == col)?.2;
-    let mut body = deckcraft_render::table_cell_body(&ctx, tb, row, col, cell);
+    let rect = seho_render::table_cell_rects(tb, &heights).into_iter().find(|(r, c, _)| *r == row && *c == col)?.2;
+    let mut body = seho_render::table_cell_body(&ctx, tb, row, col, cell);
     if body.paragraphs.is_empty() {
-        body.paragraphs.push(deckcraft_model::text::Paragraph::default());
+        body.paragraphs.push(seho_model::text::Paragraph::default());
     }
-    let tmp = deckcraft_model::Shape { text: Some(body.clone()), ..Default::default() };
-    let layout = deckcraft_text::layout(
+    let tmp = seho_model::Shape { text: Some(body.clone()), ..Default::default() };
+    let layout = seho_text::layout(
         &ctx,
         &tmp,
         &body,
-        &deckcraft_text::Opts { rect, fields: &deckcraft_text::NoFields, prompt_color: None, no_shrink: false },
+        &seho_text::Opts { rect, fields: &seho_text::NoFields, prompt_color: None, no_shrink: false },
     );
     let x = xfrm_of(&st.doc, &st.selection, sh);
-    let to_slide = deckcraft_render::text_transform(x.affine(), rect, layout.rotation);
+    let to_slide = seho_render::text_transform(x.affine(), rect, layout.rotation);
     Some(CellText { layout, to_slide })
 }
 
 struct CellText {
-    layout: deckcraft_text::TextLayout,
-    to_slide: deckcraft_geom::Affine,
+    layout: seho_text::TextLayout,
+    to_slide: seho_geom::Affine,
 }
 
 fn insert(s: &mut Session, p: &Value) -> Result<Value> {
@@ -1022,7 +1022,7 @@ fn delete(s: &mut Session, p: &Value) -> Result<Value> {
 }
 
 /// Is paragraph `para` right-to-left (its lines run from the right)?
-fn para_rtl(layout: Option<&deckcraft_text::TextLayout>, body: &TextBody, para: usize) -> bool {
+fn para_rtl(layout: Option<&seho_text::TextLayout>, body: &TextBody, para: usize) -> bool {
     match layout.and_then(|l| l.lines.iter().find(|x| x.para == para)) {
         Some(line) => line.rtl,
         None => body.paragraphs.get(para).and_then(|x| x.props.rtl).unwrap_or(false),
@@ -1030,14 +1030,14 @@ fn para_rtl(layout: Option<&deckcraft_text::TextLayout>, body: &TextBody, para: 
 }
 
 fn move_caret(s: &mut Session, p: &Value) -> Result<Value> {
-    use deckcraft_text::Affinity;
+    use seho_text::Affinity;
     let to = str_param(p, "to").unwrap_or("right").to_string();
     let extend = bool_or(p, "extend", false);
     let st = s.doc()?;
     let t = st.selection.text.clone().ok_or_else(|| bad("text.move", "not editing text"))?;
     let body = body_of(st, &t).cloned().unwrap_or_default();
     let layout = layout_for(st, &t);
-    let lp = |c: Pos| deckcraft_text::Pos { para: c.0, ch: c.1 };
+    let lp = |c: Pos| seho_text::Pos { para: c.0, ch: c.1 };
     let caret = t.caret;
     let aff = if t.at_line_end() { Affinity::Upstream } else { Affinity::Downstream };
     // Left and right are on screen: in a right-to-left paragraph left goes forward in the text.
@@ -1160,7 +1160,7 @@ fn select_para(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Turn leading tabs of a paragraph into its outline level (capped at 8) and strip them.
 /// Returns whether any tab was found.
-pub(crate) fn apply_leading_tabs(para: &mut deckcraft_model::text::Paragraph) -> bool {
+pub(crate) fn apply_leading_tabs(para: &mut seho_model::text::Paragraph) -> bool {
     let tabs = para.runs.first().map(|r| r.text.chars().take_while(|c| *c == '\t').count()).unwrap_or(0);
     if tabs == 0 {
         return false;
@@ -1188,7 +1188,7 @@ fn set(s: &mut Session, p: &Value) -> Result<Value> {
         };
         let Some(body) = target else { return Err(bad("text.set", "no text here (tables need `cell`)")) };
         let keep = body.paragraphs.first().and_then(|p| p.runs.first()).map(|r| r.props.clone()).unwrap_or_default();
-        let levels: Vec<(u8, deckcraft_model::text::ParaProps)> = body.paragraphs.iter().map(|p| (p.level, p.props.clone())).collect();
+        let levels: Vec<(u8, seho_model::text::ParaProps)> = body.paragraphs.iter().map(|p| (p.level, p.props.clone())).collect();
         let mut nb = TextBody::from_text(&text);
         for (i, para) in nb.paragraphs.iter_mut().enumerate() {
             // Leading tabs set the outline level.
@@ -1320,7 +1320,7 @@ pub(crate) fn link_text(s: &mut Session, link: Hyperlink, display: &str) -> Resu
 
 /// Apply paragraph changes to the paragraphs touched by the selection (or all paragraphs of the
 /// selected shapes).
-pub(crate) fn format_para(s: &mut Session, f: &(dyn Fn(&mut deckcraft_model::text::Paragraph) + Send + Sync)) -> Result<Value> {
+pub(crate) fn format_para(s: &mut Session, f: &(dyn Fn(&mut seho_model::text::Paragraph) + Send + Sync)) -> Result<Value> {
     let st = s.doc()?;
     if let Some(t) = st.selection.text.clone() {
         let (a, b) = t.ordered();
@@ -1366,7 +1366,7 @@ pub(crate) fn format_para(s: &mut Session, f: &(dyn Fn(&mut deckcraft_model::tex
 }
 
 /// Apply body (text box) changes to the edited or selected shapes.
-pub(crate) fn format_body(s: &mut Session, f: &(dyn Fn(&mut deckcraft_model::text::BodyProps) + Send + Sync)) -> Result<Value> {
+pub(crate) fn format_body(s: &mut Session, f: &(dyn Fn(&mut seho_model::text::BodyProps) + Send + Sync)) -> Result<Value> {
     let st = s.doc()?;
     let ids: Vec<ShapeId> = match &st.selection.text {
         Some(t) if !t.notes => vec![t.shape],
@@ -1410,7 +1410,7 @@ fn replace_font(s: &mut Session, p: &Value) -> Result<Value> {
 
 #[cfg(test)]
 mod rtl_promote_tests {
-    use deckcraft_model::text::{Align, Paragraph, Run};
+    use seho_model::text::{Align, Paragraph, Run};
 
     use super::promote_rtl_if_needed;
 

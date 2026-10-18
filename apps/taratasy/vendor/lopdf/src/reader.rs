@@ -493,7 +493,7 @@ pub const MAX_BRACKET: usize = 100;
 
 pub const MAX_NESTING_DEPTH: usize = 100;
 
-/// PdfCraft patch: a valid stream /Length resolves in at most three lookups (the length, the object stream holding
+/// Taratasy patch: a valid stream /Length resolves in at most three lookups (the length, the object stream holding
 /// it, and that stream's own /Length); longer lookup chains overflowed the stack.
 const MAX_LOOKUP_DEPTH: usize = 16;
 
@@ -1161,7 +1161,7 @@ impl Reader<'_> {
             _ => return Err(Error::MissingXrefEntry),
         };
 
-        // PdfCraft patch: require an in-file container (PDF 7.5.7) and retain the caller's cycle history through
+        // Taratasy patch: require an in-file container (PDF 7.5.7) and retain the caller's cycle history through
         // indirect stream /Length lookups; `get_object` caps the depth of that history.
         if !matches!(
             self.document.reference_table.get(container_id),
@@ -1179,7 +1179,7 @@ impl Reader<'_> {
     }
 
     pub fn get_object(&self, id: ObjectId, already_seen: &mut HashSet<ObjectId>) -> Result<Object> {
-        // PdfCraft patch: each top-level lookup starts with an empty set and every nested lookup adds one object, so
+        // Taratasy patch: each top-level lookup starts with an empty set and every nested lookup adds one object, so
         // the set's size is the depth of the lookup chain.
         if already_seen.len() >= MAX_LOOKUP_DEPTH {
             warn!("lookup chain deeper than {MAX_LOOKUP_DEPTH} at object {} {}", id.0, id.1);

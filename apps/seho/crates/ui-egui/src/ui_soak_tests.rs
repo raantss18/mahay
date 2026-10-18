@@ -2,13 +2,13 @@
 //! Ctrl/Shift, typing, scrolling) over the sample deck, with invariants every few actions: no
 //! panic, every document valid, undo/journal/texture caches bounded, and frame time bounded.
 //!
-//! `DECKCRAFT_UI_SOAK_STEPS=5000 cargo test -p deckcraft-ui-egui ui_soak_long -- --ignored`
-//! runs a long one; `DECKCRAFT_UI_SOAK_SEED` picks the seed.
+//! `SEHO_UI_SOAK_STEPS=5000 cargo test -p seho-ui-egui ui_soak_long -- --ignored`
+//! runs a long one; `SEHO_UI_SOAK_SEED` picks the seed.
 
 use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui::{Event, Key, Modifiers, MouseWheelUnit, Pos2, vec2};
 use egui_kittest::Harness;
 
@@ -70,7 +70,7 @@ const KEYS: &[Key] = &[
 
 fn harness() -> Harness<'static, SlideApp> {
     let mut s = Session::new();
-    deckcraft_engine::sample::open_sample(&mut s).unwrap();
+    seho_engine::sample::open_sample(&mut s).unwrap();
     let app = SlideApp::new(s, Services::default());
     let mut h = Harness::builder().with_size(vec2(W, H)).with_step_dt(1.0 / 60.0).build_ui_state(
         |ui, app: &mut SlideApp| {
@@ -152,7 +152,7 @@ fn check(h: &Harness<'_, SlideApp>, seed: u64, step: usize, log: &VecDeque<Strin
     assert!(app.session.journal.len() <= MAX_JOURNAL, "journal {}; {}", app.session.journal.len(), ctx());
     assert!(app.textures.thumb_count() <= MAX_THUMBS, "thumbnails {}; {}", app.textures.thumb_count(), ctx());
     assert_eq!(app.session.panics_caught, 0, "a command panicked (rolled back by the guard); {}", ctx());
-    assert_eq!(deckcraft_render::panics_caught(), 0, "a render panic was caught and drawn blank; {}", ctx());
+    assert_eq!(seho_render::panics_caught(), 0, "a render panic was caught and drawn blank; {}", ctx());
     let tex = h.ctx.tex_manager().read().num_allocated();
     assert!(tex <= MAX_TEXTURES, "{tex} textures allocated; {}", ctx());
 }
@@ -195,12 +195,12 @@ fn env(name: &str, default: u64) -> u64 {
 #[test]
 fn ui_soak_random_input_keeps_the_app_sound() {
     for seed in [3, 0xC0FFEE] {
-        soak(seed, env("DECKCRAFT_UI_SOAK_STEPS", 150) as usize);
+        soak(seed, env("SEHO_UI_SOAK_STEPS", 150) as usize);
     }
 }
 
 #[test]
-#[ignore = "long UI soak; set DECKCRAFT_UI_SOAK_STEPS"]
+#[ignore = "long UI soak; set SEHO_UI_SOAK_STEPS"]
 fn ui_soak_long() {
-    soak(env("DECKCRAFT_UI_SOAK_SEED", 0x5EED), env("DECKCRAFT_UI_SOAK_STEPS", 3000) as usize);
+    soak(env("SEHO_UI_SOAK_SEED", 0x5EED), env("SEHO_UI_SOAK_STEPS", 3000) as usize);
 }

@@ -6,8 +6,8 @@ use std::time::Duration;
 use egui::{Key, Modifiers, Pos2, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::{NodeT, Queryable};
-use pdfcraft_render::{PageRenderer, RenderRequest, RequestKind};
-use pdfcraft_ui_egui::{CombineThumb, CombineView, FilePurpose, PdfCraftApp};
+use taratasy_render::{PageRenderer, RenderRequest, RequestKind};
+use taratasy_ui_egui::{CombineThumb, CombineView, FilePurpose, TaratasyApp};
 
 /// An `n`-page document with a proper xref table; page `i` shows "Page i+1".
 fn fixture(n: usize) -> Vec<u8> {
@@ -70,12 +70,12 @@ fn heavy() -> Vec<u8> {
 
 /// A two-page fixture that opens with `user` and allows everything with `owner`.
 fn protected(user: &str, owner: &str) -> Vec<u8> {
-    protected_with(pdfcraft_cos::Algorithm::Aes256, user, owner)
+    protected_with(taratasy_cos::Algorithm::Aes256, user, owner)
 }
 
-fn protected_with(algorithm: pdfcraft_cos::Algorithm, user: &str, owner: &str) -> Vec<u8> {
-    let mut doc = pdfcraft_cos::Document::open(std::sync::Arc::new(fixture(2))).unwrap();
-    doc.set_encryption(&pdfcraft_cos::NewEncryption {
+fn protected_with(algorithm: taratasy_cos::Algorithm, user: &str, owner: &str) -> Vec<u8> {
+    let mut doc = taratasy_cos::Document::open(std::sync::Arc::new(fixture(2))).unwrap();
+    doc.set_encryption(&taratasy_cos::NewEncryption {
         algorithm,
         user_password: user,
         owner_password: owner,
@@ -84,19 +84,19 @@ fn protected_with(algorithm: pdfcraft_cos::Algorithm, user: &str, owner: &str) -
         seed: [4; 32],
     })
     .unwrap();
-    pdfcraft_cos::write_full(&doc, &Default::default()).unwrap()
+    taratasy_cos::write_full(&doc, &Default::default()).unwrap()
 }
 
 /// The Combine tab with these files (name, bytes), in its default (grid) view.
-fn grid_of(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2) -> Harness<'static, PdfCraftApp> {
+fn grid_of(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2) -> Harness<'static, TaratasyApp> {
     grid_after(files, size, 4)
 }
 
 /// The same, after only `steps` frames (1: the first thumbnails have only just been asked for).
-fn grid_after(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2, steps: usize) -> Harness<'static, PdfCraftApp> {
+fn grid_after(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2, steps: usize) -> Harness<'static, TaratasyApp> {
     let files: Vec<(String, Vec<u8>)> = files.into_iter().map(|(n, b)| (n.to_string(), b)).collect();
     let mut h = Harness::builder().with_size(size).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.use_files(FilePurpose::Combine, files);
         app
@@ -107,7 +107,7 @@ fn grid_after(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2, steps: usize) -> Ha
 
 /// The grid on the frame its first thumbnails start rendering (a render started in one frame
 /// is collected in a later one, so there always is such a frame).
-fn grid_after_one(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2) -> Harness<'static, PdfCraftApp> {
+fn grid_after_one(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2) -> Harness<'static, TaratasyApp> {
     let mut h = grid_after(files, size, 0);
     for _ in 0..20 {
         h.run_steps(1);
@@ -118,11 +118,11 @@ fn grid_after_one(files: Vec<(&str, Vec<u8>)>, size: egui::Vec2) -> Harness<'sta
     h
 }
 
-fn grid_of_pages(names: &[(&str, usize)]) -> Harness<'static, PdfCraftApp> {
+fn grid_of_pages(names: &[(&str, usize)]) -> Harness<'static, TaratasyApp> {
     grid_of(names.iter().map(|(n, p)| (*n, fixture(*p))).collect(), vec2(1400.0, 900.0))
 }
 
-fn names(h: &Harness<'static, PdfCraftApp>) -> Vec<String> {
+fn names(h: &Harness<'static, TaratasyApp>) -> Vec<String> {
     h.state().combine_draft.iter().map(|f| f.name.clone()).collect()
 }
 
@@ -134,7 +134,7 @@ fn check_duplicate_warnings(view: &str) {
     let mut h = grid_of(vec![("report.pdf", first.clone()), ("report.pdf", other)], vec2(1400.0, 900.0));
     h.state_mut().set_option("combine-view", view).unwrap();
     h.run_steps(2);
-    let warning_count = |h: &mut Harness<'static, PdfCraftApp>| {
+    let warning_count = |h: &mut Harness<'static, TaratasyApp>| {
         if view == "grid" {
             let at = h.get_all_by_label("report.pdf").next().unwrap().rect().center();
             h.hover_at(at);
@@ -165,7 +165,7 @@ fn grid_duplicate_warnings_compare_contents_and_follow_undo() {
 }
 
 /// Run frames until `done`, giving render threads time; whether it happened.
-fn settle(h: &mut Harness<'static, PdfCraftApp>, done: impl Fn(&PdfCraftApp) -> bool) -> bool {
+fn settle(h: &mut Harness<'static, TaratasyApp>, done: impl Fn(&TaratasyApp) -> bool) -> bool {
     for _ in 0..400 {
         h.run_steps(1);
         if done(h.state()) {
@@ -181,7 +181,7 @@ fn ready(t: &CombineThumb) -> bool {
 }
 
 /// Press, move in steps and release, as a user drags.
-fn drag(h: &mut Harness<'static, PdfCraftApp>, from: Pos2, to: Pos2) {
+fn drag(h: &mut Harness<'static, TaratasyApp>, from: Pos2, to: Pos2) {
     h.hover_at(from);
     h.run_steps(1);
     h.drag_at(from);
@@ -195,11 +195,11 @@ fn drag(h: &mut Harness<'static, PdfCraftApp>, from: Pos2, to: Pos2) {
 }
 
 /// Where a file's card is.
-fn card(h: &Harness<'static, PdfCraftApp>, name: &str) -> egui::Rect {
+fn card(h: &Harness<'static, TaratasyApp>, name: &str) -> egui::Rect {
     h.get_by_label(name).rect()
 }
 
-fn texts_of(app: &PdfCraftApp, tab: usize) -> Vec<String> {
+fn texts_of(app: &TaratasyApp, tab: usize) -> Vec<String> {
     let doc = app.session.get(app.views[tab].id).unwrap();
     let mut r = PageRenderer::new(doc.bytes.clone(), Default::default());
     (0..r.page_count())
@@ -225,12 +225,12 @@ fn combine_shows_a_grid_by_default_and_the_view_is_kept_in_the_settings() {
     h.get_by_label("File name");
     // Kept in the settings, and read back.
     let saved = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     assert_eq!(fresh.combine_view, CombineView::Grid);
     fresh.restore(&saved);
     assert_eq!(fresh.combine_view, CombineView::List);
     // A damaged setting keeps the default.
-    let mut damaged = PdfCraftApp::new();
+    let mut damaged = TaratasyApp::new();
     damaged.restore(r#"{"combine_view": "tiles"}"#);
     assert_eq!(damaged.combine_view, CombineView::Grid);
     // Scriptable, with a clear refusal for anything else.
@@ -269,7 +269,7 @@ fn cards_select_like_the_list_and_the_selection_survives_switching_views() {
 fn dragging_a_card_moves_it_and_undo_puts_it_back() {
     let mut h = grid_of_pages(&[("a.pdf", 1), ("b.pdf", 1), ("c.pdf", 1), ("d.pdf", 1)]);
     // Sorted first: a move by hand ends the sort, as in the list.
-    h.state_mut().combine_tab.sort = Some((pdfcraft_ui_egui::SortKey::Name, true));
+    h.state_mut().combine_tab.sort = Some((taratasy_ui_egui::SortKey::Name, true));
     let (a, c) = (card(&h, "a.pdf"), card(&h, "c.pdf"));
     drag(&mut h, a.center(), c.center() + vec2(c.width() * 0.3, 0.0));
     assert_eq!(names(&h), ["b.pdf", "c.pdf", "a.pdf", "d.pdf"]);
@@ -321,7 +321,7 @@ fn a_drop_that_changes_nothing_or_lands_outside_the_grid_leaves_no_undo_step() {
     h.key_press_modifiers(Modifiers::COMMAND, Key::Z);
     h.run_steps(2);
     assert_eq!(names(&h), ["a.pdf", "b.pdf", "c.pdf"]);
-    h.state_mut().combine_tab.sort = Some((pdfcraft_ui_egui::SortKey::Name, true));
+    h.state_mut().combine_tab.sort = Some((taratasy_ui_egui::SortKey::Name, true));
     let b = card(&h, "b.pdf");
     // Onto its own place.
     drag(&mut h, b.center(), b.center() + vec2(b.width() * 0.3, 0.0));
@@ -570,17 +570,17 @@ fn a_file_whose_pages_cant_be_measured_says_there_is_no_preview() {
     // The fixture must keep the size unknown: if the inspector learns RC4 owner passwords, this
     // needs another file it can't measure (the check below says so rather than pass vacuously).
     let mut h =
-        grid_of(vec![("one.pdf", fixture(1)), ("old.pdf", protected_with(pdfcraft_cos::Algorithm::Rc4_128, "pw", "owner"))], vec2(1400.0, 900.0));
+        grid_of(vec![("one.pdf", fixture(1)), ("old.pdf", protected_with(taratasy_cos::Algorithm::Rc4_128, "pw", "owner"))], vec2(1400.0, 900.0));
     assert!(h.state_mut().combine_unlock_rows(&[1], "owner"));
     assert!(settle(&mut h, |app| ready(&app.combine_thumbnails()[0])));
     assert!(h.state().combine_draft[1].lock.is_none(), "unlocked for combining");
     assert_eq!(h.state().combine_thumbnails()[1], CombineThumb::None, "nothing rendered (is the page size still unknown?)");
     assert_eq!(h.state().combine_thumbnails_rendering(), 0);
     // Screen readers hear it too, not only in the tooltip.
-    let description = |h: &Harness<'static, PdfCraftApp>, name: &str| h.get_by_label(name).accesskit_node().description().unwrap_or_default();
+    let description = |h: &Harness<'static, TaratasyApp>, name: &str| h.get_by_label(name).accesskit_node().description().unwrap_or_default();
     assert!(description(&h, "old.pdf").contains("No preview"), "{}", description(&h, "old.pdf"));
     assert_eq!(description(&h, "one.pdf"), "1 page");
-    let tip_of = |h: &mut Harness<'static, PdfCraftApp>, name: &str, text: &str| {
+    let tip_of = |h: &mut Harness<'static, TaratasyApp>, name: &str, text: &str| {
         let at = card(h, name).center();
         h.hover_at(at);
         (0..60).any(|_| {
@@ -701,12 +701,12 @@ fn a_locked_card_offers_unlock_on_a_right_click() {
     assert_eq!(h.state().combine_selection(), [1], "the card right-clicked is the one unlocked");
 }
 
-fn disabled(h: &Harness<'static, PdfCraftApp>, label: &str) -> bool {
+fn disabled(h: &Harness<'static, TaratasyApp>, label: &str) -> bool {
     h.get_by_label(label).accesskit_node().is_disabled()
 }
 
 /// Ctrl/⌘ with the wheel at `at` (a positive `dy` zooms in).
-fn ctrl_wheel(h: &mut Harness<'static, PdfCraftApp>, at: Pos2, dy: f32) {
+fn ctrl_wheel(h: &mut Harness<'static, TaratasyApp>, at: Pos2, dy: f32) {
     h.hover_at(at);
     h.run_steps(1);
     h.event(egui::Event::MouseWheel {
@@ -754,7 +754,7 @@ fn the_toolbar_sizes_the_cards_within_limits_and_the_size_is_kept_in_the_setting
     assert!(smallest.width() < before.width() && smallest.height() < before.height(), "{smallest:?}");
     // Kept in the settings, and read back; a damaged setting is clamped or ignored.
     let saved = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.restore(&saved);
     assert_eq!(fresh.combine_zoom, 0.6);
     fresh.restore(r#"{"combine_zoom": 99}"#);
@@ -926,7 +926,7 @@ fn zooming_quickly_never_runs_more_than_three_render_threads() {
 }
 
 /// The grid with 40 one-page files, scrolled down by `dy`; and where the top of the grid is.
-fn scrolled_grid(dy: f32) -> (Harness<'static, PdfCraftApp>, f32) {
+fn scrolled_grid(dy: f32) -> (Harness<'static, TaratasyApp>, f32) {
     let files: Vec<(String, Vec<u8>)> = (0..40).map(|i| (format!("f{i:02}.pdf"), fixture(1))).collect();
     let mut h = grid_of(files.iter().map(|(n, b)| (n.as_str(), b.clone())).collect(), vec2(1400.0, 900.0));
     // Unscrolled, the first card sits a fixed space (12 points) below the top of the grid.
@@ -944,7 +944,7 @@ fn scrolled_grid(dy: f32) -> (Harness<'static, PdfCraftApp>, f32) {
 }
 
 /// The first card (in list order) still showing below `top`.
-fn first_in_view(h: &Harness<'static, PdfCraftApp>, top: f32) -> String {
+fn first_in_view(h: &Harness<'static, TaratasyApp>, top: f32) -> String {
     names(h).into_iter().find(|n| h.query_by_label(n).is_some_and(|c| c.rect().bottom() > top)).expect("a card in view")
 }
 
@@ -1046,14 +1046,14 @@ fn the_toolbar_fits_the_smallest_window() {
 }
 
 /// The pointer over a card (its centre, below the bar of actions at the top of its page).
-fn hover_card(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
+fn hover_card(h: &mut Harness<'static, TaratasyApp>, name: &str) {
     let at = card(h, name).center();
     h.hover_at(at);
     h.run_steps(2);
 }
 
 /// A primary click at a point, as a user makes one.
-fn click_at(h: &mut Harness<'static, PdfCraftApp>, at: Pos2) {
+fn click_at(h: &mut Harness<'static, TaratasyApp>, at: Pos2) {
     h.hover_at(at);
     h.run_steps(1);
     for pressed in [true, false] {
@@ -1281,7 +1281,7 @@ fn flipping_quickly_ends_on_the_page_shown_and_leaving_the_tab_closes_the_previe
 fn space_on_a_focused_button_presses_it_and_previews_only_what_can_be_shown() {
     // Regression: with a file selected, Space opened the preview whatever had the keyboard.
     let mut h =
-        grid_of(vec![("a.pdf", fixture(2)), ("old.pdf", protected_with(pdfcraft_cos::Algorithm::Rc4_128, "pw", "owner"))], vec2(1400.0, 900.0));
+        grid_of(vec![("a.pdf", fixture(2)), ("old.pdf", protected_with(taratasy_cos::Algorithm::Rc4_128, "pw", "owner"))], vec2(1400.0, 900.0));
     h.get_by_label("a.pdf").click();
     h.run_steps(1);
     h.get_by_label("List view").focus();
@@ -1334,7 +1334,7 @@ fn page_card(page: usize, name: &str) -> String {
 }
 
 /// Expand a file from its card's hover bar.
-fn expand(h: &mut Harness<'static, PdfCraftApp>, name: &str) {
+fn expand(h: &mut Harness<'static, TaratasyApp>, name: &str) {
     hover_card(h, name);
     h.get_by_label("Expand").click();
     h.run_steps(2);
@@ -1503,7 +1503,7 @@ fn dragging_a_page_moves_that_page_even_between_another_files_pages() {
     let (p2, c) = (card(&h, &page_card(2, "b.pdf")), card(&h, "c.pdf"));
     drag(&mut h, p2.center(), c.center() + vec2(c.width() * 0.3, 0.0));
     let parts =
-        |h: &Harness<'static, PdfCraftApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
+        |h: &Harness<'static, TaratasyApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
     assert_eq!(parts(&h), ["a.pdf:[0]", "b.pdf:[0, 2, 3]", "c.pdf:[0]", "b.pdf:[1]"]);
     // One undo step puts it back, as one file again.
     h.key_press_modifiers(Modifiers::COMMAND, Key::Z);
@@ -1643,7 +1643,7 @@ fn removing_pages_from_the_hover_bar_the_toolbar_and_delete_never_touches_the_fi
     let original = h.state().combine_draft[1].bytes.clone();
     expand(&mut h, "b.pdf");
     let parts =
-        |h: &Harness<'static, PdfCraftApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
+        |h: &Harness<'static, TaratasyApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
     // A page card's trash: that page.
     hover_card(&mut h, &page_card(2, "b.pdf"));
     h.get_by_label("Remove page").click();
@@ -1679,7 +1679,7 @@ fn a_split_file_counts_once_and_combines_with_one_bookmark() {
     let mut h = grid_of_pages(&[("one.pdf", 2), ("two.pdf", 3)]);
     expand(&mut h, "one.pdf");
     expand(&mut h, "two.pdf");
-    let totals = |h: &Harness<'static, PdfCraftApp>| {
+    let totals = |h: &Harness<'static, TaratasyApp>| {
         let n = h.get_by_label_contains(" pages · ");
         let a = n.accesskit_node();
         a.label().or(a.value()).unwrap_or_default().to_string()
@@ -1715,7 +1715,7 @@ fn pages_picked_out_of_sight_or_before_an_undo_are_let_go_of() {
     // stayed picked, and the trash or Delete took it.
     let mut h = grid_of_pages(&[("a.pdf", 1), ("b.pdf", 4), ("c.pdf", 1)]);
     let parts =
-        |h: &Harness<'static, PdfCraftApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
+        |h: &Harness<'static, TaratasyApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
     expand(&mut h, "b.pdf");
     // Collapsed from its hover bar: nothing picked, Delete takes nothing.
     h.get_by_label(&page_card(2, "b.pdf")).click();
@@ -1767,7 +1767,7 @@ fn pages_picked_out_of_sight_or_before_an_undo_are_let_go_of() {
 fn a_files_parts_join_when_what_was_between_them_goes_and_one_file_cannot_be_combined() {
     let mut h = grid_of_pages(&[("one.pdf", 2), ("two.pdf", 1)]);
     let parts =
-        |h: &Harness<'static, PdfCraftApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
+        |h: &Harness<'static, TaratasyApp>| h.state().combine_parts_shown().into_iter().map(|(n, p)| format!("{n}:{p:?}")).collect::<Vec<_>>();
     expand(&mut h, "one.pdf");
     // one's page 2 after two: one is in two parts.
     let (p2, two) = (card(&h, &page_card(2, "one.pdf")), card(&h, "two.pdf"));
@@ -1807,7 +1807,7 @@ fn open_documents_already_in_the_list_are_not_added_again() {
     // #1356: Add open documents left out none of the open documents, but added again the ones
     // already listed. Two documents with the same name and the same bytes are still two documents.
     let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).build_eframe(|_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         for (name, pages) in [("a.pdf", 1), ("b.pdf", 2), ("report.pdf", 3)] {
             app.open_bytes(name, None, fixture(pages)).unwrap();
@@ -1817,7 +1817,7 @@ fn open_documents_already_in_the_list_are_not_added_again() {
     h.run_steps(4);
     h.state_mut().execute("page.combine");
     h.run_steps(3);
-    let add_all = |h: &mut Harness<'static, PdfCraftApp>| {
+    let add_all = |h: &mut Harness<'static, TaratasyApp>| {
         h.get_by_label("Add open documents").click();
         h.run_steps(2);
         h.get_by_label("All open documents").click();

@@ -103,7 +103,7 @@ pub(crate) fn buttons(ui: &mut Ui, ok: &str, cancel: &str, ok_enabled: bool) -> 
 /// Narrowest column, points (the engine refuses narrower ones).
 const MIN_COL_PT: f32 = 18.0;
 
-/// The Columns dialog's fields. Lengths are in the interface unit ([`wordcraft_geom::Unit`]).
+/// The Columns dialog's fields. Lengths are in the interface unit ([`soratra_geom::Unit`]).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ColumnsForm {
@@ -130,11 +130,11 @@ impl ColumnsForm {
 
     pub fn read(app: &WordApp) -> ColumnsForm {
         let k = Self::k();
-        let sp = wordcraft_engine::cmd::page::sect(&app.session);
+        let sp = soratra_engine::cmd::page::sect(&app.session);
         let c = &sp.columns;
         let count = c.count.clamp(1, 12);
         let sections = app.session.doc.sections().len() > 1;
-        let selection = wordcraft_engine::cmd::page::selection_sectionable(&app.session);
+        let selection = soratra_engine::cmd::page::selection_sectionable(&app.session);
         let apply = match (selection, sections) {
             (true, _) => "selection",
             (false, true) => "section",
@@ -610,7 +610,7 @@ impl SymbolForm {
             .doc
             .para_at(&app.session.sel.focus)
             .map(|p| app.session.doc.styles.resolve_char(p.props.style.as_deref(), &app.session.typing_props()).font)
-            .unwrap_or_else(|| wordcraft_doc::styles::BODY_FONT.to_string());
+            .unwrap_or_else(|| soratra_doc::styles::BODY_FONT.to_string());
         let recent = app.ui.recent_symbols.first().cloned();
         let font = recent.as_ref().map(|r| r.font.clone()).unwrap_or_default();
         let selected = recent.and_then(|r| r.ch.chars().next());
@@ -632,7 +632,7 @@ impl SymbolForm {
             return;
         }
         // The face the document's text would use (with Word's font substitutes).
-        let face = wordcraft_fonts::word::resolve(&family, false, false).face.get();
+        let face = soratra_fonts::word::resolve(&family, false, false).face.get();
         self.chars = face.chars().into_iter().map(|(c, _)| c).filter(|c| !c.is_control() && !(0xD800..=0xDFFF).contains(&(*c as u32))).collect();
         self.chars_of = Some(family);
         // Keep the selection when the new font has it; otherwise its first character.
@@ -691,15 +691,15 @@ fn glyph_texture(app: &mut WordApp, ctx: &egui::Context, font: &str, c: char) ->
 }
 
 fn glyph_image(font: &str, c: char, ppp: f32) -> Option<egui::ColorImage> {
-    use wordcraft_doc::props::{Align, CharProps, LineSpacing};
+    use soratra_doc::props::{Align, CharProps, LineSpacing};
     let size = 16.0;
     let mut p =
-        wordcraft_doc::Paragraph::with_text(&c.to_string(), CharProps { font: Some(font.to_string()), size: Some(size), ..Default::default() });
+        soratra_doc::Paragraph::with_text(&c.to_string(), CharProps { font: Some(font.to_string()), size: Some(size), ..Default::default() });
     p.props.align = Some(Align::Center);
     p.props.space_before = Some(((CELL - size * 1.3) / 2.0).max(0.0));
     p.props.space_after = Some(0.0);
     p.props.line_spacing = Some(LineSpacing::Multiple(1.0));
-    let mut img = crate::previews::snippet(&wordcraft_doc::Document::new(), p, CELL - 2.0, CELL - 2.0, ppp, 0.0)?;
+    let mut img = crate::previews::snippet(&soratra_doc::Document::new(), p, CELL - 2.0, CELL - 2.0, ppp, 0.0)?;
     // Ink against the paper (the first pixel) becomes coverage.
     let lum = |p: &Color32| (p.r() as u16 + p.g() as u16 + p.b() as u16) / 3;
     let bg = img.pixels.first().map(lum).unwrap_or(255);
@@ -941,7 +941,7 @@ pub enum FieldKind {
     Plain,
 }
 
-/// The fields WordCraft computes, by category: (name, category, description).
+/// The fields Soratra computes, by category: (name, category, description).
 pub const FIELDS: &[(&str, &str, &str)] = &[
     ("CREATEDATE", "Date and Time", "When this document was first created"),
     ("DATE", "Date and Time", "The date it is today"),
@@ -1080,7 +1080,7 @@ impl FieldForm {
                     .styles
                     .styles
                     .iter()
-                    .filter(|s| matches!(s.kind, wordcraft_doc::StyleKind::Paragraph | wordcraft_doc::StyleKind::Character) && !s.hidden)
+                    .filter(|s| matches!(s.kind, soratra_doc::StyleKind::Paragraph | soratra_doc::StyleKind::Character) && !s.hidden)
                     .map(|s| s.name.clone())
                     .collect();
                 v.sort_by_key(|n| n.to_lowercase());
@@ -1165,7 +1165,7 @@ impl FieldForm {
         if code.is_empty() || code.len() > 4096 {
             return None;
         }
-        let name = wordcraft_layout::fields::field_name(&code);
+        let name = soratra_layout::fields::field_name(&code);
         Some(if name == "MERGEFIELD" { json!({"instr": code, "result": format!("«{}»", merge_field_name(&code))}) } else { json!({"instr": code}) })
     }
 }
@@ -1258,7 +1258,7 @@ fn field_options(ui: &mut Ui, f: &mut FieldForm, t: &Tokens) {
             egui::Frame::new().stroke(Stroke::new(1.0, t.border)).inner_margin(2.0).show(ui, |ui| {
                 egui::ScrollArea::vertical().id_salt("field_dates").max_height(170.0).auto_shrink([false, false]).show(ui, |ui| {
                     for pic in DATE_FORMATS {
-                        let sample = wordcraft_engine::cmd::insert::format_date(pic);
+                        let sample = soratra_engine::cmd::insert::format_date(pic);
                         if ui.selectable_label(f.date_format == *pic, sample).on_hover_text(*pic).clicked() {
                             f.date_format = (*pic).to_string();
                         }
@@ -1337,7 +1337,7 @@ mod tests {
     use super::*;
 
     fn app() -> WordApp {
-        WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::from_text("one\ntwo")), Default::default())
+        WordApp::new(soratra_engine::Session::new(soratra_doc::Document::from_text("one\ntwo")), Default::default())
     }
 
     /// More Columns: two unequal columns with a line between apply as one undo step.
@@ -1360,14 +1360,14 @@ mod tests {
         f.separator = true;
         let undo_before = a.session.undo_depth();
         a.run("layout.columns", f.params()).unwrap();
-        let c = wordcraft_engine::cmd::page::sect(&a.session).columns;
+        let c = soratra_engine::cmd::page::sect(&a.session).columns;
         assert_eq!((c.count, c.separator, c.widths.len()), (2, true, 2));
         assert_eq!(a.session.undo_depth(), undo_before + 1, "one undo step");
         // The dialog reopens with what was applied.
         let again = ColumnsForm::read(&a);
         assert!(!again.equal && again.separator && again.cols.len() == 2);
         a.run("edit.undo", json!({})).unwrap();
-        assert_eq!(wordcraft_engine::cmd::page::sect(&a.session).columns.count, 1);
+        assert_eq!(soratra_engine::cmd::page::sect(&a.session).columns.count, 1);
     }
 
     /// With text selected, More Columns applies to the selected text by default, as in Word
@@ -1396,7 +1396,7 @@ mod tests {
         assert_eq!(p, json!({"char": "\u{2665}", "font": "DejaVu Sans"}));
         a.run("insert.symbol", p).unwrap();
         remember_symbol(&mut a, "\u{2665}", "DejaVu Sans");
-        assert!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).starts_with('\u{2665}'));
+        assert!(a.session.doc.plain_text(soratra_doc::StoryRef::Body).starts_with('\u{2665}'));
         assert_eq!(a.ui.recent_symbols.first().map(|r| r.font.as_str()), Some("DejaVu Sans"));
         assert_eq!(subset_of('\u{2665}'), Some("Miscellaneous Symbols"));
         // (normal text) inserts without a font.

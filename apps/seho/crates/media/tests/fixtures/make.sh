@@ -27,11 +27,11 @@ for f in range(6):
     sys.stdout.buffer.write(bytes(v for y in range(h) for x in range(w) for v in ((x * 4 + f * 20) % 256, (y * 5) % 256, (f * 40) % 256)))
 " > "$3"
 }
-frames 64 48 /tmp/deckcraft-fixture-64x48.rgb
-frames 64 64 /tmp/deckcraft-fixture-64x64.rgb
-VID="-f rawvideo -pix_fmt rgb24 -s 64x48 -r 10 -i /tmp/deckcraft-fixture-64x48.rgb"
+frames 64 48 /tmp/seho-fixture-64x48.rgb
+frames 64 64 /tmp/seho-fixture-64x64.rgb
+VID="-f rawvideo -pix_fmt rgb24 -s 64x48 -r 10 -i /tmp/seho-fixture-64x48.rgb"
 $FF $VID $TONE44 -c:v libx264 -pix_fmt yuv420p -g 5 -bf 2 -c:a aac -b:a 48k -shortest $META clip-h264.mp4
 $FF $VID -c:v libx264 -pix_fmt yuv420p -g 5 -bf 0 $META clip-h264.mov
 $FF $VID -c:v libx265 -pix_fmt yuv420p -x265-params log-level=error:keyint=5 -tag:v hvc1 $META clip-hevc.mp4
 $FF $VID $TONE -c:v libvpx-vp9 -pix_fmt yuv420p -g 5 -b:v 100k -c:a libopus -b:a 32k -shortest $META clip-vp9.webm
-$FF -f rawvideo -pix_fmt rgb24 -s 64x64 -r 10 -i /tmp/deckcraft-fixture-64x64.rgb -c:v libsvtav1 -pix_fmt yuv420p -g 5 -svtav1-params loglevel=0 $META clip-av1.mkv
+$FF -f rawvideo -pix_fmt rgb24 -s 64x64 -r 10 -i /tmp/seho-fixture-64x64.rgb -c:v libsvtav1 -pix_fmt yuv420p -g 5 -svtav1-params loglevel=0 $META clip-av1.mkv

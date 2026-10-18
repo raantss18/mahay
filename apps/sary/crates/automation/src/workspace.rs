@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use cap_std::ambient_authority;
 use cap_std::fs::{Dir, OpenOptions};
-use photocraft_format::atomic::RenameRetry;
+use sary_format::atomic::RenameRetry;
 use serde_json::Value;
 
 use crate::AutomationError;
@@ -54,10 +54,10 @@ impl AuthorizedWorkspace {
         read_to_observed_length(&mut file, metadata.len())
     }
 
-    /// Load one `.pcraft` document in directory form — the native on-disk layout — below the
+    /// Load one `.sary` document in directory form — the native on-disk layout — below the
     /// read root. `read` serves regular files only (the zip form), so a regular file at the
     /// path is reported as `Ok(None)` for the caller to fall back to.
-    pub fn open_pcraft(&self, path: &str) -> Result<Option<photocraft_doc::Document>, AutomationError> {
+    pub fn open_sary(&self, path: &str) -> Result<Option<sary_doc::Document>, AutomationError> {
         let relative = request_path(path, self.read.as_ref())?;
         let root = self.read.as_ref().ok_or_else(|| AutomationError::BadRequest(format!("{DENIED}: read authority is absent")))?;
         let dir = match root.dir.open_dir(&relative) {
@@ -66,12 +66,12 @@ impl AuthorizedWorkspace {
             Err(e) => return Err(file_error("read", path, e)),
         };
         let source = DirHandle { dir };
-        Ok(Some(photocraft_format::load_bytes_source(&source, &photocraft_format::LoadOptions::default())?))
+        Ok(Some(sary_format::load_bytes_source(&source, &sary_format::LoadOptions::default())?))
     }
 
     /// Create or replace one file below the configured write root, crash-safely: the bytes go to
     /// a temporary file beside the target, which is synced and renamed over it (the same steps
-    /// as [`photocraft_format::atomic_write`], through the directory capability). On failure
+    /// as [`sary_format::atomic_write`], through the directory capability). On failure
     /// the previous file is untouched and the temporary file is removed.
     ///
     /// The parent directory must already exist. `cap-std` performs path
@@ -82,15 +82,15 @@ impl AuthorizedWorkspace {
         let root = self.write.as_ref().ok_or_else(|| AutomationError::BadRequest(format!("{DENIED}: write authority is absent")))?;
         let leaf = relative.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
         let parent = relative.parent().map(Path::to_path_buf).unwrap_or_default();
-        let tmp = parent.join(photocraft_format::atomic::temp_name(&leaf));
+        let tmp = parent.join(sary_format::atomic::temp_name(&leaf));
         let mut options = OpenOptions::new();
         options.write(true).create_new(true);
         let written = root.dir.open_with(&tmp, &options).and_then(|mut file| {
             file.write_all(bytes)?;
             // Falls back to a plain fsync on shares that refuse a full flush (#1336).
-            photocraft_format::atomic::sync_file(&file.into_std())
+            sary_format::atomic::sync_file(&file.into_std())
         });
-        let renamed = written.and_then(|()| photocraft_format::atomic::retry_rename(RenameRetry::platform(), || root.dir.rename(&tmp, &root.dir, &relative)));
+        let renamed = written.and_then(|()| sary_format::atomic::retry_rename(RenameRetry::platform(), || root.dir.rename(&tmp, &root.dir, &relative)));
         if let Err(e) = renamed {
             let _ = root.dir.remove_file(&tmp);
             return Err(file_error("write", path, e));
@@ -100,7 +100,7 @@ impl AuthorizedWorkspace {
         {
             let dir = if parent.as_os_str().is_empty() { PathBuf::from(".") } else { parent };
             if let Ok(d) = root.dir.open(&dir) {
-                let _ = photocraft_format::atomic::sync_file(&d.into_std());
+                let _ = sary_format::atomic::sync_file(&d.into_std());
             }
         }
         Ok(())
@@ -215,21 +215,21 @@ fn path_error(path: &str, reason: &str) -> AutomationError {
     AutomationError::BadRequest(format!("automation path rejected: {reason}: `{path}`"))
 }
 
-/// A `.pcraft` directory behind the read-root capability: bounded reads, no ambient paths.
+/// A `.sary` directory behind the read-root capability: bounded reads, no ambient paths.
 struct DirHandle {
     dir: Dir,
 }
 
-impl photocraft_format::ByteSource for DirHandle {
-    fn get(&self, path: &str, max: usize) -> photocraft_format::Result<Vec<u8>> {
-        let missing = || photocraft_format::FormatError::Corrupt(format!("missing `{path}`"));
+impl sary_format::ByteSource for DirHandle {
+    fn get(&self, path: &str, max: usize) -> sary_format::Result<Vec<u8>> {
+        let missing = || sary_format::FormatError::Corrupt(format!("missing `{path}`"));
         let mut file = self.dir.open(path).map_err(|_| missing())?;
         let metadata = file.metadata().map_err(|_| missing())?;
         if !metadata.is_file() {
             // A FIFO or device would block the open and stream without end.
-            return Err(photocraft_format::FormatError::Corrupt(format!("`{path}` is not a regular file")));
+            return Err(sary_format::FormatError::Corrupt(format!("`{path}` is not a regular file")));
         }
-        photocraft_format::read_entry(&mut file, metadata.len(), max, path)
+        sary_format::read_entry(&mut file, metadata.len(), max, path)
     }
 }
 
@@ -303,15 +303,15 @@ pub fn authorize_desktop_engine_command(id: &str, params: &Value) -> Result<(), 
     Ok(())
 }
 
-/// [`authorize_engine_command`] as the function pointer [`photocraft_engine::Session::authorize`]
+/// [`authorize_engine_command`] as the function pointer [`sary_engine::Session::authorize`]
 /// stores. `actions.play` calls it for every nested step.
-pub fn authorize_engine_step(id: &str, params: &Value) -> photocraft_engine::Result<()> {
-    authorize_engine_command(id, params).map_err(|e| photocraft_engine::EngineError::Other(e.to_string()))
+pub fn authorize_engine_step(id: &str, params: &Value) -> sary_engine::Result<()> {
+    authorize_engine_command(id, params).map_err(|e| sary_engine::EngineError::Other(e.to_string()))
 }
 
-/// [`authorize_desktop_engine_command`] as a [`photocraft_engine::Session::authorize`] hook.
-pub fn authorize_desktop_engine_step(id: &str, params: &Value) -> photocraft_engine::Result<()> {
-    authorize_desktop_engine_command(id, params).map_err(|e| photocraft_engine::EngineError::Other(e.to_string()))
+/// [`authorize_desktop_engine_command`] as a [`sary_engine::Session::authorize`] hook.
+pub fn authorize_desktop_engine_step(id: &str, params: &Value) -> sary_engine::Result<()> {
+    authorize_desktop_engine_command(id, params).map_err(|e| sary_engine::EngineError::Other(e.to_string()))
 }
 
 fn params_contain_ambient_path(id: &str, params: &Value) -> bool {
@@ -451,7 +451,7 @@ mod tests {
     use super::*;
 
     fn roots(name: &str) -> (PathBuf, PathBuf, AuthorizedWorkspace) {
-        let base = std::env::temp_dir().join(format!("photocraft-workspace-{}-{name}", std::process::id()));
+        let base = std::env::temp_dir().join(format!("sary-workspace-{}-{name}", std::process::id()));
         let inside = base.join("inside");
         let outside = base.join("outside");
         let _ = std::fs::remove_dir_all(&base);
@@ -515,42 +515,42 @@ mod tests {
     }
 
     #[test]
-    fn open_pcraft_loads_a_directory_below_the_read_root() {
-        let (inside, _, workspace) = roots("pcraft-dir");
-        let doc = photocraft_doc::Document::new("Native", photocraft_doc::Size::new(16, 12), photocraft_doc::ColorMode::Rgb, photocraft_doc::SampleType::U8);
-        photocraft_format::PcraftWriter::new().save_dir(&doc, &inside.join("native.pcraft"), &photocraft_format::SaveOptions::default()).unwrap();
-        let loaded = workspace.open_pcraft("native.pcraft").unwrap().expect("the directory form loads");
+    fn open_sary_loads_a_directory_below_the_read_root() {
+        let (inside, _, workspace) = roots("sary-dir");
+        let doc = sary_doc::Document::new("Native", sary_doc::Size::new(16, 12), sary_doc::ColorMode::Rgb, sary_doc::SampleType::U8);
+        sary_format::SaryWriter::new().save_dir(&doc, &inside.join("native.sary"), &sary_format::SaveOptions::default()).unwrap();
+        let loaded = workspace.open_sary("native.sary").unwrap().expect("the directory form loads");
         assert_eq!(loaded.name, doc.name);
         assert_eq!((loaded.size.width, loaded.size.height), (16, 12));
     }
 
     #[test]
-    fn open_pcraft_reports_zip_files_and_missing_paths_clearly() {
-        let (inside, _, workspace) = roots("pcraft-errors");
-        let doc = photocraft_doc::Document::new("Zipped", photocraft_doc::Size::new(4, 4), photocraft_doc::ColorMode::Rgb, photocraft_doc::SampleType::U8);
-        let zip = inside.join("zipped.pcraft");
-        photocraft_format::PcraftWriter::new().save_path(&doc, &zip, &photocraft_format::SaveOptions::default()).unwrap();
+    fn open_sary_reports_zip_files_and_missing_paths_clearly() {
+        let (inside, _, workspace) = roots("sary-errors");
+        let doc = sary_doc::Document::new("Zipped", sary_doc::Size::new(4, 4), sary_doc::ColorMode::Rgb, sary_doc::SampleType::U8);
+        let zip = inside.join("zipped.sary");
+        sary_format::SaryWriter::new().save_path(&doc, &zip, &sary_format::SaveOptions::default()).unwrap();
         assert!(zip.is_file());
-        assert!(workspace.open_pcraft("zipped.pcraft").unwrap().is_none(), "the zip form falls back to the bytes path");
-        let error = workspace.open_pcraft("missing.pcraft").unwrap_err().to_string();
+        assert!(workspace.open_sary("zipped.sary").unwrap().is_none(), "the zip form falls back to the bytes path");
+        let error = workspace.open_sary("missing.sary").unwrap_err().to_string();
         assert!(error.contains("failed"), "a missing path propagates its io error: {error}");
-        assert!(AuthorizedWorkspace::default().open_pcraft("x.pcraft").is_err(), "no read authority fails closed");
+        assert!(AuthorizedWorkspace::default().open_sary("x.sary").is_err(), "no read authority fails closed");
     }
 
     #[cfg(unix)]
     #[test]
-    fn open_pcraft_rejects_non_regular_entries_and_escaping_symlinks() {
-        let (inside, _, workspace) = roots("pcraft-nonregular");
-        let bundle = inside.join("native.pcraft");
+    fn open_sary_rejects_non_regular_entries_and_escaping_symlinks() {
+        let (inside, _, workspace) = roots("sary-nonregular");
+        let bundle = inside.join("native.sary");
         std::fs::create_dir_all(bundle.join("manifest.json")).unwrap();
-        let error = workspace.open_pcraft("native.pcraft").unwrap_err().to_string();
+        let error = workspace.open_sary("native.sary").unwrap_err().to_string();
         assert!(error.contains("not a regular file"), "a directory entry is refused, not streamed: {error}");
 
-        let (inside2, _, workspace2) = roots("pcraft-symlink");
-        let bundle2 = inside2.join("native.pcraft");
+        let (inside2, _, workspace2) = roots("sary-symlink");
+        let bundle2 = inside2.join("native.sary");
         std::fs::create_dir(&bundle2).unwrap();
         std::os::unix::fs::symlink("/dev/zero", bundle2.join("manifest.json")).unwrap();
-        assert!(workspace2.open_pcraft("native.pcraft").is_err(), "an escaping symlink entry is refused");
+        assert!(workspace2.open_sary("native.sary").is_err(), "an escaping symlink entry is refused");
     }
 
     fn temp_files(dir: &Path) -> Vec<String> {
@@ -728,13 +728,13 @@ mod tests {
         assert!(authorize_engine_step("file.open", &serde_json::json!({})).is_err());
         assert!(authorize_engine_step("actions.play", &serde_json::json!({})).is_ok());
         // An allowed command can't reach a denied one by running it on its own behalf.
-        let mut session = photocraft_engine::Session::new();
+        let mut session = sary_engine::Session::new();
         session.execute("file.new", serde_json::json!({"width": 4, "height": 4})).unwrap();
         session.authorize = Some(authorize_desktop_engine_step);
         let params = serde_json::json!({"to": "grayscale"});
         assert!(authorize_desktop_engine_command("file.automate.conditionalModeChange", &params).is_ok());
         assert!(session.execute("file.automate.conditionalModeChange", params).is_err());
-        assert_eq!(session.active().unwrap().doc.mode, photocraft_engine::doc::ColorMode::Rgb);
+        assert_eq!(session.active().unwrap().doc.mode, sary_engine::doc::ColorMode::Rgb);
         assert!(authorize_desktop_engine_step("file.saveACopy", &serde_json::json!({})).is_err());
     }
 
@@ -819,19 +819,19 @@ mod tests {
     #[test]
     fn registry_filesystem_path_params_are_classified() {
         let probe = serde_json::json!({
-            "path": "/outside/photocraft-probe",
-            "file": "/outside/photocraft-probe.icc",
-            "mapPath": "/outside/photocraft-probe.png",
-            "profile": "/outside/photocraft-probe.icc",
-            "workingRgb": "/outside/photocraft-probe.icc",
-            "workingCmyk": "/outside/photocraft-probe.icc",
-            "workingGray": "/outside/photocraft-probe.icc",
-            "input": "/outside/photocraft-input",
-            "output": "/outside/photocraft-output",
-            "paths": ["/outside/photocraft-probe.psd"],
+            "path": "/outside/sary-probe",
+            "file": "/outside/sary-probe.icc",
+            "mapPath": "/outside/sary-probe.png",
+            "profile": "/outside/sary-probe.icc",
+            "workingRgb": "/outside/sary-probe.icc",
+            "workingCmyk": "/outside/sary-probe.icc",
+            "workingGray": "/outside/sary-probe.icc",
+            "input": "/outside/sary-input",
+            "output": "/outside/sary-output",
+            "paths": ["/outside/sary-probe.psd"],
         });
         let preference_probe = serde_json::json!({"path": ".scriptEvents", "value": {}});
-        let unclassified: Vec<_> = photocraft_engine::command_specs()
+        let unclassified: Vec<_> = sary_engine::command_specs()
             .iter()
             .filter(|spec| documents_filesystem_path_params(spec.id, spec.params))
             .filter(|spec| {

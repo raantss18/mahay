@@ -10,8 +10,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
-use pdfcraft_fonts::{
+use taratasy_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
+use taratasy_fonts::{
     GlyphError, GlyphOutline, ShapedCluster, ShapedScript, Std14, literal, shape_arabic, shape_hebrew, shape_thai, shaped_glyph, win_ansi,
 };
 use unicode_bidi::{Level, ParagraphBidiInfo};
@@ -154,8 +154,8 @@ impl AddedImage {
 
     /// The matrix from image space (the unit square) to display space: crop, flip, rotate,
     /// then fill the box.
-    fn matrix(&self) -> pdfcraft_content::Matrix {
-        use pdfcraft_content::Matrix as M;
+    fn matrix(&self) -> taratasy_content::Matrix {
+        use taratasy_content::Matrix as M;
         let [l, b, r, t] = self.crop.map(|v| v.clamp(0.0, 0.45));
         let (cw, ch) = ((1.0 - l - r).max(0.05), (1.0 - b - t).max(0.05));
         let mut m = M([1.0 / cw, 0.0, 0.0, 1.0 / ch, -l / cw, -b / ch]);
@@ -215,7 +215,7 @@ pub struct Added {
     pub content: Content,
 }
 
-/// PdfCraft-owned page content discovered in one page/content traversal.
+/// Taratasy-owned page content discovered in one page/content traversal.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MarkerScan {
     pub marks: Vec<MarkKind>,
@@ -311,24 +311,24 @@ fn is_thai(c: char) -> bool {
 }
 
 /// Arabic letters, marks, digits and punctuation: an item with any of them is shaped with the
-/// craft-fonts Arabic face.
+/// mahay-fonts Arabic face.
 fn is_arabic(c: char) -> bool {
     matches!(u32::from(c), 0x0600..=0x06FF | 0x0750..=0x077F | 0x0870..=0x08FF | 0xFB50..=0xFDFF | 0xFE70..=0xFEFC)
 }
 
 /// Hebrew letters, points, cantillation marks and punctuation (and the presentation forms): an
-/// item with any of them is drawn with the craft-fonts Hebrew face.
+/// item with any of them is drawn with the mahay-fonts Hebrew face.
 fn is_hebrew(c: char) -> bool {
     matches!(u32::from(c), 0x0591..=0x05F4 | 0xFB1D..=0xFB4F)
 }
 
 /// The first character of `t` that would be drawn as `?`: outside WinAnsiEncoding and not drawn
-/// with the craft-fonts Arabic (#125) or Hebrew (#128) face, or Arabic or Hebrew that the face can't
+/// with the mahay-fonts Arabic (#125) or Hebrew (#128) face, or Arabic or Hebrew that the face can't
 /// draw (or that has no face to draw it). Page-content tools refuse such text; the Add-text editor
 /// keeps it open.
 pub fn first_undrawable(t: &AddedText) -> Option<char> {
     if t.text.chars().any(is_thai) {
-        if let Some(c) = t.text.chars().find(|c| is_thai(*c) && !pdfcraft_fonts::thai_has(*c)) {
+        if let Some(c) = t.text.chars().find(|c| is_thai(*c) && !taratasy_fonts::thai_has(*c)) {
             return Some(c);
         }
         let rest = AddedText { text: t.text.chars().filter(|c| !is_thai(*c)).collect(), ..t.clone() };
@@ -336,30 +336,30 @@ pub fn first_undrawable(t: &AddedText) -> Option<char> {
     }
     // Arabic or Hebrew that nothing can draw: there's no face, or the face lacks it.
     if let Some(c) =
-        t.text.chars().find(|c| (shaped_arabic(*c) && !pdfcraft_fonts::arabic_has(*c)) || (is_hebrew(*c) && !pdfcraft_fonts::hebrew_has(*c)))
+        t.text.chars().find(|c| (shaped_arabic(*c) && !taratasy_fonts::arabic_has(*c)) || (is_hebrew(*c) && !taratasy_fonts::hebrew_has(*c)))
     {
         return Some(c);
     }
     if !shaped_by_a_face(t) {
         // Drawn line by line in the item's standard font (`\n` splits lines). Without the face
         // that is also how `draw` redraws an existing item, so it's checked that way.
-        return t.text.split('\n').find_map(pdfcraft_fonts::first_non_win_ansi);
+        return t.text.split('\n').find_map(taratasy_fonts::first_non_win_ansi);
     }
     // What `shaped_layout` leaves to the standard font, exactly as `draw_shaped` splits it.
     wrapped(t).into_iter().find_map(|(line, rtl)| {
         let (pieces, _) = shaped_layout(t, &line, rtl).ok()?;
         pieces.iter().find_map(|p| match p {
-            Piece::Latin(s) => pdfcraft_fonts::first_non_win_ansi(s),
+            Piece::Latin(s) => taratasy_fonts::first_non_win_ansi(s),
             Piece::Shaped(_) => None,
         })
     })
 }
 
-/// Whether `t` has Arabic or Hebrew that its craft-fonts face draws (so `draw` lays it out with
+/// Whether `t` has Arabic or Hebrew that its mahay-fonts face draws (so `draw` lays it out with
 /// [`draw_shaped`]).
 fn shaped_by_a_face(t: &AddedText) -> bool {
-    (pdfcraft_fonts::document_arabic_font().is_some() && t.text.chars().any(is_arabic))
-        || (pdfcraft_fonts::document_hebrew_font(false).is_some() && t.text.chars().any(is_hebrew))
+    (taratasy_fonts::document_arabic_font().is_some() && t.text.chars().any(is_arabic))
+        || (taratasy_fonts::document_hebrew_font(false).is_some() && t.text.chars().any(is_hebrew))
 }
 
 /// An Arabic character the face shapes and draws (U+061C, a direction mark, is dropped).
@@ -418,9 +418,9 @@ fn shaped_layout(t: &AddedText, line: &str, rtl: bool) -> Result<(Vec<Piece>, f6
             let after_hebrew = segments.last().is_some_and(|(kind, _)| *kind == Some(ShapedScript::Hebrew));
             let script = if is_thai(c) {
                 Some(ShapedScript::Thai)
-            } else if is_hebrew(c) || (run_rtl && after_hebrew && !c.is_alphanumeric() && pdfcraft_fonts::hebrew_has(c)) {
+            } else if is_hebrew(c) || (run_rtl && after_hebrew && !c.is_alphanumeric() && taratasy_fonts::hebrew_has(c)) {
                 Some(ShapedScript::Hebrew)
-            } else if is_arabic(c) || (run_rtl && !c.is_alphanumeric() && pdfcraft_fonts::arabic_has(c)) {
+            } else if is_arabic(c) || (run_rtl && !c.is_alphanumeric() && taratasy_fonts::arabic_has(c)) {
                 Some(ShapedScript::Arabic)
             } else {
                 None
@@ -466,8 +466,8 @@ fn shaped_width(t: &AddedText, s: &str, rtl: bool) -> f64 {
 
 fn arabic_error(e: GlyphError, text: &str) -> EditError {
     EditError::Invalid(match e {
-        GlyphError::NoFont => "Arabic text needs PdfCraft's Arabic font, which this build doesn't include \
-                               (to build it in, set CRAFT_FONTS_DIR to a craft-fonts checkout that has an Arab face)"
+        GlyphError::NoFont => "Arabic text needs Taratasy's Arabic font, which this build doesn't include \
+                               (to build it in, set MAHAY_FONTS_DIR to a mahay-fonts checkout that has an Arab face)"
             .into(),
         GlyphError::Missing => format!("the Arabic font can't show \"{text}\""),
         GlyphError::TooComplex => format!("the Arabic font's glyphs for \"{text}\" are too complex"),
@@ -476,8 +476,8 @@ fn arabic_error(e: GlyphError, text: &str) -> EditError {
 
 fn hebrew_error(e: GlyphError, text: &str) -> EditError {
     EditError::Invalid(match e {
-        GlyphError::NoFont => "Hebrew text needs PdfCraft's Hebrew font, which this build doesn't include \
-                               (to build it in, set CRAFT_FONTS_DIR to a craft-fonts checkout that has a Hebr face)"
+        GlyphError::NoFont => "Hebrew text needs Taratasy's Hebrew font, which this build doesn't include \
+                               (to build it in, set MAHAY_FONTS_DIR to a mahay-fonts checkout that has a Hebr face)"
             .into(),
         GlyphError::Missing => format!("the Hebrew font can't show \"{text}\""),
         GlyphError::TooComplex => format!("the Hebrew font's glyphs for \"{text}\" are too complex"),
@@ -487,7 +487,7 @@ fn hebrew_error(e: GlyphError, text: &str) -> EditError {
 fn thai_error(e: GlyphError, text: &str) -> EditError {
     EditError::Invalid(match e {
         GlyphError::NoFont => {
-            "Thai text needs a Thai font in this build; rebuild with CRAFT_FONTS_DIR pointing to craft-fonts with a Thai face".into()
+            "Thai text needs a Thai font in this build; rebuild with MAHAY_FONTS_DIR pointing to mahay-fonts with a Thai face".into()
         }
         GlyphError::Missing => format!("the Thai font can't show \"{text}\""),
         GlyphError::TooComplex => "the Thai glyphs are too complex; use a shorter text box".into(),
@@ -519,7 +519,7 @@ const GLYPHS_PER_FONT: usize = 240;
 type LaidLine = (String, bool, Vec<Piece>, f64);
 
 /// Draw a text item that has Arabic, Hebrew or Thai in it. Each line is laid out in display order; their glyphs
-/// come from Type 3 fonts drawn from the craft-fonts face's outlines (no font file is embedded),
+/// come from Type 3 fonts drawn from the mahay-fonts face's outlines (no font file is embedded),
 /// with a ToUnicode map for copy and search. Other text uses the item's standard font.
 fn draw_shaped(doc: &mut Document, t: &AddedText, taken: &Dict, fonts: &mut Dict, out: &mut Vec<u8>) -> Result<(), EditError> {
     let laid = wrapped(t)
@@ -530,7 +530,7 @@ fn draw_shaped(doc: &mut Document, t: &AddedText, taken: &Dict, fonts: &mut Dict
 }
 
 /// [`draw_shaped`] for lines that are already laid out. `outline` is the source of glyph outlines
-/// for a script's face (the craft-fonts faces, or a stand-in in tests).
+/// for a script's face (the mahay-fonts faces, or a stand-in in tests).
 fn draw_laid_shaped(
     doc: &mut Document,
     t: &AddedText,
@@ -708,7 +708,7 @@ fn type3_shaped(doc: &mut Document, clusters: &[&ShapedCluster], outlines: &Hash
             },
             |f| f.family,
         ),
-        None => "PdfCraft Shaped Text",
+        None => "Taratasy Shaped Text",
     };
     let mut descriptor = Dict::new();
     descriptor.set(b"Type".to_vec(), Object::name("FontDescriptor"));
@@ -768,8 +768,8 @@ fn draw(doc: &mut Document, c: &Content, view: [f64; 6], taken: &Dict, existing:
             fonts.set(name.clone().into_bytes(), Object::Dict(font));
             let face_or_new = |has: fn(char) -> bool, face: bool| t.text.chars().any(has) && (face || !existing);
             if t.text.chars().any(is_thai)
-                || face_or_new(is_arabic, pdfcraft_fonts::document_arabic_font().is_some())
-                || face_or_new(is_hebrew, pdfcraft_fonts::document_hebrew_font(false).is_some())
+                || face_or_new(is_arabic, taratasy_fonts::document_arabic_font().is_some())
+                || face_or_new(is_hebrew, taratasy_fonts::document_hebrew_font(false).is_some())
             {
                 draw_shaped(doc, t, taken, &mut fonts, &mut out)?;
                 res.set(b"Font".to_vec(), Object::Dict(fonts));
@@ -923,7 +923,7 @@ fn with_resolved<T>(doc: &Document, object: &Object, f: impl FnOnce(&Object) -> 
     }
 }
 
-fn for_each_content_entry(doc: &Document, page: &pdfcraft_model::Page, mut visit: impl FnMut(&Object)) {
+fn for_each_content_entry(doc: &Document, page: &taratasy_model::Page, mut visit: impl FnMut(&Object)) {
     let Some(contents) = page.dict.get(b"Contents") else { return };
     with_resolved(doc, contents, |resolved| match resolved {
         Object::Array(entries) => {
@@ -973,7 +973,7 @@ pub fn scan_markers(doc: &Document) -> MarkerScan {
                             .get(b"UserUnit")
                             .and_then(Object::as_f64)
                             .filter(|u| u.is_finite() && *u >= 1.0)
-                            .map_or(1.0, |u| u.min(pdfcraft_model::MAX_USER_UNIT));
+                            .map_or(1.0, |u| u.min(taratasy_model::MAX_USER_UNIT));
                         scan.added.push(Added { page: pi, obj, content: content.scaled(page.user_unit(doc) / written) });
                     }
                 });
@@ -999,16 +999,16 @@ fn validate(c: &Content) -> Result<(), EditError> {
             if (r[2] - r[0]).abs() < 1.0 {
                 return Err(EditError::Invalid("the text box is too narrow".into()));
             }
-            if t.text.chars().any(is_thai) && pdfcraft_fonts::document_thai_font().is_none() {
+            if t.text.chars().any(is_thai) && taratasy_fonts::document_thai_font().is_none() {
                 return Err(thai_error(GlyphError::NoFont, &t.text));
             }
             // Without the Arabic face, `draw` decides for the Arabic letters themselves (#403): a new
             // item is refused with what's missing, and one that already holds Arabic stays movable.
             // Everything else in it is drawn in the standard font, so it still has to fit.
-            let undrawable = if t.text.chars().any(shaped_arabic) && pdfcraft_fonts::document_arabic_font().is_none() {
+            let undrawable = if t.text.chars().any(shaped_arabic) && taratasy_fonts::document_arabic_font().is_none() {
                 t.text.split('\n').find_map(|line| {
                     line.chars()
-                        .find(|c| !(shaped_arabic(*c) || is_thai(*c) && pdfcraft_fonts::thai_has(*c) || pdfcraft_fonts::win_ansi_encodable(*c)))
+                        .find(|c| !(shaped_arabic(*c) || is_thai(*c) && taratasy_fonts::thai_has(*c) || taratasy_fonts::win_ansi_encodable(*c)))
                 })
             } else {
                 first_undrawable(t)

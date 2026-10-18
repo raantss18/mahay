@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use deckcraft_model::text::TextBody;
-use deckcraft_model::{LayoutId, LayoutType, Presentation, Section, SlideId, defaults};
+use seho_model::text::TextBody;
+use seho_model::{LayoutId, LayoutType, Presentation, Section, SlideId, defaults};
 use serde_json::{Value, json};
 
 use super::*;
@@ -162,9 +162,9 @@ fn new(s: &mut Session, p: &Value) -> Result<Value> {
 /// Prefers `idx="1"` (the content slot PowerPoint fills), then a full-size text placeholder over
 /// a `half`/`quarter` one, then a text placeholder over a picture/chart/table one; ties keep
 /// shape order, so a layout with a single body placeholder behaves as before.
-fn body_placeholder(shapes: &mut [deckcraft_model::Shape]) -> Option<&mut deckcraft_model::Shape> {
-    use deckcraft_model::PhType;
-    let rank = |sh: &deckcraft_model::Shape| {
+fn body_placeholder(shapes: &mut [seho_model::Shape]) -> Option<&mut seho_model::Shape> {
+    use seho_model::PhType;
+    let rank = |sh: &seho_model::Shape| {
         let ph = sh.ph.as_ref()?;
         if ph.kind.is_title() {
             return None;
@@ -395,16 +395,16 @@ fn hide(s: &mut Session, p: &Value) -> Result<Value> {
 
 /// Re-map a slide's placeholders onto a new layout (content kept, matched by type/index).
 pub fn apply_layout(doc: &mut Presentation, index: usize, layout: LayoutId) -> Result<()> {
-    let lay_shapes: Vec<deckcraft_model::Shape> =
+    let lay_shapes: Vec<seho_model::Shape> =
         doc.layout(layout).map(|(_, l)| l.shapes.clone()).ok_or_else(|| bad("slide.layout", "no such layout"))?;
     let mut fresh = vec![];
     for ls in lay_shapes.iter().filter(|x| x.ph.as_ref().is_some_and(|p| !p.kind.is_footer_kind())) {
-        let id = deckcraft_model::ShapeId(doc.alloc_id().ok_or_else(|| bad("slide.layout", NO_ID_SPACE))?);
+        let id = seho_model::ShapeId(doc.alloc_id().ok_or_else(|| bad("slide.layout", NO_ID_SPACE))?);
         fresh.push((id, ls.clone()));
     }
     let slide = doc.slides.get_mut(index).ok_or_else(|| bad("slide.layout", "no slide"))?;
     let slide = Arc::make_mut(slide);
-    let mut old: Vec<deckcraft_model::Shape> = std::mem::take(&mut slide.shapes);
+    let mut old: Vec<seho_model::Shape> = std::mem::take(&mut slide.shapes);
     let mut out = vec![];
     for (id, ls) in fresh {
         let Some(lph) = ls.ph.clone() else { continue };
@@ -424,13 +424,13 @@ pub fn apply_layout(doc: &mut Presentation, index: usize, layout: LayoutId) -> R
                 out.push(o);
             }
             None => {
-                out.push(deckcraft_model::Shape { id, name: ls.name.clone(), ph: Some(lph), text: Some(TextBody::default()), ..Default::default() })
+                out.push(seho_model::Shape { id, name: ls.name.clone(), ph: Some(lph), text: Some(TextBody::default()), ..Default::default() })
             }
         }
     }
     // Leftover placeholders with content stay as they were (positioned); empty ones go.
     for o in old {
-        let empty_ph = o.ph.is_some() && o.text.as_ref().is_none_or(|t| t.is_empty()) && matches!(o.kind, deckcraft_model::ShapeKind::Shape);
+        let empty_ph = o.ph.is_some() && o.text.as_ref().is_none_or(|t| t.is_empty()) && matches!(o.kind, seho_model::ShapeKind::Shape);
         if !empty_ph {
             out.push(o);
         }
@@ -510,7 +510,7 @@ fn notes(s: &mut Session, p: &Value) -> Result<Value> {
             let notes = &mut Arc::make_mut(sl).notes;
             match body {
                 Some(b) => *notes = b,
-                None => deckcraft_model::edit::replace_text(notes, &text),
+                None => seho_model::edit::replace_text(notes, &text),
             }
         }
         Ok(())
@@ -620,7 +620,7 @@ fn from_outline(s: &mut Session, p: &Value) -> Result<Value> {
     let markdown = bool_param(p, "markdown").unwrap_or(false);
     s.edit(|doc, sel| {
         let before = doc.slides.len();
-        let n = if markdown { deckcraft_format::markdown_to_slides(doc, &text) } else { deckcraft_format::outline_to_slides(doc, &text) };
+        let n = if markdown { seho_format::markdown_to_slides(doc, &text) } else { seho_format::outline_to_slides(doc, &text) };
         // both append; move them after the current slide.
         let at = (sel.slide + 1).min(before);
         let new: Vec<_> = doc.slides.drain(before..).collect();

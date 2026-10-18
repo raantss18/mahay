@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Build the browser version and zip it:  $DIST/photocraft-web-<version>.zip
+# Build the browser version and zip it:  $DIST/sary-web-<version>.zip
 #
 # Usage: packaging/web/package.sh [--skip-build]
 #
 # Needs: trunk (brew install trunk / cargo install trunk --locked) and the wasm32-unknown-unknown
-# target. The zip holds a self-contained static site in photocraft-web-<version>/ that works
+# target. The zip holds a self-contained static site in sary-web-<version>/ that works
 # from any URL path and inside an <iframe>. Hosting notes: packaging/web/README.md.
 #
 # The site holds the app's wasm gzipped and cut into parts (app/), started by the small
-# photocraft-web-boot module, so no file is larger than a part however large the app grows
+# sary-web-boot module, so no file is larger than a part however large the app grows
 # (issue #5302). dist/web still holds the app as Trunk builds it, in one .wasm.
 set -euo pipefail
 # shellcheck source=../env.sh
@@ -17,8 +17,8 @@ HERE="$ROOT/packaging/web"
 
 if [ "${1:-}" != "--skip-build" ]; then
   command -v trunk >/dev/null || { echo "error: trunk not found (cargo install trunk --locked)" >&2; exit 1; }
-  (cd "$ROOT/apps/photocraft-web" && trunk build --release)
-  (cd "$ROOT/apps/photocraft-web-boot" && trunk build --release)
+  (cd "$ROOT/apps/sary-web" && trunk build --release)
+  (cd "$ROOT/apps/sary-web-boot" && trunk build --release)
 fi
 
 APP="$ROOT/dist/web"       # the app: index.html, wasm-bindgen glue, one .wasm
@@ -35,8 +35,8 @@ done
 # Size limit (issues #198, #5302): Cloudflare Pages/Workers reject any single file over 25 MiB,
 # and other hosts and CDNs have similar caps. No file in the site may come near that; the app's
 # wasm, the one file that does, ships as parts of PART_BYTES. Override only to investigate.
-MAX_FILE_BYTES="${PHOTOCRAFT_WEB_MAX_FILE_BYTES:-25165824}" # 24 MiB
-PART_BYTES="${PHOTOCRAFT_WEB_PART_BYTES:-20971520}"         # 20 MiB
+MAX_FILE_BYTES="${SARY_WEB_MAX_FILE_BYTES:-25165824}" # 24 MiB
+PART_BYTES="${SARY_WEB_PART_BYTES:-20971520}"         # 20 MiB
 if [ "$PART_BYTES" -le 0 ] || [ "$PART_BYTES" -gt "$MAX_FILE_BYTES" ]; then
   echo "error: a part of $PART_BYTES bytes doesn't fit the $MAX_FILE_BYTES-byte file limit" >&2
   exit 1
@@ -49,23 +49,23 @@ for wasm in "$APP"/*_bg.wasm; do
   WASM="$wasm"
 done
 [ -n "$WASM" ] || { echo "error: no .wasm in $APP" >&2; exit 1; }
-STEM="$(basename "$WASM" _bg.wasm)" # photocraft-web-<content hash>
+STEM="$(basename "$WASM" _bg.wasm)" # sary-web-<content hash>
 GLUE="$APP/$STEM.js"
 [ -f "$GLUE" ] || { echo "error: $GLUE missing" >&2; exit 1; }
 
-NAME="photocraft-web-$VERSION"
+NAME="sary-web-$VERSION"
 WORK="$CARGO_TARGET_DIR/web-package"
 rm -rf "$WORK"
 mkdir -p "$WORK/$NAME/app"
 cp -R "$BOOT/." "$WORK/$NAME/"
 # The boot module imports the app's glue by this name (it can't know Trunk's content hash).
-cp "$GLUE" "$WORK/$NAME/app/photocraft-web.js"
+cp "$GLUE" "$WORK/$NAME/app/sary-web.js"
 # The parts keep the content hash, so they can be cached forever. Their extension is one no
 # server knows: a server that recognised gzip might decode it or label it, and the page inflates
 # the parts itself.
 gzip -9 -n -c "$WASM" | (cd "$WORK/$NAME/app" && split -b "$PART_BYTES" - "$STEM.part-")
 {
-  echo "photocraft-parts 1"
+  echo "sary-parts 1"
   for part in "$WORK/$NAME/app/$STEM".part-*; do basename "$part"; done
 } >"$WORK/$NAME/app/parts.txt"
 size() { wc -c <"$1" | tr -d ' '; }
@@ -77,12 +77,12 @@ echo "$(basename "$WASM"): $wasm_bytes bytes ($((wasm_bytes / 1048576)) MiB), sh
 cp "$HERE/_headers" "$HERE/.htaccess" "$WORK/$NAME/"
 cp "$HERE/README.md" "$WORK/$NAME/HOSTING.md"
 copy_docs "$WORK/$NAME"
-# Optional served fonts (README.md › Fonts): PHOTOCRAFT_WEB_FONTS_DIR=<a craft-fonts checkout, or any
+# Optional served fonts (README.md › Fonts): SARY_WEB_FONTS_DIR=<a mahay-fonts checkout, or any
 # folder with a fonts/manifest.txt in its format> copies the manifest, every font and licence file
 # it lists into the site, at the same paths. The wasm is unchanged; the app fetches fonts on demand.
-if [ -n "${PHOTOCRAFT_WEB_FONTS_DIR:-}" ]; then
-  FONTS_MANIFEST="$PHOTOCRAFT_WEB_FONTS_DIR/fonts/manifest.txt"
-  [ -f "$FONTS_MANIFEST" ] || { echo "error: $FONTS_MANIFEST missing (PHOTOCRAFT_WEB_FONTS_DIR)" >&2; exit 1; }
+if [ -n "${SARY_WEB_FONTS_DIR:-}" ]; then
+  FONTS_MANIFEST="$SARY_WEB_FONTS_DIR/fonts/manifest.txt"
+  [ -f "$FONTS_MANIFEST" ] || { echo "error: $FONTS_MANIFEST missing (SARY_WEB_FONTS_DIR)" >&2; exit 1; }
   mkdir -p "$WORK/$NAME/fonts"
   cp "$FONTS_MANIFEST" "$WORK/$NAME/fonts/manifest.txt"
   # Field 3 is the font file, field 6 (if any) its licence file; both relative to the folder.
@@ -91,9 +91,9 @@ if [ -n "${PHOTOCRAFT_WEB_FONTS_DIR:-}" ]; then
       "" | /* | *..* | *\\* | *://*) echo "error: $FONTS_MANIFEST: '$f' is not a relative path inside the folder" >&2; exit 1 ;;
     esac
     mkdir -p "$WORK/$NAME/$(dirname "$f")"
-    cp "$PHOTOCRAFT_WEB_FONTS_DIR/$f" "$WORK/$NAME/$f"
+    cp "$SARY_WEB_FONTS_DIR/$f" "$WORK/$NAME/$f"
   done
-  echo "served fonts: $(grep -cvE '^[[:space:]]*(#|$)' "$FONTS_MANIFEST") manifest lines from $PHOTOCRAFT_WEB_FONTS_DIR"
+  echo "served fonts: $(grep -cvE '^[[:space:]]*(#|$)' "$FONTS_MANIFEST") manifest lines from $SARY_WEB_FONTS_DIR"
 fi
 largest=0
 while IFS= read -r file; do

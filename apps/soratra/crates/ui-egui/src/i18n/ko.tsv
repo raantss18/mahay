@@ -3,9 +3,9 @@
 	(no style)	(스타일 없음)
 	(no suggestions)	(제안 없음)
 	1.5 Line Spacing	1.5줄 간격
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Rust로 처음부터 새로 만든 무료 오픈 소스 워드 프로세서입니다.\nArtCraft 팀의 Crafting Apps 제품군에 속합니다.
+	A free, open-source word processor written from scratch in Rust.\nPart of the Mahay apps from the Mahay team.	Rust로 처음부터 새로 만든 무료 오픈 소스 워드 프로세서입니다.\nMahay 팀의 Mahay apps 제품군에 속합니다.
 	About	정보
-	About WordCraft	WordCraft 정보
+	About Soratra	Soratra 정보
 	Accept	수락
 	Accept All Changes	모든 변경 내용 수락
 	Accept This Change	이 변경 내용 수락
@@ -270,7 +270,7 @@
 	Copy	복사
 	Copy Formatting	서식 복사
 	Corrections	수정 사항
-	Couldn't make WordCraft the default: {error}	WordCraft를 기본 앱으로 설정하지 못했습니다: {error}
+	Couldn't make Soratra the default: {error}	Soratra를 기본 앱으로 설정하지 못했습니다: {error}
 	Count words in text boxes and notes	텍스트 상자와 메모의 단어 수 포함
 	Cover Page	표지
 	Create	만들기
@@ -308,15 +308,15 @@
 	Drag a rectangle to draw a table, or a line across cells to split them. Esc stops.	사각형을 끌어 표를 그리거나 셀을 가로지르는 선을 그어 셀을 나누세요. Esc 키를 누르면 중지됩니다.
 	Draw Table	표 그리기
 	Edit Comment	댓글 편집
-	In Default apps, choose WordCraft for the document types you want it to open.	기본 앱에서 WordCraft로 열 문서 형식을 선택하세요.
+	In Default apps, choose Soratra for the document types you want it to open.	기본 앱에서 Soratra로 열 문서 형식을 선택하세요.
 	Left Margin	왼쪽 여백
 	Indents and Spacing	들여쓰기 및 간격
 	Line breaking	줄 바꿈
-	Make WordCraft the default for Word documents…	Word 문서의 기본 앱으로 WordCraft 설정…
+	Make Soratra the default for Word documents…	Word 문서의 기본 앱으로 Soratra 설정…
 	More templates →	템플릿 더 보기 →
 	No templates match your search.	검색과 일치하는 템플릿이 없습니다.
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	이제부터 .docx, .doc, .rtf, .odt 파일과 Word 템플릿을 WordCraft에서 엽니다.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	설정 › 기본 앱을 열어 .docx 및 다른 문서 형식의 기본 앱으로 WordCraft를 선택합니다.
+	Opens .docx, .doc, .rtf and .odt files and Word templates with Soratra from now on.	이제부터 .docx, .doc, .rtf, .odt 파일과 Word 템플릿을 Soratra에서 엽니다.
+	Opens Settings › Default apps, where you choose Soratra for .docx and the other document types.	설정 › 기본 앱을 열어 .docx 및 다른 문서 형식의 기본 앱으로 Soratra를 선택합니다.
 	Reopen	다시 열기
 	Right Margin	오른쪽 여백
 	Distribute letters	문자 균등 분할
@@ -326,8 +326,8 @@
 	Right (vertical)	오른쪽(세로)
 	Ruby text:	윗주 텍스트:
 	Search for templates	템플릿 검색
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Word 문서를 기본적으로 WordCraft에서 열려면 Finder에서 문서를 선택하고 파일 › 정보 가져오기를 선택한 다음, 다음으로 열기에서 WordCraft를 고르고 모두 변경을 클릭하세요.
-	WordCraft is now the default app for Word documents.	이제 WordCraft가 Word 문서의 기본 앱입니다.
+	To open Word documents with Soratra by default: select one in Finder, choose File › Get Info, pick Soratra under Open with, then click Change All.	Word 문서를 기본적으로 Soratra에서 열려면 Finder에서 문서를 선택하고 파일 › 정보 가져오기를 선택한 다음, 다음으로 열기에서 Soratra를 고르고 모두 변경을 클릭하세요.
+	Soratra is now the default app for Word documents.	이제 Soratra가 Word 문서의 기본 앱입니다.
 	development build	개발 빌드
 	Diagonal	대각선
 	Diamond	마름모
@@ -382,7 +382,7 @@
 	Equation	수식
 	Eraser	지우개
 	Even Page	짝수 페이지
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	모든 명령은 스크립트와 AI 에이전트에서 사용할 수 있습니다. MCP 서버를 실행하려면 `wordcraft-cli mcp`를 실행하거나, JSON 제어 채널을 사용하려면 앱을 `--control <port>`로 시작하세요.
+	Every command is available to scripts and AI agents: run `soratra-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	모든 명령은 스크립트와 AI 에이전트에서 사용할 수 있습니다. MCP 서버를 실행하려면 `soratra-cli mcp`를 실행하거나, JSON 제어 채널을 사용하려면 앱을 `--control <port>`로 시작하세요.
 	Export	내보내기
 	Export a copy to share (PDF, Word document)	공유할 사본 내보내기(PDF, Word 문서)
 	Export Page as PNG	페이지를 PNG로 내보내기
@@ -498,8 +498,8 @@
 	Inspect Styles at Selection	선택 영역의 스타일 검사
 	Interface language:	인터페이스 언어:
 	Italic	기울임꼴
-	Join the ArtCraft community on Discord	Discord에서 ArtCraft 커뮤니티에 참여하세요
-	Join us on Discord: discord.gg/artcraft	Discord에서 함께하세요: discord.gg/artcraft
+	Join the Mahay community on Discord	Discord에서 Mahay 커뮤니티에 참여하세요
+	Join us on Discord: discord.gg/mahay	Discord에서 함께하세요: discord.gg/mahay
 	Justify	양쪽 맞춤
 	Keep Lines Together	현재 단락의 모든 줄을 한 페이지에 유지
 	Keep lines together	현재 단락의 모든 줄을 한 페이지에 유지
@@ -556,7 +556,7 @@
 	Merge Formatting	서식 병합
 	Merged PRs	병합된 PR
 	Mirrored	좌우 대칭
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.
+	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.	MIT OR Apache-2.0. Copyright (c) 2026 Mahay Team and the Soratra contributors.
 	Moderate	보통
 	Modify Style	스타일 수정
 	Modify…	수정…
@@ -835,7 +835,7 @@
 	Small caps	작은 대문자
 	SmartArt	SmartArt
 	Sort	정렬
-	Source code: github.com/storytold/wordcraft	소스 코드: github.com/storytold/wordcraft
+	Source code: github.com/raantss18/soratra	소스 코드: github.com/raantss18/soratra
 	Space	공백
 	Space before/after:	앞/뒤 간격:
 	Spacing	간격
@@ -975,7 +975,7 @@
 	Word Left	이전 단어로 이동
 	Word Right	다음 단어로 이동
 	WordArt	WordArt
-	WordCraft	WordCraft
+	Soratra	Soratra
 	Words	단어
 	Words only	단어만
 	Wrap Text	텍스트 줄 바꿈
@@ -1036,7 +1036,7 @@
 	Stopped	중지됨
 	Speed	속도
 	Normal speed	보통 속도
-	AutoSave documents you have saved in WordCraft	WordCraft에서 저장한 문서 자동 저장
+	AutoSave documents you have saved in Soratra	Soratra에서 저장한 문서 자동 저장
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	자동 저장 실패: {error}. 자동 저장을 다시 사용하려면 문서를 저장하세요.
 	Couldn't download {name}: {error}	{name}을(를) 다운로드하지 못했습니다: {error}
 	Do you want to save changes to {name}?	{name}의 변경 내용을 저장하시겠습니까?
@@ -1212,7 +1212,7 @@
 	Insert a new equation (Alt+=)	새 수식 삽입 (Alt+=)
 	Leave the equation (Esc)	수식 종료 (Esc)
 	Preview	미리 보기
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	mahay.com/apps/soratra	mahay.com/apps/soratra
 	Draw Ink	잉크 그리기
 	Erase Ink	잉크 지우기
 	Hide Ink	잉크 숨기기
@@ -1348,7 +1348,7 @@
 	The document will be saved with a password. Save it to protect it.	문서는 암호를 설정하여 저장됩니다. 문서를 보호하려면 저장하세요.
 	The password is removed. Save the document to keep the change.	암호가 제거되었습니다. 변경 내용을 유지하려면 문서를 저장하세요.
 	The passwords don't match.	암호가 일치하지 않습니다.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	암호를 안전한 곳에 보관하세요. 암호가 없으면 WordCraft를 포함해 누구도 문서를 열 수 없습니다. 암호를 제거하려면 두 입력란을 모두 비워 두세요.
+	Keep the password somewhere safe: without it nobody, Soratra included, can open the document. Leave both boxes empty to remove the password.	암호를 안전한 곳에 보관하세요. 암호가 없으면 Soratra를 포함해 누구도 문서를 열 수 없습니다. 암호를 제거하려면 두 입력란을 모두 비워 두세요.
 	Align Top Left	위쪽 왼쪽 맞춤
 	Align Top Center	위쪽 가운데 맞춤
 	Align Top Right	위쪽 오른쪽 맞춤
@@ -1375,7 +1375,7 @@
 	Version	버전
 	% of all commits	전체 커밋 중 %
 	Lines +/−	줄 +/−
-	Craft	Craft
+	Mahay	Mahay
 	Studio	Studio
 	Atelier	Atelier
 	Darkroom	Darkroom
@@ -1728,7 +1728,7 @@
 	Word document	Word 문서
 	All files	모든 파일
 	Recipient lists	받는 사람 목록
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	시스템 파일 대화상자를 사용할 수 없어 WordCraft의 파일 대화상자를 표시합니다. 시스템 대화상자를 사용하려면 xdg-desktop-portal-gtk 또는 zenity 같은 파일 선택 포털을 설치하세요.
+	The system file dialog isn't available, so Soratra shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	시스템 파일 대화상자를 사용할 수 없어 Soratra의 파일 대화상자를 표시합니다. 시스템 대화상자를 사용하려면 xdg-desktop-portal-gtk 또는 zenity 같은 파일 선택 포털을 설치하세요.
 	Up one level	한 단계 위로
 	Home folder	홈 폴더
 	{name} wasn't found.	{name}을(를) 찾을 수 없습니다.
@@ -1736,8 +1736,8 @@
 	This folder can't be read: {error}	이 폴더를 읽을 수 없습니다: {error}
 	Showing the first {count} items.	처음 {count}개 항목 표시 중
 	File name:	파일 이름:
-	Browse in WordCraft…	WordCraft에서 찾아보기…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	시스템 파일 대화상자가 나타나지 않을 때 WordCraft의 파일 브라우저로 파일을 엽니다.
+	Browse in Soratra…	Soratra에서 찾아보기…
+	Open a file with Soratra's own browser when the system file dialog doesn't appear.	시스템 파일 대화상자가 나타나지 않을 때 Soratra의 파일 브라우저로 파일을 엽니다.
 	Hide White Space	공백 숨기기
 	All pages	모든 페이지
 	Current page	현재 페이지
@@ -2080,8 +2080,8 @@
 	Region:	지역:
 	Automatic ({region})	자동({region})
 	Start-up	시작 화면
-	Show the Start screen when WordCraft starts	WordCraft 시작 시 시작 화면 표시
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	켜기: WordCraft를 실행하면 파일 › 홈에 빈 문서, 서식 파일 및 최근 문서가 표시됩니다. 끄기: 빈 문서가 열립니다.
+	Show the Start screen when Soratra starts	Soratra 시작 시 시작 화면 표시
+	On: Soratra opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	켜기: Soratra를 실행하면 파일 › 홈에 빈 문서, 서식 파일 및 최근 문서가 표시됩니다. 끄기: 빈 문서가 열립니다.
 	Wildcards (regex)	와일드카드 (정규식)
 	➕ New comment	➕ 새 메모
 	📂  Browse…	📂  찾아보기…

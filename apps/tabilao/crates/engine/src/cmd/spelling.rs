@@ -4,7 +4,7 @@
 use std::collections::HashSet;
 use std::sync::OnceLock;
 
-use gridcraft_core::{RangeRef, Value};
+use tabilao_core::{RangeRef, Value};
 use serde_json::{Value as Json, json};
 
 use super::*;
@@ -123,7 +123,7 @@ fn suggestions(w: &str) -> Vec<String> {
 
 fn spelling(s: &mut Session, p: &Json) -> Result<Json> {
     if dictionary().is_empty() {
-        return Err(EngineError::Other("No dictionary is available on this system (GridCraft uses the system word list).".into()));
+        return Err(EngineError::Other("No dictionary is available on this system (Tabilao uses the system word list).".into()));
     }
     let si = target_sheet(s, p)?;
     let d = s.doc()?;

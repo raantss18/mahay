@@ -1,14 +1,14 @@
 # Secure file handling
 
-PhotoCraft reads and writes documents in the desktop app, CLI, headless RPC server, and MCP server.
+Sary reads and writes documents in the desktop app, CLI, headless RPC server, and MCP server.
 Remote automation paths are untrusted relative names resolved beneath explicitly granted roots.
 
 ## Implemented
 
 - Format loaders return structured errors for I/O and malformed data.
-- `.pcraft` ZIP loading validates archive offsets, entry sizes, CRCs, content hashes, and configured decompressed-size budgets.
+- `.sary` ZIP loading validates archive offsets, entry sizes, CRCs, content hashes, and configured decompressed-size budgets.
 - Raster and PSD loaders apply parser/decode limits before major pixel allocation.
-- Native `.pcraft` saves use temporary-file/rename patterns in relevant store paths.
+- Native `.sary` saves use temporary-file/rename patterns in relevant store paths.
 - `AuthorizedWorkspace` holds independent read and write directory capabilities for remote
   automation.
 - Absolute paths, parent traversal, alternate separators, drive/device/stream prefixes, reserved
@@ -22,7 +22,7 @@ Remote automation paths are untrusted relative names resolved beneath explicitly
 
 ## Known limitations
 
-- Directory `.pcraft` bundles have not been documented as resistant to link replacement or time-of-check/time-of-use races.
+- Directory `.sary` bundles have not been documented as resistant to link replacement or time-of-check/time-of-use races.
 - Root grants are process launch configuration, not per-document grants.
 - General method capabilities and structured filesystem audit events are not implemented.
 - Existing hard links inside a granted root are trusted root contents; the path policy cannot

@@ -5,16 +5,16 @@ use egui::{Event, Key, Modifiers, vec2};
 use egui_kittest::Harness;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
-fn harness() -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn harness() -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 120, "height": 80})).unwrap();
     app.run("layer.new.layer", json!({"name": "Paint"})).unwrap();
     app.run("edit.fill", json!({"color": "#3366cc"})).unwrap();
     app.sync_views();
     let mut h = Harness::builder().with_size(vec2(900.0, 600.0)).build_ui_state(
-        |ui, app: &mut PhotocraftApp| {
+        |ui, app: &mut SaryApp| {
             let ctx = ui.ctx().clone();
             if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                 return;
@@ -24,7 +24,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     h
 }
@@ -43,7 +43,7 @@ fn platform(m: Modifiers) -> Modifiers {
     out
 }
 
-fn tap(h: &mut Harness<'static, PhotocraftApp>, k: Key, m: Modifiers) {
+fn tap(h: &mut Harness<'static, SaryApp>, k: Key, m: Modifiers) {
     let m = platform(m);
     h.event(Event::ModifiersChanged(m));
     for pressed in [true, false] {
@@ -54,7 +54,7 @@ fn tap(h: &mut Harness<'static, PhotocraftApp>, k: Key, m: Modifiers) {
     h.run_steps(1);
 }
 
-fn layers(h: &Harness<'static, PhotocraftApp>) -> usize {
+fn layers(h: &Harness<'static, SaryApp>) -> usize {
     h.state().session.active().unwrap().doc.walk().len()
 }
 
@@ -95,7 +95,7 @@ fn cmd_alt_e_stamps_down() {
 
 #[test]
 fn keyboard_shortcuts_lists_the_stamps_with_layer() {
-    let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     let items = crate::prefs_ui::shortcut_items(&app);
     let find = |id: &str| items.iter().position(|i| i.0 == id);
     let (Some(v), Some(d)) = (find("layer.stampVisible"), find("layer.stampDown")) else { panic!("listed") };

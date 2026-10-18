@@ -1,4 +1,4 @@
-//! Small building blocks in getartcraft.com's style: mono labels, square buttons, badges and
+//! Small building blocks in mahay.com's style: mono labels, square buttons, badges and
 //! hairline cell groups.
 //!
 //! Upper-case text is drawn upper case but announced to screen readers as written.
@@ -494,12 +494,12 @@ pub fn more_menu<R>(ui: &mut Ui, add_contents: impl FnOnce(&mut Ui) -> R) {
     });
 }
 
-/// ArtCraft's social accounts as a row of small monochrome icons (faint, brighter on hover).
+/// Mahay's social accounts as a row of small monochrome icons (faint, brighter on hover).
 /// In a right-to-left layout they still read left to right.
 pub fn social_icons(ui: &mut Ui, size: f32) {
     let t = Tokens::get(ui.ctx());
     let rtl = ui.layout().prefer_right_to_left();
-    let services = artcraft_launcher_core::catalog::SOCIAL;
+    let services = trano_core::catalog::SOCIAL;
     let ordered: Vec<&(&str, &str)> = if rtl { services.iter().rev().collect() } else { services.iter().collect() };
     for (name, url) in ordered {
         let Some(icon) = crate::icons::social(name) else { continue };
@@ -508,17 +508,17 @@ pub fn social_icons(ui: &mut Ui, size: f32) {
         let color = if resp.hovered() { t.ink_strong } else { t.faint };
         egui::Image::new(icon).tint(color).paint_at(ui, rect.shrink(pad));
         resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Link, true, *name));
-        let resp = resp.on_hover_text(crate::i18n::fmt(tl!("ArtCraft on {name}"), &[("name", name)])).on_hover_cursor(egui::CursorIcon::PointingHand);
+        let resp = resp.on_hover_text(crate::i18n::fmt(tl!("Mahay on {name}"), &[("name", name)])).on_hover_cursor(egui::CursorIcon::PointingHand);
         if resp.clicked() {
             ui.ctx().open_url(egui::OpenUrl::new_tab(*url));
         }
     }
 }
 
-/// An app's name as the site sets it: Archivo, with "Craft" in the app's colour.
-pub fn wordmark(ui: &mut Ui, app: &artcraft_launcher_core::CraftApp, size: f32) -> Response {
+/// An app's name as the site sets it: Archivo, with "Mahay" in the app's colour.
+pub fn wordmark(ui: &mut Ui, app: &trano_core::MahayApp, size: f32) -> Response {
     let t = Tokens::get(ui.ctx());
-    let (prefix, craft) = app.name.strip_suffix("Craft").map_or((app.name, ""), |p| (p, "Craft"));
+    let (prefix, craft) = app.name.strip_suffix("Mahay").map_or((app.name, ""), |p| (p, "Mahay"));
     let mut job = egui::text::LayoutJob::default();
     let format = |color| egui::TextFormat {
         font_id: egui::FontId::new(size, theme::display()),

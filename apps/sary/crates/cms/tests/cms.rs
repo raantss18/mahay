@@ -2,8 +2,8 @@
 //! behaviour, intents, BPC, interpolation accuracy, real-world profiles and an independent
 //! oracle (moxcms, dev-dependency only).
 
-use photocraft_cms::math::{self, delta_e76};
-use photocraft_cms::{Builtin, Clut, ColorSpace, Intent, Lut3d, Profile, Transform, TransformOptions};
+use sary_cms::math::{self, delta_e76};
+use sary_cms::{Builtin, Clut, ColorSpace, Intent, Lut3d, Profile, Transform, TransformOptions};
 
 fn lab() -> &'static Profile {
     Builtin::LabD50.profile()
@@ -255,7 +255,7 @@ fn absolute_colorimetric_refuses_a_degenerate_media_white() {
     for (name, bad) in [("zero", &zero), ("parsed zero", &parsed_zero), ("negative", &negative), ("nan", &nan)] {
         for (src, dst) in [(srgb(), bad), (bad, srgb())] {
             match Transform::new(src, dst, Intent::AbsoluteColorimetric, false) {
-                Err(photocraft_cms::CmsError::Invalid(m)) => assert!(m.contains("media white"), "{name}: {m}"),
+                Err(sary_cms::CmsError::Invalid(m)) => assert!(m.contains("media white"), "{name}: {m}"),
                 Err(e) => panic!("{name}: wrong error {e}"),
                 Ok(t) => {
                     let mut out = [0.0f32; 3];
@@ -286,10 +286,10 @@ fn absolute_colorimetric_refuses_a_degenerate_media_white() {
 
 #[test]
 fn black_point_compensation() {
-    let bp = photocraft_cms::black_point(cmyk(), Intent::RelativeColorimetric, false).unwrap();
+    let bp = sary_cms::black_point(cmyk(), Intent::RelativeColorimetric, false).unwrap();
     let bl = math::xyz_to_lab([bp * 0.9642, bp, bp * 0.8249], math::D50)[0];
     assert!(bl > 4.0 && bl < 20.0, "CMYK black L* {bl}");
-    assert_eq!(photocraft_cms::black_point(srgb(), Intent::RelativeColorimetric, true).unwrap(), 0.0);
+    assert_eq!(sary_cms::black_point(srgb(), Intent::RelativeColorimetric, true).unwrap(), 0.0);
     // sRGB → CMYK: without BPC, deep shadows below the paper's black clip together; with BPC
     // they stay distinct.
     let with = Transform::new(srgb(), cmyk(), Intent::RelativeColorimetric, true).unwrap();
@@ -464,9 +464,9 @@ fn cmyk_endpoints_valid(paper: [f64; 3], black: [f64; 3]) -> bool {
 
 #[test]
 fn a_light_black_cmyk_lut_has_the_known_relative_ramp() {
-    use photocraft_cms::Curve;
-    use photocraft_cms::pipeline::Stage;
-    use photocraft_cms::profile::{Lut, LutKind};
+    use sary_cms::Curve;
+    use sary_cms::pipeline::Stage;
+    use sary_cms::profile::{Lut, LutKind};
 
     let mut p = cmyk().clone();
     // Independent linear test model: L* = 100 - 52 K, neutral a*/b*. Exercise A2B1 only;
@@ -541,10 +541,10 @@ fn system_profiles() {
             seen += 1;
             if !matches!(
                 p.class,
-                photocraft_cms::ProfileClass::Input
-                    | photocraft_cms::ProfileClass::Display
-                    | photocraft_cms::ProfileClass::Output
-                    | photocraft_cms::ProfileClass::ColorSpace
+                sary_cms::ProfileClass::Input
+                    | sary_cms::ProfileClass::Display
+                    | sary_cms::ProfileClass::Output
+                    | sary_cms::ProfileClass::ColorSpace
             ) {
                 continue;
             }
@@ -721,8 +721,8 @@ fn gray_profile_with_reversed_lut_type_reencodes() {
 /// sRGB the way Photoshop embeds it: a v2 profile whose TRCs are 1024-entry 16-bit tables.
 fn srgb_as_v2_tables() -> Profile {
     let mut p = srgb().clone();
-    let table = |c: &photocraft_cms::Curve| {
-        photocraft_cms::Curve::Table((0..1024).map(|i| ((c.eval64(i as f64 / 1023.0) * 65535.0).round() / 65535.0) as f32).collect())
+    let table = |c: &sary_cms::Curve| {
+        sary_cms::Curve::Table((0..1024).map(|i| ((c.eval64(i as f64 / 1023.0) * 65535.0).round() / 65535.0) as f32).collect())
     };
     let trc = p.trc.clone().unwrap();
     p.trc = Some([table(&trc[0]), table(&trc[1]), table(&trc[2])]);
@@ -813,9 +813,9 @@ fn device_links_parse_and_are_reported_unsupported() {
         let p = Profile::parse(&device_link(space, out_space, inputs, outputs)).unwrap();
         assert_eq!(p.color_space.channels(), inputs);
         for err in [Transform::new(&p, srgb(), Intent::Perceptual, false).err(), Transform::new(srgb(), &p, Intent::Perceptual, false).err()] {
-            assert!(matches!(err, Some(photocraft_cms::CmsError::Unsupported(_))), "{err:?}");
+            assert!(matches!(err, Some(sary_cms::CmsError::Unsupported(_))), "{err:?}");
         }
     }
     // The output space still bounds the tag: a CMYK→CMYK link with a 4→3 table is malformed.
-    assert!(matches!(Profile::parse(&device_link(b"CMYK", b"CMYK", 4, 3)), Err(photocraft_cms::CmsError::Invalid(_))));
+    assert!(matches!(Profile::parse(&device_link(b"CMYK", b"CMYK", 4, 3)), Err(sary_cms::CmsError::Invalid(_))));
 }

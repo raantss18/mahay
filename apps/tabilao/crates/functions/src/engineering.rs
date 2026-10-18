@@ -3,7 +3,7 @@
 
 use std::f64::consts::PI;
 
-use gridcraft_core::{CellError, Value, number_to_text};
+use tabilao_core::{CellError, Value, number_to_text};
 
 use crate::special::{erf, erfc};
 use crate::util::{A, R, S, flatten, has, num, num_val, opt_num, scalar, text, text_val};
@@ -1123,7 +1123,7 @@ pub(crate) fn specs() -> Vec<FnSpec> {
 
 #[cfg(test)]
 mod tests {
-    use gridcraft_core::{CellError, Value};
+    use tabilao_core::{CellError, Value};
 
     use super::parse_complex;
     use crate::util::testutil::*;

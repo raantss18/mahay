@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use gridcraft_model::LineInfo;
+use tabilao_model::LineInfo;
 
 /// The deepest outline level XLSX allows.
 pub const MAX_LEVEL: u8 = 7;

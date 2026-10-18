@@ -11,7 +11,7 @@
 //!    guided filter (He, Sun & Tang, "Guided Image Filtering", ECCV 2010) on the luminance, tile
 //!    by tile and only where the mask is mixed, which gives soft edges around foliage.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 use super::gmm::Gmm;
 use super::{Region, RgbImage, Sampler, clean_mask, scale_for, subsample, trim_region};

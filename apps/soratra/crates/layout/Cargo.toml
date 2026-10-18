@@ -1,18 +1,18 @@
 [package]
-name = "wordcraft-layout"
+name = "soratra-layout"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft layout: shaping, line breaking, tabs, lists, tables, pagination, headers/footers, hit testing"
+description = "Soratra layout: shaping, line breaking, tabs, lists, tables, pagination, headers/footers, hit testing"
 
 [lints]
 workspace = true
 
 [dependencies]
-wordcraft-geom = { workspace = true }
-wordcraft-doc = { workspace = true }
-wordcraft-fonts = { workspace = true }
-wordcraft-proof = { workspace = true }
+soratra-geom = { workspace = true }
+soratra-doc = { workspace = true }
+soratra-fonts = { workspace = true }
+soratra-proof = { workspace = true }
 kurbo = { workspace = true }
 unicode-bidi = { workspace = true }
 unicode-linebreak = { workspace = true }

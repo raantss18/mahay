@@ -1,4 +1,4 @@
-# Greek (el) PhotoCraft interface catalog.
+# Greek (el) Sary interface catalog.
 # Columns separated by TAB: context, English source, Greek translation.
 # Original translations based on general Greek graphics/computing terminology.
 # Covers every source label the i18n coverage check lists.
@@ -207,7 +207,7 @@
 	Distort	Παραμόρφωση
 	Pixelate	Εικονοστοιχείωση
 	Render	Απόδοση
-	About PhotoCraft	Πληροφορίες για το PhotoCraft
+	About Sary	Πληροφορίες για το Sary
 
 # Consolidated Greek localization additions
 	Content-Aware Fill…	Γέμισμα βάσει περιεχομένου…
@@ -711,7 +711,7 @@
 	Restart Required	Απαιτείται επανεκκίνηση
 	Restart	Επανεκκίνηση
 	Quit	Έξοδος
-	Quit PhotoCraft	Έξοδος από το PhotoCraft
+	Quit Sary	Έξοδος από το Sary
 	Close Window	Κλείσιμο παραθύρου
 	New Window	Νέο παράθυρο
 	Open Image	Άνοιγμα εικόνας
@@ -802,8 +802,8 @@
 	Pattern Size	Μέγεθος μοτίβου
 	Perspective Warp is not active	Ο μετασχηματισμός προοπτικής δεν είναι ενεργός
 	Perspective Warp: draw planes along the image's perspective, then switch to Warp	Μετασχηματισμός προοπτικής: σχεδιάστε επίπεδα σύμφωνα με την προοπτική της εικόνας και έπειτα επιλέξτε Παραμόρφωση
-	PhotoCraft Manages Colors	Διαχείριση χρωμάτων από το PhotoCraft
-	PhotoCraft — an open-source, native image editor written in Rust.	PhotoCraft — εγγενής εφαρμογή επεξεργασίας εικόνας ανοικτού κώδικα, γραμμένη σε Rust.
+	Sary Manages Colors	Διαχείριση χρωμάτων από το Sary
+	Sary — an open-source, native image editor written in Rust.	Sary — εγγενής εφαρμογή επεξεργασίας εικόνας ανοικτού κώδικα, γραμμένη σε Rust.
 	Pixels/Centimeter	Εικονοστοιχεία/εκατοστό
 	Pixels/Inch	Εικονοστοιχεία/ίντσα
 	Position and Size	Θέση και μέγεθος
@@ -825,7 +825,7 @@
 	Quick Export As PNG	Γρήγορη εξαγωγή ως PNG
 	Radial Gradient	Ακτινική διαβάθμιση
 	Paints from the document's opening state	Ζωγραφίζει χρησιμοποιώντας την αρχική κατάσταση του εγγράφου
-	PhotoCraft website	Ιστότοπος PhotoCraft
+	Sary website	Ιστότοπος Sary
 	Pen Pressure	Πίεση γραφίδας
 	Pen Tilt	Κλίση γραφίδας
 	Portrait, 4 x 6	Κατακόρυφο, 4 × 6
@@ -1104,7 +1104,7 @@
 	Automatic uses GPU acceleration when available and falls back to CPU rendering on errors.	Η αυτόματη λειτουργία χρησιμοποιεί επιτάχυνση GPU όταν είναι διαθέσιμη και επιστρέφει στην CPU σε περίπτωση σφάλματος.
 	Switched to CPU rendering	Έγινε μετάβαση σε απόδοση μέσω CPU
 	GPU acceleration could not continue. Your documents are unchanged.	Η επιτάχυνση GPU δεν μπόρεσε να συνεχιστεί. Τα έγγραφά σας δεν έχουν αλλάξει.
-	PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter.	Το PhotoCraft χρησιμοποιεί σύνθεση εικόνας μέσω CPU. Το παράθυρο μπορεί να εξακολουθεί να χρησιμοποιεί την κάρτα γραφικών.
+	Sary is using the CPU image compositor. The window may still use your graphics adapter.	Το Sary χρησιμοποιεί σύνθεση εικόνας μέσω CPU. Το παράθυρο μπορεί να εξακολουθεί να χρησιμοποιεί την κάρτα γραφικών.
 	Retry GPU requires a restart. Save your work first.	Η νέα προσπάθεια χρήσης GPU απαιτεί επανεκκίνηση. Αποθηκεύστε πρώτα την εργασία σας.
 	Keep Using CPU	Συνέχεια με CPU
 	Retry GPU	Νέα προσπάθεια χρήσης GPU
@@ -1240,7 +1240,7 @@
 	Custom Pixel Aspect Ratio	Προσαρμοσμένη αναλογία εικονοστοιχείων
 	32-bit Preview Options	Επιλογές προεπισκόπησης 32 bit
 	New Guide	Νέος οδηγός
-	Join the ArtCraft Discord	Συμμετοχή στο Discord του ArtCraft
+	Join the Mahay Discord	Συμμετοχή στο Discord του Mahay
 	Report an Issue	Αναφορά προβλήματος
 	Load Files into Stack	Φόρτωση αρχείων σε στοίβα
 	Statistics	Στατιστικά
@@ -2042,7 +2042,7 @@
 	All Caps	Όλα κεφαλαία
 	All Slices	Όλες οι τομές
 	All User Slices	Όλες οι τομές χρήστη
-	All shortcuts reset to PhotoCraft defaults.	Όλες οι συντομεύσεις επανήλθαν στις προεπιλογές του PhotoCraft.
+	All shortcuts reset to Sary defaults.	Όλες οι συντομεύσεις επανήλθαν στις προεπιλογές του Sary.
 	Alternates for Current Selection	Εναλλακτικοί χαρακτήρες για την τρέχουσα επιλογή
 	Altitude	Υψόμετρο
 	Always	Πάντα
@@ -2063,7 +2063,7 @@
 	Arc	Τόξο
 	Arch	Καμάρα
 	Art & Illustration	Τέχνη και εικονογράφηση
-	ArtCraft Website	Ιστότοπος ArtCraft
+	Mahay Website	Ιστότοπος Mahay
 	Artboard Background Color	Χρώμα φόντου πίνακα σχεδίασης
 	Artboard Guides	Οδηγοί πίνακα σχεδίασης
 	Artboard from Group	Πίνακας σχεδίασης από ομάδα
@@ -2570,7 +2570,7 @@
 	Iris Blur…	Θόλωση ίριδας…
 	Italic	Πλάγια
 	Jag	Οδοντωτό
-	Join the ArtCraft Discord…	Συμμετοχή στο Discord του ArtCraft…
+	Join the Mahay Discord…	Συμμετοχή στο Discord του Mahay…
 	Join us on Discord	Ελάτε στην κοινότητά μας στο Discord
 	Jpeg quality	Ποιότητα JPEG
 	Justification	Πλήρης στοίχιση
@@ -2733,7 +2733,7 @@
 	Move to	Μετακίνηση σε
 	NTSC Colors	Χρώματα NTSC
 	Name:	Όνομα:
-	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or run PhotoCraft under XWayland with `WAYLAND_DISPLAY= photocraft`.	Η μεταφορά και απόθεση αρχείων δεν υποστηρίζεται ακόμη στο Wayland. Χρησιμοποιήστε Αρχείο › Άνοιγμα ή εκτελέστε το PhotoCraft μέσω XWayland με `WAYLAND_DISPLAY= photocraft`.
+	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or run Sary under XWayland with `WAYLAND_DISPLAY= sary`.	Η μεταφορά και απόθεση αρχείων δεν υποστηρίζεται ακόμη στο Wayland. Χρησιμοποιήστε Αρχείο › Άνοιγμα ή εκτελέστε το Sary μέσω XWayland με `WAYLAND_DISPLAY= sary`.
 	Nearest Neighbor	Πλησιέστερος γείτονας
 	Nearest Neighbor (hard edges)	Πλησιέστερος γείτονας (σκληρές ακμές)
 	Nearest neighbor	Πλησιέστερος γείτονας
@@ -2811,8 +2811,8 @@
 	Performance	Επιδόσεις
 	Perspective Warp	Παραμόρφωση προοπτικής
 	Photo	Φωτογραφία
-	PhotoCraft Website	Ιστότοπος PhotoCraft
-	PhotoCraft on GitHub	PhotoCraft στο GitHub
+	Sary Website	Ιστότοπος Sary
+	Sary on GitHub	Sary στο GitHub
 	Photocopy	Φωτοαντίγραφο
 	Photography	Φωτογραφία
 	Photomerge	Συγχώνευση φωτογραφιών
@@ -2935,11 +2935,11 @@
 	Import Shortcuts…	Εισαγωγή συντομεύσεων…
 	Load a keyboard shortcut set saved as .kys	Φόρτωση ενός σετ συντομεύσεων πληκτρολογίου αποθηκευμένου ως .kys
 	Imported {n} shortcuts from {file}. Click OK to keep them.	Εισήχθησαν {n} συντομεύσεις από το {file}. Πατήστε OK για να τις κρατήσετε.
-	{n} commands are not in PhotoCraft.	{n} εντολές δεν υπάρχουν στο PhotoCraft.
+	{n} commands are not in Sary.	{n} εντολές δεν υπάρχουν στο Sary.
 	Keyboard shortcuts imported	Οι συντομεύσεις πληκτρολογίου εισήχθησαν
 	Your keyboard shortcut set {set} is in use here: {n} shortcuts differ from the defaults. Edit › Keyboard Shortcuts shows them; Reset All to Defaults undoes this.	Το σετ συντομεύσεων πληκτρολογίου {set} χρησιμοποιείται εδώ: {n} συντομεύσεις διαφέρουν από τις προεπιλογές. Το Επεξεργασία › Συντομεύσεις πληκτρολογίου τις δείχνει· η Επαναφορά όλων στις προεπιλογές το αναιρεί.
 	Import keyboard shortcuts?	Εισαγωγή συντομεύσεων πληκτρολογίου;
-	PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?	Το PhotoCraft βρήκε σε αυτόν τον υπολογιστή το σετ συντομεύσεων πληκτρολογίου {set} από άλλο πρόγραμμα επεξεργασίας εικόνας: {n} συντομεύσεις του διαφέρουν από του PhotoCraft. Να γίνει εισαγωγή;
+	Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?	Το Sary βρήκε σε αυτόν τον υπολογιστή το σετ συντομεύσεων πληκτρολογίου {set} από άλλο πρόγραμμα επεξεργασίας εικόνας: {n} συντομεύσεις του διαφέρουν από του Sary. Να γίνει εισαγωγή;
 	Edit › Keyboard Shortcuts › Reset All to Defaults undoes an import.	Το Επεξεργασία › Συντομεύσεις πληκτρολογίου › Επαναφορά όλων στις προεπιλογές αναιρεί μια εισαγωγή.
 	Don't Import	Χωρίς εισαγωγή
 	The keyboard shortcut set was not imported: {error}	Το σετ συντομεύσεων πληκτρολογίου δεν εισήχθη: {error}
@@ -3167,7 +3167,7 @@
 	Text Position:	Θέση κειμένου:
 	Texture Each Tip	Υφή σε κάθε αποτύπωμα πινέλου
 	Texturizer	Εφαρμογή υφής
-	These settings aren't available in PhotoCraft yet.	Αυτές οι ρυθμίσεις δεν είναι ακόμη διαθέσιμες στο PhotoCraft.
+	These settings aren't available in Sary yet.	Αυτές οι ρυθμίσεις δεν είναι ακόμη διαθέσιμες στο Sary.
 	Thin	Λεπτό
 	Threshold Level	Στάθμη κατωφλίου
 	Thumbnail size (smallest: list)	Μέγεθος μικρογραφίας (μικρότερο: λίστα)
@@ -3410,7 +3410,7 @@ cameraRaw	Yellow	Κίτρινο
 	Add to Swatches	Προσθήκη στα δείγματα χρωμάτων
 	Alt	Alt
 	Anamorphic 2:1 (2)	Αναμορφικό 2:1 (2)
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Blend If:	Ανάμειξη υπό όρους:
 	Channels:	Κανάλια:
 	Click a red pupil to neutralize it	Κάντε κλικ σε μια κόκκινη κόρη για να την εξουδετερώσετε
@@ -3447,7 +3447,7 @@ cameraRaw	Yellow	Κίτρινο
 	New Swatch Group…	Νέα ομάδα δειγμάτων χρωμάτων…
 	New Swatch…	Νέο δείγμα χρώματος…
 	OpenType	OpenType
-	PhotoCraft	PhotoCraft
+	Sary	Sary
 	Pupil Size	Μέγεθος κόρης
 	Replace Swatches…	Αντικατάσταση δειγμάτων χρωμάτων…
 	Reset Swatches	Επαναφορά δειγμάτων χρωμάτων
@@ -3490,7 +3490,7 @@ cameraRaw	Yellow	Κίτρινο
 	Color…	Χρώμα…
 	Cone (Inverted)	Κώνος (αντεστραμμένος)
 	Could not open	Δεν ήταν δυνατό το άνοιγμα
-	Default PhotoCraft Size	Προεπιλεγμένο μέγεθος PhotoCraft
+	Default Sary Size	Προεπιλεγμένο μέγεθος Sary
 	Diagonal (Descending)	Διαγώνιος (φθίνουσα)
 	Contour Editor	Επεξεργαστής περιγράμματος
 	Anti-aliased	Εξομάλυνση
@@ -3535,8 +3535,8 @@ cameraRaw	Yellow	Κίτρινο
 	Red Eye Tool	Κόκκινα μάτια (Red Eye Tool)
 	Seafoam	Θαλασσί
 	Srgb	sRGB
-	To drop files, start PhotoCraft under XWayland: `{command}`	Για να αποθέσετε αρχεία, εκκινήστε το PhotoCraft μέσω XWayland: `{command}`
-	Or set Preferences › Performance › Linux display server to X11: PhotoCraft then always starts under XWayland.	Ή ορίστε Προτιμήσεις › Επιδόσεις › Διακομιστής οθόνης Linux σε X11: το PhotoCraft θα εκκινεί τότε πάντα μέσω XWayland.
+	To drop files, start Sary under XWayland: `{command}`	Για να αποθέσετε αρχεία, εκκινήστε το Sary μέσω XWayland: `{command}`
+	Or set Preferences › Performance › Linux display server to X11: Sary then always starts under XWayland.	Ή ορίστε Προτιμήσεις › Επιδόσεις › Διακομιστής οθόνης Linux σε X11: το Sary θα εκκινεί τότε πάντα μέσω XWayland.
 	Vulkan	Vulkan
 	WebP (lossless)	WebP (χωρίς απώλειες)
 	Webp	WebP
@@ -3589,7 +3589,7 @@ fontWeight	Thin	Πολύ λεπτά
 	Color to Alpha…	Χρώμα σε άλφα…
 	Transparency Threshold	Κατώφλι διαφάνειας
 	Opacity Threshold	Κατώφλι αδιαφάνειας
-	PhotoCraft — Screen Color Picker	PhotoCraft — Επιλογή χρώματος οθόνης
+	Sary — Screen Color Picker	Sary — Επιλογή χρώματος οθόνης
 
 	Rasterize svg groups deeper than	Ραστεροποίηση ομάδων SVG πέρα από αυτό το βάθος
 	0 turns this threshold off; SVG groups nested deeper than 100 levels are always rasterized.	Το 0 απενεργοποιεί αυτό το όριο· ομάδες SVG με ένθεση βαθύτερη από 100 επίπεδα ραστεροποιούνται πάντα.
@@ -3840,7 +3840,7 @@ curves	Smooth	Εξομάλυνση
 	{name} (Photoshop)	{name} (Photoshop)
 	{message} ({note})	{message} ({note})
 @plural	Loaded {n} action from {file}|Loaded {n} actions from {file}	Φορτώθηκε {n} ενέργεια από το {file}|Φορτώθηκαν {n} ενέργειες από το {file}
-@plural	{n} step has no PhotoCraft equivalent yet|{n} steps have no PhotoCraft equivalent yet	{n} βήμα δεν έχει ακόμη αντίστοιχο στο PhotoCraft|{n} βήματα δεν έχουν ακόμη αντίστοιχο στο PhotoCraft
+@plural	{n} step has no Sary equivalent yet|{n} steps have no Sary equivalent yet	{n} βήμα δεν έχει ακόμη αντίστοιχο στο Sary|{n} βήματα δεν έχουν ακόμη αντίστοιχο στο Sary
 @plural	Saved {n} action to {file}|Saved {n} actions to {file}	Αποθηκεύτηκε {n} ενέργεια στο {file}|Αποθηκεύτηκαν {n} ενέργειες στο {file}
 @plural	{n} step with no Photoshop equivalent left out|{n} steps with no Photoshop equivalent left out	Παραλείφθηκε {n} βήμα χωρίς αντίστοιχο στο Photoshop|Παραλείφθηκαν {n} βήματα χωρίς αντίστοιχο στο Photoshop
 
@@ -3892,7 +3892,7 @@ curves	Smooth	Εξομάλυνση
 	Clear Selected Guides	Απαλοιφή επιλεγμένων οδηγών
 	Delete this set	Διαγραφή αυτού του συνόλου
 	New Set…	Νέο σύνολο…
-	PhotoCraft Defaults	Προεπιλογές PhotoCraft
+	Sary Defaults	Προεπιλογές Sary
 	Save a list of these shortcuts as a web page	Αποθήκευση λίστας αυτών των συντομεύσεων ως ιστοσελίδας
 	Save the changes to this set	Αποθήκευση των αλλαγών σε αυτό το σύνολο
 	Save these shortcuts as a .kys file	Αποθήκευση αυτών των συντομεύσεων ως αρχείου .kys

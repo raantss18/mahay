@@ -3,20 +3,20 @@
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_engine::Session;
-use pdfcraft_engine::actions::Step;
-use pdfcraft_ui_egui::PdfCraftApp;
+use taratasy_engine::Session;
+use taratasy_engine::actions::Step;
+use taratasy_ui_egui::TaratasyApp;
 
 #[test]
 fn run_and_create_actions() {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-actions-ui-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-actions-ui-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("out")).unwrap();
     let src = Session::new().create_from_text("t", "Draft report").unwrap();
     std::fs::write(dir.join("r.pdf"), &*src).unwrap();
     let d = dir.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.run_inline = true;
         app.export_dir_override = Some(d.join("out").to_string_lossy().into_owned());
@@ -49,7 +49,7 @@ fn run_and_create_actions() {
     assert_eq!(h.state().custom_actions.len(), 1);
     h.get_by_label("1. Add watermark: DRAFT");
     let saved = h.state().persist();
-    let mut fresh = PdfCraftApp::new();
+    let mut fresh = TaratasyApp::new();
     fresh.set_option("language", "en").unwrap();
     fresh.restore(&saved);
     assert_eq!(fresh.custom_actions, h.state().custom_actions);
@@ -60,7 +60,7 @@ fn run_and_create_actions() {
 
 #[test]
 fn desktop_actions_preserve_duplicate_names_and_results_from_earlier_runs() {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-actions-collisions-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-actions-collisions-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("first")).unwrap();
     std::fs::create_dir_all(dir.join("second")).unwrap();
@@ -73,7 +73,7 @@ fn desktop_actions_preserve_duplicate_names_and_results_from_earlier_runs() {
     std::fs::write(dir.join("out/report.PDF"), &*one_page).unwrap();
     let d = dir.clone();
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         app.run_inline = true;
         app.export_dir_override = Some(d.join("out").to_string_lossy().into_owned());

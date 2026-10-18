@@ -2,10 +2,10 @@
 //! boxes of a box and whisker chart (waterfall bars are drawn by [`crate::chart`], histograms as
 //! the column chart of their bins).
 
-use deckcraft_color::Rgba;
-use deckcraft_model::chart::{BoxStats, Chart, ChartType, TreeNode};
-use deckcraft_model::resolve::Ctx;
-use deckcraft_model::text::{Align, Anchor};
+use seho_color::Rgba;
+use seho_model::chart::{BoxStats, Chart, ChartType, TreeNode};
+use seho_model::resolve::Ctx;
+use seho_model::text::{Align, Anchor};
 use kurbo::{Affine, BezPath, Point, Rect, Shape as _};
 use vello_cpu::RenderContext;
 
@@ -76,7 +76,7 @@ fn mix(a: Rgba, b: Rgba, t: f64) -> Rgba {
 }
 
 /// A region map without its geography: the boundaries PowerPoint caches come from an online
-/// map service in an undocumented format and DeckCraft ships no map data, so each region is a
+/// map service in an undocumented format and Seho ships no map data, so each region is a
 /// tile in a grid, coloured on the map's value scale, with the scale below and a note saying
 /// the map itself is not drawn.
 fn region_tiles(ctx: &mut RenderContext, rctx: &Ctx, c: &Chart, m: Affine, area: Rect, base: f64, text_col: Rgba) {
@@ -564,7 +564,7 @@ mod tests {
         let c = Chart {
             kind: ChartType::Waterfall,
             subtotals: vec![3],
-            series: vec![deckcraft_model::chart::Series { values: vec![Some(100.0), Some(40.0), Some(-25.0), Some(115.0)], ..Default::default() }],
+            series: vec![seho_model::chart::Series { values: vec![Some(100.0), Some(40.0), Some(-25.0), Some(115.0)], ..Default::default() }],
             ..Default::default()
         };
         assert_eq!(c.waterfall_bars(), [(0.0, 100.0), (100.0, 140.0), (140.0, 115.0), (0.0, 115.0)]);

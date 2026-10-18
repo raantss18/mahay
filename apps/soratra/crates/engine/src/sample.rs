@@ -1,8 +1,8 @@
 //! Built-in sample documents and templates (original text, generated in code).
 
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{Align, Border, BorderStyle, Borders, CharProps, NumRef, Rgb, TabAlign, TabLeader, TabStop, TextColor};
-use wordcraft_doc::{Block, Document, ListKind, Paragraph, PartKind, Table, para_block};
+use soratra_doc::para::InlineObject;
+use soratra_doc::props::{Align, Border, BorderStyle, Borders, CharProps, NumRef, Rgb, TabAlign, TabLeader, TabStop, TextColor};
+use soratra_doc::{Block, Document, ListKind, Paragraph, PartKind, Table, para_block};
 
 fn para(text: &str) -> Paragraph {
     Paragraph::with_text(text, CharProps::default())
@@ -30,7 +30,7 @@ fn italic() -> CharProps {
 pub fn sample_document() -> Document {
     let mut d = Document::new();
     d.core.title = "The Open Studio Handbook".into();
-    d.core.creator = "WordCraft".into();
+    d.core.creator = "Soratra".into();
     let mut b: Vec<Block> = Vec::new();
     b.push(Block::Para(styled("The Open Studio Handbook", "Title")));
     b.push(Block::Para(styled("How a small community of makers shares space, tools and time", "Subtitle")));
@@ -112,7 +112,7 @@ pub fn sample_document() -> Document {
     add(
         &mut h,
         "Visit the community board",
-        CharProps { style: Some("Hyperlink".into()), link: Some("https://getartcraft.com/".into()), ..Default::default() },
+        CharProps { style: Some("Hyperlink".into()), link: Some("https://github.com/raantss18/mahay".into()), ..Default::default() },
     );
     add(&mut h, " for events.", CharProps::default());
     b.push(Block::Para(h));
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(sample_document().word_count(), 361);
         for d in [sample_document(), letter(), resume(), report()] {
             assert!(d.word_count() > 5);
-            let l = wordcraft_layout::layout(&d, &mut wordcraft_layout::LayoutCache::new(), &Default::default());
+            let l = soratra_layout::layout(&d, &mut soratra_layout::LayoutCache::new(), &Default::default());
             assert!(!l.pages.is_empty());
         }
     }

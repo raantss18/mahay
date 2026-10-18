@@ -6,7 +6,7 @@ The central boundary is crossed when untrusted bytes or requests become internal
 UNTRUSTED
   PSD / PSB
   PNG / JPEG / TIFF / WebP / EXR and other raster files
-  .pcraft files and directory bundles
+  .sary files and directory bundles
   ICC profiles / LUT files / pattern files / embedded objects
   CLI arguments / filesystem paths
   JSON control messages / MCP requests / agent commands
@@ -35,7 +35,7 @@ TRUSTED INTERNAL STATE
 |---|---|---|
 | PSD/PSB bytes to model | `crates/psd`, then `crates/io` | lengths, dimensions, channels, nesting, decompression, offsets |
 | Raster bytes to image | `crates/codecs` | dimensions, pixels, decoded allocation, format-specific limits |
-| `.pcraft` to document | `crates/format` | archive bounds, decompressed totals, hashes, schema/version validation |
+| `.sary` to document | `crates/format` | archive bounds, decompressed totals, hashes, schema/version validation |
 | JSON to command | `crates/automation`, `crates/engine` | request budget, method/capability, parameter type/range, enabled state |
 | Path to filesystem effect | `crates/automation/src/files.rs`, app services | authorized root/handle, link policy, create/replace semantics |
 | Document to GPU work | `crates/gpu`, UI planner | texture limits, buffer sizes, supported-plan validation |

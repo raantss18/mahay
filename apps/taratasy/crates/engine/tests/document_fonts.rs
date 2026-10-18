@@ -2,9 +2,9 @@
 mod support {
     pub mod font_fixture;
 }
-use pdfcraft_cos::{Dict, Document, Object, SaveOptions, Stream};
-use pdfcraft_engine::{BlockStyle, Edit, Session};
-use pdfcraft_render::{PageRenderer, RenderRequest};
+use taratasy_cos::{Dict, Document, Object, SaveOptions, Stream};
+use taratasy_engine::{BlockStyle, Edit, Session};
+use taratasy_render::{PageRenderer, RenderRequest};
 use std::sync::Arc;
 fn document() -> Arc<Vec<u8>> {
     let mut d = Document::new_empty();
@@ -36,7 +36,7 @@ fn document() -> Arc<Vec<u8>> {
     root.set(b"Pages".to_vec(), Object::Ref(pages));
     let root = d.add(Object::Dict(root));
     d.trailer_mut().set(b"Root".to_vec(), Object::Ref(root));
-    Arc::new(pdfcraft_cos::write_full(&d, &SaveOptions::default()).unwrap())
+    Arc::new(taratasy_cos::write_full(&d, &SaveOptions::default()).unwrap())
 }
 fn pixels(bytes: Arc<Vec<u8>>) -> Vec<u8> {
     let mut renderer = PageRenderer::new(bytes, Default::default());
@@ -84,16 +84,16 @@ fn opentype_cff_document_font_preserves_program_codes_and_rendering_after_reopen
 }
 #[test]
 fn contextual_arabic_marks_ligatures_and_mixed_bidi_keep_logical_text_after_reopen() {
-    if let Some(path) = std::env::var_os("PDFCRAFT_TEST_ARABIC_FONT") {
+    if let Some(path) = std::env::var_os("TARATASY_TEST_ARABIC_FONT") {
         exercise(std::fs::read(path).unwrap(), "سَلَام 123", "NotoSansArabic-Regular");
         return;
     }
-    let Some(font) = pdfcraft_fonts::document_arabic_font() else {
-        eprintln!("set CRAFT_FONTS_DIR to test full Arabic glyph programs");
+    let Some(font) = taratasy_fonts::document_arabic_font() else {
+        eprintln!("set MAHAY_FONTS_DIR to test full Arabic glyph programs");
         return;
     };
-    if pdfcraft_fonts::embedding::validate(font.bytes).is_err() {
-        eprintln!("set PDFCRAFT_TEST_ARABIC_FONT to an openly licensed static Noto Sans Arabic face");
+    if taratasy_fonts::embedding::validate(font.bytes).is_err() {
+        eprintln!("set TARATASY_TEST_ARABIC_FONT to an openly licensed static Noto Sans Arabic face");
         return;
     }
     exercise(font.bytes.to_vec(), "سَلَام 123", "NotoSansArabic-Regular");

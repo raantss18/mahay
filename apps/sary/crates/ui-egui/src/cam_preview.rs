@@ -1,6 +1,6 @@
 //! Content-Aware Move drags and its Transform On Drop box shown with the result: once the pointer
 //! (or the box) rests for a moment, the move is computed as a background job
-//! ([`photocraft_engine::retouch_cmds::content_aware_move_preview`]: a smaller sampling window than
+//! ([`sary_engine::retouch_cmds::content_aware_move_preview`]: a smaller sampling window than
 //! the command and only small selections) and the canvas shows the document with it. Any change of
 //! the offset, scale or rotation cancels the job and starts the wait again, so the UI never waits
 //! for the blend. Releasing (or Enter) runs the exact `paint.contentAwareMove`; the document is
@@ -9,11 +9,11 @@
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, TryRecvError};
 
-use photocraft_doc::{DocId, Document};
-use photocraft_engine::jobs::JobCtx;
+use sary_doc::{DocId, Document};
+use sary_engine::jobs::JobCtx;
 use serde_json::Value;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// Preview keys: `BASE + n`, one per result shown (see `canvas::display_doc`).
@@ -26,7 +26,7 @@ const POLL_MS: u64 = 40;
 struct Running {
     key: String,
     ctx: JobCtx,
-    rx: Receiver<photocraft_engine::Result<Document>>,
+    rx: Receiver<sary_engine::Result<Document>>,
 }
 
 pub(crate) struct CamPreview {
@@ -59,7 +59,7 @@ impl Drop for CamPreview {
 
 /// `paint.contentAwareMove`'s params for what the pointer or the box has now; `None` without a
 /// move to preview.
-fn wanted(app: &mut PhotocraftApp) -> Option<Value> {
+fn wanted(app: &mut SaryApp) -> Option<Value> {
     if app.ui.tool != Tool::ContentAwareMove || cfg!(target_arch = "wasm32") {
         return None;
     }
@@ -82,14 +82,14 @@ fn wanted(app: &mut PhotocraftApp) -> Option<Value> {
 
 /// The document to show for the move on document `idx`: with the move applied, once its preview
 /// has been computed for the current offset and transform.
-pub(crate) fn display_doc(app: &mut PhotocraftApp, idx: usize) -> Option<(Arc<Document>, u64)> {
+pub(crate) fn display_doc(app: &mut SaryApp, idx: usize) -> Option<(Arc<Document>, u64)> {
     if app.session.active_index() != Some(idx) {
         return None;
     }
     step(app, crate::gpu_canvas::now_ms())
 }
 
-fn step(app: &mut PhotocraftApp, now: f64) -> Option<(Arc<Document>, u64)> {
+fn step(app: &mut SaryApp, now: f64) -> Option<(Arc<Document>, u64)> {
     let Some(params) = wanted(app) else {
         app.cam_preview = None;
         return None;
@@ -125,7 +125,7 @@ fn step(app: &mut PhotocraftApp, now: f64) -> Option<(Arc<Document>, u64)> {
                 match (result, r) {
                     (Ok(d), Some(r)) => {
                         // Duotone documents display through their inks.
-                        let d = photocraft_engine::mode_cmds::display_document(&d).unwrap_or(d);
+                        let d = sary_engine::mode_cmds::display_document(&d).unwrap_or(d);
                         p.shown = Some((r.key, Arc::new(d)));
                         p.serial += 1;
                     }
@@ -156,8 +156,8 @@ fn step(app: &mut PhotocraftApp, now: f64) -> Option<(Arc<Document>, u64)> {
 }
 
 /// Compute the preview of `params` on a worker thread.
-fn start(app: &PhotocraftApp, params: &Value, key: String) -> Option<Running> {
-    let job = photocraft_engine::retouch_cmds::content_aware_move_preview(&app.session, params).ok()?;
+fn start(app: &SaryApp, params: &Value, key: String) -> Option<Running> {
+    let job = sary_engine::retouch_cmds::content_aware_move_preview(&app.session, params).ok()?;
     let ctx = JobCtx::new();
     let (tx, rx) = std::sync::mpsc::channel();
     let worker = ctx.clone();
@@ -171,7 +171,7 @@ fn start(app: &PhotocraftApp, params: &Value, key: String) -> Option<Running> {
 }
 
 /// Keep frames coming while a preview waits out its debounce or computes.
-pub(crate) fn wake(app: &PhotocraftApp, ctx: &egui::Context) {
+pub(crate) fn wake(app: &SaryApp, ctx: &egui::Context) {
     let Some(p) = &app.cam_preview else { return };
     if p.running.is_some() {
         ctx.request_repaint_after(std::time::Duration::from_millis(POLL_MS));
@@ -182,7 +182,7 @@ pub(crate) fn wake(app: &PhotocraftApp, ctx: &egui::Context) {
 }
 
 /// Whether the canvas shows a preview.
-pub(crate) fn showing(app: &PhotocraftApp) -> bool {
+pub(crate) fn showing(app: &SaryApp) -> bool {
     app.cam_preview.as_ref().is_some_and(|p| p.shown.as_ref().is_some_and(|s| s.0 == p.key))
 }
 
@@ -198,7 +198,7 @@ mod tests {
 
     #[test]
     fn the_drag_previews_the_move_after_it_rests_and_never_touches_the_document() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 100, "height": 60})).unwrap();
         app.run("paint.pencil", json!({"points": [[16, 30], [28, 30]], "size": 4, "color": "#0000ff"})).unwrap();
         app.run("select.lasso", json!({"points": [[6, 14], [38, 14], [38, 46], [6, 46]]})).unwrap();
@@ -241,7 +241,7 @@ mod tests {
 
     #[test]
     fn the_transform_on_drop_box_previews_the_dropped_patch() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 100, "height": 60})).unwrap();
         app.run("paint.pencil", json!({"points": [[16, 30], [28, 30]], "size": 4, "color": "#0000ff"})).unwrap();
         app.run("select.lasso", json!({"points": [[6, 14], [38, 14], [38, 46], [6, 46]]})).unwrap();
@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn a_selection_too_large_to_preview_is_not_retried() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 600, "height": 400})).unwrap();
         app.run("select.rect", json!({"x": 10, "y": 10, "width": 300, "height": 300})).unwrap();
         app.ui.tool = Tool::ContentAwareMove;

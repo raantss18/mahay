@@ -9,7 +9,7 @@
   stroke-linecap="round"
   stroke-linejoin="round"
 >
-  <!-- PhotoCraft's own Perspective Crop tool glyph (not from an icon set): a crop frame seen in
+  <!-- Sary's own Perspective Crop tool glyph (not from an icon set): a crop frame seen in
        perspective, with its grid and two crop-mark ticks. -->
   <path d="M8 6h8l4 12H4z" />
   <path d="M12 6v12" />

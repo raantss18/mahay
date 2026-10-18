@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn resolve_uses_default_then_app_override() {
         let mut s = store();
-        let app = AppId::new("wordcraft").unwrap();
+        let app = AppId::new("soratra").unwrap();
         assert_eq!(s.resolve(&app, &role()).unwrap().connection.id.as_str(), "a");
         let mut other = remote("b");
         other.models = s.connections[0].models.clone();
@@ -265,7 +265,7 @@ mod tests {
         let over = Binding { role: RoleId::new("rewrite").unwrap(), connection: ConnectionId::new("b").unwrap(), model: ModelId::new("m").unwrap() };
         s.apps.insert(app.clone(), AppSettings { overrides: vec![over] });
         assert_eq!(s.resolve(&app, &role()).unwrap().connection.id.as_str(), "b");
-        assert_eq!(s.resolve(&AppId::new("photocraft").unwrap(), &role()).unwrap().connection.id.as_str(), "a");
+        assert_eq!(s.resolve(&AppId::new("sary").unwrap(), &role()).unwrap().connection.id.as_str(), "a");
     }
 
     #[test]

@@ -6,7 +6,7 @@
 //!   (manifest `xtask/psd-corpus.sha256`).
 //! - `corpus/psd-tools/**/*.{psd,psb}`: the complete psd-tools test set (MIT).
 //! - `corpus/photoshop/**/*.psd`: our own Photoshop-authored oracles from
-//!   https://github.com/storytold/photocraft-corpus (smart filters, layer-style effect shapes,
+//!   https://github.com/raantss18/mahay-corpus (smart filters, layer-style effect shapes,
 //!   the text engine, adjustments in every mode and depth), reported per feature group. Smart
 //!   objects and type layers composite Photoshop's cached pixels here; the engine's
 //!   `photoshop_oracles` test re-renders them with our smart-filter stack and text engine.
@@ -34,7 +34,7 @@
 //! filters, knockout); the run asserts no crashes, and that the oracle pass count and the export
 //! round-trip count do not fall below the source's floors. Raise the floors when they improve;
 //! never lower them.
-//! Set `PHOTOCRAFT_CORPUS_STRICT=1` to also fail on import/export errors
+//! Set `SARY_CORPUS_STRICT=1` to also fail on import/export errors
 //! (files listed in `KNOWN_BAD` excepted).
 //!
 //! Every exported file must also pass `common::strict_block_errors` (#200): each tagged block
@@ -50,8 +50,8 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use photocraft_io::*;
-use photocraft_psd::PsdFile;
+use sary_io::*;
+use sary_psd::PsdFile;
 
 fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(rd) = std::fs::read_dir(dir) else { return };
@@ -81,13 +81,13 @@ const DISSOLVE_TOL: f32 = 0.1;
 /// as usual (≤ 2/255), and inside them the premultiplied colour averaged over 16 × 16 blocks
 /// (density and colour) must agree within 0.1 (binomial noise of a 50 % dissolve is about
 /// 0.044 per block difference).
-fn dissolve_matches(doc: &photocraft_doc::Document, ours: &[[f32; 4]], ps: &[[f32; 4]]) -> bool {
+fn dissolve_matches(doc: &sary_doc::Document, ours: &[[f32; 4]], ps: &[[f32; 4]]) -> bool {
     let canvas = doc.bounds();
     let regions: Vec<_> = doc
         .walk()
         .into_iter()
-        .filter(|(_, _, l)| l.visible && l.blend == photocraft_color::BlendMode::Dissolve)
-        .map(|(_, _, l)| photocraft_compose::layer_bounds(l, canvas).intersect(&canvas))
+        .filter(|(_, _, l)| l.visible && l.blend == sary_color::BlendMode::Dissolve)
+        .map(|(_, _, l)| sary_compose::layer_bounds(l, canvas).intersect(&canvas))
         .filter(|r| !r.is_empty())
         .collect();
     let (w, h) = (canvas.width() as i32, canvas.height() as i32);
@@ -154,7 +154,7 @@ const MIXED: Source = Source { label: "io corpus", dir: "corpus/psd", group_dept
 /// 226 vs the merged image + 10 vs the thumbnail (Advanced Blending knockouts: +7).
 const PSD_TOOLS: Source = Source { label: "psd-tools corpus", dir: "corpus/psd-tools", group_depth: 0, pass_floor: 249, roundtrip_floor: 308 };
 
-/// Our Photoshop-authored oracles (256 files; https://github.com/storytold/photocraft-corpus),
+/// Our Photoshop-authored oracles (256 files; https://github.com/raantss18/mahay-corpus),
 /// grouped by feature (`smart-filters`, `effects`, `text`, `adjustments/<mode><bits>`).
 const PHOTOSHOP: Source = Source { label: "photoshop oracles", dir: "corpus/photoshop", group_depth: 2, pass_floor: 188, roundtrip_floor: 258 };
 
@@ -191,12 +191,12 @@ const THUMB_BAD_FRAC: f32 = 0.02;
 
 /// Photoshop's embedded thumbnail (resource 1036: a 28-byte header, then JFIF) as RGB floats.
 fn thumbnail(file: &PsdFile) -> Option<(u32, u32, Vec<[f32; 3]>)> {
-    let r = file.resource(photocraft_psd::resources::ids::THUMBNAIL)?;
+    let r = file.resource(sary_psd::resources::ids::THUMBNAIL)?;
     let format = u32::from_be_bytes(r.data.get(..4)?.try_into().ok()?);
     if format != 1 {
         return None;
     }
-    let img = photocraft_codecs::decode(r.data.get(28..)?).ok()?;
+    let img = sary_codecs::decode(r.data.get(28..)?).ok()?;
     let rgba = img.to_rgba8();
     Some((img.width(), img.height(), rgba.as_chunks::<4>().0.iter().map(|p| [0, 1, 2].map(|c| f32::from(p[c]) / 255.0)).collect()))
 }
@@ -316,16 +316,16 @@ fn check_file(name: &str, bytes: &[u8]) -> (Outcome, Option<f32>) {
             return (Outcome::Error, None);
         }
     };
-    let ours = photocraft_compose::flatten(doc).px;
+    let ours = sary_compose::flatten(doc).px;
     // Our own export must not change how the document renders.
-    let again = photocraft_compose::flatten(&reimported).px;
+    let again = sary_compose::flatten(&reimported).px;
     let rt = if again.len() == ours.len() { common::max_diff(&ours, &again) } else { f32::INFINITY };
     let layers = doc.layer_count();
     // Oracle choice: the merged image (Photoshop's composite; for files without layers it is the
     // whole image, decoded independently by the psd crate). When Photoshop wrote no real merged
     // image (Maximize Compatibility off) or it decodes through our own model code (Multichannel),
     // its embedded thumbnail is the oracle at thumbnail size.
-    let use_thumb = file.has_real_merged_data() == Some(false) || file.header.color_mode == photocraft_psd::ColorMode::Multichannel;
+    let use_thumb = file.has_real_merged_data() == Some(false) || file.header.color_mode == sary_psd::ColorMode::Multichannel;
     let merged = if use_thumb { None } else { merged_composite(&file).ok() };
     let Some(merged) = merged else {
         let notes: Vec<&str> = imp.warnings.iter().map(String::as_str).take(2).collect();
@@ -427,7 +427,7 @@ fn run_oracle(src: &Source) {
     eprintln!("{label}: export -> re-import renders the same for {rt_same} files; differs for {}: {}", rt_diff.len(), rt_diff.join(", "));
     let block_errors = BLOCK_ERRORS.with(|b| b.borrow().clone());
     eprintln!("{label}: exported files whose tagged blocks fail the strict re-parse: {}", block_errors.len());
-    if std::env::var_os("PHOTOCRAFT_CORPUS_STRICT").is_some() {
+    if std::env::var_os("SARY_CORPUS_STRICT").is_some() {
         assert_eq!(errors, 0);
     }
     assert!(crashes.is_empty(), "{label}: panics (Rule 9): {crashes:?}");
@@ -483,7 +483,7 @@ fn run_mutations(src: &Source) {
                 if let Ok(imp) = import(&name, &data) {
                     let b = imp.document.bounds();
                     if i64::from(b.width()) * i64::from(b.height()) <= 4_000_000 {
-                        let _ = photocraft_compose::flatten(&imp.document);
+                        let _ = sary_compose::flatten(&imp.document);
                     }
                 }
             }));

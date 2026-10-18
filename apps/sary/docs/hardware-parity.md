@@ -2,11 +2,11 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-10 · **Change:** major (first version: GPU, pen tablets, displays, gestures per platform against Photoshop 2026) · **Target:** Adobe Photoshop 2026
 
-Each hardware feature Photoshop 2026 (27.11.0) uses, per platform, against PhotoCraft. Photoshop
+Each hardware feature Photoshop 2026 (27.11.0) uses, per platform, against Sary. Photoshop
 side: its bundle (Metal and OpenCL paths, "Precise Color Management for HDR Display" and EDR
-strings, Touch Bar resources, pen pressure/tilt strings) and Adobe's GPU FAQ. PhotoCraft side:
-`crates/tablet`, `crates/ui-egui/src/stylus.rs`, `apps/photocraft/src/gpu_startup.rs`,
-`engine/src/display_color.rs`, `apps/photocraft/src/monitor_profile.rs`.
+strings, Touch Bar resources, pen pressure/tilt strings) and Adobe's GPU FAQ. Sary side:
+`crates/tablet`, `crates/ui-egui/src/stylus.rs`, `apps/sary/src/gpu_startup.rs`,
+`engine/src/display_color.rs`, `apps/sary/src/monitor_profile.rs`.
 
 **Summary (estimated):** ~50% ready. GPU compositing and colour-managed display are solid; pen
 input is uneven by platform (Windows lacks tilt/rotation, Wayland is broken) and there is no HDR
@@ -15,7 +15,7 @@ HDR display to verify.
 
 ## GPU
 
-| Feature | Photoshop | PhotoCraft | Status |
+| Feature | Photoshop | Sary | Status |
 |---|---|---|---|
 | GPU canvas, zoom/pan, rotate view | Metal (macOS), DirectX/OpenCL (Windows) | wgpu 30: Metal, Vulkan, DX12, GL; backend selectable | done |
 | GPU compositing of layers, blend modes, effects | partial (Photoshop composites mostly on CPU) | wgpu compositor, ≤ 1/255 vs CPU oracle; Multichannel and > texture-limit regions fall back to CPU | done (ahead in places) |
@@ -37,7 +37,7 @@ HDR display to verify.
 
 ## Displays and colour
 
-| Feature | Photoshop | PhotoCraft | Status |
+| Feature | Photoshop | Sary | Status |
 |---|---|---|---|
 | Colour-managed canvas (document → monitor profile) | yes | yes, folded into the GPU 3D LUT | done |
 | Monitor profile detection | per display, live | macOS per display at launch; others sRGB or a chosen .icc | partial |
@@ -48,7 +48,7 @@ HDR display to verify.
 
 ## Input devices
 
-| Feature | Photoshop | PhotoCraft | Status |
+| Feature | Photoshop | Sary | Status |
 |---|---|---|---|
 | Trackpad pinch zoom, two-finger pan | yes | yes; pinch scrolls instead in 0.6.0 (#2463) | partial |
 | Trackpad rotate (Rotate View) | yes | yes (`rotate_view.rs`) | done |

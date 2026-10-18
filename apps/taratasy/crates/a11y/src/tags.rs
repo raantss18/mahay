@@ -1,6 +1,6 @@
 //! Properties of reachable indirect structure elements.
 
-use pdfcraft_cos::{CosError, Document, ObjRef, Object, PdfString};
+use taratasy_cos::{CosError, Document, ObjRef, Object, PdfString};
 
 use crate::alt;
 
@@ -122,13 +122,13 @@ pub fn move_tag(doc: &mut Document, object: ObjRef, anchor: ObjRef, placement: T
     Ok(())
 }
 
-fn text(doc: &Document, d: &pdfcraft_cos::Dict, key: &[u8]) -> Option<String> {
+fn text(doc: &Document, d: &taratasy_cos::Dict, key: &[u8]) -> Option<String> {
     d.get(key).map(|o| doc.resolve(o)).and_then(|o| o.as_string().map(PdfString::to_text))
 }
 
 /// List reachable, indirect tags in structure-tree order.
 pub fn tags(doc: &Document) -> Vec<TagInfo> {
-    let pages = pdfcraft_model::pages(doc);
+    let pages = taratasy_model::pages(doc);
     let page_index: std::collections::HashMap<ObjRef, usize> = pages.iter().enumerate().map(|(i, p)| (p.obj, i)).collect();
     alt::elements(doc)
         .into_iter()
@@ -151,7 +151,7 @@ pub fn tags(doc: &Document) -> Vec<TagInfo> {
 /// List marked-content references directly owned by an indirect tag.
 pub fn tag_content(doc: &Document, object: ObjRef) -> Result<Vec<TagContentItem>, TagError> {
     let Some(element) = alt::elements(doc).into_iter().find(|e| e.object == object) else { return Err(TagError::NotATag(object)) };
-    let pages = pdfcraft_model::pages(doc);
+    let pages = taratasy_model::pages(doc);
     let page_index: std::collections::HashMap<ObjRef, usize> = pages.iter().enumerate().map(|(i, p)| (p.obj, i)).collect();
     let mut marks = Vec::new();
     if let Some(kids) = element.dict.get(b"K") {

@@ -1,7 +1,7 @@
 //! UI-level shortcuts, the command palette, and the menu structure (shared with the native macOS
 //! menu bar in the desktop app).
 
-use deckcraft_engine::Mods;
+use seho_engine::Mods;
 use serde_json::json;
 
 use crate::SlideApp;
@@ -80,14 +80,14 @@ pub fn ui_shortcut(app: &mut SlideApp, key: egui::Key, m: Mods) -> bool {
 
 /// The palette's entries for the lowercase query `q`. An engine command is hidden when a UI command has the same label: Open…, Save As…,
 /// Export… and Audio/Video from File… need a `path` the palette can't give, so the one entry left opens the dialog instead of failing.
-fn palette_items(session: &deckcraft_engine::Session, q: &str) -> Vec<(String, String, Option<&'static str>)> {
+fn palette_items(session: &seho_engine::Session, q: &str) -> Vec<(String, String, Option<&'static str>)> {
     let mut items: Vec<(String, String, Option<&'static str>)> = session
         .commands()
         .into_iter()
         // Commands that need a path or other value fail when the palette runs them with `{}`.
-        .filter(|c| c.enabled && !crate::UI_COMMANDS.iter().any(|u| u.1 == c.label) && !deckcraft_engine::cmd::needs_arguments(c.params))
+        .filter(|c| c.enabled && !crate::UI_COMMANDS.iter().any(|u| u.1 == c.label) && !seho_engine::cmd::needs_arguments(c.params))
         .map(|c| (c.id.to_string(), c.label.to_string(), c.shortcut))
-        .chain(crate::UI_COMMANDS.iter().filter(|c| !deckcraft_engine::cmd::needs_arguments(c.3)).map(|c| (c.0.to_string(), c.1.to_string(), c.2)))
+        .chain(crate::UI_COMMANDS.iter().filter(|c| !seho_engine::cmd::needs_arguments(c.3)).map(|c| (c.0.to_string(), c.1.to_string(), c.2)))
         .filter(|(id, label, _)| q.is_empty() || label.to_lowercase().contains(q) || id.to_lowercase().contains(q))
         .collect();
     items.sort_by_key(|(_, l, _)| !l.to_lowercase().starts_with(q));
@@ -289,7 +289,7 @@ pub fn menu_tree() -> Vec<(&'static str, Vec<(&'static str, &'static str)>)> {
                 ("Set Up Show…", "show.setup"),
             ],
         ),
-        ("Help", vec![("About DeckCraft", "app.about"), ("Command Palette", "app.palette")]),
+        ("Help", vec![("About Seho", "app.about"), ("Command Palette", "app.palette")]),
     ]
 }
 
@@ -300,7 +300,7 @@ mod tests {
     /// #79: the palette listed two "Export…" entries and the first (`file.export`) failed with "missing `path`".
     #[test]
     fn palette_has_one_export_entry_that_opens_the_dialog() {
-        let session = deckcraft_engine::Session::with_new();
+        let session = seho_engine::Session::with_new();
         for query in ["exp", "export"] {
             let exports: Vec<_> = palette_items(&session, query).into_iter().filter(|(_, label, _)| label == "Export…").collect();
             assert_eq!(exports.len(), 1, "query {query}");
@@ -309,7 +309,7 @@ mod tests {
         // Open…, Save As…, Audio/Video from File… and Notes had the same duplicates: every UI command is the only entry with its label.
         // Commands that need a value (Set Zoom's percent) are left out of the palette.
         for (id, label, _, params) in crate::UI_COMMANDS {
-            if deckcraft_engine::cmd::needs_arguments(params) {
+            if seho_engine::cmd::needs_arguments(params) {
                 continue;
             }
             let same: Vec<_> = palette_items(&session, &label.to_lowercase()).into_iter().filter(|(_, l, _)| l == label).collect();

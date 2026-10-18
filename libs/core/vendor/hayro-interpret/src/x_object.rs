@@ -55,7 +55,7 @@ impl<'a> XObject<'a> {
 }
 
 pub(crate) struct FormXObject<'a> {
-    // PdfCraft patch: counted against the page's content budget while the form is alive.
+    // Taratasy patch: counted against the page's content budget while the form is alive.
     pub(crate) decoded: crate::context::DecodedContent<'a>,
     pub(crate) matrix: Affine,
     pub(crate) bbox: [f32; 4],
@@ -68,7 +68,7 @@ impl<'a> FormXObject<'a> {
     pub(crate) fn new(stream: &Stream<'a>) -> Option<Self> {
         let dict = stream.dict();
 
-        // PdfCraft patch: see `context::MAX_PAGE_CONTENT`.
+        // Taratasy patch: see `context::MAX_PAGE_CONTENT`.
         let decoded = crate::context::decode_content(stream)?;
         let resources = dict.get::<Dict<'_>>(RESOURCES);
 
@@ -272,7 +272,7 @@ pub(crate) struct ImageXObject<'a> {
     height: u32,
     color_space: Option<ColorSpace>,
     cache: Cache,
-    /// PdfCraft patch: decoded pixels shared across renders (see `decoded_raster`); `None`
+    /// Taratasy patch: decoded pixels shared across renders (see `decoded_raster`); `None`
     /// for an image that is never cached (an inline image).
     decoded_cache: Option<DecodedImageCache>,
     interpolate: bool,
@@ -352,7 +352,7 @@ impl<'a> ImageXObject<'a> {
             return None;
         }
 
-        // PdfCraft patch: decode once per `DecodedImageKey`; tiles and scales share it.
+        // Taratasy patch: decode once per `DecodedImageKey`; tiles and scales share it.
         let Some(cache) = &self.decoded_cache else {
             return decode_mask(self, target_dimension);
         };
@@ -372,7 +372,7 @@ impl<'a> ImageXObject<'a> {
             return None;
         }
 
-        // PdfCraft patch: decode once per `DecodedImageKey`; tiles and scales share it.
+        // Taratasy patch: decode once per `DecodedImageKey`; tiles and scales share it.
         let Some(cache) = &self.decoded_cache else {
             return decode_raster(self, target_dimension);
         };
@@ -384,7 +384,7 @@ impl<'a> ImageXObject<'a> {
         )
     }
 
-    /// PdfCraft patch: the cache key of decoding this image (as a mask when `mask_output`) at
+    /// Taratasy patch: the cache key of decoding this image (as a mask when `mask_output`) at
     /// `target_dimension`: every input of the decode (see [`DecodedImageKey`]). `None` when one
     /// of them can't be keyed cheaply (a transfer function): such a decode isn't cached.
     pub(crate) fn decode_key(
@@ -431,16 +431,16 @@ impl<'a> ImageXObject<'a> {
     }
 }
 
-/// PdfCraft patch: budget for [`DecodedImageCache`] entries per interpreter cache: decoded
+/// Taratasy patch: budget for [`DecodedImageCache`] entries per interpreter cache: decoded
 /// image pixels shared across tiles and scales. Past it the cache starts a fresh epoch.
 const MAX_DECODED_IMAGE_BYTES: usize = 64 << 20;
 
-/// PdfCraft patch: pixel bytes held by a decoded mask.
+/// Taratasy patch: pixel bytes held by a decoded mask.
 fn decoded_mask_size(mask: &DecodedMask) -> usize {
     mask.luma.width as usize * mask.luma.height as usize
 }
 
-/// PdfCraft patch: pixel bytes held by a decoded raster image and its mask.
+/// Taratasy patch: pixel bytes held by a decoded raster image and its mask.
 fn decoded_raster_size(raster: &DecodedRaster) -> usize {
     let image = match &raster.image {
         ImageData::Rgb(d) => d.width as usize * d.height as usize * 3,
@@ -479,7 +479,7 @@ fn decode_context<'a>(
     obj: &ImageXObject<'a>,
     target_dimension: Option<(u32, u32)>,
 ) -> Option<DecodeContext<'a>> {
-    // PdfCraft patch: images and masks over `MAX_IMAGE_PIXELS` are not decoded at all (the
+    // Taratasy patch: images and masks over `MAX_IMAGE_PIXELS` are not decoded at all (the
     // renderer skips them anyway): a fuzzed `/W 4294967295` stencil mask allocated gigabytes here.
     if !image_size_ok(obj.width, obj.height) {
         (obj.warning_sink)(InterpreterWarning::ImageDecodeFailure);
@@ -1055,7 +1055,7 @@ fn apply_decode_array(
     Some(decoded_arr)
 }
 
-/// PdfCraft patch: whether an image or mask of `width` × `height` may be decoded (at most
+/// Taratasy patch: whether an image or mask of `width` × `height` may be decoded (at most
 /// 2^28 pixels, the renderer's `MAX_IMAGE_PIXELS`).
 pub fn image_size_ok(width: u32, height: u32) -> bool {
     width > 0 && height > 0 && u64::from(width) * u64::from(height) <= 1 << 28

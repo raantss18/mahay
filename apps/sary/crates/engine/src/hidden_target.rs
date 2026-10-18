@@ -3,7 +3,7 @@
 //! instead of changing pixels nobody can see. A layer inside a hidden group is hidden too. An
 //! alpha channel or Quick Mask target has no layer, so it is never refused.
 
-use photocraft_doc::{Document, LayerId};
+use sary_doc::{Document, LayerId};
 use serde_json::Value;
 
 use crate::Session;

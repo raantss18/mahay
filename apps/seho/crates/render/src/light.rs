@@ -7,7 +7,7 @@
 //! directional lights with an ambient level and a colour tint, each material scales the diffuse
 //! and ambient terms and adds a specular highlight.
 
-use deckcraft_color::Rgba;
+use seho_color::Rgba;
 
 /// A light rig and material: what lights a 3-D surface.
 #[derive(Clone, Debug, PartialEq)]

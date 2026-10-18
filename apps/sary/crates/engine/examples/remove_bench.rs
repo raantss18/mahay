@@ -1,12 +1,12 @@
 //! Timing: the Remove Tool (`paint.remove`) on a 6000×4000 (24 MP) document, through the full
 //! command path (`Session::execute`: window read, hole, fill, write, undo snapshot).
-//! `cargo run --release -p photocraft-engine --example remove_bench [depth]`
+//! `cargo run --release -p sary-engine --example remove_bench [depth]`
 //!
 //! Rings around objects of 100, 300 and 1000 px (one completion each) and a 3000 px thin line
 //! (completed tile by tile), each undone before the next.
 use std::time::Instant;
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::json;
 
 fn ring(cx: f64, cy: f64, r: f64) -> Vec<[f64; 2]> {

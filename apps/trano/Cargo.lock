@@ -275,12 +275,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
-name = "artcraft-launcher"
+name = "trano"
 version = "0.5.1"
 dependencies = [
- "artcraft-launcher-core",
- "artcraft-launcher-native",
- "artcraft-launcher-ui-egui",
+ "trano-core",
+ "trano-native",
+ "trano-ui-egui",
  "eframe",
  "egui",
  "env_logger",
@@ -300,7 +300,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "artcraft-launcher-core"
+name = "trano-core"
 version = "0.5.1"
 dependencies = [
  "semver",
@@ -309,10 +309,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "artcraft-launcher-native"
+name = "trano-native"
 version = "0.5.1"
 dependencies = [
- "artcraft-launcher-core",
+ "trano-core",
  "dirs 6.0.0",
  "dunce",
  "flate2",
@@ -329,10 +329,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "artcraft-launcher-ui-egui"
+name = "trano-ui-egui"
 version = "0.5.1"
 dependencies = [
- "artcraft-launcher-core",
+ "trano-core",
  "egui",
  "egui_extras",
  "egui_kittest",
@@ -345,11 +345,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "artcraft-launcher-web"
+name = "trano-web"
 version = "0.5.1"
 dependencies = [
- "artcraft-launcher-core",
- "artcraft-launcher-ui-egui",
+ "trano-core",
+ "trano-ui-egui",
  "eframe",
  "egui",
  "js-sys",

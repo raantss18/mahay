@@ -4,7 +4,7 @@
 # Clean-room: every entry was written from the plain meaning of the English label using ordinary
 # Turkish computing vocabulary (katman, seçim, maske, ayar katmanı, fırça, degrade ...). No
 # proprietary localisation resource, string table or product UI was consulted or copied; add
-# entries the same way. Product and technology names (PhotoCraft, ArtCraft, OpenType, CMYK, Lab ...)
+# entries the same way. Product and technology names (Sary, Mahay, OpenType, CMYK, Lab ...)
 # stay as they are; the trailing "…" of dialog commands is kept.
 #
 # Custom paper dimensions in Print Settings.
@@ -760,11 +760,11 @@
 	Timeline	Zaman çizelgesi
 	Tool Presets	Araç Ön Ayarları
 	Tools	Araçlar
-	About PhotoCraft	PhotoCraft Hakkında
-	PhotoCraft Website	PhotoCraft Web Sitesi
-	PhotoCraft on GitHub	GitHub'da PhotoCraft
-	ArtCraft Website	ArtCraft Web Sitesi
-	Join the ArtCraft Discord…	ArtCraft Discord'una katılın…
+	About Sary	Sary Hakkında
+	Sary Website	Sary Web Sitesi
+	Sary on GitHub	GitHub'da Sary
+	Mahay Website	Mahay Web Sitesi
+	Join the Mahay Discord…	Mahay Discord'una katılın…
 	Report an Issue…	Bir Sorun Bildirin…
 	WIA Support…	WIA Desteği…
 	Apply	Uygula
@@ -815,7 +815,7 @@
 	All Caps	Tamamı Büyük Harf
 	All Slices	Tüm Dilimler
 	All User Slices	Tüm Kullanıcı Dilimleri
-	All shortcuts reset to PhotoCraft defaults.	Tüm kısayollar PhotoCraft varsayılanlarına sıfırlanır.
+	All shortcuts reset to Sary defaults.	Tüm kısayollar Sary varsayılanlarına sıfırlanır.
 	Alt	Alternatif
 	Always use pressure for opacity	Opaklık için her zaman baskıyı kullanın
 	Always use pressure for size	Her zaman boyuta göre baskı kullanın
@@ -1059,8 +1059,8 @@
 	Drop an image or PSD anywhere to open it.	Açmak için bir görüntüyü veya PSD'yi herhangi bir yere bırakın.
 	Native file drag-and-drop is unavailable	Yerel dosya sürükle ve bırak özelliği kullanılamıyor
 	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or copy the image in your file manager and paste it with {paste}.	Yerel dosya sürükle ve bırak özelliği henüz Wayland'de desteklenmiyor. Dosyayı Kullan › Aç veya resmi dosya yöneticinize kopyalayıp {paste} ile yapıştırın.
-	To drop files, start PhotoCraft under XWayland: `{command}`	Dosyaları bırakmak için XWayland altında PhotoCraft'ı başlatın: `{command}`
-	Or set Preferences › Performance › Linux display server to X11: PhotoCraft then always starts under XWayland.	Veya Tercihler › Performans › Linux görüntüleme sunucusunu X11: PhotoCraft olarak ayarlayın, ardından her zaman XWayland altında başlar.
+	To drop files, start Sary under XWayland: `{command}`	Dosyaları bırakmak için XWayland altında Sary'ı başlatın: `{command}`
+	Or set Preferences › Performance › Linux display server to X11: Sary then always starts under XWayland.	Veya Tercihler › Performans › Linux görüntüleme sunucusunu X11: Sary olarak ayarlayın, ardından her zaman XWayland altında başlar.
 	Edit › Paste	Düzenle › Yapıştır
 	Duplicate Layers…	Katmanları Çoğalt…
 	Duplicate style	Yinelenen stil
@@ -1305,9 +1305,9 @@
 	Perspective Warp is not active	Perspektif Çarpıtma etkin değil
 	Perspective Warp: draw planes along the image's perspective, then switch to Warp	Perspektif Çarpıtma: görüntünün perspektifi boyunca düzlemler çizin, ardından Çarpıtma'ya geçin
 	Photo Filter	Fotoğraf Filtresi
-	PhotoCraft	PhotoCraft
-	PhotoCraft Manages Colors	PhotoCraft Renkleri Yönetir
-	PhotoCraft — an open-source, native image editor written in Rust.	PhotoCraft — Rust'ta yazılmış açık kaynaklı, yerel bir resim düzenleyici.
+	Sary	Sary
+	Sary Manages Colors	Sary Renkleri Yönetir
+	Sary — an open-source, native image editor written in Rust.	Sary — Rust'ta yazılmış açık kaynaklı, yerel bir resim düzenleyici.
 	Pin Depth:	Pim Derinliği:
 	Pixel Length:	Piksel Uzunluğu:
 	Pixels/Centimeter	Piksel/Santimetre
@@ -1382,11 +1382,11 @@
 	Import Shortcuts…	Kısayolları İçe Aktar…
 	Load a keyboard shortcut set saved as .kys	.kys olarak kaydedilen bir klavye kısayolu kümesi yükleyin
 	Imported {n} shortcuts from {file}. Click OK to keep them.	{n} kısayolları {file} adresinden içe aktarıldı. Bunları saklamak için Tamam'ı tıklayın.
-	{n} commands are not in PhotoCraft.	{n} komutları PhotoCraft'ta değil.
+	{n} commands are not in Sary.	{n} komutları Sary'ta değil.
 	Keyboard shortcuts imported	İçe aktarılan klavye kısayolları
 	Your keyboard shortcut set {set} is in use here: {n} shortcuts differ from the defaults. Edit › Keyboard Shortcuts shows them; Reset All to Defaults undoes this.	{set} klavye kısayol grubunuz burada kullanılıyor: {n} kısayolları varsayılanlardan farklı. Düzenle › Klavye Kısayolları bunları gösterir; Tümünü Varsayılanlara Sıfırla bu işlemi geri alır.
 	Import keyboard shortcuts?	Klavye kısayolları içe aktarılsın mı?
-	PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?	PhotoCraft, {set} klavye kısayol setinizi bu bilgisayardaki başka bir resim düzenleyicide buldu: {n} kısayolları PhotoCraft'ınkilerden farklı. İçe aktarılsın mı?
+	Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?	Sary, {set} klavye kısayol setinizi bu bilgisayardaki başka bir resim düzenleyicide buldu: {n} kısayolları Sary'ınkilerden farklı. İçe aktarılsın mı?
 	Edit › Keyboard Shortcuts › Reset All to Defaults undoes an import.	Düzenle › Klavye Kısayolları › Tümünü Varsayılanlara Sıfırla, içe aktarma işlemini geri alır.
 	Don't Import	İçe Aktarma
 	The keyboard shortcut set was not imported: {error}	Klavye kısayol seti içe aktarılmadı: {error}
@@ -1571,7 +1571,7 @@
 	Apple Watch 45mm	Apple Watch 45mm
 	Aqua	Su
 	Art & Illustration	Sanat ve İllüstrasyon
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Background Eraser Tool	Arka Plan Silgisi Aracı
 	Bevel & Emboss	Eğim Ver ve Kabart
 	Blend Mode	Karışım Modu
@@ -1607,7 +1607,7 @@
 	Current Tool	Güncel Araç
 	Custom Shape Tool	Özel Şekil Aracı
 	Cyans	Camgöbeği
-	Default PhotoCraft Size	Varsayılan PhotoCraft Boyutu
+	Default Sary Size	Varsayılan Sary Boyutu
 	Delete Workspace	Çalışma Alanını Sil
 	Diamond	Elmas
 	Dimensions:	Boyutlar:
@@ -1718,7 +1718,7 @@
 	Pen Tool	Kalem Aracı
 	Convert Point Tool	Nokta Dönüştürme Aracı
 	Photo	Fotoğraf
-	PhotoCraft website	PhotoCraft web sitesi
+	Sary website	Sary web sitesi
 	Picas	Pikalar
 	Pillow Emboss	Yastık Kabartma
 	Pixel Replacement	Piksel Değiştirme
@@ -2045,7 +2045,7 @@
 	System Info	Sistem Bilgisi
 	More panels	Daha fazla panel
 	More documents	Daha fazla belge
-	These settings aren't available in PhotoCraft yet.	Bu ayarlar henüz PhotoCraft'ta mevcut değildir.
+	These settings aren't available in Sary yet.	Bu ayarlar henüz Sary'ta mevcut değildir.
 	Graphics	Grafik
 	Reset GPU Backend	GPU Arka Uçunu Sıfırla
 	Applies at next launch.	Bir sonraki açılışta geçerlidir.
@@ -2244,7 +2244,7 @@
 	Automatic uses GPU acceleration when available and falls back to CPU rendering on errors.	Otomatik, mümkün olduğunda GPU hızlandırmayı kullanır ve hatalarda CPU oluşturmaya geri döner.
 	Switched to CPU rendering	CPU oluşturmaya geçildi
 	GPU acceleration could not continue. Your documents are unchanged.	GPU hızlandırması devam edemedi. Belgeleriniz değişmedi.
-	PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter.	PhotoCraft, CPU görüntü düzenleyicisini kullanıyor. Pencere hala grafik bağdaştırıcınızı kullanıyor olabilir.
+	Sary is using the CPU image compositor. The window may still use your graphics adapter.	Sary, CPU görüntü düzenleyicisini kullanıyor. Pencere hala grafik bağdaştırıcınızı kullanıyor olabilir.
 	Retry GPU requires a restart. Save your work first.	GPU'yu yeniden dene, yeniden başlatma gerektirir. Öncelikle çalışmanızı kaydedin.
 	Keep Using CPU	CPU'yu Kullanmaya Devam Edin
 	Retry GPU	GPU'yu yeniden dene
@@ -2625,7 +2625,7 @@ cameraRaw	Color	Renk
 	Restart Required	Yeniden Başlatma Gerekli
 	Restart	Yeniden başlat
 	Quit	Çıkış
-	Quit PhotoCraft	PhotoCraft'tan Çık
+	Quit Sary	Sary'tan Çık
 	Close Window	Pencereyi Kapat
 	New Window	Yeni Pencere
 	Open Image	Resmi Aç
@@ -3009,7 +3009,7 @@ cameraRaw	Color	Renk
 	Custom Pixel Aspect Ratio	Özel Piksel En Boy Oranı
 	32-bit Preview Options	32 bit Önizleme Seçenekleri
 	New Guide	Yeni Kılavuz
-	Join the ArtCraft Discord	ArtCraft Discord'una katılın
+	Join the Mahay Discord	Mahay Discord'una katılın
 	Report an Issue	Sorun Bildir
 	Load Files into Stack	Dosyaları Yığına Yükle
 	Statistics	İstatistikler
@@ -3397,7 +3397,7 @@ cameraRaw	Color	Renk
 	Modify Date	Tarihi Değiştir
 	Mosaic	Mozaik
 	Motion Blur	Hareket Bulanıklığı
-	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or run PhotoCraft under XWayland with `WAYLAND_DISPLAY= photocraft`.	Yerel dosya sürükle ve bırak özelliği henüz Wayland'de desteklenmiyor. Dosya › Aç'ı kullanın veya PhotoCraft'ı XWayland altında `WAYLAND_DISPLAY= photocraft` ile çalıştırın.
+	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or run Sary under XWayland with `WAYLAND_DISPLAY= sary`.	Yerel dosya sürükle ve bırak özelliği henüz Wayland'de desteklenmiyor. Dosya › Aç'ı kullanın veya Sary'ı XWayland altında `WAYLAND_DISPLAY= sary` ile çalıştırın.
 	Neon Glow	Neon Parıltı
 	New Guide Layout	Yeni Kılavuz Düzeni
 	New Path	Yeni Yol
@@ -3756,7 +3756,7 @@ cameraData	Lens	Lens
 	There is no crop size or ratio to save	Kaydedilecek kırpma boyutu veya oranı yok
 	Search settings…	Arama ayarları…
 	No matching settings	Eşleşen ayar yok
-	PhotoCraft — Screen Color Picker	PhotoCraft — Ekran Rengi Seçici
+	Sary — Screen Color Picker	Sary — Ekran Rengi Seçici
 	Loading fonts…	Yazı tipleri yükleniyor…
 	Onion Skin	Soğan Kabuğu
 	Marching Ants	Yürüyen Karıncalar
@@ -3857,7 +3857,7 @@ cameraData	Lens	Lens
 	{name} (Photoshop)	{name} (Photoshop)
 	{message} ({note})	{message} ({note})
 @plural	Loaded {n} action from {file}|Loaded {n} actions from {file}	{file} dosyasından {n} eylem yüklendi
-@plural	{n} step has no PhotoCraft equivalent yet|{n} steps have no PhotoCraft equivalent yet	{n} adımın PhotoCraft’ta henüz karşılığı yok
+@plural	{n} step has no Sary equivalent yet|{n} steps have no Sary equivalent yet	{n} adımın Sary’ta henüz karşılığı yok
 @plural	Saved {n} action to {file}|Saved {n} actions to {file}	{n} eylem {file} dosyasına kaydedildi
 @plural	{n} step with no Photoshop equivalent left out|{n} steps with no Photoshop equivalent left out	Photoshop karşılığı olmayan {n} adım atlandı
 
@@ -3922,7 +3922,7 @@ cameraData	Lens	Lens
 	Clear Selected Guides	Seçili Kılavuzları Temizle
 	Delete this set	Bu Kümeyi Sil
 	New Set…	Yeni Küme…
-	PhotoCraft Defaults	PhotoCraft Varsayılanları
+	Sary Defaults	Sary Varsayılanları
 	Save a list of these shortcuts as a web page	Bu kısayolların listesini web sayfası olarak kaydet
 	Save the changes to this set	Bu kümedeki değişiklikleri kaydet
 	Save these shortcuts as a .kys file	Bu kısayolları .kys dosyası olarak kaydet

@@ -4,7 +4,7 @@
 
 use std::collections::HashSet;
 
-use pdfcraft_cos::{Dict, Document as Cos, ObjRef, Object};
+use taratasy_cos::{Dict, Document as Cos, ObjRef, Object};
 
 use crate::Document;
 
@@ -36,7 +36,7 @@ impl Document {
         let img = self.page_images(page).into_iter().nth(index).ok_or_else(|| format!("page {} has no image {}", page + 1, index + 1))?;
         let object = img.object.ok_or("the image has no object")?;
         let picture = if img.is_form { picture_in_form(&editor.cos, object).ok_or("this artwork holds no picture")? } else { object };
-        pdfcraft_create::image_file(&editor.cos, picture)
+        taratasy_create::image_file(&editor.cos, picture)
     }
 
     /// Copy Image: picture `index` on `page` at its own resolution, as straight (unpremultiplied)

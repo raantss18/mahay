@@ -11,7 +11,7 @@
 
 use std::collections::HashMap;
 
-use wordcraft_doc::{Align, Document};
+use soratra_doc::{Align, Document};
 
 use crate::html::decode_entity;
 use crate::model::{self, Cell, FBlock, FTable, Fmt, Inline, Kind, ListInfo, Para, make_img};
@@ -28,7 +28,7 @@ pub fn import(text: &str) -> Document {
 }
 
 /// [`import`] onto `page`: Markdown gives no page size (#1381).
-pub fn import_on(text: &str, page: &wordcraft_doc::SectionProps) -> Document {
+pub fn import_on(text: &str, page: &soratra_doc::SectionProps) -> Document {
     model::to_doc_in(&parse(text), page.clone())
 }
 
@@ -1179,7 +1179,7 @@ fn inlines_md_impl(inlines: &[Inline], in_table: bool) -> String {
     };
     for (text, f, raw) in pieces {
         // Links are the outermost construct; a script or other non-web target is plain text.
-        let f_link = f.link.clone().filter(|l| wordcraft_doc::link::is_safe_href(l));
+        let f_link = f.link.clone().filter(|l| soratra_doc::link::is_safe_href(l));
         if f_link != link || raw.is_some() {
             close_all(&mut out, &mut stack);
             if let Some(l) = &link {

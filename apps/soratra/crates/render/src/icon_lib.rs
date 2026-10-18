@@ -1,6 +1,6 @@
 //! The Insert › Icons library: monochrome pictograms drawn in code.
 //!
-//! Every icon here is original WordCraft artwork: simple geometric line drawings designed on a
+//! Every icon here is original Soratra artwork: simple geometric line drawings designed on a
 //! 24×24 grid for this file (no external icon set was copied, traced or adapted). The same path
 //! data is drawn live by the interface's icon picker and rasterised here, by vello_cpu, into the
 //! PNG picture `insert.icon` places in the document.
@@ -19,7 +19,7 @@ use std::sync::OnceLock;
 
 use vello_cpu::kurbo::{self, Affine, BezPath};
 use vello_cpu::{RenderContext, Resources};
-use wordcraft_doc::props::Rgb;
+use soratra_doc::props::Rgb;
 
 use crate::Rendered;
 

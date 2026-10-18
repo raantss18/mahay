@@ -1,9 +1,9 @@
 //! Independent, font-free reference painting for the shared controls' public visual contracts.
-//! Reference paths never call craft-ui or derive their expected rectangles from its responses.
+//! Reference paths never call mahay-ui or derive their expected rectangles from its responses.
 
-use craft_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
-use craft_ui::layout::{ResizeHandle, ResizeHandleStyle, SplitAxis, SplitSize, split_rect};
-use craft_ui::tabs::Tab;
+use mahay_ui::buttons::{ButtonVisuals, IconButton, IconButtonStyle};
+use mahay_ui::layout::{ResizeHandle, ResizeHandleStyle, SplitAxis, SplitSize, split_rect};
+use mahay_ui::tabs::Tab;
 use egui::{Align, Color32, CornerRadius, Id, Layout, Painter, Rect, Response, Stroke, StrokeKind, Ui, UiBuilder, Vec2, pos2, vec2};
 
 pub const CANVAS: Vec2 = vec2(128.0, 72.0);

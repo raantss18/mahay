@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use gridcraft_core::CellRef;
+use tabilao_core::CellRef;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -24,7 +24,7 @@ pub fn deserialize<'de, D: Deserializer<'de>, V: Deserialize<'de>>(d: D) -> Resu
 #[cfg(test)]
 mod tests {
     use crate::{Comment, Hyperlink, Sheet};
-    use gridcraft_core::CellRef;
+    use tabilao_core::CellRef;
 
     #[test]
     fn comments_and_hyperlinks_survive_json() {

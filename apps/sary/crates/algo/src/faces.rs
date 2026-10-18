@@ -8,7 +8,7 @@
 //!
 //! [`detect`] takes straight RGBA in `0..=1` and returns faces in pixel coordinates of that image.
 //!
-//! The browser build (wasm32) leaves the network and its weights out, as `photocraft-raw` does with
+//! The browser build (wasm32) leaves the network and its weights out, as `sary-raw` does with
 //! its JPEG XL decoder: they would push the wasm over the per-file cap of static hosts
 //! (packaging/web/package.sh). There [`AVAILABLE`] is false and [`detect`] finds nothing.
 

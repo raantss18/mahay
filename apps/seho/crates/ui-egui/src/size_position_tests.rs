@@ -12,7 +12,7 @@ fn harness() -> Harness<'static, SlideApp> {
             app.logic(ui.ctx());
             app.ui(ui);
         },
-        SlideApp::new(deckcraft_engine::Session::with_new(), Services::default()),
+        SlideApp::new(seho_engine::Session::with_new(), Services::default()),
     );
     h.run_steps(2);
     h
@@ -20,7 +20,7 @@ fn harness() -> Harness<'static, SlideApp> {
 
 fn box_of(app: &SlideApp, id: u64) -> (f64, f64, f64, f64, f64) {
     let st = app.session.active().unwrap();
-    let x = st.shape(deckcraft_model::ShapeId(id as u32)).and_then(|s| s.xfrm).unwrap();
+    let x = st.shape(seho_model::ShapeId(id as u32)).and_then(|s| s.xfrm).unwrap();
     (x.x, x.y, x.w, x.h, x.rot)
 }
 

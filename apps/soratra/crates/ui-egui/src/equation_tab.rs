@@ -6,8 +6,8 @@
 
 use egui::{Align2, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::json;
-use wordcraft_doc::math::parse_linear;
-use wordcraft_engine::math_gallery::{BUILT_INS, STRUCTURES, SYMBOL_SETS, Template};
+use soratra_doc::math::parse_linear;
+use soratra_engine::math_gallery::{BUILT_INS, STRUCTURES, SYMBOL_SETS, Template};
 
 use crate::WordApp;
 use crate::theme::{Tokens, regular, semibold};
@@ -32,7 +32,7 @@ pub(crate) fn button_picture(id: &str) -> &'static str {
 }
 
 /// A rendered equation drawn into `r` (centred), or its linear text while it renders.
-fn paint_math(app: &mut WordApp, ui: &Ui, r: Rect, key: &str, linear: &str, nodes: Option<wordcraft_doc::math::Arg>, display: bool, pt: f32) {
+fn paint_math(app: &mut WordApp, ui: &Ui, r: Rect, key: &str, linear: &str, nodes: Option<soratra_doc::math::Arg>, display: bool, pt: f32) {
     let nodes = nodes.unwrap_or_else(|| parse_linear(linear));
     match crate::previews::math_texture(app, ui.ctx(), key, &nodes, display, pt, r.size()) {
         Some((tex, uv)) => {
@@ -254,9 +254,9 @@ fn symbol_button(ui: &mut Ui, app: &mut WordApp, c: char, t: &Tokens) -> bool {
         ui.painter().rect_stroke(r, 2.0, Stroke::new(1.0, t.accent), egui::StrokeKind::Inside);
     }
     let s = c.to_string();
-    let nodes = vec![wordcraft_doc::math::MNode::Run(wordcraft_doc::math::MRun { text: s.clone(), lit: true, ..Default::default() })];
+    let nodes = vec![soratra_doc::math::MNode::Run(soratra_doc::math::MRun { text: s.clone(), lit: true, ..Default::default() })];
     paint_math(app, ui, r, &format!("sym:{s}"), &s, Some(nodes), false, 11.0);
-    let name = wordcraft_doc::math_symbols::name_of(c).map(|n| format!("{s}  \\{n}")).unwrap_or_else(|| format!("{s}  U+{:04X}", c as u32));
+    let name = soratra_doc::math_symbols::name_of(c).map(|n| format!("{s}  \\{n}")).unwrap_or_else(|| format!("{s}  U+{:04X}", c as u32));
     resp.on_hover_text(name).clicked()
 }
 

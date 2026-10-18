@@ -133,7 +133,7 @@ impl<'a> Dict<'a> {
         match &self.0 {
             Inner::Empty => None,
             Inner::Some(repr) => Some(repr.offsets.get_or_init(|| {
-                // PdfCraft patch: (#307) large resource dictionaries are read for every
+                // Taratasy patch: (#307) large resource dictionaries are read for every
                 // page at open, but most are never looked up. Index them only on demand.
                 // The first pass already validated the same immutable bytes with this
                 // context. Keep the same parser, including duplicate-key and repair rules.
@@ -179,7 +179,7 @@ impl Skippable for Dict<'_> {
         r.forward_tag(b"<<")?;
         r.enter_container()?;
 
-        // PdfCraft patch: leave even when a value or garbage fails through `?`.
+        // Taratasy patch: leave even when a value or garbage fails through `?`.
         let result = (|| loop {
             r.skip_white_spaces_and_comments();
 
@@ -212,7 +212,7 @@ impl<'a> Readable<'a> for Dict<'a> {
     }
 }
 
-// PdfCraft patch: (#307) retain the fast single-pass index for ordinary small
+// Taratasy patch: (#307) retain the fast single-pass index for ordinary small
 // dictionaries. Above this entry count, validate without retaining a hash table.
 const EAGER_DICT_ENTRIES: usize = 32;
 
@@ -231,7 +231,7 @@ pub(crate) struct CachedDict {
     offsets: SharedIndex,
 }
 
-// PdfCraft patch: share a validated large dictionary's index across pages. The cache
+// Taratasy patch: share a validated large dictionary's index across pages. The cache
 // belongs to the xref, owns its keys, and is bounded even on documents with many unique
 // dictionaries. Comparing the bytes also makes address reuse harmless. No reader context
 // is cached: decryption, object identity and reference-cycle tracking stay with each read.
@@ -366,7 +366,7 @@ pub(crate) fn probe_dict<'a>(
     })
 }
 
-// PdfCraft patch: an object where a key belongs is read, not skipped, so a dictionary
+// Taratasy patch: an object where a key belongs is read, not skipped, so a dictionary
 // holding another one there (`<< << …`) recursed without a bound. Count each parsed
 // dictionary like a skipped one, and leave on every exit of the parse below.
 fn parse_dict_with<'a, F>(

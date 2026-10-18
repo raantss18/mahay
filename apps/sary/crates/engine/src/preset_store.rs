@@ -43,8 +43,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Read;
 use std::sync::{Arc, Mutex, PoisonError};
 
-use photocraft_paint::tile::PREVIEW_SIDE;
-use photocraft_paint::{BrushPreset, BrushSettings, GrayTile, Pattern, PresetCaptures, StoredTile, TipShape};
+use sary_paint::tile::PREVIEW_SIDE;
+use sary_paint::{BrushPreset, BrushSettings, GrayTile, Pattern, PresetCaptures, StoredTile, TipShape};
 use serde::{Deserialize, Serialize};
 
 use crate::Session;
@@ -78,7 +78,7 @@ pub const MAX_GROUPS: usize = 4096;
 /// Most presets loaded from one group file.
 pub const MAX_PRESETS_PER_GROUP: usize = 50_000;
 
-const GROUP_FORMAT: &str = "photocraft-brush-group";
+const GROUP_FORMAT: &str = "sary-brush-group";
 const TIP_MAGIC: &[u8; 6] = b"PCTIP1";
 const TIP_HEADER: usize = 6 + 1 + 4 + 4;
 
@@ -207,7 +207,7 @@ impl PresetBackend for DirBackend {
         let path = self.path(name)?;
         let dir = path.parent().ok_or_else(|| format!("{name}: no parent directory"))?;
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-        photocraft_format::atomic_write(&path, bytes).map_err(|e| format!("{name}: {e}"))
+        sary_format::atomic_write(&path, bytes).map_err(|e| format!("{name}: {e}"))
     }
     fn remove(&self, name: &str) -> Result<(), String> {
         match std::fs::remove_file(self.path(name)?) {
@@ -274,7 +274,7 @@ pub fn decode_tip(bytes: &[u8]) -> Result<GrayTile, String> {
 fn decode_tip_max(bytes: &[u8], max_side: u32) -> Result<GrayTile, String> {
     let head = bytes.get(..TIP_HEADER).ok_or("truncated tip header")?;
     if &head[..6] != TIP_MAGIC {
-        return Err("not a PhotoCraft tip".into());
+        return Err("not a Sary tip".into());
     }
     let bits = head[6];
     let u32_at = |i: usize| u32::from_le_bytes([head[i], head[i + 1], head[i + 2], head[i + 3]]);
@@ -1077,7 +1077,7 @@ impl PresetStore {
 
 fn builtin_names() -> &'static [String] {
     static NAMES: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
-    NAMES.get_or_init(|| photocraft_paint::presets::builtin().into_iter().map(|p| p.name).collect())
+    NAMES.get_or_init(|| sary_paint::presets::builtin().into_iter().map(|p| p.name).collect())
 }
 
 impl Session {

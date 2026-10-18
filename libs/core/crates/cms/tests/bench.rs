@@ -1,6 +1,6 @@
-//! Throughput check: `cargo test -p craft-cms --release --test bench -- --ignored --nocapture`.
+//! Throughput check: `cargo test -p mahay-cms --release --test bench -- --ignored --nocapture`.
 
-use craft_cms::{Builtin, Intent, Transform};
+use mahay_cms::{Builtin, Intent, Transform};
 
 #[test]
 #[ignore]

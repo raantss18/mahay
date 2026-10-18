@@ -1,13 +1,13 @@
 //! Insert › Icons: Lucide stroke icons as custom geometry.
 //!
 //! The paths in `icon_data.rs` are Lucide 1.56.0 centerlines (24×24, fill none). They are converted
-//! to DeckCraft's `M`/`L`/`C`/`Q`/`Z` syntax when inserted, so the shape is a stroked outline rather
+//! to Seho's `M`/`L`/`C`/`Q`/`Z` syntax when inserted, so the shape is a stroked outline rather
 //! than a filled silhouette or an SVG picture.
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use deckcraft_geom::{BezPath, PathEl};
+use seho_geom::{BezPath, PathEl};
 
 /// Design size of every icon, in path units. Lucide's viewBox is `0 0 24 24`.
 pub const VIEW: f64 = 24.0;
@@ -46,7 +46,7 @@ pub fn outline(name: &str) -> Option<&'static BezPath> {
     parsed().get(icon.name)
 }
 
-/// DeckCraft path syntax for `name`, in the 24×24 viewBox.
+/// Seho path syntax for `name`, in the 24×24 viewBox.
 pub fn path_data(name: &str) -> Option<String> {
     outline(name).and_then(deck_path)
 }
@@ -130,8 +130,8 @@ fn num(v: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deckcraft_geom::preset::FillMode;
-    use deckcraft_model::{Geom, ShapeId};
+    use seho_geom::preset::FillMode;
+    use seho_model::{Geom, ShapeId};
     use serde_json::json;
 
     use crate::Session;
@@ -144,7 +144,7 @@ mod tests {
             assert!(bp.elements().len() >= 2, "{}", icon.name);
             let d = path_data(icon.name).unwrap_or_else(|| panic!("{}", icon.name));
             assert!(d.starts_with('M'), "{d}");
-            let again = deckcraft_render::parse_path(&d);
+            let again = seho_render::parse_path(&d);
             assert!(!again.elements().is_empty(), "{}", icon.name);
         }
         // `m19 12…` is a second SVG element, not a continuation of the shaft.
@@ -181,7 +181,7 @@ mod tests {
             assert!(paths[0].d.contains('M') && paths[0].d.contains('C'));
             let width = sh.line.as_ref().and_then(|l| l.width).unwrap();
             assert!((width - 6.0).abs() < 1e-6, "{width}");
-            let img = deckcraft_render::render_slide(&st.doc, st.selection.slide, &deckcraft_render::RenderOpts { scale: 2.0, ..Default::default() });
+            let img = seho_render::render_slide(&st.doc, st.selection.slide, &seho_render::RenderOpts { scale: 2.0, ..Default::default() });
             let ink = ink_in(&img, 100.0, 80.0, 72.0, 72.0, 2.0);
             assert!(ink > 40, "star stroke pixels {ink}");
             let mid = img.pixel((100.0 + 36.0) as u32 * 2, (80.0 + 36.0) as u32 * 2);
@@ -197,12 +197,12 @@ mod tests {
             let sh = st.shapes().iter().find(|s| s.name == "Arrow right").unwrap();
             let width = sh.line.as_ref().and_then(|l| l.width).unwrap();
             assert!((width - 8.0).abs() < 1e-6, "{width}");
-            let img = deckcraft_render::render_slide(&st.doc, st.selection.slide, &deckcraft_render::RenderOpts { scale: 2.0, ..Default::default() });
+            let img = seho_render::render_slide(&st.doc, st.selection.slide, &seho_render::RenderOpts { scale: 2.0, ..Default::default() });
             assert!(ink_in(&img, 200.0, 200.0, 96.0, 96.0, 2.0) > 40);
         }
 
-        let bytes = deckcraft_pptx::export(&s.doc().unwrap().doc).unwrap();
-        let p = deckcraft_pptx::import(&bytes).unwrap();
+        let bytes = seho_pptx::export(&s.doc().unwrap().doc).unwrap();
+        let p = seho_pptx::import(&bytes).unwrap();
         let sh = p.slides[0].shapes.iter().find(|s| s.name == "Arrow right").unwrap();
         let Geom::Custom { paths } = &sh.geom else { panic!("{:?}", sh.geom) };
         assert!(paths.iter().any(|path| path.fill == FillMode::None && path.stroke && path.d.contains('M')));
@@ -210,7 +210,7 @@ mod tests {
         assert!((width - 8.0).abs() < 0.05, "{width}");
     }
 
-    fn ink_in(img: &deckcraft_render::Image, x: f64, y: f64, w: f64, h: f64, scale: f64) -> usize {
+    fn ink_in(img: &seho_render::Image, x: f64, y: f64, w: f64, h: f64, scale: f64) -> usize {
         let x0 = (x * scale).floor().max(0.0) as u32;
         let y0 = (y * scale).floor().max(0.0) as u32;
         let x1 = ((x + w) * scale).ceil().min(img.width as f64) as u32;

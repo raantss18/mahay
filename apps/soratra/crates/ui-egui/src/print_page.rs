@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use egui::{Rect, Sense, Stroke, TextureHandle, Ui, pos2, vec2};
 use serde_json::{Value, json};
-use wordcraft_layout::DocLayout;
+use soratra_layout::DocLayout;
 
 use crate::theme::{Tokens, medium, regular};
 use crate::{WordApp, icons};
@@ -109,7 +109,7 @@ fn page_texture(app: &WordApp, ctx: &egui::Context, lay: &DocLayout, page: usize
     // Zoomed in, the texture stays within what the GPU takes and is stretched beyond that.
     let max_side = ctx.input(|i| i.max_texture_side) as f32 / pg.w.max(pg.h).max(1.0);
     let scale = (width / pg.w.max(1.0) * ctx.pixels_per_point()).clamp(0.05, 4.0).min(max_side);
-    let img = wordcraft_render::render_page(&app.session.doc, pg, scale, &Default::default());
+    let img = soratra_render::render_page(&app.session.doc, pg, scale, &Default::default());
     let color = egui::ColorImage::from_rgba_unmultiplied([img.width as usize, img.height as usize], &img.to_straight());
     let tex = ctx.load_texture("print_page_preview", color, egui::TextureOptions::LINEAR);
     ctx.data_mut(|d| d.insert_temp(id, (key, tex.clone())));
@@ -174,8 +174,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                     ui.label(egui::RichText::new(tl!("Copies")).font(medium(13.0)));
                     ui.horizontal(|ui| {
                         let mut n = app.ui.print.copies;
-                        ui.add(egui::DragValue::new(&mut n).range(1..=wordcraft_engine::print::MAX_COPIES).speed(0.2));
-                        app.ui.print.copies = n.clamp(1, wordcraft_engine::print::MAX_COPIES);
+                        ui.add(egui::DragValue::new(&mut n).range(1..=soratra_engine::print::MAX_COPIES).speed(0.2));
+                        app.ui.print.copies = n.clamp(1, soratra_engine::print::MAX_COPIES);
                         if app.ui.print.copies > 1 {
                             ui.checkbox(&mut app.ui.print.collate, tl!("Collate copies"));
                         }
@@ -192,14 +192,14 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                         egui::TextEdit::singleline(&mut app.ui.print.pages)
                             .hint_text(tl!("Pages like 1-3, 5"))
                             .desired_width(260.0)
-                            .char_limit(wordcraft_engine::print::MAX_SPEC_CHARS),
+                            .char_limit(soratra_engine::print::MAX_SPEC_CHARS),
                     );
                 }
                 choice(ui, "print_parity", &mut app.ui.print.parity, &PARITIES);
                 ui.label(egui::RichText::new(tl!("Orientation")).font(medium(13.0)));
                 choice(ui, "print_orientation", &mut app.ui.print.orientation, &ORIENTATIONS);
 
-                match wordcraft_engine::print::plan(&app.ui.print.params(), total, current) {
+                match soratra_engine::print::plan(&app.ui.print.params(), total, current) {
                     Ok(plan) => {
                         let msg = crate::i18n::fmt(
                             tl!("{count} of {total} pages will print"),

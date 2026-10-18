@@ -19,10 +19,10 @@ pub const FALLBACK_FAMILY: &str = "Inter";
 /// `epaint_default_fonts`; licence in ATTRIBUTION.md).
 pub const LAST_RESORT_FAMILY: &str = "Ubuntu";
 
-/// Compiled-in font files: the craft-fonts faces (Latin presentation fonts, then Japanese;
-/// empty without `CRAFT_FONTS_DIR`), then the last-resort face.
+/// Compiled-in font files: the mahay-fonts faces (Latin presentation fonts, then Japanese;
+/// empty without `MAHAY_FONTS_DIR`), then the last-resort face.
 pub fn bundled() -> Vec<&'static [u8]> {
-    let mut v: Vec<&'static [u8]> = crate::CRAFT_FONTS.iter().map(|f| f.bytes).collect();
+    let mut v: Vec<&'static [u8]> = crate::MAHAY_FONTS.iter().map(|f| f.bytes).collect();
     v.push(epaint_default_fonts::UBUNTU_LIGHT);
     v
 }
@@ -88,7 +88,7 @@ fn office_twin(family: &str) -> Option<&'static str> {
 }
 
 /// Office's downloadable (cloud) families: PowerPoint fetches them when a document uses them, so
-/// they draw as themselves there, not as Calibri. Without them DeckCraft keeps their closest open
+/// they draw as themselves there, not as Calibri. Without them Seho keeps their closest open
 /// substitute ([`substitutes`]; Aptos as Inter).
 fn is_office_cloud_font(family: &str) -> bool {
     let f = family.to_ascii_lowercase();
@@ -510,7 +510,7 @@ pub fn system_font_dirs() -> Vec<std::path::PathBuf> {
             let l = std::path::PathBuf::from(l);
             dirs.push(l.join("Microsoft\\Windows\\Fonts"));
             // Fonts Microsoft Office downloads on demand (Aptos…), used where Office put them;
-            // DeckCraft never ships or needs them.
+            // Seho never ships or needs them.
             dirs.push(l.join("Microsoft\\FontCache\\4\\CloudFonts"));
         }
     } else {
@@ -773,9 +773,9 @@ fn style_italic(style: &str) -> bool {
 }
 
 impl FontDb {
-    /// A database holding the bundled fonts, then the craft-fonts Japanese faces (Mincho first,
+    /// A database holding the bundled fonts, then the mahay-fonts Japanese faces (Mincho first,
     /// so they are the fallback for Japanese text after the requested and bundled fonts; empty
-    /// without `CRAFT_FONTS_DIR`), whose system font scan reads `font_dirs`.
+    /// without `MAHAY_FONTS_DIR`), whose system font scan reads `font_dirs`.
     pub fn with_font_dirs(font_dirs: Vec<std::path::PathBuf>) -> Self {
         let mut faces = Vec::new();
         for data in bundled() {
@@ -1030,7 +1030,7 @@ impl FontDb {
     /// when it is installed or bundled, or a metric-compatible stand-in (Carlito for Calibri,
     /// Liberation Sans for Arial…), or the family PowerPoint maps it to (Liberation Sans as Arial,
     /// see `office_twin`); any other missing family is drawn in Calibri (or Carlito).
-    /// DeckCraft's own default family keeps [`FontDb::face`]'s fallbacks.
+    /// Seho's own default family keeps [`FontDb::face`]'s fallbacks.
     pub fn document_face(&self, family: &str, style: &str) -> Arc<FontFace> {
         if family.eq_ignore_ascii_case(FALLBACK_FAMILY) || has_metric_twin(family) || is_office_cloud_font(family) || self.has_family(family) {
             return self.face(family, style);

@@ -1,8 +1,8 @@
-# WordCraft parity with Microsoft Word
+# Soratra parity with Microsoft Word
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-16 · **Change:** trivial (East Asian typography: `w:eastAsianLayout` kept on save, not laid out; previously trivial: Ink to Shape recognises arrows; previously trivial: Windows Magnifier follows the caret onto a new line, #1119; previously trivial: table border drags with Ctrl and Alt, from the left edge and of selected cells, #711; previously trivial: table column and row markers on the rulers, #700; previously trivial: table borders and the resize handle drag on the page, #217; previously trivial: all 12 bibliography styles, #383; previously trivial: formatting revisions landed, #41; previously trivial: Draw Table and Eraser landed, #303; previously minor: readiness table with hours per audience; full number back to the additive weighted sum, 60%; mainstream and essentials numbers added; alpha gate checked; previously major: full re-measure against Word for Mac 16.113.4; replaces the parity tables that lived in ROADMAP.md) · **Target:** Microsoft Word (Microsoft 365) for Mac 16.113.4
 
-The authoritative assessment of how close WordCraft is to Microsoft Word. [`ROADMAP.md`](../ROADMAP.md)
+The authoritative assessment of how close Soratra is to Microsoft Word. [`ROADMAP.md`](../ROADMAP.md)
 summarizes it; [`gaps.md`](gaps.md) itemizes every shortfall; the deep checklists are
 [`file-format-parity.md`](file-format-parity.md), [`layout-parity.md`](layout-parity.md),
 [`typing-parity.md`](typing-parity.md), [`ui-parity.md`](ui-parity.md),
@@ -42,7 +42,7 @@ The generated ribbon checklist is [`parity-checklist.md`](parity-checklist.md).
 - Word's file formats, ribbon, dialogs and keyboard shortcuts from Microsoft's public documentation
   and our knowledge of Word for Windows and Mac (Microsoft 365). Windows-only features (PDF Reflow
   open, Works/WordPerfect import) are counted, because a Word user on Windows expects them.
-- WordCraft as it is on origin/main today: source (catalog, command registry, readers/writers,
+- Soratra as it is on origin/main today: source (catalog, command registry, readers/writers,
   layout), tests, the i18n catalogs, open issues (62 as of 2026-10-10) and open PRs (~45 as of 2026-10-10), git history.
 - **Not done this pass:** opening real-world .docx files in both apps and comparing pages. There is
   no real-world corpus in the repo (Word-produced files can't be committed), and the disk budget
@@ -84,7 +84,7 @@ Weighted feature depth: **~68%** (Σ weight × parity / 100 over the table).
 
 ## Readiness numbers: full, mainstream practitioner, essentials user
 
-Three numbers, each with its own hours (craftrules `standards/progress-docs.md`, "Numbers"). The
+Three numbers, each with its own hours (mahay-rules `standards/progress-docs.md`, "Numbers"). The
 **full** number is the additive weighted sum over the dimension table below. **Mainstream** and
 **essentials** average depth over the areas in scope, then multiply by written-down discounts for
 what still stops real work. The stage follows the full number and the core-workflow gate.
@@ -107,7 +107,7 @@ h), pictures and tables (12–18 h), spelling depth (8–12 h), polish (10–20 
 |---|---|---|---|
 | Interaction fidelity | ×0.93 | — | Typing pinned to Word (`tests_typing.rs`), ribbon, keytips, mini-toolbar; but 16 modal dialogs against Word's ~100, 125 of ~250 shortcuts, picture/shape handling complaints (#82, #142), lines wrap differently without an Aptos-metric font |
 | Discoverability and UI clarity | — | ×0.95 | Word-style ribbon a Word user already knows, command search, keytips; some newer pane strings and tooltips terse or untranslated |
-| Stability on real machines | ×0.90 | ×0.90 (launch and install) | Never-crash standard, hostile-param fuzzing, panic guard; but open startup crash on Intel UHD (#170), freezes (#77, #59, #31), Windows writes fail without admin (#218), installer conflicts with other Crafting Apps (#64, #73, #106, #51); 5 days of field history |
+| Stability on real machines | ×0.90 | ×0.90 (launch and install) | Never-crash standard, hostile-param fuzzing, panic guard; but open startup crash on Intel UHD (#170), freezes (#77, #59, #31), Windows writes fail without admin (#218), installer conflicts with other Mahay apps (#64, #73, #106, #51); 5 days of field history |
 | Exchanging files with Word users | ×0.90 | ×0.92 (opening files people send) | Word opens our .docx; `.doc` import; but no real-world corpus test, charts/SmartArt/OLE dropped silently, pagination differs (Aptos, no column balancing or footnote continuation). Simple documents, which are most of what a casual user receives, come through well; double-click open on macOS is fixed on main but not yet released (#223, #279) |
 | Product | **×0.753** | **×0.787** | |
 
@@ -168,7 +168,7 @@ mainstream.
 
 Base ≈ **80%**; **80% × 0.787 ≈ 63%**.
 
-### User evidence (GitHub, 2026-10-10; no issue was filed by a storytold org member)
+### User evidence (GitHub, 2026-10-10; no issue was filed by a raantss18 org member)
 
 - **120 issues** filed by 80+ outside users in 5 days; about 60 closed, most fixed within a day.
 - **Praise:** 4 issues or comments ("Awesome job guys!" #28, "amazing how much it advanced" #146,
@@ -179,7 +179,7 @@ Base ≈ **80%**; **80% × 0.787 ≈ 63%**.
   be fixed on main), **~11 right-to-left and language** reports (#19, #48, #63, #66, #199, #211,
   #215, #25, #40, #56, #100), **~24 feature requests or minor bugs** (catalog parity, macros,
   passwords, cloud, theming).
-- Reading: people are trying WordCraft as a Word replacement and report core-path problems more
+- Reading: people are trying Soratra as a Word replacement and report core-path problems more
   than niche ones; the install and stability discount is earned.
 
 ## By dimension

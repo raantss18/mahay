@@ -1,7 +1,7 @@
 //! Rendering a value with a parsed section.
 
-use gridcraft_core::DateSystem;
-use gridcraft_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, max_serial};
+use tabilao_core::DateSystem;
+use tabilao_core::date::{MONTHS, WEEKDAYS, datetime_from_serial, max_serial};
 
 use crate::decimal::{decimal_digits, fixed, fixed_from_digits, format_general_fit};
 use crate::parse::{DatePart, Section, Tok};

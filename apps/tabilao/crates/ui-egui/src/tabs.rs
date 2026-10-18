@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use egui::{Align2, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use gridcraft_engine::model::{Sheet, Visibility};
+use tabilao_engine::model::{Sheet, Visibility};
 use serde_json::json;
 
 use crate::SheetApp;
@@ -231,10 +231,10 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
         |ui| {
             ui.horizontal_centered(|ui| {
                 let mode = match app.session.mode {
-                    gridcraft_engine::Mode::Ready => "Ready",
-                    gridcraft_engine::Mode::Enter => "Enter",
-                    gridcraft_engine::Mode::Edit => "Edit",
-                    gridcraft_engine::Mode::Point => "Point",
+                    tabilao_engine::Mode::Ready => "Ready",
+                    tabilao_engine::Mode::Enter => "Enter",
+                    tabilao_engine::Mode::Edit => "Edit",
+                    tabilao_engine::Mode::Point => "Point",
                 };
                 ui.label(egui::RichText::new(app.ui.language.tr(mode)).font(theme::ui_font(12.5)).color(t.text_dim));
                 if let Some(d) = app.session.active() {
@@ -242,7 +242,7 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
                         ui.add_space(12.0);
                         ui.label(egui::RichText::new("Macros preserved (not executed)").font(theme::ui_font(12.5)).color(t.danger));
                     }
-                    if d.wb.calc.mode == gridcraft_engine::model::CalcMode::Manual {
+                    if d.wb.calc.mode == tabilao_engine::model::CalcMode::Manual {
                         ui.add_space(12.0);
                         ui.label(egui::RichText::new(app.ui.language.tr("Calculate")).font(theme::ui_font(12.5)).color(t.text_dim));
                     }
@@ -308,11 +308,11 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
                         && let Some(sh) = d.wb.active()
                         && !d.selection.is_single_cell()
                     {
-                        let st = gridcraft_engine::display::stats(sh, &d.selection.ranges);
+                        let st = tabilao_engine::display::stats(sh, &d.selection.ranges);
                         let fmt = |v: f64| {
                             let code = d.wb.styles.get(sh.style_id(d.selection.active)).num_fmt.as_str().to_string();
                             let code = if code == "General" { "#,##0.##########".to_string() } else { code };
-                            gridcraft_engine::display::format(&gridcraft_engine::core::Value::Number(v), &code, &d.wb)
+                            tabilao_engine::display::format(&tabilao_engine::core::Value::Number(v), &code, &d.wb)
                                 .text
                                 .trim_end_matches('.')
                                 .to_string()
@@ -341,7 +341,7 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::{navigator_items, rename_needs_focus};
-    use gridcraft_engine::model::{Sheet, Visibility};
+    use tabilao_engine::model::{Sheet, Visibility};
     use std::sync::Arc;
 
     #[test]

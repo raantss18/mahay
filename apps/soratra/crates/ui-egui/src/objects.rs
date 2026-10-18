@@ -17,10 +17,10 @@
 
 use egui::{Color32, Painter, Pos2, Rect, Ui};
 use serde_json::json;
-use wordcraft_doc::para::{InlineObject, OBJ, Wrap};
-use wordcraft_doc::{PartKind, Pos, StoryRef};
-use wordcraft_layout::DocLayout;
-use wordcraft_layout::hit::ObjectHit;
+use soratra_doc::para::{InlineObject, OBJ, Wrap};
+use soratra_doc::{PartKind, Pos, StoryRef};
+use soratra_layout::DocLayout;
+use soratra_layout::hit::ObjectHit;
 
 use crate::WordApp;
 use crate::frame::{self, Drag, Grab};
@@ -66,7 +66,7 @@ fn connector_ends(app: &WordApp, layout: &DocLayout) -> Option<(ObjectHit, (f32,
     }
     let (flip_h, flip_v) = (float.flip_h, float.flip_v);
     let o = layout.object(&pos, app.session.page_hint)?;
-    let (a, b) = wordcraft_doc::connector::ends(o.rect.x, o.rect.y, o.rect.w, o.rect.h, flip_h, flip_v);
+    let (a, b) = soratra_doc::connector::ends(o.rect.x, o.rect.y, o.rect.w, o.rect.h, flip_h, flip_v);
     Some((o, a, b))
 }
 
@@ -90,7 +90,7 @@ fn connector_end_at(app: &WordApp, layout: &DocLayout, pages: &[Rect], scale: f3
 /// The selected object: the selection is exactly one picture, shape or text box, in the body
 /// or in a header/footer.
 pub fn selected(app: &WordApp) -> Option<(Pos, &InlineObject)> {
-    wordcraft_engine::cmd::objects::object_selection(&app.session).filter(|(p, _)| selectable_story(app, p.story))
+    soratra_engine::cmd::objects::object_selection(&app.session).filter(|(p, _)| selectable_story(app, p.story))
 }
 
 /// Whether objects of `story` can be selected and dragged on the canvas: the body and
@@ -142,7 +142,7 @@ pub fn active(app: &WordApp, layout: &DocLayout) -> Option<(ObjectHit, bool)> {
     }
 }
 
-fn screen(pages: &[Rect], scale: f32, page: usize, r: wordcraft_geom::Rect) -> Option<Rect> {
+fn screen(pages: &[Rect], scale: f32, page: usize, r: soratra_geom::Rect) -> Option<Rect> {
     pages.get(page).map(|p| frame::to_screen(*p, scale, r))
 }
 
@@ -251,7 +251,7 @@ pub fn pointer(app: &mut WordApp, ui: &Ui, resp: &egui::Response, pages: &[Rect]
     }
     if pressed && grab == Grab::Move && object.behind() && behind_draggable(app, &object) {
         let (min, picture) = match app.session.doc.para_at(&object.pos()).and_then(|p| p.object_at(object.pos().off)) {
-            Some(o) => (wordcraft_engine::cmd::objects::min_size(o), matches!(o, InlineObject::Image { .. })),
+            Some(o) => (soratra_engine::cmd::objects::min_size(o), matches!(o, InlineObject::Image { .. })),
             None => return false,
         };
         app.canvas.obj_drag = Some(ObjectDrag {
@@ -272,7 +272,7 @@ pub fn pointer(app: &mut WordApp, ui: &Ui, resp: &egui::Response, pages: &[Rect]
         let end = Pos { off: pos.off + OBJ.len_utf8(), ..pos.clone() };
         let _ = app.run("select.range", json!({"anchor": pos, "focus": end}));
         let (min, picture) = match selected(app) {
-            Some((_, o)) => (wordcraft_engine::cmd::objects::min_size(o), matches!(o, InlineObject::Image { .. })),
+            Some((_, o)) => (soratra_engine::cmd::objects::min_size(o), matches!(o, InlineObject::Image { .. })),
             None => return true,
         };
         // Objects in table cells can be selected and resized, not moved; charts neither.
@@ -306,13 +306,13 @@ fn snap_move(layout: &DocLayout, d: &mut ObjectDrag, scale: f32) {
 }
 
 /// The page's own width, without the comment balloons' markup area.
-fn paper_width(pg: &wordcraft_layout::Page) -> f32 {
+fn paper_width(pg: &soratra_layout::Page) -> f32 {
     (pg.w - pg.markup).max(0.0)
 }
 
 /// The bounds of the floating objects on `pg` that `me` can snap to: all but itself and, for a
 /// text box, the objects in its text (they move with it).
-fn snap_targets(pg: &wordcraft_layout::Page, me: &ObjectHit) -> Vec<wordcraft_geom::Rect> {
+fn snap_targets(pg: &soratra_layout::Page, me: &ObjectHit) -> Vec<soratra_geom::Rect> {
     let pos = me.pos();
     let own = me.text_box.map(StoryRef::Part);
     pg.items
@@ -320,7 +320,7 @@ fn snap_targets(pg: &wordcraft_layout::Page, me: &ObjectHit) -> Vec<wordcraft_ge
         .chain(&pg.header)
         .chain(&pg.footer)
         .filter_map(|it| match it {
-            wordcraft_layout::Placed::Object { rect, spin, story, path, off, wrap, .. }
+            soratra_layout::Placed::Object { rect, spin, story, path, off, wrap, .. }
                 if *wrap != Wrap::Inline && !(*story == pos.story && *path == pos.path && *off == pos.off) && Some(*story) != own =>
             {
                 Some(spin.bounds(*rect))
@@ -352,7 +352,7 @@ fn link_click(app: &mut WordApp, layout: &DocLayout, pages: &[Rect], scale: f32,
         return;
     }
     let target = crate::canvas::page_at(pages, layout, scale, at).and_then(|(page, x, y)| {
-        layout.find_object(page, |o| o.page == page && o.text_box.is_some() && o.rect.contains(wordcraft_geom::Point::new(x, y)))
+        layout.find_object(page, |o| o.page == page && o.text_box.is_some() && o.rect.contains(soratra_geom::Point::new(x, y)))
     });
     let Some(target) = target else {
         app.status(tl!("Not linked: click a text box"));
@@ -374,7 +374,7 @@ pub fn select_at(app: &mut WordApp, layout: &DocLayout, pages: &[Rect], scale: f
     let Some((object, _)) = grab_at(app, layout, pages, scale, at) else { return false };
     let pos = object.pos();
     // Already selected (alone or among several picked for Group): keep the selection.
-    if !wordcraft_engine::cmd::objects::picked_objects(&app.session).contains(&pos) {
+    if !soratra_engine::cmd::objects::picked_objects(&app.session).contains(&pos) {
         let end = Pos { off: pos.off + OBJ.len_utf8(), ..pos.clone() };
         let _ = app.run("select.range", json!({"anchor": pos, "focus": end}));
     }
@@ -463,9 +463,9 @@ fn preview(app: &WordApp, ctx: &egui::Context, layout: &DocLayout, o: &ObjectHit
     let page = layout.pages.get(o.page)?;
     let mut opts = crate::canvas::screen_render_options();
     opts.dark = app.session.view.dark_mode;
-    let items = wordcraft_layout::display::object_display(&app.session.doc, page, obj, o.rect, o.text_box, &opts.display);
+    let items = soratra_layout::display::object_display(&app.session.doc, page, obj, o.rect, o.text_box, &opts.display);
     let b = o.bounds();
-    let img = wordcraft_render::render_items(&app.session.doc, &items, b.x, b.y, b.w, b.h, scale * ctx.pixels_per_point(), &opts);
+    let img = soratra_render::render_items(&app.session.doc, &items, b.x, b.y, b.w, b.h, scale * ctx.pixels_per_point(), &opts);
     let ci = egui::ColorImage::from_rgba_unmultiplied([img.width as usize, img.height as usize], &img.to_straight());
     Some(ctx.load_texture("object-drag", ci, egui::TextureOptions::LINEAR))
 }
@@ -529,7 +529,7 @@ pub fn paint(app: &WordApp, painter: &Painter, t: &Tokens, layout: &DocLayout, p
             // A turned object's pixels fill its rotated bounds, which move with it.
             let r = d.object.bounds();
             let (dx, dy) = (d.drag.rect.x - d.drag.start.x, d.drag.rect.y - d.drag.start.y);
-            let moved = wordcraft_geom::Rect::new(r.x + dx, r.y + dy, r.w, r.h);
+            let moved = soratra_geom::Rect::new(r.x + dx, r.y + dy, r.w, r.h);
             let to = if d.object.spin.is_identity() { to } else { screen(pages, scale, d.drag.to_page, moved).unwrap_or(to) };
             let uv = Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
             painter.image(tex.id(), to, uv, Color32::from_white_alpha(PREVIEW_OPACITY));
@@ -562,11 +562,11 @@ fn paint_end_drag(app: &WordApp, d: &ObjectDrag, painter: &Painter, t: &Tokens, 
     let Some((which, at)) = d.end.filter(|_| d.drag.moved) else { return };
     let Some((_, a, b)) = connector_ends(app, layout) else { return };
     let fixed = if which { a } else { b };
-    let snap = wordcraft_engine::cmd::connectors::SNAP;
+    let snap = soratra_engine::cmd::connectors::SNAP;
     let mut best: Option<((f32, f32), f32)> = None;
     if let Some(pg) = layout.pages.get(d.object.page) {
         for it in &pg.items {
-            let wordcraft_layout::Placed::Object { rect, spin, story: StoryRef::Body, path, off, .. } = it else { continue };
+            let soratra_layout::Placed::Object { rect, spin, story: StoryRef::Body, path, off, .. } = it else { continue };
             let pos = Pos { story: StoryRef::Body, path: path.clone(), off: *off };
             let Some(InlineObject::Shape { kind, .. }) = app.session.doc.para_at(&pos).and_then(|p| p.object_at(pos.off)) else { continue };
             if kind.is_connector() || pos == d.object.pos() {
@@ -577,8 +577,8 @@ fn paint_end_drag(app: &WordApp, d: &ObjectDrag, painter: &Painter, t: &Tokens, 
             if at.0 < rect.x - 4.0 * snap || at.0 > rect.right() + 4.0 * snap || at.1 < rect.y - 4.0 * snap || at.1 > rect.bottom() + 4.0 * snap {
                 continue;
             }
-            for (i, _) in wordcraft_doc::connector::sites(*kind, rect.w, rect.h).iter().enumerate() {
-                let Some(p) = wordcraft_doc::connector::site_point(*kind, r, *spin, i as u32) else { continue };
+            for (i, _) in soratra_doc::connector::sites(*kind, rect.w, rect.h).iter().enumerate() {
+                let Some(p) = soratra_doc::connector::site_point(*kind, r, *spin, i as u32) else { continue };
                 let dist = ((p.0 - at.0).powi(2) + (p.1 - at.1).powi(2)).sqrt();
                 if let Some(c) = point_on_screen(pages, scale, d.object.page, p) {
                     painter.circle_stroke(c, 3.5, egui::Stroke::new(1.0, t.accent));
@@ -652,14 +652,14 @@ pub fn enter_text_box(app: &mut WordApp) -> bool {
 mod tests {
     use std::sync::Arc;
 
-    use wordcraft_doc::para::{InlineObject, ShapeKind};
-    use wordcraft_doc::{Document, Pos};
+    use soratra_doc::para::{InlineObject, ShapeKind};
+    use soratra_doc::{Document, Pos};
 
     use super::*;
 
     /// An app whose first paragraph holds `obj`, and where it's laid out.
     fn app_with(obj: InlineObject) -> (WordApp, ObjectHit) {
-        let mut app = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
+        let mut app = WordApp::new(soratra_engine::Session::new(Document::new()), crate::Services::default());
         app.session.doc.insert_object(&Pos::body(0, 0), obj, &Default::default()).unwrap();
         let hit = app.session.layout().object(&Pos::body(0, 0), 0).expect("laid out");
         (app, hit)
@@ -693,7 +693,7 @@ mod tests {
     #[test]
     fn dragging_a_shape_snaps_to_the_page_centre_unless_alt() {
         use egui::{Event, Modifiers, PointerButton};
-        let mut a = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(Document::new()), crate::Services::default());
         a.run("view.commentsPane", json!({"value": false})).unwrap();
         a.run("insert.shape", json!({"kind": "rectangle", "width": 100, "height": 50})).unwrap();
         a.run("arrange.bounds", json!({"page": 0, "x": 100, "y": 250})).unwrap();
@@ -756,11 +756,11 @@ mod tests {
     #[test]
     fn dropping_a_shape_on_another_page_keeps_the_view_where_it_is() {
         use egui::{Event, PointerButton};
-        let mut a = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(Document::new()), crate::Services::default());
         a.run("view.commentsPane", json!({"value": false})).unwrap();
         a.run("insert.shape", json!({"kind": "rectangle", "width": 100, "height": 50})).unwrap();
         a.run("arrange.bounds", json!({"page": 0, "x": 100, "y": 250})).unwrap();
-        let end = Pos::body(0, wordcraft_doc::para::OBJ.len_utf8());
+        let end = Pos::body(0, soratra_doc::para::OBJ.len_utf8());
         a.run("caret.set", json!({"pos": end})).unwrap();
         a.run("text.insert", json!({"text": "one"})).unwrap();
         a.run("text.newParagraph", json!({})).unwrap();
@@ -809,7 +809,7 @@ mod tests {
             fill: None,
             stroke: None,
             stroke_width: 1.0,
-            float: wordcraft_doc::para::Float { wrap: Wrap::InFrontOfText, x: 10.0, y: 10.0, ..Default::default() },
+            float: soratra_doc::para::Float { wrap: Wrap::InFrontOfText, x: 10.0, y: 10.0, ..Default::default() },
             story: None,
             freeform: None,
             effects: Default::default(),
@@ -820,14 +820,14 @@ mod tests {
     /// A text box doesn't snap to the objects inside it (they move with it).
     #[test]
     fn a_text_box_does_not_snap_to_its_own_contents() {
-        let mut app = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
+        let mut app = WordApp::new(soratra_engine::Session::new(Document::new()), crate::Services::default());
         app.run("insert.textBox", json!({"text": "Box"})).unwrap();
         let bx = app.session.layout().find_object(0, |o| o.text_box.is_some()).expect("the box");
         let end = Pos { off: bx.off + OBJ.len_utf8(), ..bx.pos() };
         app.run("select.range", json!({"anchor": bx.pos(), "focus": end})).unwrap();
         app.run("arrange.bounds", json!({"page": 0, "x": 100, "y": 200, "width": 200, "height": 150})).unwrap();
         let id = app.session.layout().find_object(0, |o| o.text_box.is_some()).and_then(|o| o.text_box).unwrap();
-        let inner = Pos { story: StoryRef::Part(id), path: wordcraft_doc::Path::top(0), off: 0 };
+        let inner = Pos { story: StoryRef::Part(id), path: soratra_doc::Path::top(0), off: 0 };
         app.session.doc.insert_object(&inner, floating_rect(30.0, 20.0), &Default::default()).unwrap();
         app.session.touch();
         let layout = app.session.layout();
@@ -846,7 +846,7 @@ mod tests {
     #[test]
     fn alt_pressed_during_a_drag_unsnaps_and_keeps_keytips_off() {
         use egui::{Event, Modifiers, PointerButton};
-        let mut a = WordApp::new(wordcraft_engine::Session::new(Document::new()), crate::Services::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(Document::new()), crate::Services::default());
         a.run("view.commentsPane", json!({"value": false})).unwrap();
         a.run("insert.shape", json!({"kind": "rectangle", "width": 100, "height": 50})).unwrap();
         a.run("arrange.bounds", json!({"page": 0, "x": 100, "y": 250})).unwrap();
@@ -903,15 +903,15 @@ mod tests {
     fn a_dragged_shape_leaves_the_text_behind_it() {
         use crate::table_resize::tests::{H, button, steps};
         let text = "MMMMMMMMMMMM ".repeat(12);
-        let mut a = WordApp::new(wordcraft_engine::Session::new(Document::from_text(&text)), Default::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(Document::from_text(&text)), Default::default());
         let shape = InlineObject::Shape {
             kind: ShapeKind::Rectangle,
             w: 120.0,
             h: 60.0,
             fill: None,
-            stroke: Some(wordcraft_doc::Rgb(0xFF, 0, 0)),
+            stroke: Some(soratra_doc::Rgb(0xFF, 0, 0)),
             stroke_width: 3.0,
-            float: wordcraft_doc::para::Float { wrap: wordcraft_doc::para::Wrap::InFrontOfText, ..Default::default() },
+            float: soratra_doc::para::Float { wrap: soratra_doc::para::Wrap::InFrontOfText, ..Default::default() },
             story: None,
             freeform: None,
             effects: Default::default(),

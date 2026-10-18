@@ -2,7 +2,7 @@
 //! the right (`tbRl`), or run up and stack from the left (`btLr`).
 
 use super::*;
-use wordcraft_doc::Pos;
+use soratra_doc::Pos;
 
 fn lay(doc: &Document) -> DocLayout {
     let mut c = LayoutCache::new();
@@ -106,7 +106,7 @@ fn east_asian_characters_stand_upright_in_top_to_bottom_text() {
 
 #[test]
 fn headers_stay_horizontal_and_a_vertical_section_starts_a_page() {
-    use wordcraft_doc::section::SectionStart;
+    use soratra_doc::section::SectionStart;
     let mut d = Document::from_text("Horizontal\nVertical");
     // Section 1 ends after paragraph 0 (continuous), section 2 is vertical.
     let first = SectionProps { start: SectionStart::Continuous, ..Default::default() };

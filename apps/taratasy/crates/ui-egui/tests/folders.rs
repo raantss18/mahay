@@ -6,8 +6,8 @@ use std::time::{Duration, SystemTime};
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use pdfcraft_ui_egui::PdfCraftApp;
-use pdfcraft_ui_egui::folders_ui::{MAX_PINNED, SHOWN};
+use taratasy_ui_egui::TaratasyApp;
+use taratasy_ui_egui::folders_ui::{MAX_PINNED, SHOWN};
 
 /// A one-page PDF.
 const FIXTURE: &[u8] = b"%PDF-1.7
@@ -22,7 +22,7 @@ struct TempFolder(PathBuf);
 
 impl TempFolder {
     fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("pdfcraft-pinned-{name}-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("taratasy-pinned-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -48,9 +48,9 @@ impl Drop for TempFolder {
     }
 }
 
-fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, PdfCraftApp> {
+fn harness(setup: impl FnOnce(&mut TaratasyApp) + 'static) -> Harness<'static, TaratasyApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1400.0, 1400.0)).build_eframe(move |_cc| {
-        let mut app = PdfCraftApp::new();
+        let mut app = TaratasyApp::new();
         app.set_option("language", "en").unwrap();
         // List folders on the frame that asks, not on a worker thread.
         app.run_inline = true;
@@ -62,7 +62,7 @@ fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, P
     h
 }
 
-fn listed(h: &Harness<'static, PdfCraftApp>, folder: &str) -> Vec<String> {
+fn listed(h: &Harness<'static, TaratasyApp>, folder: &str) -> Vec<String> {
     h.state().pinned.listing(folder).map(|l| l.files.iter().map(|f| f.name.clone()).collect()).unwrap_or_default()
 }
 
@@ -132,7 +132,7 @@ fn unpinning_removes_the_folder_but_not_its_files() {
         app.pin_folder(&pin);
     });
     h.run_steps(2);
-    let name = pdfcraft_ui_egui::folders_ui::folder_name(&folder);
+    let name = taratasy_ui_egui::folders_ui::folder_name(&folder);
     h.get_by_label(&format!("Unpin {name}")).click();
     h.run_steps(2);
     assert!(h.state().pinned.folders.is_empty());
@@ -144,10 +144,10 @@ fn unpinning_removes_the_folder_but_not_its_files() {
 fn pinned_folders_survive_a_restart() {
     let dir = TempFolder::new("restart");
     let folder = dir.path();
-    let mut a = PdfCraftApp::new();
+    let mut a = TaratasyApp::new();
     a.set_option("language", "en").unwrap();
     assert!(a.pin_folder(&folder));
-    let mut b = PdfCraftApp::new();
+    let mut b = TaratasyApp::new();
     b.set_option("language", "en").unwrap();
     b.restore(&a.persist());
     assert_eq!(b.pinned.folders, [folder]);
@@ -159,7 +159,7 @@ fn pinned_folders_survive_a_restart() {
 
 #[test]
 fn an_unavailable_folder_says_so_and_stays_pinned() {
-    let missing = std::env::temp_dir().join(format!("pdfcraft-pinned-gone-{}", std::process::id()));
+    let missing = std::env::temp_dir().join(format!("taratasy-pinned-gone-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&missing);
     let folder = missing.to_string_lossy().into_owned();
     let pin = folder.clone();
@@ -225,7 +225,7 @@ fn a_long_pdf_name_is_cut_before_its_date_and_size() {
 
 #[test]
 fn pinning_is_limited_and_never_duplicates() {
-    let mut app = PdfCraftApp::new();
+    let mut app = TaratasyApp::new();
     app.set_option("language", "en").unwrap();
     assert!(!app.pin_folder("relative/scans"), "a relative path is refused");
     let root = if cfg!(windows) { "C:\\" } else { "/" };

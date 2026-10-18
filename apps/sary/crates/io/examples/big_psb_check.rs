@@ -1,6 +1,6 @@
-//! Opens the files written by `photocraft-psd`'s `big_psb` example and checks their pixels.
+//! Opens the files written by `sary-psd`'s `big_psb` example and checks their pixels.
 //!
-//! `cargo run --release -p photocraft-io --example big_psb_check -- <file.psb>...`
+//! `cargo run --release -p sary-io --example big_psb_check -- <file.psb>...`
 
 fn sample(x: u32, y: u32, c: u32, rle: bool) -> u8 {
     if c == 3 {
@@ -23,7 +23,7 @@ fn main() {
         };
         let read_s = t.elapsed().as_secs_f64();
         let t = std::time::Instant::now();
-        let res = match photocraft_io::import(&path, &bytes) {
+        let res = match sary_io::import(&path, &bytes) {
             Ok(r) => r,
             Err(e) => {
                 println!("{path}: import failed: {e}");
@@ -34,7 +34,7 @@ fn main() {
         // With SAVE set: save as PSB, then check the re-opened file instead.
         let res = if std::env::var_os("SAVE").is_some() {
             let t = std::time::Instant::now();
-            let out = match photocraft_io::export(&res.document, "x.psb", &photocraft_io::ExportOptions::default()) {
+            let out = match sary_io::export(&res.document, "x.psb", &sary_io::ExportOptions::default()) {
                 Ok(o) => o,
                 Err(e) => {
                     println!("{path}: save failed: {e}");
@@ -43,7 +43,7 @@ fn main() {
             };
             println!("{path}: saved {:.2} GB in {:.1} s, warnings {:?}", out.bytes.len() as f64 / 1e9, t.elapsed().as_secs_f64(), out.warnings);
             drop(res);
-            match photocraft_io::import("x.psb", &out.bytes) {
+            match sary_io::import("x.psb", &out.bytes) {
                 Ok(r) => r,
                 Err(e) => {
                     println!("{path}: re-open failed: {e}");

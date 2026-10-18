@@ -11,11 +11,11 @@ use crate::{EngineError, Result, Session};
 
 fn entries_json(path: &str) -> Result<Value> {
     let bytes = read_file(path)?;
-    let entries = photocraft_io::exr_parts::entries(&bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let entries = sary_io::exr_parts::entries(&bytes).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     Ok(json!(entries
         .iter()
         .map(|e| json!({
-            "kind": match e.kind { photocraft_io::exr_parts::EntryKind::Part => "part", photocraft_io::exr_parts::EntryKind::Group => "group", photocraft_io::exr_parts::EntryKind::Cryptomatte => "cryptomatte" },
+            "kind": match e.kind { sary_io::exr_parts::EntryKind::Part => "part", sary_io::exr_parts::EntryKind::Group => "group", sary_io::exr_parts::EntryKind::Cryptomatte => "cryptomatte" },
             "name": e.name,
             "view": e.view,
             "width": e.width,
@@ -45,14 +45,14 @@ fn open_exr_parts(s: &mut Session, p: &Value) -> Result<Value> {
     if !matches!(view, "both" | "left" | "right") {
         return Err(EngineError::BadParams { cmd: "file.openExrParts".into(), msg: format!("view is \"{view}\"; it is \"both\", \"left\" or \"right\"") });
     }
-    let sel = photocraft_io::exr_parts::Selection {
+    let sel = sary_io::exr_parts::Selection {
         parts: selected(p, "part/"),
         groups: selected(p, "group/"),
         view: view.to_string(),
         precomp: p.get("precomp").and_then(Value::as_bool).unwrap_or(false),
     };
     let bytes = read_file(&path)?;
-    let mut r = photocraft_io::exr_parts::import(&stem(&path), &bytes, &sel).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
+    let mut r = sary_io::exr_parts::import(&stem(&path), &bytes, &sel).map_err(|e| EngineError::Other(format!("{path}: {e}")))?;
     crate::file_cmds::tag_exr_colorspace(s, &path, &mut r.document);
     let (i, color) = s.open_document(r.document, Some(path.clone()));
     Ok(json!({"document": i, "color": color, "warnings": r.warnings}))
@@ -81,7 +81,7 @@ pub fn specs() -> Vec<CommandSpec> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::ColorMode;
+    use sary_doc::ColorMode;
 
     fn session() -> Session {
         Session::new()
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn exr_parts_lists_parts_groups_and_views() {
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-parts-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-parts-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("aov.exr");
         write_multipart(&path);
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn open_exr_parts_imports_the_chosen_part_as_a_layer() {
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-open-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-open-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("aov.exr");
         write_multipart(&path);
@@ -165,7 +165,7 @@ mod tests {
         assert_eq!(doc.layers.len(), 1);
         assert_eq!(doc.layers[0].name, "beauty");
         // The beauty pixels survived (R 0.8 at pixel 0).
-        if let photocraft_doc::LayerContent::Raster(surface) = &doc.layers[0].content {
+        if let sary_doc::LayerContent::Raster(surface) = &doc.layers[0].content {
             let px = surface.pixel(0, 0);
             assert!((px[0] - 0.8).abs() < 1e-4, "{:?}", px);
         } else {
@@ -177,12 +177,12 @@ mod tests {
     /// File Handling › "Open color-less EXR as ACEScg" applies to Open EXR Parts too.
     #[test]
     fn open_exr_parts_honours_the_aces_cg_preference() {
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-aces-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-aces-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("aov.exr");
         write_multipart(&path);
-        let linear = photocraft_cms::Builtin::LinearSrgb.profile().to_bytes();
-        let aces = photocraft_cms::Builtin::AcesCg.profile().to_bytes();
+        let linear = sary_cms::Builtin::LinearSrgb.profile().to_bytes();
+        let aces = sary_cms::Builtin::AcesCg.profile().to_bytes();
         for (on, want) in [(false, &linear), (true, &aces)] {
             let mut s = session();
             s.prefs.edit(|p| p.file_handling.exr_aces_cg = on);
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn open_exr_parts_refuses_an_empty_selection_and_unknown_names() {
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-empty-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-empty-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("aov.exr");
         write_multipart(&path);
@@ -209,7 +209,7 @@ mod tests {
 
     #[test]
     fn channel_groups_import_from_their_own_channels() {
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-groups-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-groups-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("grouped.exr");
         write_grouped(&path);
@@ -221,7 +221,7 @@ mod tests {
         let doc = &s.active().unwrap().doc;
         assert_eq!(doc.layers.len(), 1);
         assert_eq!(doc.layers[0].name, "diffuse");
-        if let photocraft_doc::LayerContent::Raster(surface) = &doc.layers[0].content {
+        if let sary_doc::LayerContent::Raster(surface) = &doc.layers[0].content {
             let px = surface.pixel(0, 0);
             // The channels import as stored (straight here): values are untouched.
             assert!((px[0] - 0.3).abs() < 1e-4, "{:?}", px);
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn an_unnamed_part_opens_by_the_name_the_listing_gives_it() {
         // #4210: the listing names an unnamed part "part 0"; feeding that name back must open it.
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-unnamed-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-unnamed-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("unnamed.exr");
         write_unnamed_grouped(&path);
@@ -263,7 +263,7 @@ mod tests {
         let doc = &s.active().unwrap().doc;
         assert_eq!(doc.layers.len(), 1);
         assert_eq!(doc.layers[0].name, "part 0");
-        if let photocraft_doc::LayerContent::Raster(surface) = &doc.layers[0].content {
+        if let sary_doc::LayerContent::Raster(surface) = &doc.layers[0].content {
             let px = surface.pixel(0, 0);
             assert!((px[0] - 0.7).abs() < 1e-4, "{:?}", px);
         }
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn precomp_sums_the_light_path_set_and_refuses_an_incomplete_one() {
-        let dir = std::env::temp_dir().join(format!("pcraft-exr-precomp-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("sary-exr-precomp-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("grouped.exr");
         write_grouped(&path);
@@ -315,7 +315,7 @@ mod tests {
         assert!(r["warnings"].as_array().unwrap().iter().any(|w| w.as_str().unwrap().contains("precomp")), "{r}");
         let doc = &s.active().unwrap().doc;
         let precomp = doc.layers.iter().find(|l| l.name == "beauty (precomp)").expect("the precomp layer");
-        if let photocraft_doc::LayerContent::Raster(surface) = &precomp.content {
+        if let sary_doc::LayerContent::Raster(surface) = &precomp.content {
             let px = surface.pixel(0, 0);
             assert!((px[0] - expect).abs() < 1e-3, "{:?} vs {expect}", px);
         }

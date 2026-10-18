@@ -2,7 +2,7 @@
 //! it, buried among history, channels and much more; an agent looking for the layers' ids looks
 //! for a `layer.*` command first.
 
-use photocraft_doc::{Layer, LayerContent, LayerId};
+use sary_doc::{Layer, LayerContent, LayerId};
 use serde_json::{Value, json};
 
 use crate::commands::CommandSpec;

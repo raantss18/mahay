@@ -1,7 +1,7 @@
 //! Bounded arithmetic parser shared by every editable numeric widget.
 //! No scripting, allocations derived from results, or non-finite values.
 
-use photocraft_engine::prefs::Unit;
+use sary_engine::prefs::Unit;
 
 pub(crate) fn parse(text: &str) -> Option<f64> {
     parse_with_units(text, None)

@@ -2,10 +2,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::style::Fill;
-use deckcraft_model::table::Table;
-use deckcraft_model::{Geom, PhType, Shape, ShapeId, ShapeKind, ShapeStyle, walk};
+use seho_geom::Xfrm;
+use seho_model::style::Fill;
+use seho_model::table::Table;
+use seho_model::{Geom, PhType, Shape, ShapeId, ShapeKind, ShapeStyle, walk};
 
 use super::dml::{self, emu, emu_pos};
 use super::{Exp, Out};
@@ -94,7 +94,7 @@ pub fn geometry(w: &mut W, g: &Geom) {
                 w.empty0("a:avLst");
             } else {
                 // PowerPoint wants the complete guide list once any is given.
-                let defaults = deckcraft_geom::preset::info(name).map(|i| i.defaults).unwrap_or(&[]);
+                let defaults = seho_geom::preset::info(name).map(|i| i.defaults).unwrap_or(&[]);
                 let mut vals: Vec<f64> = adj.iter().take(16).copied().collect();
                 while vals.len() < defaults.len() {
                     vals.push(defaults.get(vals.len()).copied().unwrap_or(0.0));
@@ -445,7 +445,7 @@ pub fn shape(w: &mut W, x: &mut Exp, o: &mut Out, cx: &mut Ctx, s: &Shape, depth
     }
 }
 
-fn model_rel(x: &mut Exp, o: &mut Out, media: deckcraft_model::MediaId) -> Option<String> {
+fn model_rel(x: &mut Exp, o: &mut Out, media: seho_model::MediaId) -> Option<String> {
     if x.p.media(media).is_none_or(|m| m.data.is_empty()) {
         return None;
     }
@@ -471,8 +471,8 @@ fn write_model(
     o: &mut Out,
     cx: &mut Ctx,
     s: &Shape,
-    media: deckcraft_model::MediaId,
-    poster: Option<deckcraft_model::MediaId>,
+    media: seho_model::MediaId,
+    poster: Option<seho_model::MediaId>,
 ) {
     let Some(rid) = model_rel(x, o, media) else {
         log::warn!("pptx: 3-D model '{}' has no embedded part", s.name);
@@ -494,7 +494,7 @@ fn write_model(
         id: ShapeId(0),
         name: s.name.clone(),
         xfrm: s.xfrm,
-        kind: ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { media: poster, ..Default::default() } },
+        kind: ShapeKind::Picture { fill: seho_model::style::PictureFill { media: poster, ..Default::default() } },
         ..Default::default()
     };
     let pid = cx.ids.fresh();
@@ -506,7 +506,7 @@ fn write_model(
 /// A SmartArt graphic: a graphic frame naming its data, layout, quick style and colour parts,
 /// with the group's shapes as the cached drawing PowerPoint shows until it lays the diagram out.
 #[allow(clippy::too_many_arguments)]
-fn diagram(w: &mut W, x: &mut Exp, o: &mut Out, cx: &mut Ctx, s: &Shape, d: &deckcraft_model::Diagram, children: &[Shape], child: &Xfrm) {
+fn diagram(w: &mut W, x: &mut Exp, o: &mut Out, cx: &mut Ctx, s: &Shape, d: &seho_model::Diagram, children: &[Shape], child: &Xfrm) {
     use crate::dgm;
     let id = cx.id_for(s);
     let n = x.next_diagram();
@@ -586,7 +586,7 @@ fn diagram(w: &mut W, x: &mut Exp, o: &mut Out, cx: &mut Ctx, s: &Shape, d: &dec
     frame_close(w);
 }
 
-fn ink_shape(st: &deckcraft_model::InkStroke, i: usize) -> Option<Shape> {
+fn ink_shape(st: &seho_model::InkStroke, i: usize) -> Option<Shape> {
     let pts: Vec<(f64, f64)> = st.points.iter().filter(|p| p.0.is_finite() && p.1.is_finite()).map(|p| (p.0, p.1)).collect();
     let (x0, y0) = pts.iter().fold((f64::MAX, f64::MAX), |a, p| (a.0.min(p.0), a.1.min(p.1)));
     let (x1, y1) = pts.iter().fold((f64::MIN, f64::MIN), |a, p| (a.0.max(p.0), a.1.max(p.1)));
@@ -596,32 +596,32 @@ fn ink_shape(st: &deckcraft_model::InkStroke, i: usize) -> Option<Shape> {
     let (w, h) = ((x1 - x0).max(1.0), (y1 - y0).max(1.0));
     // PPTX keeps one line width. A pressured stroke exports at its mean sample width;
     // a legacy flat `0.5` stroke stays at the pen width.
-    let legacy = deckcraft_model::ink_pressure_is_legacy(&st.points);
+    let legacy = seho_model::ink_pressure_is_legacy(&st.points);
     let width = if legacy {
         st.width
     } else {
         let n = st.points.len().max(1) as f64;
-        st.points.iter().map(|p| deckcraft_model::ink_sample_width(st.width, p.2, false)).sum::<f64>() / n
+        st.points.iter().map(|p| seho_model::ink_sample_width(st.width, p.2, false)).sum::<f64>() / n
     };
     let mut d = String::new();
     for (k, (px, py)) in pts.iter().enumerate() {
         d.push_str(if k == 0 { "M " } else { "L " });
         d.push_str(&format!("{:.2} {:.2} ", px - x0, py - y0));
     }
-    let mut c = deckcraft_model::style::ColorRef::rgb(st.color.with_alpha(255));
+    let mut c = seho_model::style::ColorRef::rgb(st.color.with_alpha(255));
     if st.highlighter {
-        c = c.with(deckcraft_color::ColorTransform::Alpha(50_000));
+        c = c.with(seho_color::ColorTransform::Alpha(50_000));
     }
     Some(Shape {
         id: ShapeId(0),
         name: format!("Ink {}", i + 1),
         xfrm: Some(Xfrm::new(x0, y0, w, h)),
-        geom: Geom::Custom { paths: vec![deckcraft_model::CustomPath { w, h, d, fill: deckcraft_geom::preset::FillMode::None, stroke: true }] },
+        geom: Geom::Custom { paths: vec![seho_model::CustomPath { w, h, d, fill: seho_geom::preset::FillMode::None, stroke: true }] },
         fill: Some(Fill::None),
-        line: Some(deckcraft_model::Line {
-            cap: Some(deckcraft_model::style::LineCap::Round),
-            join: Some(deckcraft_model::style::LineJoin::Round),
-            ..deckcraft_model::Line::solid(c, width.max(0.25))
+        line: Some(seho_model::Line {
+            cap: Some(seho_model::style::LineCap::Round),
+            join: Some(seho_model::style::LineJoin::Round),
+            ..seho_model::Line::solid(c, width.max(0.25))
         }),
         ..Default::default()
     })
@@ -663,7 +663,7 @@ fn sp(w: &mut W, x: &mut Exp, o: &mut Out, id: u32, s: &Shape, math: bool) {
         // one would put it at the top, so say so.
         if s.ph.is_none() && !s.text_box && tb.body.anchor.is_none() {
             let mut tb = tb.clone();
-            tb.body.anchor = Some(deckcraft_model::text::Anchor::Middle);
+            tb.body.anchor = Some(seho_model::text::Anchor::Middle);
             dml::text_body(w, x, o, "p:txBody", &tb, math);
         } else {
             dml::text_body(w, x, o, "p:txBody", tb, math);
@@ -742,7 +742,7 @@ fn table(w: &mut W, x: &mut Exp, o: &mut Out, t: &Table) {
             a = a.o("vert", c.vertical.map(|v| v.xml())).o(
                 "anchor",
                 c.anchor.map(|a| match a {
-                    deckcraft_model::text::Anchor::Justified | deckcraft_model::text::Anchor::Distributed => "t",
+                    seho_model::text::Anchor::Justified | seho_model::text::Anchor::Distributed => "t",
                     other => other.xml(),
                 }),
             );
@@ -773,7 +773,7 @@ fn table(w: &mut W, x: &mut Exp, o: &mut Out, t: &Table) {
     w.close("a:tbl");
 }
 
-fn media(w: &mut W, x: &mut Exp, o: &mut Out, id: u32, s: &Shape, m: &deckcraft_model::MediaClip) {
+fn media(w: &mut W, x: &mut Exp, o: &mut Out, id: u32, s: &Shape, m: &seho_model::MediaClip) {
     let kind = if m.video { "video" } else { "audio" };
     let link = x.media_rel(o, m.media, kind);
     let embed = x.media_rel_new(o, m.media, crate::opc::RT_MEDIA);
@@ -781,8 +781,8 @@ fn media(w: &mut W, x: &mut Exp, o: &mut Out, id: u32, s: &Shape, m: &deckcraft_
     w.open0("p:nvPicPr");
     let mut s2 = s.clone();
     if s2.click.is_none() {
-        s2.click = Some(deckcraft_model::text::Hyperlink {
-            action: deckcraft_model::text::Action::PlayMedia,
+        s2.click = Some(seho_model::text::Hyperlink {
+            action: seho_model::text::Action::PlayMedia,
             tooltip: String::new(),
             highlight_click: false,
             sound: None,
@@ -828,7 +828,7 @@ fn media(w: &mut W, x: &mut Exp, o: &mut Out, id: u32, s: &Shape, m: &deckcraft_
     }
     w.close("p:nvPr");
     w.close("p:nvPicPr");
-    let poster = deckcraft_model::style::PictureFill { media: m.poster.unwrap_or_default(), ..Default::default() };
+    let poster = seho_model::style::PictureFill { media: m.poster.unwrap_or_default(), ..Default::default() };
     dml::blip_fill(w, x, o, "p:blipFill", &poster);
     let mut s3 = s.clone();
     s3.fill = None;
@@ -844,9 +844,9 @@ fn opaque(
     cx: &mut Ctx,
     s: &Shape,
     xml: &str,
-    preview: Option<deckcraft_model::MediaId>,
+    preview: Option<seho_model::MediaId>,
     label: &str,
-    parts: &[(String, String, deckcraft_model::MediaId)],
+    parts: &[(String, String, seho_model::MediaId)],
 ) {
     // Kept XML is written back as it was when every part it references was kept too, with those
     // parts re-added under this slide's relationship ids.
@@ -876,7 +876,7 @@ fn opaque(
     }
     match preview {
         Some(m) if x.p.media(m).is_some() => {
-            p.kind = ShapeKind::Picture { fill: deckcraft_model::style::PictureFill { media: m, ..Default::default() } };
+            p.kind = ShapeKind::Picture { fill: seho_model::style::PictureFill { media: m, ..Default::default() } };
             p.ph = None;
             shape_with_id(w, x, o, cx, &p, id);
         }
@@ -915,7 +915,7 @@ fn shape_with_id(w: &mut W, x: &mut Exp, o: &mut Out, cx: &mut Ctx, s: &Shape, i
 /// A legacy OLE object finds its preview in the slide's VML drawing through `spid`, and PowerPoint
 /// won't open the slide without it. We don't write that drawing, so write PowerPoint's own
 /// fallback form instead: no `spid`, and the preview as a `p:pic`.
-fn ole_fallback(root: &mut crate::xml::El, x: &mut Exp, o: &mut Out, preview: Option<deckcraft_model::MediaId>) {
+fn ole_fallback(root: &mut crate::xml::El, x: &mut Exp, o: &mut Out, preview: Option<seho_model::MediaId>) {
     let xfrm = root.child("xfrm").map(|t| {
         let at = |e: &str, a: &str| t.child(e).and_then(|c| c.attr(a)).unwrap_or("0").to_string();
         (at("off", "x"), at("off", "y"), at("ext", "cx"), at("ext", "cy"))

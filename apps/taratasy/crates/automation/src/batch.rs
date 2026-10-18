@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use pdfcraft_engine::{Session, ocr, optimize};
+use taratasy_engine::{Session, ocr, optimize};
 use serde_json::{Value, json};
 
 use crate::{Args, Automation, Result, failed};
@@ -59,7 +59,7 @@ impl<'a> Recipe<'a> {
 
     fn accepts(&self, path: &Path) -> bool {
         let extension = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_ascii_lowercase();
-        extension == "pdf" || (self.steps.contains(&"convert") && pdfcraft_engine::CONVERTIBLE.contains(&extension.as_str()))
+        extension == "pdf" || (self.steps.contains(&"convert") && taratasy_engine::CONVERTIBLE.contains(&extension.as_str()))
     }
 
     fn process(&self, path: &Path) -> Result<(Arc<Vec<u8>>, Vec<Value>)> {

@@ -1,7 +1,7 @@
 //! Page Setup opens on the active sheet's saved margins, so OK without edits keeps them (issue #524).
 
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::SheetApp;
+use tabilao_engine::Session;
+use tabilao_ui_egui::SheetApp;
 use serde_json::{Value, json};
 
 fn margins(app: &SheetApp) -> [f32; 6] {

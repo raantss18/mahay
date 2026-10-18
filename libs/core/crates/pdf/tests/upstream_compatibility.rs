@@ -2,7 +2,7 @@
 #![cfg(feature = "read")]
 #![allow(clippy::unwrap_used, clippy::panic)]
 
-use craft_pdf::syntax::object::{FromBytes, ObjRef, Object};
+use mahay_pdf::syntax::object::{FromBytes, ObjRef, Object};
 
 fn stream(dictionary: &str, content: &[u8]) -> Vec<u8> {
     let mut bytes = format!("<< {dictionary} /Length {} >>\nstream\n", content.len()).into_bytes();
@@ -100,17 +100,17 @@ fn compressed_object(value: &[u8]) -> Vec<u8> {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 fn decoded_object_streams_keep_the_same_64_container_boundary() {
     for kind in 0..3 {
-        let accepted = craft_pdf::open_slice(&compressed_object(&nested_object(64, kind)), None).unwrap();
+        let accepted = mahay_pdf::open_slice(&compressed_object(&nested_object(64, kind)), None).unwrap();
         assert_nested_leaf(accepted.xref().get::<Object<'_>>(ObjRef::new(6, 0).into()).unwrap(), 64);
-        let rejected = craft_pdf::open_slice(&compressed_object(&nested_object(65, kind)), None).unwrap();
+        let rejected = mahay_pdf::open_slice(&compressed_object(&nested_object(65, kind)), None).unwrap();
         assert!(rejected.xref().get::<Object<'_>>(ObjRef::new(6, 0).into()).is_none(), "container kind {kind}");
     }
 }
 
 mod page_trees {
     use super::assemble;
-    use craft_pdf::syntax::object::{Array, FromBytes, MaybeRef, Name, Number};
-    use craft_pdf::syntax::page::{Page, Rotation};
+    use mahay_pdf::syntax::object::{Array, FromBytes, MaybeRef, Name, Number};
+    use mahay_pdf::syntax::page::{Page, Rotation};
 
     fn assert_page(page: &Page<'_>, id: i32, media: [f64; 4], crop: [f64; 4], rotation: i32, user_unit: f32) {
         assert_eq!(page.raw().get::<i32>(b"ContractPage"), Some(id));
@@ -144,7 +144,7 @@ mod page_trees {
         // An empty page is valid. Omitting Contents also prevents a brute-force scan
         // from satisfying this contract after losing the actual page-tree ancestry.
         objects.push(format!("<< /Type /Page /Parent {} 0 R /ContractPage 1024 /UserUnit 2 >>", DEPTH + 1).into_bytes());
-        let pdf = craft_pdf::open_slice(&assemble(&objects), None).unwrap();
+        let pdf = mahay_pdf::open_slice(&assemble(&objects), None).unwrap();
         assert_eq!(pdf.pages().len(), 1, "the valid leaf must survive all 1024 ancestors");
         let page = &pdf.pages()[0];
         assert_page(page, 1024, [0.0, 0.0, 300.0, 400.0], [1.0, 2.0, 190.0, 290.0], 180, 2.0);
@@ -168,7 +168,7 @@ mod page_trees {
     #[cfg_attr(not(target_arch = "wasm32"), test)]
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn cyclic_page_trees_keep_valid_sibling_order_and_deduplicate_leaves() {
-        let pdf = craft_pdf::open_slice(
+        let pdf = mahay_pdf::open_slice(
             &assemble(&[
                 b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
                 b"<< /Type /Pages /Count 3 /Kids [3 0 R 6 0 R 5 0 R 4 0 R 6 0 R] /MediaBox [0 0 100 200] /CropBox [1 2 90 180] /Rotate 90 /Resources << /Font << /Root << /BaseFont /Helvetica >> >> >> >>".to_vec(),
@@ -209,7 +209,7 @@ mod page_trees {
             .collect();
         assert_eq!(values, [Some(0), Some(3)]);
         for token in ["+", "+.", "-"] {
-            let pdf = craft_pdf::open_slice(
+            let pdf = mahay_pdf::open_slice(
                 &assemble(&[
                     b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
                     format!("<< /Type /Pages /Count 1 /Kids [{token} 3 0 R] /MediaBox [0 0 100 200] /CropBox [1 2 90 180] /Rotate 90 >>")
@@ -230,14 +230,14 @@ mod page_trees {
 #[cfg(feature = "interpret")]
 mod painting {
     use super::{assemble, stream};
-    use craft_pdf::interpret::{
+    use mahay_pdf::interpret::{
         BlendMode, ClipPath, Context, Device, GlyphDrawMode, Image, InterpreterCache, InterpreterSettings, Paint, PathDrawMode, SoftMask,
         TransformExt, font::Glyph,
     };
     use kurbo::{Affine, BezPath, Point, Rect};
 
-    #[cfg(craft_pdf_unicode_fixtures)]
-    const INTER: &[u8] = include_bytes!(concat!(env!("CRAFT_PDF_TEST_FONT_DIR"), "/Inter-Regular.ttf"));
+    #[cfg(mahay_pdf_unicode_fixtures)]
+    const INTER: &[u8] = include_bytes!(concat!(env!("MAHAY_PDF_TEST_FONT_DIR"), "/Inter-Regular.ttf"));
 
     #[derive(Debug)]
     struct GlyphEvent {
@@ -289,7 +289,7 @@ mod painting {
     }
 
     fn events(bytes: &[u8]) -> Events {
-        let pdf = craft_pdf::open_slice(bytes, None).unwrap();
+        let pdf = mahay_pdf::open_slice(bytes, None).unwrap();
         let page = &pdf.pages()[0];
         let cache = InterpreterCache::new();
         let mut context = Context::new(
@@ -300,7 +300,7 @@ mod painting {
             InterpreterSettings::default(),
         );
         let mut device = Events::default();
-        craft_pdf::interpret_page(page, &mut context, &mut device).unwrap();
+        mahay_pdf::interpret_page(page, &mut context, &mut device).unwrap();
         device
     }
 
@@ -367,8 +367,8 @@ mod painting {
 
     #[cfg(feature = "raster")]
     fn pixels(bytes: &[u8]) -> Vec<u8> {
-        use craft_pdf::raster::{self, Options, RenderCache};
-        let pdf = craft_pdf::open_slice(bytes, None).unwrap();
+        use mahay_pdf::raster::{self, Options, RenderCache};
+        let pdf = mahay_pdf::open_slice(bytes, None).unwrap();
         let image = raster::render(&pdf.pages()[0], &RenderCache::new(), &InterpreterSettings::default(), &Options::default()).unwrap();
         assert!(image.diagnostics.is_empty(), "{:?}", image.diagnostics);
         image.bytes().to_vec()
@@ -429,11 +429,11 @@ mod painting {
     }
 
     fn fixture_font() -> &'static [u8] {
-        #[cfg(craft_pdf_unicode_fixtures)]
+        #[cfg(mahay_pdf_unicode_fixtures)]
         {
             INTER
         }
-        #[cfg(not(craft_pdf_unicode_fixtures))]
+        #[cfg(not(mahay_pdf_unicode_fixtures))]
         {
             panic!("enable the hash-verified fonts.json fixtures")
         }
@@ -451,7 +451,7 @@ mod painting {
         ])
     }
 
-    #[cfg_attr(not(craft_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and craft_pdf_unicode_fixtures cfg")]
+    #[cfg_attr(not(mahay_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and mahay_pdf_unicode_fixtures cfg")]
     #[cfg_attr(not(target_arch = "wasm32"), test)]
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn filled_stroked_tj_runs_preserve_paint_order_alpha_and_text_advances() {
@@ -472,7 +472,7 @@ mod painting {
     }
 
     #[cfg(feature = "raster")]
-    #[cfg_attr(not(craft_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and craft_pdf_unicode_fixtures cfg")]
+    #[cfg_attr(not(mahay_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and mahay_pdf_unicode_fixtures cfg")]
     #[cfg_attr(not(target_arch = "wasm32"), test)]
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
     fn overlapping_translucent_glyphs_fill_the_whole_run_before_stroking() {

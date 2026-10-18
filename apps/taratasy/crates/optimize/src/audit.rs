@@ -8,7 +8,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object};
+use taratasy_cos::{Dict, Document, ObjRef, Object};
 
 /// The categories, in Acrobat's order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -192,7 +192,7 @@ fn annotation_category(doc: &Document, annot: &Object) -> SpaceCategory {
 fn size(doc: &Document, num: u32) -> u64 {
     let obj = doc.get(ObjRef::new(num, doc.generation(num)));
     let mut out = Vec::new();
-    pdfcraft_cos::serialize(&obj, &mut out);
+    taratasy_cos::serialize(&obj, &mut out);
     // "n g obj\n … \nendobj\n" and its cross-reference entry.
     out.len() as u64 + 20 + 20
 }
@@ -202,9 +202,9 @@ fn size(doc: &Document, num: u32) -> u64 {
 pub fn audit_space(doc: &Document, file_len: u64) -> Vec<SpaceUse> {
     let mut a = Audit { doc, owner: HashMap::new() };
     let cat = doc.root().and_then(|r| doc.get(r).as_dict().cloned()).unwrap_or_default();
-    let pages = pdfcraft_model::pages(doc);
+    let pages = taratasy_model::pages(doc);
     // Order matters: the most specific owners first. Resources by kind before anything that
-    // uses them: a content stream's dictionary may point at what it draws (PdfCraft's /PCAdded
+    // uses them: a content stream's dictionary may point at what it draws (Taratasy's /PCAdded
     // records an added image), and form fields and comments draw with fonts and images too.
     for p in &pages {
         let res = a.resolve_dict(p.dict.get(b"Resources"));

@@ -6,7 +6,7 @@
 //! radius-independent box cascade, so cost grows with the number of levels,
 //! not the blur size.
 
-use photocraft_geom::Rect;
+use sary_geom::Rect;
 
 mod spin_plan;
 

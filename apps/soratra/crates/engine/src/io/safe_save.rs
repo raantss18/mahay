@@ -49,7 +49,7 @@ impl Temporary {
         // A short name also works beside a destination already at the filename-length limit.
         for _ in 0..128 {
             let id = NEXT.fetch_add(1, Ordering::Relaxed);
-            let path = destination.with_file_name(format!(".wordcraft-save-{}-{id}.tmp", std::process::id()));
+            let path = destination.with_file_name(format!(".soratra-save-{}-{id}.tmp", std::process::id()));
             let mut options = OpenOptions::new();
             options.write(true).create_new(true);
             #[cfg(unix)]
@@ -101,7 +101,7 @@ mod tests {
         fn new() -> Self {
             static NEXT: AtomicU64 = AtomicU64::new(0);
             let path =
-                std::env::temp_dir().join(format!("wordcraft-save-owner-test-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+                std::env::temp_dir().join(format!("soratra-save-owner-test-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
             fs::create_dir(&path).unwrap();
             Self(path)
         }

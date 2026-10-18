@@ -1,4 +1,4 @@
-//! Developer › Controls: content controls (see [`wordcraft_doc::control`]) — insert each kind,
+//! Developer › Controls: content controls (see [`soratra_doc::control`]) — insert each kind,
 //! set their properties, tick check boxes, choose list entries and dates, Design Mode.
 //!
 //! Typing into a control that shows its placeholder replaces the placeholder; deleting all of a
@@ -7,11 +7,11 @@
 //! typing and deleting commands.
 
 use serde_json::{Value, json};
-use wordcraft_doc::control::{ContentControl, ControlKind, ControlLock, ControlRange, ListItem, MAX_CONTROL_TEXT, MAX_LIST_ITEMS};
-use wordcraft_doc::para::OBJ;
-use wordcraft_doc::props::{CharProps, Rgb, TextColor};
-use wordcraft_doc::styles::{Style, StyleKind};
-use wordcraft_doc::{InlineObject, Pos, StoryRef};
+use soratra_doc::control::{ContentControl, ControlKind, ControlLock, ControlRange, ListItem, MAX_CONTROL_TEXT, MAX_LIST_ITEMS};
+use soratra_doc::para::OBJ;
+use soratra_doc::props::{CharProps, Rgb, TextColor};
+use soratra_doc::styles::{Style, StyleKind};
+use soratra_doc::{InlineObject, Pos, StoryRef};
 
 use super::{delete_selection, sel_result};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -176,8 +176,8 @@ fn content_props(base: &CharProps) -> CharProps {
 /// An id no control in the document has.
 fn new_id(s: &Session) -> i64 {
     let mut used = std::collections::BTreeSet::new();
-    let mut add = |bl: &wordcraft_doc::Blocks| {
-        wordcraft_doc::control::walk_controls(bl, &mut |c| {
+    let mut add = |bl: &soratra_doc::Blocks| {
+        soratra_doc::control::walk_controls(bl, &mut |c| {
             if let Some(id) = c.id {
                 used.insert(id);
             }
@@ -733,8 +733,8 @@ mod tests {
 #[cfg(test)]
 mod editing_tests {
     use serde_json::json;
-    use wordcraft_doc::StoryRef;
-    use wordcraft_doc::control::ControlKind;
+    use soratra_doc::StoryRef;
+    use soratra_doc::control::ControlKind;
 
     use crate::Session;
 
@@ -750,7 +750,7 @@ mod editing_tests {
 
     #[test]
     fn typing_replaces_the_placeholder_and_emptying_brings_it_back() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         run(&mut s, "text.insert", json!({"text": "Name: "}));
         run(&mut s, "developer.plainText", json!({"title": "Name", "tag": "name"}));
         let i = info(&mut s);
@@ -784,13 +784,13 @@ mod editing_tests {
         run(&mut s, "edit.undo", json!({}));
         assert_eq!(text(&s), "Name: A");
         // And the file keeps it.
-        let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let back = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
         assert_eq!(back.control_ranges(StoryRef::Body).first().map(|r| r.control.tag.clone()), Some("name".into()));
     }
 
     #[test]
     fn check_boxes_toggle_and_locks_refuse() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         run(&mut s, "developer.checkBox", json!({"tag": "ok"}));
         assert_eq!(text(&s), "\u{2610}");
         // A check box takes no typing: at its edge the text goes beside it, over it it's refused.
@@ -822,7 +822,7 @@ mod editing_tests {
     }
 
     fn replacement_control() -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("cat cat"));
+        let mut s = Session::new(soratra_doc::Document::from_text("cat cat"));
         run(&mut s, "edit.find", json!({"text": "cat"}));
         run(&mut s, "developer.richText", json!({"tag": "protected"}));
         assert_eq!(text(&s), "cat cat");
@@ -866,7 +866,7 @@ mod editing_tests {
 
     #[test]
     fn lists_dates_and_blocks() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         run(&mut s, "developer.dropDown", json!({"tag": "size", "items": ["Small", {"display": "Large", "value": "L"}]}));
         run(&mut s, "developer.chooseItem", json!({"control": "size", "value": "L"}));
         run(&mut s, "text.insert", json!({"text": " on "}));
@@ -880,7 +880,7 @@ mod editing_tests {
         run(&mut s, "select.all", json!({}));
         run(&mut s, "developer.richText", json!({"title": "All"}));
         run(&mut s, "developer.repeatingSection", json!({}));
-        let doc = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let doc = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
         let kinds: Vec<_> = doc.control_ranges(StoryRef::Body).iter().map(|r| (r.control.kind.name(), r.control.block)).collect();
         for k in [("dropDown", false), ("date", false), ("richText", true), ("repeatingSection", true), ("repeatingSectionItem", true)] {
             assert!(kinds.contains(&k), "{k:?} in {kinds:?}");

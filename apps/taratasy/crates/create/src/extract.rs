@@ -1,12 +1,12 @@
 //! Export a PDF ▸ Image ▸ Export all images, and Edit ▸ Save image as: the images that pages
 //! use, as files. JPEG images are written unchanged; other images, and JPEG images with
 //! transparency or with CMYK samples a viewer would read inverted, are decoded and written as PNG with their soft mask, stencil mask or colour
-//! key as alpha. Images PdfCraft can't decode yet (JPEG 2000, JBIG2, CCITT, separations) are
+//! key as alpha. Images Taratasy can't decode yet (JPEG 2000, JBIG2, CCITT, separations) are
 //! reported, never silently left out.
 
 use std::collections::HashSet;
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, Stream};
+use taratasy_cos::{Dict, Document, ObjRef, Object, Stream};
 
 /// One image, ready to write.
 #[derive(Clone, Debug, PartialEq)]
@@ -34,7 +34,7 @@ const MAX_PIXELS: u64 = 100_000_000;
 /// The images of `pages` (0-based; each image once, on the first page using it), skipping
 /// those with fewer than `min_side` pixels on their shorter side.
 pub fn extract_images(doc: &Document, pages: &[usize], min_side: u32) -> ImageExport {
-    let all = pdfcraft_model::pages(doc);
+    let all = taratasy_model::pages(doc);
     let mut out = ImageExport::default();
     let mut seen = HashSet::new();
     for &p in pages {

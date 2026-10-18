@@ -3,7 +3,7 @@
 //! miss the bugs that need a sequence — insert rows under a spill, undo, sort, paste into a table —
 //! and those are the ones that corrupt a workbook.
 //!
-//! Each seed picks a sample (sales, budget, grades) and runs `GRIDCRAFT_FUZZ_STEPS` commands. Most
+//! Each seed picks a sample (sales, budget, grades) and runs `TABILAO_FUZZ_STEPS` commands. Most
 //! come from a curated list of state-changing commands with hand-shaped params; the rest are drawn
 //! from every registered command, with params generated from its `params` doc string.
 //!
@@ -22,20 +22,20 @@
 //!   final one (view state aside), and both keep the Watch Window list, which isn't an edit.
 //!
 //! Knobs (environment variables):
-//! - `GRIDCRAFT_FUZZ_SEEDS` (default 6) and `GRIDCRAFT_FUZZ_STEPS` (default 40): the budget. Soak with
-//!   `GRIDCRAFT_FUZZ_SEEDS=200 GRIDCRAFT_FUZZ_STEPS=200 cargo test --release -p gridcraft-engine --test command_sequence_fuzz`.
-//! - `GRIDCRAFT_FUZZ_SEED=17`: replay that one seed (the failure message prints the command line).
-//! - `GRIDCRAFT_FUZZ_SHRINK=1`: on failure, shrink the sequence to a minimal list of commands that
+//! - `TABILAO_FUZZ_SEEDS` (default 6) and `TABILAO_FUZZ_STEPS` (default 40): the budget. Soak with
+//!   `TABILAO_FUZZ_SEEDS=200 TABILAO_FUZZ_STEPS=200 cargo test --release -p tabilao-engine --test command_sequence_fuzz`.
+//! - `TABILAO_FUZZ_SEED=17`: replay that one seed (the failure message prints the command line).
+//! - `TABILAO_FUZZ_SHRINK=1`: on failure, shrink the sequence to a minimal list of commands that
 //!   still fails the same way, printed as `execute` calls ready for a regression test.
-//! - `GRIDCRAFT_FUZZ_KEEP_GOING=1`: report every failing seed instead of stopping at the first.
+//! - `TABILAO_FUZZ_KEEP_GOING=1`: report every failing seed instead of stopping at the first.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value, col_to_letters};
-use gridcraft_engine::calc::Calc;
-use gridcraft_engine::model::{CalcMode, Formula, Sheet, Workbook};
-use gridcraft_engine::{EngineError, Session, command_specs, find_command, io};
+use tabilao_core::{CellRef, MAX_COLS, MAX_ROWS, RangeRef, Value, col_to_letters};
+use tabilao_engine::calc::Calc;
+use tabilao_engine::model::{CalcMode, Formula, Sheet, Workbook};
+use tabilao_engine::{EngineError, Session, command_specs, find_command, io};
 use serde_json::{Value as Json, json};
 
 const SAMPLES: [&str; 3] = ["sales", "budget", "grades"];
@@ -112,10 +112,10 @@ fn env_num(name: &str, default: u64) -> u64 {
 
 #[test]
 fn command_sequences_keep_the_workbook_consistent() {
-    let seeds = env_num("GRIDCRAFT_FUZZ_SEEDS", 6);
-    let steps = env_num("GRIDCRAFT_FUZZ_STEPS", 40) as usize;
-    let keep_going = std::env::var_os("GRIDCRAFT_FUZZ_KEEP_GOING").is_some();
-    let list: Vec<u64> = match std::env::var("GRIDCRAFT_FUZZ_SEED").ok().and_then(|v| v.trim().parse().ok()) {
+    let seeds = env_num("TABILAO_FUZZ_SEEDS", 6);
+    let steps = env_num("TABILAO_FUZZ_STEPS", 40) as usize;
+    let keep_going = std::env::var_os("TABILAO_FUZZ_KEEP_GOING").is_some();
+    let list: Vec<u64> = match std::env::var("TABILAO_FUZZ_SEED").ok().and_then(|v| v.trim().parse().ok()) {
         Some(one) => vec![one],
         None => (0..seeds).collect(),
     };
@@ -138,7 +138,7 @@ fn report(seed: u64, steps: usize, sample: &str, sequence: &[Step], f: &Failure)
         None => format!("end-of-run checks after {} steps", sequence.len()),
     };
     let mut out = format!(
-        "command-sequence fuzz failure: seed {seed} (sample `{sample}`), {at}\n  invariant [{}]: {}\n  replay: GRIDCRAFT_FUZZ_SEED={seed} GRIDCRAFT_FUZZ_STEPS={steps} cargo test -p gridcraft-engine --test command_sequence_fuzz\n",
+        "command-sequence fuzz failure: seed {seed} (sample `{sample}`), {at}\n  invariant [{}]: {}\n  replay: TABILAO_FUZZ_SEED={seed} TABILAO_FUZZ_STEPS={steps} cargo test -p tabilao-engine --test command_sequence_fuzz\n",
         f.kind, f.what
     );
     let end = (f.step + 1).min(sequence.len());
@@ -147,7 +147,7 @@ fn report(seed: u64, steps: usize, sample: &str, sequence: &[Step], f: &Failure)
     for (i, (id, p)) in sequence.iter().enumerate().take(end).skip(from) {
         out.push_str(&format!("    {i:4} {id} {p}\n"));
     }
-    if std::env::var_os("GRIDCRAFT_FUZZ_SHRINK").is_some() {
+    if std::env::var_os("TABILAO_FUZZ_SHRINK").is_some() {
         let min = shrink(sample, &sequence[..end], f.kind);
         out.push_str(&format!("  minimal sequence ({} steps) from file.new {{\"sample\": \"{sample}\"}}:\n", min.len()));
         for (id, p) in &min {
@@ -157,7 +157,7 @@ fn report(seed: u64, steps: usize, sample: &str, sequence: &[Step], f: &Failure)
             out.push_str(&format!("  which fails with [{}]: {}\n", f.kind, f.what));
         }
     } else {
-        out.push_str("  (set GRIDCRAFT_FUZZ_SHRINK=1 for a minimal sequence)\n");
+        out.push_str("  (set TABILAO_FUZZ_SHRINK=1 for a minimal sequence)\n");
     }
     out
 }
@@ -335,7 +335,7 @@ impl Harness {
 
 // ---------------------------------------------------------------- invariants
 
-fn has_content(c: &gridcraft_engine::model::Cell) -> bool {
+fn has_content(c: &tabilao_engine::model::Cell) -> bool {
     c.formula.is_some() || !c.value.is_empty()
 }
 
@@ -368,7 +368,7 @@ fn overlaps(a: &RangeRef, b: &RangeRef) -> bool {
     a.intersection(b).is_some()
 }
 
-fn structure_problem(wb: &Workbook, sel: &gridcraft_engine::Selection) -> Option<String> {
+fn structure_problem(wb: &Workbook, sel: &tabilao_engine::Selection) -> Option<String> {
     if wb.sheets.is_empty() {
         return Some("no sheets left".into());
     }
@@ -603,7 +603,7 @@ fn spill_anchors(wb: &Workbook) -> Vec<(usize, CellRef)> {
     wb.sheets.iter().enumerate().flat_map(|(i, sh)| sh.spill_ranges.keys().map(move |c| (i, *c))).collect()
 }
 
-fn tables(wb: &Workbook) -> Vec<(usize, &gridcraft_engine::model::Table)> {
+fn tables(wb: &Workbook) -> Vec<(usize, &tabilao_engine::model::Table)> {
     wb.sheets.iter().enumerate().flat_map(|(i, sh)| sh.tables.iter().map(move |t| (i, t))).collect()
 }
 

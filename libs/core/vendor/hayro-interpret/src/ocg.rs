@@ -120,7 +120,7 @@ impl OcgState {
         self.visibility_stack.pop();
     }
 
-    /// PdfCraft patch: override one group's state (viewer layer toggles).
+    /// Taratasy patch: override one group's state (viewer layer toggles).
     pub(crate) fn set_active(&mut self, id: ObjectIdentifier, active: bool) {
         if active {
             self.inactive_ocgs.remove(&id);

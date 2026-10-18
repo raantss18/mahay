@@ -467,12 +467,12 @@ fn choice_and_range_tables_cover_enum_fields() {
 fn svg_group_rasterization_threshold_is_bounded_by_document_depth() {
     let mut s = session();
     let pref = "fileHandling.rasterizeSvgGroupsDeeperThan";
-    assert_eq!(s.execute("prefs.get", json!({"path": pref})).unwrap(), json!(photocraft_doc::MAX_GROUP_DEPTH));
+    assert_eq!(s.execute("prefs.get", json!({"path": pref})).unwrap(), json!(sary_doc::MAX_GROUP_DEPTH));
     s.execute("prefs.set", json!({"path": pref, "value": 4})).unwrap();
     assert_eq!(s.prefs().file_handling.rasterize_svg_groups_deeper_than, 4);
     s.execute("prefs.set", json!({"path": pref, "value": 0})).unwrap();
     assert_eq!(s.prefs().file_handling.rasterize_svg_groups_deeper_than, 0, "zero disables the preference threshold");
-    assert!(s.execute("prefs.set", json!({"path": pref, "value": photocraft_doc::MAX_GROUP_DEPTH + 1})).is_err());
+    assert!(s.execute("prefs.set", json!({"path": pref, "value": sary_doc::MAX_GROUP_DEPTH + 1})).is_err());
     assert_eq!(s.prefs().file_handling.rasterize_svg_groups_deeper_than, 0, "out-of-range preferences leave the valid value unchanged");
 }
 
@@ -833,7 +833,7 @@ fn shift_key_tool_switch_is_on_by_default_and_a_stored_false_is_kept() {
 #[test]
 fn exports_are_written_all_or_nothing() {
     use super::write_files_atomically;
-    let dir = std::env::temp_dir().join(format!("photocraft-atomic-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-atomic-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let (a, b) = (dir.join("a.kys"), dir.join("b.html"));
     std::fs::write(&a, "old A").unwrap();
@@ -841,7 +841,7 @@ fn exports_are_written_all_or_nothing() {
     let (pa, pb) = (a.to_str().unwrap(), b.to_str().unwrap());
     let staged_moves = std::cell::Cell::new(0);
     let failing = |from: &std::path::Path, to: &std::path::Path| {
-        if from.to_string_lossy().ends_with("photocraft-tmp") {
+        if from.to_string_lossy().ends_with("sary-tmp") {
             staged_moves.set(staged_moves.get() + 1);
             if staged_moves.get() == 2 {
                 return Err(std::io::Error::other("disk gone"));
@@ -851,12 +851,12 @@ fn exports_are_written_all_or_nothing() {
     };
     assert!(write_files_atomically(&[(pa, "new A"), (pb, "new B")], &failing).is_err());
     assert_eq!((std::fs::read_to_string(&a).unwrap(), std::fs::read_to_string(&b).unwrap()), ("old A".into(), "old B".into()));
-    let leftovers = || std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).filter(|e| e.file_name().to_string_lossy().contains(".photocraft-")).count();
+    let leftovers = || std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).filter(|e| e.file_name().to_string_lossy().contains(".sary-")).count();
     assert_eq!(leftovers(), 0);
     // A backup move that fails leaves no empty placeholder behind.
     let backups = std::cell::Cell::new(0);
     let failing_backup = |from: &std::path::Path, to: &std::path::Path| {
-        if to.to_string_lossy().ends_with("photocraft-bak") {
+        if to.to_string_lossy().ends_with("sary-bak") {
             backups.set(backups.get() + 1);
             if backups.get() == 2 {
                 return Err(std::io::Error::other("locked"));
@@ -871,11 +871,11 @@ fn exports_are_written_all_or_nothing() {
     assert!(write_files_atomically(&[(pa, "x"), (pa, "y")], &|f, t| std::fs::rename(f, t)).is_err());
     assert_eq!(std::fs::read_to_string(&a).unwrap(), "old A");
     // A target named like a staging file is just a file.
-    let odd = dir.join("c.kys.photocraft-tmp");
+    let odd = dir.join("c.kys.sary-tmp");
     std::fs::write(&odd, "old C").unwrap();
     write_files_atomically(&[(pa, "new A"), (odd.to_str().unwrap(), "new C")], &|f, t| std::fs::rename(f, t)).unwrap();
     assert_eq!((std::fs::read_to_string(&a).unwrap(), std::fs::read_to_string(&odd).unwrap()), ("new A".into(), "new C".into()));
-    assert_eq!(leftovers(), 1, "only c.kys.photocraft-tmp itself");
+    assert_eq!(leftovers(), 1, "only c.kys.sary-tmp itself");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -884,7 +884,7 @@ fn exports_are_written_all_or_nothing() {
 #[test]
 fn a_stranded_backup_is_named_in_the_error() {
     use super::write_files_atomically;
-    let dir = std::env::temp_dir().join(format!("photocraft-stranded-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-stranded-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let (a, b) = (dir.join("a.kys"), dir.join("b.html"));
     std::fs::write(&a, "old A").unwrap();
@@ -894,13 +894,13 @@ fn a_stranded_backup_is_named_in_the_error() {
     // The second staged move fails, and so does putting a.kys's backup back.
     let rename = |from: &std::path::Path, to: &std::path::Path| {
         let f = from.to_string_lossy();
-        if f.ends_with("photocraft-tmp") {
+        if f.ends_with("sary-tmp") {
             staged.set(staged.get() + 1);
             if staged.get() == 2 {
                 return Err(std::io::Error::other("disk gone"));
             }
         }
-        if f.ends_with("photocraft-bak") && to == a.as_path() {
+        if f.ends_with("sary-bak") && to == a.as_path() {
             return Err(std::io::Error::other("locked"));
         }
         std::fs::rename(from, to)
@@ -908,7 +908,7 @@ fn a_stranded_backup_is_named_in_the_error() {
     let e = write_files_atomically(&[(pa, "new A"), (pb, "new B")], &rename).unwrap_err();
     assert!(e.contains(&format!("the previous {} is at", a.display())), "{e}");
     let backup: Vec<_> =
-        std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with("photocraft-bak")).collect();
+        std::fs::read_dir(&dir).unwrap().filter_map(|e| e.ok()).map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with("sary-bak")).collect();
     assert_eq!(backup.len(), 1, "{backup:?}");
     assert!(e.contains(&backup[0].display().to_string()), "{e}");
     assert_eq!(std::fs::read_to_string(&backup[0]).unwrap(), "old A");

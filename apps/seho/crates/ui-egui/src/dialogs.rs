@@ -1,7 +1,7 @@
 //! Dialogs (Insert Table, Slide Size, Font, Paragraph, Tabs, Header & Footer, Hyperlink, Set Up Show, Zoom, …) and the
 //! About window. The start screen is File › Home (`backstage.rs`).
 
-use deckcraft_color::SchemeSlot;
+use seho_color::SchemeSlot;
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
 
@@ -47,7 +47,7 @@ fn title(id: &str) -> &'static str {
         "paragraph" => "Paragraph",
         "tabs" => "Tabs",
         "font" => "Font",
-        "about" => "About DeckCraft",
+        "about" => "About Seho",
         "preferences" => "Preferences",
         "autocorrect" => "AutoCorrect",
         "gridOptions" => "Grid Options",
@@ -68,10 +68,10 @@ fn title(id: &str) -> &'static str {
         "smartart" => "Choose a SmartArt Graphic",
         "bullets" => "Bullets and Numbering",
         "action" => "Action Settings",
-        "quit" => "DeckCraft",
+        "quit" => "Seho",
         "themeColors" => "Create New Theme Colors",
         "themeFonts" => "Create New Theme Fonts",
-        _ => "DeckCraft",
+        _ => "Seho",
     }
 }
 
@@ -258,7 +258,7 @@ fn pick_album_picture(app: &mut SlideApp) -> Option<Value> {
         return None;
     }
     let name = std::path::Path::new(&path).file_name().and_then(|n| n.to_str()).filter(|s| !s.is_empty()).unwrap_or("picture").to_string();
-    Some(json!({"name": name, "data": deckcraft_engine::cmd::base64_encode(&loaded)}))
+    Some(json!({"name": name, "data": seho_engine::cmd::base64_encode(&loaded)}))
 }
 
 fn album_choice(ui: &mut Ui, d: &mut Dialog, id: &str, key: &str, default: &str, choices: &[(&str, &str)]) {
@@ -274,7 +274,7 @@ fn album_choice(ui: &mut Ui, d: &mut Dialog, id: &str, key: &str, default: &str,
     opened.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, label));
 }
 
-const ALBUM_THEMES: &[&str] = &["DeckCraft", "Harbor", "Ember", "Meadow", "Nocturne", "Paper", "Coral Reef", "Slate"];
+const ALBUM_THEMES: &[&str] = &["Seho", "Harbor", "Ember", "Meadow", "Nocturne", "Paper", "Coral Reef", "Slate"];
 
 fn current_theme(app: &SlideApp) -> String {
     app.session
@@ -282,7 +282,7 @@ fn current_theme(app: &SlideApp) -> String {
         .and_then(|d| d.doc.masters.first())
         .map(|m| m.theme.name.clone())
         .filter(|n| !n.is_empty())
-        .unwrap_or_else(|| "DeckCraft".into())
+        .unwrap_or_else(|| "Seho".into())
 }
 
 fn album_json_id(v: &Value) -> Option<u64> {
@@ -465,7 +465,7 @@ fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         check(ui, d, "Captions under pictures", "captions", false);
         check(ui, d, "ALL pictures black and white", "grayscale", false);
         ui.label("Album theme");
-        album_choice(ui, d, "album_theme", "theme", "DeckCraft", &ALBUM_THEMES.iter().map(|n| (*n, *n)).collect::<Vec<_>>());
+        album_choice(ui, d, "album_theme", "theme", "Seho", &ALBUM_THEMES.iter().map(|n| (*n, *n)).collect::<Vec<_>>());
     });
     let captions = d.fields.get("captions").is_some_and(|v| v == "1");
     let grayscale = d.fields.get("grayscale").is_some_and(|v| v == "1");
@@ -482,7 +482,7 @@ fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         }
         let layout = d.get("layout", "1");
         let frame = d.get("frame", "rect");
-        let theme = d.get("theme", "DeckCraft");
+        let theme = d.get("theme", "Seho");
         let theme_was = d.fields.get("themeWas").cloned().unwrap_or_default();
         let mut payload = json!({"pictures": list, "layout": layout, "frame": frame, "captions": captions, "grayscale": grayscale});
         if theme != theme_was
@@ -544,7 +544,7 @@ fn theme_color_row(ui: &mut Ui, d: &mut Dialog, slot: SchemeSlot) {
     let mut v = d.get(key, "000000");
     ui.horizontal(|ui| {
         ui.add_sized(vec2(188.0, 18.0), egui::Label::new(slot.label()));
-        let fill = deckcraft_color::Rgba::from_hex(&v).map(theme::to_color32).unwrap_or_else(|| Color32::from_gray(200));
+        let fill = seho_color::Rgba::from_hex(&v).map(theme::to_color32).unwrap_or_else(|| Color32::from_gray(200));
         let (rect, _) = ui.allocate_exact_size(vec2(18.0, 18.0), Sense::hover());
         ui.painter().rect(rect, CornerRadius::same(2), fill, Stroke::new(1.0, Tokens::get(ui.ctx()).border), egui::StrokeKind::Inside);
         let resp = ui.add(egui::TextEdit::singleline(&mut v).desired_width(84.0).id_salt(("theme-hex", key)));
@@ -566,7 +566,7 @@ fn theme_color_payload(d: &mut Dialog) -> Result<Value, String> {
     let mut colors = serde_json::Map::new();
     for slot in SchemeSlot::THEME {
         let raw = d.get(slot.xml_name(), "");
-        let Some(rgb) = deckcraft_color::Rgba::from_hex(raw.trim()) else {
+        let Some(rgb) = seho_color::Rgba::from_hex(raw.trim()) else {
             return Err(format!("{} needs a colour like #RRGGBB.", slot.label()));
         };
         colors.insert(slot.xml_name().into(), Value::String(format!("#{}", rgb.hex())));
@@ -633,7 +633,7 @@ fn seed_theme_fonts(d: &mut Dialog) {
 
 fn theme_font_choices(app: &SlideApp, selected: &str) -> Vec<String> {
     let mut v = crate::ribbon::font_families(app);
-    for scheme in deckcraft_model::theme::builtin_font_schemes() {
+    for scheme in seho_model::theme::builtin_font_schemes() {
         v.push(scheme.major.latin);
         v.push(scheme.minor.latin);
     }
@@ -735,7 +735,7 @@ enum CurrentLink {
     /// Nothing is linked. OK sets a new link (a caret at a word boundary inserts text).
     None,
     /// One link covers the text span or every selected shape.
-    One(deckcraft_model::text::Hyperlink),
+    One(seho_model::text::Hyperlink),
     /// The selection mixes different links. OK must not replace them until a new target is chosen.
     Mixed,
 }
@@ -764,8 +764,8 @@ impl HyperlinkSeed {
 
 /// Turn one hyperlink into dialog fields. A slide that is no longer in the deck, and actions this
 /// dialog does not edit (next slide, a program, …), are preserved so OK does not retarget them.
-fn seed_of_link(link: &deckcraft_model::text::Hyperlink, slide_ids: &[deckcraft_model::SlideId]) -> HyperlinkSeed {
-    use deckcraft_model::text::Action;
+fn seed_of_link(link: &seho_model::text::Hyperlink, slide_ids: &[seho_model::SlideId]) -> HyperlinkSeed {
+    use seho_model::text::Action;
     let mut seed = HyperlinkSeed {
         mode: "url",
         url: String::new(),
@@ -799,7 +799,7 @@ fn seed_of_link(link: &deckcraft_model::text::Hyperlink, slide_ids: &[deckcraft_
     seed
 }
 
-fn seed_from(current: CurrentLink, slide_ids: &[deckcraft_model::SlideId]) -> HyperlinkSeed {
+fn seed_from(current: CurrentLink, slide_ids: &[seho_model::SlideId]) -> HyperlinkSeed {
     match current {
         CurrentLink::None => HyperlinkSeed::blank(),
         CurrentLink::Mixed => HyperlinkSeed { preserve: true, url: String::new(), ..HyperlinkSeed::blank() },
@@ -809,11 +809,11 @@ fn seed_from(current: CurrentLink, slide_ids: &[deckcraft_model::SlideId]) -> Hy
 
 /// Links on the half-open span `[a, b)`. A point span is a new link: Insert Hyperlink inserts
 /// there instead of editing a neighbouring run.
-fn link_covering(body: &deckcraft_model::text::TextBody, a: (usize, usize), b: (usize, usize)) -> CurrentLink {
+fn link_covering(body: &seho_model::text::TextBody, a: (usize, usize), b: (usize, usize)) -> CurrentLink {
     if a == b {
         return CurrentLink::None;
     }
-    let mut seen: Option<Option<deckcraft_model::text::Hyperlink>> = None;
+    let mut seen: Option<Option<seho_model::text::Hyperlink>> = None;
     for (pi, para) in body.paragraphs.iter().enumerate() {
         if pi < a.0 || pi > b.0 {
             continue;
@@ -852,7 +852,7 @@ fn link_covering(body: &deckcraft_model::text::TextBody, a: (usize, usize), b: (
     }
 }
 
-fn common_click(clicks: impl IntoIterator<Item = Option<deckcraft_model::text::Hyperlink>>) -> CurrentLink {
+fn common_click(clicks: impl IntoIterator<Item = Option<seho_model::text::Hyperlink>>) -> CurrentLink {
     let mut clicks = clicks.into_iter();
     let Some(first) = clicks.next() else { return CurrentLink::None };
     for next in clicks {
@@ -868,13 +868,13 @@ fn common_click(clicks: impl IntoIterator<Item = Option<deckcraft_model::text::H
 
 /// The link Insert Hyperlink would edit: text when a caret or selection is active, otherwise the
 /// click action shared by the selected shapes.
-fn hyperlink_seed_of(st: Option<&deckcraft_engine::DocState>) -> HyperlinkSeed {
+fn hyperlink_seed_of(st: Option<&seho_engine::DocState>) -> HyperlinkSeed {
     let Some(st) = st else { return HyperlinkSeed::blank() };
-    let ids: Vec<deckcraft_model::SlideId> = st.doc.slides.iter().map(|s| s.id).collect();
+    let ids: Vec<seho_model::SlideId> = st.doc.slides.iter().map(|s| s.id).collect();
     let current = if let Some(t) = &st.selection.text {
-        match deckcraft_engine::cmd::text::body_of(st, t) {
+        match seho_engine::cmd::text::body_of(st, t) {
             Some(body) => {
-                let (a, b) = deckcraft_engine::cmd::text::format_range(st, t);
+                let (a, b) = seho_engine::cmd::text::format_range(st, t);
                 link_covering(body, a, b)
             }
             None => CurrentLink::None,
@@ -998,7 +998,7 @@ impl TrimSeed {
     fn zeros() -> Self {
         TrimSeed { start: "0".into(), end: "0".into(), fade_in: "0".into(), fade_out: "0".into() }
     }
-    fn from_clip(m: &deckcraft_model::MediaClip) -> Self {
+    fn from_clip(m: &seho_model::MediaClip) -> Self {
         TrimSeed {
             start: ms_as_seconds(m.trim_start_ms),
             end: ms_as_seconds(m.trim_end_ms),
@@ -1010,12 +1010,12 @@ impl TrimSeed {
 
 /// The first selected audio or video. Other shapes in the selection are skipped. No media means
 /// the old zeros, which OK then stores.
-fn trim_seed(st: Option<&deckcraft_engine::DocState>) -> TrimSeed {
+fn trim_seed(st: Option<&seho_engine::DocState>) -> TrimSeed {
     let Some(st) = st else { return TrimSeed::zeros() };
     st.selected_shapes()
         .into_iter()
         .find_map(|sh| match &sh.kind {
-            deckcraft_model::ShapeKind::Media(m) => Some(TrimSeed::from_clip(m)),
+            seho_model::ShapeKind::Media(m) => Some(TrimSeed::from_clip(m)),
             _ => None,
         })
         .unwrap_or_else(TrimSeed::zeros)
@@ -1038,11 +1038,11 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             ok || cancel
         }
         "slideSize" => {
-            let cur = app.session.active().map(|s| s.doc.slide_size).unwrap_or(deckcraft_model::defaults::WIDE);
+            let cur = app.session.active().map(|s| s.doc.slide_size).unwrap_or(seho_model::defaults::WIDE);
             ui.label("Slides sized for:");
             let preset = d.get("preset", "");
             egui::ComboBox::from_id_salt("sizes").selected_text(if preset.is_empty() { "Custom" } else { &preset }).show_ui(ui, |ui| {
-                for (label, w, h) in deckcraft_model::defaults::SLIDE_SIZES {
+                for (label, w, h) in seho_model::defaults::SLIDE_SIZES {
                     if ui.selectable_label(preset == *label, *label).clicked() {
                         d.fields.insert("preset".into(), label.to_string());
                         d.fields.insert("w".into(), format!("{:.2}", w / 72.0));
@@ -1369,7 +1369,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             ok || cancel || none
         }
         "action" => {
-            use deckcraft_model::text::Action;
+            use seho_model::text::Action;
             let tab = d.get("tab", "click");
             // Start from the selected shape's current setting for this tab.
             let (cur, slides, shows) = app
@@ -1377,7 +1377,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 .active()
                 .map(|st| {
                     let sh = st.selected_shapes().first().map(|x| if tab == "hover" { x.hover.clone() } else { x.click.clone() }).unwrap_or(None);
-                    let slides: Vec<(deckcraft_model::SlideId, String)> =
+                    let slides: Vec<(seho_model::SlideId, String)> =
                         st.doc.slides.iter().enumerate().map(|(i, sl)| (sl.id, format!("{}. {}", i + 1, sl.title()))).collect();
                     let shows: Vec<String> = st.doc.custom_shows.iter().map(|c| c.name.clone()).collect();
                     (sh, slides, shows)
@@ -1704,7 +1704,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             let (ok, cancel) = buttons(ui, "Insert");
             if ok && !v.is_empty() {
                 let pretty = pretty_equation(&v);
-                let size = app.session.active().map(|s| s.doc.slide_size).unwrap_or(deckcraft_model::defaults::WIDE);
+                let size = app.session.active().map(|s| s.doc.slide_size).unwrap_or(seho_model::defaults::WIDE);
                 run(app, "insert.textBox", json!({"rect": [size.width / 2.0 - 150.0, size.height / 2.0 - 25.0, 300, 50], "text": pretty}));
                 run(app, "text.exit", json!({}));
                 run(app, "format.font", json!({"family": "Liberation Serif"}));
@@ -1803,9 +1803,9 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                                 let end = item.get("end").and_then(Value::as_u64).unwrap_or(0) as usize;
                                 let para = item.get("para").and_then(Value::as_u64).unwrap_or(0) as usize;
                                 let text = app.session.active().and_then(|st| {
-                                    let sh = st.shape(deckcraft_model::ShapeId(shape.as_u64()? as u32))?;
+                                    let sh = st.shape(seho_model::ShapeId(shape.as_u64()? as u32))?;
                                     let pp = match (item.get("row").and_then(Value::as_u64), item.get("col").and_then(Value::as_u64), &sh.kind) {
-                                        (Some(r), Some(c), deckcraft_model::ShapeKind::Table(tb)) => {
+                                        (Some(r), Some(c), seho_model::ShapeKind::Table(tb)) => {
                                             tb.cell(r as usize, c as usize)?.text.paragraphs.get(para)?.text()
                                         }
                                         _ => sh.text.as_ref()?.paragraphs.get(para)?.text(),
@@ -1919,7 +1919,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 let own = (!crate::squiggles::LANGS.iter().any(|(_, t)| t.eq_ignore_ascii_case(&cur))).then(|| (cur.clone(), cur.clone()));
                 let all = own.into_iter().chain(crate::squiggles::LANGS.iter().map(|(n, t)| (n.to_string(), t.to_string())));
                 for (name, tag) in all {
-                    let installed = deckcraft_engine::spell::dictionary(&tag).is_some();
+                    let installed = seho_engine::spell::dictionary(&tag).is_some();
                     let label = if installed { format!("{name}  (dictionary)") } else { name };
                     if ui.selectable_label(lang.eq_ignore_ascii_case(&tag), label).clicked() {
                         d.fields.insert("lang".into(), tag);
@@ -1970,7 +1970,7 @@ fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             let ch = app.session.active().and_then(|s| {
                 s.selected_shapes()
                     .into_iter()
-                    .find_map(|x| if let deckcraft_model::ShapeKind::Chart(c) = &x.kind { Some(((**c).clone(), x.id)) } else { None })
+                    .find_map(|x| if let seho_model::ShapeKind::Chart(c) = &x.kind { Some(((**c).clone(), x.id)) } else { None })
             });
             let Some((c, id)) = ch else {
                 ui.label("Select a chart first.");
@@ -2230,11 +2230,11 @@ fn exact_of(d: &Dialog, key: &str) -> Option<f64> {
     parse_shown(&field_of(d, &format!("{key}Pt")))
 }
 
-fn selection_xfrm(app: &SlideApp) -> Option<deckcraft_geom::Xfrm> {
+fn selection_xfrm(app: &SlideApp) -> Option<seho_geom::Xfrm> {
     let st = app.session.active()?;
     let id = *st.selection.shapes.first()?;
     let sh = st.shape(id)?;
-    Some(deckcraft_engine::cmd::xfrm_of(&st.doc, &st.selection, sh))
+    Some(seho_engine::cmd::xfrm_of(&st.doc, &st.selection, sh))
 }
 
 fn seed_size_position(app: &SlideApp, d: &mut Dialog) {
@@ -2459,11 +2459,11 @@ const DATE_KINDS: [&str; 13] = [
 /// Samples `field_text` can compute for `lang`. Named months and AM/PM exist for English only;
 /// other languages keep the numeric date and the 24-hour times.
 fn date_rows(lang: &str) -> Vec<(&'static str, String)> {
-    let now = deckcraft_text::datetime::DateTime::now_local();
+    let now = seho_text::datetime::DateTime::now_local();
     let mut rows = Vec::new();
     for kind in DATE_KINDS {
         if let Some(now) = now
-            && let Some(sample) = deckcraft_text::datetime::field_text(kind, Some(lang), now)
+            && let Some(sample) = seho_text::datetime::field_text(kind, Some(lang), now)
         {
             rows.push((kind, sample));
         }
@@ -2514,8 +2514,8 @@ fn date_time_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     if ok {
         let lang = d.get("language", "en-US");
         let mut format = d.get("format", "datetime1");
-        let probe = deckcraft_text::datetime::DateTime::new(2026, 10, 9, 20, 5, 7);
-        if deckcraft_text::datetime::field_text(&format, Some(&lang), probe).is_none() {
+        let probe = seho_text::datetime::DateTime::new(2026, 10, 9, 20, 5, 7);
+        if seho_text::datetime::field_text(&format, Some(&lang), probe).is_none() {
             format = "datetime1".into();
         }
         return app.run("insert.dateTime", json!({"format": format, "update": update, "language": lang})).is_ok();
@@ -2607,27 +2607,27 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
     ui.vertical_centered(|ui| {
         let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
         paint_logo(ui.painter(), r);
-        ui.label(egui::RichText::new("DeckCraft").font(theme::bold(22.0)));
+        ui.label(egui::RichText::new("Seho").font(theme::bold(22.0)));
         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
         ui.add_space(6.0);
         ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
         ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
         ui.add_space(6.0);
-        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
-        ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
-        ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+        ui.hyperlink_to("Join our community on Discord", seho_engine::links::DISCORD);
+        ui.hyperlink_to("mahay.com/apps/seho", seho_engine::links::APP_PAGE);
+        ui.hyperlink_to("Source on GitHub", seho_engine::links::GITHUB);
         ui.add_space(6.0);
-        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors").size(11.0).color(t.text_faint));
+        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 Mahay Team and the Seho contributors").size(11.0).color(t.text_faint));
     });
 }
 
 /// "Version X.Y.Z" plus, for release builds, the short commit and build date. The version comes
 /// from `[workspace.package] version` (the single source of truth, `cargo xtask version`); the
-/// release workflow sets `DECKCRAFT_BUILD_SHA` / `DECKCRAFT_BUILD_DATE` at build time.
+/// release workflow sets `SEHO_BUILD_SHA` / `SEHO_BUILD_DATE` at build time.
 pub fn version_line() -> String {
     let mut s = format!("Version {}", env!("CARGO_PKG_VERSION"));
-    let sha = option_env!("DECKCRAFT_BUILD_SHA").map(|s| s.get(..9).unwrap_or(s)).filter(|s| !s.is_empty());
-    let date = option_env!("DECKCRAFT_BUILD_DATE").filter(|s| !s.is_empty());
+    let sha = option_env!("SEHO_BUILD_SHA").map(|s| s.get(..9).unwrap_or(s)).filter(|s| !s.is_empty());
+    let date = option_env!("SEHO_BUILD_DATE").filter(|s| !s.is_empty());
     match (sha, date) {
         (Some(sha), Some(date)) => s.push_str(&format!(" ({sha}, {date})")),
         (Some(x), None) | (None, Some(x)) => s.push_str(&format!(" ({x})")),
@@ -2636,7 +2636,7 @@ pub fn version_line() -> String {
     s
 }
 
-/// DeckCraft's mark, drawn in code: a slide card with a play triangle in our orange.
+/// Seho's mark, drawn in code: a slide card with a play triangle in our orange.
 pub fn paint_logo(p: &egui::Painter, r: Rect) {
     let orange = Color32::from_rgb(0xF2, 0x6B, 0x1D);
     let deep = Color32::from_rgb(0xC2, 0x4E, 0x14);
@@ -2656,7 +2656,7 @@ pub fn paint_logo(p: &egui::Painter, r: Rect) {
 /// the caret, else the first run of the first selected shape; US English when none says.
 pub fn selected_language(app: &SlideApp) -> (String, bool) {
     let Some(st) = app.session.active() else { return ("en-US".into(), false) };
-    let run = |sh: &deckcraft_model::Shape, at: Option<(usize, usize)>| -> Option<deckcraft_model::RunProps> {
+    let run = |sh: &seho_model::Shape, at: Option<(usize, usize)>| -> Option<seho_model::RunProps> {
         let t = sh.text.as_ref()?;
         if let Some((p, c)) = at {
             let para = t.paragraphs.get(p)?;
@@ -3217,7 +3217,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 p["with"] = json!(d.get("with", ""));
                 let msg = match app.session.execute("text.replace", &p) {
                     Ok(v) => format!("Replaced {} occurrence(s).", v.get("replaced").and_then(Value::as_u64).unwrap_or(0)),
-                    Err(_) => format!("DeckCraft can't find “{text}”."),
+                    Err(_) => format!("Seho can't find “{text}”."),
                 };
                 d.fields.insert("status".into(), msg);
                 d.fields.remove("cur");
@@ -3232,7 +3232,7 @@ fn find_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     if find_next {
         let list = app.session.execute("text.find", &q).ok().and_then(|v| v.as_array().cloned()).unwrap_or_default();
         if list.is_empty() {
-            d.fields.insert("status".into(), format!("DeckCraft can't find “{text}”."));
+            d.fields.insert("status".into(), format!("Seho can't find “{text}”."));
             d.fields.remove("cur");
         } else {
             let n = d.get("next", "0").parse::<usize>().unwrap_or(0) % list.len();
@@ -3273,7 +3273,7 @@ mod photo_album_tests;
 /// The export dialog's Animated GIF options (size, seconds per slide, loop, slide range, hidden
 /// slides) as `file.export` params; a slide range that doesn't fit the deck is an error message.
 fn gif_options(app: &SlideApp, ui: &mut Ui, d: &mut Dialog) -> Result<Value, String> {
-    use deckcraft_engine::gif_export::{MAX_SECONDS, MAX_WIDTH, MIN_SECONDS, MIN_WIDTH, SIZE_PRESETS};
+    use seho_engine::gif_export::{MAX_SECONDS, MAX_WIDTH, MIN_SECONDS, MIN_WIDTH, SIZE_PRESETS};
     let n = app.session.active().map_or(0, |s| s.doc.slides.len());
     let size = d.get("gifSize", "medium");
     let size_label = |k: &str| match k {
@@ -3314,7 +3314,7 @@ fn gif_options(app: &SlideApp, ui: &mut Ui, d: &mut Dialog) -> Result<Value, Str
         json!(size)
     };
     let seconds = num(d, "gifSeconds", f64::NAN);
-    if deckcraft_engine::gif_export::check_seconds(seconds).is_err() {
+    if seho_engine::gif_export::check_seconds(seconds).is_err() {
         return Err(format!("Seconds per slide: enter {MIN_SECONDS} to {MAX_SECONDS}"));
     }
     let mut p = json!({"width": width, "secondsPerSlide": seconds, "loop": forever, "includeHidden": hidden});
@@ -3352,8 +3352,8 @@ mod alt_text_tests {
 
 #[cfg(test)]
 mod tests {
-    use deckcraft_model::text::{Action, Hyperlink, Run, TextBody};
-    use deckcraft_model::{Presentation, SlideId};
+    use seho_model::text::{Action, Hyperlink, Run, TextBody};
+    use seho_model::{Presentation, SlideId};
 
     use super::{
         CurrentLink, HyperlinkSeed, common_click, hyperlink_command, hyperlink_seed_of, hyperlink_should_apply, link_covering, seed_from,
@@ -3380,7 +3380,7 @@ mod tests {
         use serde_json::json;
 
         use crate::SlideApp;
-        let dir = std::env::temp_dir().join(format!("deckcraft-ui-gif-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("seho-ui-gif-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("deck.gif");
         let picked = path.to_string_lossy().to_string();
@@ -3393,7 +3393,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut session = deckcraft_engine::Session::with_new();
+        let mut session = seho_engine::Session::with_new();
         session.execute("slide.new", &json!({})).unwrap();
         let mut harness = egui_kittest::Harness::builder().with_size(vec2(1200.0, 900.0)).build_ui_state(
             |ui, app: &mut SlideApp| {
@@ -3524,8 +3524,8 @@ mod tests {
             slide.shapes[0].text = Some(body);
             slide.shapes[0].id
         };
-        let mut st = deckcraft_engine::DocState::new(doc, None, "t".into());
-        st.selection.text = Some(deckcraft_engine::TextSel { shape: shape_id, anchor: (0, 8), caret: (0, 8), ..Default::default() });
+        let mut st = seho_engine::DocState::new(doc, None, "t".into());
+        st.selection.text = Some(seho_engine::TextSel { shape: shape_id, anchor: (0, 8), caret: (0, 8), ..Default::default() });
         let seed = hyperlink_seed_of(Some(&st));
         assert_eq!(seed.mode, "url");
         assert_eq!(seed.url, "https://example.org");
@@ -3547,7 +3547,7 @@ mod tests {
         assert_eq!(seed.tip, "shape tip");
         assert!(seed.highlight);
 
-        st.selection.text = Some(deckcraft_engine::TextSel { shape: shape_id, anchor: (0, 11), caret: (0, 11), ..Default::default() });
+        st.selection.text = Some(seho_engine::TextSel { shape: shape_id, anchor: (0, 11), caret: (0, 11), ..Default::default() });
         let seed = hyperlink_seed_of(Some(&st));
         assert_eq!(seed, HyperlinkSeed::blank(), "a caret at the end of the word inserts a new link");
     }
@@ -3579,7 +3579,7 @@ mod zoom_tests {
 mod trim_media_tests {
     use std::sync::Arc;
 
-    use deckcraft_model::{MediaClip, Presentation, ShapeId, ShapeKind};
+    use seho_model::{MediaClip, Presentation, ShapeId, ShapeKind};
 
     use super::{ms_as_seconds, seconds_text_to_ms, trim_seed};
 
@@ -3610,7 +3610,7 @@ mod trim_media_tests {
             slide.shapes.push(media);
             (title, ShapeId(900))
         };
-        let mut st = deckcraft_engine::DocState::new(doc, None, "t".into());
+        let mut st = seho_engine::DocState::new(doc, None, "t".into());
         st.selection.shapes = vec![media_id.0];
         assert_eq!(trim_seed(Some(&st)).start, "0", "a title shape is not a clip");
         st.selection.shapes = vec![media_id.0, media_id.1];

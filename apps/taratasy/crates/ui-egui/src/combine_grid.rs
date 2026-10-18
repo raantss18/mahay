@@ -18,9 +18,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, TextureHandle, Vec2, pos2, vec2};
-use pdfcraft_render::{RenderConfig, RenderPool, RenderRequest, Retiring};
+use taratasy_render::{RenderConfig, RenderPool, RenderRequest, Retiring};
 
-use crate::PdfCraftApp;
+use crate::TaratasyApp;
 use crate::combine_ui::{CombineFile, ERROR, Lock, RowAction, WARNING};
 use crate::icons;
 use crate::theme::{self, Tokens};
@@ -425,7 +425,7 @@ fn texture(
     ctx: &egui::Context,
     slot: Slot,
     size: [u32; 2],
-    pixels: pdfcraft_render::Pixels,
+    pixels: taratasy_render::Pixels,
     max_side: usize,
 ) -> Result<(TextureHandle, usize), String> {
     let [w, h] = size.map(|v| v as usize);
@@ -525,7 +525,7 @@ pub(crate) fn pages_shown(cache: &mut HashMap<u64, PageList>, f: &CombineFile) -
 }
 
 /// The grid's places, in order: each file's card, or its pages when it is expanded.
-fn layout(app: &mut PdfCraftApp) -> Vec<Cell> {
+fn layout(app: &mut TaratasyApp) -> Vec<Cell> {
     let tab = &mut app.combine_tab;
     let mut cells = Vec::with_capacity(app.combine_draft.len());
     for (file, f) in app.combine_draft.iter().enumerate() {
@@ -558,7 +558,7 @@ fn file_gap(cells: &[Cell], at: usize, files: usize) -> usize {
 
 /// The grid of files, in the card that holds the list. Returns what the user did.
 pub(crate) fn grid(
-    app: &mut PdfCraftApp,
+    app: &mut TaratasyApp,
     ui: &mut egui::Ui,
     t: &Tokens,
     checks: &[Result<usize, String>],
@@ -1083,7 +1083,7 @@ impl Card {
 /// The file a card's magnifier opened, shown large over the page: one of the pages it adds at a
 /// time, flipped with the buttons or the Left and Right keys; Esc, the close button or a click
 /// outside closes it. It closes by itself when the file leaves the list or has nothing to show.
-pub(crate) fn preview(app: &mut PdfCraftApp, ctx: &egui::Context, t: &Tokens) {
+pub(crate) fn preview(app: &mut TaratasyApp, ctx: &egui::Context, t: &Tokens) {
     // The command palette goes over everything: the preview waits under it (drawn again after).
     if app.palette_open {
         return;
@@ -1219,7 +1219,7 @@ pub(crate) fn preview(app: &mut PdfCraftApp, ctx: &egui::Context, t: &Tokens) {
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// The file shown large, the page on screen (0-based, in the file) and its render, while it
     /// shows (tests and the control channel).
     pub fn combine_preview(&self) -> Option<(String, usize, ThumbState)> {

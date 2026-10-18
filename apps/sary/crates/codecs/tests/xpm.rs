@@ -1,4 +1,4 @@
-use photocraft_codecs::{ChannelLayout, CodecError, Format, Image, caps, decode, decode_as, detect, encode, from_extension};
+use sary_codecs::{ChannelLayout, CodecError, Format, Image, caps, decode, decode_as, detect, encode, from_extension};
 
 const SAMPLE: &[u8] = br#"/* XPM */
 static char *icon[] = {

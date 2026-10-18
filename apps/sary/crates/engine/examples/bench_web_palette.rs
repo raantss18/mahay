@@ -1,9 +1,9 @@
 //! Compare generated-palette and edited fixed-palette GIF exports on a 24 MP image.
-//! cargo run --release -p photocraft-engine --example bench_web_palette
+//! cargo run --release -p sary-engine --example bench_web_palette
 use std::time::Instant;
 
-use photocraft_engine::web_cmds::{WebSettings, optimize};
-use photocraft_geom::Rect;
+use sary_engine::web_cmds::{WebSettings, optimize};
+use sary_geom::Rect;
 use serde_json::json;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

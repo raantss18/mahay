@@ -1,5 +1,5 @@
 [package]
-name = "deckcraft-matroska"
+name = "seho-matroska"
 description = "Clean-room Matroska (MKV) and WebM demuxer and muxer"
 version.workspace = true
 edition.workspace = true

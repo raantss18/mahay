@@ -1,7 +1,7 @@
 //! Substitution rules for declarative specs: what a template may name, and that the structure of
 //! a request can never come from the user's text.
 
-use craft_ai_core::spec::template::{Slot, Values, render_text, render_value, slots, value_slots};
+use mahay_ai_core::spec::template::{Slot, Values, render_text, render_value, slots, value_slots};
 use serde_json::json;
 
 fn values() -> Values<'static> {

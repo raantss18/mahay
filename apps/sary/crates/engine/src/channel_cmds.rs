@@ -12,11 +12,11 @@
 //! targeted channel when the caller didn't pass a target. Targeting a single colour channel keeps
 //! those commands from touching the other colour channels of the layer ([`restrict_to_color`]).
 
-use photocraft_algo::selection::{self as sel, SelectionMode};
-use photocraft_color::{BlendMode, Color, ColorMode, PixelFormat, blend::blend_channel};
-use photocraft_doc::{AlphaChannel, ColorIndicates, Document, Layer, LayerContent, LayerId};
-use photocraft_geom::{Rect, TileCoord};
-use photocraft_raster::{Surface, from_rgba, to_rgba};
+use sary_algo::selection::{self as sel, SelectionMode};
+use sary_color::{BlendMode, Color, ColorMode, PixelFormat, blend::blend_channel};
+use sary_doc::{AlphaChannel, ColorIndicates, Document, Layer, LayerContent, LayerId};
+use sary_geom::{Rect, TileCoord};
+use sary_raster::{Surface, from_rgba, to_rgba};
 use serde::Serialize;
 use serde_json::{Value, json};
 
@@ -92,7 +92,7 @@ impl ChannelView {
             && self.shown_layer_mask(doc).is_none()
     }
     /// The layer mask shown on the canvas (#196) and how, if its layer still has a mask.
-    pub fn shown_layer_mask<'a>(&self, doc: &'a Document) -> Option<(&'a photocraft_doc::LayerMask, crate::mask_view_cmds::MaskViewMode)> {
+    pub fn shown_layer_mask<'a>(&self, doc: &'a Document) -> Option<(&'a sary_doc::LayerMask, crate::mask_view_cmds::MaskViewMode)> {
         let v = self.layer_mask?;
         Some((doc.layer(v.layer)?.mask.as_ref()?, v.mode))
     }
@@ -399,7 +399,7 @@ fn native_pixels(doc: &Document, layer: Option<LayerId>) -> Result<(Vec<f32>, us
             Ok((raw.chunks_exact(sf.channels()).flat_map(|p| from_rgba(&fmt, to_rgba(&sf, p))).collect(), n))
         }
         None => {
-            let buf = photocraft_compose::render(doc, r);
+            let buf = sary_compose::render(doc, r);
             Ok((buf.px.iter().flat_map(|p| from_rgba(&fmt, *p)).collect(), n))
         }
     }
@@ -451,7 +451,7 @@ fn ref_planes(doc: &Document, layer: Option<LayerId>, active: Option<LayerId>, r
                 // Use its existing renderer rather than treating it as a canvas-wide fill.
                 None => match &l.content {
                     LayerContent::Shape(shape) => vec![
-                        photocraft_vector::CompiledShape::new(shape, photocraft_vector::DEFAULT_TOLERANCE, area)
+                        sary_vector::CompiledShape::new(shape, sary_vector::DEFAULT_TOLERANCE, area)
                             .render_rgba(area)
                             .into_iter()
                             .map(|p| p[3])
@@ -473,8 +473,8 @@ fn ref_planes(doc: &Document, layer: Option<LayerId>, active: Option<LayerId>, r
             let l = doc.layer(id).ok_or(EngineError::NoLayer(id))?;
             let m = l.vector_mask.as_ref().ok_or_else(|| EngineError::Other(format!("layer \"{}\" has no vector mask", l.name)))?;
             // The path's shape, whether or not the mask is enabled (as Photoshop loads it).
-            let shape = photocraft_doc::VectorMask { enabled: true, density: 1.0, feather: 0.0, ..m.clone() };
-            vec![photocraft_vector::vector_mask_values(&shape, area)]
+            let shape = sary_doc::VectorMask { enabled: true, density: 1.0, feather: 0.0, ..m.clone() };
+            vec![sary_vector::vector_mask_values(&shape, area)]
         }
     })
 }
@@ -1513,7 +1513,7 @@ fn merge_spot(s: &mut Session, p: &Value) -> Result<Value> {
     s.edit("Merge Spot Channel", |doc, active| {
         let area = doc.bounds();
         let fmt = doc.pixel_format();
-        let comp = photocraft_compose::render(doc, area);
+        let comp = sary_compose::render(doc, area);
         let k = read_plane(&doc.channels[i].surface, area);
         let ink = ink.to_rgb();
         // Ink over the image: opaque at 100% solidity, multiplied (transparent ink) at 0%.

@@ -1,23 +1,23 @@
 //! Photoshop-style guide layout dialog. Its preview is a pure guide overlay, never an edit.
 
 use egui::{Color32, Stroke};
-use photocraft_doc::{Document, Guides};
+use sary_doc::{Document, Guides};
 use serde_json::{Map, Value, json};
 
-use crate::{PhotocraftApp, theme::Tokens, widgets};
+use crate::{SaryApp, theme::Tokens, widgets};
 
 const COMMAND: &str = "view.newGuideLayout";
 const MARK: &str = "__guideLayout";
 
 /// A `"#rrggbb"` colour as drawn.
 fn rgb(hex: &str) -> Option<Color32> {
-    photocraft_engine::prefs::parse_hex(hex).map(|[r, g, b]| Color32::from_rgb(r, g, b))
+    sary_engine::prefs::parse_hex(hex).map(|[r, g, b]| Color32::from_rgb(r, g, b))
 }
 
 /// The Color list: New Guide's colours (`GUIDE_COLORS`) by their `"#rrggbb"`, then `current` as
 /// Custom when it's none of them.
 fn color_options(current: &str) -> Vec<(String, &'static str)> {
-    let mut colors: Vec<(String, &'static str)> = photocraft_engine::edit_cmds::GUIDE_COLORS
+    let mut colors: Vec<(String, &'static str)> = sary_engine::edit_cmds::GUIDE_COLORS
         .iter()
         .map(|(name, [r, g, b])| (format!("#{r:02x}{g:02x}{b:02x}"), crate::new_guide_ui::color_label(name)))
         .collect();
@@ -32,7 +32,7 @@ pub fn owns(f: &Map<String, Value>) -> bool {
 }
 
 /// Alt+Cancel (Reset): factory New Guide Layout values, not the last-used remembered layout.
-pub fn reset(app: &PhotocraftApp, f: &mut Map<String, Value>) {
+pub fn reset(app: &SaryApp, f: &mut Map<String, Value>) {
     if !owns(f) {
         return;
     }
@@ -65,7 +65,7 @@ fn positive(f: &Map<String, Value>, key: &str) -> bool {
     f.get(key).and_then(Value::as_f64).is_some_and(|n| n > 0.0)
 }
 
-pub fn open(app: &mut PhotocraftApp) -> u64 {
+pub fn open(app: &mut SaryApp) -> u64 {
     let mut f = app.ui.view.guide_layout.as_object().cloned().unwrap_or_default();
     f.insert(MARK.into(), json!(true));
     f.insert("__command".into(), json!(COMMAND));
@@ -74,7 +74,7 @@ pub fn open(app: &mut PhotocraftApp) -> u64 {
     f.insert("__preview".into(), json!(true));
     f.insert("color".into(), json!(app.session.prefs().guides_grid_and_slices.guide_color));
     f.entry("target").or_insert_with(|| json!("document"));
-    if f.get("target").and_then(Value::as_str) == Some("selectedArtboards") && photocraft_engine::guide_layout::selected_artboards(&app.session).is_empty() {
+    if f.get("target").and_then(Value::as_str) == Some("selectedArtboards") && sary_engine::guide_layout::selected_artboards(&app.session).is_empty() {
         f.insert("target".into(), json!("document"));
     }
     f.entry("__preset").or_insert_with(|| json!("custom"));
@@ -124,11 +124,11 @@ pub fn params(f: &Map<String, Value>) -> Value {
     Value::Object(p)
 }
 
-fn source(app: &PhotocraftApp) -> Value {
+fn source(app: &SaryApp) -> Value {
     app.session.active().map(|st| json!([st.doc.id, st.revision, st.active_layer, st.selected_layers])).unwrap_or(Value::Null)
 }
 
-fn calculate(app: &PhotocraftApp, f: &Map<String, Value>) -> Result<Guides, String> {
+fn calculate(app: &SaryApp, f: &Map<String, Value>) -> Result<Guides, String> {
     let st = app.session.active().ok_or("no document")?;
     if f.get("__document") != Some(&json!(st.doc.id)) {
         return Err("the guide layout belongs to another document".into());
@@ -141,16 +141,16 @@ fn calculate(app: &PhotocraftApp, f: &Map<String, Value>) -> Result<Guides, Stri
     {
         return Ok(guides);
     }
-    photocraft_engine::guide_layout::calculate(&app.session, &params).map(|l| l.guides).map_err(|e| e.to_string())
+    sary_engine::guide_layout::calculate(&app.session, &params).map(|l| l.guides).map_err(|e| e.to_string())
 }
 
-pub fn validate(app: &PhotocraftApp, f: &Map<String, Value>) -> Result<(), String> {
+pub fn validate(app: &SaryApp, f: &Map<String, Value>) -> Result<(), String> {
     let color = f.get("color").and_then(Value::as_str).unwrap_or("#4affff");
     rgb(color).ok_or("invalid guide color")?;
     calculate(app, f).map(|_| ())
 }
 
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     validate(app, f)?;
     let color = f.get("color").and_then(Value::as_str).unwrap_or("#4affff");
     // Colour is the existing global guide display preference, not document data.
@@ -171,7 +171,7 @@ pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value,
 }
 
 /// Full replacement guide set for the dialog's own document. Cancel/removal drops it immediately.
-pub fn preview(app: &PhotocraftApp, doc: &Document) -> Option<(Guides, Color32)> {
+pub fn preview(app: &SaryApp, doc: &Document) -> Option<(Guides, Color32)> {
     let dialog = app.ui.dialogs.iter().rev().find(|d| owns(&d.fields))?;
     let f = &dialog.fields;
     if !on(f, "__preview", true) || f.get("__document") != Some(&json!(doc.id)) {
@@ -255,7 +255,7 @@ fn axis(ui: &mut egui::Ui, f: &mut Map<String, Value>, rows: bool) {
     });
 }
 
-fn main_fields(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+fn main_fields(app: &SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     let before: Map<String, Value> = f.iter().filter(|(key, _)| !key.starts_with("__preview")).map(|(k, v)| (k.clone(), v.clone())).collect();
     egui::Grid::new("guide-header").spacing([8.0, 6.0]).show(ui, |ui| {
         ui.label(tl!("Preset:"));
@@ -298,7 +298,7 @@ fn main_fields(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value
         ui.label(tl!("Target:"));
         let mut target = f.get("target").and_then(Value::as_str).unwrap_or("document").to_string();
         let mut options = vec![("document".to_string(), "Document")];
-        if !photocraft_engine::guide_layout::selected_artboards(&app.session).is_empty() {
+        if !sary_engine::guide_layout::selected_artboards(&app.session).is_empty() {
             options.push(("selectedArtboards".into(), "Selected Artboards"));
         }
         if widgets::dropdown(ui, "guide-target", &mut target, &options, 222.0) {
@@ -362,7 +362,7 @@ fn main_fields(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value
 }
 
 /// Own the action rail as well as the body, so OK/Cancel/Preview follow Photoshop's arrangement.
-pub fn body(app: &PhotocraftApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, interactive: bool) -> Option<bool> {
+pub fn body(app: &SaryApp, ui: &mut egui::Ui, f: &mut Map<String, Value>, interactive: bool) -> Option<bool> {
     let before = (params(f), on(f, "__preview", true), f.get("color").cloned());
     let mut outcome = None;
     ui.horizontal_top(|ui| {

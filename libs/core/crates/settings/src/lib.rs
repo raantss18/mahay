@@ -1,6 +1,6 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
-//! Shared settings storage for the Craft suite.
+//! Shared settings storage for the Mahay suite.
 //!
 //! Each application keeps its own settings type and defaults. This crate decides where the
 //! `config.toml` lives, loads it without ever failing, saves it atomically while the
@@ -10,7 +10,7 @@
 //! merge values into it, so comments and keys the application does not know stay in place.
 //!
 //! ```no_run
-//! use craft_settings::{Location, Settings, SettingsStore};
+//! use mahay_settings::{Location, Settings, SettingsStore};
 //! use serde::{Deserialize, Serialize};
 //!
 //! #[derive(Serialize, Deserialize, Default, Clone, PartialEq)]
@@ -26,7 +26,7 @@
 //! }
 //!
 //! impl Settings for Prefs {
-//!     const APP_ID: &'static str = "photocraft";
+//!     const APP_ID: &'static str = "sary";
 //!     const SCHEMA_VERSION: u32 = 1;
 //! }
 //!
@@ -76,7 +76,7 @@ pub trait Settings: Serialize + DeserializeOwned + Default + Clone + PartialEq {
     const SCHEMA_VERSION: u32;
 
     /// File names next to the executable that turn on portable mode (any one; contents ignored).
-    /// Override to keep an existing portable layout, e.g. `&["portable.txt", "PhotoCraft.portable"]`.
+    /// Override to keep an existing portable layout, e.g. `&["portable.txt", "Sary.portable"]`.
     const PORTABLE_MARKERS: &'static [&'static str] = paths_default::MARKERS;
 
     /// Folder beside the executable that holds settings in portable mode.

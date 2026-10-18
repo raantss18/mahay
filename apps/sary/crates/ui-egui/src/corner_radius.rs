@@ -7,10 +7,10 @@
 //! click without movement changes nothing.
 
 use egui::{Color32, Modifiers, Pos2, Stroke};
-use photocraft_doc::LayerContent;
-use photocraft_doc::vector::LiveShape;
+use sary_doc::LayerContent;
+use sary_doc::vector::LiveShape;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ToolEvent;
 use crate::state::Tool;
 
@@ -44,7 +44,7 @@ pub struct Drag {
 }
 
 /// Do the widgets show with the current tool?
-fn shows(app: &PhotocraftApp) -> bool {
+fn shows(app: &SaryApp) -> bool {
     app.ui.transform.is_none()
         && match app.ui.tool {
             Tool::PathSelection | Tool::Rectangle => true,
@@ -54,7 +54,7 @@ fn shows(app: &PhotocraftApp) -> bool {
 }
 
 /// The selected layers that are live rectangles, front first.
-fn targets(app: &PhotocraftApp) -> Vec<Target> {
+fn targets(app: &SaryApp) -> Vec<Target> {
     if !shows(app) {
         return Vec::new();
     }
@@ -110,13 +110,13 @@ fn radius_after(rect: [f64; 4], i: usize, from: f64, start: [f64; 2], p: [f64; 2
     if r.is_finite() { r.max(0.0) } else { from }
 }
 
-fn zoom(app: &PhotocraftApp) -> f64 {
+fn zoom(app: &SaryApp) -> f64 {
     f64::from(app.point_zoom().max(0.01))
 }
 
 /// The widget of `targets` within grabbing distance of document point `p`: the rectangle (an
 /// index into `targets`) and its corner, the nearest when several are close.
-fn hit(app: &PhotocraftApp, targets: &[Target], p: [f64; 2]) -> Option<(usize, usize)> {
+fn hit(app: &SaryApp, targets: &[Target], p: [f64; 2]) -> Option<(usize, usize)> {
     let z = zoom(app);
     let tol = 7.0 / z;
     targets
@@ -135,12 +135,12 @@ fn hit(app: &PhotocraftApp, targets: &[Target], p: [f64; 2]) -> Option<(usize, u
 
 /// Is a widget under document point `p`, or one being dragged? The canvas then shows the corner
 /// radius cursor.
-pub fn hovers(app: &PhotocraftApp, p: [f64; 2]) -> bool {
+pub fn hovers(app: &SaryApp, p: [f64; 2]) -> bool {
     app.ui.corner_radius.is_some() || hit(app, &targets(app), p).is_some()
 }
 
 /// Canvas pointer events for the corner widgets; false when the event is not theirs.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent, mods: Modifiers) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent, mods: Modifiers) -> bool {
     match ev {
         ToolEvent::Down { x, y, .. } => {
             if mods.command {
@@ -204,7 +204,7 @@ fn dragged_radius(d: &Drag) -> Option<f64> {
 
 /// The widgets of every selected live rectangle; while one is dragged, the new outlines and the
 /// radius beside the pointer (`R: 25.0 px`), as in Photoshop.
-pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, to_scr: &dyn Fn([f64; 2]) -> Pos2, accent: Color32) {
+pub fn draw(app: &SaryApp, painter: &egui::Painter, to_scr: &dyn Fn([f64; 2]) -> Pos2, accent: Color32) {
     let drag = app.ui.corner_radius.as_ref();
     if let Some(r) = drag.and_then(dragged_radius)
         && let Some(at) = painter.ctx().input(|i| i.pointer.hover_pos())
@@ -216,7 +216,7 @@ pub fn draw(app: &PhotocraftApp, painter: &egui::Painter, to_scr: &dyn Fn([f64; 
         let now = drag.and_then(|d| d.targets.iter().position(|g| g.layer == t.layer).and_then(|i| d.now.get(i)));
         let radii = now.copied().unwrap_or(t.radii);
         if now.is_some() {
-            let path = photocraft_vector::shapes::rounded_rect(t.rect[0], t.rect[1], t.rect[2], t.rect[3], radii);
+            let path = sary_vector::shapes::rounded_rect(t.rect[0], t.rect[1], t.rect[2], t.rect[3], radii);
             crate::vector_ui::draw_outline(painter, &path, to_scr, accent);
         }
         for i in 0..4 {

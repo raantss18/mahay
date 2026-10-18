@@ -1,26 +1,26 @@
-# DeckCraft roadmap: milestones and what's next
+# Seho roadmap: milestones and what's next
 
 > **Last reviewed:** 2026-10-14 · **Last updated:** 2026-10-14 · **Change:** major (community PR wave 2026-10-14: PPTX corpus, presenter and show controls, review navigation, starter decks, Grid Options and New Window, WordArt gallery and handles, pen pressure; beta items 9 and 10 narrowed; duplicated rows and headers folded; previous: minor, core-workflow alpha gate added) · **Target:** Microsoft PowerPoint for Mac 16.113 (Microsoft 365)
 
-Forward-looking: where DeckCraft is going and in what order. The one-page summary is
+Forward-looking: where Seho is going and in what order. The one-page summary is
 [ROADMAP.md](../ROADMAP.md); every shortfall is in [gaps.md](gaps.md); numbers are in
 [target-app-parity.md](target-app-parity.md). Hours are Opus 5.5 agent wall-clock hours.
 
 ## Alpha gate: PowerPoint's core workflows
 
 What a typical PowerPoint user does every day, checked end to end on macOS, the main platform
-(craftrules `standards/progress-docs.md`, "The core-workflow gate"). Every workflow passes, so
-DeckCraft stays **alpha**. The "partial" rows don't block the workflow, but they are its weakest
+(mahay-rules `standards/progress-docs.md`, "The core-workflow gate"). Every workflow passes, so
+Seho stays **alpha**. The "partial" rows don't block the workflow, but they are its weakest
 points and lead the beta plan.
 
 | Core workflow | Works end to end? | Evidence | Hours to full pass |
 |---|---|---|---|
-| Build a deck from scratch (theme, layouts, titles and bullets, shapes, pictures from file), save, close and reopen it | yes | Commands for all of it; `.deckcraft` and `.pptx` round-trip tests (`crates/pptx/tests/roundtrip.rs`, `crates/format`); AutoRecover. Close discards edits without asking (#60, PR #75); image *paste* fails on Windows/Linux (#53), though insert-from-file works | 1–3 |
+| Build a deck from scratch (theme, layouts, titles and bullets, shapes, pictures from file), save, close and reopen it | yes | Commands for all of it; `.seho` and `.pptx` round-trip tests (`crates/pptx/tests/roundtrip.rs`, `crates/format`); AutoRecover. Close discards edits without asking (#60, PR #75); image *paste* fails on Windows/Linux (#53), though insert-from-file works | 1–3 |
 | Open a colleague's `.pptx`, edit it, save it back as `.pptx` that PowerPoint opens | partial (not blocking) | The reader is lenient and keeps unknown objects. Files open in PowerPoint without repair (checked 2026-10-06). But only generated decks have been tested; text inside EMF/WMF pictures is missing; comment threads, media options and rewind are lost (#70, #74, #77) | 31–55 |
 | Present: full-screen show with transitions, animations, media, presenter view with notes, next slide and timer | yes | 48/48 transitions, 64 effects, triggers, builds, media playback, presenter window, See All Slides and zoom. The presenter timer pauses and resets, and notes have a size control. A custom show plays only its slides. Typing a slide number during the show shows it, and Enter goes there. Presenter view isn't placed on the second display automatically (drag it there; #433) | 2–4 |
 | Add business content: tables, charts with their data, simple diagrams | partial (not blocking) | Tables with styles, merge/split, all D or P. Charts insert with the common types and edit data in the Chart Data dialog (P0 partial); SmartArt is basic (pre-drawn shapes) | 12–20 |
 | Share the deck: PDF of slides, notes or handouts; images | yes | `file.export` PDF with text layer, links, bookmarks, handouts 1–9; PNG/JPEG. Artwork is raster in the PDF; no direct print (print the PDF) | 10–16 |
-| Review: comments with replies, resolve, spelling | partial (not blocking) | Comments, replies and resolve work and survive `.deckcraft` and `.pptx` (#70); Previous and Next walk every slide and the pane lists them; spelling uses installed Hunspell dictionaries (only a short built-in list where none is installed) | 4–8 |
+| Review: comments with replies, resolve, spelling | partial (not blocking) | Comments, replies and resolve work and survive `.seho` and `.pptx` (#70); Previous and Next walk every slide and the pane lists them; spelling uses installed Hunspell dictionaries (only a short built-in list where none is installed) | 4–8 |
 
 ## Current focus (2026-10-10)
 
@@ -39,7 +39,7 @@ points and lead the beta plan.
 ## Plan to beta (~120–210 h; ~40–70 h wall clock with 3–4 agents)
 
 Beta means ~75% ready for real work and opening and saving PowerPoint's `.pptx` reliably
-(craftrules `standards/progress-docs.md`). Ranked:
+(mahay-rules `standards/progress-docs.md`). Ranked:
 
 | # | Work | Hours | Moves |
 |---|---|---|---|
@@ -94,7 +94,7 @@ From the local execution plan (`plan/execution-plan.md`, gitignored). Status as 
 
 ## History: the 2026-10-07 alpha checklist
 
-Before the craftrules stages existed, DeckCraft defined "alpha" as: install a signed build on
+Before the mahay-rules stages existed, Seho defined "alpha" as: install a signed build on
 macOS, Windows or Linux, make a real deck from scratch or from a PowerPoint file, present it with
 transitions, animations and media, save back to `.pptx`/PDF without losing work, and hit no crashes
 on common paths. On 2026-10-07 it was ~80% there with these blockers:
@@ -108,7 +108,7 @@ on common paths. On 2026-10-07 it was ~80% there with these blockers:
 | UI fidelity pass on the most-used ribbon groups and dialogs; first run | Partly (start-screen fixes #20, #49); beta item 11 |
 | Mascot app icon, README screenshots, user docs | App icon (with a scalable SVG, #29) and README screenshots in place; user docs open |
 
-By the standard's definitions DeckCraft is **alpha** (~55% ready); these blockers now feed the beta
+By the standard's definitions Seho is **alpha** (~55% ready); these blockers now feed the beta
 plan above.
 
 ## Revision history

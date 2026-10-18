@@ -1,6 +1,6 @@
 [package]
-name = "pdfcraft-geom"
-description = "Geometry primitives for PdfCraft (points, rects, page transforms)"
+name = "taratasy-geom"
+description = "Geometry primitives for Taratasy (points, rects, page transforms)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

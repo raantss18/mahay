@@ -4,12 +4,12 @@
 //! confirmation, as Acrobat asks) or clear them.
 
 use egui::{Color32, CornerRadius, Pos2, Rect, Stroke};
-use pdfcraft_engine::{Edit, NewAnnotation, REDACT_PATTERNS, REDACTION_CODE_SETS, RedactPattern, RedactionCodeSet, Rgb, Shape, Style, rect_quad};
-use pdfcraft_render::DocInfo;
+use taratasy_engine::{Edit, NewAnnotation, REDACT_PATTERNS, REDACTION_CODE_SETS, RedactPattern, RedactionCodeSet, Rgb, Shape, Style, rect_quad};
+use taratasy_render::DocInfo;
 
 use crate::canvas::{DocView, PageXform};
 use crate::theme::Tokens;
-use crate::{PdfCraftApp, widgets};
+use crate::{TaratasyApp, widgets};
 
 const MARK_RED: Color32 = Color32::from_rgb(0xE3, 0x22, 0x22);
 
@@ -25,7 +25,7 @@ pub struct RedactPrefs {
     pub code_set: RedactionCodeSet,
     pub codes: Vec<&'static str>,
     /// Overlay text font, size (0 = auto), colour, alignment and repetition.
-    pub look: pdfcraft_engine::OverlayLook,
+    pub look: taratasy_engine::OverlayLook,
     /// How an unapplied mark looks on the page: its outline colour (`/C`), the fill shown while
     /// the pointer is over it (a preference, not written to the file) and its opacity (`/CA`).
     pub outline: Rgb,
@@ -140,7 +140,7 @@ impl RedactPrefs {
             d.codes = d.code_set.codes.iter().copied().filter(|c| codes.iter().any(|x| x.as_str() == Some(c))).collect();
         }
         if let Some(f) = v["font"].as_str() {
-            d.look.font = pdfcraft_engine::OverlayFont::from_resource(f);
+            d.look.font = taratasy_engine::OverlayFont::from_resource(f);
         }
         if let Some(n) = v["size"].as_f64().filter(|n| (0.0..=400.0).contains(n)) {
             d.look.size = n;
@@ -294,7 +294,7 @@ pub(crate) fn paint(ui: &egui::Ui, painter: &egui::Painter, page: usize, view: &
     }
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     /// Mark every match of the search draft on every page; returns how many were marked.
     pub fn redact_search(&mut self) -> usize {
         let Some((_, id)) = self.active_ids() else { return 0 };
@@ -302,21 +302,21 @@ impl PdfCraftApp {
         let d = self.redact_search.clone();
         let needles = match d.mode {
             SearchMode::Phrase if !d.text.trim().is_empty() => vec![d.text.clone()],
-            SearchMode::Words => pdfcraft_engine::redact_word_list(&d.words),
+            SearchMode::Words => taratasy_engine::redact_word_list(&d.words),
             SearchMode::Phrase | SearchMode::Patterns => Vec::new(),
         };
         if d.mode != SearchMode::Patterns && needles.is_empty() {
             return 0;
         }
-        let config = pdfcraft_render::RenderConfig { password: doc.password.as_deref().map(std::sync::Arc::from), ..Default::default() };
-        let mut r = pdfcraft_render::PageRenderer::new(doc.bytes.clone(), config);
+        let config = taratasy_render::RenderConfig { password: doc.password.as_deref().map(std::sync::Arc::from), ..Default::default() };
+        let mut r = taratasy_render::PageRenderer::new(doc.bytes.clone(), config);
         let mut edits = Vec::new();
         let author = self.comment_prefs.author.clone();
         for (page, page_info) in doc.info.pages.iter().enumerate() {
-            let out = r.render(pdfcraft_render::RenderRequest { page, kind: pdfcraft_render::RequestKind::Text, scale: 1.0, ..Default::default() });
+            let out = r.render(taratasy_render::RenderRequest { page, kind: taratasy_render::RequestKind::Text, scale: 1.0, ..Default::default() });
             let Some(text) = out.text else { continue };
             let hits = match d.mode {
-                SearchMode::Patterns => text.find_with(|c| pdfcraft_engine::find_pattern(d.pattern, c)),
+                SearchMode::Patterns => text.find_with(|c| taratasy_engine::find_pattern(d.pattern, c)),
                 _ => needles.iter().flat_map(|w| text.find_opts(w, d.case_sensitive, d.whole_words)).collect(),
             };
             for h in hits {
@@ -397,7 +397,7 @@ pub(crate) fn search_body(ui: &mut egui::Ui, d: &mut SearchDraft, t: &Tokens) ->
         });
         ui.horizontal(|ui| {
             import = ui.button(tl!("Import list…")).clicked();
-            let n = pdfcraft_engine::redact_word_list(&d.words).len();
+            let n = taratasy_engine::redact_word_list(&d.words).len();
             ui.label(egui::RichText::new(crate::i18n::fmt(tl!("{n} word(s) or phrase(s)"), &[("n", &n.to_string())])).small().color(t.text_faint));
         });
     });
@@ -502,7 +502,7 @@ pub(crate) fn props_body(ui: &mut egui::Ui, d: &mut RedactPrefs, _t: &Tokens) ->
                 ui.label(tl!("Font:"));
                 ui.add_enabled_ui(on, |ui| {
                     egui::ComboBox::from_id_salt("overlay-font").selected_text(look.font.name()).show_ui(ui, |ui| {
-                        for f in pdfcraft_engine::OverlayFont::ALL {
+                        for f in taratasy_engine::OverlayFont::ALL {
                             ui.selectable_value(&mut look.font, f, f.name());
                         }
                     });
@@ -616,10 +616,10 @@ fn buttons(ui: &mut egui::Ui, ok: &str, primary: bool) -> (bool, bool) {
 /// something was.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct HiddenDraft {
-    pub found: Vec<(pdfcraft_engine::Hidden, usize, bool)>,
+    pub found: Vec<(taratasy_engine::Hidden, usize, bool)>,
 }
 
-impl PdfCraftApp {
+impl TaratasyApp {
     pub fn open_remove_hidden(&mut self) {
         let Some((_, id)) = self.active_ids() else { return };
         let Some(doc) = self.session.get(id) else { return };

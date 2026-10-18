@@ -1,8 +1,8 @@
 //! Portable mode (#157): a marker file beside the executable ([`MARKERS`]) keeps the settings,
-//! log files, crash-recovery autosaves and new digital IDs in `<exe dir>/PdfCraftData`, so a
+//! log files, crash-recovery autosaves and new digital IDs in `<exe dir>/TaratasyData`, so a
 //! portable copy (on a USB stick, say) writes nothing to `%APPDATA%` or `%LOCALAPPDATA%`. The
-//! Windows portable zip ships with `portable.txt`; the MSI doesn't. PhotoCraft uses the same
-//! scheme (`photocraft/apps/photocraft/src/app_dirs.rs`).
+//! Windows portable zip ships with `portable.txt`; the MSI doesn't. Sary uses the same
+//! scheme (`sary/apps/sary/src/app_dirs.rs`).
 //!
 //! If that folder can't be written (read-only medium, Program Files), portable mode stays off, the
 //! per-user folders are used and the app says why.
@@ -11,14 +11,14 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 /// Files beside the executable that switch on portable mode (either one; contents are ignored).
-pub const MARKERS: [&str; 2] = ["portable.txt", "PdfCraft.portable"];
+pub const MARKERS: [&str; 2] = ["portable.txt", "Taratasy.portable"];
 /// The data folder created beside the executable in portable mode.
-pub const DATA_DIR: &str = "PdfCraftData";
+pub const DATA_DIR: &str = "TaratasyData";
 
 /// The outcome of looking for a portable marker.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Portable {
-    /// `<exe dir>/PdfCraftData` when portable mode is on, `None` otherwise.
+    /// `<exe dir>/TaratasyData` when portable mode is on, `None` otherwise.
     pub dir: Option<PathBuf>,
     /// Set when a marker was found but its data folder can't be written.
     pub unwritable: Option<Unwritable>,
@@ -100,7 +100,7 @@ mod tests {
 
     fn temp(tag: &str) -> PathBuf {
         static N: AtomicUsize = AtomicUsize::new(0);
-        let d = std::env::temp_dir().join(format!("pdfcraft-portable-{tag}-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
+        let d = std::env::temp_dir().join(format!("taratasy-portable-{tag}-{}-{}", std::process::id(), N.fetch_add(1, Ordering::Relaxed)));
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         d
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn an_existing_data_folder_is_reused() {
         let exe = temp("reuse");
-        std::fs::write(exe.join("portable.txt"), b"PdfCraft portable mode").unwrap();
+        std::fs::write(exe.join("portable.txt"), b"Taratasy portable mode").unwrap();
         std::fs::create_dir_all(exe.join(DATA_DIR)).unwrap();
         std::fs::write(exe.join(DATA_DIR).join("app.ron"), b"()").unwrap();
         assert_eq!(resolve(Some(&exe)).dir, Some(exe.join(DATA_DIR)));

@@ -11,7 +11,7 @@
 //! and it hands back bytes rather than a parsed document for the same reason.
 //!
 //! ```
-//! use pdfcraft_testkit::Pdf;
+//! use taratasy_testkit::Pdf;
 //! let bytes = Pdf::new()
 //!     .obj("<< /Type /Catalog /Pages 2 0 R >>")
 //!     .obj("<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
@@ -87,7 +87,7 @@ impl Pdf {
     /// The number the next object added will get, so a caller can refer forward to it.
     ///
     /// ```
-    /// # use pdfcraft_testkit::Pdf;
+    /// # use taratasy_testkit::Pdf;
     /// let mut p = Pdf::new().obj("<< /Type /Catalog /Pages 2 0 R >>");
     /// assert_eq!(p.next_obj(), 2);
     /// ```

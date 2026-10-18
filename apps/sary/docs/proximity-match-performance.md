@@ -64,7 +64,7 @@ empty, one-pixel and separated holes; uniform ties and nonfinite samples. A comp
 unknown image still has no source candidate.
 
 ```sh
-cargo test --release -p photocraft-algo proximity_integral_release_comparison -- --ignored --nocapture
+cargo test --release -p sary-algo proximity_integral_release_comparison -- --ignored --nocapture
 ```
 
 The old search is retained only in the test module. The selected source displacement is

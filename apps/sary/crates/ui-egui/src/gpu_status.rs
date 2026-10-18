@@ -6,7 +6,7 @@
 
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Notice title when the device was lost.
 pub const LOST_MESSAGE: &str = "GPU device was lost; using the CPU renderer.";
@@ -15,11 +15,11 @@ pub const ERROR_MESSAGE: &str = "GPU error; using the CPU renderer.";
 /// Frames after which startup counts as done even if a document never drew.
 const STARTED_MAX_FRAMES: u64 = 120;
 
-/// Hook run once the app has rendered its first frames (see [`PhotocraftApp::on_started`]).
-pub type StartedHook = Box<dyn FnOnce(&mut PhotocraftApp)>;
+/// Hook run once the app has rendered its first frames (see [`SaryApp::on_started`]).
+pub type StartedHook = Box<dyn FnOnce(&mut SaryApp)>;
 
 /// Per-frame check: switch to the CPU canvas when the GPU faulted, and run the started hook.
-pub fn check(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn check(app: &mut SaryApp, ctx: &egui::Context) {
     if let Some(fault) = app.gpu.as_ref().and_then(|g| g.fault()) {
         fall_back(app, &fault);
         ctx.request_repaint();
@@ -40,7 +40,7 @@ pub fn check(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// Drop the GPU canvas after `fault`: free its resources, send every view through the CPU
 /// path, record why, and tell the user. Documents are untouched.
-pub fn fall_back(app: &mut PhotocraftApp, fault: &photocraft_gpu::Fault) {
+pub fn fall_back(app: &mut SaryApp, fault: &sary_gpu::Fault) {
     let Some(gpu) = app.gpu.take() else { return };
     log::error!("{fault}; using the CPU renderer for the rest of the session");
     gpu.release();
@@ -61,13 +61,13 @@ pub fn fall_back(app: &mut PhotocraftApp, fault: &photocraft_gpu::Fault) {
 }
 
 /// English diagnostics for issue reports (Copy and the control API), independent of UI language.
-pub fn system_info(app: &PhotocraftApp) -> Vec<String> {
+pub fn system_info(app: &SaryApp) -> Vec<String> {
     crate::i18n::with_language(crate::i18n::Lang::EN, || system_info_ui(app))
 }
 
 /// Help › System Info's on-screen text: version, platform and the graphics state.
-pub fn system_info_ui(app: &PhotocraftApp) -> Vec<String> {
-    let mut v = vec![format!("PhotoCraft {}", photocraft_engine::build_info::long_version()), {
+pub fn system_info_ui(app: &SaryApp) -> Vec<String> {
+    let mut v = vec![format!("Sary {}", sary_engine::build_info::long_version()), {
         let template = "Platform: {os} {arch}";
         crate::i18n::fmt(tl!(template), &[("os", std::env::consts::OS), ("arch", std::env::consts::ARCH)])
     }];
@@ -77,9 +77,9 @@ pub fn system_info_ui(app: &PhotocraftApp) -> Vec<String> {
 }
 
 /// The `help.systemInfo` result: the same facts as JSON.
-pub fn system_info_json(app: &PhotocraftApp) -> serde_json::Value {
+pub fn system_info_json(app: &SaryApp) -> serde_json::Value {
     json!({
-        "version": photocraft_engine::build_info::long_version(),
+        "version": sary_engine::build_info::long_version(),
         "os": std::env::consts::OS,
         "arch": std::env::consts::ARCH,
         "gpu": app.perf.gpu_info,
@@ -90,12 +90,12 @@ pub fn system_info_json(app: &PhotocraftApp) -> serde_json::Value {
 }
 
 /// Queue the same recovery warning for startup and runtime failures.
-pub fn queue_fallback_notice(app: &mut PhotocraftApp, reason: impl Into<String>) {
+pub fn queue_fallback_notice(app: &mut SaryApp, reason: impl Into<String>) {
     app.ui.gpu_fallback_notice = Some(reason.into());
 }
 
 /// Store the next-launch choice without restarting or risking unsaved documents.
-fn choose_recovery(app: &mut PhotocraftApp, retry: bool) -> Result<(), String> {
+fn choose_recovery(app: &mut SaryApp, retry: bool) -> Result<(), String> {
     app.run(
         "prefs.set",
         json!({"values": {
@@ -110,7 +110,7 @@ fn choose_recovery(app: &mut PhotocraftApp, retry: bool) -> Result<(), String> {
         crate::notices::post(
             app,
             "GPU retry scheduled",
-            vec!["Save your work and restart PhotoCraft to retry GPU acceleration. CPU rendering remains active for this session.".into()],
+            vec!["Save your work and restart Sary to retry GPU acceleration. CPU rendering remains active for this session.".into()],
             false,
             None,
         );
@@ -119,7 +119,7 @@ fn choose_recovery(app: &mut PhotocraftApp, retry: bool) -> Result<(), String> {
 }
 
 /// Recovery is an explicit choice; the CPU document renderer stays active while the user works.
-pub fn show_fallback(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show_fallback(app: &mut SaryApp, ctx: &egui::Context) {
     let Some(reason) = app.ui.gpu_fallback_notice.clone() else { return };
     let t = crate::theme::Tokens::get(ctx);
     let mut choice = None;
@@ -131,7 +131,7 @@ pub fn show_fallback(app: &mut PhotocraftApp, ctx: &egui::Context) {
         .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
         .show(ctx, |ui| {
             ui.label(egui::RichText::new(tl!("GPU acceleration could not continue. Your documents are unchanged.")).color(t.warning));
-            ui.label(tl!("PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter."));
+            ui.label(tl!("Sary is using the CPU image compositor. The window may still use your graphics adapter."));
             ui.collapsing(tl!("Details"), |ui| {
                 ui.label(&reason);
             });
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn system_info_copy_and_api_stay_english_in_czech_ui() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.perf.gpu_info.adapter = "Test GPU".into();
         app.perf.gpu_info.preference = "auto".into();
         let english = crate::i18n::with_language(crate::i18n::Lang::EN, || system_info(&app));
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn system_info_translates_empty_and_stored_auto_only_for_display() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         // Hardware names are opaque even when they happen to match a lookup key.
         app.perf.gpu_info.adapter = "auto".into();
         crate::i18n::with_language(crate::i18n::Lang::from_code("cs").unwrap(), || {
@@ -194,7 +194,7 @@ mod tests {
 
     #[test]
     fn fallback_warning_keeps_reason_in_inspectable_state() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         queue_fallback_notice(&mut app, "device unavailable");
         let state = serde_json::to_value(&app.ui).unwrap();
         assert_eq!(state["gpu_fallback_notice"], "device unavailable");
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn failed_preference_save_keeps_recovery_warning_open() {
         let services = crate::Services { save_prefs: Some(Box::new(|_| Err("disk full".into()))), ..Default::default() };
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+        let mut app = SaryApp::new(sary_engine::Session::new(), services);
         queue_fallback_notice(&mut app, "GPU fault");
         assert!(choose_recovery(&mut app, true).is_err());
         assert_eq!(app.ui.gpu_fallback_notice.as_deref(), Some("GPU fault"));
@@ -222,7 +222,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
+        let mut app = SaryApp::new(sary_engine::Session::new(), services);
         queue_fallback_notice(&mut app, "device unavailable");
         choose_recovery(&mut app, false).unwrap();
         assert!(!app.session.prefs().performance.use_gpu);

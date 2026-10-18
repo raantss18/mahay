@@ -6,9 +6,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Weak};
 use std::time::SystemTime;
 
-use photocraft_color::{PixelFormat, SampleType};
-use photocraft_doc::Document;
-use photocraft_raster::{Rgba8Image, Tile};
+use sary_color::{PixelFormat, SampleType};
+use sary_doc::Document;
+use sary_raster::{Rgba8Image, Tile};
 
 use crate::convert::{self, Fetch, Loader, Sink, is_valid_hash, swap_to_le};
 use crate::manifest::{ContentM, FORMAT_VERSION, Hash, LayerM, Manifest};
@@ -55,9 +55,9 @@ fn hash_bytes(b: &[u8]) -> Hash {
 }
 
 fn png(img: &Rgba8Image) -> Result<Vec<u8>> {
-    let image = photocraft_codecs::Image::from_u8(img.width, img.height, photocraft_codecs::ChannelLayout::Rgba, img.pixels.clone())
+    let image = sary_codecs::Image::from_u8(img.width, img.height, sary_codecs::ChannelLayout::Rgba, img.pixels.clone())
         .map_err(|e| FormatError::Unsupported(format!("preview: {e}")))?;
-    photocraft_codecs::encode(&image, photocraft_codecs::Format::Png, &Default::default()).map_err(|e| FormatError::Unsupported(format!("preview: {e}")))
+    sary_codecs::encode(&image, sary_codecs::Format::Png, &Default::default()).map_err(|e| FormatError::Unsupported(format!("preview: {e}")))
 }
 
 // ---------------------------------------------------------------------------
@@ -250,7 +250,7 @@ impl Fetch for LoadFetch<'_> {
 }
 
 /// Refuses a declared canvas outside `opts`' budget before anything is decoded for it (#2935).
-fn admit_canvas(size: photocraft_geom::Size, opts: &LoadOptions) -> Result<()> {
+fn admit_canvas(size: sary_geom::Size, opts: &LoadOptions) -> Result<()> {
     let (w, h) = (size.width, size.height);
     if w == 0 || h == 0 {
         return Err(FormatError::corrupt(format!("canvas size {w}x{h} is empty")));
@@ -343,11 +343,11 @@ fn tile_le(t: &Tile, sample: SampleType) -> std::borrow::Cow<'_, [u8]> {
     }
 }
 
-/// Default for [`PcraftWriter::set_reverify_budget`]: compressed bytes of already-verified
+/// Default for [`SaryWriter::set_reverify_budget`]: compressed bytes of already-verified
 /// objects re-read per directory save.
 pub const DEFAULT_REVERIFY_BUDGET: u64 = 16 * 1024 * 1024;
 
-/// Incremental `.pcraft` writer. Keep one per open document: it remembers
+/// Incremental `.sary` writer. Keep one per open document: it remembers
 /// tile hashes (by `Arc` identity), compressed objects, and objects it has
 /// verified in the current directory, so repeated saves stay cheap.
 ///
@@ -360,7 +360,7 @@ pub const DEFAULT_REVERIFY_BUDGET: u64 = 16 * 1024 * 1024;
 /// the cached objects, oldest-checked first, up to [`DEFAULT_REVERIFY_BUDGET`] bytes (see
 /// [`Self::set_reverify_budget`]). Over enough saves every object is read again, and a damaged
 /// one is rewritten.
-pub struct PcraftWriter {
+pub struct SaryWriter {
     hash_cache: HashMap<usize, (Weak<Tile>, Hash)>,
     /// Compressed objects by bundle path (ZIP mode).
     compressed: HashMap<String, Arc<Vec<u8>>>,
@@ -368,7 +368,7 @@ pub struct PcraftWriter {
     reverify_budget: u64,
 }
 
-impl Default for PcraftWriter {
+impl Default for SaryWriter {
     fn default() -> Self {
         Self { hash_cache: HashMap::new(), compressed: HashMap::new(), verified_directory: None, reverify_budget: DEFAULT_REVERIFY_BUDGET }
     }
@@ -713,7 +713,7 @@ fn par_compress<'a>(objects: &[(&'a String, &'a Object)]) -> Result<Vec<Compress
     })
 }
 
-impl PcraftWriter {
+impl SaryWriter {
     pub fn new() -> Self {
         Self::default()
     }
@@ -739,7 +739,7 @@ impl PcraftWriter {
         }
         let manifest = Manifest {
             format_version: FORMAT_VERSION,
-            generator: format!("photocraft-format {}", env!("CARGO_PKG_VERSION")),
+            generator: format!("sary-format {}", env!("CARGO_PKG_VERSION")),
             document,
             thumbnail: opts.thumbnail.as_ref().map(|_| THUMB.to_owned()),
             composite: opts.composite.as_ref().map(|_| COMPOSITE.to_owned()),
@@ -948,8 +948,8 @@ fn gc_pinned_directory_handles_resist_subdirectory_swap() {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static NEXT: AtomicU64 = AtomicU64::new(0);
-    let root = std::env::temp_dir().join(format!("pcraft-gc-swap-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
-    let bundle = root.join("project.pcraft");
+    let root = std::env::temp_dir().join(format!("sary-gc-swap-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+    let bundle = root.join("project.sary");
     let outside = root.join("outside");
     for sub in ["tiles", "blobs", "composite"] {
         std::fs::create_dir_all(bundle.join(sub)).unwrap();

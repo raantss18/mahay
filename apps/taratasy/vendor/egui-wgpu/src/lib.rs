@@ -63,7 +63,7 @@ pub enum WgpuError {
     #[error(transparent)]
     HandleError(#[from] ::winit::raw_window_handle::HandleError),
 
-    /// PdfCraft patch (#519): the device raised an error while a new window's surface was
+    /// Taratasy patch (#519): the device raised an error while a new window's surface was
     /// configured (see [`winit::catch_errors`]).
     #[cfg(feature = "winit")]
     #[error("The window's surface couldn't be configured: {0}")]

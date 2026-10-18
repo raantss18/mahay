@@ -3,7 +3,7 @@
 
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::{Dialog, DialogKind};
 use crate::widgets::{ButtonRole, DialogButton, dialog_buttons};
 
@@ -155,7 +155,7 @@ pub(crate) fn close_box(ui: &mut egui::Ui, rect: egui::Rect) -> bool {
     crate::icons::button(&mut child, "x", CLOSE_BOX_SIZE, false, tl!("Close")).clicked()
 }
 
-pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn show(app: &mut SaryApp, ctx: &egui::Context) {
     crate::layer_style::color_picker::prune(app);
     crate::type_panels_ui::color_picker::prune(app);
     crate::edit_history::track_dialogs(app, ctx);
@@ -293,7 +293,7 @@ pub fn show(app: &mut PhotocraftApp, ctx: &egui::Context) {
                     }
                 }
                 DialogKind::About => {
-                    // Tabs About · Contributors · Models (craftrules standards/contributors.md). The
+                    // Tabs About · Contributors · Models (mahay-rules standards/contributors.md). The
                     // tab is a dialog field, so automation can switch it with `ui.dialog.set`.
                     let tab = about_tab(&fields);
                     let mut chosen = tab;
@@ -542,13 +542,13 @@ fn about_tab(fields: &serde_json::Map<String, Value>) -> &'static str {
 }
 
 /// One About tab's contents: the credits lists, or the product blurb and links.
-fn about_tab_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, tab: &str) {
+fn about_tab_body(app: &mut SaryApp, ui: &mut egui::Ui, tab: &str) {
     match tab {
         "contributors" => crate::credits::contributors_ui(app, ui),
         "models" => crate::credits::models_ui(ui),
         _ => {
-            ui.label(tl!("PhotoCraft — an open-source, native image editor written in Rust."));
-            ui.label(crate::i18n::fmt(tl!("Version {version}"), &[("version", &photocraft_engine::build_info::long_version())]));
+            ui.label(tl!("Sary — an open-source, native image editor written in Rust."));
+            ui.label(crate::i18n::fmt(tl!("Version {version}"), &[("version", &sary_engine::build_info::long_version())]));
             ui.add_space(12.0);
             ui.vertical_centered(|ui| {
                 crate::links::discord_button(app, ui, 220.0);
@@ -556,7 +556,7 @@ fn about_tab_body(app: &mut PhotocraftApp, ui: &mut egui::Ui, tab: &str) {
                 crate::links::link_row(app, ui);
             });
             ui.add_space(10.0);
-            ui.weak("egui · wgpu · photocraft-engine");
+            ui.weak("egui · wgpu · sary-engine");
         }
     }
 }
@@ -579,7 +579,7 @@ pub fn title(d: &Dialog) -> String {
     match d.kind {
         DialogKind::NewDocument => "New Document".into(),
         DialogKind::About if d.fields.get("systemInfo").and_then(Value::as_bool) == Some(true) => "System Info".into(),
-        DialogKind::About => "About PhotoCraft".into(),
+        DialogKind::About => "About Sary".into(),
         DialogKind::LayerStyle => "Layer Style".into(),
         DialogKind::Command => d.fields.get("__label").and_then(Value::as_str).unwrap_or("Command").trim_end_matches('…').to_string(),
         DialogKind::Error => "Error".into(),
@@ -587,7 +587,7 @@ pub fn title(d: &Dialog) -> String {
 }
 
 /// Confirm a dialog: run its action and close it. Used by the OK button and by automation.
-pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, id: u64) -> Result<Value, String> {
     if crate::layer_style::color_picker::has_child(app, id) {
         return Err("confirm or cancel the Layer Style color picker first".into());
     }
@@ -669,7 +669,7 @@ pub fn confirm(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
 }
 
 /// Cancel a dialog and its dependent Layer Style picker, without applying edits.
-pub fn cancel(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
+pub fn cancel(app: &mut SaryApp, id: u64) -> Result<Value, String> {
     let closed = app.ui.close_dialog(id).ok_or_else(|| format!("no dialog {id}"))?;
     crate::actions::stopped(app, &closed.fields);
     if crate::guide_layout_ui::owns(&closed.fields) {
@@ -689,7 +689,7 @@ pub fn cancel(app: &mut PhotocraftApp, id: u64) -> Result<Value, String> {
 /// Open the parameter dialog of `command`: the adjustment editor for `image.adjustments.*`, the
 /// schema dialog for filters, the Color Range dialog for `select.colorRange`, otherwise a bare
 /// confirm dialog.
-pub fn open_command_dialog(app: &mut PhotocraftApp, command: &str, label: &str) -> u64 {
+pub fn open_command_dialog(app: &mut SaryApp, command: &str, label: &str) -> u64 {
     if command == "view.newGuideLayout" {
         return crate::guide_layout_ui::open(app);
     }
@@ -718,8 +718,8 @@ mod tests {
     use super::*;
 
     /// A filter dialog over a 256×256 layer, with the preview the canvas computed for it on screen.
-    fn filter_dialog_with_preview(background: bool) -> (PhotocraftApp, u64) {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn filter_dialog_with_preview(background: bool) -> (SaryApp, u64) {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.background_jobs = background;
         app.run("file.new", serde_json::json!({"width": 256, "height": 256, "background": "#3366cc"})).unwrap();
         let id = open_command_dialog(&mut app, "filter.blur.gaussianBlur", "Gaussian Blur");
@@ -785,7 +785,7 @@ mod tests {
             // The fonts are set up after the harness's first frame: the dialog appears after it.
             let dialogs = std::mem::take(&mut app.ui.dialogs);
             let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1280.0, 800.0)).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-            PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+            SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
             h.state_mut().ui.dialogs = dialogs;
             h.run_steps(4);
             assert!(h.state().filter_preview.is_some(), "the preview is on screen");
@@ -827,7 +827,7 @@ mod tests {
         let frame = rects(&h.ctx)[0];
         assert!((x.center().y - title.center().y).abs() < 2.0 && x.left() > title.right(), "the × is on the title row: {x:?}, {title:?}");
         assert!(frame.right() - x.right() < 16.0, "at its right end: {x:?} in {frame:?}");
-        let drag = |h: &mut egui_kittest::Harness<'static, PhotocraftApp>, from: egui::Pos2, to: egui::Pos2| {
+        let drag = |h: &mut egui_kittest::Harness<'static, SaryApp>, from: egui::Pos2, to: egui::Pos2| {
             h.hover_at(from);
             h.drag_at(from);
             h.run_steps(2);
@@ -854,9 +854,9 @@ mod tests {
         use egui_kittest::{Harness, kittest::Queryable};
 
         for size in [egui::vec2(760.0, 480.0), egui::vec2(960.0, 640.0)] {
-            let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             let mut h = Harness::builder().with_size(size).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-            PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+            SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
             crate::color_picker_ui::open(h.state_mut(), "foreground");
             h.run_steps(4);
             let frame = rects(&h.ctx)[0];
@@ -884,9 +884,9 @@ mod tests {
         use egui_kittest::{Harness, kittest::Queryable};
 
         for point in 0..5 {
-            let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-            PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+            SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
             h.state_mut().ui.open_dialog(DialogKind::LayerStyle, serde_json::Map::new());
             h.run_steps(3);
             let before = h.get_by_label("Layer Style").rect();
@@ -916,9 +916,9 @@ mod tests {
     fn dragging_the_title_bar_moves_the_dialog() {
         use egui_kittest::{Harness, kittest::Queryable};
 
-        let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let mut harness = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-        PhotocraftApp::setup_context(&harness.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&harness.ctx, crate::theme::ThemeKind::ALL[0]);
         harness.state_mut().ui.open_dialog(DialogKind::LayerStyle, serde_json::Map::new());
         harness.run_steps(3);
         let before = harness.get_by_label("Layer Style").rect();
@@ -943,11 +943,11 @@ mod tests {
     /// #4872: an alert (Error, About) closes with ↩ as with OK, but not on the ↩ that raised it.
     #[test]
     fn enter_closes_an_alert_but_not_the_enter_that_opened_it() {
-        let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 600.0)).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(2);
-        let alert = |h: &mut egui_kittest::Harness<'static, PhotocraftApp>| {
+        let alert = |h: &mut egui_kittest::Harness<'static, SaryApp>| {
             h.state_mut().ui.open_dialog(DialogKind::Error, json!({"message": crate::move_lock::MESSAGE}).as_object().cloned().unwrap_or_default())
         };
         // Raised in the frame its own ↩ arrives: that ↩ leaves it open.
@@ -966,11 +966,11 @@ mod tests {
         assert!(h.state().ui.dialogs.is_empty(), "Esc too");
     }
 
-    fn dialog_harness(size: egui::Vec2, command: &str) -> egui_kittest::Harness<'static, PhotocraftApp> {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn dialog_harness(size: egui::Vec2, command: &str) -> egui_kittest::Harness<'static, SaryApp> {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 64})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(size).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         crate::filter_dialog::open(h.state_mut(), command).unwrap();
         h.run_steps(4);
         h
@@ -982,9 +982,9 @@ mod tests {
     fn motion_blur_angle_dial_sets_the_angle_by_click_and_drag() {
         use egui_kittest::kittest::Queryable;
         let mut h = dialog_harness(egui::vec2(1280.0, 800.0), "filter.blur.motionBlur");
-        let angle = |h: &egui_kittest::Harness<'static, PhotocraftApp>| h.state().ui.dialogs.last().and_then(|d| d.fields["angle"].as_f64());
-        let centre = |h: &egui_kittest::Harness<'static, PhotocraftApp>| h.get_by_role_and_label(egui::accesskit::Role::Slider, "Angle").rect().center();
-        let press = |h: &mut egui_kittest::Harness<'static, PhotocraftApp>, pos: egui::Pos2, pressed: bool| {
+        let angle = |h: &egui_kittest::Harness<'static, SaryApp>| h.state().ui.dialogs.last().and_then(|d| d.fields["angle"].as_f64());
+        let centre = |h: &egui_kittest::Harness<'static, SaryApp>| h.get_by_role_and_label(egui::accesskit::Role::Slider, "Angle").rect().center();
+        let press = |h: &mut egui_kittest::Harness<'static, SaryApp>, pos: egui::Pos2, pressed: bool| {
             h.event(egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() });
         };
         assert_eq!(angle(&h), Some(0.0));
@@ -1076,7 +1076,7 @@ mod tests {
         use egui_kittest::kittest::Queryable;
         const BLUR: &str = "filter.blur.gaussianBlur";
         let mut h = dialog_harness(egui::vec2(1280.0, 800.0), BLUR);
-        let radius = |h: &egui_kittest::Harness<'static, PhotocraftApp>| h.state().ui.dialogs.last().and_then(|d| d.fields["radius"].as_f64());
+        let radius = |h: &egui_kittest::Harness<'static, SaryApp>| h.state().ui.dialogs.last().and_then(|d| d.fields["radius"].as_f64());
         assert_eq!(radius(&h), Some(1.0), "the default the first time");
         assert!(h.get_by_role(egui::accesskit::Role::SpinButton).is_focused(), "the Radius field has focus");
         h.event(egui::Event::Text("5".into()));
@@ -1106,10 +1106,10 @@ mod tests {
     #[test]
     fn fit_image_is_as_narrow_as_its_content() {
         use egui_kittest::kittest::Queryable;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 64})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(1280.0, 800.0)).build_ui_state(|ui, app| show(app, ui.ctx()), app);
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         let ctx = h.ctx.clone();
         let d = crate::menus::invoke(h.state_mut(), &ctx, "file.automate.fitImage", json!({})).unwrap()["dialog"].as_u64().unwrap();
         h.run_steps(4);

@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-content"
+name = "taratasy-content"
 description = "Content streams (ISO 32000-2 §7.8, §8–9): operators with source spans, inline images, serializer, matrices"
 version.workspace = true
 edition.workspace = true
@@ -9,4 +9,4 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-cos = { workspace = true }
+taratasy-cos = { workspace = true }

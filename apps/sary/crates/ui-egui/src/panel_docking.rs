@@ -1,11 +1,11 @@
 //! Application-owned panel IDs and commands around the shared docking layout.
 
 use crate::dock::Group;
-use craft_ui::docking::{Action, Floating, Layout, Node, Placement, Zone};
-use craft_ui::layout::{SplitAxis, SplitSize};
+use mahay_ui::docking::{Action, Floating, Layout, Node, Placement, Zone};
+use mahay_ui::layout::{SplitAxis, SplitSize};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 const PANELS: &[(&str, &str, Group)] = &[
     ("color", "Color", Group::Color),
@@ -32,14 +32,14 @@ struct LegacyDrag {
     generation: u64,
     layout: Option<Layout<String>>,
     tabs: crate::state::DockTabs,
-    hidden: std::collections::BTreeMap<String, craft_ui::docking::Location<String>>,
+    hidden: std::collections::BTreeMap<String, mahay_ui::docking::Location<String>>,
 }
 
-fn cancel_legacy_drag(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
-    let key = egui::Id::new("photocraft-panel-docking").with("legacy-origin");
+fn cancel_legacy_drag(app: &mut SaryApp, ctx: &egui::Context) -> bool {
+    let key = egui::Id::new("sary-panel-docking").with("legacy-origin");
     let previous = ctx.data_mut(|data| data.remove_temp::<LegacyDrag>(key));
     if let Some(previous) = previous {
-        craft_ui::docking::cancel_drag::<String>(ctx, egui::Id::new("photocraft-panel-docking"));
+        mahay_ui::docking::cancel_drag::<String>(ctx, egui::Id::new("sary-panel-docking"));
         if previous.generation != app.ui.docking_generation {
             return false;
         }
@@ -60,11 +60,11 @@ pub(crate) fn valid(layout: &Layout<String>) -> bool {
     layout.validate().is_ok() && layout.panels().iter().all(|id| normalize(id) == Some(id.as_str()))
 }
 
-fn legacy(app: &PhotocraftApp) -> Layout<String> {
+fn legacy(app: &SaryApp) -> Layout<String> {
     legacy_layout(app, false)
 }
 
-fn legacy_layout(app: &PhotocraftApp, all: bool) -> Layout<String> {
+fn legacy_layout(app: &SaryApp, all: bool) -> Layout<String> {
     let pro = matches!(app.ui.theme, crate::theme::ThemeKind::Pro | crate::theme::ThemeKind::ProMedium);
     let mut layout = Layout::default();
     for group in app.ui.dock.order().into_iter().rev().filter(|g| all || g.shown(&app.ui.panels)) {
@@ -104,7 +104,7 @@ fn legacy_layout(app: &PhotocraftApp, all: bool) -> Layout<String> {
 
 // Native collapse flags remain app-owned. An intact native tab group keeps its collapsed
 // presentation when the workspace first becomes customizable; mixed custom groups are expanded.
-fn collapsed_members(app: &PhotocraftApp, layout: &Layout<String>) -> std::collections::HashSet<String> {
+fn collapsed_members(app: &SaryApp, layout: &Layout<String>) -> std::collections::HashSet<String> {
     let mut collapsed: std::collections::HashSet<String> = app.ui.docking_collapsed.iter().cloned().collect();
     let mut pending: Vec<_> = layout.root.iter().collect();
     while let Some(node) = pending.pop() {
@@ -163,7 +163,7 @@ fn placement(params: &Value) -> Result<Placement<String>, String> {
     })
 }
 
-pub(crate) fn command(app: &mut PhotocraftApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
+pub(crate) fn command(app: &mut SaryApp, id: &str, params: &Value) -> Option<Result<Value, String>> {
     if id == "window.panel.group" {
         return Some(group_command(app, params));
     }
@@ -202,15 +202,15 @@ pub(crate) fn command(app: &mut PhotocraftApp, id: &str, params: &Value) -> Opti
     Some(change(app, operation, params))
 }
 
-pub(crate) fn checked(app: &PhotocraftApp, id: &str) -> Option<bool> {
+pub(crate) fn checked(app: &SaryApp, id: &str) -> Option<bool> {
     let layout = app.ui.docking.as_ref()?;
     let panel = id.strip_prefix("window.panel.").or_else(|| id.strip_prefix("window.toggle.")).and_then(normalize)?;
     Some(layout.contains(&panel.to_string()))
 }
 
 // UI output and automation share this atomic dispatcher. The application owns the registry
-// and saved return locations; craft-ui owns tree validation and structural changes.
-fn apply_action(app: &mut PhotocraftApp, action: Action<String>) -> Result<Value, String> {
+// and saved return locations; mahay-ui owns tree validation and structural changes.
+fn apply_action(app: &mut SaryApp, action: Action<String>) -> Result<Value, String> {
     if app.session.prefs().workspace_locked && !matches!(action, Action::Activate { .. }) {
         return Err("workspace is locked".into());
     }
@@ -231,7 +231,7 @@ fn apply_action(app: &mut PhotocraftApp, action: Action<String>) -> Result<Value
         | Action::MoveFloating { panel, .. }
         | Action::SetStackOpen { panel, .. }
         | Action::ResizeStack { panel, .. } => registered(panel),
-        Action::ResizeSplit { path, .. } => path.len() <= craft_ui::docking::MAX_DEPTH,
+        Action::ResizeSplit { path, .. } => path.len() <= mahay_ui::docking::MAX_DEPTH,
     };
     if !known {
         return Err("docking action contains an unknown panel or an excessive split path".into());
@@ -273,7 +273,7 @@ fn apply_action(app: &mut PhotocraftApp, action: Action<String>) -> Result<Value
     Ok(json!({"layout": app.ui.docking}))
 }
 
-fn change(app: &mut PhotocraftApp, operation: &str, params: &Value) -> Result<Value, String> {
+fn change(app: &mut SaryApp, operation: &str, params: &Value) -> Result<Value, String> {
     if app.session.prefs().workspace_locked && operation != "activate" {
         return Err("workspace is locked".into());
     }
@@ -364,8 +364,8 @@ fn change(app: &mut PhotocraftApp, operation: &str, params: &Value) -> Result<Va
     Ok(json!({"panel": panel, "layout": app.ui.docking}))
 }
 
-pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
-    let area = egui::Id::new("photocraft-panel-docking");
+pub(crate) fn show(app: &mut SaryApp, ui: &mut egui::Ui) -> bool {
+    let area = egui::Id::new("sary-panel-docking");
     let stale_origin =
         ui.ctx().data_mut(|data| data.get_temp::<LegacyDrag>(area.with("legacy-origin")).is_some_and(|origin| origin.generation != app.ui.docking_generation));
     let changed_workspace = ui.ctx().data_mut(|data| {
@@ -375,7 +375,7 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
     });
     if changed_workspace || stale_origin {
         ui.ctx().data_mut(|data| data.insert_temp(area.with("legacy-suppressed"), true));
-        craft_ui::docking::cancel_drag::<String>(ui.ctx(), area);
+        mahay_ui::docking::cancel_drag::<String>(ui.ctx(), area);
         ui.ctx().data_mut(|data| data.remove::<LegacyDrag>(area.with("legacy-origin")));
     }
 
@@ -403,7 +403,7 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
     let mut commands = Vec::new();
     let mut targets = Vec::new();
     let mut draw = |ui: &mut egui::Ui| {
-        let mut style = craft_ui::docking::DockStyle::from_ui(ui);
+        let mut style = mahay_ui::docking::DockStyle::from_ui(ui);
         style.tab_height = if t.pro { 28.0 } else { 40.0 };
         style.min_pane = 0.0;
         style.background = t.card;
@@ -421,7 +421,7 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
         style.panels_label = tl!("Panels").to_string();
         style.resize_label = tl!("Resize panels").to_string();
         style.resize_window_label = tl!("Resize panel window").to_string();
-        let mut area = craft_ui::docking::DockArea::new(egui::Id::new("photocraft-panel-docking"));
+        let mut area = mahay_ui::docking::DockArea::new(egui::Id::new("sary-panel-docking"));
         if let Some(panel) = &reveal {
             area = area.raise_panel(panel.clone());
         }
@@ -430,15 +430,15 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
             &layout,
             &style,
             |id| PANELS.iter().find(|p| p.0 == id).map(|p| tl!(p.1).to_string()).unwrap_or_else(|| id.clone()),
-            |_| craft_ui::docking::Permissions { movable: !locked, floatable: !locked, closable: !locked, accepts_tabs: !locked },
+            |_| mahay_ui::docking::Permissions { movable: !locked, floatable: !locked, closable: !locked, accepts_tabs: !locked },
             |id| {
                 if collapsed.contains(id) {
-                    craft_ui::docking::PanelLimits { min: egui::vec2(220.0, 0.0), max: egui::vec2(1_000_000.0, 0.0) }
+                    mahay_ui::docking::PanelLimits { min: egui::vec2(220.0, 0.0), max: egui::vec2(1_000_000.0, 0.0) }
                 } else {
                     // Layers owns its row scroll and footer; leave room for its fixed controls
                     // plus a scrolling row area instead of clipping the footer after a split.
                     let height = if id == "layers" { 220.0 } else { 80.0 };
-                    craft_ui::docking::PanelLimits { min: egui::vec2(220.0, height), ..Default::default() }
+                    mahay_ui::docking::PanelLimits { min: egui::vec2(220.0, height), ..Default::default() }
                 }
             },
             &mut PanelContent { app, collapsed: &collapsed, commands: &mut commands, targets: &mut targets },
@@ -464,21 +464,21 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
         if !output.actions.iter().any(|action| matches!(action, Action::Move { .. } | Action::Float { .. })) && cancel_legacy_drag(app, ui.ctx()) {
             return app.ui.docking.is_some();
         }
-        ui.ctx().data_mut(|data| data.remove::<LegacyDrag>(egui::Id::new("photocraft-panel-docking").with("legacy-origin")));
+        ui.ctx().data_mut(|data| data.remove::<LegacyDrag>(egui::Id::new("sary-panel-docking").with("legacy-origin")));
     }
     if let Some(panel) = output.group_drag.as_ref()
         && let Some(pointer) = ui.ctx().pointer_interact_pos()
     {
         let members = group_members(&layout, panel);
         let eligible: Vec<_> = targets.iter().filter(|target| !members.contains(&target.anchor)).cloned().collect();
-        if let Some(proposal) = craft_ui::docking::resolve_drop(panel, pointer, &eligible) {
+        if let Some(proposal) = mahay_ui::docking::resolve_drop(panel, pointer, &eligible) {
             ui.painter().rect_stroke(proposal.preview, 0.0, egui::Stroke::new(2.0, t.accent), egui::StrokeKind::Inside);
         }
     }
     if let Some((panel, pointer)) = output.group_drop {
         let members = group_members(&layout, &panel);
         let eligible: Vec<_> = targets.iter().filter(|target| !members.contains(&target.anchor)).cloned().collect();
-        if let Some(proposal) = craft_ui::docking::resolve_drop(&panel, pointer, &eligible) {
+        if let Some(proposal) = mahay_ui::docking::resolve_drop(&panel, pointer, &eligible) {
             commands.push(("window.panel.group", json!({"panel":panel,"operation":"move","anchor":proposal.anchor,"placement":proposal.placement})));
         }
     }
@@ -496,8 +496,8 @@ pub(crate) fn show(app: &mut PhotocraftApp, ui: &mut egui::Ui) -> bool {
     true
 }
 
-pub(crate) fn legacy_tab(app: &mut PhotocraftApp, ui: &mut egui::Ui, panel: &str, response: &egui::Response) {
-    let suppressed = egui::Id::new("photocraft-panel-docking").with("legacy-suppressed");
+pub(crate) fn legacy_tab(app: &mut SaryApp, ui: &mut egui::Ui, panel: &str, response: &egui::Response) {
+    let suppressed = egui::Id::new("sary-panel-docking").with("legacy-suppressed");
     if ui.input(|input| input.pointer.button_pressed(egui::PointerButton::Primary)) {
         ui.ctx().data_mut(|data| data.remove::<bool>(suppressed));
     }
@@ -519,10 +519,10 @@ pub(crate) fn legacy_tab(app: &mut PhotocraftApp, ui: &mut egui::Ui, panel: &str
             egui::pos2(bounds.left(), response.rect.top()),
             egui::vec2(bounds.width().clamp(240.0, 600.0), bounds.height().clamp(200.0, 600.0)),
         );
-        if ensure(&mut layout, id).is_ok() && craft_ui::docking::begin_drag(ui.ctx(), egui::Id::new("photocraft-panel-docking"), id.to_string(), source) {
+        if ensure(&mut layout, id).is_ok() && mahay_ui::docking::begin_drag(ui.ctx(), egui::Id::new("sary-panel-docking"), id.to_string(), source) {
             ui.ctx().data_mut(|data| {
                 data.insert_temp(
-                    egui::Id::new("photocraft-panel-docking").with("legacy-origin"),
+                    egui::Id::new("sary-panel-docking").with("legacy-origin"),
                     LegacyDrag {
                         generation: app.ui.docking_generation,
                         layout: app.ui.docking.clone(),
@@ -539,7 +539,7 @@ pub(crate) fn legacy_tab(app: &mut PhotocraftApp, ui: &mut egui::Ui, panel: &str
     }
 }
 
-fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: &str) {
+fn body(app: &mut SaryApp, ui: &mut egui::Ui, id: &str) {
     let Some((_, label, group)) = PANELS.iter().find(|p| p.0 == id) else { return };
     let pro = crate::theme::Tokens::get(ui.ctx()).pro;
     let Some(tab) = group.tabs(pro).iter().position(|name| name == label) else { return };
@@ -565,7 +565,7 @@ fn body(app: &mut PhotocraftApp, ui: &mut egui::Ui, id: &str) {
 mod tests;
 
 /// Return positions for panels already hidden in a legacy workspace.
-fn migration_hidden(app: &PhotocraftApp, visible: &Layout<String>) -> std::collections::BTreeMap<String, craft_ui::docking::Location<String>> {
+fn migration_hidden(app: &SaryApp, visible: &Layout<String>) -> std::collections::BTreeMap<String, mahay_ui::docking::Location<String>> {
     let full = legacy_layout(app, true);
     PANELS
         .iter()
@@ -587,7 +587,7 @@ fn group_members(layout: &Layout<String>, panel: &str) -> Vec<String> {
     layout.floating.iter().find(|group| group.panels.iter().any(|id| id == panel)).map(|group| group.panels.clone()).unwrap_or_default()
 }
 
-fn reveal_group(app: &mut PhotocraftApp, panel: &str) {
+fn reveal_group(app: &mut SaryApp, panel: &str) {
     if let Some(layout) = &app.ui.docking {
         let members = group_members(layout, panel);
         app.ui.docking_collapsed.retain(|id| !members.contains(id));
@@ -599,14 +599,14 @@ fn reveal_group(app: &mut PhotocraftApp, panel: &str) {
     }
 }
 
-pub(crate) fn rail_on(app: &PhotocraftApp, group: Group) -> bool {
+pub(crate) fn rail_on(app: &SaryApp, group: Group) -> bool {
     app.ui.docking.as_ref().is_some_and(|layout| {
         let collapsed = collapsed_members(app, layout);
         PANELS.iter().filter(|p| p.2 == group).any(|p| layout.contains(&p.0.to_owned()) && !collapsed.contains(p.0))
     })
 }
 
-pub(crate) fn rail_click(app: &mut PhotocraftApp, group: Group) {
+pub(crate) fn rail_click(app: &mut SaryApp, group: Group) {
     let Some(layout) = app.ui.docking.as_ref() else { return };
     let floating = PANELS.iter().filter(|p| p.2 == group).any(|p| layout.floating.iter().any(|g| g.panels.iter().any(|id| id == p.0)));
     let existing = PANELS.iter().find(|p| p.2 == group && layout.contains(&p.0.to_owned())).map(|p| p.0);
@@ -645,7 +645,7 @@ fn root_groups(layout: &Layout<String>) -> Vec<Vec<String>> {
     out
 }
 
-fn group_command(app: &mut PhotocraftApp, params: &Value) -> Result<Value, String> {
+fn group_command(app: &mut SaryApp, params: &Value) -> Result<Value, String> {
     let panel = params.get("panel").and_then(Value::as_str).and_then(normalize).ok_or("panel must name a registered panel")?;
     let operation = params.get("operation").and_then(Value::as_str).ok_or("operation is required")?;
     if app.session.prefs().workspace_locked {
@@ -730,13 +730,13 @@ fn group_command(app: &mut PhotocraftApp, params: &Value) -> Result<Value, Strin
 
 pub(crate) struct LegacyUpdate {
     layout: Layout<String>,
-    hidden: std::collections::BTreeMap<String, craft_ui::docking::Location<String>>,
+    hidden: std::collections::BTreeMap<String, mahay_ui::docking::Location<String>>,
     clear_collapse: Vec<Group>,
 }
 
 /// Validate and stage the legacy controls before ui.set commits any fields.
 pub(crate) fn prepare_legacy_update(
-    app: &PhotocraftApp,
+    app: &SaryApp,
     request: &Value,
     panels: Option<&crate::state::Panels>,
     tabs: Option<&crate::state::DockTabs>,
@@ -818,7 +818,7 @@ pub(crate) fn prepare_legacy_update(
     Ok(Some(LegacyUpdate { layout, hidden, clear_collapse }))
 }
 
-pub(crate) fn commit_legacy_update(app: &mut PhotocraftApp, update: LegacyUpdate, request: &Value) {
+pub(crate) fn commit_legacy_update(app: &mut SaryApp, update: LegacyUpdate, request: &Value) {
     for group in update.clear_collapse {
         let ids: Vec<_> = PANELS.iter().filter(|p| p.2 == group).map(|p| p.0).collect();
         app.ui.docking_collapsed.retain(|id| !ids.contains(&id.as_str()));
@@ -838,13 +838,13 @@ pub(crate) fn commit_legacy_update(app: &mut PhotocraftApp, update: LegacyUpdate
 }
 
 struct PanelContent<'a> {
-    app: &'a mut PhotocraftApp,
+    app: &'a mut SaryApp,
     collapsed: &'a std::collections::HashSet<String>,
     commands: &'a mut Vec<(&'static str, Value)>,
-    targets: &'a mut Vec<craft_ui::docking::DropTarget<String>>,
+    targets: &'a mut Vec<mahay_ui::docking::DropTarget<String>>,
 }
 
-fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui, panel: &str) {
+fn panel_menu(app: &mut SaryApp, ui: &mut egui::Ui, panel: &str) {
     match panel {
         "layers" => {
             crate::layer_row_ui::panel_menu(app, ui);
@@ -866,7 +866,7 @@ fn panel_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui, panel: &str) {
     }
 }
 
-impl craft_ui::docking::DockContent<String> for PanelContent<'_> {
+impl mahay_ui::docking::DockContent<String> for PanelContent<'_> {
     fn body(&mut self, ui: &mut egui::Ui, id: &String) {
         if let Some(target) = self.targets.iter_mut().find(|target| target.anchor == *id) {
             target.rect = target.rect.union(ui.max_rect());
@@ -878,7 +878,7 @@ impl craft_ui::docking::DockContent<String> for PanelContent<'_> {
             target.tabs = members
                 .into_iter()
                 .filter_map(|panel| {
-                    ui.ctx().read_response(egui::Id::new("photocraft-panel-docking").with(("tab", &panel))).map(|response| (panel, response.rect))
+                    ui.ctx().read_response(egui::Id::new("sary-panel-docking").with(("tab", &panel))).map(|response| (panel, response.rect))
                 })
                 .collect();
         }
@@ -895,7 +895,7 @@ impl craft_ui::docking::DockContent<String> for PanelContent<'_> {
     fn group_header(&mut self, ui: &mut egui::Ui, panels: &[String], active: &String, floating: bool) {
         if !floating {
             let rect = ui.max_rect();
-            self.targets.push(craft_ui::docking::DropTarget {
+            self.targets.push(mahay_ui::docking::DropTarget {
                 anchor: active.clone(),
                 rect,
                 tab_strip: Some(rect),
@@ -939,7 +939,7 @@ impl craft_ui::docking::DockContent<String> for PanelContent<'_> {
     }
 }
 
-pub(crate) fn sync_visibility(app: &mut PhotocraftApp) {
+pub(crate) fn sync_visibility(app: &mut SaryApp) {
     if let Some(layout) = &app.ui.docking {
         if !valid(layout) {
             return;
@@ -980,7 +980,7 @@ fn panel_active(layout: &Layout<String>, panel: &str) -> bool {
 }
 
 /// Extra legacy menu choices use the same commands as the customized renderer.
-pub(crate) fn legacy_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui, label: &str) {
+pub(crate) fn legacy_menu(app: &mut SaryApp, ui: &mut egui::Ui, label: &str) {
     let Some(panel) = normalize(label) else { return };
     let locked = app.session.prefs().workspace_locked;
     ui.add_enabled_ui(!locked, |ui| {
@@ -1008,7 +1008,7 @@ pub(crate) fn legacy_menu(app: &mut PhotocraftApp, ui: &mut egui::Ui, label: &st
 
 // A closed group forms a bounded chain of hidden tab neighbors. Restore just the requested
 // panel at the first surviving return position, then let the remaining tabs rejoin it.
-fn restore_hidden(layout: &mut Layout<String>, hidden: &mut std::collections::BTreeMap<String, craft_ui::docking::Location<String>>, panel: &str) {
+fn restore_hidden(layout: &mut Layout<String>, hidden: &mut std::collections::BTreeMap<String, mahay_ui::docking::Location<String>>, panel: &str) {
     let Some(mut at) = hidden.get(panel).cloned() else { return };
     let mut terminal = panel.to_owned();
     let mut seen = vec![terminal.clone()];

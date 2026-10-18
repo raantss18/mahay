@@ -2,11 +2,11 @@
 //! compositor) instead of panicking with "Buffer 'pc_compose_uniforms' is invalid". Skips when no
 //! GPU adapter exists.
 
-use photocraft_color::{Color, ColorMode, SampleType};
-use photocraft_doc::{Document, Layer, LayerContent};
-use photocraft_geom::{Rect, Size};
-use photocraft_gpu::{Compositor, DeviceHealth, Fault, render_to_vec};
-use photocraft_raster::Surface;
+use sary_color::{Color, ColorMode, SampleType};
+use sary_doc::{Document, Layer, LayerContent};
+use sary_geom::{Rect, Size};
+use sary_gpu::{Compositor, DeviceHealth, Fault, render_to_vec};
+use sary_raster::Surface;
 
 /// Concurrent wgpu instances in one process segfault on some drivers (see `parity.rs`).
 static GPU_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -157,7 +157,7 @@ fn a_captured_render_error_preserves_the_device_for_a_later_render() {
     let error = result.unwrap().expect_err("an invalid allocation must fail this render");
     assert!(error.0.contains("synthetic_invalid_buffer"), "{error}");
     let out = render_to_vec(&mut comp, &device, &queue, &d, d.bounds()).expect("the next fitting render keeps working");
-    let expected = photocraft_compose::flatten(&d);
+    let expected = sary_compose::flatten(&d);
     for (cpu, gpu) in expected.px[0].iter().zip(out[0]) {
         assert!((cpu - gpu).abs() <= 1.0 / 255.0, "the healthy GPU control differs: {cpu} vs {gpu}");
     }
@@ -168,7 +168,7 @@ fn assert_recovery_after_invalid_encoder(encode_only: bool) {
     let Some((adapter, device, queue)) = device() else { return };
     let mut comp = Compositor::try_new_with_format(&device, Compositor::preferred_acc_format(&adapter)).unwrap();
     let mut d = doc();
-    d.layers[1].effects.items = vec![photocraft_doc::Effect::default_drop_shadow()];
+    d.layers[1].effects.items = vec![sary_doc::Effect::default_drop_shadow()];
     // Pipeline creation errors are not proof of missing hardware capabilities: check the
     // adapter and the features actually enabled on this device before allowing a skip.
     let required = wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING;
@@ -190,7 +190,7 @@ fn assert_recovery_after_invalid_encoder(encode_only: bool) {
     let src = device.create_buffer(&wgpu::BufferDescriptor { label: None, size: 4, usage: wgpu::BufferUsages::COPY_SRC, mapped_at_creation: false });
     let dst = device.create_buffer(&wgpu::BufferDescriptor { label: None, size: 4, usage: wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
     let mut injected = false;
-    let mut sink = |encoder: &mut wgpu::CommandEncoder, _: photocraft_gpu::ChunkOut<'_>| {
+    let mut sink = |encoder: &mut wgpu::CommandEncoder, _: sary_gpu::ChunkOut<'_>| {
         injected = true;
         // Misaligned copies invalidate the encoder, discarding all recorded effect-map work.
         encoder.copy_buffer_to_buffer(&src, 0, &dst, 0, 1);
@@ -242,7 +242,7 @@ fn loss_during_intermediate_unwatched_submissions_returns_an_error() {
     let mut d = Document::with_background("synthetic", Size::new(2048, 1), ColorMode::Rgb, SampleType::U8, Color::rgba(0.9, 0.9, 0.9, 1.0));
     for _ in 0..300 {
         let mut layer = d.layers[0].clone();
-        layer.id = photocraft_doc::LayerId::fresh();
+        layer.id = sary_doc::LayerId::fresh();
         layer.opacity = 0.5;
         d.layers.push(layer);
     }

@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn ink_to_shape_command_converts_and_undoes() {
-        use deckcraft_model::{InkStroke, Shape, ShapeId, ShapeKind};
+        use seho_model::{InkStroke, Shape, ShapeId, ShapeKind};
         use serde_json::json;
         let mut s = crate::Session::with_new();
         s.execute("slide.new", &json!({"layout": "blank"})).unwrap();
@@ -157,7 +157,7 @@ mod tests {
         let zig: Vec<(f64, f64)> = (0..40).map(|i| (i as f64 * 5.0, if i % 2 == 0 { 300.0 } else { 360.0 })).collect();
         let mk = |v: &[(f64, f64)]| InkStroke {
             points: v.iter().map(|(x, y)| (*x, *y, 0.5)).collect(),
-            color: deckcraft_color::Rgba::rgb(200, 0, 0),
+            color: seho_color::Rgba::rgb(200, 0, 0),
             width: 3.0,
             highlighter: false,
         };
@@ -167,7 +167,7 @@ mod tests {
             crate::shapes_mut(doc, sel).unwrap().push(Shape {
                 id,
                 name: "Ink".into(),
-                xfrm: Some(deckcraft_geom::Xfrm::new(0.0, 0.0, 960.0, 540.0)),
+                xfrm: Some(seho_geom::Xfrm::new(0.0, 0.0, 960.0, 540.0)),
                 kind: ShapeKind::Ink { strokes },
                 ..Default::default()
             });
@@ -180,7 +180,7 @@ mod tests {
         let sh = s.doc().unwrap().shapes();
         assert_eq!(sh.len(), n0 + 1, "ink keeps the zigzag, one rectangle added");
         let made = sh.last().unwrap();
-        assert!(matches!(&made.geom, deckcraft_model::Geom::Preset { name, .. } if name == "rect"));
+        assert!(matches!(&made.geom, seho_model::Geom::Preset { name, .. } if name == "rect"));
         assert_eq!(made.line.as_ref().and_then(|l| l.width), Some(3.0));
         s.execute("edit.undo", &json!({})).unwrap();
         assert_eq!(s.doc().unwrap().shapes().len(), n0);

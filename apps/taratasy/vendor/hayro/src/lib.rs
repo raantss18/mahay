@@ -60,9 +60,9 @@ use vello_cpu::color::palette::css::WHITE;
 use vello_cpu::{Level, Pixmap, RenderMode};
 
 mod renderer;
-/// PdfCraft patch: exported for its regression test.
+/// Taratasy patch: exported for its regression test.
 pub use renderer::{image_resampling_size, tiling_cell_scale};
-/// PdfCraft patch: exported for its regression test.
+/// Taratasy patch: exported for its regression test.
 #[doc(hidden)]
 pub use renderer::set_skip_offscreen_paths;
 
@@ -86,7 +86,7 @@ impl<'a> RenderCache<'a> {
     }
 }
 
-/// PdfCraft patch: replacement colours for the "reading colours" view setting (Acrobat's
+/// Taratasy patch: replacement colours for the "reading colours" view setting (Acrobat's
 /// "Replace Document Colors"). Solid paints are mapped by luminance: dark paints move towards
 /// `text`, light paints towards `background`. Images, shadings and patterns never pass through
 /// the mapping.
@@ -149,12 +149,12 @@ pub struct RenderSettings {
     /// The background color. Determines the color of the base
     /// rectangle during rendering to a pixmap.
     pub bg_color: AlphaColor<Srgb>,
-    /// PdfCraft patch: top-left corner of the rendered region, in device pixels of the scaled
+    /// Taratasy patch: top-left corner of the rendered region, in device pixels of the scaled
     /// page. Together with `width`/`height` this renders one tile of a large page.
     pub x_offset: f32,
     /// See `x_offset`.
     pub y_offset: f32,
-    /// PdfCraft patch: when set, solid text and line-art paint colours are remapped while
+    /// Taratasy patch: when set, solid text and line-art paint colours are remapped while
     /// rendering; `None` renders exactly as without the patch.
     pub color_replacement: Option<ColorReplacement>,
 }
@@ -193,7 +193,7 @@ pub fn render<'a>(
     pixmap
 }
 
-/// PdfCraft patch: the size in pixels of what [`render`] produces with these settings.
+/// Taratasy patch: the size in pixels of what [`render`] produces with these settings.
 pub fn render_size(page: &Page<'_>, render_settings: &RenderSettings) -> (u16, u16) {
     let (width, height) = page.render_dimensions();
     let (scaled_width, scaled_height) = (
@@ -208,7 +208,7 @@ pub fn render_size(page: &Page<'_>, render_settings: &RenderSettings) -> (u16, u
     )
 }
 
-/// PdfCraft patch: [`render`] into `buffer`, premultiplied RGBA8 rows of [`render_size`]
+/// Taratasy patch: [`render`] into `buffer`, premultiplied RGBA8 rows of [`render_size`]
 /// pixels, so the caller chooses the allocation (one aligned to whole pixels can then become
 /// texture data without a copy). `buffer.len()` must be width × height × 4; any other length
 /// leaves `buffer` untouched (vello_cpu asserts on the length, and a panic must not be reachable).
@@ -254,7 +254,7 @@ pub fn render_into<'a>(
         interpreter_settings.preview,
     );
 
-    // PdfCraft patch (18): the page renders as one transparency group with the background
+    // Taratasy patch (18): the page renders as one transparency group with the background
     // painted *inside* it, as the initial backdrop. A group isolates what it wraps from what
     // was painted before it, so with the background outside, a Multiply highlight blended
     // only with the group's transparent backdrop and stayed its own colour — over a dark
@@ -336,7 +336,7 @@ pub(crate) fn derive_settings(settings: &vello_cpu::RenderSettings) -> vello_cpu
     }
 }
 
-// PdfCraft patch: unit tests for the reading-colours mapping.
+// Taratasy patch: unit tests for the reading-colours mapping.
 #[cfg(test)]
 mod color_replacement_tests {
     use super::ColorReplacement;
@@ -406,7 +406,7 @@ mod color_replacement_tests {
     }
 }
 
-// PdfCraft patch: end-to-end test for the reading-colours renderer hook.
+// Taratasy patch: end-to-end test for the reading-colours renderer hook.
 #[cfg(test)]
 mod color_replacement_render_tests {
     use super::{ColorReplacement, InterpreterSettings, Pdf, Pixmap, render_pdf};

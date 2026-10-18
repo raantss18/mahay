@@ -9,10 +9,10 @@
 //! (`canvas::ensure_filter_preview`), unchanged.
 
 use egui::{Color32, Rect, Sense, Stroke, Vec2, pos2, vec2};
-use photocraft_doc::Document;
+use sary_doc::Document;
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::filter_dialog::FilterPreviewKey;
 use crate::theme::Tokens;
 
@@ -29,7 +29,7 @@ const CENTER_Y_FIELD: &str = "__pvCy";
 
 /// Draw the filter dialog's in-dialog preview window below its parameters (its `fields` `f`). A
 /// no-op for dialogs without a preview and for Select and Mask, which has its own view.
-pub(crate) fn window(app: &PhotocraftApp, dialog: u64, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
+pub(crate) fn window(app: &SaryApp, dialog: u64, ui: &mut egui::Ui, f: &mut Map<String, Value>) {
     if !shows(f) {
         return;
     }
@@ -223,7 +223,7 @@ fn document_size(proxy: [u32; 2], k: u32) -> Vec2 {
 }
 
 /// A composite as monitor pixels, matching the canvas (`canvas::display_image`).
-fn upload(ctx: &egui::Context, app: &PhotocraftApp, name: &str, doc: &Document) -> egui::TextureHandle {
+fn upload(ctx: &egui::Context, app: &SaryApp, name: &str, doc: &Document) -> egui::TextureHandle {
     // Reduce only the display texture when a full-resolution result exceeds the device limit.
     // The cached document and the window's document-pixel zoom coordinates stay at full size.
     let factor = texture_factor(doc.size.width, doc.size.height, ctx.input(|i| i.max_texture_side));
@@ -235,7 +235,7 @@ fn upload(ctx: &egui::Context, app: &PhotocraftApp, name: &str, doc: &Document) 
         let image = egui::ColorImage::new([width as usize, height as usize], pixels);
         return ctx.load_texture(name, image, egui::TextureOptions::LINEAR);
     }
-    let buf = if factor == 1 { photocraft_compose::flatten(doc) } else { photocraft_compose::render_reduced(doc, width, height) };
+    let buf = if factor == 1 { sary_compose::flatten(doc) } else { sary_compose::render_reduced(doc, width, height) };
     let (display, _) = crate::canvas::canvas_display(app, doc, None);
     let img = crate::canvas::display_image(display.as_deref(), &buf);
     ctx.load_texture(name, img, egui::TextureOptions::LINEAR)
@@ -251,7 +251,7 @@ pub(crate) fn texture_factor(w: u32, h: u32, max_side: usize) -> u32 {
 #[derive(Clone, PartialEq)]
 enum TexKey {
     Filtered(FilterPreviewKey),
-    Original(photocraft_doc::DocId, u64, u32),
+    Original(sary_doc::DocId, u64, u32),
 }
 
 #[derive(Clone)]
@@ -267,7 +267,7 @@ struct CachedTex {
 struct Cache {
     filtered: Option<CachedTex>,
     original: Option<CachedTex>,
-    view: Option<(photocraft_engine::channel_cmds::ChannelView, bool, Option<photocraft_doc::LayerId>)>,
+    view: Option<(sary_engine::channel_cmds::ChannelView, bool, Option<sary_doc::LayerId>)>,
 }
 
 #[cfg(test)]
@@ -279,14 +279,14 @@ mod tests {
         let ctx = egui::Context::default();
         let limit = ctx.input(|i| i.max_texture_side) as u32;
         let width = limit + 2;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": width, "height": 2})).unwrap();
         for alpha in [false, true] {
             if alpha {
                 app.run("channel.new", json!({"name": "Alpha", "fill": "black"})).unwrap();
                 app.session
                     .edit("Fixture", |doc, _| {
-                        doc.channels[0].surface.fill_rect(photocraft_geom::Rect::new(0, 0, (width / 2) as i32, 2), &[1.0]);
+                        doc.channels[0].surface.fill_rect(sary_geom::Rect::new(0, 0, (width / 2) as i32, 2), &[1.0]);
                         Ok(())
                     })
                     .unwrap();
@@ -307,14 +307,14 @@ mod tests {
 
     #[test]
     fn uploaded_preview_shows_the_filtered_alpha_at_every_depth_and_proxy_scale() {
-        use photocraft_engine::channel_cmds::ChannelTarget;
+        use sary_engine::channel_cmds::ChannelTarget;
         for depth in [8, 16, 32] {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 16, "height": 16, "depth": depth})).unwrap();
             app.run("channel.new", json!({"name": "Alpha", "fill": "black"})).unwrap();
             app.session
                 .edit("Fixture", |doc, _| {
-                    doc.channels[0].surface.fill_rect(photocraft_geom::Rect::new(0, 0, 8, 16), &[1.0]);
+                    doc.channels[0].surface.fill_rect(sary_geom::Rect::new(0, 0, 8, 16), &[1.0]);
                     Ok(())
                 })
                 .unwrap();
@@ -348,8 +348,8 @@ mod tests {
 
     #[test]
     fn original_texture_refreshes_when_the_channel_view_changes_without_an_edit() {
-        use photocraft_engine::channel_cmds::ChannelTarget;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        use sary_engine::channel_cmds::ChannelTarget;
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 16, "height": 16})).unwrap();
         app.run("channel.new", json!({"name": "White", "fill": "white"})).unwrap();
         app.run("channel.new", json!({"name": "Black", "fill": "black"})).unwrap();
@@ -490,7 +490,7 @@ mod tests {
 
     #[test]
     fn the_window_defaults_its_view_and_never_panics() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         let id = crate::filter_dialog::open(&mut app, "filter.stylize.emboss").expect("Emboss opens a dialog");
         let mut f = app.ui.dialogs.iter().find(|d| d.id == id).expect("the dialog is open").fields.clone();

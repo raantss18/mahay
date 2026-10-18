@@ -1,5 +1,5 @@
 [package]
-name = "pdfcraft-organize"
+name = "taratasy-organize"
 description = "Page and document-structure edits: rotate, delete, move, insert pages; document info"
 version.workspace = true
 edition.workspace = true
@@ -9,10 +9,10 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-pdfcraft-content = { workspace = true }
-pdfcraft-cos = { workspace = true }
+taratasy-content = { workspace = true }
+taratasy-cos = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-pdfcraft-oracle = { workspace = true }
+taratasy-oracle = { workspace = true }
 hayro-syntax = { workspace = true }

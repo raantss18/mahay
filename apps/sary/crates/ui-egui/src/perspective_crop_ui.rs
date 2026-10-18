@@ -14,11 +14,11 @@
 //! A pending quad belongs to the document it was drawn on, like the Crop tool's frame.
 
 use egui::{Color32, Pos2, Stroke};
-use photocraft_algo::transform::{Homography, convex_quad};
-use photocraft_engine::prefs::Unit;
+use sary_algo::transform::{Homography, convex_quad};
+use sary_engine::prefs::Unit;
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::{ToolEvent, ViewXform};
 use crate::state::Tool;
 
@@ -41,26 +41,26 @@ pub struct PerspectiveCrop {
     /// Corners clicked so far, before the fourth makes the quad.
     pub clicks: Vec<[f64; 2]>,
     /// The document the pending quad belongs to.
-    doc: Option<photocraft_doc::DocId>,
+    doc: Option<sary_doc::DocId>,
 }
 
-fn active(app: &PhotocraftApp) -> bool {
+fn active(app: &SaryApp) -> bool {
     app.ui.tool == Tool::PerspectiveCrop && app.session.active().is_some()
 }
 
 /// A quad or corners clicked or a drag in progress.
-pub fn pending(app: &PhotocraftApp) -> bool {
+pub fn pending(app: &SaryApp) -> bool {
     app.ui.perspective_crop.is_some() || !app.pcrop.clicks.is_empty() || app.pcrop.drag.is_some()
 }
 
-pub fn cancel(app: &mut PhotocraftApp) {
+pub fn cancel(app: &mut SaryApp) {
     app.ui.perspective_crop = None;
     app.pcrop.drag = None;
     app.pcrop.clicks.clear();
 }
 
 /// Another document became active: its pending quad is dropped.
-fn cancel_stale(app: &mut PhotocraftApp) {
+fn cancel_stale(app: &mut SaryApp) {
     let doc = app.session.active().map(|st| st.doc.id);
     if pending(app) && app.pcrop.doc.is_some() && app.pcrop.doc != doc {
         cancel(app);
@@ -87,7 +87,7 @@ fn inside(q: &[[f64; 2]; 4], p: [f64; 2]) -> bool {
 }
 
 /// Pointer events (document px) with the tool. True when consumed.
-pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent) -> bool {
+pub fn pointer(app: &mut SaryApp, ev: ToolEvent) -> bool {
     if app.ui.tool != Tool::PerspectiveCrop {
         app.pcrop.drag = None;
         return false;
@@ -139,7 +139,7 @@ pub fn pointer(app: &mut PhotocraftApp, ev: ToolEvent) -> bool {
     true
 }
 
-fn drag_to(app: &mut PhotocraftApp, p: [f64; 2]) {
+fn drag_to(app: &mut SaryApp, p: [f64; 2]) {
     match app.pcrop.drag {
         Some(Drag::New { start, .. }) => app.pcrop.drag = Some(Drag::New { start, cur: p }),
         Some(Drag::Corner { index, offset }) => {
@@ -157,7 +157,7 @@ fn drag_to(app: &mut PhotocraftApp, p: [f64; 2]) {
 
 /// `image.perspectiveCrop`'s size params from W, H and the resolution (the Crop tool's fields):
 /// lengths in physical units convert at the typed resolution, else the document's.
-fn size_params(app: &PhotocraftApp, p: &mut Value) {
+fn size_params(app: &SaryApp, p: &mut Value) {
     let o = &app.ui.tool_options;
     let res = crate::crop_size::resolution_ppi(o);
     let dpi = res.unwrap_or_else(|| app.session.active().map_or(72.0, |st| f64::from(st.doc.resolution_dpi)));
@@ -178,7 +178,7 @@ fn size_params(app: &PhotocraftApp, p: &mut Value) {
 }
 
 /// ↵: crops to the pending quad. An invalid quad stays for fixing, with the engine's reason.
-pub fn commit(app: &mut PhotocraftApp) {
+pub fn commit(app: &mut SaryApp) {
     cancel_stale(app);
     let Some(q) = app.ui.perspective_crop else { return };
     let mut p = json!({"corners": q});
@@ -189,7 +189,7 @@ pub fn commit(app: &mut PhotocraftApp) {
 }
 
 /// ↵ commits and Esc cancels while the tool has something pending. True when a key was taken.
-pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     if !active(app) || !pending(app) {
         return false;
     }
@@ -212,7 +212,7 @@ fn grid_steps(side: f32) -> usize {
 }
 
 /// The quad, its perspective grid and corner handles; corners clicked so far; the box being drawn.
-pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform) {
+pub fn draw_overlay(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform) {
     if app.ui.tool != Tool::PerspectiveCrop {
         return;
     }
@@ -267,7 +267,7 @@ pub fn draw_overlay(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform
 
 /// Options bar: W, ⇄, H, the resolution (the Crop tool's fields), Front Image, Clear, Show Grid,
 /// and cancel / commit.
-pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
+pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     crate::crop_size::fields(&mut app.ui.tool_options, ui);
     if crate::widgets::secondary_button(ui, tl!("Front Image"), 0.0).clicked()
         && let Some((size, dpi)) = app.session.active().map(|st| (st.doc.size, f64::from(st.doc.resolution_dpi)))
@@ -297,18 +297,18 @@ pub fn options_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use photocraft_doc::{Color, ColorMode, Document, SampleType, Size};
+    use sary_doc::{Color, ColorMode, Document, SampleType, Size};
 
     /// A box drag makes the quad, corners drag alone, and ↵'s commit crops the document to the
     /// quad's size; four clicks in any order make a quad in TL, TR, BR, BL order.
     #[test]
     fn drag_a_box_move_a_corner_and_commit() {
         let doc = Document::with_background("p", Size::new(200, 150), ColorMode::Rgb, SampleType::U8, Color::WHITE);
-        let mut s = photocraft_engine::Session::new();
+        let mut s = sary_engine::Session::new();
         s.add_document(doc, None);
-        let mut app = PhotocraftApp::new(s, crate::Services::default());
+        let mut app = SaryApp::new(s, crate::Services::default());
         app.ui.tool = Tool::PerspectiveCrop;
-        let ev = |app: &mut PhotocraftApp, e| assert!(pointer(app, e));
+        let ev = |app: &mut SaryApp, e| assert!(pointer(app, e));
         ev(&mut app, ToolEvent::Down { x: 20.0, y: 10.0, pressure: 1.0 });
         ev(&mut app, ToolEvent::Move { x: 120.0, y: 90.0, pressure: 1.0 });
         ev(&mut app, ToolEvent::Up { x: 120.0, y: 90.0 });

@@ -1,8 +1,8 @@
 //! End-to-end timing of `select.rect` (rectangular and elliptical marquee) on a 6000×4000
-//! document. `cargo run --release -p photocraft-engine --example bench_marquee [reps]`
+//! document. `cargo run --release -p sary-engine --example bench_marquee [reps]`
 use std::time::{Duration, Instant};
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 fn main() {

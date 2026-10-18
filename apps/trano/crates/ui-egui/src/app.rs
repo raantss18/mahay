@@ -2,12 +2,12 @@
 
 use std::time::Duration;
 
-use artcraft_launcher_core::protocol::{
+use trano_core::protocol::{
     Backend, BackendOptions, CANCELLED, Capabilities, Command, Event, INSTALL_CANCELLED, JobPhase, LatestRelease, PAUSED, Source,
 };
-use artcraft_launcher_core::release::Release;
-use artcraft_launcher_core::status::AppStatus;
-use artcraft_launcher_core::{Platform, SUITE};
+use trano_core::release::Release;
+use trano_core::status::AppStatus;
+use trano_core::{Platform, SUITE};
 
 use crate::i18n::set_current;
 use crate::model::AppEntry;
@@ -63,7 +63,7 @@ pub trait Host {
     }
     /// The URL to open when Discord is clicked. Defaults to the web link.
     fn discord_url(&self) -> &'static str {
-        artcraft_launcher_core::catalog::DISCORD_URL
+        trano_core::catalog::DISCORD_URL
     }
     /// Quit the launcher for real (not just hide to the tray).
     fn quit(&mut self) {}
@@ -82,7 +82,7 @@ pub(crate) enum Dialog {
     Install { app: String, folder: String },
     Replace { app: String, path: String },
     Settings,
-    LauncherUpdate(artcraft_launcher_core::Release),
+    LauncherUpdate(trano_core::Release),
 }
 
 impl Dialog {
@@ -111,13 +111,13 @@ pub struct LauncherUi {
     pub(crate) rate_limited_until: Option<i64>,
     pub(crate) launcher_update: Option<Release>,
     /// The launcher's own update, while it downloads and installs.
-    pub(crate) launcher_job: Option<artcraft_launcher_core::protocol::JobPhase>,
+    pub(crate) launcher_job: Option<trano_core::protocol::JobPhase>,
     /// The new launcher is in place: quit so it can start.
     restart_requested: bool,
-    /// News from ArtCraft's release feed, shown inline until dismissed.
-    pub(crate) announcements: Vec<artcraft_launcher_core::feed::Notice>,
+    /// News from Mahay's release feed, shown inline until dismissed.
+    pub(crate) announcements: Vec<trano_core::feed::Notice>,
     /// Alerts from the feed, shown as popups until acknowledged.
-    pub(crate) alerts: Vec<artcraft_launcher_core::feed::Notice>,
+    pub(crate) alerts: Vec<trano_core::feed::Notice>,
     pub(crate) search: String,
     pub(crate) toasts: Vec<Toast>,
     pub(crate) dialog: Option<Dialog>,
@@ -215,7 +215,7 @@ impl LauncherUi {
             last_detect: 0,
             was_focused: true,
             auto_update_attempted: std::collections::BTreeSet::new(),
-            discord_url: artcraft_launcher_core::catalog::DISCORD_URL,
+            discord_url: trano_core::catalog::DISCORD_URL,
         }
     }
 
@@ -295,7 +295,7 @@ impl LauncherUi {
     pub(crate) fn custom_install_folders(&self) -> bool {
         self.caps.manage_apps
             && self.platform.is_some_and(|p| {
-                matches!(p.os, artcraft_launcher_core::Os::Windows | artcraft_launcher_core::Os::MacOs | artcraft_launcher_core::Os::Linux)
+                matches!(p.os, trano_core::Os::Windows | trano_core::Os::MacOs | trano_core::Os::Linux)
             })
             && !crate::settings::is_flatpak_sandbox()
     }
@@ -379,7 +379,7 @@ impl LauncherUi {
                 true
             }
             Event::Progress { app, phase } => {
-                if app == artcraft_launcher_core::catalog::LAUNCHER_ID {
+                if app == trano_core::catalog::LAUNCHER_ID {
                     self.launcher_job = Some(phase);
                     if matches!(self.dialog, Some(Dialog::LauncherUpdate(_))) {
                         self.dialog = None;
@@ -415,7 +415,7 @@ impl LauncherUi {
                 false
             }
             Event::JobFinished { app, result } => {
-                let launcher = app == artcraft_launcher_core::catalog::LAUNCHER_ID;
+                let launcher = app == trano_core::catalog::LAUNCHER_ID;
                 // What the job was doing when it ended says what a cancellation called off.
                 let last = if launcher { self.launcher_job.take() } else { self.entry(&app).and_then(|e| e.job) };
                 if let Some(e) = self.entry_mut(&app) {
@@ -487,7 +487,7 @@ impl LauncherUi {
         if self.settings.notify {
             let (title, body) = match fresh.as_slice() {
                 [(_, name, v)] => {
-                    let body: String = tl!("Open ArtCraft Launcher to update.").to_string();
+                    let body: String = tl!("Open Mahay Trano to update.").to_string();
                     (crate::i18n::fmt(tl!("{name} {v} is available"), &[("name", name), ("v", v)]), body)
                 }
                 many => {
@@ -525,7 +525,7 @@ impl LauncherUi {
             && let Some(r) = &self.launcher_update
             && self.launcher_job.is_none()
         {
-            let id = artcraft_launcher_core::catalog::LAUNCHER_ID.to_string();
+            let id = trano_core::catalog::LAUNCHER_ID.to_string();
             let v = r.version_label();
             if !self.auto_update_attempted.contains(&(id.clone(), v.clone())) {
                 log::info!("auto-update: queuing launcher self-update to {v}");
@@ -695,24 +695,24 @@ impl LauncherUi {
         list.into_iter().map(|(_, e)| e.app.id).collect()
     }
 
-    /// "ArtCraft API", "GitHub" or "ArtCraft API and GitHub": the services behind the releases on
+    /// "Mahay API", "GitHub" or "Mahay API and GitHub": the services behind the releases on
     /// screen right now. `None` until something has loaded.
     pub(crate) fn sources_label(&self) -> Option<String> {
-        use artcraft_launcher_core::protocol::Origin;
+        use trano_core::protocol::Origin;
         let mut api = false;
         let mut github = false;
         for e in &self.entries {
             if matches!(e.latest, Some(LatestRelease::Found(_) | LatestRelease::None)) {
                 match e.origin {
-                    Some(Origin::ArtCraftApi) => api = true,
+                    Some(Origin::MahayApi) => api = true,
                     Some(Origin::GitHub) => github = true,
                     None => {}
                 }
             }
         }
         match (api, github) {
-            (true, true) => Some(crate::i18n::fmt(tl!("{a} and {b}"), &[("a", Origin::ArtCraftApi.label()), ("b", Origin::GitHub.label())])),
-            (true, false) => Some(Origin::ArtCraftApi.label().to_string()),
+            (true, true) => Some(crate::i18n::fmt(tl!("{a} and {b}"), &[("a", Origin::MahayApi.label()), ("b", Origin::GitHub.label())])),
+            (true, false) => Some(Origin::MahayApi.label().to_string()),
             (false, true) => Some(Origin::GitHub.label().to_string()),
             (false, false) => None,
         }

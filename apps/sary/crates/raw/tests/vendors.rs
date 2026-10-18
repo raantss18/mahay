@@ -1,7 +1,7 @@
 //! Synthetic CR2 and TIFF/EP (NEF / ARW-like) files.
 
-use photocraft_raw::testgen::{Cr2Spec, Val, mosaic, scene, tiff_ep};
-use photocraft_raw::*;
+use sary_raw::testgen::{Cr2Spec, Val, mosaic, scene, tiff_ep};
+use sary_raw::*;
 
 fn cr2_spec(w: usize, h: usize, comps: usize, slices: Vec<usize>) -> Cr2Spec {
     // Left / top borders of 16 / 4 masked pixels at black level 512.

@@ -1,6 +1,6 @@
 [package]
-name = "craft-pdf"
-description = "Shared PDF reading, rendering and optional writing for Craft apps"
+name = "mahay-pdf"
+description = "Shared PDF reading, rendering and optional writing for Mahay apps"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

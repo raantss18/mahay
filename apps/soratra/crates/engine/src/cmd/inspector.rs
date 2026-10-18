@@ -4,7 +4,7 @@
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value, json};
-use wordcraft_doc::props::{CharProps, ParaProps};
+use soratra_doc::props::{CharProps, ParaProps};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};

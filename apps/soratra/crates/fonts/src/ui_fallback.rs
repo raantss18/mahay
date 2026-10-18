@@ -1,6 +1,6 @@
-//! An installed CJK font for the interface, after the embedded craft-fonts faces, when they leave
-//! characters of the interface text without a glyph: a build without craft-fonts, one whose
-//! craft-fonts checkout lacks the Chinese face (#241), or one whose faces lack characters the
+//! An installed CJK font for the interface, after the embedded mahay-fonts faces, when they leave
+//! characters of the interface text without a glyph: a build without mahay-fonts, one whose
+//! mahay-fonts checkout lacks the Chinese face (#241), or one whose faces lack characters the
 //! catalogs use (#486) would otherwise draw Chinese menus with boxes and `?`. Native only; wasm
 //! has no system fonts to read.
 //!
@@ -11,7 +11,7 @@
 use skrifa::MetadataProvider;
 use skrifa::raw::FileRef;
 
-use crate::CraftFont;
+use crate::MahayFont;
 
 /// An installed font file chosen for the interface.
 pub struct SystemUiFont {
@@ -40,9 +40,9 @@ pub fn is_cjk(c: char) -> bool {
 }
 
 /// The distinct CJK characters of `texts` (see [`is_cjk`]) that none of the `embedded` faces
-/// maps, in code point order. A craft-fonts face may lack characters the interface catalogs use
+/// maps, in code point order. A mahay-fonts face may lack characters the interface catalogs use
 /// (an older or subset file), and those would draw as boxes or `?` (#486).
-pub fn ui_uncovered_cjk(texts: &[&str], embedded: &[&CraftFont]) -> Vec<char> {
+pub fn ui_uncovered_cjk(texts: &[&str], embedded: &[&MahayFont]) -> Vec<char> {
     let faces: Vec<_> = embedded.iter().filter_map(|f| skrifa::FontRef::from_index(f.bytes, 0).ok()).map(|f| f.charmap()).collect();
     let chars: std::collections::BTreeSet<char> = texts.iter().flat_map(|t| t.chars()).filter(|c| is_cjk(*c)).collect();
     chars.into_iter().filter(|c| !faces.iter().any(|m| m.map(*c).is_some())).collect()
@@ -50,10 +50,10 @@ pub fn ui_uncovered_cjk(texts: &[&str], embedded: &[&CraftFont]) -> Vec<char> {
 
 /// Do the embedded interface faces (`ui_cjk_fonts`) leave CJK characters of `texts` (the
 /// interface catalogs and language names that can be on screen) without a glyph? Then an
-/// installed CJK font goes after them. No embedded face (a build without craft-fonts) leaves
+/// installed CJK font goes after them. No embedded face (a build without mahay-fonts) leaves
 /// every CJK character uncovered; a Japanese face alone lacks the simplified-only hanzi (页, 选,
 /// 删 …, #241) and some traditional ones (啟, 內 …, #486).
-pub fn ui_needs_system_cjk(texts: &[&str], embedded: &[&CraftFont]) -> bool {
+pub fn ui_needs_system_cjk(texts: &[&str], embedded: &[&MahayFont]) -> bool {
     !ui_uncovered_cjk(texts, embedded).is_empty()
 }
 
@@ -257,17 +257,17 @@ mod tests {
 
     #[test]
     fn needs_system_cjk_when_an_embedded_face_lacks_an_interface_character() {
-        // A face without CJK glyphs stands in for a craft-fonts face that lacks some (#486).
-        let latin = CraftFont { family: "Source Sans 3", style: "Regular", scripts: &["Hans"], bytes: crate::bundled()[0] };
+        // A face without CJK glyphs stands in for a mahay-fonts face that lacks some (#486).
+        let latin = MahayFont { family: "Source Sans 3", style: "Regular", scripts: &["Hans"], bytes: crate::bundled()[0] };
         assert_eq!(ui_uncovered_cjk(&["选项 Options", "選項：选项"], &[&latin]), ['选', '選', '項', '项', '：']);
         assert!(ui_needs_system_cjk(&["简体中文"], &[]));
         assert!(ui_needs_system_cjk(&["Save", "开"], &[&latin]));
         // Latin, Cyrillic and symbols are the Latin faces' business.
         assert!(!ui_needs_system_cjk(&["Українська Español → ¶"], &[]));
         // A damaged embedded face counts as covering nothing; it never panics.
-        let broken = CraftFont { family: "x", style: "Regular", scripts: &["Hans"], bytes: b"OTTO" };
+        let broken = MahayFont { family: "x", style: "Regular", scripts: &["Hans"], bytes: b"OTTO" };
         assert!(ui_needs_system_cjk(&["页"], &[&broken]));
-        // The real faces, when built with craft-fonts: the Chinese face covers simplified and
+        // The real faces, when built with mahay-fonts: the Chinese face covers simplified and
         // traditional hanzi the Japanese one lacks (#241, #486).
         let embedded = crate::ui_cjk_fonts(true);
         if crate::chinese_fonts().next().is_some() {

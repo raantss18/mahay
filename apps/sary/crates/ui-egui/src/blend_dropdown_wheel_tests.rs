@@ -5,16 +5,16 @@ use egui::accesskit::Role;
 use egui::{Pos2, Rect, vec2};
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use photocraft_doc::BlendMode;
+use sary_doc::BlendMode;
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// The app with a new document after `setup` (its last layer is the active one).
-fn harness(setup: impl FnOnce(&mut PhotocraftApp) + 'static) -> Harness<'static, PhotocraftApp> {
+fn harness(setup: impl FnOnce(&mut SaryApp) + 'static) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_max_steps(64).build_eframe(move |cc| {
-        PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
         setup(&mut app);
         app
@@ -24,27 +24,27 @@ fn harness(setup: impl FnOnce(&mut PhotocraftApp) + 'static) -> Harness<'static,
 }
 
 /// A filled pixel layer above the Background, active.
-fn pixel_layer(app: &mut PhotocraftApp) {
+fn pixel_layer(app: &mut SaryApp) {
     app.run("layer.new.layer", json!({})).unwrap();
     app.run("edit.fill", json!({"color": "#cc3366"})).unwrap();
 }
 
-fn blend(h: &Harness<'_, PhotocraftApp>) -> BlendMode {
+fn blend(h: &Harness<'_, SaryApp>) -> BlendMode {
     let st = h.state().session.active().unwrap();
     st.doc.layer(st.active_layer.unwrap()).unwrap().blend
 }
 
-fn steps(h: &Harness<'_, PhotocraftApp>) -> usize {
+fn steps(h: &Harness<'_, SaryApp>) -> usize {
     h.state().session.active().unwrap().history.past_len()
 }
 
 /// The Layers panel's dropdown: the lowest one (the options bar and the title bar have some too).
-fn dropdown(h: &Harness<'_, PhotocraftApp>) -> Rect {
+fn dropdown(h: &Harness<'_, SaryApp>) -> Rect {
     h.query_all_by_role(Role::ComboBox).map(|n| n.rect()).max_by(|a, b| a.top().total_cmp(&b.top())).unwrap()
 }
 
 /// `lines` wheel lines at `at` in one event: negative is down.
-fn wheel(h: &mut Harness<'_, PhotocraftApp>, at: Pos2, lines: f32) {
+fn wheel(h: &mut Harness<'_, SaryApp>, at: Pos2, lines: f32) {
     h.hover_at(at);
     h.run_steps(1);
     h.event(egui::Event::MouseWheel {
@@ -132,7 +132,7 @@ fn the_wheel_leaves_the_greyed_background_blend_mode_alone() {
     assert_eq!((blend(&h), steps(&h)), (BlendMode::Normal, undo));
 }
 
-fn click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
+fn click(h: &mut Harness<'_, SaryApp>, at: Pos2) {
     h.hover_at(at);
     h.run_steps(1);
     for pressed in [true, false] {
@@ -143,7 +143,7 @@ fn click(h: &mut Harness<'_, PhotocraftApp>, at: Pos2) {
 }
 
 /// Where the entry `label` of the open list is (also when it is scrolled out of sight).
-fn entry(h: &Harness<'_, PhotocraftApp>, label: &str) -> Rect {
+fn entry(h: &Harness<'_, SaryApp>, label: &str) -> Rect {
     h.get_by_label(label).rect()
 }
 
@@ -186,7 +186,7 @@ fn wheel_steps_in_the_open_list_keep_the_chosen_mode_in_view() {
 }
 
 /// The mode the canvas previews on the active layer, if any (#970).
-fn previewed(h: &mut Harness<'_, PhotocraftApp>) -> Option<BlendMode> {
+fn previewed(h: &mut Harness<'_, SaryApp>) -> Option<BlendMode> {
     let st = h.state().session.active().unwrap();
     let id = st.active_layer.unwrap();
     crate::blend_preview::display_doc(h.state_mut(), 0).map(|(d, _)| d.layer(id).unwrap().blend)

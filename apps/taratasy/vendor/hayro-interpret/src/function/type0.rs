@@ -9,11 +9,11 @@ use smallvec::SmallVec;
 #[derive(Debug)]
 pub(crate) struct Type0 {
     sizes: IntVec,
-    /// PdfCraft patch (31): the samples in stream order, `range.len()` to a grid point, the
+    /// Taratasy patch (31): the samples in stream order, `range.len()` to a grid point, the
     /// first input varying fastest. They were a hash map keyed by each grid point, built again
     /// every time a shading using the function was painted.
     samples: Vec<u32>,
-    /// PdfCraft patch (31): how many grid points one step along each input moves.
+    /// Taratasy patch (31): how many grid points one step along each input moves.
     strides: SmallVec<[usize; 4]>,
     clamper: Clamper,
     range: TupleVec,
@@ -55,7 +55,7 @@ impl Type0 {
                 .collect(),
         );
 
-        // PdfCraft patch: see `MAX_SAMPLE_VALUES`.
+        // Taratasy patch: see `MAX_SAMPLE_VALUES`.
         let Some(num_expected_entries) = sizes
             .iter()
             .try_fold(1usize, |n, s| n.checked_mul(*s as usize))
@@ -138,7 +138,7 @@ impl Type0 {
 
         let interpolated = self.interpolate(&key, &in_prev, &in_next, &mut coord, 0)?;
 
-        // PdfCraft patch (31): `2_u32.pow(32)` overflowed (a panic with overflow checks on).
+        // Taratasy patch (31): `2_u32.pow(32)` overflowed (a panic with overflow checks on).
         let max_sample = ((1u64 << self.bits_per_sample) - 1) as f32;
         let mut out = interpolated
             .iter()
@@ -157,7 +157,7 @@ type IntVec = SmallVec<[u32; 4]>;
 
 // See <https://github.com/apache/pdfbox/blob/bb778d4784f354c36ce032e91a0cee2169a4c598/pdfbox/src/main/java/org/apache/pdfbox/pdmodel/common/function/PDFunctionType0.java#L252>
 impl Type0 {
-    /// PdfCraft patch (31): the value at `input` between the grid points `in_prev` and
+    /// Taratasy patch (31): the value at `input` between the grid points `in_prev` and
     /// `in_next`, interpolating the inputs from `step` on (the earlier ones are placed in
     /// `coord`). The same multilinear interpolation, in the same order, as the hash-map
     /// version, so the results are bit for bit the same; one level of recursion per input,
@@ -194,7 +194,7 @@ impl Type0 {
         )
     }
 
-    /// PdfCraft patch (31): the samples of grid point `coord`, or `None` where it is off the
+    /// Taratasy patch (31): the samples of grid point `coord`, or `None` where it is off the
     /// grid or the stream ended before it (where the hash map had no entry).
     fn entry(&self, coord: &[u32]) -> Option<&[u32]> {
         let mut index = 0usize;
@@ -210,7 +210,7 @@ impl Type0 {
     }
 }
 
-/// PdfCraft patch: the most sample values a sampled function may have, and the most table
+/// Taratasy patch: the most sample values a sampled function may have, and the most table
 /// entries (one per point of its `/Size` grid). The samples were read into 4-byte values and
 /// then into a table entry each, so a stream inflating to 256 MiB of 1-bit samples asked for
 /// 8 GB; `/Size` sets how many the table expects. The largest real tables are DeviceN tint

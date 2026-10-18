@@ -1,8 +1,8 @@
 //! Header AutoFit and resize gestures, driven through real egui pointer events.
 
 use egui::{Event, Modifiers, PointerButton, Pos2, pos2, vec2};
-use gridcraft_engine::Session;
-use gridcraft_ui_egui::{SheetApp, grid::Geo};
+use tabilao_engine::Session;
+use tabilao_ui_egui::{SheetApp, grid::Geo};
 use serde_json::json;
 
 fn harness(selection: &str) -> egui_kittest::Harness<'static, SheetApp> {
@@ -179,11 +179,11 @@ fn table_filter_autofit_works_through_command_and_header_double_click() {
             let app = h.state();
             let sheet = app.session.active().unwrap().wb.active().unwrap();
             let geo = Geo::new(sheet, app.grid.rect.unwrap(), app.view().scroll);
-            let cell = gridcraft_engine::core::CellRef::new(0, 0);
+            let cell = tabilao_engine::core::CellRef::new(0, 0);
             let rect = geo.cell_rect(sheet, cell);
-            let button = gridcraft_ui_egui::grid::filter_button_rect(&geo, sheet, cell);
+            let button = tabilao_ui_egui::grid::filter_button_rect(&geo, sheet, cell);
             let style = app.session.active().unwrap().wb.styles.get(sheet.style_id(cell));
-            let text_width = gridcraft_engine::cmd::format::approx_text_width("Quarterly Revenue", style.font.size, style.font.bold) * geo.z;
+            let text_width = tabilao_engine::cmd::format::approx_text_width("Quarterly Revenue", style.font.size, style.font.bold) * geo.z;
             assert!(rect.left() + text_width + 2.5 * geo.z < button.left(), "heading overlaps filter: zoom={zoom}, double_click={double_click}");
             assert_eq!(app.session.active().unwrap().undo.len(), 1);
             h.state_mut().session.execute("edit.undo", json!({})).unwrap();

@@ -3,12 +3,12 @@
 
 use std::collections::{HashMap, HashSet};
 
-use deckcraft_color::SchemeSlot;
-use deckcraft_geom::{Xfrm, preset};
-use deckcraft_model::style::{ColorRef, Effects, Fill};
-use deckcraft_model::table::{Cell, Row, Table};
-use deckcraft_model::text::{Anchor, TextDir};
-use deckcraft_model::{Geom, MediaClip, PhType, Placeholder, Shape, ShapeId, ShapeKind, ShapeStyle};
+use seho_color::SchemeSlot;
+use seho_geom::{Xfrm, preset};
+use seho_model::style::{ColorRef, Effects, Fill};
+use seho_model::table::{Cell, Row, Table};
+use seho_model::text::{Anchor, TextDir};
+use seho_model::{Geom, MediaClip, PhType, Placeholder, Shape, ShapeId, ShapeKind, ShapeStyle};
 
 use super::{Imp, Part, dml};
 use crate::xml::El;
@@ -227,7 +227,7 @@ fn sp_pr(imp: &mut Imp, part: &Part, s: &mut Shape, pr: &El) {
     if let Some(pg) = pr.child("prstGeom") {
         s.geom = preset_geom(pg);
     } else if let Some(cg) = pr.child("custGeom") {
-        let (w, h) = s.xfrm.map(|x| (deckcraft_geom::pt_to_emu(x.w) as f64, deckcraft_geom::pt_to_emu(x.h) as f64)).unwrap_or((21600.0, 21600.0));
+        let (w, h) = s.xfrm.map(|x| (seho_geom::pt_to_emu(x.w) as f64, seho_geom::pt_to_emu(x.h) as f64)).unwrap_or((21600.0, 21600.0));
         let paths = crate::custgeom::read_cust_geom(cg, w, h);
         if !paths.is_empty() {
             s.geom = Geom::Custom { paths };
@@ -471,7 +471,7 @@ fn frame(imp: &mut Imp, part: &Part, ctx: &mut IdCtx, e: &El, depth: usize) -> S
 
 /// The preview picture of an old-style embedded object (`p:oleObj spid` with no `p:pic`): the
 /// `v:imagedata` of the legacy VML drawing shape with that id, as PowerPoint 2007 wrote them.
-fn vml_preview(imp: &mut Imp, part: &Part, spid: &str) -> Option<deckcraft_model::MediaId> {
+fn vml_preview(imp: &mut Imp, part: &Part, spid: &str) -> Option<seho_model::MediaId> {
     for rel in part.rels.items.iter().filter(|r| r.kind == "vmlDrawing" && !r.external) {
         let key = crate::opc::norm(&rel.target);
         if !imp.vml_previews.contains_key(&key) {
@@ -509,7 +509,7 @@ fn vml_index(pkg: &crate::opc::Package, vml: &str) -> std::collections::HashMap<
 /// A diagram's data part, without the link to its cached drawing: that link is a slide
 /// relationship id, which a save renumbers. Only diagrams whose drawing is missing or empty get
 /// here, and those are drawn from their data.
-fn diagram_data(imp: &mut Imp, target: &str) -> Option<deckcraft_model::MediaId> {
+fn diagram_data(imp: &mut Imp, target: &str) -> Option<seho_model::MediaId> {
     fn strip(e: &mut El, depth: usize) {
         if depth > crate::xml::MAX_DEPTH {
             return;
@@ -522,9 +522,9 @@ fn diagram_data(imp: &mut Imp, target: &str) -> Option<deckcraft_model::MediaId>
     let mut doc = imp.pkg.xml(target)?;
     strip(&mut doc.root, 0);
     let xml = format!("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n{}", doc.root.to_xml());
-    let id = deckcraft_model::MediaId(imp.alloc());
+    let id = seho_model::MediaId(imp.alloc());
     let content_type = imp.pkg.content_type(target)?;
-    imp.media.push(deckcraft_model::MediaItem {
+    imp.media.push(seho_model::MediaItem {
         id,
         name: crate::opc::file_of(target).to_string(),
         content_type,
@@ -654,7 +654,7 @@ fn text_on_rect(imp: &mut Imp, ctx: &mut IdCtx, s: &mut Shape, t: Xfrm) -> Optio
         name: s.name.clone(),
         xfrm: Some(Xfrm { rot: turn(x.rot + t.rot), flip_h: false, flip_v: false, ..t }),
         fill: Some(Fill::None),
-        line: Some(deckcraft_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
+        line: Some(seho_model::style::Line { fill: Some(Fill::None), ..Default::default() }),
         style,
         text,
         click: s.click.clone(),
@@ -664,8 +664,8 @@ fn text_on_rect(imp: &mut Imp, ctx: &mut IdCtx, s: &mut Shape, t: Xfrm) -> Optio
 }
 
 /// Where a shape's geometry puts its text, in shape-local points (as the renderer computes it).
-fn text_area(geom: &Geom, w: f64, h: f64) -> deckcraft_geom::Rect {
-    let full = deckcraft_geom::Rect::new(0.0, 0.0, w, h);
+fn text_area(geom: &Geom, w: f64, h: f64) -> seho_geom::Rect {
+    let full = seho_geom::Rect::new(0.0, 0.0, w, h);
     match geom {
         Geom::Preset { name, adj } => {
             preset::build(name, w, h, adj).or_else(|| preset::build("rect", w, h, &[])).map(|g| g.text_rect).unwrap_or(full)
@@ -676,7 +676,7 @@ fn text_area(geom: &Geom, w: f64, h: f64) -> deckcraft_geom::Rect {
 
 /// The outline of a SmartArt graphic (for the Text Pane), with its layout, quick style and colour
 /// parts kept to be written back.
-fn diagram_outline(imp: &Imp, part: &Part, rel_ids: &El, data: &El) -> Option<deckcraft_model::Diagram> {
+fn diagram_outline(imp: &Imp, part: &Part, rel_ids: &El, data: &El) -> Option<seho_model::Diagram> {
     let nodes = crate::dgm::outline(data);
     if nodes.is_empty() {
         return None;
@@ -705,7 +705,7 @@ fn diagram_outline(imp: &Imp, part: &Part, rel_ids: &El, data: &El) -> Option<de
     let pr = data.path(&["ptLst"]).and_then(|l| l.children_named("pt").find(|p| p.attr("type") == Some("doc"))).and_then(|p| p.child("prSet"));
     let style = crate::dgm::style_for(pr.and_then(|p| p.attr("qsTypeId")).unwrap_or("")).to_string();
     let colors = crate::dgm::colors_for(pr.and_then(|p| p.attr("csTypeId")).unwrap_or(""));
-    Some(deckcraft_model::Diagram {
+    Some(seho_model::Diagram {
         kind: crate::dgm::kind_for(&id, &cat).to_string(),
         nodes,
         style,
@@ -732,7 +732,7 @@ fn table(imp: &mut Imp, part: &Part, tbl: &El) -> Table {
         t.band_col = pr.bool("bandCol").unwrap_or(false);
         if let Some(id) = pr.child("tableStyleId").map(|e| e.text()) {
             // A style the file defines is drawn from its definition (by its GUID).
-            // DeckCraft's own styles (written with GUIDs derived from their ids) map back to them.
+            // Seho's own styles (written with GUIDs derived from their ids) map back to them.
             let up = id.trim().to_ascii_uppercase();
             t.style =
                 if imp.table_style_ids.contains(&up) && !crate::tables::is_own_guid(&up) { up } else { crate::tables::style_from_guid(id.trim()) };

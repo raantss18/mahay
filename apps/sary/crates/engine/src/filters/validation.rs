@@ -177,7 +177,7 @@ pub(crate) fn validate_params(id: &str, params: &Value) -> Result<()> {
 mod tests {
     use std::sync::Arc;
 
-    use photocraft_geom::Rect;
+    use sary_geom::Rect;
     use serde_json::json;
 
     use super::*;
@@ -466,7 +466,7 @@ mod tests {
 
     #[test]
     fn stored_extended_filter_records_still_decode_tolerantly() {
-        use photocraft_algo::{BlurQuality, BlurShape, FilterParams, SmartBlurMode};
+        use sary_algo::{BlurQuality, BlurShape, FilterParams, SmartBlurMode};
         let smart =
             crate::filters::params_for("filter.blur.smartBlur", &json!({"radius":-2,"threshold":900,"quality":"old","mode":false,"extra":true})).unwrap();
         assert!(matches!(smart, FilterParams::SmartBlur { radius: 0.1, threshold: 100.0, quality: BlurQuality::High, mode: SmartBlurMode::Normal }));

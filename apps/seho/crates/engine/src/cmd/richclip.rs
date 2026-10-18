@@ -1,10 +1,10 @@
 //! Rich text on the system clipboard, as HTML.
 //!
-//! Pages and Keynote put copied text on the pasteboard as HTML (and plain text). DeckCraft writes
+//! Pages and Keynote put copied text on the pasteboard as HTML (and plain text). Seho writes
 //! the same pair when it copies, and reads it back on paste: bold, italic and underline survive.
 //! Anything else in the markup is skipped. A hostile fragment is capped, never executed.
 
-use deckcraft_model::text::{Paragraph, Run, RunProps, TextBody};
+use seho_model::text::{Paragraph, Run, RunProps, TextBody};
 
 const MAX_HTML: usize = 1 << 20;
 const MAX_PARAS: usize = 2_000;
@@ -22,7 +22,7 @@ pub fn body_to_html(body: &TextBody) -> String {
             let (open, close) = tags(&r.props);
             out.push_str(&open);
             match &r.kind {
-                deckcraft_model::text::RunKind::Break => out.push_str("<br>"),
+                seho_model::text::RunKind::Break => out.push_str("<br>"),
                 _ => push_escaped(&mut out, &r.text),
             }
             out.push_str(&close);

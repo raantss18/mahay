@@ -19,7 +19,7 @@
 
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ToolEvent;
 use crate::state::Tool;
 
@@ -76,17 +76,17 @@ pub struct MoveDrag {
     dup_from: Option<usize>,
 }
 
-fn past_len(app: &PhotocraftApp) -> Option<usize> {
+fn past_len(app: &SaryApp) -> Option<usize> {
     app.session.active().map(|st| st.history.past_len())
 }
 
-fn moving(app: &PhotocraftApp) -> bool {
+fn moving(app: &SaryApp) -> bool {
     app.drag.as_ref().is_some_and(|d| d.tool == Tool::Move)
 }
 
 /// Duplicates the selected layers (the copies become the selection), remembering the history
 /// length before so [`fold_history`] can merge the copy and the move into one step.
-fn duplicate(app: &mut PhotocraftApp) -> Option<usize> {
+fn duplicate(app: &mut SaryApp) -> Option<usize> {
     let before = past_len(app)?;
     // In place: the copy follows the pointer from the original, artboards too (#1531).
     match app.run("layer.duplicate", json!({"inPlace": true})) {
@@ -99,7 +99,7 @@ fn duplicate(app: &mut PhotocraftApp) -> Option<usize> {
 }
 
 /// Merges every history step after `from` into one "Duplicate + Move" step.
-fn fold_history(app: &mut PhotocraftApp, from: usize) {
+fn fold_history(app: &mut SaryApp, from: usize) {
     let Some(st) = app.session.active_mut() else { return };
     while st.history.past_len() > from + 1 {
         if !st.history.purge_last() {
@@ -113,7 +113,7 @@ fn fold_history(app: &mut PhotocraftApp, from: usize) {
 
 /// Rewrites a Move-tool pointer event for the held modifiers: ⇧ locks it to an axis, and the
 /// first real movement of an ⌥-drag duplicates the layers being moved. Other tools pass through.
-pub fn filter_event(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifiers) -> ToolEvent {
+pub fn filter_event(app: &mut SaryApp, ev: ToolEvent, mods: egui::Modifiers) -> ToolEvent {
     if app.active_tool() != Tool::Move || app.ui.transform.is_some() {
         app.move_mods = MoveDrag::default();
         return ev;
@@ -134,7 +134,7 @@ pub fn filter_event(app: &mut PhotocraftApp, ev: ToolEvent, mods: egui::Modifier
     }
 }
 
-fn drag_to(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) -> [f64; 2] {
+fn drag_to(app: &mut SaryApp, p: [f64; 2], mods: egui::Modifiers) -> [f64; 2] {
     let Some(start) = app.move_mods.start.filter(|_| moving(app)) else { return p };
     // Selected pixels (`move_ui`): ⌥ copied them at the press.
     let pixels = app.drag.as_ref().is_some_and(|d| d.sel_move.is_some());
@@ -153,7 +153,7 @@ fn drag_to(app: &mut PhotocraftApp, p: [f64; 2], mods: egui::Modifiers) -> [f64;
 }
 
 /// Call after the Move tool finished its drag: an ⌥-drag's copy and move become one step.
-pub fn finish(app: &mut PhotocraftApp) {
+pub fn finish(app: &mut SaryApp) {
     let st = std::mem::take(&mut app.move_mods);
     if let Some(from) = st.dup_from {
         fold_history(app, from);
@@ -162,7 +162,7 @@ pub fn finish(app: &mut PhotocraftApp) {
 
 /// Call when a Move drag ends without moving (its layers were dragged to another document): an
 /// ⌥-drag's copy is taken back.
-pub fn abandon(app: &mut PhotocraftApp) {
+pub fn abandon(app: &mut SaryApp) {
     if std::mem::take(&mut app.move_mods).dup_from.is_some() {
         app.session.undo();
     }
@@ -172,7 +172,7 @@ pub fn abandon(app: &mut PhotocraftApp) {
 /// ⌥ duplicates the layers first. ⌘-arrows (Ctrl off the Mac) do the same from most other tools,
 /// where ⌘ is the temporary Move tool (`hold_keys::cmd_nudges`, #2474). Returns true when a key
 /// was used.
-pub fn arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+pub fn arrow_keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     use egui::{Key, Modifiers};
     let cmd = ctx.input(|i| i.modifiers.command) && crate::hold_keys::cmd_nudges(app);
     if app.ui.tool != Tool::Move && app.ui.transform.is_none() && !cmd {
@@ -197,7 +197,7 @@ pub fn arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
 
 /// ← / → with a painting tool: turn the brush tip 1° (⇧ 15°), as Photoshop does; → turns it
 /// clockwise. Returns true when a key was used.
-fn brush_arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+fn brush_arrow_keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     use egui::{Key, Modifiers};
     // Only plain or ⇧ arrows (`consume_key` ignores an extra ⌥, which kerns type), and never
     // while type is being edited.
@@ -223,7 +223,7 @@ fn brush_arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
 /// pixels, as the Move tool (also when ⌘ makes it the temporary Move tool). Nudges that follow
 /// each other are one History state, or one Undo step of the box (`nudge_bundle`); the selected
 /// pixels float until dropped, which is one state already.
-pub fn nudge(app: &mut PhotocraftApp, dx: f64, dy: f64, duplicate_first: bool) {
+pub fn nudge(app: &mut SaryApp, dx: f64, dy: f64, duplicate_first: bool) {
     if app.ui.transform.is_some() {
         crate::transform_tool::nudge(app, dx, dy);
         return;
@@ -256,11 +256,11 @@ pub fn nudge(app: &mut PhotocraftApp, dx: f64, dy: f64, duplicate_first: bool) {
 /// (`nudge_bundle`); the pixels stay put. A floating piece (⌘-dragged pixels) moves instead, like
 /// a plain drag on it. Not while a drag, a polygon or a Magnetic Lasso border is in progress.
 /// Returns true when a key was used.
-fn selection_arrow_keys(app: &mut PhotocraftApp, ctx: &egui::Context) -> bool {
+fn selection_arrow_keys(app: &mut SaryApp, ctx: &egui::Context) -> bool {
     if !crate::tool_feedback::is_selection_tool(app.ui.tool) || app.drag.is_some() || !app.ui.polygon.is_empty() || app.ui.magnetic.active() {
         return false;
     }
-    let floating = app.session.active().is_some_and(|st| photocraft_engine::float_cmds::floating(st).is_some());
+    let floating = app.session.active().is_some_and(|st| sary_engine::float_cmds::floating(st).is_some());
     if !floating && !app.session.is_enabled("select.transformSelection") {
         return false;
     }
@@ -326,14 +326,14 @@ mod tests {
         assert!(near(constrain([30.0, 20.0], Some(v), 4), [30.0, 0.0]));
     }
 
-    fn app_with_layer() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app_with_layer() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.sync_views();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
             .edit("paint", |doc, a| {
-                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(8, 8, 24, 24), &[1.0, 0.0, 0.0, 1.0]);
+                doc.layer_mut(a.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(8, 8, 24, 24), &[1.0, 0.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -345,11 +345,11 @@ mod tests {
         app
     }
 
-    fn bounds(app: &PhotocraftApp, id: photocraft_doc::LayerId) -> photocraft_geom::Rect {
+    fn bounds(app: &SaryApp, id: sary_doc::LayerId) -> sary_geom::Rect {
         app.session.active().unwrap().doc.layer(id).unwrap().surface().unwrap().content_bounds()
     }
 
-    fn drag(app: &mut PhotocraftApp, pts: &[[f64; 2]], mods: egui::Modifiers) {
+    fn drag(app: &mut SaryApp, pts: &[[f64; 2]], mods: egui::Modifiers) {
         crate::canvas::tool_event(app, ToolEvent::Down { x: pts[0][0], y: pts[0][1], pressure: 1.0 }, mods);
         for p in &pts[1..pts.len() - 1] {
             crate::canvas::tool_event(app, ToolEvent::Move { x: p[0], y: p[1], pressure: 1.0 }, mods);
@@ -363,10 +363,10 @@ mod tests {
         let mut app = app_with_layer();
         let id = app.session.active().unwrap().active_layer.unwrap();
         drag(&mut app, &[[16.0, 16.0], [22.0, 18.0], [26.0, 19.0]], egui::Modifiers::SHIFT);
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(18, 8, 34, 24));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(18, 8, 34, 24));
         // Switching axis mid-drag: the end point decides.
         drag(&mut app, &[[16.0, 16.0], [22.0, 17.0], [18.0, 30.0], [17.0, 36.0]], egui::Modifiers::SHIFT);
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(18, 28, 34, 44));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(18, 28, 34, 44));
     }
 
     #[test]
@@ -380,14 +380,14 @@ mod tests {
         assert_eq!(st.doc.layers.len(), n0 + 1, "one copy");
         let copy = st.active_layer.unwrap();
         assert_ne!(copy, orig);
-        assert_eq!(bounds(&app, orig), photocraft_geom::Rect::new(8, 8, 24, 24), "original untouched");
-        assert_eq!(bounds(&app, copy), photocraft_geom::Rect::new(18, 13, 34, 29));
+        assert_eq!(bounds(&app, orig), sary_geom::Rect::new(8, 8, 24, 24), "original untouched");
+        assert_eq!(bounds(&app, copy), sary_geom::Rect::new(18, 13, 34, 29));
         let st = app.session.active().unwrap();
         assert_eq!(st.history.past_len(), h0 + 1, "one undo step");
         assert_eq!(st.history.undo_label(), Some(DUPLICATE_MOVE_LABEL));
         assert!(app.session.undo());
         assert_eq!(app.session.active().unwrap().doc.layers.len(), n0);
-        assert_eq!(bounds(&app, orig), photocraft_geom::Rect::new(8, 8, 24, 24));
+        assert_eq!(bounds(&app, orig), sary_geom::Rect::new(8, 8, 24, 24));
         // ⌥-click without a drag makes no copy.
         drag(&mut app, &[[16.0, 16.0], [16.0, 16.0]], egui::Modifiers::ALT);
         assert_eq!(app.session.active().unwrap().doc.layers.len(), n0);
@@ -395,7 +395,7 @@ mod tests {
         drag(&mut app, &[[16.0, 16.0], [30.0, 19.0]], egui::Modifiers::SHIFT | egui::Modifiers::ALT);
         let st = app.session.active().unwrap();
         assert_eq!(st.doc.layers.len(), n0 + 1);
-        assert_eq!(bounds(&app, st.active_layer.unwrap()), photocraft_geom::Rect::new(22, 8, 38, 24));
+        assert_eq!(bounds(&app, st.active_layer.unwrap()), sary_geom::Rect::new(22, 8, 38, 24));
     }
 
     #[test]
@@ -411,7 +411,7 @@ mod tests {
         let st = app.session.active().unwrap();
         assert_eq!(st.doc.layers.len(), n0 + 2);
         assert_eq!(st.history.past_len(), h0 + 1);
-        assert_eq!(bounds(&app, a), photocraft_geom::Rect::new(8, 8, 24, 24));
+        assert_eq!(bounds(&app, a), sary_geom::Rect::new(8, 8, 24, 24));
         assert!(st.doc.layer(b).is_some());
     }
 
@@ -421,11 +421,11 @@ mod tests {
         let id = app.session.active().unwrap().active_layer.unwrap();
         nudge(&mut app, 10.0, 0.0, false);
         nudge(&mut app, 0.0, -1.0, false);
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(18, 7, 34, 23));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(18, 7, 34, 23));
         let n0 = app.session.active().unwrap().doc.layers.len();
         nudge(&mut app, 1.0, 0.0, true);
         assert_eq!(app.session.active().unwrap().doc.layers.len(), n0 + 1);
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(18, 7, 34, 23));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(18, 7, 34, 23));
         let ctx = egui::Context::default();
         crate::transform_tool::begin(&mut app, &ctx).unwrap();
         let q0 = app.ui.transform.as_ref().unwrap().quad;
@@ -434,12 +434,12 @@ mod tests {
     }
 
     /// One key press through `arrow_keys`, as egui delivers it.
-    fn press(app: &mut PhotocraftApp, key: egui::Key, mods: egui::Modifiers) -> bool {
+    fn press(app: &mut SaryApp, key: egui::Key, mods: egui::Modifiers) -> bool {
         press_at(app, key, mods, 0.0)
     }
 
     /// [`press`] at egui time `time` (seconds).
-    fn press_at(app: &mut PhotocraftApp, key: egui::Key, mods: egui::Modifiers, time: f64) -> bool {
+    fn press_at(app: &mut SaryApp, key: egui::Key, mods: egui::Modifiers, time: f64) -> bool {
         let ctx = egui::Context::default();
         ctx.input_mut(|i| {
             i.time = time;
@@ -478,13 +478,13 @@ mod tests {
         let id = app.session.active().unwrap().active_layer.unwrap();
         let n0 = app.session.active().unwrap().doc.layers.len();
         assert!(press(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE));
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(9, 8, 25, 24));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(9, 8, 25, 24));
         assert!(press(&mut app, egui::Key::ArrowDown, egui::Modifiers::SHIFT));
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(9, 18, 25, 34));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(9, 18, 25, 34));
         assert!(press(&mut app, egui::Key::ArrowLeft, egui::Modifiers::ALT));
         let st = app.session.active().unwrap();
         assert_eq!(st.doc.layers.len(), n0 + 1, "⌥ duplicated first");
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(9, 18, 25, 34), "the original stays");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(9, 18, 25, 34), "the original stays");
     }
 
     /// ⌘ as a Mac sends it, and Ctrl as Windows and Linux send it (`command` is Ctrl there).
@@ -501,26 +501,26 @@ mod tests {
         let n0 = app.session.active().unwrap().doc.layers.len();
         // A plain arrow turns the Brush's tip (below), never the layer.
         assert!(press(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE));
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(8, 8, 24, 24));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(8, 8, 24, 24));
         assert_eq!(app.session.tools.brush.angle, -1.0);
         app.run("tools.setBrush", json!({"brush": {"angle": 0}})).unwrap();
         for cmd in [CTRL, MAC_CMD] {
             assert!(press(&mut app, egui::Key::ArrowRight, cmd));
         }
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(10, 8, 26, 24), "1 px per press");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(10, 8, 26, 24), "1 px per press");
         assert!(press(&mut app, egui::Key::ArrowDown, CTRL | egui::Modifiers::SHIFT));
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(10, 18, 26, 34), "⌘⇧: 10 px");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(10, 18, 26, 34), "⌘⇧: 10 px");
         assert!(press(&mut app, egui::Key::ArrowLeft, CTRL | egui::Modifiers::ALT));
         let st = app.session.active().unwrap();
         assert_eq!(st.doc.layers.len(), n0 + 1, "⌘⌥ duplicated first");
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(10, 18, 26, 34), "the original stays");
-        assert_eq!(bounds(&app, st.active_layer.unwrap()), photocraft_geom::Rect::new(9, 18, 25, 34), "the copy moved");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(10, 18, 26, 34), "the original stays");
+        assert_eq!(bounds(&app, st.active_layer.unwrap()), sary_geom::Rect::new(9, 18, 25, 34), "the copy moved");
         assert_eq!(app.ui.tool, Tool::Brush);
         // The Move tool itself takes ⌘-arrows as plain ones.
         app.ui.tool = Tool::Move;
         assert!(press(&mut app, egui::Key::ArrowUp, CTRL));
         let copy = app.session.active().unwrap().active_layer.unwrap();
-        assert_eq!(bounds(&app, copy), photocraft_geom::Rect::new(9, 17, 25, 33));
+        assert_eq!(bounds(&app, copy), sary_geom::Rect::new(9, 17, 25, 33));
     }
 
     /// #2474: tools where ⌘ means something else in Photoshop (Pen and path tools, Hand, Zoom,
@@ -534,7 +534,7 @@ mod tests {
             assert!(!press(&mut app, egui::Key::ArrowRight, CTRL), "{tool:?}");
             assert!(!press(&mut app, egui::Key::ArrowRight, MAC_CMD | egui::Modifiers::SHIFT), "{tool:?}");
         }
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(8, 8, 24, 24));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(8, 8, 24, 24));
         app.ui.tool = Tool::Brush;
         crate::transform_tool::begin(&mut app, &egui::Context::default()).unwrap();
         let q0 = app.ui.transform.as_ref().unwrap().quad;
@@ -550,7 +550,7 @@ mod tests {
         app.ui.tool = Tool::RectMarquee;
         app.session.execute("select.rect", json!({"x": 8, "y": 8, "width": 8, "height": 8})).unwrap();
         assert!(press(&mut app, egui::Key::ArrowRight, CTRL));
-        let offset = |app: &PhotocraftApp| photocraft_engine::float_cmds::floating(app.session.active().unwrap()).map(|f| f.offset);
+        let offset = |app: &SaryApp| sary_engine::float_cmds::floating(app.session.active().unwrap()).map(|f| f.offset);
         assert_eq!(offset(&app), Some((1, 0)), "the selected pixels float, 1 px to the right");
         assert!(press(&mut app, egui::Key::ArrowDown, CTRL | egui::Modifiers::SHIFT));
         assert_eq!(offset(&app), Some((1, 10)), "⌘⇧: 10 px");
@@ -572,23 +572,23 @@ mod tests {
         app.ui.tool = Tool::Lasso;
         assert!(!press(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE), "no selection: not used");
         app.session.execute("select.rect", json!({"x": 4, "y": 4, "width": 10, "height": 10})).unwrap();
-        let sel = |app: &PhotocraftApp| app.session.active().unwrap().doc.selection.as_ref().unwrap().content_bounds();
+        let sel = |app: &SaryApp| app.session.active().unwrap().doc.selection.as_ref().unwrap().content_bounds();
         let h0 = app.session.active().unwrap().history.past_len();
         assert!(press(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE));
         assert!(press(&mut app, egui::Key::ArrowDown, egui::Modifiers::SHIFT));
-        assert_eq!(sel(&app), photocraft_geom::Rect::new(5, 14, 15, 24));
+        assert_eq!(sel(&app), sary_geom::Rect::new(5, 14, 15, 24));
         assert_eq!(app.session.active().unwrap().history.past_len(), h0 + 2);
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(8, 8, 24, 24), "pixels stay put");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(8, 8, 24, 24), "pixels stay put");
         // Not while a polygon is being drawn.
         app.ui.tool = Tool::PolygonLasso;
         app.ui.polygon = vec![[1.0, 1.0]];
         assert!(!press(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE));
     }
-    fn history(app: &PhotocraftApp) -> usize {
+    fn history(app: &SaryApp) -> usize {
         app.session.active().unwrap().history.past_len()
     }
 
-    fn left_edge(app: &PhotocraftApp, id: photocraft_doc::LayerId) -> i32 {
+    fn left_edge(app: &SaryApp, id: sary_doc::LayerId) -> i32 {
         bounds(app, id).x0
     }
 
@@ -604,13 +604,13 @@ mod tests {
             assert!(press_at(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE, 5.0 + 0.2 * f64::from(i)));
         }
         assert!(press_at(&mut app, egui::Key::ArrowDown, egui::Modifiers::SHIFT, 7.6));
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(20, 18, 36, 34));
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(20, 18, 36, 34));
         assert_eq!(history(&app), h0 + 1, "thirteen presses, one state");
         assert_eq!(app.session.active().unwrap().history.undo_label(), Some("Move"));
         assert!(app.session.undo());
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(8, 8, 24, 24), "one Undo takes back the run");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(8, 8, 24, 24), "one Undo takes back the run");
         assert!(app.session.redo());
-        assert_eq!(bounds(&app, id), photocraft_geom::Rect::new(20, 18, 36, 34), "and one Redo does it again");
+        assert_eq!(bounds(&app, id), sary_geom::Rect::new(20, 18, 36, 34), "and one Redo does it again");
     }
 
     /// A pause longer than Nudge Bundle Pause starts a new run; a longer pause setting keeps it.
@@ -660,7 +660,7 @@ mod tests {
     fn other_changes_end_the_run() {
         let mut app = app_with_layer();
         let a = app.session.active().unwrap().active_layer.unwrap();
-        let tap = |app: &mut PhotocraftApp| assert!(press(app, egui::Key::ArrowRight, egui::Modifiers::NONE));
+        let tap = |app: &mut SaryApp| assert!(press(app, egui::Key::ArrowRight, egui::Modifiers::NONE));
         let h0 = history(&app);
         tap(&mut app);
         tap(&mut app);
@@ -693,7 +693,7 @@ mod tests {
         let before = history(&app);
         app.session
             .edit("paint", |doc, active| {
-                doc.layer_mut(active.unwrap()).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(0, 0, 4, 4), &[0.0, 1.0, 0.0, 1.0]);
+                doc.layer_mut(active.unwrap()).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(0, 0, 4, 4), &[0.0, 1.0, 0.0, 1.0]);
                 Ok(())
             })
             .unwrap();
@@ -721,16 +721,16 @@ mod tests {
         let mut app = app_with_layer();
         app.ui.tool = Tool::Lasso;
         app.session.execute("select.rect", json!({"x": 4, "y": 4, "width": 10, "height": 10})).unwrap();
-        let sel = |app: &PhotocraftApp| app.session.active().unwrap().doc.selection.as_ref().unwrap().content_bounds();
+        let sel = |app: &SaryApp| app.session.active().unwrap().doc.selection.as_ref().unwrap().content_bounds();
         let h0 = history(&app);
         for i in 0..5 {
             assert!(press_at(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE, 2.0 + 0.1 * f64::from(i)));
         }
         assert!(press_at(&mut app, egui::Key::ArrowDown, egui::Modifiers::SHIFT, 2.6));
-        assert_eq!(sel(&app), photocraft_geom::Rect::new(9, 14, 19, 24));
+        assert_eq!(sel(&app), sary_geom::Rect::new(9, 14, 19, 24));
         assert_eq!(history(&app), h0 + 1);
         assert!(app.session.undo());
-        assert_eq!(sel(&app), photocraft_geom::Rect::new(4, 4, 14, 14), "Undo takes the outline back where it was drawn");
+        assert_eq!(sel(&app), sary_geom::Rect::new(4, 4, 14, 14), "Undo takes the outline back where it was drawn");
         // The layer nudge and the outline nudge are different runs even back to back.
         app.session.execute("select.deselect", json!({})).unwrap();
         app.ui.tool = Tool::Move;
@@ -746,10 +746,10 @@ mod tests {
         let mut app = app_with_layer();
         let ctx = egui::Context::default();
         crate::transform_tool::begin(&mut app, &ctx).unwrap();
-        let quad = |app: &PhotocraftApp| app.ui.transform.as_ref().unwrap().quad;
+        let quad = |app: &SaryApp| app.ui.transform.as_ref().unwrap().quad;
         let q0 = quad(&app);
         let moved = |dx: f64, dy: f64| q0.map(|q| [q[0] + dx, q[1] + dy]);
-        let settle = |app: &mut PhotocraftApp| crate::transform_tool::track_steps(app, &ctx);
+        let settle = |app: &mut SaryApp| crate::transform_tool::track_steps(app, &ctx);
         for i in 0..6 {
             assert!(press_at(&mut app, egui::Key::ArrowRight, egui::Modifiers::NONE, 4.0 + 0.1 * f64::from(i)));
             settle(&mut app);

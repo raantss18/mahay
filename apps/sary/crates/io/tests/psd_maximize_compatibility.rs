@@ -3,12 +3,12 @@
 //! resource 1057 (`has_real_merged_data = false`). Layers, alpha channels and the Quick Mask are
 //! written as usual, so the file reopens the same.
 
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{AlphaChannel, Document, Layer};
-use photocraft_geom::{Rect, Size};
-use photocraft_io::{ExportOptions, export, import};
-use photocraft_psd::PsdFile;
-use photocraft_raster::Surface;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_doc::{AlphaChannel, Document, Layer};
+use sary_geom::{Rect, Size};
+use sary_io::{ExportOptions, export, import};
+use sary_psd::PsdFile;
+use sary_raster::Surface;
 
 fn compat_off() -> ExportOptions {
     ExportOptions { psd_maximize_compatibility: false, ..Default::default() }
@@ -23,7 +23,7 @@ fn filled(mode: ColorMode, depth: SampleType, w: u32, h: u32, rgba: [f32; 4]) ->
     let mut d = Document::new("compat", Size::new(w, h), mode, depth);
     let fmt = d.pixel_format();
     let mut px = vec![0.0; fmt.channels()];
-    photocraft_raster::from_rgba_into(&fmt, rgba, &mut px);
+    sary_raster::from_rgba_into(&fmt, rgba, &mut px);
     let mut layer = Layer::raster("pixels", fmt);
     layer.surface_mut().unwrap().fill_rect(Rect::new(0, 0, w as i32, h as i32), &px);
     d.layers.push(layer);
@@ -102,7 +102,7 @@ fn layers_and_alpha_channels_reopen_unchanged() {
     assert_eq!(off.channels, on.channels, "alpha channels follow the placeholder");
     assert_eq!(off.quick_mask, on.quick_mask);
     let canvas = d.bounds();
-    assert_eq!(photocraft_compose::render(&off, canvas).px, photocraft_compose::render(&on, canvas).px, "the same image");
+    assert_eq!(sary_compose::render(&off, canvas).px, sary_compose::render(&on, canvas).px, "the same image");
 }
 
 /// Without layer records the merged image is the only copy of the pixels, so it stays real.

@@ -3,13 +3,13 @@ mod common;
 use std::path::PathBuf;
 
 use common::{Prefs, empty_probe, open_in, probe_with_env};
-use craft_settings::paths::{Location, Portable, Probe, Rule, env_var_name, resolve};
-use craft_settings::{OpenOptions, Settings, SettingsStore};
+use mahay_settings::paths::{Location, Portable, Probe, Rule, env_var_name, resolve};
+use mahay_settings::{OpenOptions, Settings, SettingsStore};
 
 #[test]
 fn env_var_name_uppercases_and_replaces_punctuation() {
-    assert_eq!(env_var_name("photocraft"), "PHOTOCRAFT_CONFIG_DIR");
-    assert_eq!(env_var_name("photo-craft"), "PHOTO_CRAFT_CONFIG_DIR");
+    assert_eq!(env_var_name("sary"), "SARY_CONFIG_DIR");
+    assert_eq!(env_var_name("photo-craft"), "PHOTO_MAHAY_CONFIG_DIR");
 }
 
 #[test]
@@ -50,20 +50,20 @@ fn memory_location_has_no_folder() {
 
 #[test]
 fn app_supplied_portable_names_are_used() {
-    const LEGACY: Portable = Portable { markers: &["portable.txt", "PhotoCraft.portable"], dir: "PhotoCraftData" };
-    for marker in ["portable.txt", "PhotoCraft.portable"] {
+    const LEGACY: Portable = Portable { markers: &["portable.txt", "Sary.portable"], dir: "SaryData" };
+    for marker in ["portable.txt", "Sary.portable"] {
         let tmp = tempfile::tempdir().unwrap();
         std::fs::write(tmp.path().join(marker), "").unwrap();
         let probe = Probe { env: Box::new(|_| None), exe_dir: Some(tmp.path().to_path_buf()), platform_config_dir: Some(PathBuf::from("/platform")) };
         let r = resolve("testcraft", &LEGACY, &Location::Auto, &probe);
         assert_eq!(r.rule, Rule::Portable, "{marker}");
-        assert_eq!(r.dir, Some(tmp.path().join("PhotoCraftData")), "{marker}");
+        assert_eq!(r.dir, Some(tmp.path().join("SaryData")), "{marker}");
     }
 }
 
 #[test]
 fn default_marker_is_ignored_when_the_app_uses_its_own() {
-    const LEGACY: Portable = Portable { markers: &["portable.txt"], dir: "PhotoCraftData" };
+    const LEGACY: Portable = Portable { markers: &["portable.txt"], dir: "SaryData" };
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(tmp.path().join("portable"), "").unwrap();
     let probe = Probe { env: Box::new(|_| None), exe_dir: Some(tmp.path().to_path_buf()), platform_config_dir: Some(PathBuf::from("/platform")) };
@@ -138,6 +138,6 @@ fn unwritable_folder_is_reported_at_open_not_first_save() {
     let (mut store, report) = open_in(&dir);
     std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700)).unwrap();
     assert!(store.is_read_only());
-    assert!(matches!(report.read_only, Some(craft_settings::ReadOnlyReason::DirNotWritable(_))), "{report:?}");
-    assert!(matches!(store.flush(), Err(craft_settings::SettingsError::ReadOnly(_))));
+    assert!(matches!(report.read_only, Some(mahay_settings::ReadOnlyReason::DirNotWritable(_))), "{report:?}");
+    assert!(matches!(store.flush(), Err(mahay_settings::SettingsError::ReadOnly(_))));
 }

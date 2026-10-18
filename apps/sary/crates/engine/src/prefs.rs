@@ -64,7 +64,7 @@ choice!(CanvasBorder { DropShadow = "dropShadow", Line = "line", None = "none" }
 choice!(UiScale { Auto = "auto", P75 = "75", P80 = "80", P85 = "85", P90 = "90", P95 = "95", P100 = "100", P125 = "125", P150 = "150", P175 = "175", P200 = "200", P250 = "250", P300 = "300" } default Auto);
 choice!(
     /// Graphics backend of the desktop app's window and GPU canvas (applies at next launch).
-    /// `auto` lets PhotoCraft pick (DX12 for Intel adapters on Windows); `cpu` composites on the
+    /// `auto` lets Sary pick (DX12 for Intel adapters on Windows); `cpu` composites on the
     /// CPU and draws the window with a software adapter where the platform has one. A start that
     /// crashes inside the graphics driver moves this to the next safer choice.
     GpuBackend { Auto = "auto", Vulkan = "vulkan", Dx12 = "dx12", Metal = "metal", Gl = "gl", Cpu = "cpu" } default Auto
@@ -76,9 +76,9 @@ choice!(
 );
 choice!(
     /// Linux display server of the desktop app's window (applies at next launch). `x11` runs
-    /// PhotoCraft through XWayland on a Wayland session, where native file drag and drop works
+    /// Sary through XWayland on a Wayland session, where native file drag and drop works
     /// (winit 0.30 has none on Wayland, issue #386); fractional scaling may then look softer.
-    /// It needs an X server (`DISPLAY`); without one PhotoCraft starts as `auto`. Other
+    /// It needs an X server (`DISPLAY`); without one Sary starts as `auto`. Other
     /// platforms ignore it.
     LinuxDisplayServer { Auto = "auto", X11 = "x11" } default Auto
 );
@@ -282,7 +282,7 @@ pub struct Interface {
     /// Move tool drags show only the layer's outline and an arrow, leaving its pixels in place
     /// until release. Off (the default), the pixels follow the pointer live inside the outline.
     pub show_bounding_box_when_dragging_layer: bool,
-    /// Windows and Linux: use the system's title bar and window buttons instead of PhotoCraft's
+    /// Windows and Linux: use the system's title bar and window buttons instead of Sary's
     /// own one-row title bar (tiling window managers, desktops that draw their own decorations;
     /// #1271, #1316). Read when the app starts. macOS always uses the system's.
     pub system_title_bar: bool,
@@ -414,9 +414,9 @@ impl Default for Tools {
 }
 
 /// Preferences › Tools › Pressure Curve, ready to evaluate: the same monotone cubic every brush
-/// dynamic uses for its own control ([`photocraft_paint::ResponseCurve`]), sanitised the same way,
+/// dynamic uses for its own control ([`sary_paint::ResponseCurve`]), sanitised the same way,
 /// since a whole-section update or a hand-edited preferences file can store anything.
-pub use photocraft_paint::ResponseCurve as PressureCurve;
+pub use sary_paint::ResponseCurve as PressureCurve;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
@@ -473,7 +473,7 @@ impl Default for FileHandling {
             exr_aces_cg: false,
             ask_before_saving_layered_tiff: true,
             maximize_psd_compatibility: Ask::Always,
-            rasterize_svg_groups_deeper_than: photocraft_doc::MAX_GROUP_DEPTH as u32,
+            rasterize_svg_groups_deeper_than: sary_doc::MAX_GROUP_DEPTH as u32,
             recent_file_count: 20,
             recent_files: Vec::new(),
         }
@@ -510,7 +510,7 @@ impl Default for Export {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Performance {
-    /// Memory PhotoCraft may use, in MB: bounds each document's pixels plus its History (the
+    /// Memory Sary may use, in MB: bounds each document's pixels plus its History (the
     /// oldest states are dropped beyond it).
     pub memory_usage_mb: u32,
     /// Undo steps kept per document (History panel states).
@@ -1108,7 +1108,7 @@ pub fn range(path: &str) -> Option<(f64, f64)> {
         "fileHandling.autosaveMinutes" => (1.0, 240.0),
         "fileHandling.recentFileCount" => (0.0, 100.0),
         "tools.nudgeBundlePauseMs" => (100.0, 10_000.0),
-        "fileHandling.rasterizeSvgGroupsDeeperThan" => (0.0, photocraft_doc::MAX_GROUP_DEPTH as f64),
+        "fileHandling.rasterizeSvgGroupsDeeperThan" => (0.0, sary_doc::MAX_GROUP_DEPTH as f64),
         "interface.notificationDurationSeconds" => (1.0, 120.0),
         "export.jpegQuality" | "export.webpQuality" => (1.0, 100.0),
         "performance.memoryUsageMb" => (256.0, 1_048_576.0),
@@ -1629,9 +1629,9 @@ impl Session {
             st.history.max_bytes = bytes;
             st.trim_history();
         }
-        photocraft_compose::set_effect_cache_budget(budget << 20);
+        sary_compose::set_effect_cache_budget(budget << 20);
         // Without waiting for the system font scan: this runs on the UI thread at launch.
-        photocraft_text::set_shared_missing_glyph_protection(self.prefs().type_.missing_glyph_protection());
+        sary_text::set_shared_missing_glyph_protection(self.prefs().type_.missing_glyph_protection());
         crate::plugin_cmds::sync_prefs(self);
     }
 
@@ -1678,7 +1678,7 @@ impl Session {
         let prefs: Preferences = serde_json::from_value(v).map_err(|e| format!("preferences: {e}"))?;
         if let Some(c) = color {
             self.color.settings = serde_json::from_value(c).unwrap_or_default();
-            photocraft_compose::psblend::set_text_gamma(self.color.settings.blend_text_gamma);
+            sary_compose::psblend::set_text_gamma(self.color.settings.blend_text_gamma);
         }
         self.prefs.edit(|p| *p = prefs);
         if let Some(v) = presets {
@@ -1858,7 +1858,7 @@ fn prefs_set(s: &mut Session, p: &Value) -> Result<Value> {
         return Err(bad(cmd, e));
     }
     // `colorSettings.blendTextGamma` lives in the compositor too, as `edit.colorSettings` sets it.
-    photocraft_compose::psblend::set_text_gamma(s.color.settings.blend_text_gamma);
+    sary_compose::psblend::set_text_gamma(s.color.settings.blend_text_gamma);
     s.apply_prefs();
     let view = s.prefs_view();
     let out: Map<String, Value> = changes.iter().map(|(k, _)| (k.clone(), get_path(&view, k).cloned().unwrap_or(Value::Null))).collect();
@@ -1888,7 +1888,7 @@ fn prefs_reset(s: &mut Session, p: &Value) -> Result<Value> {
         }
     }
     s.prefs.edit(|_| ());
-    photocraft_compose::psblend::set_text_gamma(s.color.settings.blend_text_gamma);
+    sary_compose::psblend::set_text_gamma(s.color.settings.blend_text_gamma);
     s.apply_prefs();
     if path.is_some_and(|path| keyed(path).is_some()) {
         // The removed override is absent, so reading its old path would report an error.
@@ -2242,7 +2242,7 @@ fn path_key(path: &str) -> String {
 #[cfg(not(target_arch = "wasm32"))]
 fn sibling(path: &str, kind: &str) -> std::io::Result<(std::path::PathBuf, std::fs::File)> {
     for n in 0..1000u32 {
-        let p = std::path::PathBuf::from(format!("{path}.{}-{n}.photocraft-{kind}", std::process::id()));
+        let p = std::path::PathBuf::from(format!("{path}.{}-{n}.sary-{kind}", std::process::id()));
         match std::fs::OpenOptions::new().write(true).create_new(true).open(&p) {
             Ok(f) => return Ok((p, f)),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,

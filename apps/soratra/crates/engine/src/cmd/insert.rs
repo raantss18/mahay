@@ -1,9 +1,9 @@
 //! Insert tab: pages, tables, pictures, shapes, links, bookmarks, headers/footers, text, symbols.
 
 use serde_json::{Value, json};
-use wordcraft_doc::para::{Float, InlineObject, ShapeKind, Wrap};
-use wordcraft_doc::props::{Align, CharProps, Rgb, TabAlign, TabStop, TextColor};
-use wordcraft_doc::{Block, Paragraph, PartKind, Path, Pos, StoryRef, Table, para_block};
+use soratra_doc::para::{Float, InlineObject, ShapeKind, Wrap};
+use soratra_doc::props::{Align, CharProps, Rgb, TabAlign, TabStop, TextColor};
+use soratra_doc::{Block, Paragraph, PartKind, Path, Pos, StoryRef, Table, para_block};
 
 use super::{delete_selection, sel_result, split_para, type_text};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -113,7 +113,7 @@ pub fn specs() -> Vec<CommandSpec> {
         .params(r#"{"lines"?: n (0 = none)}"#),
         CommandSpec::new("insert.horizontalLine", "Horizontal Line", "Home › Paragraph › Borders", |s, _| {
             super::para::fmt(s, &|p| {
-                p.borders = Some(wordcraft_doc::props::Borders { bottom: Some(wordcraft_doc::props::Border::single(1.5)), ..Default::default() })
+                p.borders = Some(soratra_doc::props::Borders { bottom: Some(soratra_doc::props::Border::single(1.5)), ..Default::default() })
             })
         }),
         CommandSpec::new("insert.textFromFile", "Text from File", "Insert › Text › Object", |s, v| {
@@ -250,10 +250,10 @@ fn place_picture(s: &mut Session, bytes: Vec<u8>, width: Option<f32>, alt: &str)
         return Err(CmdError::Failed("image is larger than 200 MB".into()));
     }
     // Natural size: pixels at 96 ppi, or a metafile's own frame (WMF, EMF: #802).
-    let (natural_w, natural_h, ext) = if let Some((pw, ph)) = wordcraft_render::image_size(&bytes) {
+    let (natural_w, natural_h, ext) = if let Some((pw, ph)) = soratra_render::image_size(&bytes) {
         let ext = image_ext(&bytes);
         (pw as f32 * 0.75, ph as f32 * 0.75, ext)
-    } else if let Some(size) = wordcraft_render::metafile_size(&bytes) {
+    } else if let Some(size) = soratra_render::metafile_size(&bytes) {
         size
     } else {
         return Err(CmdError::Failed("not a supported image (PNG, JPEG, GIF, WebP, BMP, WMF, EMF)".into()));
@@ -283,12 +283,12 @@ fn place_picture(s: &mut Session, bytes: Vec<u8>, width: Option<f32>, alt: &str)
     Ok(json!({"media": key, "width": w, "height": h}))
 }
 
-/// Insert › Icons: a library icon (original artwork drawn in code, `wordcraft_render::icon_lib`)
+/// Insert › Icons: a library icon (original artwork drawn in code, `soratra_render::icon_lib`)
 /// rendered to a PNG picture `size` points square (default 1 inch) in `color` (default black).
 /// Without an `id` it lists the library (narrowed by `query` and `category`) and asks a front end
 /// for its icon picker.
 fn icon(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_render::icon_lib;
+    use soratra_render::icon_lib;
     let Some(id) = p::str(v, "id") else {
         let category = p::str(v, "category").and_then(icon_lib::Category::parse);
         let icons: Vec<Value> = icon_lib::search(p::str(v, "query").unwrap_or(""), category)
@@ -334,7 +334,7 @@ fn shape(s: &mut Session, v: &Value) -> CmdResult {
         Some("none") | None => (false, false),
         Some(x) => return Err(CmdError::Params(format!("`arrow`: none, start, end or both, not `{x}`"))),
     };
-    let extra = wordcraft_doc::connector::ShapeExtra { arrow_start, arrow_end, ..Default::default() };
+    let extra = soratra_doc::connector::ShapeExtra { arrow_start, arrow_end, ..Default::default() };
     // Connectors float in front of the text, so they can be glued to floating shapes.
     let float = if kind.is_connector() {
         Float { wrap: Wrap::InFrontOfText, ..Default::default() }
@@ -461,15 +461,15 @@ pub fn bookmark_name_ok(name: &str) -> bool {
 }
 
 /// Where bookmark `name` is: see [`bookmark_span`]. `None` when there is no such bookmark.
-pub fn bookmark_range(doc: &wordcraft_doc::Document, name: &str) -> Option<(Pos, Pos)> {
+pub fn bookmark_range(doc: &soratra_doc::Document, name: &str) -> Option<(Pos, Pos)> {
     let (_, start) = doc.bookmarks().into_iter().find(|(n, _)| n == name)?;
     Some(bookmark_span(doc, name, &start))
 }
 
 /// The text of bookmark `name` whose start mark is at `start`: from just after that mark to its
 /// end mark — in a later paragraph when it spans several (the start again when it has no end).
-pub fn bookmark_span(doc: &wordcraft_doc::Document, name: &str, start: &Pos) -> (Pos, Pos) {
-    let from = Pos { off: start.off.saturating_add(wordcraft_doc::para::OBJ.len_utf8()), ..start.clone() };
+pub fn bookmark_span(doc: &soratra_doc::Document, name: &str, start: &Pos) -> (Pos, Pos) {
+    let from = Pos { off: start.off.saturating_add(soratra_doc::para::OBJ.len_utf8()), ..start.clone() };
     let end = doc.para_paths(start.story).into_iter().skip_while(|p| *p != start.path).find_map(|path| {
         let para = doc.para(start.story, &path)?;
         let off = para.object_offsets().into_iter().find(|o| {
@@ -484,7 +484,7 @@ pub fn bookmark_span(doc: &wordcraft_doc::Document, name: &str, start: &Pos) -> 
 /// Remove bookmark `name`'s start and end marks, in whichever paragraphs and stories they are,
 /// keeping the selection on the same text. Returns whether the bookmark was there.
 fn remove_bookmark(s: &mut Session, name: &str) -> Result<bool, CmdError> {
-    let mark_len = wordcraft_doc::para::OBJ.len_utf8();
+    let mark_len = soratra_doc::para::OBJ.len_utf8();
     let mut found = false;
     let stories: Vec<StoryRef> = std::iter::once(StoryRef::Body).chain(s.doc.parts.keys().map(|k| StoryRef::Part(*k))).collect();
     for story in stories {
@@ -550,11 +550,11 @@ fn hf_part(s: &mut Session, header: bool) -> u32 {
     let layout = s.layout();
     let page = if s.sel.focus.story == StoryRef::Body { layout.page_of(&s.sel.focus) } else { Some(s.page_hint) };
     let slot = page.and_then(|pg| layout.pages.get(pg)).map(|pg| pg.hf_slot).unwrap_or_default();
-    fn slot_of(slot: wordcraft_layout::HfSlot, set: &mut wordcraft_doc::section::HeaderSet) -> &mut Option<u32> {
+    fn slot_of(slot: soratra_layout::HfSlot, set: &mut soratra_doc::section::HeaderSet) -> &mut Option<u32> {
         match slot {
-            wordcraft_layout::HfSlot::First => &mut set.first,
-            wordcraft_layout::HfSlot::Even => &mut set.even,
-            wordcraft_layout::HfSlot::Default => &mut set.default,
+            soratra_layout::HfSlot::First => &mut set.first,
+            soratra_layout::HfSlot::Even => &mut set.even,
+            soratra_layout::HfSlot::Default => &mut set.default,
         }
     }
     let mut sect = s.doc.section_mut(block).clone();
@@ -684,9 +684,9 @@ fn page_hf_part(s: &mut Session, page: usize, header: bool) -> Result<u32, CmdEr
     let sect = s.doc.section_mut(block);
     let set = if header { &mut sect.headers } else { &mut sect.footers };
     match slot {
-        wordcraft_layout::HfSlot::First => set.first = Some(id),
-        wordcraft_layout::HfSlot::Even => set.even = Some(id),
-        wordcraft_layout::HfSlot::Default => set.default = Some(id),
+        soratra_layout::HfSlot::First => set.first = Some(id),
+        soratra_layout::HfSlot::Even => set.even = Some(id),
+        soratra_layout::HfSlot::Default => set.default = Some(id),
     }
     s.new_header_parts.push(id);
     Ok(id)
@@ -711,7 +711,7 @@ fn new_empty_headers(s: &Session) -> Vec<u32> {
 
 /// The document as saved: without the headers/footers just made and still empty, so an unwritten
 /// one is never saved (`None` when there are none, to save the document as it is).
-pub(crate) fn saved_copy(s: &Session) -> Option<wordcraft_doc::Document> {
+pub(crate) fn saved_copy(s: &Session) -> Option<soratra_doc::Document> {
     let ids = new_empty_headers(s);
     if ids.is_empty() {
         return None;
@@ -722,11 +722,11 @@ pub(crate) fn saved_copy(s: &Session) -> Option<wordcraft_doc::Document> {
 
 /// Takes headers/footers `ids` out of the document and every section that refers to them;
 /// whether anything was taken away.
-fn strip_headers(doc: &mut wordcraft_doc::Document, ids: &[u32]) -> bool {
+fn strip_headers(doc: &mut soratra_doc::Document, ids: &[u32]) -> bool {
     if ids.is_empty() {
         return false;
     }
-    let clear = |set: &mut wordcraft_doc::section::HeaderSet| {
+    let clear = |set: &mut soratra_doc::section::HeaderSet| {
         for slot in [&mut set.default, &mut set.first, &mut set.even] {
             if slot.is_some_and(|id| ids.contains(&id)) {
                 *slot = None;
@@ -922,8 +922,8 @@ fn cover_page(s: &mut Session, v: &Value) -> CmdResult {
     }
     let mut t =
         Paragraph::with_text(&title, CharProps { size: Some(44.0), color: Some(TextColor::Rgb(accent)), ..Default::default() }).styled("Title");
-    t.props.borders = Some(wordcraft_doc::props::Borders {
-        bottom: Some(wordcraft_doc::props::Border { style: wordcraft_doc::props::BorderStyle::Single, width: 2.0, color: Some(accent), space: 6.0 }),
+    t.props.borders = Some(soratra_doc::props::Borders {
+        bottom: Some(soratra_doc::props::Border { style: soratra_doc::props::BorderStyle::Single, width: 2.0, color: Some(accent), space: 6.0 }),
         ..Default::default()
     });
     blocks.push(Block::Para(t));
@@ -936,7 +936,7 @@ fn cover_page(s: &mut Session, v: &Value) -> CmdResult {
     let mut date = Paragraph::with_text(&format_date("MMMM d, yyyy"), CharProps::default());
     date.insert_text(date.len(), "\u{000C}", &CharProps::default())?;
     blocks.push(Block::Para(date));
-    let frag = wordcraft_doc::edit::Fragment { blocks, ..Default::default() };
+    let frag = soratra_doc::edit::Fragment { blocks, ..Default::default() };
     let start = s.doc.start_of(StoryRef::Body);
     let at = s.doc.split_paragraph(&start)?;
     let _ = at;
@@ -954,7 +954,7 @@ mod tests {
     /// away again so the saved file stays as it was.
     #[test]
     fn edit_header_on_a_page_creates_its_slot() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("text.insert", &json!({"text": "One"})).unwrap();
         s.run("insert.pageBreak", &json!({})).unwrap();
         s.run("text.insert", &json!({"text": "Two"})).unwrap();
@@ -967,7 +967,7 @@ mod tests {
         s.run("insert.closeHeader", &json!({})).unwrap();
         assert_eq!(s.doc.last_section.headers, Default::default());
         assert!(!s.doc.parts.contains_key(&id));
-        let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let back = soratra_docx::read(&soratra_docx::write(&s.doc).unwrap()).unwrap();
         assert!(back.parts.values().all(|p| !matches!(p.kind, PartKind::Header | PartKind::Footer)), "no empty header saved");
         // Written footer stays.
         let r = s.run("insert.editFooter", &json!({"page": 0})).unwrap();
@@ -1017,7 +1017,7 @@ mod tests {
     }
 
     fn two_pages() -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(soratra_doc::Document::new());
         s.run("text.insert", &json!({"text": "One"})).unwrap();
         s.run("insert.pageBreak", &json!({})).unwrap();
         s.run("text.insert", &json!({"text": "Two"})).unwrap();
@@ -1058,13 +1058,13 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn an_empty_new_header_is_never_saved() {
-        let dir = std::env::temp_dir().join(format!("wordcraft-hf960-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("soratra-hf960-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("x.docx");
         let mut s = two_pages();
         s.run("insert.editHeader", &json!({"page": 0})).unwrap();
         s.run("file.save", &json!({"path": path.to_string_lossy()})).unwrap();
-        let back = wordcraft_docx::read(&std::fs::read(&path).unwrap()).unwrap();
+        let back = soratra_docx::read(&std::fs::read(&path).unwrap()).unwrap();
         assert!(back.parts.values().all(|p| p.kind != PartKind::Header), "no empty header saved");
         assert_eq!(headers(&s), 1, "still open for typing");
         s.run("insert.closeHeader", &json!({})).unwrap();
@@ -1125,7 +1125,7 @@ mod tests {
     /// selects the bookmark's text, as in Word.
     #[test]
     fn deleting_a_bookmark_removes_its_start_and_end() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("Alpha beta\ngamma delta"));
+        let mut s = Session::new(soratra_doc::Document::from_text("Alpha beta\ngamma delta"));
         s.sel = Selection { anchor: Pos::body(0, 6), focus: Pos::body(1, 5) };
         s.run("insert.bookmark", &json!({"name": "Across"})).unwrap();
         assert_eq!(bookmark_marks(&s), vec![(0, true, "Across".into()), (1, false, "Across".into())]);
@@ -1146,7 +1146,7 @@ mod tests {
     /// looked for in the start's paragraph, so a bookmark across paragraphs left a stray end.
     #[test]
     fn adding_a_bookmark_again_moves_all_of_it() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("Alpha beta\ngamma delta"));
+        let mut s = Session::new(soratra_doc::Document::from_text("Alpha beta\ngamma delta"));
         s.sel = Selection { anchor: Pos::body(0, 6), focus: Pos::body(1, 5) };
         s.run("insert.bookmark", &json!({"name": "Spot"})).unwrap();
         s.run("select.text", &json!({"text": "delta"})).unwrap();
@@ -1158,7 +1158,7 @@ mod tests {
     /// Insert › Symbol with a font: only the symbol takes it, the caret's font carries on after.
     #[test]
     fn symbol_takes_its_own_font() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("ab"));
+        let mut s = Session::new(soratra_doc::Document::from_text("ab"));
         s.run("caret.docEnd", &json!({})).unwrap();
         s.run("insert.symbol", &json!({"char": "\u{2665}", "font": "DejaVu Sans"})).unwrap();
         s.run("text.insert", &json!({"text": "c"})).unwrap();

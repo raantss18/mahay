@@ -10,8 +10,8 @@ use serde_json::json;
 use super::*;
 
 /// Open, then New Layer, Fill, New Layer, Fill.
-fn harness() -> Harness<'static, PhotocraftApp> {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+fn harness() -> Harness<'static, SaryApp> {
+    let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
     app.run("file.new", json!({"width": 64, "height": 48})).unwrap();
     for (cmd, p) in
         [("layer.new.layer", json!({})), ("edit.fill", json!({"color": "#ff0000"})), ("layer.new.layer", json!({})), ("edit.fill", json!({"color": "#00ff00"}))]
@@ -20,9 +20,9 @@ fn harness() -> Harness<'static, PhotocraftApp> {
     }
     let mut ready = false;
     let mut h = Harness::builder().with_size(vec2(300.0, 400.0)).build_ui_state(
-        move |ui, app: &mut PhotocraftApp| {
+        move |ui, app: &mut SaryApp| {
             if !ready {
-                PhotocraftApp::setup_context(ui.ctx(), theme::ThemeKind::ProMedium);
+                SaryApp::setup_context(ui.ctx(), theme::ThemeKind::ProMedium);
                 ready = true;
                 return;
             }
@@ -34,7 +34,7 @@ fn harness() -> Harness<'static, PhotocraftApp> {
     h
 }
 
-fn state(h: &Harness<'_, PhotocraftApp>) -> (usize, usize, u64) {
+fn state(h: &Harness<'_, SaryApp>) -> (usize, usize, u64) {
     let st = h.state().session.active().unwrap();
     (st.history.past_len(), st.history.redo_labels().count(), st.revision)
 }

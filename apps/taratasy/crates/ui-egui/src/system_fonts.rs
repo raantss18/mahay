@@ -1,11 +1,11 @@
 //! The last-resort interface font: one face already installed on this machine.
 //!
-//! The embedded faces (Inter, egui's defaults, craft-fonts) come first in every family; this one
+//! The embedded faces (Inter, egui's defaults, mahay-fonts) come first in every family; this one
 //! only draws characters none of them has, such as an Arabic file name in a build without
-//! craft-fonts, or the Simplified Chinese interface in a build without a `Hans` face (#826). A
+//! mahay-fonts, or the Simplified Chinese interface in a build without a `Hans` face (#826). A
 //! few more installed faces, [`devanagari_fallback`], [`telugu_fallback`], [`sinhala_fallback`]
 //! and [`tamil_fallback`], draw Hindi, Telugu, Sinhala and Tamil when one is installed. It is
-//! read at runtime and never embedded or shipped (AGENTS.md §1.4), and `PDFCRAFT_SYSTEM_FONTS=0`
+//! read at runtime and never embedded or shipped (AGENTS.md §1.4), and `TARATASY_SYSTEM_FONTS=0`
 //! turns it off (published screenshots do).
 
 use std::path::{Path, PathBuf};
@@ -32,15 +32,15 @@ const TELUGU_PROBE: char = '\u{0C15}';
 const SINHALA_PROBE: char = '\u{0D9A}';
 /// Tamil letter ka (க): the face must have it to cover Tamil.
 const TAMIL_PROBE: char = '\u{0B95}';
-/// 欢 (U+6B22): Simplified only, absent from the Japanese craft-fonts faces.
+/// 欢 (U+6B22): Simplified only, absent from the Japanese mahay-fonts faces.
 const HANS_PROBE: char = '\u{6B22}';
-/// 說 (U+8AAA): Traditional only, absent from the Japanese craft-fonts faces.
+/// 說 (U+8AAA): Traditional only, absent from the Japanese mahay-fonts faces.
 const HANT_PROBE: char = '\u{8AAA}';
 
 /// What the installed face is wanted for, from the interface language.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Need {
-    /// Scripts no embedded face has (Arabic in a build without craft-fonts).
+    /// Scripts no embedded face has (Arabic in a build without mahay-fonts).
     #[default]
     Other,
     /// Simplified Chinese interface text.
@@ -64,7 +64,7 @@ pub fn fallback(need: Need) -> Option<Arc<FontData>> {
 }
 
 fn load(need: Need) -> Option<Arc<FontData>> {
-    if std::env::var_os("PDFCRAFT_SYSTEM_FONTS").is_some_and(|v| v == "0") {
+    if std::env::var_os("TARATASY_SYSTEM_FONTS").is_some_and(|v| v == "0") {
         return None;
     }
     let (probe, max) = match need {
@@ -104,7 +104,7 @@ pub fn tamil_fallback() -> Option<Arc<FontData>> {
 }
 
 fn script_fallback(candidates: &[PathBuf], probe: char) -> Option<Arc<FontData>> {
-    if std::env::var_os("PDFCRAFT_SYSTEM_FONTS").is_some_and(|v| v == "0") {
+    if std::env::var_os("TARATASY_SYSTEM_FONTS").is_some_and(|v| v == "0") {
         return None;
     }
     candidates.iter().find_map(|path| read(path, probe, MAX_BYTES))
@@ -300,7 +300,7 @@ fn unix_fonts(files: &'static [&'static str]) -> Vec<PathBuf> {
     // Read once per process, and not at all when installed fonts are turned off.
     let installed = INSTALLED
         .get_or_init(|| {
-            if std::env::var_os("PDFCRAFT_SYSTEM_FONTS").is_some_and(|v| v == "0") {
+            if std::env::var_os("TARATASY_SYSTEM_FONTS").is_some_and(|v| v == "0") {
                 return Vec::new();
             }
             fontconfig::font_files(&fontconfig::config_path())

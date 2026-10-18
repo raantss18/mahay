@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build the browser version and zip it:  $DIST/gridcraft-web-<version>.zip
+# Build the browser version and zip it:  $DIST/tabilao-web-<version>.zip
 #
 # Usage: packaging/web/package.sh [--skip-build]
 #
 # Needs: trunk (brew install trunk / cargo install trunk --locked) and the wasm32-unknown-unknown
-# target. The zip holds a self-contained static site in gridcraft-web-<version>/ that works
+# target. The zip holds a self-contained static site in tabilao-web-<version>/ that works
 # from any URL path and inside an <iframe>. Hosting notes: packaging/web/README.md.
 set -euo pipefail
 # shellcheck source=../env.sh
@@ -14,10 +14,10 @@ HERE="$ROOT/packaging/web"
 SITE="$ROOT/dist/web"
 if [ "${1:-}" != "--skip-build" ]; then
   command -v trunk >/dev/null || { echo "error: trunk not found (cargo install trunk --locked)" >&2; exit 1; }
-  [ -f "$ROOT/apps/gridcraft-web/index.html" ] || { echo "error: apps/gridcraft-web/index.html missing (the web app isn't set up yet)" >&2; exit 1; }
+  [ -f "$ROOT/apps/tabilao-web/index.html" ] || { echo "error: apps/tabilao-web/index.html missing (the web app isn't set up yet)" >&2; exit 1; }
   # --dist/--public-url here, so the output doesn't depend on Trunk.toml (which should agree:
   # public_url = "./").
-  (cd "$ROOT/apps/gridcraft-web" && trunk build --release --dist "$SITE" --public-url ./)
+  (cd "$ROOT/apps/tabilao-web" && trunk build --release --dist "$SITE" --public-url ./)
 fi
 
 [ -f "$SITE/index.html" ] || { echo "error: $SITE/index.html missing; run without --skip-build" >&2; exit 1; }
@@ -27,7 +27,7 @@ if grep -Eq '(src|href)="/[^/]' "$SITE/index.html"; then
   exit 1
 fi
 
-NAME="gridcraft-web-$VERSION"
+NAME="tabilao-web-$VERSION"
 WORK="$CARGO_TARGET_DIR/web-package"
 rm -rf "$WORK"
 mkdir -p "$WORK/$NAME"

@@ -73,7 +73,7 @@ pub struct Decoder {
     jobs: VecDeque<std::thread::JoinHandle<()>>,
     #[cfg(feature = "threads")]
     pool: Option<rayon::ThreadPool>,
-    /// Bytes the picture store may take ([`deckcraft_bitstream::budget`]).
+    /// Bytes the picture store may take ([`seho_bitstream::budget`]).
     memory_budget: u64,
 }
 
@@ -129,7 +129,7 @@ impl Decoder {
             last_show_frame: false,
             stats: DecodeStats::default(),
             threads: threads.max(1),
-            memory_budget: deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET,
+            memory_budget: seho_bitstream::budget::DECODE_MEMORY_BUDGET,
             bufs: Arc::default(),
             draft: false,
             pending: VecDeque::new(),
@@ -779,7 +779,7 @@ fn picture_of(f: &Frame, pts: i64, draft: bool) -> Picture {
 /// Whether `pictures` frames of `width` x `height` (on the 64-sample superblock grid) fit in
 /// `budget` bytes.
 fn store_fits(width: u32, height: u32, color: &crate::header::ColorConfig, pictures: usize, budget: u64) -> bool {
-    let shape = deckcraft_bitstream::budget::PictureShape {
+    let shape = seho_bitstream::budget::PictureShape {
         width: u64::from(width).div_ceil(64) * 64,
         height: u64::from(height).div_ceil(64) * 64,
         shift_x: u32::from(color.subsampling_x),
@@ -793,7 +793,7 @@ fn store_fits(width: u32, height: u32, color: &crate::header::ColorConfig, pictu
 #[cfg(test)]
 mod budget_tests {
     use super::*;
-    use deckcraft_bitstream::budget::DECODE_MEMORY_BUDGET;
+    use seho_bitstream::budget::DECODE_MEMORY_BUDGET;
 
     fn c420() -> crate::header::ColorConfig {
         crate::header::ColorConfig { subsampling_x: true, subsampling_y: true, ..Default::default() }

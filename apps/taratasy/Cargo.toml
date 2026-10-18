@@ -2,58 +2,58 @@
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
 exclude = ["vendor"]
-default-members = ["crates/*", "apps/pdfcraft", "apps/pdfcraft-cli", "xtask"]
+default-members = ["crates/*", "apps/taratasy", "apps/taratasy-cli", "xtask"]
 
 [workspace.package]
 version = "0.9.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/pdfcraft"
+repository = "https://github.com/raantss18/mahay"
 
 [workspace.dependencies]
 # Shared frontend components; engines remain independent of egui.
-craft-ui = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "5c874d51eeb3de70e735c8ce87a59a7dedd47675", features = ["serde"] }
+mahay-ui = { path = "../../libs/core/crates/ui", version = "0.1.0", features = ["serde"] }
 # Quit the macOS way (#1136): ⌘Q asks about unsaved changes, and closing quits through `terminate:`.
-craft-quit = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "f58bc1a3df490992d633393d0898af0588ce882c" }
-# Shared system spooler; document composition remains in pdfcraft-print.
-craft-print = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "666c358065261a2816b376fa3bb10538dbf53040" }
+mahay-quit = { path = "../../libs/core/crates/quit", version = "0.1.0" }
+# Shared system spooler; document composition remains in taratasy-print.
+mahay-print = { path = "../../libs/core/crates/print", version = "0.1.0" }
 # Whether a path stored in a document may be opened (GoToR link targets).
-craft-docpath = { version = "0.1.0", git = "https://github.com/storytold/craft-libs", rev = "82a24b006eefa036b43c09a67fb9a3fbd17ffe63" }
+mahay-docpath = { path = "../../libs/core/crates/docpath", version = "0.1.0" }
 # internal
-pdfcraft-geom = { path = "crates/geom", version = "0.9.0" }
-pdfcraft-filters = { path = "crates/filters", version = "0.9.0" }
-pdfcraft-cos = { path = "crates/cos", version = "0.9.0" }
-pdfcraft-crypt = { path = "crates/crypt", version = "0.9.0" }
-pdfcraft-organize = { path = "crates/organize", version = "0.9.0" }
-pdfcraft-measure = { path = "crates/measure", version = "0.9.0" }
-pdfcraft-annot = { path = "crates/annot", version = "0.9.0" }
-pdfcraft-audit = { path = "crates/audit", version = "0.9.0" }
-pdfcraft-fonts = { path = "crates/fonts", version = "0.9.0" }
-pdfcraft-model = { path = "crates/model", version = "0.9.0" }
-pdfcraft-content = { path = "crates/content", version = "0.9.0" }
-pdfcraft-redact = { path = "crates/redact", version = "0.9.0" }
-pdfcraft-print = { path = "crates/print", version = "0.9.0" }
-pdfcraft-xfdf = { path = "crates/xfdf", version = "0.9.0" }
-pdfcraft-sign = { path = "crates/sign", version = "0.9.0" }
-pdfcraft-optimize = { path = "crates/optimize", version = "0.9.0" }
-pdfcraft-a11y = { path = "crates/a11y", version = "0.9.0" }
-pdfcraft-oracle = { path = "crates/oracle", version = "0.9.0" }
-pdfcraft-testkit = { path = "crates/testkit", version = "0.9.0" }
-pdfcraft-ocr = { path = "crates/ocr", version = "0.9.0" }
-pdfcraft-js = { path = "crates/js", version = "0.9.0" }
-pdfcraft-compare = { path = "crates/compare", version = "0.9.0" }
-pdfcraft-preflight = { path = "crates/preflight", version = "0.9.0" }
-pdfcraft-export = { path = "crates/export", version = "0.9.0" }
-pdfcraft-edit = { path = "crates/edit", version = "0.9.0" }
-pdfcraft-create = { path = "crates/create", version = "0.9.0" }
-pdfcraft-forms = { path = "crates/forms", version = "0.9.0" }
-pdfcraft-xfa = { path = "crates/xfa", version = "0.9.0" }
-pdfcraft-render = { path = "crates/render", version = "0.9.0" }
-pdfcraft-engine = { path = "crates/engine", version = "0.9.0" }
-pdfcraft-platform = { path = "crates/platform", version = "0.9.0" }
-pdfcraft-ui-egui = { path = "crates/ui-egui", version = "0.9.0" }
-pdfcraft-automation = { path = "crates/automation", version = "0.9.0", default-features = false }
+taratasy-geom = { path = "crates/geom", version = "0.9.0" }
+taratasy-filters = { path = "crates/filters", version = "0.9.0" }
+taratasy-cos = { path = "crates/cos", version = "0.9.0" }
+taratasy-crypt = { path = "crates/crypt", version = "0.9.0" }
+taratasy-organize = { path = "crates/organize", version = "0.9.0" }
+taratasy-measure = { path = "crates/measure", version = "0.9.0" }
+taratasy-annot = { path = "crates/annot", version = "0.9.0" }
+taratasy-audit = { path = "crates/audit", version = "0.9.0" }
+taratasy-fonts = { path = "crates/fonts", version = "0.9.0" }
+taratasy-model = { path = "crates/model", version = "0.9.0" }
+taratasy-content = { path = "crates/content", version = "0.9.0" }
+taratasy-redact = { path = "crates/redact", version = "0.9.0" }
+taratasy-print = { path = "crates/print", version = "0.9.0" }
+taratasy-xfdf = { path = "crates/xfdf", version = "0.9.0" }
+taratasy-sign = { path = "crates/sign", version = "0.9.0" }
+taratasy-optimize = { path = "crates/optimize", version = "0.9.0" }
+taratasy-a11y = { path = "crates/a11y", version = "0.9.0" }
+taratasy-oracle = { path = "crates/oracle", version = "0.9.0" }
+taratasy-testkit = { path = "crates/testkit", version = "0.9.0" }
+taratasy-ocr = { path = "crates/ocr", version = "0.9.0" }
+taratasy-js = { path = "crates/js", version = "0.9.0" }
+taratasy-compare = { path = "crates/compare", version = "0.9.0" }
+taratasy-preflight = { path = "crates/preflight", version = "0.9.0" }
+taratasy-export = { path = "crates/export", version = "0.9.0" }
+taratasy-edit = { path = "crates/edit", version = "0.9.0" }
+taratasy-create = { path = "crates/create", version = "0.9.0" }
+taratasy-forms = { path = "crates/forms", version = "0.9.0" }
+taratasy-xfa = { path = "crates/xfa", version = "0.9.0" }
+taratasy-render = { path = "crates/render", version = "0.9.0" }
+taratasy-engine = { path = "crates/engine", version = "0.9.0" }
+taratasy-platform = { path = "crates/platform", version = "0.9.0" }
+taratasy-ui-egui = { path = "crates/ui-egui", version = "0.9.0" }
+taratasy-automation = { path = "crates/automation", version = "0.9.0", default-features = false }
 
 # pdf
 hayro = "0.7.1"
@@ -109,6 +109,10 @@ codegen-units = 1
 
 # Vendored, patched third-party crates (see vendor/README.md). Each patch is meant to go upstream.
 [patch.crates-io]
+# Adds an Android backend (Storage Access Framework through mahay-android); desktop unchanged.
+rfd = { path = "../../libs/core/vendor/rfd" }
+# Adds an Android text backend through mahay-android; desktop unchanged.
+arboard = { path = "../../libs/core/vendor/arboard" }
 hayro-interpret = { path = "vendor/hayro-interpret" }
 hayro = { path = "vendor/hayro" }
 hayro-syntax = { path = "vendor/hayro-syntax" }
@@ -117,3 +121,10 @@ lopdf = { path = "vendor/lopdf" }
 winit = { path = "vendor/winit" }
 egui-wgpu = { path = "vendor/egui-wgpu" }
 vello_common = { path = "vendor/vello_common" }
+
+# Android release: whole-program LTO and no symbols, for the smallest .so.
+[profile.android]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+strip = true

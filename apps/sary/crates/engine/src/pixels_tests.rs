@@ -1,6 +1,6 @@
-use photocraft_color::{ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{Document, Layer, Size};
-use photocraft_raster::from_rgba;
+use sary_color::{ColorMode, PixelFormat, SampleType};
+use sary_doc::{Document, Layer, Size};
+use sary_raster::from_rgba;
 use serde_json::json;
 use std::time::Instant;
 
@@ -53,11 +53,11 @@ fn benchmark_large_group_merge() {
         children.push(child);
     }
     doc.layers.push(Layer::group("Group", children));
-    let expected_area = photocraft_compose::layer_bounds(&doc.layers[0], doc.bounds()).intersect(&doc.bounds());
+    let expected_area = sary_compose::layer_bounds(&doc.layers[0], doc.bounds()).intersect(&doc.bounds());
 
     let start = Instant::now();
-    let reference = photocraft_compose::flatten(&doc);
-    let reference_data: Vec<f32> = reference.px.iter().flat_map(|p| photocraft_raster::from_rgba(&fmt, *p)).collect();
+    let reference = sary_compose::flatten(&doc);
+    let reference_data: Vec<f32> = reference.px.iter().flat_map(|p| sary_raster::from_rgba(&fmt, *p)).collect();
     let mut reference_surface = Surface::new(fmt);
     reference_surface.write_region(doc.bounds(), &reference_data);
     reference_surface.prune();
@@ -216,7 +216,7 @@ fn clear_leaves_unselected_tiles_shared_and_drops_cleared_ones() {
     sel.write_pixel(601, 301, &[0.5]);
     let mut got = s.clone();
     try_clear_surface(&mut got, Rect::new(0, 0, 602, 302), Some(&sel)).unwrap();
-    let tile = |s: &Surface, tx, ty| s.tile(photocraft_geom::TileCoord::new(tx, ty)).cloned();
+    let tile = |s: &Surface, tx, ty| s.tile(sary_geom::TileCoord::new(tx, ty)).cloned();
     assert!(tile(&got, 0, 0).is_none(), "a fully cleared tile is no tile");
     let (a, b) = (tile(&s, 2, 1).unwrap(), tile(&got, 2, 1).unwrap());
     assert!(std::sync::Arc::ptr_eq(&a, &b), "a tile the selection leaves alone is not copied");
@@ -246,7 +246,7 @@ fn benchmark_clear_large_selection() {
 /// become 255 - v (a lands one step past the mirror), 16 bits mirror a and b around neutral.
 #[test]
 fn invert_in_a_lab_document_mirrors_l_a_and_b() {
-    use photocraft_color::convert::{lab_to_srgb, srgb_to_lab};
+    use sary_color::convert::{lab_to_srgb, srgb_to_lab};
     let c = lab_to_srgb([30.0, 12.0, -18.0]);
     for depth in SampleType::ALL {
         let fmt = PixelFormat { mode: ColorMode::Lab, sample: depth, alpha: true };
@@ -255,7 +255,7 @@ fn invert_in_a_lab_document_mirrors_l_a_and_b() {
         s.write_region(r, &(0..4).flat_map(|_| from_rgba(&fmt, [c[0], c[1], c[2], 1.0])).collect::<Vec<_>>());
         adjust_surface(&mut s, &Adjustment::Invert, None, ColorMode::Lab);
         let px = s.read_region(Rect::new(1, 1, 2, 2));
-        let rgba = photocraft_raster::to_rgba(&fmt, &px);
+        let rgba = sary_raster::to_rgba(&fmt, &px);
         let got = srgb_to_lab([rgba[0], rgba[1], rgba[2]]);
         let want = if depth == SampleType::U8 { [70.0, -13.0, 17.0] } else { [70.0, -12.0, 18.0] };
         assert!(got.iter().zip(want).all(|(g, w)| (g - w).abs() < 0.5), "{depth:?}: {got:?}");
@@ -284,7 +284,7 @@ fn mixing_through_a_selection_matches_sampling_it_per_pixel() {
                 let k = sel.sample_channel(r.x0 + (i % w) as i32, r.y0 + (i / w) as i32, 0);
                 let mixed: [f32; 4] = std::array::from_fn(|c| o[c] + (a[c] - o[c]) * k);
                 let mut enc = [0.0f32; 8];
-                let m = photocraft_raster::from_rgba_into(&fmt, mixed, &mut enc);
+                let m = sary_raster::from_rgba_into(&fmt, mixed, &mut enc);
                 expected.extend_from_slice(&enc[..m]);
             }
             assert_eq!(mix_through_selection(&fmt, r, &orig, &edited, Some(&sel)), expected, "{sel_fmt:?} over {fmt:?}");
@@ -294,7 +294,7 @@ fn mixing_through_a_selection_matches_sampling_it_per_pixel() {
     let px = [[0.1, 0.2, 0.3, 1.0]];
     let fmt = PixelFormat::RGBA8;
     let mut enc = [0.0f32; 8];
-    let m = photocraft_raster::from_rgba_into(&fmt, px[0], &mut enc);
+    let m = sary_raster::from_rgba_into(&fmt, px[0], &mut enc);
     assert_eq!(mix_through_selection(&fmt, Rect::new(0, 0, 1, 1), &[[0.0; 4]], &px, None), enc[..m].to_vec());
     assert!(mix_through_selection(&fmt, Rect::EMPTY, &[], &[], None).is_empty());
 }
@@ -380,7 +380,7 @@ fn hue_saturation_and_color_balance_keep_a_cmyk_layers_black() {
     let cmyk = PixelFormat::new(ColorMode::Cmyk, SampleType::U16, true);
     let ink = [0.2, 0.7, 0.1, 0.3, 1.0];
     let hue =
-        Adjustment::HueSaturation { hue: 40.0, saturation: 25.0, lightness: -10.0, colorize: false, ranges: photocraft_doc::adjust::HueRange::defaults() };
+        Adjustment::HueSaturation { hue: 40.0, saturation: 25.0, lightness: -10.0, colorize: false, ranges: sary_doc::adjust::HueRange::defaults() };
     let balance =
         Adjustment::ColorBalance { shadows: [20.0, -10.0, 0.0], midtones: [-15.0, 10.0, 30.0], highlights: [0.0, 0.0, -20.0], preserve_luminosity: true };
     for adj in [hue, balance] {

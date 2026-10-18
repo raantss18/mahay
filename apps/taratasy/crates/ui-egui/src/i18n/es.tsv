@@ -6,7 +6,7 @@
 # Spanish computing vocabulary (European Spanish, informal "tú"). No proprietary localisation
 # resource, string table or product UI (Acrobat's included) was consulted or copied; add entries
 # the same way.
-# Product and technology names (PdfCraft, PDF, Acrobat JavaScript ...) are not translated;
+# Product and technology names (Taratasy, PDF, Acrobat JavaScript ...) are not translated;
 # the trailing "…" of dialog commands is kept.
 
 	Menu	Menú
@@ -158,17 +158,17 @@
 	Next page	Página siguiente
 	Previous page	Página anterior
 	Current page — type a page number or label (such as iv) and press Enter	Página actual: escribe un número o una etiqueta de página (por ejemplo, iv) y pulsa Intro
-	Welcome to PdfCraft	Te damos la bienvenida a PdfCraft
+	Welcome to Taratasy	Te damos la bienvenida a Taratasy
 	An open-source PDF workbench — local, private, and scriptable.	Un banco de trabajo PDF de código abierto: local, privado y automatizable.
-	Join the ArtCraft community	Únete a la comunidad de ArtCraft
+	Join the Mahay community	Únete a la comunidad de Mahay
 	Get help, share feedback and follow development on Discord.	Recibe ayuda, comparte tu opinión y sigue el desarrollo en Discord.
 	Recommended tools	Herramientas recomendadas
 	Use now	Usar ahora
 	Open file	Abrir archivo
 	Recent	Recientes
-	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Los archivos que abras en PdfCraft aparecerán aquí. Suelta un PDF en cualquier parte para abrirlo.
+	Files you open in Taratasy appear here. Drop a PDF anywhere to open it.	Los archivos que abras en Taratasy aparecerán aquí. Suelta un PDF en cualquier parte para abrirlo.
 	Privacy	Privacidad
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft funciona sin conexión. Sin telemetría, sin cuenta y sin procesamiento en la nube, salvo que añadas un proveedor.
+	Taratasy works offline. No telemetry, no account, and no cloud processing unless you add a provider.	Taratasy funciona sin conexión. Sin telemetría, sin cuenta y sin procesamiento en la nube, salvo que añadas un proveedor.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Los scripts se ejecutan en un entorno aislado, sin acceso a archivos ni a la red. Con JavaScript desactivado, las funciones estándar de formato, validación y cálculo de Acrobat siguen funcionando.
 	Back to all tools	Volver a todas las herramientas
 	Close panel	Cerrar panel
@@ -306,12 +306,12 @@
 	Split document…	Dividir documento…
 	Number pages…	Numerar páginas…
 	Keyboard shortcuts	Atajos de teclado
-	Join the ArtCraft Discord	Únete al Discord de ArtCraft
-	PdfCraft web page	Página web de PdfCraft
-	PdfCraft on GitHub	PdfCraft en GitHub
-	ArtCraft website	Sitio web de ArtCraft
+	Join the Mahay Discord	Únete al Discord de Mahay
+	Taratasy web page	Página web de Taratasy
+	Taratasy on GitHub	Taratasy en GitHub
+	Mahay website	Sitio web de Mahay
 	Check for updates…	Buscar actualizaciones…
-	About PdfCraft	Acerca de PdfCraft
+	About Taratasy	Acerca de Taratasy
 	Export a PDF	Exportar un PDF
 	Export to	Exportar a
 	Microsoft Word (.docx)	Microsoft Word (.docx)
@@ -768,9 +768,9 @@
 	Check for updates	Buscar actualizaciones
 	No check has run yet.	Aún no se ha hecho ninguna comprobación.
 	Checking for a newer version…	Buscando una versión más reciente…
-	PdfCraft {v} is available.	PdfCraft {v} está disponible.
+	Taratasy {v} is available.	Taratasy {v} está disponible.
 	You have version {c}. Download the new version from its release page.	Tienes la versión {c}. Descarga la nueva versión desde su página de publicación.
-	PdfCraft {c} is up to date.	PdfCraft {c} está actualizado.
+	Taratasy {c} is up to date.	Taratasy {c} está actualizado.
 	Couldn't check for updates: {e}	No se pudieron buscar actualizaciones: {e}
 	You have version {c}. All releases are listed at {page}.	Tienes la versión {c}. Todas las versiones aparecen en {page}.
 	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Consulta a GitHub cuál es la última versión. No se descarga ni se instala nada automáticamente.
@@ -889,8 +889,8 @@
 	No changes allowed	No se permite ningún cambio
 	Annotations, form fill-in, and digital signatures	Anotaciones, rellenado de formularios y firmas digitales
 	Form fill-in and digital signatures	Rellenado de formularios y firmas digitales
-	The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.	La clave está en el Llavero de macOS, que puede pedirte permiso para que PdfCraft la use.
-	The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.	La clave está en el almacén de certificados de Windows, que puede pedirte permiso para que PdfCraft la use.
+	The key is in the macOS Keychain, which may ask to allow Taratasy to use it.	La clave está en el Llavero de macOS, que puede pedirte permiso para que Taratasy la use.
+	The key is in the Windows certificate store, which may ask to allow Taratasy to use it.	La clave está en el almacén de certificados de Windows, que puede pedirte permiso para que Taratasy la use.
 	Digital ID password	Contraseña del ID digital
 	Back	Atrás
 	Validate all	Validar todas
@@ -1252,7 +1252,7 @@
 	Downsample to	Reducir resolución a
 	Also recognize pages that already have text	Reconocer también las páginas que ya tienen texto
 	Pictures on those pages are recognized too; words already in the page's text are not added again	También se reconocen las imágenes de esas páginas; las palabras que ya están en el texto de la página no se vuelven a añadir
-	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	El reconocimiento de texto no está instalado: faltan sus archivos de modelo. Reinstala PdfCraft o define PDFCRAFT_MODELS con la carpeta que los contiene.
+	Text recognition isn't installed: its model files are missing. Reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them.	El reconocimiento de texto no está instalado: faltan sus archivos de modelo. Reinstala Taratasy o define TARATASY_MODELS con la carpeta que los contiene.
 	Settings	Ajustes
 	Optional	Opcional
 	Planned · {m}	Previsto · {m}
@@ -1397,7 +1397,7 @@
 	Anyone opening the document will need this password. It's applied when you save.	Cualquiera que abra el documento necesitará esta contraseña. Se aplica al guardar.
 	The document opens without a password; this password is needed to change the restrictions. It's applied when you save.	El documento se abre sin contraseña; esta contraseña hace falta para cambiar las restricciones. Se aplica al guardar.
 	Recover unsaved documents?	¿Recuperar documentos sin guardar?
-	PdfCraft didn't shut down normally. These documents had changes that were autosaved:	PdfCraft no se cerró correctamente. Estos documentos tenían cambios que se guardaron automáticamente:
+	Taratasy didn't shut down normally. These documents had changes that were autosaved:	Taratasy no se cerró correctamente. Estos documentos tenían cambios que se guardaron automáticamente:
 	just now	ahora mismo
 	{n} min ago	hace {n} min
 	{n} h ago	hace {n} h
@@ -1558,10 +1558,10 @@
 	On the web, open or drop an image to convert it	En la versión web, abre o suelta una imagen para convertirla
 	Couldn't optimize the file: {e}	No se pudo optimizar el archivo: {e}
 	Couldn't write {path}: {e}	No se pudo escribir {path}: {e}
-	The form asks to be submitted to {u}; PdfCraft doesn't send form data. Save the document to keep your entries.	El formulario pide enviarse a {u}; PdfCraft no envía datos de formulario. Guarda el documento para conservar lo que has introducido.
+	The form asks to be submitted to {u}; Taratasy doesn't send form data. Save the document to keep your entries.	El formulario pide enviarse a {u}; Taratasy no envía datos de formulario. Guarda el documento para conservar lo que has introducido.
 	This PDF uses the unsupported {s} action.	Este PDF usa una acción {s} no compatible.
 	{name}: the {other} action isn't supported yet	{name}: la acción {other} aún no es compatible
-	{name} submits the form to {url}; PdfCraft doesn't send form data. Save the document to keep your entries.	{name} envía el formulario a {url}; PdfCraft no envía datos de formulario. Guarda el documento para conservar lo que has introducido.
+	{name} submits the form to {url}; Taratasy doesn't send form data. Save the document to keep your entries.	{name} envía el formulario a {url}; Taratasy no envía datos de formulario. Guarda el documento para conservar lo que has introducido.
 	Export stopped: {e}	Exportación detenida: {e}
 	Exported 1 image	Se ha exportado 1 imagen
 	Exported {n} images	Se han exportado {n} imágenes
@@ -1733,7 +1733,7 @@ action wizard	Start	Iniciar
 	Couldn't open {name}: {e}	No se pudo abrir {name}: {e}
 	Couldn't read {name}: {e}	No se pudo leer {name}: {e}
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	El modo portátil está desactivado: no se puede escribir en {folder} ({error}). La configuración se guarda en tu carpeta de usuario.
-	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	PdfCraft está dibujando sin procesador gráfico, así que puede ir lento. Actualizar el controlador gráfico puede ayudar.
+	Taratasy is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	Taratasy está dibujando sin procesador gráfico, así que puede ir lento. Actualizar el controlador gráfico puede ayudar.
 	Couldn't save: {e}	No se pudo guardar: {e}
 	Downloading attachments on the web arrives with M3.10 ({n} bytes ready)	La descarga de archivos adjuntos en la versión web llegará con M3.10 ({n} bytes listos)
 	`{command}` {when}	`{command}` {when}
@@ -1807,8 +1807,8 @@ action wizard	Start	Iniciar
 	Signed and all signatures are valid.	Firmado y todas las firmas son válidas.
 	At least one signature has problems.	Al menos una firma tiene problemas.
 	This document is secured. Some changes are restricted by its security settings.	Este documento está protegido. Su configuración de seguridad restringe algunos cambios.
-	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Este es un formulario XFA dinámico, que PdfCraft aún no puede mostrar. Lo que ves es la página de marcador de posición del archivo.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Este formulario también contiene datos XFA, que PdfCraft aún no lee. Puedes rellenar sus campos, pero Acrobat puede mostrar los valores XFA en su lugar.
+	This is a dynamic XFA form, which Taratasy can't display yet. What you see is the file's placeholder page.	Este es un formulario XFA dinámico, que Taratasy aún no puede mostrar. Lo que ves es la página de marcador de posición del archivo.
+	This form also contains XFA data, which Taratasy doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Este formulario también contiene datos XFA, que Taratasy aún no lee. Puedes rellenar sus campos, pero Acrobat puede mostrar los valores XFA en su lugar.
 	This document contains {n} interactive form fields.	Este documento contiene {n} campos de formulario interactivos.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Este archivo estaba dañado y se ha reparado. Al guardar se conserva la versión reparada.
 	Dismiss	Cerrar
@@ -1857,7 +1857,7 @@ action wizard	Start	Iniciar
 	there are no pages to print	no hay páginas que imprimir
 	the document has no tags	el documento no tiene etiquetas
 	{0}: {1}	{0}: {1}
-	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	los modelos de reconocimiento de texto no están instalados (reinstala PdfCraft o define PDFCRAFT_MODELS con la carpeta que los contiene)
+	the text recognition models are not installed (reinstall Taratasy, or set TARATASY_MODELS to the folder that holds them)	los modelos de reconocimiento de texto no están instalados (reinstala Taratasy o define TARATASY_MODELS con la carpeta que los contiene)
 	the image is empty	la imagen está vacía
 	this file isn't XFDF, FDF, XML or text form data	este archivo no contiene datos de formulario XFDF, FDF, XML ni de texto
 	nothing in the file matches this document	nada en el archivo coincide con este documento
@@ -2119,7 +2119,7 @@ action wizard	Start	Iniciar
 	% of all commits	% de todos los commits
 	Lines +/−	Líneas +/−
 	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR, {commits} commits, +{added} / −{deleted} líneas (Δ {delta}), +{bin_added} / −{bin_deleted} recursos binarios, {first} – {last}
-	Reopen the files that were open when PdfCraft last closed	Volver a abrir los archivos que estaban abiertos al cerrar PdfCraft por última vez
+	Reopen the files that were open when Taratasy last closed	Volver a abrir los archivos que estaban abiertos al cerrar Taratasy por última vez
 	Add {what}	Añadir {what}
 	Use {what}	Usar {what}
 	Place saved {what}	Colocar {what} desde lo guardado
@@ -2127,8 +2127,8 @@ action wizard	Start	Iniciar
 	A link	Un enlace
 	A button	Un botón
 	A script	Un script
-	{who} in this document tried to open an address PdfCraft won't open: {e}.	{who} de este documento intentó abrir una dirección que PdfCraft no abre: {e}.
-	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	{who} de este documento intentó abrir una dirección que PdfCraft no abre: {e}. Desde los documentos solo se abren enlaces web (http, https) y de correo (mailto).
+	{who} in this document tried to open an address Taratasy won't open: {e}.	{who} de este documento intentó abrir una dirección que Taratasy no abre: {e}.
+	{who} in this document tried to open an address Taratasy won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	{who} de este documento intentó abrir una dirección que Taratasy no abre: {e}. Desde los documentos solo se abren enlaces web (http, https) y de correo (mailto).
 	Another file dialog is still open. Finish with it first.	Todavía hay otro cuadro de archivos abierto. Termina primero con ese.
 	Couldn't show the file picker. Please try again.	No se pudo mostrar el selector de archivos. Inténtalo de nuevo.
 	The document changed while you were choosing a file, so nothing was changed.	El documento cambió mientras elegías un archivo, así que no se modificó nada.
@@ -2177,8 +2177,8 @@ action wizard	Start	Iniciar
 	For page sizes and margins.	Para tamaños de página y márgenes.
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Las fuentes de texto PDF no pueden mostrar «{c}» ({code}). Elige texto compatible.
 	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Las fuentes estándar no pueden mostrar «{c}» ({code}). Por ahora solo se pueden añadir como texto caracteres de Europa occidental.
-	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	La fuente de este campo no puede mostrar «{c}» ({code}), así que PdfCraft muestra ? en su lugar. El valor se guarda y los demás visores de PDF vuelven a dibujar el campo a partir de él.
-	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Las fuentes con las que escribe PdfCraft no pueden mostrar «{c}» ({code}), así que aparece como ? en todos los visores de PDF. El texto se guarda.
+	This field's font can't draw “{c}” ({code}), so Taratasy shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	La fuente de este campo no puede mostrar «{c}» ({code}), así que Taratasy muestra ? en su lugar. El valor se guarda y los demás visores de PDF vuelven a dibujar el campo a partir de él.
+	The fonts Taratasy writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Las fuentes con las que escribe Taratasy no pueden mostrar «{c}» ({code}), así que aparece como ? en todos los visores de PDF. El texto se guarda.
 	Open arrow	Flecha abierta
 	Closed arrow	Flecha cerrada
 	Butt	Extremo recto
@@ -2226,8 +2226,8 @@ action wizard	Start	Iniciar
 	 ({n} at {dpi} dpi, the largest size they can be drawn at)	 ({n} a {dpi} ppp, el mayor tamaño al que se pueden dibujar)
 
 # What the layers below word for themselves, now that the engine hands the wording over apart from
-# the document's own words: `pdfcraft_a11y::{WORDINGS, REPORT_WORDS}`, `pdfcraft_preflight::WORDINGS`,
-# `pdfcraft_sign::pdf::{WORDINGS, kind::ALL}`, `pdfcraft_print::WORDINGS` and the engine's
+# the document's own words: `taratasy_a11y::{WORDINGS, REPORT_WORDS}`, `taratasy_preflight::WORDINGS`,
+# `taratasy_sign::pdf::{WORDINGS, kind::ALL}`, `taratasy_print::WORDINGS` and the engine's
 # `EDIT_LABELS`. `spanish_covers_what_the_engine_says` keeps this section complete.
 #
 # What the checker finds (a11y::WORDINGS).
@@ -2287,7 +2287,7 @@ action wizard	Start	Iniciar
 	The signature's byte range does not exclude exactly its contents.	El intervalo de bytes de la firma no excluye exactamente su contenido.
 	The signature contents are not hexadecimal.	El contenido de la firma no es hexadecimal.
 	The signature could not be read ({}).	No se ha podido leer la firma ({}).
-	PdfCraft can't check this signature yet: {}.	PdfCraft todavía no puede comprobar esta firma: {}.
+	Taratasy can't check this signature yet: {}.	Taratasy todavía no puede comprobar esta firma: {}.
 	The signature uses the legacy adbe.x509.rsa_sha1 format.	La firma usa el formato antiguo adbe.x509.rsa_sha1.
 # What was read leniently on the way, each sentence worded where the reading happens.
 	The signature is BER-encoded (indefinite lengths) rather than DER; it was read leniently.	La firma está codificada en BER (longitudes indefinidas) en vez de en DER; se ha leído con indulgencia.
@@ -2311,7 +2311,7 @@ action wizard	Start	Iniciar
 	The signer's certificate was not valid at the time of signing.	El certificado del firmante no era válido en el momento de la firma.
 	The signer's certificate does not allow digital signatures (its key usage has neither digital signature nor non-repudiation).	El certificado del firmante no permite firmas digitales (su uso de clave no incluye ni firma digital ni no repudio).
 	The signer's certificate is not issued for signing documents (its extended key usage has no document-signing purpose).	El certificado del firmante no está emitido para firmar documentos (su uso extendido de clave no incluye ningún propósito de firma de documentos).
-	The signer's certificate has critical extensions PdfCraft does not recognize ({}).	El certificado del firmante tiene extensiones críticas que PdfCraft no reconoce ({}).
+	The signer's certificate has critical extensions Taratasy does not recognize ({}).	El certificado del firmante tiene extensiones críticas que Taratasy no reconoce ({}).
 # Why a certificate that matched the issuer was not used to build the chain.
 	The certificate of {} is not a CA certificate that may issue certificates, so it is not used to vouch for {}.	El certificado de {} no es un certificado de CA que pueda emitir certificados, así que no se usa para avalar a {}.
 	The certificate of {} does not allow this many CA certificates below it (path length), so it is not used to vouch for {}.	El certificado de {} no admite tantos certificados de CA por debajo (longitud de ruta), así que no se usa para avalar a {}.
@@ -2470,7 +2470,7 @@ animation effects	Off	Desactivados
 	no output folder was chosen	no se eligió ninguna carpeta de salida
 @plural	Downloaded {n} PDF|Downloaded {n} PDFs	Se descargó {n} PDF|Se descargaron {n} PDF
 	Scan	Escanear
-	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: PdfCraft finds the signature and removes the paper.	Firma en una hoja de papel blanco y hazle una foto con luz intensa y uniforme (usa el flash). Elige la foto o suéltala aquí: PdfCraft encuentra la firma y elimina el papel.
+	Sign a sheet of white paper and take a photo of it in bright, even light (use the flash). Choose the photo or drop it here: Taratasy finds the signature and removes the paper.	Firma en una hoja de papel blanco y hazle una foto con luz intensa y uniforme (usa el flash). Elige la foto o suéltala aquí: Taratasy encuentra la firma y elimina el papel.
 	Choose photo…	Elegir foto…
 	No photo chosen	No se ha elegido ninguna foto
 	Photo	Foto

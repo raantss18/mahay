@@ -8,7 +8,7 @@
 use egui::{Color32, Mesh, Rect, Sense, Stroke, StrokeKind, pos2, vec2};
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 use crate::theme::Tokens;
 use crate::widgets;
@@ -33,7 +33,7 @@ fn field_lab(mode: &str, z: f32, x: f32, y: f32) -> Option<[f32; 3]> {
 
 /// Lab → sRGB, clamped to what the field can show.
 fn lab_rgb(lab: [f32; 3]) -> [f32; 3] {
-    photocraft_color::convert::lab_to_srgb(lab).map(|c| c.clamp(0.0, 1.0))
+    sary_color::convert::lab_to_srgb(lab).map(|c| c.clamp(0.0, 1.0))
 }
 
 /// Colour differences the CMYK round trip leaves inside the printable gamut (ΔE ≤ 0.4, black ≈ 1.4
@@ -42,7 +42,7 @@ const GAMUT_DE: f32 = 3.0;
 
 /// The nearest printable colour, when `rgb` is outside the CMYK gamut (Photoshop's ⚠ warning).
 pub fn out_of_gamut(rgb: [f32; 3]) -> Option<[f32; 3]> {
-    use photocraft_color::convert::{cmyk_to_rgb, rgb_to_cmyk, srgb_to_lab};
+    use sary_color::convert::{cmyk_to_rgb, rgb_to_cmyk, srgb_to_lab};
     let back = cmyk_to_rgb(rgb_to_cmyk(rgb)).map(|c| c.clamp(0.0, 1.0));
     let (a, b) = (srgb_to_lab(rgb), srgb_to_lab(back));
     let de = ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2) + (a[2] - b[2]).powi(2)).sqrt();
@@ -167,7 +167,7 @@ fn c32(c: [f32; 3]) -> Color32 {
 }
 
 /// Open the picker for the foreground or background colour.
-pub fn open(app: &mut PhotocraftApp, target: &str) -> u64 {
+pub fn open(app: &mut SaryApp, target: &str) -> u64 {
     let c = if target == "background" { app.session.tools.background } else { app.session.tools.foreground };
     let rgb = [c[0], c[1], c[2]];
     let label = if target == "background" { "Color Picker (Background Color)" } else { "Color Picker (Foreground Color)" };
@@ -195,7 +195,7 @@ pub(crate) fn initial_fields(target: &str, label: &str, rgb: [f32; 3]) -> Map<St
 /// Seed [`initial_fields`] with the last Only Web Colors setting. With web-only on, the opening
 /// colour is snapped and `__orig` follows it: OK without an edit is "unchanged", so opening the
 /// picker never rewrites a fill behind the user's back (#4995).
-pub(crate) fn fields_with_web(app: &PhotocraftApp, target: &str, label: &str, rgb: [f32; 3]) -> Map<String, Value> {
+pub(crate) fn fields_with_web(app: &SaryApp, target: &str, label: &str, rgb: [f32; 3]) -> Map<String, Value> {
     let mut f = initial_fields(target, label, rgb);
     f.insert("__webOnly".into(), json!(app.ui.color_panel.web_only));
     if app.ui.color_panel.web_only {
@@ -207,7 +207,7 @@ pub(crate) fn fields_with_web(app: &PhotocraftApp, target: &str, label: &str, rg
 
 /// Open the picker on `rgb` for something other than the tool colours: OK runs `command` with
 /// `params` plus `"color": "#rrggbb"` (e.g. a gradient stop's colour).
-pub fn open_for_command(app: &mut PhotocraftApp, label: &str, rgb: [f32; 3], command: &str, params: Value) -> u64 {
+pub fn open_for_command(app: &mut SaryApp, label: &str, rgb: [f32; 3], command: &str, params: Value) -> u64 {
     let mut f = fields_with_web(app, "command", label, rgb);
     f.insert("__command".into(), json!(command));
     f.insert("__params".into(), params);
@@ -216,7 +216,7 @@ pub fn open_for_command(app: &mut PhotocraftApp, label: &str, rgb: [f32; 3], com
 
 /// Open the picker on `rgb` for a colour field of another dialog (e.g. Edit › Fill's Color…): OK
 /// writes `"#rrggbb"` into `field` of dialog `dialog`, which stays open; Cancel leaves it alone.
-pub fn open_for_field(app: &mut PhotocraftApp, label: &str, rgb: [f32; 3], dialog: u64, field: &str) -> u64 {
+pub fn open_for_field(app: &mut SaryApp, label: &str, rgb: [f32; 3], dialog: u64, field: &str) -> u64 {
     let mut f = fields_with_web(app, "field", label, rgb);
     f.insert("__dialog".into(), json!(dialog));
     f.insert("__field".into(), json!(field));
@@ -225,7 +225,7 @@ pub fn open_for_field(app: &mut PhotocraftApp, label: &str, rgb: [f32; 3], dialo
 
 /// Open the picker on `rgb` for a colour the shell keeps itself (e.g. the Crop shield's custom
 /// colour): OK hands `"#rrggbb"` to `target`'s setter in [`confirm`]; Cancel leaves it alone.
-pub fn open_for_target(app: &mut PhotocraftApp, target: &str, label: &str, rgb: [f32; 3]) -> u64 {
+pub fn open_for_target(app: &mut SaryApp, target: &str, label: &str, rgb: [f32; 3]) -> u64 {
     app.ui.open_dialog(DialogKind::Command, fields_with_web(app, target, label, rgb))
 }
 
@@ -280,7 +280,7 @@ fn set_field(f: &mut Map<String, Value>, field: &str, value: Value) -> Result<()
 
 /// Opens the Color Picker dialog `id`'s body asked for ([`request`], [`request_field`]), on its
 /// colour: OK sets that field of the dialog (not the foreground), Cancel leaves it as it was.
-pub fn open_requested(app: &mut PhotocraftApp, id: u64) {
+pub fn open_requested(app: &mut SaryApp, id: u64) {
     let Some(d) = app.ui.dialog_mut(id) else { return };
     let (title, field) = match d.fields.remove(REQUEST) {
         Some(Value::String(title)) => (title, "color".to_string()),
@@ -309,13 +309,13 @@ pub fn reset(f: &mut Map<String, Value>) {
 }
 
 /// The Color Picker, when it is the top dialog (another dialog opened over it takes the input).
-pub fn top(app: &PhotocraftApp) -> Option<u64> {
+pub fn top(app: &SaryApp) -> Option<u64> {
     app.ui.dialogs.last().filter(|d| owns(&d.fields)).map(|d| d.id)
 }
 
 /// Eyedropper: the top Color Picker's new colour becomes the image's composite colour at document
 /// point (x, y). Off the image or over transparency nothing changes.
-pub fn sample_at(app: &mut PhotocraftApp, x: f64, y: f64) {
+pub fn sample_at(app: &mut SaryApp, x: f64, y: f64) {
     let Some(id) = top(app) else { return };
     let Some(rgb) = crate::canvas::composite_color(app, x, y) else { return };
     if let Some(d) = app.ui.dialog_mut(id) {
@@ -356,8 +356,8 @@ pub fn current(f: &Map<String, Value>) -> Components {
     Components {
         rgb,
         hsv: kept(f, "__hsv", rgb, |h| hsv_to_rgb(h[0], h[1], h[2])).unwrap_or_else(|| rgb_to_hsv(rgb)),
-        lab: kept(f, "__lab", rgb, photocraft_color::convert::lab_to_srgb).unwrap_or_else(|| photocraft_color::convert::srgb_to_lab(rgb)),
-        cmyk: kept(f, "__cmyk", rgb, photocraft_color::convert::cmyk_to_rgb).unwrap_or_else(|| photocraft_color::convert::rgb_to_cmyk(rgb)),
+        lab: kept(f, "__lab", rgb, sary_color::convert::lab_to_srgb).unwrap_or_else(|| sary_color::convert::srgb_to_lab(rgb)),
+        cmyk: kept(f, "__cmyk", rgb, sary_color::convert::cmyk_to_rgb).unwrap_or_else(|| sary_color::convert::rgb_to_cmyk(rgb)),
     }
 }
 
@@ -723,7 +723,7 @@ fn fields(ui: &mut egui::Ui, f: &mut Map<String, Value>, mode: &str, now: &Compo
                 if widgets::value_field(ui, &mut x, range, "", VALUE_W).changed() {
                     let mut l = lab;
                     l[i] = x;
-                    edit = Some((photocraft_color::convert::lab_to_srgb(l).map(|c| c.clamp(0.0, 1.0)), Keep::Lab(l)));
+                    edit = Some((sary_color::convert::lab_to_srgb(l).map(|c| c.clamp(0.0, 1.0)), Keep::Lab(l)));
                 }
                 ui.label("");
                 ui.end_row();
@@ -737,7 +737,7 @@ fn fields(ui: &mut egui::Ui, f: &mut Map<String, Value>, mode: &str, now: &Compo
                 if widgets::value_field(ui, &mut x, 0.0..=100.0, "", VALUE_W).changed() {
                     let mut k = cmyk;
                     k[i] = x / 100.0;
-                    edit = Some((photocraft_color::convert::cmyk_to_rgb(k).map(|c| c.clamp(0.0, 1.0)), Keep::Cmyk(k)));
+                    edit = Some((sary_color::convert::cmyk_to_rgb(k).map(|c| c.clamp(0.0, 1.0)), Keep::Cmyk(k)));
                 }
                 ui.label(egui::RichText::new("%").color(t.text_faint));
                 ui.end_row();
@@ -770,14 +770,14 @@ fn take_hex_paste(ui: &egui::Ui) -> Option<[f32; 3]> {
 }
 
 /// Add to Swatches was clicked: add the picked colour to the Swatches panel.
-pub fn take_add_swatch(app: &mut PhotocraftApp, f: &mut Map<String, Value>) {
+pub fn take_add_swatch(app: &mut SaryApp, f: &mut Map<String, Value>) {
     if f.remove("__addSwatch").and_then(|v| v.as_bool()) == Some(true) {
         crate::swatches_ui::add_from_picker(app, f);
     }
 }
 
 /// OK: set the foreground or background colour.
-pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, f: &Map<String, Value>) -> Result<Value, String> {
     if crate::type_panels_ui::color_picker::owns(f) {
         return crate::type_panels_ui::color_picker::confirm(app, f);
     }
@@ -823,7 +823,7 @@ pub fn confirm(app: &mut PhotocraftApp, f: &Map<String, Value>) -> Result<Value,
     }
     let mut params = json!({ target: color });
     // The CMYK values the person entered stay the colour's inks: a CMYK document is filled with them (#4196).
-    if let Some(cmyk) = parse_hex(color).and_then(|rgb| kept::<4>(f, "__cmyk", rgb, photocraft_color::convert::cmyk_to_rgb)) {
+    if let Some(cmyk) = parse_hex(color).and_then(|rgb| kept::<4>(f, "__cmyk", rgb, sary_color::convert::cmyk_to_rgb)) {
         params[format!("{target}Cmyk")] = json!(cmyk);
     }
     let r = app.run("tools.setColors", params)?;
@@ -871,7 +871,7 @@ mod tests {
             },
             f,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         h.run_steps(2);
         h
     }
@@ -942,9 +942,9 @@ mod tests {
 
     #[test]
     fn color_picker_dialog_hex_field_is_in_tab_order_and_confirms_typed_color() {
-        let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let mut h = Harness::builder().with_size(vec2(760.0, 480.0)).build_ui_state(|ui, app| crate::dialogs::show(app, ui.ctx()), app);
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
         open(h.state_mut(), "foreground");
         h.run_steps(3);
         assert!(h.get_by_role(Role::TextInput).is_focused(), "hex field has focus in dialog frame");
@@ -959,7 +959,7 @@ mod tests {
 
     #[test]
     fn alt_reset_restores_orig_color() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.tools.foreground = [0.2, 0.4, 0.6, 1.0];
         let id = open(&mut app, "foreground");
         let f = &mut app.ui.dialog_mut(id).unwrap().fields;
@@ -972,13 +972,13 @@ mod tests {
     #[test]
     fn lab_and_cmyk_fields_take_multi_digit_values() {
         let base = parse_hex("#336699").unwrap();
-        let lab = photocraft_color::convert::srgb_to_lab(base);
-        let cmyk = photocraft_color::convert::rgb_to_cmyk(base);
+        let lab = sary_color::convert::srgb_to_lab(base);
+        let cmyk = sary_color::convert::rgb_to_cmyk(base);
         // Fields in order: H S B R G B, L a b, C M Y K.
         for (field, typed, want) in [
-            (6, "60", photocraft_color::convert::lab_to_srgb([60.0, lab[1], lab[2]])),
-            (7, "30", photocraft_color::convert::lab_to_srgb([lab[0], 30.0, lab[2]])),
-            (9, "40", photocraft_color::convert::cmyk_to_rgb([0.4, cmyk[1], cmyk[2], cmyk[3]])),
+            (6, "60", sary_color::convert::lab_to_srgb([60.0, lab[1], lab[2]])),
+            (7, "30", sary_color::convert::lab_to_srgb([lab[0], 30.0, lab[2]])),
+            (9, "40", sary_color::convert::cmyk_to_rgb([0.4, cmyk[1], cmyk[2], cmyk[3]])),
         ] {
             let mut h = picker("#336699");
             h.query_all_by_role(Role::SpinButton).nth(field).unwrap().click();
@@ -1006,7 +1006,7 @@ mod tests {
         assert_eq!(h.query_all_by_label("OK").count(), 1);
         let web = h.get_by_label("Only Web Colors").rect();
         assert!(web.left() < hue.left() && web.top() > hue.bottom());
-        // The full dialog should fit even in PhotoCraft's minimum 760 x 480 window.
+        // The full dialog should fit even in Sary's minimum 760 x 480 window.
         assert!(black.bottom() - ok.top() < 360.0);
         assert!(black.right() - web.left() < 600.0);
         let hex = h.get_by_role(Role::TextInput).rect();
@@ -1015,12 +1015,12 @@ mod tests {
 
     /// The whole Color Picker window (title, frame and all) is no bigger than Photoshop's: about
     /// 534 x 376 points (Photoshop 27.11 on macOS, measured from a screenshot at the same scale as
-    /// PhotoCraft's, which was 682 x 438).
+    /// Sary's, which was 682 x 438).
     #[test]
     fn the_picker_window_is_no_bigger_than_photoshops() {
         let mut h = Harness::builder().with_size(vec2(1400.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            PhotocraftApp::new(photocraft_engine::Session::new(), Default::default())
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            SaryApp::new(sary_engine::Session::new(), Default::default())
         });
         h.run_steps(4);
         let id = open(h.state_mut(), "foreground");
@@ -1063,14 +1063,14 @@ mod tests {
         set_rgb(&mut f, hsv_to_rgb(40.0, 1.0, 1.0), Keep::Hsv([40.0, 1.0, 1.0]));
         assert_eq!(f["color"], json!("#ff9900"));
         assert!(f.get("__hsv").is_none(), "kept HSV does not outlive a web snap");
-        set_rgb(&mut f, photocraft_color::convert::lab_to_srgb([50.0, 40.0, 20.0]).map(|c| c.clamp(0.0, 1.0)), Keep::Lab([50.0, 40.0, 20.0]));
+        set_rgb(&mut f, sary_color::convert::lab_to_srgb([50.0, 40.0, 20.0]).map(|c| c.clamp(0.0, 1.0)), Keep::Lab([50.0, 40.0, 20.0]));
         assert_eq!(not_web_safe(parse_hex(f["color"].as_str().unwrap()).unwrap()), None);
         assert!(f.get("__lab").is_none());
     }
 
     #[test]
     fn web_only_survives_reopen_and_other_picker_targets() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.ui.color_panel.web_only = true;
         let id = open(&mut app, "foreground");
         let f = &app.ui.dialog_mut(id).unwrap().fields;
@@ -1087,7 +1087,7 @@ mod tests {
 
     #[test]
     fn sample_at_snaps_when_only_web_colors_is_on() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         let id = open(&mut app, "foreground");
         let f = &mut app.ui.dialog_mut(id).unwrap().fields;
         f.insert("__webOnly".into(), json!(true));
@@ -1099,9 +1099,9 @@ mod tests {
     fn side_buttons_and_keyboard_confirm_or_cancel_without_changing_the_other_color() {
         for target in ["foreground", "background"] {
             for action in ["OK", "Cancel", "Enter", "Escape"] {
-                let app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+                let app = SaryApp::new(sary_engine::Session::new(), Default::default());
                 let mut h = Harness::builder().with_size(vec2(760.0, 480.0)).build_ui_state(|ui, app| crate::dialogs::show(app, ui.ctx()), app);
-                PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+                SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
                 let original_fg = h.state().session.tools.foreground;
                 let original_bg = h.state().session.tools.background;
                 let id = open(h.state_mut(), target);
@@ -1160,7 +1160,7 @@ mod tests {
     #[test]
     fn field_and_locate_are_inverse_in_every_mode() {
         let rgb = [0.8, 0.3, 0.2];
-        let (hsv, lab) = (rgb_to_hsv(rgb), photocraft_color::convert::srgb_to_lab(rgb));
+        let (hsv, lab) = (rgb_to_hsv(rgb), sary_color::convert::srgb_to_lab(rgb));
         for (m, _) in MODES.iter().chain(LAB_MODES) {
             let (x, y, z) = locate(m, hsv, rgb, lab);
             let c = field_color(m, z, x, y);
@@ -1171,20 +1171,20 @@ mod tests {
     #[test]
     fn lab_fields_are_laid_out_like_photoshops() {
         // Photoshop 25.4. L: a across (green to red), b upwards (blue to yellow).
-        let l = |x, y| photocraft_color::convert::srgb_to_lab(field_color("lab_l", 0.6, x, y));
+        let l = |x, y| sary_color::convert::srgb_to_lab(field_color("lab_l", 0.6, x, y));
         assert!(l(0.0, 0.5)[1] < -40.0 && l(1.0, 0.5)[1] > 40.0, "{:?} {:?}", l(0.0, 0.5), l(1.0, 0.5));
         assert!(l(0.5, 1.0)[2] < -40.0 && l(0.5, 0.0)[2] > 40.0, "{:?} {:?}", l(0.5, 1.0), l(0.5, 0.0));
         // a: b across, L upwards (white at the top, black at the bottom).
         assert!(field_color("lab_a", 0.5, 0.5, 0.0).iter().all(|&c| c > 0.99), "white at the top");
         assert!(field_color("lab_a", 0.5, 0.5, 1.0).iter().all(|&c| c < 0.01), "black at the bottom");
-        let a = |x| photocraft_color::convert::srgb_to_lab(field_color("lab_a", 0.5, x, 0.5));
+        let a = |x| sary_color::convert::srgb_to_lab(field_color("lab_a", 0.5, x, 0.5));
         assert!(a(0.0)[2] < -40.0 && a(1.0)[2] > 40.0);
         // b: a across, L upwards; its slider runs from yellow (top) to blue.
-        let b = |x| photocraft_color::convert::srgb_to_lab(field_color("lab_b", 0.5, x, 0.5));
+        let b = |x| sary_color::convert::srgb_to_lab(field_color("lab_b", 0.5, x, 0.5));
         assert!(b(0.0)[1] < -40.0 && b(1.0)[1] > 40.0);
         let lab = [60.0, 0.0, 0.0];
-        let top = photocraft_color::convert::srgb_to_lab(slider_color("lab_b", 1.0, [0.0; 3], [0.0; 3], lab));
-        let bottom = photocraft_color::convert::srgb_to_lab(slider_color("lab_b", 0.0, [0.0; 3], [0.0; 3], lab));
+        let top = sary_color::convert::srgb_to_lab(slider_color("lab_b", 1.0, [0.0; 3], [0.0; 3], lab));
+        let bottom = sary_color::convert::srgb_to_lab(slider_color("lab_b", 0.0, [0.0; 3], [0.0; 3], lab));
         assert!(top[2] > 40.0 && bottom[2] < -40.0, "{top:?} {bottom:?}");
     }
 
@@ -1206,7 +1206,7 @@ mod tests {
         f.insert("color".into(), json!("#808080"));
         f.insert("__hsv".into(), json!([200.0, 0.0, 128.0 / 255.0]));
         assert_eq!(current(&f).hsv[0], 200.0);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let id = open(&mut app, "background");
         let d = app.ui.dialog_mut(id).unwrap();
         d.fields.insert("color".into(), json!("#3366cc"));
@@ -1219,11 +1219,11 @@ mod tests {
     /// reopening the picker shows them again.
     #[test]
     fn cmyk_values_survive_ok_and_a_reopen() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let cyan = [1.0, 0.0, 0.0, 0.0];
         let id = open(&mut app, "foreground");
         let d = app.ui.dialog_mut(id).unwrap();
-        set_rgb(&mut d.fields, photocraft_color::convert::cmyk_to_rgb(cyan).map(|c| c.clamp(0.0, 1.0)), Keep::Cmyk(cyan));
+        set_rgb(&mut d.fields, sary_color::convert::cmyk_to_rgb(cyan).map(|c| c.clamp(0.0, 1.0)), Keep::Cmyk(cyan));
         let fields = d.fields.clone();
         confirm(&mut app, &fields).unwrap();
         let fg = app.session.tools.foreground;
@@ -1233,13 +1233,13 @@ mod tests {
         assert_eq!(again.cmyk, cyan);
     }
 
-    fn dialog_color(app: &PhotocraftApp, id: u64) -> &str {
+    fn dialog_color(app: &SaryApp, id: u64) -> &str {
         app.ui.dialogs.iter().find(|d| d.id == id).and_then(|d| d.fields.get("color")).and_then(Value::as_str).unwrap()
     }
 
     #[test]
     fn the_top_picker_samples_the_image() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 40, "height": 20, "background": "transparent"})).unwrap();
         app.run("shape.create", json!({"kind": "rect", "rect": [0, 0, 20, 20], "fill": "#ff0000"})).unwrap();
         app.run("shape.create", json!({"kind": "rect", "rect": [20, 0, 10, 20], "fill": "#00ff00"})).unwrap();
@@ -1283,7 +1283,7 @@ mod screen_integration_tests {
     use egui_kittest::{Harness, kittest::Queryable};
     #[test]
     fn text_swatch_opens_full_dialog_and_screen_pick_waits_for_ok() {
-        let mut session = photocraft_engine::Session::new();
+        let mut session = sary_engine::Session::new();
         session.execute("file.new", json!({"width":160,"height":120})).unwrap();
         let id = session.execute("type.create", json!({"text":"Hello world","color":"#000000","size":24,"x":10,"y":60})).unwrap()["layer"].as_u64().unwrap();
         let services = crate::Services {
@@ -1295,8 +1295,8 @@ mod screen_integration_tests {
             ..Default::default()
         };
         let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_max_steps(64).build_eframe(move |cc| {
-            PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-            let mut app = PhotocraftApp::new(session, services);
+            SaryApp::setup_context(&cc.egui_ctx, Default::default());
+            let mut app = SaryApp::new(session, services);
             app.ui.tool = crate::state::Tool::Type;
             app
         });
@@ -1314,8 +1314,8 @@ mod screen_integration_tests {
         h.get_by_label("OK").click();
         h.run_steps(4);
         let doc = &h.state().session.active().unwrap().doc;
-        let layer = doc.layer(photocraft_doc::LayerId(id)).unwrap();
-        let photocraft_doc::LayerContent::Text(text) = &layer.content else { panic!("not text") };
+        let layer = doc.layer(sary_doc::LayerId(id)).unwrap();
+        let sary_doc::LayerContent::Text(text) = &layer.content else { panic!("not text") };
         assert_eq!(text.color.to_rgba8(), [255, 136, 0, 255]);
         assert_eq!(h.state().session.active().unwrap().history.entries().len(), before + 1);
     }

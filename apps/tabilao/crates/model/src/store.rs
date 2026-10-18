@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use gridcraft_core::{CellRef, RangeRef};
+use tabilao_core::{CellRef, RangeRef};
 use serde::{Deserialize, Serialize};
 
 use crate::cell::Cell;
@@ -168,7 +168,7 @@ impl CellStore {
         };
         for (c, cell) in moved {
             let nr = c.row as i64 + delta;
-            if (0..gridcraft_core::MAX_ROWS as i64).contains(&nr) {
+            if (0..tabilao_core::MAX_ROWS as i64).contains(&nr) {
                 self.set(CellRef::new(nr as u32, c.col), cell);
             }
         }
@@ -178,7 +178,7 @@ impl CellStore {
         let moved: Vec<(CellRef, Cell)> = keys.into_iter().filter_map(|c| self.remove(c).map(|cell| (c, cell))).collect();
         for (c, cell) in moved {
             let nc = c.col as i64 + delta;
-            if (0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
+            if (0..tabilao_core::MAX_COLS as i64).contains(&nc) {
                 self.set(CellRef::new(c.row, nc as u32), cell);
             }
         }
@@ -186,22 +186,22 @@ impl CellStore {
     /// Shifts cells within rows `r0..=r1` and columns `>= from` horizontally (Insert/Delete Cells
     /// with shift right/left).
     pub fn shift_cols_in_rows(&mut self, r0: u32, r1: u32, from: u32, delta: i64) {
-        let range = RangeRef::new(CellRef::new(r0, from), CellRef::new(r1, gridcraft_core::MAX_COLS - 1));
+        let range = RangeRef::new(CellRef::new(r0, from), CellRef::new(r1, tabilao_core::MAX_COLS - 1));
         let moved = self.take_range(range);
         for (c, cell) in moved {
             let nc = c.col as i64 + delta;
-            if (0..gridcraft_core::MAX_COLS as i64).contains(&nc) {
+            if (0..tabilao_core::MAX_COLS as i64).contains(&nc) {
                 self.set(CellRef::new(c.row, nc as u32), cell);
             }
         }
     }
     /// Shifts cells within columns `c0..=c1` and rows `>= from` vertically.
     pub fn shift_rows_in_cols(&mut self, c0: u32, c1: u32, from: u32, delta: i64) {
-        let range = RangeRef::new(CellRef::new(from, c0), CellRef::new(gridcraft_core::MAX_ROWS - 1, c1));
+        let range = RangeRef::new(CellRef::new(from, c0), CellRef::new(tabilao_core::MAX_ROWS - 1, c1));
         let moved = self.take_range(range);
         for (c, cell) in moved {
             let nr = c.row as i64 + delta;
-            if (0..gridcraft_core::MAX_ROWS as i64).contains(&nr) {
+            if (0..tabilao_core::MAX_ROWS as i64).contains(&nr) {
                 self.set(CellRef::new(nr as u32, c.col), cell);
             }
         }
@@ -211,7 +211,7 @@ impl CellStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gridcraft_core::Value;
+    use tabilao_core::Value;
 
     fn c(r: u32, col: u32) -> CellRef {
         CellRef::new(r, col)

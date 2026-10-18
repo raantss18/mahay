@@ -2,8 +2,8 @@
 //! commands on Persian text, arrow keys in bidirectional text, DOCX save and open.
 
 use serde_json::json;
-use wordcraft_doc::props::Align;
-use wordcraft_doc::{Pos, StoryRef};
+use soratra_doc::props::Align;
+use soratra_doc::{Pos, StoryRef};
 
 use crate::Session;
 
@@ -13,7 +13,7 @@ fn run(s: &mut Session, id: &str, v: serde_json::Value) -> serde_json::Value {
 
 /// A session with `text` (paragraphs split on `\n`), every paragraph right to left when `rtl`.
 fn session(text: &str, rtl: bool) -> Session {
-    let mut s = Session::new(wordcraft_doc::Document::new());
+    let mut s = Session::new(soratra_doc::Document::new());
     run(&mut s, "document.setText", json!({"text": text}));
     if rtl {
         run(&mut s, "select.all", json!({}));
@@ -23,8 +23,8 @@ fn session(text: &str, rtl: bool) -> Session {
     s
 }
 
-fn props(s: &Session, i: usize) -> wordcraft_doc::props::ParaProps {
-    s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(i)).unwrap().props.clone()
+fn props(s: &Session, i: usize) -> soratra_doc::props::ParaProps {
+    s.doc.para(StoryRef::Body, &soratra_doc::Path::top(i)).unwrap().props.clone()
 }
 
 fn caret_x(s: &mut Session) -> f32 {
@@ -100,22 +100,22 @@ fn font_commands_reach_persian_text() {
     run(&mut s, "format.bold", json!({}));
     run(&mut s, "format.size", json!({"size": 18}));
     run(&mut s, "format.font", json!({"name": "Vazirmatn"}));
-    let p = s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap();
+    let p = s.doc.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap();
     let c = p.props_of_char(0).clone();
     let rc = s.doc.styles.resolve_char(None, &c).complex();
     assert_eq!((rc.font.as_str(), rc.size, rc.bold), ("Vazirmatn", 18.0, true), "the complex-script formatting follows");
     // Saved and reopened, Word sees bold and size for the Persian text too.
     let bytes = crate::io::save_bytes("x.docx", &s.doc).unwrap();
     let d = crate::io::open_bytes("x.docx", &bytes).unwrap();
-    let c = d.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().props_of_char(0).clone();
+    let c = d.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().props_of_char(0).clone();
     let rc = d.styles.resolve_char(None, &c).complex();
     assert_eq!((rc.font.as_str(), rc.size, rc.bold), ("Vazirmatn", 18.0, true));
-    assert_eq!(d.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().props.bidi, Some(true));
+    assert_eq!(d.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().props.bidi, Some(true));
 }
 
 #[test]
 fn font_commands_override_inherited_complex_script_properties_explicitly() {
-    use wordcraft_doc::props::CharProps;
+    use soratra_doc::props::CharProps;
 
     let mut s = session("שלום ABC", true);
     s.doc.styles.default_chr.size_cs = Some(30.0);
@@ -135,22 +135,22 @@ fn font_commands_override_inherited_complex_script_properties_explicitly() {
         if let Some(command) = command {
             run(&mut s, command, json!({}));
         }
-        let p = s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap();
+        let p = s.doc.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap();
         let c = p.props_of_char(0);
         assert_eq!((c.size_cs, c.bold_cs, c.italic_cs), (Some(expected_size), Some(false), Some(false)));
         let d = crate::io::open_bytes("x.docx", &crate::io::save_bytes("x.docx", &s.doc).unwrap()).unwrap();
-        let c = d.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().props_of_char(0);
+        let c = d.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().props_of_char(0);
         let cs = d.styles.resolve_char(None, c).complex();
         assert_eq!((cs.size, cs.bold, cs.italic), (expected_size, false, false));
     }
     // The font dialog's command keeps formatting both scripts when given one value.
     run(&mut s, "format.set", json!({"props": {"size": 10, "bold": true, "italic": true}}));
-    let p = s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap();
+    let p = s.doc.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap();
     let c: &CharProps = p.props_of_char(0);
     assert_eq!((c.size_cs, c.bold_cs, c.italic_cs), (Some(10.0), Some(true), Some(true)));
     // Callers can still supply distinct values explicitly, including false.
     run(&mut s, "format.set", json!({"props": {"size": 12, "sizeCs": 18, "bold": true, "boldCs": false, "italic": true, "italicCs": false}}));
-    let p = s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap();
+    let p = s.doc.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap();
     let c = p.props_of_char(0);
     assert_eq!((c.size, c.size_cs, c.bold_cs, c.italic_cs), (Some(12.0), Some(18.0), Some(false), Some(false)));
 }
@@ -220,10 +220,10 @@ fn word_moves_follow_reading_order() {
 #[test]
 fn typing_persian_keeps_logical_order() {
     let mut s = session("", true);
-    for w in ["سلام", " ", "WordCraft", " ", "۱۴۰۳"] {
+    for w in ["سلام", " ", "Soratra", " ", "۱۴۰۳"] {
         run(&mut s, "text.insert", json!({"text": w}));
     }
-    assert_eq!(s.doc.plain_text(StoryRef::Body), "سلام WordCraft ۱۴۰۳");
+    assert_eq!(s.doc.plain_text(StoryRef::Body), "سلام Soratra ۱۴۰۳");
     // The caret after typing a number at the end sits right after it on the screen.
     let l = s.layout();
     let c = l.caret(&s.sel.focus).unwrap();
@@ -252,7 +252,7 @@ fn explicit_alignment_sets_without_toggling() {
 
 #[test]
 fn typing_kurdish_in_new_document_advances_caret_smoothly() {
-    let mut s = Session::new(wordcraft_doc::Document::new());
+    let mut s = Session::new(soratra_doc::Document::new());
     let mut first_x = None;
     let mut last_x = 0.0;
     for ch in ["م", "ن", " ", "ن", "ا", "و", "م", " ", "ه", "ێ", "ڤ", "ا", "ر", "ه"] {
@@ -295,8 +295,8 @@ fn latin_typed_into_reopened_hebrew_is_saved_left_to_right() {
     let s = session("לפני אחרי", true);
     let bytes = crate::io::save_bytes("x.docx", &s.doc).unwrap();
     let mut s = Session::new(crate::io::open_bytes("x.docx", &bytes).unwrap());
-    assert!(s.doc.para(StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap().runs.iter().all(|r| r.props.rtl == Some(true)));
-    s.sel = crate::Selection::caret(Pos::new(StoryRef::Body, wordcraft_doc::Path::top(0), "לפני ".len()));
+    assert!(s.doc.para(StoryRef::Body, &soratra_doc::Path::top(0)).unwrap().runs.iter().all(|r| r.props.rtl == Some(true)));
+    s.sel = crate::Selection::caret(Pos::new(StoryRef::Body, soratra_doc::Path::top(0), "לפני ".len()));
     run(&mut s, "text.insert", json!({"text": "Foo Bar 2026 "}));
     let runs = saved_runs(&s);
     assert!(runs.contains(&(false, "Foo Bar 2026".to_string())), "{runs:?}");
@@ -311,12 +311,12 @@ fn a_latin_link_inserted_into_reopened_hebrew_is_saved_left_to_right() {
     let s = session("לפני אחרי", true);
     let bytes = crate::io::save_bytes("x.docx", &s.doc).unwrap();
     let mut s = Session::new(crate::io::open_bytes("x.docx", &bytes).unwrap());
-    s.sel = crate::Selection::caret(Pos::new(StoryRef::Body, wordcraft_doc::Path::top(0), "לפני ".len()));
-    run(&mut s, "insert.link", json!({"url": "https://example.com", "text": "WordCraft site"}));
+    s.sel = crate::Selection::caret(Pos::new(StoryRef::Body, soratra_doc::Path::top(0), "לפני ".len()));
+    run(&mut s, "insert.link", json!({"url": "https://example.com", "text": "Soratra site"}));
     let runs = saved_runs(&s);
-    assert!(runs.contains(&(false, "WordCraft site".to_string())), "{runs:?}");
+    assert!(runs.contains(&(false, "Soratra site".to_string())), "{runs:?}");
     // The caret's own formatting, as Reveal Formatting shows it, still says right to left.
-    s.sel = crate::Selection::caret(Pos::new(StoryRef::Body, wordcraft_doc::Path::top(0), "לפ".len()));
+    s.sel = crate::Selection::caret(Pos::new(StoryRef::Body, soratra_doc::Path::top(0), "לפ".len()));
     s.pending = None; // moving the caret by hand doesn't drop the link's pending formatting
     assert_eq!(s.caret_props().rtl, Some(true));
     assert_eq!(s.typing_props().rtl, None);

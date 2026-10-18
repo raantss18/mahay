@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use gridcraft_core::{DateSystem, RangeRef};
-use gridcraft_model::{CalcMode, CellPicture, DefinedName, Sheet, Style, StyleId, StyleTable, Visibility, Workbook};
+use tabilao_core::{DateSystem, RangeRef};
+use tabilao_model::{CalcMode, CellPicture, DefinedName, Sheet, Style, StyleId, StyleTable, Visibility, Workbook};
 
 use crate::package::{Package, Rel};
 use crate::styles::{StylesIn, read_styles};
@@ -326,7 +326,7 @@ pub fn read_xlsx(bytes: &[u8]) -> Result<(Workbook, ReadReport), IoError> {
         wb.props.company = x.child("Company").map(|e| e.text.clone()).unwrap_or_default();
     }
 
-    // A VBA project is carried through unchanged: GridCraft never runs macros, but preserving the
+    // A VBA project is carried through unchanged: Tabilao never runs macros, but preserving the
     // binary keeps macro-enabled workbooks from being silently stripped on save.
     if let Some(r) = find_rel(&wb_rels, "vbaProject").cloned() {
         match cx.pkg.read(&r.target) {
@@ -378,10 +378,10 @@ pub fn parse_print_titles(text: &str) -> (Option<(u32, u32)>, Option<(u32, u32)>
         let p = strip_sheet(part.trim()).replace('$', "");
         let Some((a, b)) = p.split_once(':') else { continue };
         if let (Ok(r0), Ok(r1)) = (a.parse::<u32>(), b.parse::<u32>()) {
-            if r0 >= 1 && r1 >= r0 && r1 <= gridcraft_core::MAX_ROWS {
+            if r0 >= 1 && r1 >= r0 && r1 <= tabilao_core::MAX_ROWS {
                 rows = Some((r0 - 1, r1 - 1));
             }
-        } else if let (Some(c0), Some(c1)) = (gridcraft_core::letters_to_col(a), gridcraft_core::letters_to_col(b))
+        } else if let (Some(c0), Some(c1)) = (tabilao_core::letters_to_col(a), tabilao_core::letters_to_col(b))
             && c1 >= c0
         {
             cols = Some((c0, c1));

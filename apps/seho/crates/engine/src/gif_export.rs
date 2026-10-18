@@ -9,7 +9,7 @@
 //! the total number of pixels encoded is capped, so a request can't exhaust memory or run for
 //! hours.
 
-use deckcraft_model::Presentation;
+use seho_model::Presentation;
 use serde_json::Value;
 
 use crate::cmd::bad;
@@ -181,7 +181,7 @@ pub fn frame_size(doc: &Presentation, width: u32) -> (u32, u32) {
 
 /// Straight RGBA of a premultiplied render composited onto white (GIF has no partial alpha, and
 /// fully transparent pixels would otherwise become see-through).
-fn on_white(img: &deckcraft_render::Image, w: u32, h: u32) -> Vec<u8> {
+fn on_white(img: &seho_render::Image, w: u32, h: u32) -> Vec<u8> {
     let len = (w as usize).saturating_mul(h as usize).saturating_mul(4);
     if img.width != w || img.height != h || img.pixels.len() != len {
         log::error!("GIF export: a slide rendered at {}×{} instead of {w}×{h}; writing a blank frame", img.width, img.height);
@@ -220,7 +220,7 @@ pub fn encode(doc: &Presentation, opts: &GifOptions) -> Result<GifOutput> {
             enc.set_repeat(Repeat::Infinite).map_err(enc_err)?;
         }
         for i in &frames {
-            let img = deckcraft_render::render_slide(doc, *i, &deckcraft_render::RenderOpts { scale, size: Some((w, h)), ..Default::default() });
+            let img = seho_render::render_slide(doc, *i, &seho_render::RenderOpts { scale, size: Some((w, h)), ..Default::default() });
             let buffer = image::RgbaImage::from_raw(w, h, on_white(&img, w, h))
                 .ok_or_else(|| EngineError::Other(format!("GIF export: slide {i} has no pixels")))?;
             let delay = image::Delay::from_numer_denom_ms(u32::from(delay_cs) * 10, 1);
@@ -258,7 +258,7 @@ mod tests {
     }
 
     fn temp(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("deckcraft-gif-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("seho-gif-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         dir.join(name)
     }
@@ -397,7 +397,7 @@ mod tests {
         assert!(w >= 1 && h <= MAX_SIDE && w <= MAX_WIDTH, "{w}×{h}");
         // The total pixel budget stops huge requests before anything is rendered.
         let mut big = Presentation::clone(doc);
-        big.slide_size = deckcraft_geom::Size::new(960.0, 540.0);
+        big.slide_size = seho_geom::Size::new(960.0, 540.0);
         let slide = big.slides[0].clone();
         big.slides = vec![slide; 200];
         let o = GifOptions { width: MAX_WIDTH, ..Default::default() };
@@ -405,7 +405,7 @@ mod tests {
         assert!(e.contains("too large"), "{e}");
         // A degenerate slide size falls back to 16:9 rather than dividing by zero.
         let mut odd = Presentation::clone(doc);
-        odd.slide_size = deckcraft_geom::Size::new(0.0, f64::NAN);
+        odd.slide_size = seho_geom::Size::new(0.0, f64::NAN);
         assert_eq!(frame_size(&odd, 640), (640, 360));
     }
 

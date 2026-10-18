@@ -11,7 +11,7 @@ use egui::{Color32, Context, Modifiers};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// An open layer menu: where (screen points) and the layers under that point, topmost first.
@@ -28,7 +28,7 @@ pub fn is_gesture(tool: Tool, mods: Modifiers) -> bool {
 }
 
 /// The layers at document point (x, y), topmost first, including text between glyphs.
-pub fn layers_at(app: &mut PhotocraftApp, x: f64, y: f64) -> Vec<(u64, String)> {
+pub fn layers_at(app: &mut SaryApp, x: f64, y: f64) -> Vec<(u64, String)> {
     if !(x.is_finite() && y.is_finite()) {
         return Vec::new();
     }
@@ -41,7 +41,7 @@ pub fn layers_at(app: &mut PhotocraftApp, x: f64, y: f64) -> Vec<(u64, String)> 
 
 /// Open the menu at screen point `at` for document point (x, y). False (and nothing opens) when
 /// no layer has pixels there.
-pub fn open(app: &mut PhotocraftApp, ctx: &Context, at: [f32; 2], x: f64, y: f64) -> bool {
+pub fn open(app: &mut SaryApp, ctx: &Context, at: [f32; 2], x: f64, y: f64) -> bool {
     let layers = layers_at(app, x, y);
     if layers.is_empty() {
         app.ui.layer_menu = None;
@@ -54,7 +54,7 @@ pub fn open(app: &mut PhotocraftApp, ctx: &Context, at: [f32; 2], x: f64, y: f64
 }
 
 /// Choose a layer from the menu: select it (one `layer.select`) and close the menu.
-pub fn choose(app: &mut PhotocraftApp, layer: u64) {
+pub fn choose(app: &mut SaryApp, layer: u64) {
     app.ui.layer_menu = None;
     if let Err(e) = app.run("layer.select", json!({"layer": layer, "mode": "replace"})) {
         app.ui.status = e;
@@ -66,7 +66,7 @@ fn menu_id() -> egui::Id {
 }
 
 /// Show the open menu. Escape or a click outside closes it.
-pub fn show(app: &mut PhotocraftApp, ctx: &Context) {
+pub fn show(app: &mut SaryApp, ctx: &Context) {
     let Some(menu) = app.ui.layer_menu.clone() else { return };
     if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
         app.ui.layer_menu = None;
@@ -118,8 +118,8 @@ mod tests {
 
     /// 200 × 200: a white Background, "Red" (a square in the middle), and "Hidden" (all over,
     /// hidden). Returns the app and the (background, red, hidden) ids.
-    fn app() -> (PhotocraftApp, u64, u64, u64) {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    fn app() -> (SaryApp, u64, u64, u64) {
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 200, "height": 200})).unwrap();
         let bg = app.session.active().unwrap().active_layer.unwrap().0;
         app.run("layer.new.layer", json!({"name": "Red"})).unwrap();
@@ -134,7 +134,7 @@ mod tests {
         (app, bg, red, hidden)
     }
 
-    fn names(app: &PhotocraftApp) -> Vec<String> {
+    fn names(app: &SaryApp) -> Vec<String> {
         app.ui.layer_menu.as_ref().map(|m| m.layers.iter().map(|l| l.1.clone()).collect()).unwrap_or_default()
     }
 
@@ -158,7 +158,7 @@ mod tests {
             assert!(a.ui.layer_menu.is_none());
         }
         // A transparent document: nothing to list.
-        let mut b = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut b = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         assert!(!open(&mut b, &Context::default(), [0.0, 0.0], 1.0, 1.0), "no document");
         b.run("file.new", json!({"width": 20, "height": 20, "background": "transparent"})).unwrap();
         assert!(!open(&mut b, &Context::default(), [0.0, 0.0], 1.0, 1.0));
@@ -167,11 +167,11 @@ mod tests {
         assert!(!a.ui.status.is_empty());
     }
 
-    fn harness(a: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+    fn harness(a: SaryApp) -> Harness<'static, SaryApp> {
         let mut a = a;
         a.sync_views();
         let mut h = Harness::builder().with_size(vec2(1000.0, 700.0)).build_ui_state(
-            |ui, app: &mut PhotocraftApp| {
+            |ui, app: &mut SaryApp| {
                 let ctx = ui.ctx().clone();
                 if !ctx.fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
                     return;
@@ -180,12 +180,12 @@ mod tests {
             },
             a,
         );
-        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
         h.run_steps(4);
         h
     }
 
-    fn right_click(h: &mut Harness<'static, PhotocraftApp>, p: Pos2, modifiers: Modifiers) {
+    fn right_click(h: &mut Harness<'static, SaryApp>, p: Pos2, modifiers: Modifiers) {
         h.event(egui::Event::ModifiersChanged(modifiers));
         h.event(egui::Event::PointerMoved(p));
         h.run_steps(1);
@@ -268,7 +268,7 @@ mod tests {
         a.ui.tool = Tool::Move;
         let mut h = harness(a);
         let ctx = h.ctx.clone();
-        let pointer = |h: &mut Harness<'static, PhotocraftApp>, tool: &str, x: f64, y: f64| {
+        let pointer = |h: &mut Harness<'static, SaryApp>, tool: &str, x: f64, y: f64| {
             let events = json!([{"kind": "down", "x": x, "y": y}, {"kind": "up", "x": x, "y": y}]);
             let (req, _rx) = crate::control::ControlRequest::new("ui.pointer", json!({"tool": tool, "button": "right", "events": events}));
             let _ = crate::control::handle(h.state_mut(), &ctx, &req);

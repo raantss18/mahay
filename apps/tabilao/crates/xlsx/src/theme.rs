@@ -5,7 +5,7 @@
 
 use std::fmt::Write as _;
 
-use gridcraft_model::Theme;
+use tabilao_model::Theme;
 
 use crate::xml::{El, esc_attr};
 
@@ -70,7 +70,7 @@ pub fn read_theme(root: &El) -> Theme {
 /// A minimal, schema-complete theme part for `t`.
 pub fn write_theme(t: &Theme) -> String {
     let mut s = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n");
-    let name = if t.name.is_empty() { "Craft" } else { &t.name };
+    let name = if t.name.is_empty() { "Mahay" } else { &t.name };
     let _ = write!(s, "<a:theme xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\" name=\"{}\"><a:themeElements>", esc_attr(name));
     let _ = write!(s, "<a:clrScheme name=\"{}\">", esc_attr(name));
     for (slot, idx) in SLOTS {
@@ -86,7 +86,7 @@ pub fn write_theme(t: &Theme) -> String {
         esc_attr(&t.minor_font)
     );
     // Format scheme: three entries per list, as the schema requires.
-    s.push_str("<a:fmtScheme name=\"Craft\"><a:fillStyleLst>");
+    s.push_str("<a:fmtScheme name=\"Mahay\"><a:fillStyleLst>");
     for _ in 0..3 {
         s.push_str("<a:solidFill><a:schemeClr val=\"phClr\"/></a:solidFill>");
     }

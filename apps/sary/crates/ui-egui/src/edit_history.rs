@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 use serde_json::{Map, Value};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::DialogKind;
 
 /// Most steps a dialog keeps.
@@ -84,7 +84,7 @@ fn settings(fields: &Map<String, Value>) -> Map<String, Value> {
 pub type DialogEdits = HashMap<u64, EditHistory<Map<String, Value>>>;
 
 /// Once a frame: records each open parameter dialog's settings and forgets closed dialogs.
-pub fn track_dialogs(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn track_dialogs(app: &mut SaryApp, ctx: &egui::Context) {
     let busy = ctx.input(|i| i.pointer.any_down());
     let dialogs = &app.ui.dialogs;
     app.dialog_edits.retain(|id, _| dialogs.iter().any(|d| d.id == *id));
@@ -96,7 +96,7 @@ pub fn track_dialogs(app: &mut PhotocraftApp, ctx: &egui::Context) {
 
 /// ⌘Z / ⇧⌘Z while a dialog with its own history is in front: steps that dialog, and the keys
 /// never reach the document's History beneath it. A focused text field keeps them for its typing.
-pub fn keys(app: &mut PhotocraftApp, ctx: &egui::Context) {
+pub fn keys(app: &mut SaryApp, ctx: &egui::Context) {
     if ctx.text_edit_focused() {
         return;
     }
@@ -135,7 +135,7 @@ pub(crate) mod tests {
     use super::*;
 
     /// One frame of the shell's key handling with ⌘Z (plus `modifiers`) pressed.
-    pub(crate) fn press_z(app: &mut PhotocraftApp, ctx: &egui::Context, modifiers: egui::Modifiers) {
+    pub(crate) fn press_z(app: &mut SaryApp, ctx: &egui::Context, modifiers: egui::Modifiers) {
         let raw = egui::RawInput {
             events: vec![egui::Event::Key { key: egui::Key::Z, physical_key: None, pressed: true, repeat: false, modifiers }],
             ..Default::default()
@@ -144,15 +144,15 @@ pub(crate) mod tests {
         out.textures_delta.clear();
     }
 
-    fn app() -> PhotocraftApp {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+    fn app() -> SaryApp {
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         app.run("file.new", json!({"width": 120, "height": 80})).unwrap();
         app.run("layer.new.layer", json!({})).unwrap();
         app.run("edit.fill", json!({"color": "#808080"})).unwrap();
         app
     }
 
-    fn past(app: &PhotocraftApp) -> usize {
+    fn past(app: &SaryApp) -> usize {
         app.session.active().unwrap().history.past_len()
     }
 
@@ -185,7 +185,7 @@ pub(crate) mod tests {
         let steps = past(&app);
         let id = crate::dialogs::open_command_dialog(&mut app, "filter.lensCorrection", "Lens Correction");
         track_dialogs(&mut app, &ctx);
-        let field = |app: &PhotocraftApp, k: &str| app.ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.get(k).cloned();
+        let field = |app: &SaryApp, k: &str| app.ui.dialogs.iter().find(|d| d.id == id).unwrap().fields.get(k).cloned();
         let vertical = field(&app, "vertical");
         let private: Vec<String> = app.ui.dialog_mut(id).unwrap().fields.keys().filter(|k| k.starts_with("__")).cloned().collect();
         assert!(!private.is_empty());

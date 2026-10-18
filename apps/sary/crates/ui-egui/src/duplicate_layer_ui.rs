@@ -1,7 +1,7 @@
 //! Layer › Duplicate Layer… dialog (#3348): the copy's name and its destination document, as in
 //! Photoshop. Only the menu, palette and Layers panel menu open it; ⌘J, Alt-drag and dragging onto
 //! the New Layer button still duplicate at once.
-use crate::{PhotocraftApp, state::DialogKind};
+use crate::{SaryApp, state::DialogKind};
 use serde_json::{Map, Value, json};
 const MARK: &str = "__duplicateLayer";
 
@@ -9,7 +9,7 @@ pub fn owns(fields: &Map<String, Value>) -> bool {
     fields.contains_key(MARK)
 }
 
-pub fn open(app: &mut PhotocraftApp) -> Result<Value, String> {
+pub fn open(app: &mut SaryApp) -> Result<Value, String> {
     let index = app.session.active_index().ok_or("no document")?;
     let st = app.session.active().ok_or("no document")?;
     let selected = st.selected_layers();
@@ -36,7 +36,7 @@ pub fn open(app: &mut PhotocraftApp) -> Result<Value, String> {
     Ok(json!({"dialog": id}))
 }
 
-pub fn body(app: &PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
+pub fn body(app: &SaryApp, ui: &mut egui::Ui, fields: &mut Map<String, Value>) {
     let documents: Vec<(String, String)> = app.session.documents().iter().enumerate().map(|(i, d)| (i.to_string(), d.doc.name.clone())).collect();
     let mut options: Vec<(String, &str)> = documents.iter().map(|(k, n)| (k.clone(), n.as_str())).collect();
     options.push(("new".to_string(), tl!("New")));
@@ -74,7 +74,7 @@ pub fn body(app: &PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, Val
     }
 }
 
-pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<Value, String> {
+pub fn confirm(app: &mut SaryApp, fields: &Map<String, Value>) -> Result<Value, String> {
     let index = app.session.active_index().ok_or("The document is closed")?;
     let st = app.session.active().ok_or("The document is closed")?;
     if fields.get("document").and_then(Value::as_u64) != Some(st.doc.id.0)
@@ -111,17 +111,17 @@ pub fn confirm(app: &mut PhotocraftApp, fields: &Map<String, Value>) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn make_app() -> PhotocraftApp {
-        let mut s = photocraft_engine::Session::new();
+    fn make_app() -> SaryApp {
+        let mut s = sary_engine::Session::new();
         s.execute("file.new", json!({"width":8,"height":8,"name":"Poster"})).unwrap();
         s.execute("layer.new.layer", json!({"name":"Ink"})).unwrap();
-        PhotocraftApp::new(s, crate::Services::default())
+        SaryApp::new(s, crate::Services::default())
     }
-    fn invoke(app: &mut PhotocraftApp) -> u64 {
+    fn invoke(app: &mut SaryApp) -> u64 {
         let ctx = egui::Context::default();
         crate::menus::invoke(app, &ctx, "layer.duplicate", json!({})).unwrap()["dialog"].as_u64().unwrap()
     }
-    fn names(app: &PhotocraftApp, i: usize) -> Vec<String> {
+    fn names(app: &SaryApp, i: usize) -> Vec<String> {
         app.session.documents()[i].doc.walk().into_iter().map(|(_, _, l)| l.name.clone()).collect()
     }
 

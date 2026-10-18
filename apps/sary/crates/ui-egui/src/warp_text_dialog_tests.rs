@@ -4,15 +4,15 @@
 use egui::vec2;
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
-use photocraft_doc::text::TextWarp;
-use photocraft_doc::{Document, LayerContent};
+use sary_doc::text::TextWarp;
+use sary_doc::{Document, LayerContent};
 use serde_json::{Map, Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// A document with one type layer, active.
-fn app_with_type() -> PhotocraftApp {
-    let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+fn app_with_type() -> SaryApp {
+    let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     app.run("file.new", json!({"width": 400, "height": 200})).unwrap();
     app.run("type.create", json!({"x": 20, "y": 120, "text": "Warp", "size": 60})).unwrap();
     app
@@ -22,24 +22,24 @@ fn flag() -> Value {
     json!({"style": "flag", "bend": -30.0, "horizontalDistortion": 20.0, "verticalDistortion": -10.0, "orientation": "vertical"})
 }
 
-fn warp(app: &PhotocraftApp) -> Option<TextWarp> {
+fn warp(app: &SaryApp) -> Option<TextWarp> {
     let st = app.session.active().unwrap();
     warp_of(&st.doc, st.active_layer.unwrap())
 }
 
-fn warp_of(doc: &Document, id: photocraft_doc::LayerId) -> Option<TextWarp> {
+fn warp_of(doc: &Document, id: sary_doc::LayerId) -> Option<TextWarp> {
     match &doc.layer(id).unwrap().content {
         LayerContent::Text(t) => t.warp.clone(),
         _ => panic!("the layer is a type layer"),
     }
 }
 
-fn steps(app: &PhotocraftApp) -> usize {
+fn steps(app: &SaryApp) -> usize {
     app.session.active().unwrap().history.entries().len()
 }
 
 /// The open dialogs drawn over `app`, as the window shows them.
-fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
+fn harness(app: SaryApp) -> Harness<'static, SaryApp> {
     let mut h = Harness::builder().with_size(vec2(900.0, 700.0)).build_ui_state(
         |ui, app| {
             if ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("medium".into()))) {
@@ -48,14 +48,14 @@ fn harness(app: PhotocraftApp) -> Harness<'static, PhotocraftApp> {
         },
         app,
     );
-    PhotocraftApp::setup_context(&h.ctx, Default::default());
+    SaryApp::setup_context(&h.ctx, Default::default());
     h.run_steps(4);
     h
 }
 
 /// Set dialog values as the sliders and dropdowns would, and compute the canvas preview as a
 /// frame of the canvas does.
-fn edit_and_preview(h: &mut Harness<'_, PhotocraftApp>, id: u64, values: Value) {
+fn edit_and_preview(h: &mut Harness<'_, SaryApp>, id: u64, values: Value) {
     let f = &mut h.state_mut().ui.dialog_mut(id).unwrap().fields;
     for (k, v) in values.as_object().unwrap() {
         f.insert(k.clone(), v.clone());
@@ -65,7 +65,7 @@ fn edit_and_preview(h: &mut Harness<'_, PhotocraftApp>, id: u64, values: Value) 
 }
 
 /// Open Warp Text from the Type menu and return the dialog with its fields.
-fn open(app: &mut PhotocraftApp) -> (u64, Map<String, Value>) {
+fn open(app: &mut SaryApp) -> (u64, Map<String, Value>) {
     let r = crate::menus::invoke(app, &egui::Context::default(), "type.warpText", json!({})).unwrap();
     let id = r["dialog"].as_u64().unwrap();
     (id, app.ui.dialog_mut(id).unwrap().fields.clone())
@@ -150,7 +150,7 @@ fn warp_text_dialog_previews_the_warp_without_editing_the_document() {
     let app = h.state();
     let shown = app.filter_preview.as_ref().and_then(|p| p.result.clone()).expect("a preview");
     assert_eq!(warp_of(&shown, layer).map(|w| (w.style, w.value)), Some(("warpArc".to_string(), 40.0)));
-    assert_ne!(photocraft_compose::flatten(&shown).px, photocraft_compose::flatten(&original).px, "the preview shows the warp");
+    assert_ne!(sary_compose::flatten(&shown).px, sary_compose::flatten(&original).px, "the preview shows the warp");
     let st = app.session.active().unwrap();
     assert_eq!(st.revision, revision);
     assert_eq!(warp(app), None, "the document is not edited");

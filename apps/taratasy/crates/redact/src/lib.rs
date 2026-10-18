@@ -1,6 +1,6 @@
 //! Redaction (architecture §11.2, execution plan M8.5–M8.7). Layer L4.
 //!
-//! Content is marked for redaction with Redact annotations (§12.5.6.23); `pdfcraft-annot`
+//! Content is marked for redaction with Redact annotations (§12.5.6.23); `taratasy-annot`
 //! creates them. [`apply`] then removes everything under the marks, for good:
 //! - text glyphs (the rest of each line keeps its position), inline images, and paths that the
 //!   marks cover; images and vectors partly under a mark lose the covered part;
@@ -16,7 +16,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, Stream};
+use taratasy_cos::{Dict, Document, ObjRef, Object, Stream};
 
 pub mod codes;
 mod image;
@@ -44,7 +44,7 @@ pub enum RedactError {
     #[error("{0}")]
     Undrawable(String),
     #[error(
-        "page {0} has vertical-writing text while a redaction mark is pending, and PdfCraft cannot tell whether that text lies under the mark yet, so nothing was changed"
+        "page {0} has vertical-writing text while a redaction mark is pending, and Taratasy cannot tell whether that text lies under the mark yet, so nothing was changed"
     )]
     VerticalText(usize),
     #[error(
@@ -52,11 +52,11 @@ pub enum RedactError {
     )]
     OverlayLimit,
     #[error(transparent)]
-    Edit(#[from] pdfcraft_edit::EditError),
+    Edit(#[from] taratasy_edit::EditError),
     #[error(transparent)]
-    Form(#[from] pdfcraft_forms::FormError),
+    Form(#[from] taratasy_forms::FormError),
     #[error(transparent)]
-    Cos(#[from] pdfcraft_cos::CosError),
+    Cos(#[from] taratasy_cos::CosError),
 }
 
 /// A redaction mark on a page.
@@ -71,13 +71,13 @@ pub struct Mark {
     pub fill: Option<Rgb>,
     pub overlay: String,
     /// How the overlay text is drawn (`/DA`, `/Q`, `/Repeat`).
-    pub look: pdfcraft_annot::OverlayLook,
+    pub look: taratasy_annot::OverlayLook,
 }
 
 /// The overlay look of a Redact annotation: font, size and colour from `/DA`, alignment from
 /// `/Q`, repetition from `/Repeat`.
-fn overlay_look(doc: &Document, d: &Dict) -> pdfcraft_annot::OverlayLook {
-    let mut look = pdfcraft_annot::OverlayLook::default();
+fn overlay_look(doc: &Document, d: &Dict) -> taratasy_annot::OverlayLook {
+    let mut look = taratasy_annot::OverlayLook::default();
     if let Some(da) = d.get(b"DA").and_then(|o| doc.resolve(o).as_string().map(|s| String::from_utf8_lossy(&s.bytes).into_owned())) {
         let t: Vec<&str> = da.split_whitespace().collect();
         for (i, w) in t.iter().enumerate() {
@@ -93,7 +93,7 @@ fn overlay_look(doc: &Document, d: &Dict) -> pdfcraft_annot::OverlayLook {
                     }
                 }
                 "Tf" if i >= 2 => {
-                    look.font = pdfcraft_annot::OverlayFont::from_resource(t[i - 2].trim_start_matches('/'));
+                    look.font = taratasy_annot::OverlayFont::from_resource(t[i - 2].trim_start_matches('/'));
                     look.size = t[i - 1].parse::<f64>().unwrap_or(0.0).max(0.0);
                 }
                 _ => {}
@@ -149,7 +149,7 @@ pub(crate) fn annots_of(doc: &Document, page: &Dict) -> Vec<Object> {
 /// Every redaction mark in the document, page by page.
 pub fn marks(doc: &Document) -> Vec<Mark> {
     let mut out = Vec::new();
-    for (pi, p) in pdfcraft_model::pages(doc).iter().enumerate() {
+    for (pi, p) in taratasy_model::pages(doc).iter().enumerate() {
         for a in annots_of(doc, &p.dict) {
             let Some(r) = a.as_ref() else { continue };
             let obj = doc.get(r);
@@ -236,9 +236,9 @@ fn resource_source(doc: &Document, page: ObjRef) -> Option<Option<ObjRef>> {
 /// ancestor `/Resources` they came from once no other page still inherits it, so the parent can't
 /// keep a removed XObject reachable. Pages that aren't redacted are left untouched; an inherited
 /// dictionary that is direct becomes one shared indirect object, never a copy per page.
-fn localize_resources(doc: &mut Document, selected: &[usize]) -> Result<(), pdfcraft_cos::CosError> {
-    let pages = pdfcraft_model::pages(doc);
-    let inherits = |doc: &Document, p: &pdfcraft_model::Page| doc.get(p.obj).as_dict().is_some_and(|d| !d.contains(b"Resources"));
+fn localize_resources(doc: &mut Document, selected: &[usize]) -> Result<(), taratasy_cos::CosError> {
+    let pages = taratasy_model::pages(doc);
+    let inherits = |doc: &Document, p: &taratasy_model::Page| doc.get(p.obj).as_dict().is_some_and(|d| !d.contains(b"Resources"));
     // Ancestor → the reference its resources are shared through, and whether that reference is new.
     let mut shared: HashMap<ObjRef, (Object, bool)> = HashMap::new();
     for page in selected.iter().filter_map(|&i| pages.get(i)) {
@@ -313,10 +313,10 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
     }
     // Overlay text is drawn in Helvetica; applying can't be undone in the file, so text it can't
     // draw (a mark another program made) is refused before anything changes, never burnt in as `?`.
-    if let Some((m, c)) = chosen.iter().find_map(|m| pdfcraft_fonts::first_undrawable(&m.overlay).map(|c| (m, c))) {
+    if let Some((m, c)) = chosen.iter().find_map(|m| taratasy_fonts::first_undrawable(&m.overlay).map(|c| (m, c))) {
         return Err(RedactError::Undrawable(format!(
             "{}; change or clear that mark's overlay text, then apply again (nothing was redacted)",
-            pdfcraft_fonts::undrawable_message(&format!("the overlay text of a redaction mark on page {}", m.page + 1), c)
+            taratasy_fonts::undrawable_message(&format!("the overlay text of a redaction mark on page {}", m.page + 1), c)
         )));
     }
     let mut report = Report { marks: chosen.len(), ..Report::default() };
@@ -337,10 +337,10 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
     let mut doomed_xobjects: Vec<ObjRef> = Vec::new();
     let mut retired_properties = Vec::new();
     let widget_owner: Vec<(ObjRef, String)> =
-        pdfcraft_forms::fields(doc).into_iter().flat_map(|f| f.widgets.iter().map(|w| (w.obj, f.name.clone())).collect::<Vec<_>>()).collect();
+        taratasy_forms::fields(doc).into_iter().flat_map(|f| f.widgets.iter().map(|w| (w.obj, f.name.clone())).collect::<Vec<_>>()).collect();
 
     for &(pi, page_marks) in &groups {
-        let page = pdfcraft_model::pages(doc).swap_remove(pi);
+        let page = taratasy_model::pages(doc).swap_remove(pi);
         let rects: Vec<[f64; 4]> = page_marks.iter().flat_map(|m| m.rects.iter().copied()).collect();
 
         // 1. Content.
@@ -348,7 +348,7 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
         let resources = page.dict.get(b"Resources").and_then(|r| doc.resolve(r).as_dict().cloned()).unwrap_or_default();
         let out = {
             let mut scope = Scope::new(&rects, Mode::Apply, &mut report);
-            process(doc, &mut scope, &data, &resources, pdfcraft_content::Matrix::IDENTITY)
+            process(doc, &mut scope, &data, &resources, taratasy_content::Matrix::IDENTITY)
         };
         // Fail closed: the interpreter lays vertical-writing text out horizontally, so it cannot
         // tell whether those glyphs lie under a mark. Rather than report success and possibly
@@ -417,7 +417,7 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
             let after = doc.get(page.obj).as_dict().cloned().unwrap_or_default();
             let (_, new_data) = page_streams(doc, &after, pi)?;
             let (changed_ids, empty_ids) =
-                tags::touched(doc, &resources, pdfcraft_content::Pieces::join(&data).data(), pdfcraft_content::Pieces::join(&new_data).data());
+                tags::touched(doc, &resources, taratasy_content::Pieces::join(&data).data(), taratasy_content::Pieces::join(&new_data).data());
             report.tags += tags::clean(doc, page.obj, None, &changed_ids, &empty_ids)?;
         }
 
@@ -442,7 +442,7 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
             if subtype == b"Popup" {
                 continue;
             }
-            if rect_of(doc, d.get(b"Rect")).is_some_and(|b| rects.iter().any(|x| pdfcraft_content::overlaps(*x, b, 0.0))) {
+            if rect_of(doc, d.get(b"Rect")).is_some_and(|b| rects.iter().any(|x| taratasy_content::overlaps(*x, b, 0.0))) {
                 removed.push(r);
                 if subtype == b"Widget" {
                     if let Some((_, name)) = widget_owner.iter().find(|(w, _)| *w == r)
@@ -504,8 +504,8 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
 
     // 3. Form fields with a widget under a mark (all their widgets go).
     for name in &doomed_fields {
-        if pdfcraft_forms::fields(doc).iter().any(|f| &f.name == name) {
-            pdfcraft_forms::delete_field(doc, name)?;
+        if taratasy_forms::fields(doc).iter().any(|f| &f.name == name) {
+            taratasy_forms::delete_field(doc, name)?;
             report.fields += 1;
         }
     }
@@ -514,17 +514,17 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
     // rebuilds fields and pages from that packet, so deleting the AcroForm field alone leaves the
     // redacted value in the file and lets a later relayout put it back. Once redactions are
     // applied the form stops being XFA: the packets, /NeedsRendering, the layout mark and the
-    // rest go (pdfcraft_xfa::strip), leaving a plain already-laid-out AcroForm that neither the
+    // rest go (taratasy_xfa::strip), leaving a plain already-laid-out AcroForm that neither the
     // saved file nor a relayout can restore from.
-    if pdfcraft_xfa::xfa_shape(doc).is_some() {
-        let r = pdfcraft_xfa::strip(doc).map_err(|e| pdfcraft_edit::EditError::Invalid(e.to_string()))?;
+    if taratasy_xfa::xfa_shape(doc).is_some() {
+        let r = taratasy_xfa::strip(doc).map_err(|e| taratasy_edit::EditError::Invalid(e.to_string()))?;
         report.xfa_removed = !r.packets.is_empty();
     }
 
     // 4. The boxes.
     for (pi, content) in overlays {
         if !content.is_empty() {
-            pdfcraft_edit::stamp(doc, pi, "Redaction", content)?;
+            taratasy_edit::stamp(doc, pi, "Redaction", content)?;
         }
     }
 
@@ -535,7 +535,7 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
     // 5. Verify: nothing readable may remain under a region.
     let mut residue = 0;
     for &(pi, page_marks) in &groups {
-        let page = pdfcraft_model::pages(doc).swap_remove(pi);
+        let page = taratasy_model::pages(doc).swap_remove(pi);
         let rects: Vec<[f64; 4]> = page_marks.iter().flat_map(|m| m.rects.iter().copied()).collect();
         let (list, data) = page_streams(doc, &page.dict, pi)?;
         // The overlay stream (last) draws text of its own: the overlay label is allowed.
@@ -548,7 +548,7 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
         let resources = page.dict.get(b"Resources").and_then(|r| doc.resolve(r).as_dict().cloned()).unwrap_or_default();
         let mut scratch = Report::default();
         let mut scope = Scope::new(&rects, Mode::Verify, &mut scratch);
-        residue += process(doc, &mut scope, &original, &resources, pdfcraft_content::Matrix::IDENTITY).residue;
+        residue += process(doc, &mut scope, &original, &resources, taratasy_content::Matrix::IDENTITY).residue;
     }
     if residue > 0 {
         return Err(RedactError::Residue(residue));
@@ -565,7 +565,7 @@ pub fn clear_marks(doc: &mut Document, pages: Option<&[usize]>) -> Result<usize,
     if doomed.is_empty() {
         return Err(RedactError::NothingToApply);
     }
-    for p in pdfcraft_model::pages(doc) {
+    for p in taratasy_model::pages(doc) {
         let annots = annots_of(doc, &p.dict);
         let kept: Vec<Object> = annots
             .iter()

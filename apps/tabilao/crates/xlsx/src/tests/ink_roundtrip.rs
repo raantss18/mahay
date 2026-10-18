@@ -3,7 +3,7 @@
 use std::io::Read;
 use std::sync::Arc;
 
-use gridcraft_model::{Anchor, AnchorMode, Color, Shape, ShapeKind, Sheet, Workbook};
+use tabilao_model::{Anchor, AnchorMode, Color, Shape, ShapeKind, Sheet, Workbook};
 
 use super::minimal;
 use crate::xml::{self, El};

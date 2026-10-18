@@ -1,4 +1,4 @@
-//! UI localisation for ArtCraft Launcher. Strings in code stay English and are the default
+//! UI localisation for Mahay Trano. Strings in code stay English and are the default
 //! lookup keys; a per-language catalog (`*.tsv`) maps them to display text at render time.
 //!
 //! # Adding a language

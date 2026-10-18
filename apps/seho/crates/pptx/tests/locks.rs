@@ -2,10 +2,10 @@
 
 use std::io::{Cursor, Read, Write};
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::style::PictureFill;
-use deckcraft_model::table::Table;
-use deckcraft_model::{Presentation, Shape, ShapeId, ShapeKind, Slide, defaults};
+use seho_geom::Xfrm;
+use seho_model::style::PictureFill;
+use seho_model::table::Table;
+use seho_model::{Presentation, Shape, ShapeId, ShapeKind, Slide, defaults};
 
 fn png() -> Vec<u8> {
     let img = image::RgbImage::from_pixel(4, 4, image::Rgb([10, 200, 30]));
@@ -55,7 +55,7 @@ fn deck() -> Presentation {
     v.push(pic);
     let mut cx = shape(&mut p, "Conn", 100.0);
     cx.kind = ShapeKind::Connector { start: None, end: None };
-    cx.geom = deckcraft_model::Geom::preset("straightConnector1");
+    cx.geom = seho_model::Geom::preset("straightConnector1");
     cx.locked = true;
     v.push(cx);
     let mut tb = shape(&mut p, "Tbl", 200.0);
@@ -70,7 +70,7 @@ fn deck() -> Presentation {
 
 fn find<'a>(s: &'a Slide, name: &str) -> &'a Shape {
     let mut found = None;
-    deckcraft_model::walk(&s.shapes, &mut |x, _| {
+    seho_model::walk(&s.shapes, &mut |x, _| {
         if found.is_none() && x.name == name {
             found = Some(x);
         }
@@ -117,7 +117,7 @@ fn nv_of<'a>(xml: &'a str, name: &str) -> &'a str {
 #[test]
 fn lock_and_hidden_round_trip() {
     let p = deck();
-    let q = deckcraft_pptx::import(&deckcraft_pptx::export(&p).expect("export")).expect("import");
+    let q = seho_pptx::import(&seho_pptx::export(&p).expect("export")).expect("import");
     let s = &q.slides[0];
     for (name, locked, hidden) in [
         ("Locked", true, false),
@@ -143,7 +143,7 @@ fn lock_and_hidden_round_trip() {
 
 #[test]
 fn lock_writes_powerpoints_full_attribute_set() {
-    let xml = slide1_xml(&deckcraft_pptx::export(&deck()).expect("export"));
+    let xml = slide1_xml(&seho_pptx::export(&deck()).expect("export"));
     let sp = r#"noGrp="1" noRot="1" noMove="1" noResize="1" noEditPoints="1" noAdjustHandles="1" noChangeArrowheads="1" noChangeShapeType="1""#;
     assert!(nv_of(&xml, "Locked").contains(&format!("<a:spLocks {sp}/>")), "{}", nv_of(&xml, "Locked"));
     assert!(nv_of(&xml, "Hidden text").contains(&format!("<a:spLocks {sp}/>")));
@@ -168,7 +168,7 @@ fn partial_locks_are_not_lock() {
     if let Some(s) = p.slides.first_mut() {
         std::sync::Arc::make_mut(s).shapes = vec![a, b, c, d];
     }
-    let mut es = entries(&deckcraft_pptx::export(&p).expect("export"));
+    let mut es = entries(&seho_pptx::export(&p).expect("export"));
     let slide = es.iter_mut().find(|(n, _)| n == "ppt/slides/slide1.xml").expect("slide1");
     let xml = String::from_utf8(slide.1.clone()).expect("utf8");
     let swap = |xml: String, name: &str, locks: &str| {
@@ -186,7 +186,7 @@ fn partial_locks_are_not_lock() {
     let xml =
         swap(xml, "C", r#"<a:spLocks noGrp="1" noRot="1" noMove="1" noResize="1" noEditPoints="1" noAdjustHandles="1" noChangeShapeType="1"/>"#);
     slide.1 = xml.into_bytes();
-    let q = deckcraft_pptx::import(&rezip(&es)).expect("import");
+    let q = seho_pptx::import(&rezip(&es)).expect("import");
     let s = &q.slides[0];
     assert!(!find(s, "A").locked);
     assert!(!find(s, "B").locked);
@@ -202,10 +202,10 @@ fn empty_locks_element_is_unlocked() {
     if let Some(s) = p.slides.first_mut() {
         std::sync::Arc::make_mut(s).shapes = vec![a];
     }
-    let mut es = entries(&deckcraft_pptx::export(&p).expect("export"));
+    let mut es = entries(&seho_pptx::export(&p).expect("export"));
     let slide = es.iter_mut().find(|(n, _)| n == "ppt/slides/slide1.xml").expect("slide1");
     let xml = String::from_utf8(slide.1.clone()).expect("utf8").replacen("<p:cNvSpPr/>", "<p:cNvSpPr><a:spLocks/></p:cNvSpPr>", 1);
     slide.1 = xml.into_bytes();
-    let q = deckcraft_pptx::import(&rezip(&es)).expect("import");
+    let q = seho_pptx::import(&rezip(&es)).expect("import");
     assert!(!find(&q.slides[0], "A").locked);
 }

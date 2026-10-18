@@ -1,12 +1,12 @@
 [package]
-name = "gridcraft-numfmt"
+name = "tabilao-numfmt"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "GridCraft number formats: Excel format codes, General display, TEXT()"
+description = "Tabilao number formats: Excel format codes, General display, TEXT()"
 
 [lints]
 workspace = true
 
 [dependencies]
-gridcraft-core = { workspace = true }
+tabilao-core = { workspace = true }

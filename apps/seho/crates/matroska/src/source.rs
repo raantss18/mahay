@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 /// Random-access, read-only byte source (file, in-memory buffer, web Blob…).
 ///
-/// Same shape as `deckcraft_isobmff::ByteSource`, so one adapter can serve both demuxers.
+/// Same shape as `seho_isobmff::ByteSource`, so one adapter can serve both demuxers.
 pub trait ByteSource {
     /// Total length in bytes.
     fn len(&self) -> u64;

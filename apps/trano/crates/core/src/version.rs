@@ -57,7 +57,7 @@ pub fn parse_package(text: &str) -> Option<Version> {
     match parts.as_slice() {
         [a, b, c] => Version::parse(&format!("{a}.{b}.{c}")).ok(),
         [a, b] => Version::parse(&format!("{a}.{b}.0")).ok(),
-        // Text around the version, as in `--version` output (`PhotoCraft 0.5.0 (abc, 2026)`):
+        // Text around the version, as in `--version` output (`Sary 0.5.0 (abc, 2026)`):
         // the first `X.Y.Z` run anywhere.
         _ => first_xyz(&t),
     }
@@ -160,7 +160,7 @@ mod tests {
         assert_eq!(p("0.4.0").as_deref(), Some("0.4.0"));
         assert_eq!(p("0.5").as_deref(), Some("0.5.0"));
         // A version inside text, as `--version` prints it.
-        assert_eq!(p("PhotoCraft 0.5.0 (abc, 2026)").as_deref(), Some("0.5.0"));
+        assert_eq!(p("Sary 0.5.0 (abc, 2026)").as_deref(), Some("0.5.0"));
         assert_eq!(p("junk"), None);
         assert_eq!(p("garbage"), None);
         // The bug this guards: 0.5.0-1 used to read as a pre-release, so an installed .deb of the

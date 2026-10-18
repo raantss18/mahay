@@ -1,7 +1,7 @@
 //! Compiles a WebAssembly text plug-in to a `.wasm` module and checks that it loads:
-//! `cargo run -p photocraft-plugins --example wat2wasm -- plugin.wat plugin.wasm`
+//! `cargo run -p sary-plugins --example wat2wasm -- plugin.wat plugin.wasm`
 
-use photocraft_plugins::{Limits, Plugin};
+use sary_plugins::{Limits, Plugin};
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();

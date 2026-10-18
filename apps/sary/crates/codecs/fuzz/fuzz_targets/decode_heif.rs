@@ -1,7 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use photocraft_codecs::{decode_as_with, DecodeOptions, Format, Limits};
+use sary_codecs::{decode_as_with, DecodeOptions, Format, Limits};
 
 // heic-rs is young and parses untrusted HEIF/HEVC: run with `-timeout=10` so a hang is reported,
 // not just a panic. The codec turns a heic-rs panic into an error, so heic-rs is also called

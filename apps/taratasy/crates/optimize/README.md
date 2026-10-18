@@ -1,4 +1,4 @@
-# pdfcraft-optimize
+# taratasy-optimize
 
 Layer L4: the PDF Optimizer (execution plan M11.1; Acrobat's Reduce File Size and Optimize PDF ▸
 Advanced optimization).
@@ -31,8 +31,8 @@ let report = optimize_with_progress(&mut doc, &settings, &mut |stage| keep_going
   layer, that layer is removed when the result is smaller (the inner filters keep their encoded
   bytes). Streams with `/DecodeParms`, images and object streams are left alone.
 
-The engine runs Remove Hidden Information (`pdfcraft-redact`) for the user-data categories,
+The engine runs Remove Hidden Information (`taratasy-redact`) for the user-data categories,
 then this, then merges identical objects and writes a full, compressed save
-(`pdfcraft_engine::optimizer::OptimizeJob`, which the UI runs on a worker thread with a
+(`taratasy_engine::optimizer::OptimizeJob`, which the UI runs on a worker thread with a
 progress bar). JPEG decoding and
 encoding and resampling come from the `image` crate.

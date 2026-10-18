@@ -1,5 +1,5 @@
 [package]
-name = "photocraft-ui-egui"
+name = "sary-ui-egui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,27 +8,27 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-craft-print = { workspace = true }
-craft-ui = { workspace = true }
-photocraft-geom = { workspace = true }
-photocraft-color = { workspace = true }
-photocraft-cms = { workspace = true }
-photocraft-raster = { workspace = true }
-photocraft-doc = { workspace = true }
-photocraft-compose = { workspace = true }
-photocraft-gpu = { workspace = true }
-photocraft-engine = { workspace = true }
-photocraft-io = { workspace = true }
-photocraft-plugins = { workspace = true }
-photocraft-algo = { workspace = true }
-photocraft-text = { workspace = true }
-photocraft-vector = { workspace = true }
+mahay-print = { workspace = true }
+mahay-ui = { workspace = true }
+sary-geom = { workspace = true }
+sary-color = { workspace = true }
+sary-cms = { workspace = true }
+sary-raster = { workspace = true }
+sary-doc = { workspace = true }
+sary-compose = { workspace = true }
+sary-gpu = { workspace = true }
+sary-engine = { workspace = true }
+sary-io = { workspace = true }
+sary-plugins = { workspace = true }
+sary-algo = { workspace = true }
+sary-text = { workspace = true }
+sary-vector = { workspace = true }
 # Only MAX_BRUSH_SIZE: `ui.set brushSize` validates against the Brush Settings range up front.
-photocraft-paint = { workspace = true }
+sary-paint = { workspace = true }
 # Reading files to open them (bounded reads, a clear error for files larger than memory).
-photocraft-format = { workspace = true }
-# Decoding the brand mark's PNG (`brand.rs`); already linked through photocraft-io.
-photocraft-codecs = { workspace = true }
+sary-format = { workspace = true }
+# Decoding the brand mark's PNG (`brand.rs`); already linked through sary-io.
+sary-codecs = { workspace = true }
 egui = { workspace = true }
 egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
 eframe = { workspace = true, features = ["wgpu", "accesskit"] }
@@ -38,7 +38,7 @@ log = { workspace = true }
 # Display order of right-to-left labels (`bidi_text.rs`); already linked through usvg.
 unicode-bidi = "0.3"
 base64 = "0.22"
-# Inflating the translation catalogs, stored deflated (build.rs); already linked through photocraft-io.
+# Inflating the translation catalogs, stored deflated (build.rs); already linked through sary-io.
 flate2 = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -56,12 +56,12 @@ winsafe = { version = "=0.0.29", default-features = false, features = ["kernel",
 # `Context::default()` (no install_fonts) can lay out text.
 egui = { workspace = true, features = ["default_fonts"] }
 # Synthetic raw files for the open-time Camera Raw dialog tests.
-photocraft-raw = { workspace = true, features = ["testgen"] }
+sary-raw = { workspace = true, features = ["testgen"] }
 egui_kittest = { workspace = true, features = ["wgpu", "snapshot", "eframe"] }
 # Benchmark helpers for the `--json` benches `cargo xtask perf` runs (in-process RSS, percentiles).
-photocraft-testkit = { workspace = true }
+sary-testkit = { workspace = true }
 # Only for examples/perf_scenarios.rs (a 500-brush .abr for the #210 import row).
-photocraft-psd = { workspace = true }
+sary-psd = { workspace = true }
 
 [build-dependencies]
 # Deflates the translation catalogs and egui's default fonts (build.rs); already linked at run time to inflate them.

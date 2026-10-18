@@ -1,7 +1,7 @@
 //! Named New Document configurations. The existing preferences services persist these with the
 //! other presets; selecting one only returns settings, and document creation stays in `file.new`.
 
-use photocraft_color::{ColorMode, SampleType};
+use sary_color::{ColorMode, SampleType};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -10,9 +10,9 @@ use crate::presets::{always, bad, req_str};
 use crate::{Result, Session};
 
 pub(crate) const MAX_DIMENSION: u32 = 300_000;
-// What `file.new` creates must reopen: the `.pcraft` loader's default canvas budget covers it (#2935).
+// What `file.new` creates must reopen: the `.sary` loader's default canvas budget covers it (#2935).
 const _: () =
-    assert!(photocraft_format::MAX_CANVAS_SIDE >= MAX_DIMENSION && photocraft_format::MAX_CANVAS_PIXELS >= MAX_DIMENSION as u64 * MAX_DIMENSION as u64);
+    assert!(sary_format::MAX_CANVAS_SIDE >= MAX_DIMENSION && sary_format::MAX_CANVAS_PIXELS >= MAX_DIMENSION as u64 * MAX_DIMENSION as u64);
 pub(crate) const MAX_RESOLUTION: f64 = 30_000.0;
 const MAX_PRESETS: usize = 256;
 /// File › New › Recent keeps this many settings, like Photoshop's Recent tab.
@@ -546,15 +546,15 @@ mod tests {
         }
     }
 
-    /// What `file.new` can create, `.pcraft` can reopen: the loader's default canvas budget
+    /// What `file.new` can create, `.sary` can reopen: the loader's default canvas budget
     /// covers the largest new document (#2935), and such a document round-trips.
     #[test]
-    fn the_largest_new_document_reopens_from_pcraft() {
+    fn the_largest_new_document_reopens_from_sary() {
         let mut s = Session::new();
         s.execute("file.new", json!({"width": MAX_DIMENSION, "height": MAX_DIMENSION, "background": "transparent"})).unwrap();
         let doc = &s.active().unwrap().doc;
-        let bytes = photocraft_format::save_to_bytes(doc, &Default::default()).unwrap();
-        let back = photocraft_format::load_from_bytes(&bytes).unwrap();
-        assert_eq!(back.size, photocraft_geom::Size::new(MAX_DIMENSION, MAX_DIMENSION));
+        let bytes = sary_format::save_to_bytes(doc, &Default::default()).unwrap();
+        let back = sary_format::load_from_bytes(&bytes).unwrap();
+        assert_eq!(back.size, sary_geom::Size::new(MAX_DIMENSION, MAX_DIMENSION));
     }
 }

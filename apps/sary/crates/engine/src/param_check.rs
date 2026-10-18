@@ -126,7 +126,7 @@ mod tests {
         let mut s = Session::new();
         s.execute("file.new", json!({"width": 8, "height": 8})).unwrap();
         let a = s.execute("layer.new.layer", json!({})).unwrap()["layer"].as_u64().unwrap();
-        let visible = |s: &Session| s.active().unwrap().doc.layer(photocraft_doc::LayerId(a)).unwrap().visible;
+        let visible = |s: &Session| s.active().unwrap().doc.layer(sary_doc::LayerId(a)).unwrap().visible;
         for cmd in ["layer.hideLayers", "layer.showLayers"] {
             let err = s.execute(cmd, json!({"ids": [a]})).unwrap_err().to_string();
             assert!(err.contains("unknown parameter `ids`") && err.contains("expected: layer"), "{err}");

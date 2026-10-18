@@ -5,15 +5,15 @@
 //! and of the JPEG.
 //!
 //! ```sh
-//! cargo run --release -p photocraft-io --example rawlook -- [--png DIR] FILE...
-//! cargo run --release -p photocraft-io --example rawlook -- --synthetic   # time a 24 MP synthetic NEF
+//! cargo run --release -p sary-io --example rawlook -- [--png DIR] FILE...
+//! cargo run --release -p sary-io --example rawlook -- --synthetic   # time a 24 MP synthetic NEF
 //! ```
 
 use std::time::Instant;
 
-use photocraft_cms::{Builtin, Intent, Transform};
-use photocraft_codecs::{self as codecs, ChannelLayout, EncodeOptions, Format, Image};
-use photocraft_raw::{DevelopOptions, develop_sensor};
+use sary_cms::{Builtin, Intent, Transform};
+use sary_codecs::{self as codecs, ChannelLayout, EncodeOptions, Format, Image};
+use sary_raw::{DevelopOptions, develop_sensor};
 
 /// Box-downsamples interleaved RGB to at most `edge` pixels on the long side.
 fn shrink(px: &[f32], w: usize, h: usize, edge: usize) -> (Vec<f32>, usize, usize) {
@@ -104,7 +104,7 @@ fn write_png(path: &str, px: &[f32], w: usize, h: usize) {
 
 /// Times the fit on a synthetic 6034×4012 NEF-like raw with a 1632×1086 camera-style preview.
 fn synthetic() {
-    use photocraft_raw::testgen::{TiffBuilder, Val, mosaic};
+    use sary_raw::testgen::{TiffBuilder, Val, mosaic};
     let (w, h) = (6034usize, 4012usize);
     let colours: Vec<[f32; 3]> = (0..96u32).map(|i| [0.1 + 0.05 * (i % 9) as f32, 0.1 + 0.04 * (i % 11) as f32, 0.1 + 0.06 * (i % 7) as f32]).collect();
     let at = |x: usize, y: usize| {
@@ -148,24 +148,24 @@ fn synthetic() {
     t.chain = vec![ifd0];
     let bytes = t.build();
     let opts = DevelopOptions::default();
-    let sensor = photocraft_raw::decode(&bytes, &opts.limits).expect("decode");
-    let _ = photocraft_io::raw::fit_preview_look(&bytes, &sensor, &opts);
+    let sensor = sary_raw::decode(&bytes, &opts.limits).expect("decode");
+    let _ = sary_io::raw::fit_preview_look(&bytes, &sensor, &opts);
     let mut times: Vec<f64> = (0..7)
         .map(|_| {
             let t = Instant::now();
-            let r = photocraft_io::raw::fit_preview_look(&bytes, &sensor, &opts);
+            let r = sary_io::raw::fit_preview_look(&bytes, &sensor, &opts);
             assert!(r.is_ok(), "{r:?}");
             t.elapsed().as_secs_f64() * 1e3
         })
         .collect();
     times.sort_by(f64::total_cmp);
-    let p = photocraft_raw::embedded_preview(&bytes).expect("preview");
+    let p = sary_raw::embedded_preview(&bytes).expect("preview");
     let t = Instant::now();
     let img = codecs::decode_as(Format::Jpeg, p.jpeg).expect("jpeg");
     let dec = t.elapsed().as_secs_f64() * 1e3;
-    let r = photocraft_raw::Reference { width: img.width(), height: img.height(), rgb: img.data() };
+    let r = sary_raw::Reference { width: img.width(), height: img.height(), rgb: img.data() };
     let t = Instant::now();
-    let _ = photocraft_raw::fit_look(&sensor, &opts, &r);
+    let _ = sary_raw::fit_look(&sensor, &opts, &r);
     println!("  preview decode {dec:.1} ms, fit_look {:.1} ms", t.elapsed().as_secs_f64() * 1e3);
     println!("synthetic {w}x{h}: preview decode + fit median {:.1} ms (min {:.1}, max {:.1})", times[3], times[0], times[6]);
 }
@@ -190,11 +190,11 @@ fn main() {
         let bytes = std::fs::read(&f).expect("read");
         let name = std::path::Path::new(&f).file_stem().and_then(|s| s.to_str()).unwrap_or("raw").to_string();
         let opts = DevelopOptions::default();
-        let sensor = photocraft_raw::decode(&bytes, &opts.limits).expect("decode");
+        let sensor = sary_raw::decode(&bytes, &opts.limits).expect("decode");
         // Warm up (thread pool), then time the fit.
-        let _ = photocraft_io::raw::fit_preview_look(&bytes, &sensor, &opts);
+        let _ = sary_io::raw::fit_preview_look(&bytes, &sensor, &opts);
         let t = Instant::now();
-        let fit = photocraft_io::raw::fit_preview_look(&bytes, &sensor, &opts);
+        let fit = sary_io::raw::fit_preview_look(&bytes, &sensor, &opts);
         let fit_ms = t.elapsed().as_secs_f64() * 1e3;
         let before = develop_sensor(&sensor, &opts).expect("develop");
         let t = Instant::now();
@@ -204,11 +204,11 @@ fn main() {
         };
         let dev_ms = t.elapsed().as_secs_f64() * 1e3;
         // Independent check against the largest preview.
-        let p = photocraft_raw::embedded_preview(&bytes).expect("preview");
+        let p = sary_raw::embedded_preview(&bytes).expect("preview");
         let raw_jpeg = codecs::decode_as_with(Format::Jpeg, p.jpeg, &codecs::DecodeOptions { keep_orientation: true, ..Default::default() }).expect("jpeg");
         let own = raw_jpeg.meta.exif.as_deref().map_or(1, codecs::exif_orientation);
         let o = if own != 1 { own } else { codecs::exif_orientation(&bytes) };
-        let jpeg = raw_jpeg.oriented(o).expect("orient").converted(ChannelLayout::Rgb, photocraft_codecs::SampleType::U8).into_owned();
+        let jpeg = raw_jpeg.oriented(o).expect("orient").converted(ChannelLayout::Rgb, sary_codecs::SampleType::U8).into_owned();
         let (jw, jh) = (jpeg.width() as usize, jpeg.height() as usize);
         let jpx: Vec<f32> = jpeg.data().iter().map(|v| f32::from(*v) / 255.0).collect();
         let (dw, dh) = (before.width as usize, before.height as usize);

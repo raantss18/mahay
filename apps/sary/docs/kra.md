@@ -1,15 +1,15 @@
 # Krita documents
 
-PhotoCraft opens Krita's native documents (`.kra`, and the `.krz` archive variant) with their
+Sary opens Krita's native documents (`.kra`, and the `.krz` archive variant) with their
 layers. File › Open, recent files, drops, the CLI (`convert`, `info`, `batch`) and automation
-(`doc.open`, MCP) all use the reader in `photocraft-io`; the browser build accepts them too. A
+(`doc.open`, MCP) all use the reader in `sary-io`; the browser build accepts them too. A
 file is recognised by its `mimetype` entry (`application/x-krita`). Krita files are import-only:
-Save suggests OpenRaster (`.ora`), which Krita opens with its layers, and `.pcraft` keeps
+Save suggests OpenRaster (`.ora`), which Krita opens with its layers, and `.sary` keeps
 everything.
 
 ## What is read
 
-| Krita | PhotoCraft |
+| Krita | Sary |
 |---|---|
 | Paint layers, 8 and 16-bit RGBA, 8 and 16-bit gray | pixel layers, at the document's depth (a gray layer in an RGB document is converted) |
 | Layer position (`x`, `y`), tiles anywhere, also off-canvas | kept |
@@ -41,7 +41,7 @@ children (checked against Krita's merged image).
 
 ## Limits and safety
 
-The reader uses the bounded ZIP reader of `photocraft-format` (no ZIP64, CRC-checked), parses
+The reader uses the bounded ZIP reader of `sary-format` (no ZIP64, CRC-checked), parses
 `maindoc.xml` with `roxmltree` (32 MiB cap; the DTD is declared by public id and not fetched),
 and decodes tiles with a bounds-checked LZF decoder that must produce exactly one tile. Tiles
 are at most 1024 px a side; canvases at most 300,000 px a side and 1 GiB of decoded pixels;
@@ -56,16 +56,16 @@ check layers, groups, pass-through, offsets, opacity, visibility, locks, masks, 
 16-bit and gray conversion, the merged-image fallback, LZF edge cases and malformed input.
 `crates/automation/tests/krita.rs` opens a `.kra` through the agent surface, edits it and saves
 it as OpenRaster. `crates/engine/tests/kra.rs` (opt-in) opens a Krita-authored 16-bit file in a
-session, checks it is read-only, edits with undo and saves as `.ora` and `.pcraft`.
+session, checks it is read-only, edits with undo and saves as `.ora` and `.sary`.
 
 Real-file checks use the Krita-authored oracles in
-[photocraft-corpus](https://github.com/storytold/photocraft-corpus) (`krita/`, made by
+[sary-corpus](https://github.com/raantss18/mahay-corpus) (`krita/`, made by
 `tools/krita-oracles/generate.py`, which removes Krita's embedded third-party ICC profiles so
 the files are sRGB):
 
 ```sh
-KRITA_TEST_DIR=/path/to/photocraft-corpus/krita cargo test -p photocraft-io --test krita_corpus -- --ignored --nocapture
-KRITA_TEST_DIR=/path/to/photocraft-corpus/krita cargo test -p photocraft-engine --test kra -- --ignored
+KRITA_TEST_DIR=/path/to/sary-corpus/krita cargo test -p sary-io --test krita_corpus -- --ignored --nocapture
+KRITA_TEST_DIR=/path/to/sary-corpus/krita cargo test -p sary-engine --test kra -- --ignored
 ```
 
 2026-10-09, Krita 5.2.9: 31 of 35 `.kra` files render within 3/255 of Krita's merged image; the

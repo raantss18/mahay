@@ -1,9 +1,9 @@
 //! Sheet Right-to-Left: the grid is mirrored on screen and pointer/keyboard input follows it.
 
 use egui::{Event, Key, Modifiers, PointerButton, Pos2};
-use gridcraft_engine::Session;
-use gridcraft_engine::core::{CellRef, RangeRef};
-use gridcraft_ui_egui::{SheetApp, grid::Geo};
+use tabilao_engine::Session;
+use tabilao_engine::core::{CellRef, RangeRef};
+use tabilao_ui_egui::{SheetApp, grid::Geo};
 use serde_json::json;
 
 type Harness = egui_kittest::Harness<'static, SheetApp>;

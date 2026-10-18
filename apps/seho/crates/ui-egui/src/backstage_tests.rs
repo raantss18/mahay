@@ -5,7 +5,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use deckcraft_engine::Session;
+use seho_engine::Session;
 use egui::accesskit::Role;
 use egui::{Key, Modifiers};
 use egui_kittest::Harness;
@@ -34,7 +34,7 @@ fn new_app() -> SlideApp {
 
 /// A folder of its own for one test's files.
 fn temp_dir(name: &str) -> std::path::PathBuf {
-    let d = std::env::temp_dir().join(format!("deckcraft-backstage-{}-{name}", std::process::id()));
+    let d = std::env::temp_dir().join(format!("seho-backstage-{}-{name}", std::process::id()));
     let _ = std::fs::remove_dir_all(&d);
     std::fs::create_dir_all(&d).unwrap();
     d
@@ -157,7 +157,7 @@ fn alt_f_arrows_enter_and_esc_drive_the_side_menu() {
 #[test]
 fn every_page_renders() {
     let mut h = harness(new_app());
-    let last_theme = deckcraft_model::theme::builtin_themes().last().map(|t| t.name.clone()).unwrap();
+    let last_theme = seho_model::theme::builtin_themes().last().map(|t| t.name.clone()).unwrap();
     let checks: [(Page, &str); 8] = [
         (Page::Home, "Recent"),
         (Page::New, &last_theme),
@@ -166,7 +166,7 @@ fn every_page_renders() {
         (Page::SaveAs, "Not saved yet"),
         (Page::Print, "Print Hidden Slides"),
         (Page::Export, "Create PDF Document"),
-        (Page::Account, "About DeckCraft"),
+        (Page::Account, "About Seho"),
     ];
     for (p, marker) in checks {
         h.state_mut().run("app.backstage", json!({"page": p.id()})).unwrap();
@@ -205,7 +205,7 @@ fn new_creates_a_presentation() {
     assert_eq!(h.state().session.documents().len(), 2);
     assert!(h.state().backstage.is_none(), "the new presentation shows");
 
-    let theme = deckcraft_model::theme::builtin_themes().into_iter().nth(1).unwrap();
+    let theme = seho_model::theme::builtin_themes().into_iter().nth(1).unwrap();
     h.state_mut().run("app.backstage", json!({})).unwrap();
     h.run_steps(3);
     h.get_by_label(&theme.name).click();
@@ -454,7 +454,7 @@ fn a_file_that_cant_be_opened_says_why() {
     }
     h.run_steps(2);
     assert!(h.state().session.documents().is_empty());
-    assert!(h.query_by_label_contains("not a presentation DeckCraft can read").is_some(), "the error is on screen");
+    assert!(h.query_by_label_contains("not a presentation Seho can read").is_some(), "the error is on screen");
     let _ = std::fs::remove_dir_all(&dir);
 }
 

@@ -3,8 +3,8 @@
 use std::path::{Path, PathBuf};
 
 #[cfg(feature = "mcp")]
-use pdfcraft_automation::mcp::McpServer;
-use pdfcraft_automation::{Automation, Content, ToolError, tools};
+use taratasy_automation::mcp::McpServer;
+use taratasy_automation::{Automation, Content, ToolError, tools};
 use serde_json::{Value, json};
 
 /// A PDF with `n` 200×300 pt pages reading "Page 1", "Page 2", …
@@ -65,7 +65,7 @@ fn remote_link_pdf(file: &str, destination: Option<&str>) -> Vec<u8> {
 }
 
 fn protected_fixture(password: &str) -> Vec<u8> {
-    use pdfcraft_engine::{Edit, Protection, Session};
+    use taratasy_engine::{Edit, Protection, Session};
     let mut session = Session::new();
     let id = session.open("target.pdf", None, std::sync::Arc::new(fixture(1)), None).unwrap();
     session.apply(id, Edit::Protect(Protection { open_password: Some(password.into()), ..Default::default() })).unwrap();
@@ -76,7 +76,7 @@ fn protected_fixture(password: &str) -> Vec<u8> {
 #[track_caller]
 fn workdir(test: &str) -> PathBuf {
     let caller = std::panic::Location::caller();
-    let dir = std::env::temp_dir().join(format!("pdfcraft-automation-{test}-{}-{}-{}", std::process::id(), caller.line(), caller.column(),));
+    let dir = std::env::temp_dir().join(format!("taratasy-automation-{test}-{}-{}-{}", std::process::id(), caller.line(), caller.column(),));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("a.pdf"), fixture(3)).unwrap();
@@ -155,14 +155,14 @@ fn doc_info_lists_page_transitions_and_display_times() {
 }
 
 /// Page transitions through the tools: set on chosen pages, written to the file as `/Trans` and
-/// `/Dur`, removed again, bad values refused, and one undo step. (Read through `pdfcraft_cos`,
+/// `/Dur`, removed again, bad values refused, and one undo step. (Read through `taratasy_cos`,
 /// so this does not lean on `doc_info` listing them.)
 #[test]
 fn page_transitions_are_set_and_removed_through_the_tools() {
-    use pdfcraft_cos::Object;
+    use taratasy_cos::Object;
     /// `key` of 0-based `page` in the saved file `name`, resolved.
     fn entry(dir: &Path, name: &str, page: usize, key: &[u8]) -> Option<Object> {
-        let d = pdfcraft_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join(name)).ok()?)).ok()?;
+        let d = taratasy_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join(name)).ok()?)).ok()?;
         let root = d.root()?;
         let pages = d.get(root).as_dict()?.reference(b"Pages")?;
         let kids = d.get(pages).as_dict()?.get(b"Kids")?.clone();
@@ -287,8 +287,8 @@ fn autotag_apply_writes_reviewable_tags_and_survives_save_reopen() {
 
     ok(&mut a, "doc_save", json!({ "doc": doc, "path": "tagged.pdf" }));
     let saved = std::fs::read(dir.join("tagged.pdf")).unwrap();
-    let reopened = pdfcraft_cos::Document::open(std::sync::Arc::new(saved)).unwrap();
-    let pages = pdfcraft_model::pages(&reopened);
+    let reopened = taratasy_cos::Document::open(std::sync::Arc::new(saved)).unwrap();
+    let pages = taratasy_model::pages(&reopened);
     assert_eq!(pages.len(), 2);
     assert!(pages.iter().all(|page| page.dict.contains(b"StructParents")));
 }
@@ -380,7 +380,7 @@ fn tool_table_is_well_formed() {
             assert!(t.input_schema.get(k).is_none(), "{}: top-level {k} in input_schema is rejected by MCP clients such as Claude", t.name);
         }
         if let Some(c) = t.command {
-            assert!(pdfcraft_engine::commands::command(c).is_some(), "{} names unregistered command {c}", t.name);
+            assert!(taratasy_engine::commands::command(c).is_some(), "{} names unregistered command {c}", t.name);
         }
     }
 }
@@ -436,8 +436,8 @@ fn explicit_font_and_disjoint_ranges_save_reopen_through_tools() {
 
 #[test]
 fn added_arabic_text_keeps_copy_search_and_editor_order_after_retyping_and_reopen() {
-    if pdfcraft_fonts::document_arabic_font().is_none() {
-        eprintln!("set CRAFT_FONTS_DIR to exercise added Arabic text");
+    if taratasy_fonts::document_arabic_font().is_none() {
+        eprintln!("set MAHAY_FONTS_DIR to exercise added Arabic text");
         return;
     }
     let dir = workdir("arabic-copy-order");
@@ -460,7 +460,7 @@ fn added_arabic_text_keeps_copy_search_and_editor_order_after_retyping_and_reope
 
 #[test]
 fn arabic_actual_text_stays_logical_through_editor_tools_and_save_reopen() {
-    use pdfcraft_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
+    use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
     use std::sync::Arc;
 
     let dir = workdir("arabic-actual-text");
@@ -490,7 +490,7 @@ fn arabic_actual_text_stays_logical_through_editor_tools_and_save_reopen() {
 
 #[test]
 fn arabic_ligature_actual_text_is_one_editable_word_through_save_reopen() {
-    use pdfcraft_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
+    use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
     use std::sync::Arc;
 
     let dir = workdir("arabic-ligature-actual-text");
@@ -882,11 +882,11 @@ fn errors_are_specific_and_safe() {
     assert_eq!(ok(&mut a, "doc_list", json!({}))["documents"], json!([]));
 
     // The root confines reads and writes.
-    let outside = std::env::temp_dir().join("pdfcraft-automation-outside.pdf");
+    let outside = std::env::temp_dir().join("taratasy-automation-outside.pdf");
     std::fs::write(&outside, fixture(1)).unwrap();
     assert!(matches!(err(&mut a, "doc_open", json!({ "path": outside.to_str().unwrap() })), ToolError::Failed(m) if m.contains("outside")));
     assert!(
-        matches!(err(&mut a, "doc_open", json!({ "path": "../pdfcraft-automation-outside.pdf" })), ToolError::Failed(m) if m.contains("outside"))
+        matches!(err(&mut a, "doc_open", json!({ "path": "../taratasy-automation-outside.pdf" })), ToolError::Failed(m) if m.contains("outside"))
     );
     let doc = ok(&mut a, "doc_open", json!({ "path": "a.pdf" }))["doc"].as_u64().unwrap();
     assert!(a.call("doc_save", &json!({ "doc": doc, "path": "new/../../escape.pdf" })).is_err());
@@ -897,7 +897,7 @@ fn errors_are_specific_and_safe() {
 /// `root/` (with `inside.pdf`) next to `outside/` (with the file `secret.pdf` and the folder
 /// `sub`), all in a fresh temporary directory. Returns (base, canonical root).
 fn sandbox(test: &str) -> (PathBuf, PathBuf) {
-    let base = std::env::temp_dir().join(format!("pdfcraft-automation-{test}-{}", std::process::id()));
+    let base = std::env::temp_dir().join(format!("taratasy-automation-{test}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&base);
     std::fs::create_dir_all(base.join("root")).unwrap();
     std::fs::create_dir_all(base.join("outside/sub")).unwrap();
@@ -958,10 +958,10 @@ fn root_refusals_do_not_reveal_what_exists_outside() {
             "../outside/secret.pdf ".into(),
             // Another network share or device namespace is refused by name, without contacting
             // it (`.invalid` never resolves, so a regression fails instead of reaching a host).
-            r"\\pdfcraft-test.invalid\share\secret.pdf".into(),
-            "//pdfcraft-test.invalid/share/secret.pdf".into(),
-            r"\\?\UNC\pdfcraft-test.invalid\share\secret.pdf".into(),
-            r"\\.\pipe\pdfcraft-test".into(),
+            r"\\taratasy-test.invalid\share\secret.pdf".into(),
+            "//taratasy-test.invalid/share/secret.pdf".into(),
+            r"\\?\UNC\taratasy-test.invalid\share\secret.pdf".into(),
+            r"\\.\pipe\taratasy-test".into(),
             r"\\?\GLOBALROOT\Device\Null".into(),
         ]);
         let other = base.join("outside/secret.pdf").canonicalize().unwrap();
@@ -1078,7 +1078,7 @@ fn writing_to_a_folder_touches_nothing_beside_it() {
     // what this checks; the listings and the file at the old staging name are canaries.
     let (base, root) = sandbox("root-itself");
     let mut a = auto(&root);
-    let beside = base.join(".root.pdfcraft-tmp");
+    let beside = base.join(".root.taratasy-tmp");
     std::fs::write(&beside, "SENTINEL").unwrap();
     std::fs::create_dir_all(root.join("folder")).unwrap();
     let listing = |dir: &Path| {
@@ -1205,7 +1205,7 @@ fn mcp_session_over_stdio() {
     assert_eq!(replies.len(), 4, "the notification gets no reply");
 
     assert_eq!(replies[0]["result"]["protocolVersion"], "2025-03-26");
-    assert_eq!(replies[0]["result"]["serverInfo"]["name"], "pdfcraft");
+    assert_eq!(replies[0]["result"]["serverInfo"]["name"], "taratasy");
     assert_eq!(replies[1]["result"]["tools"].as_array().unwrap().len(), tools().len());
     assert_eq!(replies[2]["result"]["structuredContent"]["pages"], 3);
     assert_eq!(replies[2]["result"]["isError"], false);
@@ -1223,7 +1223,7 @@ fn mcp_errors() {
     assert_eq!(rpc(&mut s, 1, "initialize", json!({ "protocolVersion": "1999-01-01" }))["result"]["protocolVersion"], "2025-06-18");
     assert_eq!(rpc(&mut s, 2, "ping", json!({}))["result"], json!({}));
     assert_eq!(rpc(&mut s, 3, "prompts/list", json!({}))["error"]["code"], -32601);
-    assert_eq!(rpc(&mut s, 6, "resources/read", json!({ "uri": "pdfcraft://doc/9/info" }))["error"]["code"], -32602);
+    assert_eq!(rpc(&mut s, 6, "resources/read", json!({ "uri": "taratasy://doc/9/info" }))["error"]["code"], -32602);
     assert_eq!(rpc(&mut s, 4, "tools/call", json!({ "name": "nope" }))["error"]["code"], -32602);
     let failed = rpc(&mut s, 5, "tools/call", json!({ "name": "doc_open", "arguments": { "path": "/definitely/not/here.pdf" } }));
     assert_eq!(failed["result"]["isError"], true);
@@ -1243,19 +1243,19 @@ fn mcp_resources_expose_open_documents() {
     rpc(&mut s, 4, "tools/call", json!({ "name": "doc_open", "arguments": { "path": "a.pdf" } }));
     let list = rpc(&mut s, 5, "resources/list", json!({}))["result"]["resources"].as_array().cloned().unwrap();
     assert_eq!(list.len(), 2 + 3 + 2, "info, text, three page images and two session resources");
-    assert_eq!(list[0]["uri"], "pdfcraft://doc/1/info");
+    assert_eq!(list[0]["uri"], "taratasy://doc/1/info");
     let read = |s: &mut McpServer, uri: &str| rpc(s, 6, "resources/read", json!({ "uri": uri }))["result"]["contents"][0].clone();
-    let text = read(&mut s, "pdfcraft://doc/1/text");
+    let text = read(&mut s, "taratasy://doc/1/text");
     assert_eq!(text["mimeType"], "text/plain");
     assert!(text["text"].as_str().unwrap().contains("Page 2\nPage 2"), "{text}");
-    assert_eq!(read(&mut s, "pdfcraft://doc/1/page/3/text")["text"], "Page 3");
-    let info: Value = serde_json::from_str(read(&mut s, "pdfcraft://doc/1/info")["text"].as_str().unwrap()).unwrap();
+    assert_eq!(read(&mut s, "taratasy://doc/1/page/3/text")["text"], "Page 3");
+    let info: Value = serde_json::from_str(read(&mut s, "taratasy://doc/1/info")["text"].as_str().unwrap()).unwrap();
     assert_eq!(info["pages"].as_array().unwrap().len(), 3);
-    let img = read(&mut s, "pdfcraft://doc/1/page/1/image?dpi=36");
+    let img = read(&mut s, "taratasy://doc/1/page/1/image?dpi=36");
     use base64::Engine as _;
     let png = base64::engine::general_purpose::STANDARD.decode(img["blob"].as_str().unwrap()).unwrap();
     assert_eq!(&png[1..4], b"PNG");
-    assert_eq!(rpc(&mut s, 7, "resources/read", json!({ "uri": "pdfcraft://doc/1/page/9/image" }))["error"]["code"], -32602);
+    assert_eq!(rpc(&mut s, 7, "resources/read", json!({ "uri": "taratasy://doc/1/page/9/image" }))["error"]["code"], -32602);
 }
 
 /// A server in compact mode with `dir` as its root.
@@ -1292,11 +1292,11 @@ fn mcp_default_lists_every_tool_and_has_no_meta_tools() {
 fn mcp_compact_lists_the_core_tools_and_two_meta_tools() {
     let mut s = McpServer::new(Automation::new()).with_compact(true);
     let list = rpc(&mut s, 1, "tools/list", json!({}));
-    let mut expected: Vec<String> = pdfcraft_automation::mcp::COMPACT_CORE_TOOLS.iter().map(|n| n.to_string()).collect();
+    let mut expected: Vec<String> = taratasy_automation::mcp::COMPACT_CORE_TOOLS.iter().map(|n| n.to_string()).collect();
     expected.extend(["tool_search".to_string(), "tool_call".to_string()]);
     assert_eq!(tool_names(&list), expected);
     let all: Vec<&str> = tools().iter().map(|t| t.name).collect();
-    for core in pdfcraft_automation::mcp::COMPACT_CORE_TOOLS {
+    for core in taratasy_automation::mcp::COMPACT_CORE_TOOLS {
         assert!(all.contains(core), "core tool {core} is not in the tool table");
     }
     // Core tools are the real definitions, and the list is far smaller than the full one.
@@ -1304,7 +1304,7 @@ fn mcp_compact_lists_the_core_tools_and_two_meta_tools() {
     let core_open = list["result"]["tools"][0].clone();
     assert_eq!(Some(&core_open), full["result"]["tools"].as_array().unwrap().iter().find(|t| t["name"] == "doc_open"));
     assert!(list.to_string().len() * 5 < full.to_string().len(), "compact {} vs full {}", list.to_string().len(), full.to_string().len());
-    for meta in &list["result"]["tools"].as_array().unwrap()[pdfcraft_automation::mcp::COMPACT_CORE_TOOLS.len()..] {
+    for meta in &list["result"]["tools"].as_array().unwrap()[taratasy_automation::mcp::COMPACT_CORE_TOOLS.len()..] {
         assert_eq!(meta["inputSchema"]["type"], "object");
     }
     let instructions = rpc(&mut s, 3, "initialize", json!({}))["result"]["instructions"].as_str().unwrap().to_string();
@@ -1463,7 +1463,7 @@ fn mcp_compact_meta_tools_reject_unknown_arguments() {
     let dir = workdir("mcp-compact-keys");
     let mut s = compact_server(&dir);
     let list = rpc(&mut s, 1, "tools/list", json!({}));
-    let metas = &list["result"]["tools"].as_array().unwrap()[pdfcraft_automation::mcp::COMPACT_CORE_TOOLS.len()..];
+    let metas = &list["result"]["tools"].as_array().unwrap()[taratasy_automation::mcp::COMPACT_CORE_TOOLS.len()..];
     assert_eq!(metas.len(), 2);
     for meta in metas {
         assert_eq!(meta["inputSchema"]["additionalProperties"], false, "{}", meta["name"]);
@@ -1994,7 +1994,7 @@ fn protecting_with_a_password_encryption_ignores_is_refused() {
 #[test]
 fn forms_through_tools() {
     let dir = workdir("forms");
-    let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../dist/demo/pdfcraft-showcase.pdf");
+    let src = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../dist/demo/taratasy-showcase.pdf");
     if !src.exists() {
         eprintln!("skipped: run `cargo xtask demo-pdf` for the showcase form");
         return;
@@ -2267,8 +2267,8 @@ trailer << /Root 1 0 R >>
     );
     assert_eq!((moved["tags"][1]["object"].as_u64(), moved["tags"][2]["object"].as_u64()), (Some(8), Some(7)));
     ok(&mut a, "doc_save", json!({ "doc": fd, "path": "reordered.pdf" }));
-    let saved = pdfcraft_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("reordered.pdf")).unwrap())).unwrap();
-    assert_eq!(pdfcraft_engine::a11y::tags(&saved).into_iter().map(|tag| tag.title).collect::<Vec<_>>(), [None, Some("Second shape".into()), None]);
+    let saved = taratasy_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("reordered.pdf")).unwrap())).unwrap();
+    assert_eq!(taratasy_engine::a11y::tags(&saved).into_iter().map(|tag| tag.title).collect::<Vec<_>>(), [None, Some("Second shape".into()), None]);
     assert_eq!(ok(&mut a, "edit_undo", json!({ "doc": fd }))["undone"], "Move object");
     assert_eq!(ok(&mut a, "accessibility_tags", json!({ "doc": fd }))["tags"][1]["object"], 7);
     assert!(matches!(
@@ -2336,8 +2336,8 @@ trailer << /Root 1 0 R >>
     assert_eq!(tagged["count"], 1);
     assert_eq!(ok(&mut a, "accessibility_check", json!({ "doc": doc, "rules": ["tagged-content"] }))["failed"], 0);
     ok(&mut a, "doc_save", json!({ "doc": doc, "path": "artifact.pdf" }));
-    let saved = pdfcraft_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("artifact.pdf")).unwrap())).unwrap();
-    assert_eq!(pdfcraft_engine::a11y::tags(&saved).len(), 1);
+    let saved = taratasy_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("artifact.pdf")).unwrap())).unwrap();
+    assert_eq!(taratasy_engine::a11y::tags(&saved).len(), 1);
     assert_eq!(ok(&mut a, "edit_undo", json!({ "doc": doc }))["undone"], "Mark content as artifact");
     assert_eq!(ok(&mut a, "accessibility_tags", json!({ "doc": doc }))["count"], 2);
     assert!(matches!(a.call("accessibility_mark_tag_artifact", &json!({ "doc": doc, "object": 6, "generation": 0 })), Err(ToolError::Failed(_))));
@@ -2638,10 +2638,10 @@ fn enhance_camera_image_finds_the_edges_by_itself() {
 
 #[test]
 fn editing_form_artwork_through_tools() {
-    use pdfcraft_cos::{Dict, Document, Object, SaveOptions, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, SaveOptions, Stream, write_incremental};
     let dir = workdir("form-artwork");
     let mut cos = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
-    let page = pdfcraft_model::pages(&cos)[0].clone();
+    let page = taratasy_model::pages(&cos)[0].clone();
     let mut form = Dict::new();
     form.set(b"Subtype".to_vec(), Object::name("Form"));
     form.set(b"BBox".to_vec(), Object::Array([0, 0, 80, 40].map(Object::Int).to_vec()));
@@ -2742,7 +2742,7 @@ fn fill_and_sign_through_tools() {
     // Month and weekday names in a chosen language, for the preference or one date.
     let f = ok(&mut a, "fill_sign_date_format", json!({ "format": "d. mmmm yyyy", "language": "cs" }));
     assert_eq!((f["language"].as_str(), f["today"].as_str()), (Some("cs"), Some("14. listopadu 2023")), "{f}");
-    assert_eq!(f["languages"].as_array().unwrap().len(), pdfcraft_engine::dates::DATE_LANGUAGES.len(), "every date language");
+    assert_eq!(f["languages"].as_array().unwrap().len(), taratasy_engine::dates::DATE_LANGUAGES.len(), "every date language");
     ok(&mut a, "fill_sign_add", json!({ "doc": doc, "page": 1, "type": "date", "at": [20, 280], "format": "d \\de mmmm", "language": "es" }));
     assert!(page_text(&mut a, doc)[0].contains("14 de noviembre"));
     assert!(matches!(a.call("fill_sign_date_format", &json!({ "format": "yyy" })), Err(ToolError::InvalidArgs(_))));
@@ -2782,8 +2782,8 @@ fn fill_sign_text_font_size_is_saved_and_validated() {
     assert!(height > 30.0, "24 pt text has a taller annotation: {comments}");
     ok(&mut a, "doc_save", json!({ "doc": doc, "path": "sized.pdf" }));
     let saved = std::fs::read(dir.join("sized.pdf")).unwrap();
-    let pdf = pdfcraft_cos::Document::open(std::sync::Arc::new(saved)).unwrap();
-    let page = pdfcraft_model::pages(&pdf).remove(0);
+    let pdf = taratasy_cos::Document::open(std::sync::Arc::new(saved)).unwrap();
+    let page = taratasy_model::pages(&pdf).remove(0);
     let annotations = pdf.resolve(page.dict.get(b"Annots").unwrap());
     let annotation = pdf.resolve(annotations.as_array().unwrap().first().unwrap());
     let da = annotation.as_dict().unwrap().get(b"DA").unwrap().as_string().unwrap();
@@ -3538,7 +3538,7 @@ fn printing_through_tools() {
     let mut a = auto(&dir);
     let doc = ok(&mut a, "doc_open", json!({ "path": "a.pdf" }))["doc"].as_u64().unwrap();
     assert!(ok(&mut a, "printers", json!({}))["printers"].is_array());
-    let none = ok(&mut a, "printer_options", json!({ "printer": "No_Such_Queue_PdfCraft" }));
+    let none = ok(&mut a, "printer_options", json!({ "printer": "No_Such_Queue_Taratasy" }));
     assert_eq!((none["count"].as_u64(), none["options"].as_array().map(Vec::len)), (Some(0), Some(0)));
     assert!(matches!(a.call("printer_options", &json!({})), Err(ToolError::InvalidArgs(_))));
     assert!(matches!(
@@ -3883,9 +3883,9 @@ fn links_through_tools() {
     assert_eq!(list["count"], 3);
     let added = list["links"].as_array().unwrap().iter().find(|l| l["to_page"] == 1).unwrap().clone();
     assert_eq!(added["rect"], json!([72.0, 300.0, 200.0, 320.0]));
-    ok(&mut a, "link_edit", json!({ "doc": doc, "page": 1, "index": added["index"], "url": "https://pdfcraft.dev" }));
+    ok(&mut a, "link_edit", json!({ "doc": doc, "page": 1, "index": added["index"], "url": "https://taratasy.dev" }));
     let list = ok(&mut a, "link_list", json!({ "doc": doc }));
-    assert!(list["links"].as_array().unwrap().iter().any(|l| l["url"] == "https://pdfcraft.dev"));
+    assert!(list["links"].as_array().unwrap().iter().any(|l| l["url"] == "https://taratasy.dev"));
     ok(&mut a, "link_delete", json!({ "doc": doc, "page": 1, "index": added["index"] }));
     let r = ok(&mut a, "links_remove", json!({ "doc": doc, "pages": [1] }));
     assert_eq!(r["removed"], 2);
@@ -3957,7 +3957,7 @@ fn local_gotor_link_open_applies_destinations_and_honors_root() {
     assert_eq!(opened["destination"]["view"]["kind"], "fit_h");
     assert_eq!(opened["document"]["pages"], 3);
     let target_id = opened["document"]["doc"].as_u64().unwrap();
-    assert_eq!(a.session().get(pdfcraft_engine::DocId(target_id)).unwrap().info.pages.len(), 3);
+    assert_eq!(a.session().get(taratasy_engine::DocId(target_id)).unwrap().info.pages.len(), 3);
 
     let absolute = ok(&mut a, "doc_open", json!({ "path": "absolute.pdf" }))["doc"].as_u64().unwrap();
     let before = a.session().docs().len();
@@ -4221,7 +4221,7 @@ fn comment_checkmarks_locks_hiding_and_summaries_through_tools() {
 /// value, a button caption, a text box and Fill & Sign text are kept as typed (as Acrobat keeps
 /// them) and the result's `warnings` names the character; a form also asks other viewers to
 /// redraw it. Where the `?` would be permanent the tool refuses: a typed signature, a redaction's
-/// overlay text, a new document from text, and flattening what PdfCraft drew with `?`. A comment
+/// overlay text, a new document from text, and flattening what Taratasy drew with `?`. A comment
 /// summary that quotes such text writes it as [U+XXXX].
 #[test]
 fn text_the_standard_fonts_cannot_draw_is_never_silent_through_tools() {
@@ -4284,7 +4284,7 @@ fn text_box_font_size_through_the_tool() {
     }
     assert!(a.call("comment_edit", &json!({ "doc": doc, "page": 1, "index": 2, "font_size": 12 })).is_err());
     ok(&mut a, "doc_save", json!({ "doc": doc, "path": "sized.pdf" }));
-    let saved = pdfcraft_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("sized.pdf")).unwrap())).unwrap();
+    let saved = taratasy_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("sized.pdf")).unwrap())).unwrap();
     let sizes: Vec<String> = saved
         .object_numbers()
         .iter()
@@ -4328,7 +4328,7 @@ fn line_endings_through_the_tool() {
         Err(ToolError::InvalidArgs(_))
     ));
     ok(&mut a, "doc_save", json!({ "doc": doc, "path": "ended.pdf" }));
-    let saved = pdfcraft_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("ended.pdf")).unwrap())).unwrap();
+    let saved = taratasy_cos::Document::open(std::sync::Arc::new(std::fs::read(dir.join("ended.pdf")).unwrap())).unwrap();
     for name in [b"Diamond".as_slice(), b"Circle", b"Slash", b"Square"] {
         assert!(
             saved.object_numbers().iter().any(|n| saved.try_get(*n).ok().is_some_and(|o| object_has_name(&o, name))),
@@ -4341,7 +4341,7 @@ fn line_endings_through_the_tool() {
         .into_iter()
         .filter_map(|n| {
             let obj = saved.try_get(n).ok()?;
-            let pdfcraft_cos::Object::Stream(s) = &*obj else { return None };
+            let taratasy_cos::Object::Stream(s) = &*obj else { return None };
             if s.dict.name(b"Subtype") != Some(b"Form") {
                 return None;
             }
@@ -4352,12 +4352,12 @@ fn line_endings_through_the_tool() {
     assert!(drawn.iter().any(|s| s.contains(" l S")), "an open ending was drawn: {drawn:?}");
 }
 
-fn object_has_name(obj: &pdfcraft_cos::Object, name: &[u8]) -> bool {
+fn object_has_name(obj: &taratasy_cos::Object, name: &[u8]) -> bool {
     match obj {
-        pdfcraft_cos::Object::Name(n) => n.as_slice() == name,
-        pdfcraft_cos::Object::Array(items) => items.iter().any(|o| object_has_name(o, name)),
-        pdfcraft_cos::Object::Dict(d) => d.iter().any(|(_, o)| object_has_name(o, name)),
-        pdfcraft_cos::Object::Stream(s) => s.dict.iter().any(|(_, o)| object_has_name(o, name)),
+        taratasy_cos::Object::Name(n) => n.as_slice() == name,
+        taratasy_cos::Object::Array(items) => items.iter().any(|o| object_has_name(o, name)),
+        taratasy_cos::Object::Dict(d) => d.iter().any(|(_, o)| object_has_name(o, name)),
+        taratasy_cos::Object::Stream(s) => s.dict.iter().any(|(_, o)| object_has_name(o, name)),
         _ => false,
     }
 }
@@ -4545,7 +4545,7 @@ fn digital_ids_signing_and_validation_through_tools() {
 
 /// The decoded text of every visible signature appearance (Helvetica forms) in a signed file.
 fn signature_appearances(path: &Path) -> String {
-    use pdfcraft_cos::{Document, ObjRef, Object};
+    use taratasy_cos::{Document, ObjRef, Object};
     let doc = Document::open(std::sync::Arc::new(std::fs::read(path).unwrap())).unwrap();
     let mut text = String::new();
     for num in doc.object_numbers() {
@@ -5128,7 +5128,7 @@ fn print_readiness_through_tools() {
     assert!(trim[0]["page"].is_null(), "{r}");
     assert_eq!(ok(&mut a, "doc_info", json!({ "doc": doc })), before, "verification doesn't change the document");
     assert!(a.call("print_readiness", &json!({ "doc": 999 })).is_err());
-    assert!(pdfcraft_automation::tools().iter().any(|t| t.name == "print_readiness" && t.read_only));
+    assert!(taratasy_automation::tools().iter().any(|t| t.name == "print_readiness" && t.read_only));
 }
 
 #[test]
@@ -5151,7 +5151,7 @@ fn exporting_to_word_html_and_rtf() {
 /// #773: a diagonal watermark must not enter the body flow or move invoice fields.
 #[test]
 fn exporting_an_invoice_to_word_keeps_the_watermark_out_of_flow() {
-    use pdfcraft_cos::{Dict, Document, ObjRef, SaveOptions, Stream, write_full};
+    use taratasy_cos::{Dict, Document, ObjRef, SaveOptions, Stream, write_full};
     let dir = workdir("invoice-word");
     let mut pdf = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
     let content = b"q BT /F1 60 Tf 0.8 g 0.70710678 0.70710678 -0.70710678 0.70710678 30 80 Tm (DRAFT) Tj ET Q \
@@ -5195,7 +5195,7 @@ BT /F1 11 Tf 20 20 Td (Total due: 150.00) Tj ET";
 fn hundreds_of_xfa_calculations_open_and_recalculate_within_their_budgets() {
     let dir = workdir("xfa-many");
     let (sections, rows) = (10, 20);
-    std::fs::write(dir.join("many.pdf"), pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::many_calculations_template(sections, rows))).unwrap();
+    std::fs::write(dir.join("many.pdf"), taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::many_calculations_template(sections, rows))).unwrap();
     let mut a = auto(&dir);
     let started = std::time::Instant::now();
     let opened = ok(&mut a, "doc_open", json!({ "path": "many.pdf" }));
@@ -5222,7 +5222,7 @@ fn hundreds_of_xfa_calculations_open_and_recalculate_within_their_budgets() {
 fn xfa_forms_flatten_and_convert_to_static_through_tools() {
     let dir = workdir("xfa-flat");
     let data = "<form><page1><country>JP</country></page1></form>";
-    std::fs::write(dir.join("fields.pdf"), pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::fields_template(data))).unwrap();
+    std::fs::write(dir.join("fields.pdf"), taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::fields_template(data))).unwrap();
     let mut a = auto(&dir);
     // Convert to static: the fields stay, the XFA goes.
     let doc = ok(&mut a, "doc_open", json!({ "path": "fields.pdf" }))["doc"].as_u64().unwrap();
@@ -5249,7 +5249,7 @@ fn xfa_forms_flatten_and_convert_to_static_through_tools() {
 fn xfa_data_files_export_and_import_through_tools() {
     let dir = workdir("xfa-data");
     let data = "<form><page1><country>JP</country></page1></form>";
-    std::fs::write(dir.join("fields.pdf"), pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::fields_template(data))).unwrap();
+    std::fs::write(dir.join("fields.pdf"), taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::fields_template(data))).unwrap();
     let mut a = auto(&dir);
     let doc = ok(&mut a, "doc_open", json!({ "path": "fields.pdf" }))["doc"].as_u64().unwrap();
     ok(&mut a, "doc_export_data", json!({ "doc": doc, "path": "data.xml", "what": "fields" }));
@@ -5266,13 +5266,13 @@ fn xfa_data_files_export_and_import_through_tools() {
     let country = fields["fields"].as_array().unwrap().iter().find(|f| f["name"] == "country").unwrap();
     assert_eq!(country["value"], json!("CA"));
     // A picture for the image field, through form_set_image, lands in the data.
-    std::fs::write(dir.join("pic.gif"), pdfcraft_xfa::fixtures::TINY_GIF).unwrap();
+    std::fs::write(dir.join("pic.gif"), taratasy_xfa::fixtures::TINY_GIF).unwrap();
     ok(&mut a, "form_set_image", json!({ "doc": doc, "field": "photo", "path": "pic.gif" }));
     ok(&mut a, "doc_export_data", json!({ "doc": doc, "path": "after.xml", "what": "fields" }));
     let after = std::fs::read_to_string(dir.join("after.xml")).unwrap();
     assert!(after.contains("<photo xfa:contentType=\"image/gif\">R0lGODlh"), "{after}");
     // XDP is for XFA forms only.
-    std::fs::write(dir.join("plain.pdf"), pdfcraft_xfa::fixtures::static_shell("<form1><page1><name>Ada</name></page1></form1>")).unwrap();
+    std::fs::write(dir.join("plain.pdf"), taratasy_xfa::fixtures::static_shell("<form1><page1><name>Ada</name></page1></form1>")).unwrap();
     let plain = ok(&mut a, "doc_open", json!({ "path": "plain.pdf" }))["doc"].as_u64().unwrap();
     ok(&mut a, "doc_export_data", json!({ "doc": plain, "path": "static.xml", "what": "fields" }));
     assert!(std::fs::read_to_string(dir.join("static.xml")).unwrap().contains("<name>Ada</name>"), "a static XFA form exports its data too");
@@ -5281,7 +5281,7 @@ fn xfa_data_files_export_and_import_through_tools() {
 #[test]
 fn dynamic_xfa_forms_open_render_fill_and_save_through_tools() {
     let dir = workdir("xfa");
-    std::fs::write(dir.join("xfa.pdf"), pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::template(2))).unwrap();
+    std::fs::write(dir.join("xfa.pdf"), taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::template(2))).unwrap();
     let mut a = auto(&dir);
     let opened = ok(&mut a, "doc_open", json!({ "path": "xfa.pdf" }));
     assert_eq!(opened["pages"], 2, "laid out from the template, not the placeholder page");
@@ -5475,7 +5475,7 @@ fn measurement_snap_tool_covers_all_targets() {
 #[test]
 fn xfa_scripts_run_for_buttons_and_field_changes_through_tools() {
     let dir = workdir("xfa-scripts");
-    std::fs::write(dir.join("scripted.pdf"), pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::scripted_template())).unwrap();
+    std::fs::write(dir.join("scripted.pdf"), taratasy_xfa::fixtures::shell(&taratasy_xfa::fixtures::scripted_template())).unwrap();
     let mut a = auto(&dir);
     let doc = ok(&mut a, "doc_open", json!({ "path": "scripted.pdf" }))["doc"].as_u64().unwrap();
     let field = |a: &mut Automation, n: &str| {
@@ -5506,11 +5506,11 @@ fn xfa_scripts_run_for_buttons_and_field_changes_through_tools() {
 fn doc_info_says_when_a_runaway_script_turned_the_forms_scripts_off() {
     let dir = workdir("xfa-scripts-off");
     // An initialize script whose loops are in nested calls runs until it is abandoned.
-    let tpl = pdfcraft_xfa::fixtures::scripted_template().replace(
+    let tpl = taratasy_xfa::fixtures::scripted_template().replace(
         "if (qty.rawValue === null) qty.rawValue = 2;",
         "function f() { for (var j = 0; j &lt; 99999; j++) {} } for (var k = 0; k &lt; 5000; k++) f();",
     );
-    std::fs::write(dir.join("runaway.pdf"), pdfcraft_xfa::fixtures::shell(&tpl)).unwrap();
+    std::fs::write(dir.join("runaway.pdf"), taratasy_xfa::fixtures::shell(&tpl)).unwrap();
     let mut a = auto(&dir);
     let doc = ok(&mut a, "doc_open", json!({ "path": "runaway.pdf" }))["doc"].as_u64().unwrap();
     assert_eq!(ok(&mut a, "doc_info", json!({ "doc": doc }))["xfa_scripts_off"], true);
@@ -5568,7 +5568,7 @@ mod close_argument_tests {
             let parent = std::env::temp_dir();
             for _ in 0..128 {
                 let serial = NEXT.fetch_add(1, Ordering::Relaxed);
-                let path = parent.join(format!("pdfcraft-close-{}-{serial}", std::process::id()));
+                let path = parent.join(format!("taratasy-close-{}-{serial}", std::process::id()));
                 match std::fs::create_dir(&path) {
                     Ok(()) => {
                         let dir = Self(path);
@@ -5605,22 +5605,22 @@ mod close_argument_tests {
             let list = ok(&mut a, "doc_list", json!({}));
             let info = ok(&mut a, "doc_info", json!({ "doc": doc }));
             let text = ok(&mut a, "text_extract", json!({ "doc": doc }));
-            let bytes = a.session().get(pdfcraft_engine::DocId(doc)).unwrap().bytes.clone();
+            let bytes = a.session().get(taratasy_engine::DocId(doc)).unwrap().bytes.clone();
             for invalid in [json!("false"), json!(0), json!([]), json!({})] {
                 let error = a.call("doc_close", &json!({ "doc": doc, "discard_changes": invalid })).unwrap_err();
                 assert!(matches!(error, ToolError::InvalidArgs(ref message) if message == "discard_changes must be true or false"));
                 assert_eq!(ok(&mut a, "doc_list", json!({})), list, "all document identities, order, paths and history stay unchanged");
                 assert_eq!(ok(&mut a, "doc_info", json!({ "doc": doc })), info);
                 assert_eq!(ok(&mut a, "text_extract", json!({ "doc": doc })), text);
-                let current = a.session().get(pdfcraft_engine::DocId(doc)).unwrap();
+                let current = a.session().get(taratasy_engine::DocId(doc)).unwrap();
                 assert_eq!(current.bytes, bytes);
                 assert_eq!(current.dirty, dirty);
                 assert_eq!(std::fs::read(dir.0.join("a.pdf")).unwrap(), source);
                 assert_eq!(std::fs::read(dir.0.join("b.pdf")).unwrap(), other_source);
             }
             assert_eq!(ok(&mut a, "doc_close", json!({ "doc": doc, "discard_changes": true }))["closed"], doc);
-            assert!(a.session().get(pdfcraft_engine::DocId(doc)).is_none());
-            assert!(a.session().get(pdfcraft_engine::DocId(other)).is_some());
+            assert!(a.session().get(taratasy_engine::DocId(doc)).is_none());
+            assert!(a.session().get(taratasy_engine::DocId(other)).is_some());
         }
     }
 
@@ -5637,24 +5637,24 @@ mod close_argument_tests {
                 args["discard_changes"] = discard;
             }
             assert_eq!(ok(&mut a, "doc_close", args)["closed"], doc);
-            assert!(a.session().get(pdfcraft_engine::DocId(doc)).is_none());
-            assert!(a.session().get(pdfcraft_engine::DocId(other)).is_some());
+            assert!(a.session().get(taratasy_engine::DocId(doc)).is_none());
+            assert!(a.session().get(taratasy_engine::DocId(other)).is_some());
         }
         let doc = ok(&mut a, "doc_open", json!({ "path": "a.pdf" }))["doc"].as_u64().unwrap();
         ok(&mut a, "doc_set_info", json!({ "doc": doc, "key": "Title", "value": "Unsaved title" }));
         let before = ok(&mut a, "doc_list", json!({}));
         let info = ok(&mut a, "doc_info", json!({ "doc": doc }));
-        let bytes = a.session().get(pdfcraft_engine::DocId(doc)).unwrap().bytes.clone();
+        let bytes = a.session().get(taratasy_engine::DocId(doc)).unwrap().bytes.clone();
         for args in [json!({ "doc": doc }), json!({ "doc": doc, "discard_changes": null }), json!({ "doc": doc, "discard_changes": false })] {
             let error = a.call("doc_close", &args).unwrap_err();
             assert!(matches!(error, ToolError::Failed(ref message) if message.contains("unsaved changes")));
             assert_eq!(ok(&mut a, "doc_list", json!({})), before);
             assert_eq!(ok(&mut a, "doc_info", json!({ "doc": doc })), info);
-            assert_eq!(a.session().get(pdfcraft_engine::DocId(doc)).unwrap().bytes, bytes);
+            assert_eq!(a.session().get(taratasy_engine::DocId(doc)).unwrap().bytes, bytes);
         }
         assert_eq!(ok(&mut a, "doc_close", json!({ "doc": doc, "discard_changes": true }))["closed"], doc);
-        assert!(a.session().get(pdfcraft_engine::DocId(doc)).is_none());
-        assert!(a.session().get(pdfcraft_engine::DocId(other)).is_some());
+        assert!(a.session().get(taratasy_engine::DocId(doc)).is_none());
+        assert!(a.session().get(taratasy_engine::DocId(other)).is_some());
         assert_eq!(std::fs::read(dir.0.join("a.pdf")).unwrap(), source);
     }
 }
@@ -5672,7 +5672,7 @@ mod combine_argument_tests {
             let parent = std::env::temp_dir();
             for _ in 0..128 {
                 let serial = NEXT.fetch_add(1, Ordering::Relaxed);
-                let path = parent.join(format!("pdfcraft-combine-{}-{serial}", std::process::id()));
+                let path = parent.join(format!("taratasy-combine-{}-{serial}", std::process::id()));
                 match std::fs::create_dir(&path) {
                     Ok(()) => {
                         let dir = Self(path);
@@ -5708,7 +5708,7 @@ mod combine_argument_tests {
         let list = ok(&mut a, "doc_list", json!({}));
         let info = ok(&mut a, "doc_info", json!({ "doc": doc }));
         let text = page_text(&mut a, doc);
-        let bytes = a.session().get(pdfcraft_engine::DocId(doc)).unwrap().bytes.clone();
+        let bytes = a.session().get(taratasy_engine::DocId(doc)).unwrap().bytes.clone();
         for invalid in [json!(1), json!(true), json!({ "page": 1 }), json!(["1"])] {
             for (index, pages) in [json!([invalid, null]), json!([null, invalid])].into_iter().enumerate() {
                 for out in ["combined.pdf", "not-created.pdf"] {
@@ -5721,7 +5721,7 @@ mod combine_argument_tests {
                     assert_eq!(ok(&mut a, "doc_list", json!({})), list);
                     assert_eq!(ok(&mut a, "doc_info", json!({ "doc": doc })), info);
                     assert_eq!(page_text(&mut a, doc), text);
-                    assert_eq!(a.session().get(pdfcraft_engine::DocId(doc)).unwrap().bytes, bytes);
+                    assert_eq!(a.session().get(taratasy_engine::DocId(doc)).unwrap().bytes, bytes);
                     assert_eq!(std::fs::read(dir.0.join("a.pdf")).unwrap(), first);
                     assert_eq!(std::fs::read(dir.0.join("b.pdf")).unwrap(), second);
                 }
@@ -5840,14 +5840,14 @@ fn conventions_resources() {
         let r = rpc(s, 1, "resources/read", json!({"uri":uri}));
         serde_json::from_str::<Value>(r["result"]["contents"][0]["text"].as_str().expect("JSON resource")).unwrap()
     };
-    assert_eq!(read(&mut s, "pdfcraft://document"), json!({"documents":[]}));
+    assert_eq!(read(&mut s, "taratasy://document"), json!({"documents":[]}));
     rpc(&mut s, 2, "tools/call", json!({"name":"doc_open","arguments":{"path":"a.pdf"}}));
     let doc = rpc(&mut s, 3, "tools/call", json!({"name":"doc_inspect","arguments":{}}));
-    assert_eq!(read(&mut s, "pdfcraft://document"), doc["result"]["structuredContent"]);
+    assert_eq!(read(&mut s, "taratasy://document"), doc["result"]["structuredContent"]);
     let commands = rpc(&mut s, 4, "tools/call", json!({"name":"command_list","arguments":{}}));
-    assert_eq!(read(&mut s, "pdfcraft://commands"), commands["result"]["structuredContent"]);
+    assert_eq!(read(&mut s, "taratasy://commands"), commands["result"]["structuredContent"]);
     // Responses keep the shape every supported protocol revision expects: no cache hints.
-    for (method, params) in [("tools/list", json!({})), ("resources/list", json!({})), ("resources/read", json!({"uri":"pdfcraft://document"}))] {
+    for (method, params) in [("tools/list", json!({})), ("resources/list", json!({})), ("resources/read", json!({"uri":"taratasy://document"}))] {
         assert!(rpc(&mut s, 5, method, params)["result"].get("resultType").is_none());
     }
     assert_eq!(rpc(&mut s, 7, "initialize", json!({"protocolVersion":"2026-07-28"}))["result"]["protocolVersion"], "2025-06-18");
@@ -5892,7 +5892,7 @@ fn thai_text_through_tools_saves_reopens_extracts_and_renders() {
     let doc = ok(&mut a, "doc_open", json!({"path": "a.pdf"}))["doc"].as_u64().unwrap();
     let text = "สวัสดี น้ำ ผู้ใช้ ปู่ ๑๒๓ Hello 123";
     let args = json!({"doc": doc, "page": 1, "text": text, "at": [10, 20], "size": 9});
-    if pdfcraft_fonts::document_thai_font().is_none() {
+    if taratasy_fonts::document_thai_font().is_none() {
         assert!(a.call("page_add_text", &args).unwrap_err().to_string().contains("Thai"));
         assert_eq!(ok(&mut a, "content_list", json!({"doc": doc}))["count"], 0);
         return;
@@ -5916,7 +5916,7 @@ fn hebrew_text_through_tools_saves_reopens_extracts_and_renders() {
     let doc = ok(&mut a, "doc_open", json!({"path": "a.pdf"}))["doc"].as_u64().unwrap();
     let text = "שם משפחה: שרון, טל׳ 052-1234567 (נייד)";
     let args = json!({"doc": doc, "page": 1, "text": text, "rect": [10, 20, 400, 40], "size": 11, "align": "right"});
-    if pdfcraft_fonts::document_hebrew_font(false).is_none() {
+    if taratasy_fonts::document_hebrew_font(false).is_none() {
         assert!(a.call("page_add_text", &args).unwrap_err().to_string().contains("U+05E9"));
         assert_eq!(ok(&mut a, "content_list", json!({"doc": doc}))["count"], 0);
         return;
@@ -6086,10 +6086,10 @@ fn text_extract_with_a_rect_takes_one_column() {
 
 #[test]
 fn mixed_visual_region_edit_preview_save_reopen_and_undo_through_tools() {
-    use pdfcraft_cos::{Dict, Document, Object, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, Stream, write_incremental};
     let dir = workdir("mixed-region");
     let mut cos = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
-    let page = pdfcraft_model::pages(&cos)[0].clone();
+    let page = taratasy_model::pages(&cos)[0].clone();
     let mut font = Dict::new();
     font.set(b"Type".to_vec(), Object::name("Font"));
     font.set(b"Subtype".to_vec(), Object::name("Type1"));
@@ -6131,7 +6131,7 @@ fn mixed_visual_region_edit_preview_save_reopen_and_undo_through_tools() {
     assert_eq!(after["count"], 1);
     assert_eq!(after["paragraphs"][0]["editor_text"], "Heading\nText bold text");
     let saved = Document::open(std::sync::Arc::new(std::fs::read(dir.join("out/mixed-edited.pdf")).unwrap())).unwrap();
-    let mut session = pdfcraft_engine::Session::new();
+    let mut session = taratasy_engine::Session::new();
     let id = session.open("saved.pdf", None, std::sync::Arc::new(write_incremental(&saved, &Default::default()).unwrap()), None).unwrap();
     let runs = session.get(id).unwrap().text_lines(0);
     let preserved = runs.iter().find(|l| l.text == "bold").unwrap();
@@ -6145,10 +6145,10 @@ fn mixed_visual_region_edit_preview_save_reopen_and_undo_through_tools() {
 
 #[test]
 fn clipped_image_bounds_and_text_edit_save_reopen_through_tools() {
-    use pdfcraft_cos::{Dict, Document, Object, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, Stream, write_incremental};
     let dir = workdir("clipped-artwork");
     let mut cos = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
-    let page = pdfcraft_model::pages(&cos)[0].clone();
+    let page = taratasy_model::pages(&cos)[0].clone();
     let mut image = Dict::new();
     for (key, value) in [
         ("Type", Object::name("XObject")),
@@ -6247,8 +6247,8 @@ fn architectural_and_iso_papers_through_tools() {
             );
             assert_eq!(out["sheets"], 1);
             let bytes = std::fs::read(dir.join("plot.pdf")).unwrap();
-            let saved = pdfcraft_cos::Document::open(std::sync::Arc::new(bytes)).unwrap();
-            let pages = pdfcraft_model::pages(&saved);
+            let saved = taratasy_cos::Document::open(std::sync::Arc::new(bytes)).unwrap();
+            let pages = taratasy_model::pages(&saved);
             assert_eq!(pages.len(), 1);
             let (ew, eh) = if orientation == "landscape" { (h, w) } else { (w, h) };
             let (aw, ah) = pages[0].display_size(&saved);
@@ -6306,7 +6306,7 @@ fn reading_colors_fixture() -> Vec<u8> {
 
 /// A fresh directory whose `a.pdf` is `reading_colors_fixture()`.
 fn reading_colors_workdir() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-automation-reading-colors-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-automation-reading-colors-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("a.pdf"), reading_colors_fixture()).unwrap();
@@ -6386,10 +6386,10 @@ fn reading_colors_through_tools() {
 
 #[test]
 fn private_crops_with_nested_state_resize_save_reopen_through_tools() {
-    use pdfcraft_cos::{Dict, Document, Object, Stream, write_incremental};
+    use taratasy_cos::{Dict, Document, Object, Stream, write_incremental};
     let dir = workdir("private-crop-state");
     let mut cos = Document::open(std::sync::Arc::new(fixture(1))).unwrap();
-    let page = pdfcraft_model::pages(&cos)[0].clone();
+    let page = taratasy_model::pages(&cos)[0].clone();
     let mut image = Dict::new();
     for (key, value) in [
         ("Type", Object::name("XObject")),
@@ -6536,9 +6536,9 @@ fn doc_print_as_image() {
     let r = ok(&mut a, "doc_print", json!({ "doc": doc, "pages": "1", "as_image": true, "dpi": 150, "grayscale": true, "path": "image.pdf" }));
     assert_eq!(r["sheets"], 1);
     let bytes = std::fs::read(dir.join("image.pdf")).unwrap();
-    let out = pdfcraft_cos::Document::open(std::sync::Arc::new(bytes)).unwrap();
+    let out = taratasy_cos::Document::open(std::sync::Arc::new(bytes)).unwrap();
     let pictures =
-        out.scan_objects().filter(|(_, o)| matches!(&**o, pdfcraft_cos::Object::Stream(st) if st.dict.name(b"Subtype") == Some(b"Image"))).count();
+        out.scan_objects().filter(|(_, o)| matches!(&**o, taratasy_cos::Object::Stream(st) if st.dict.name(b"Subtype") == Some(b"Image"))).count();
     assert_eq!(pictures, 1);
     match a.call("doc_print", &json!({ "doc": doc, "as_image": true, "dpi": 20, "path": "x.pdf" })) {
         Err(ToolError::InvalidArgs(m)) => assert!(m.contains("dpi"), "{m}"),
@@ -6550,7 +6550,7 @@ fn doc_print_as_image() {
 /// made, nothing is left beside the file, and a folder at the path is refused.
 #[test]
 fn a_root_less_write_output_is_atomic_too() {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-automation-rootless-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("taratasy-automation-rootless-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let free = Automation::new();
     let target = dir.join("new").join("page.png");

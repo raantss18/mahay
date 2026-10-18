@@ -227,7 +227,7 @@ pub(super) fn translate(text: &str) -> Option<&'static str> {
         "Command\nPalette" => "命令\n面板",
         "Agent\nControl" => "智能体\n控制",
         "Action\nJournal" => "操作\n日志",
-        "About\nGridCraft" => "关于\nGridCraft",
+        "About\nTabilao" => "关于\nTabilao",
         "Share" => "分享",
         "Add Chart\nElement" => "添加图表\n元素",
         "Change\nChart Type" => "更改\n图表类型",

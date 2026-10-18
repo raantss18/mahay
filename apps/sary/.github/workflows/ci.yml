@@ -20,8 +20,8 @@ env:
   RUST_BACKTRACE: 1
   # No test or fuzz run may print a page: the engine refuses to spool, and if something ever
   # bypasses that, lp fails loudly on a printer that does not exist.
-  PHOTOCRAFT_NO_PRINT: "1"
-  LPDEST: photocraft-no-such-printer
+  SARY_NO_PRINT: "1"
+  LPDEST: sary-no-such-printer
   # Debug and test builds keep line tables (file:line in panic backtraces) but drop the rest of the
   # debug info: faster codegen and links, and a smaller target dir (the Linux test job ran out of
   # disk with full debug info). The Windows test legs drop debuginfo entirely (see the test job).
@@ -73,7 +73,7 @@ jobs:
           # The browser build (a fat-LTO wasm build) runs only when something it compiles or
           # packages changed: the web app and its packaging, crate sources and manifests (the web
           # build compiles nearly every crate), the workspace manifests and this workflow.
-          if git diff --name-only "$BASE" HEAD | grep -Eq '^(apps/photocraft-web(-boot)?/|packaging/web/|packaging/env\.sh$|crates/[^/]+/(src/|Cargo\.toml$|build\.rs$)|Cargo\.(toml|lock)$|rust-toolchain(\.toml)?$|\.github/workflows/ci\.yml$)'; then
+          if git diff --name-only "$BASE" HEAD | grep -Eq '^(apps/sary-web(-boot)?/|packaging/web/|packaging/env\.sh$|crates/[^/]+/(src/|Cargo\.toml$|build\.rs$)|Cargo\.(toml|lock)$|rust-toolchain(\.toml)?$|\.github/workflows/ci\.yml$)'; then
             echo "web=true" >> "$GITHUB_OUTPUT"
           else
             echo "web=false" >> "$GITHUB_OUTPUT"
@@ -102,7 +102,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # Unused toolchains in the image (Android SDK, .NET, GHC, CodeQL) are deleted in the
-      # background: the space is free before the craft-fonts build needs it, and nothing waits.
+      # background: the space is free before the mahay-fonts build needs it, and nothing waits.
       - name: Install Linux system dependencies (egui/winit/rfd)
         if: runner.os == 'Linux'
         run: |
@@ -172,7 +172,7 @@ jobs:
         with:
           tool: cargo-nextest@0.9.146
 
-      # `--features heif`: official builds open HEIC photos via the optional photocraft-heif crate.
+      # `--features heif`: official builds open HEIC photos via the optional sary-heif crate.
       # `--lib --bins --tests` leaves out the examples, which cargo test would build and link but
       # never run (Clippy's `--all-targets` still checks they compile). nextest skips doctests, so
       # they get their own step.
@@ -201,7 +201,7 @@ jobs:
         if: runner.os == 'Linux'
         run: >-
           cargo nextest run --profile ci --workspace --locked --features heif --lib --bins --tests
-          --run-ignored only -E 'binary_id(photocraft-engine::panic_hunt)'
+          --run-ignored only -E 'binary_id(sary-engine::panic_hunt)'
 
       - name: Doctests
         if: matrix.part == 'all' || matrix.part == 'unit'
@@ -238,7 +238,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [without heif, with craft-fonts]
+        variant: [without heif, with mahay-fonts]
     steps:
       - uses: actions/checkout@v4
 
@@ -266,28 +266,28 @@ jobs:
       # error for distributors who leave it out.
       - name: Test without heif
         if: matrix.variant == 'without heif'
-        run: cargo nextest run -p photocraft-heif -p photocraft-codecs -p photocraft-io --locked --profile ci
+        run: cargo nextest run -p sary-heif -p sary-codecs -p sary-io --locked --profile ci
 
-      # The tests built with the optional craft-fonts input (crates/text/build.rs), so the Japanese
+      # The tests built with the optional mahay-fonts input (crates/text/build.rs), so the Japanese
       # font tests that skip without it run. Keep the test job's exact `--workspace --features heif
       # --lib --bins --tests`, so the restored dependencies match and only the workspace rebuilds.
       # Filter execution to the three crates that read the optional font input (#6127).
-      - name: Check out craft-fonts
-        if: matrix.variant == 'with craft-fonts'
+      - name: Check out mahay-fonts
+        if: matrix.variant == 'with mahay-fonts'
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          repository: storytold/craft-fonts
+          repository: raantss18/mahay-fonts
           ref: abb83316d96aa59c1cf64784289e378fe9fa5695
-          path: craft-fonts
+          path: mahay-fonts
 
-      - name: Test with craft-fonts
-        if: matrix.variant == 'with craft-fonts'
+      - name: Test with mahay-fonts
+        if: matrix.variant == 'with mahay-fonts'
         env:
-          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
-          CRAFT_FONTS_REQUIRED: "1"
+          MAHAY_FONTS_DIR: ${{ github.workspace }}/mahay-fonts
+          MAHAY_FONTS_REQUIRED: "1"
         run: >-
           cargo nextest run --profile ci --workspace --locked --features heif --lib --bins --tests
-          -E 'package(photocraft-text) | package(photocraft-io) | package(photocraft-ui-egui)'
+          -E 'package(sary-text) | package(sary-io) | package(sary-ui-egui)'
 
   corpus:
     timeout-minutes: 30

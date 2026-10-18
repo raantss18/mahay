@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: deckcraft
+name: seho
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -12,16 +12,16 @@ version_schema: semver
 release: 1
 section: editors
 priority: optional
-maintainer: ${DECKCRAFT_MAINTAINER}
+maintainer: ${SEHO_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/deckcraft
+homepage: https://github.com/raantss18/mahay
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native presentation app that works the way PowerPoint users
   expect. Themes, layouts, shapes, pictures, tables, charts, transitions and
   animations; opens and saves PowerPoint (.pptx) files; full-screen slide show
   with presenter view; GPU rendering (wgpu).
-  Includes deckcraft-cli, a headless renderer and command runner.
+  Includes seho-cli, a headless renderer and command runner.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the
 # GPU (Vulkan, EGL/GL) are loaded at runtime, so they are dependencies/recommendations here
@@ -58,11 +58,11 @@ overrides:
       - xdg-desktop-portal
 
 contents:
-  - src: ${STAGE}/usr/bin/deckcraft
-    dst: /usr/bin/deckcraft
+  - src: ${STAGE}/usr/bin/seho
+    dst: /usr/bin/seho
     file_info: { mode: 0755 }
-  - src: ${STAGE}/usr/bin/deckcraft-cli
-    dst: /usr/bin/deckcraft-cli
+  - src: ${STAGE}/usr/bin/seho-cli
+    dst: /usr/bin/seho-cli
     file_info: { mode: 0755 }
   - src: ${STAGE}/usr/share/
     dst: /usr/share/

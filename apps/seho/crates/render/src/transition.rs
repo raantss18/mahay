@@ -1,14 +1,14 @@
-//! Slide transition frames without a GPU: the layers of [`deckcraft_anim::transition_layers`]
+//! Slide transition frames without a GPU: the layers of [`seho_anim::transition_layers`]
 //! composited on the CPU from two rendered slide images. The slide show draws the same layers with
 //! the UI toolkit's meshes; this is the headless twin used by the CLI, comparisons and tests.
 
-use deckcraft_anim::{Layer, Source, layer_mesh, transition_frame, uses_slide_parts};
-use deckcraft_model::{Presentation, ShapeId};
+use seho_anim::{Layer, Source, layer_mesh, transition_frame, uses_slide_parts};
+use seho_model::{Presentation, ShapeId};
 
 use crate::{Image, RenderOpts, ShapeState, SlidePart, render_blend, render_slide, render_slide_part};
 
 /// The two slides of a transition rendered as background and content, for the transitions that
-/// move contents over the backgrounds ([`deckcraft_anim::uses_slide_parts`]). `None` parts of the
+/// move contents over the backgrounds ([`seho_anim::uses_slide_parts`]). `None` parts of the
 /// old slide (the show's first slide) are black and nothing.
 #[derive(Clone, Debug, Default)]
 pub struct SlideParts {
@@ -77,7 +77,7 @@ pub fn render_transition(pres: &Presentation, index: usize, t: f64, opts: &Rende
     {
         let tt = if t.is_finite() { t.clamp(0.0, 1.0) } else { 0.0 };
         if tt < 1.0 {
-            let m = deckcraft_anim::morph_frame(pres, a, slide, tt, &|_| false);
+            let m = seho_anim::morph_frame(pres, a, slide, tt, &|_| false);
             let f = |id: ShapeId| ShapeState { opacity: m.opacity_of(id), ..Default::default() };
             let o = RenderOpts { state: Some(&f), ..copy_opts(opts) };
             let text: Vec<crate::TextMorph> =
@@ -235,9 +235,9 @@ mod tests {
     fn layers_composite_in_order() {
         let old = solid(40, 20, [255, 0, 0, 255]);
         let new = solid(40, 20, [0, 0, 255, 255]);
-        let img = composite_transition(Some(&old), &new, None, &deckcraft_anim::transition_layers("cover", "l", 0.0));
+        let img = composite_transition(Some(&old), &new, None, &seho_anim::transition_layers("cover", "l", 0.0));
         assert_eq!(img.pixel(20, 10), [255, 0, 0, 255]);
-        let img = composite_transition(Some(&old), &new, None, &deckcraft_anim::transition_layers("cover", "l", 1.0));
+        let img = composite_transition(Some(&old), &new, None, &seho_anim::transition_layers("cover", "l", 1.0));
         assert_eq!(img.pixel(20, 10), [0, 0, 255, 255]);
     }
 
@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn every_transition_starts_old_and_ends_new() {
-        for (kind, _, _, _, opts) in deckcraft_model::anim::TRANSITIONS {
+        for (kind, _, _, _, opts) in seho_model::anim::TRANSITIONS {
             let mut options: Vec<&str> = opts.to_vec();
             options.push("");
             for o in options {

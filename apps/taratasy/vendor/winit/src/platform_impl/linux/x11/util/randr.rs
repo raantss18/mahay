@@ -185,7 +185,7 @@ impl XConnection {
     }
 }
 
-// PdfCraft patch: without Xft DPI, use the X server's configured screen DPI before
+// Taratasy patch: without Xft DPI, use the X server's configured screen DPI before
 // the output's physical density. Xorg can deliberately run a dense panel at 96 DPI;
 // using its EDID dimensions instead makes only winit applications appear zoomed.
 // Keep configured HiDPI screens and the explicit `randr` override working.

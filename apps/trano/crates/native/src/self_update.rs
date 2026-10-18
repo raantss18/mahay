@@ -1,6 +1,6 @@
-//! ArtCraft Launcher updating itself.
+//! Mahay Trano updating itself.
 //!
-//! The new version is downloaded and verified like any Craft App, then swapped in the way this
+//! The new version is downloaded and verified like any Mahay App, then swapped in the way this
 //! copy was installed. A small helper process waits for this launcher to exit, finishes anything
 //! that can't happen while it runs (Windows locks a running exe), and starts the new one. The
 //! launcher has to exit first anyway: it holds the single-instance lock, and a new copy started
@@ -10,7 +10,7 @@
 //! |---|---|
 //! | macOS `.app` | copy the new bundle from the DMG over this one (fine while running), reopen it |
 //! | Windows MSI (per-user, any folder) | after exit, run the new MSI (it reinstalls into the same folder), then start the exe |
-//! | Windows portable zip | after exit, unzip over this folder (settings in `ArtCraftLauncherData` stay) |
+//! | Windows portable zip | after exit, unzip over this folder (settings in `MahayLauncherData` stay) |
 //! | Linux AppImage | rename the new AppImage over this one (fine while running), start it |
 //! | Linux `.deb` / `.rpm` | the system package manager, with the password prompt; then restart |
 //! | Linux Flatpak | reinstall the bundle with `--reinstall` via the host portal; then restart |
@@ -19,14 +19,14 @@
 
 use std::path::{Path, PathBuf};
 
-use artcraft_launcher_core::PackageKind;
-use artcraft_launcher_core::catalog::LAUNCHER;
-use artcraft_launcher_core::platform::{Platform, pick_asset};
-use artcraft_launcher_core::protocol::JobPhase;
-use artcraft_launcher_core::release::Release;
-use artcraft_launcher_core::version::{self, Version};
+use trano_core::PackageKind;
+use trano_core::catalog::LAUNCHER;
+use trano_core::platform::{Platform, pick_asset};
+use trano_core::protocol::JobPhase;
+use trano_core::release::Release;
+use trano_core::version::{self, Version};
 #[cfg(target_os = "macos")]
-use artcraft_launcher_core::{InstallSource, Installed};
+use trano_core::{InstallSource, Installed};
 
 use crate::http::{Http, Stop};
 use crate::install::{self, Job};
@@ -36,7 +36,7 @@ use crate::process;
 /// How this running launcher was installed.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Install {
-    /// The `ArtCraft Launcher.app` bundle.
+    /// The `Mahay Trano.app` bundle.
     MacApp(PathBuf),
     /// The per-user Windows Installer package; the exe.
     Msi(PathBuf),
@@ -65,7 +65,7 @@ impl Install {
 
 /// Makes an installed copy believe it's this version, to try the self-update against the current
 /// release. The restart helper drops it, so it lasts one run.
-const PRETEND_VAR: &str = "ARTCRAFT_LAUNCHER_PRETEND_VERSION";
+const PRETEND_VAR: &str = "TRANO_PRETEND_VERSION";
 
 /// The version this launcher counts as (see [`PRETEND_VAR`]).
 pub fn current_version() -> Option<Version> {
@@ -111,19 +111,19 @@ fn detect(exe: &Path) -> Option<Install> {
         return Some(Install::Portable(exe.to_path_buf()));
     }
     // The MSI installs per user, into the folder chosen in its wizard (which it records in the
-    // registry) or by default %LOCALAPPDATA%\Programs\ArtCraft Launcher.
+    // registry) or by default %LOCALAPPDATA%\Programs\Mahay Trano.
     let canonical = |p: PathBuf| p.canonicalize().unwrap_or(p);
     let recorded = msi_install_dir().map(canonical);
     let default = dirs::data_local_dir().map(|d| canonical(d.join("Programs").join(LAUNCHER.name)));
     [recorded, default].into_iter().flatten().any(|d| d == dir).then(|| Install::Msi(exe.to_path_buf()))
 }
 
-/// The folder the MSI installed into, as it records it (`packaging/windows/artcraft-launcher.wxs`).
+/// The folder the MSI installed into, as it records it (`packaging/windows/trano.wxs`).
 #[cfg(windows)]
 fn msi_install_dir() -> Option<PathBuf> {
     use winreg::RegKey;
     use winreg::enums::HKEY_CURRENT_USER;
-    let key = RegKey::predef(HKEY_CURRENT_USER).open_subkey(r"Software\Learning Machines LLC\ArtCraft Launcher").ok()?;
+    let key = RegKey::predef(HKEY_CURRENT_USER).open_subkey(r"Software\Learning Machines LLC\Mahay Trano").ok()?;
     let dir: String = key.get_value("InstallDir").ok()?;
     let dir = dir.trim();
     (!dir.is_empty()).then(|| PathBuf::from(dir))
@@ -189,7 +189,7 @@ fn from_bundle() -> bool {
 }
 
 /// Flatpak names a bundle's origin after the last part of the app id, numbered when that name is
-/// taken: `artcraft-launcher-origin`, `artcraft-launcher1-origin`, …
+/// taken: `trano-origin`, `trano1-origin`, …
 #[cfg(target_os = "linux")]
 fn is_bundle_origin(origin: &str) -> bool {
     origin.strip_prefix(LAUNCHER.id).and_then(|rest| rest.strip_suffix("-origin")).is_some_and(|n| n.bytes().all(|b| b.is_ascii_digit()))
@@ -217,10 +217,10 @@ pub fn update(
     if let (Some(rel_v), Some(cur_v)) = (release.version.as_ref(), current_version().as_ref())
         && !version::is_newer(rel_v, cur_v)
     {
-        return Err(format!("ArtCraft Launcher {} is not newer than currently running version {}", release.version_label(), cur_v));
+        return Err(format!("Mahay Trano {} is not newer than currently running version {}", release.version_label(), cur_v));
     }
     let (asset, _) = pick_asset(release, &[LAUNCHER.id], platform, &[install.kind()])
-        .ok_or_else(|| format!("ArtCraft Launcher {} has no {} for {}", release.version_label(), install.kind().label(), platform.label()))?;
+        .ok_or_else(|| format!("Mahay Trano {} has no {} for {}", release.version_label(), install.kind().label(), platform.label()))?;
     let asset = asset.clone();
     let mut job = Job { http, paths, stop, phase, install_locations: &Default::default(), replace: false };
     let file = install::download(release, &asset, &mut job)?;
@@ -283,7 +283,7 @@ pub fn update(
         #[allow(unreachable_patterns)]
         _ => {
             let _ = (pid, &file);
-            Err("this copy of ArtCraft Launcher can't update itself; download the new version instead".into())
+            Err("this copy of Mahay Trano can't update itself; download the new version instead".into())
         }
     }
 }
@@ -379,7 +379,7 @@ fn relaunch_flatpak_after_exit() -> Result<(), String> {
             id,
         ),
         // Without either, starting it again could only meet the old copy still running.
-        (None, None) => return Err("ArtCraft Launcher is updated; quit and reopen it to start the new version".into()),
+        (None, None) => return Err("Mahay Trano is updated; quit and reopen it to start the new version".into()),
     };
     let script = format!("({wait_clause}) &");
     let app_id = LAUNCHER.bundle_id();
@@ -503,33 +503,33 @@ mod tests {
         assert!(marker.exists(), "never started after the old launcher exited");
     }
 
-    /// A real disk image: the new `ArtCraft Launcher.app` replaces the old one in place.
+    /// A real disk image: the new `Mahay Trano.app` replaces the old one in place.
     #[cfg(target_os = "macos")]
     #[test]
     fn the_new_bundle_replaces_the_running_one() {
         fn bundle(at: &Path, version: &str) {
-            let contents = at.join("ArtCraft Launcher.app/Contents");
+            let contents = at.join("Mahay Trano.app/Contents");
             std::fs::create_dir_all(contents.join("MacOS")).unwrap();
             std::fs::write(
                 contents.join("Info.plist"),
                 format!(
                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict>\
-                     <key>CFBundleIdentifier</key><string>ai.storyteller.artcraft-launcher</string>\
+                     <key>CFBundleIdentifier</key><string>ai.storyteller.trano</string>\
                      <key>CFBundleShortVersionString</key><string>{version}</string></dict></plist>"
                 ),
             )
             .unwrap();
-            std::fs::write(contents.join("MacOS/ArtCraft Launcher"), version).unwrap();
+            std::fs::write(contents.join("MacOS/Mahay Trano"), version).unwrap();
         }
         let dir = tempfile::tempdir().unwrap();
         let apps = dir.path().join("Applications");
         bundle(&apps, "0.1.0");
         let src = dir.path().join("src");
         bundle(&src, "0.2.0");
-        let dmg = dir.path().join("artcraft-launcher-0.2.0-macos-universal.dmg");
+        let dmg = dir.path().join("trano-0.2.0-macos-universal.dmg");
         let one_at_a_time = install::macos::DISK_IMAGES.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let ok = std::process::Command::new("hdiutil")
-            .args(["create", "-quiet", "-format", "UDZO", "-volname", "ArtCraft Launcher 0.2.0", "-srcfolder"])
+            .args(["create", "-quiet", "-format", "UDZO", "-volname", "Mahay Trano 0.2.0", "-srcfolder"])
             .arg(&src)
             .arg(&dmg)
             .status()
@@ -537,24 +537,24 @@ mod tests {
             .success();
         assert!(ok, "hdiutil create failed");
         drop(one_at_a_time);
-        let current = apps.join("ArtCraft Launcher.app");
+        let current = apps.join("Mahay Trano.app");
         let existing = Installed { version: None, source: InstallSource::MacApp, location: current.display().to_string(), package: None };
         // An unsigned test bundle: the signature check has its own tests in `install`.
         let expect = install::macos::Expect { team: None, version: None };
         let placed = install::macos::install_dmg(&LAUNCHER, &dmg, Some(&existing), None, false, &Paths::under(dir.path()), &expect).unwrap();
         assert_eq!(placed, current);
-        assert_eq!(std::fs::read_to_string(current.join("Contents/MacOS/ArtCraft Launcher")).unwrap(), "0.2.0");
+        assert_eq!(std::fs::read_to_string(current.join("Contents/MacOS/Mahay Trano")).unwrap(), "0.2.0");
         assert_eq!(
             std::fs::read_dir(&apps).unwrap().map(|e| e.unwrap().file_name()).collect::<Vec<_>>(),
-            [std::ffi::OsString::from("ArtCraft Launcher.app")]
+            [std::ffi::OsString::from("Mahay Trano.app")]
         );
     }
 
     #[test]
     fn powershell_quoting_survives_apostrophes() {
-        let p = Path::new(r"C:\Users\O'Brien\AppData\Local\ArtCraft Launcher\x.msi");
-        assert_eq!(ps_quote(p), r"'C:\Users\O''Brien\AppData\Local\ArtCraft Launcher\x.msi'");
-        assert_eq!(ps_quote_arg(p), r#"'"C:\Users\O''Brien\AppData\Local\ArtCraft Launcher\x.msi"'"#);
+        let p = Path::new(r"C:\Users\O'Brien\AppData\Local\Mahay Trano\x.msi");
+        assert_eq!(ps_quote(p), r"'C:\Users\O''Brien\AppData\Local\Mahay Trano\x.msi'");
+        assert_eq!(ps_quote_arg(p), r#"'"C:\Users\O''Brien\AppData\Local\Mahay Trano\x.msi"'"#);
     }
 
     #[test]
@@ -566,23 +566,23 @@ mod tests {
     #[test]
     fn the_launcher_picks_its_own_release_files() {
         let names = [
-            "artcraft-launcher-0.2.0-macos-universal.dmg",
-            "artcraft-launcher-0.2.0-windows-x64.msi",
-            "artcraft-launcher-0.2.0-windows-x64-portable.zip",
-            "artcraft-launcher-0.2.0-linux-x86_64.AppImage",
-            "artcraft-launcher-0.2.0-linux-x86_64.deb",
-            "artcraft-launcher-0.2.0-linux-x86_64.flatpak",
-            "artcraft-launcher-0.2.0-linux-x86_64.pkg.tar.zst",
-            "artcraft-launcher-web-0.2.0.zip",
+            "trano-0.2.0-macos-universal.dmg",
+            "trano-0.2.0-windows-x64.msi",
+            "trano-0.2.0-windows-x64-portable.zip",
+            "trano-0.2.0-linux-x86_64.AppImage",
+            "trano-0.2.0-linux-x86_64.deb",
+            "trano-0.2.0-linux-x86_64.flatpak",
+            "trano-0.2.0-linux-x86_64.pkg.tar.zst",
+            "trano-web-0.2.0.zip",
         ];
         let release = Release {
             assets: names
                 .iter()
-                .map(|n| artcraft_launcher_core::release::Asset { name: (*n).into(), size: 1, url: String::new(), sha256: None })
+                .map(|n| trano_core::release::Asset { name: (*n).into(), size: 1, url: String::new(), sha256: None })
                 .collect(),
             ..Release::default()
         };
-        use artcraft_launcher_core::{Arch, Os};
+        use trano_core::{Arch, Os};
         let pick = |os, kind| pick_asset(&release, &[LAUNCHER.id], Platform { os, arch: Arch::X64 }, &[kind]).map(|(a, _)| a.name.clone());
         assert_eq!(pick(Os::MacOs, Install::MacApp(PathBuf::new()).kind()).as_deref(), Some(names[0]));
         assert_eq!(pick(Os::Windows, Install::Msi(PathBuf::new()).kind()).as_deref(), Some(names[1]));
@@ -604,8 +604,8 @@ mod tests {
         let release = Release {
             version: version::parse("0.1.0"),
             tag: "v0.1.0".into(),
-            assets: vec![artcraft_launcher_core::release::Asset {
-                name: "artcraft-launcher-0.1.0-linux-x86_64.AppImage".into(),
+            assets: vec![trano_core::release::Asset {
+                name: "trano-0.1.0-linux-x86_64.AppImage".into(),
                 size: 1,
                 url: String::new(),
                 sha256: None,
@@ -613,7 +613,7 @@ mod tests {
             ..Release::default()
         };
         let install = Install::AppImage(dir.path().join("launcher.AppImage"));
-        use artcraft_launcher_core::{Arch, Os};
+        use trano_core::{Arch, Os};
         let platform = Platform { os: Os::Linux, arch: Arch::X64 };
         let result = update(&install, &release, platform, &http, &paths, &stop, &mut phase, &last);
         assert!(result.is_err());
@@ -623,11 +623,11 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn parses_flatpak_metadata_for_restart() {
-        let info = "[Application]\nname=ai.storyteller.artcraft-launcher\n\n[Instance]\ninstance-id=155661136\n";
+        let info = "[Application]\nname=ai.storyteller.trano\n\n[Instance]\ninstance-id=155661136\n";
         assert_eq!(parse_flatpak_instance_id(info), Some("155661136".to_string()));
         assert_eq!(parse_flatpak_instance_id("no instance id here"), None);
 
-        let ps = "Instance   PID    Application\n155661136  842791 ai.storyteller.artcraft-launcher\n";
+        let ps = "Instance   PID    Application\n155661136  842791 ai.storyteller.trano\n";
         assert_eq!(parse_flatpak_host_pid(ps, "155661136"), Some(842791));
         assert_eq!(parse_flatpak_host_pid(ps, "999999999"), None);
     }
@@ -636,9 +636,9 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn only_a_per_user_install_updates_itself() {
-        let info = |path: &str| format!("[Application]\nname=ai.storyteller.artcraft-launcher\n\n[Instance]\ninstance-id=1\napp-path={path}\n");
-        assert!(parse_is_user_install(&info("/home/alice/.local/share/flatpak/app/ai.storyteller.artcraft-launcher/x86_64/stable/0a3de1c/files")));
-        assert!(!parse_is_user_install(&info("/var/lib/flatpak/app/ai.storyteller.artcraft-launcher/x86_64/stable/0a3de1c/files")));
+        let info = |path: &str| format!("[Application]\nname=ai.storyteller.trano\n\n[Instance]\ninstance-id=1\napp-path={path}\n");
+        assert!(parse_is_user_install(&info("/home/alice/.local/share/flatpak/app/ai.storyteller.trano/x86_64/stable/0a3de1c/files")));
+        assert!(!parse_is_user_install(&info("/var/lib/flatpak/app/ai.storyteller.trano/x86_64/stable/0a3de1c/files")));
         // `flatpak run --app-path=` mounts an empty /app.
         assert!(!parse_is_user_install(&info("")));
         // The key belongs to [Instance] only.
@@ -651,12 +651,12 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn only_a_bundle_origin_counts_as_the_release_bundle() {
-        assert!(is_bundle_origin("artcraft-launcher-origin"));
-        assert!(is_bundle_origin("artcraft-launcher2-origin"));
+        assert!(is_bundle_origin("trano-origin"));
+        assert!(is_bundle_origin("trano2-origin"));
         assert!(!is_bundle_origin("flathub"));
         assert!(!is_bundle_origin("flathub-beta"));
-        assert!(!is_bundle_origin("artcraft-launcher-beta-origin"));
-        assert!(!is_bundle_origin("photocraft-origin"));
+        assert!(!is_bundle_origin("trano-beta-origin"));
+        assert!(!is_bundle_origin("sary-origin"));
         assert!(!is_bundle_origin(""));
     }
 }

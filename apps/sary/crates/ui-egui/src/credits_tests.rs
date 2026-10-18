@@ -35,7 +35,7 @@ fn people(n: u64) -> Vec<Contributor> {
 }
 
 fn harness(list: Vec<Contributor>, table: bool) -> Harness<'static> {
-    let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+    let mut app = crate::SaryApp::new(sary_engine::Session::new(), crate::Services::default());
     let mut h = Harness::builder().with_size(vec2(WIDTH + 20.0, 520.0)).build_ui(move |ui| {
         if !ui.ctx().fonts(|f| f.families().contains(&egui::FontFamily::Name("semibold".into()))) {
             return;
@@ -47,7 +47,7 @@ fn harness(list: Vec<Contributor>, table: bool) -> Harness<'static> {
         ui.set_width(WIDTH);
         contributors_in(&mut app, ui, &list, 1);
     });
-    crate::PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    crate::SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     h
 }
@@ -181,7 +181,7 @@ fn the_models_table_lines_counts_up_on_the_right_under_a_rule_of_headers() {
         ui.set_width(WIDTH);
         models_in(ui, &models, 482);
     });
-    crate::PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
+    crate::SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::ALL[0]);
     h.run_steps(4);
     let head = |l: &str| h.query_all_by_label(l).next().map(|n| n.rect()).unwrap_or_else(|| panic!("no {l} header"));
     let (commits, lines) = (head("Commits"), head("Lines +/−"));
@@ -204,8 +204,8 @@ fn the_models_table_lines_counts_up_on_the_right_under_a_rule_of_headers() {
 /// its OK button, and the bottom of the lowest thing between them.
 fn about_window(tab: &str, table: bool) -> (f32, f32, f32) {
     let mut h = Harness::builder().with_size(vec2(1440.0, 900.0)).with_max_steps(64).build_eframe(|cc| {
-        crate::PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
-        crate::PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default())
+        crate::SaryApp::setup_context(&cc.egui_ctx, Default::default());
+        crate::SaryApp::new(sary_engine::Session::new(), crate::Services::default())
     });
     let mut fields = serde_json::Map::new();
     fields.insert("tab".into(), serde_json::json!(tab));
@@ -214,7 +214,7 @@ fn about_window(tab: &str, table: bool) -> (f32, f32, f32) {
     h.run_steps(6);
     let ok = h.query_all_by_role(Role::Button).find(|n| n.accesskit_node().label().as_deref() == Some("OK")).map(|n| n.rect()).expect("the OK button");
     // The dialog's contents: everything between its title and the OK button.
-    let title = h.query_all_by_label("About PhotoCraft").map(|n| n.rect()).find(|r| r.top() < ok.top()).expect("the dialog title");
+    let title = h.query_all_by_label("About Sary").map(|n| n.rect()).find(|r| r.top() < ok.top()).expect("the dialog title");
     let lowest = h
         .query_all(egui_kittest::kittest::by().predicate(|n| n.bounding_box().is_some()))
         .map(|n| n.rect())

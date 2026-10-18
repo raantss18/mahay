@@ -10,14 +10,14 @@
 //! every block of every corpus file (effects, type, smart objects, adjustments, paths, …) is
 //! converted to little-endian on the way out and back on the way in. Blocks the transcoder
 //! doesn't know are dropped with a warning; the test lists the keys it saw dropped, and fails
-//! if any of them is one `photocraft-io` maps (a loss of fidelity we can fix).
+//! if any of them is one `sary-io` maps (a loss of fidelity we can fix).
 #![cfg(feature = "corpus")]
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 
-use photocraft_doc::{Document, Layer};
-use photocraft_io::*;
+use sary_doc::{Document, Layer};
+use sary_io::*;
 
 fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(rd) = std::fs::read_dir(dir) else { return };
@@ -43,7 +43,7 @@ fn structure(layers: &[Layer], out: &mut Vec<String>, depth: usize) {
             l.mask.is_some(),
             l.effects.items.len()
         ));
-        if let photocraft_doc::LayerContent::Group(g) = &l.content {
+        if let sary_doc::LayerContent::Group(g) = &l.content {
             structure(&g.children, out, depth + 1);
         }
     }
@@ -80,8 +80,8 @@ fn corpus_round_trips_through_layered_tiff() {
         let doc = imported.document;
         // Only modes a TIFF holds; everything else is saved flat by design. Multichannel documents
         // have no layers at all (their channels are the image): nothing here to test.
-        if !matches!(doc.pixel_format().mode, photocraft_color::ColorMode::Grayscale | photocraft_color::ColorMode::Rgb | photocraft_color::ColorMode::Cmyk)
-            || doc.mode == photocraft_color::ColorMode::Multichannel
+        if !matches!(doc.pixel_format().mode, sary_color::ColorMode::Grayscale | sary_color::ColorMode::Rgb | sary_color::ColorMode::Cmyk)
+            || doc.mode == sary_color::ColorMode::Multichannel
         {
             continue;
         }
@@ -116,8 +116,8 @@ fn corpus_round_trips_through_layered_tiff() {
                 d.channels.clear();
                 d
             };
-            let x = photocraft_compose::flatten(&expected).px;
-            let y = photocraft_compose::flatten(&back).px;
+            let x = sary_compose::flatten(&expected).px;
+            let y = sary_compose::flatten(&back).px;
             let diff = max_diff(&x, &y);
             if diff > 1.0 / 255.0 + 1e-5 {
                 return Err(format!("render differs by {diff}"));

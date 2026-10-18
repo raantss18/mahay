@@ -1,11 +1,11 @@
 //! Print the actions and steps of `.atn` files, one event per line, with the top-level keys of
-//! each step's descriptor: `cargo run -p photocraft-psd --example atn_dump -- set.atn…`
+//! each step's descriptor: `cargo run -p sary-psd --example atn_dump -- set.atn…`
 //!
 //! Handy when adding a Photoshop event to the engine's `.atn` import table: it shows the event
 //! id, the panel name and the parameter keys Photoshop recorded.
 
-use photocraft_psd::atn;
-use photocraft_psd::descriptor::{Descriptor, ReferenceItem, Value};
+use sary_psd::atn;
+use sary_psd::descriptor::{Descriptor, ReferenceItem, Value};
 
 fn summary(v: &Value) -> String {
     match v {
@@ -22,7 +22,7 @@ fn summary(v: &Value) -> String {
     }
 }
 
-fn id(i: &photocraft_psd::descriptor::Id) -> String {
+fn id(i: &sary_psd::descriptor::Id) -> String {
     String::from_utf8_lossy(i.as_bytes()).trim().to_string()
 }
 

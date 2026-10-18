@@ -2,7 +2,7 @@
 
 use std::fmt::Write;
 
-use gridcraft_core::{CellRef, col_to_letters, number_to_text};
+use tabilao_core::{CellRef, col_to_letters, number_to_text};
 
 use crate::ast::*;
 
@@ -16,7 +16,7 @@ pub fn needs_quotes(name: &str) -> bool {
         return true;
     }
     // Looks like a cell ref (`A1`, `R1C1`) or a boolean.
-    gridcraft_core::CellRef::parse(name).is_some() || name.eq_ignore_ascii_case("TRUE") || name.eq_ignore_ascii_case("FALSE")
+    tabilao_core::CellRef::parse(name).is_some() || name.eq_ignore_ascii_case("TRUE") || name.eq_ignore_ascii_case("FALSE")
 }
 
 pub fn quote_sheet(name: &str) -> String {

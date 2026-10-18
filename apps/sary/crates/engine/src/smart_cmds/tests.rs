@@ -26,7 +26,7 @@ fn paint(s: &mut Session) {
             for x in r.x0..r.x1 {
                 let v = ((x * 7 + y * 13) % 23) as f32 / 22.0;
                 let a = if (x + y) % 5 == 0 { 0.5 } else { 1.0 };
-                data.extend(photocraft_raster::from_rgba(&fmt, [v, 1.0 - v, ((x * y) % 7) as f32 / 6.0, a]));
+                data.extend(sary_raster::from_rgba(&fmt, [v, 1.0 - v, ((x * y) % 7) as f32 / 6.0, a]));
             }
         }
         surf.write_region(r, &data);
@@ -36,7 +36,7 @@ fn paint(s: &mut Session) {
 }
 
 fn flat(s: &Session) -> Vec<[f32; 4]> {
-    photocraft_compose::flatten(&s.active().unwrap().doc).px
+    sary_compose::flatten(&s.active().unwrap().doc).px
 }
 
 fn max_diff(a: &[[f32; 4]], b: &[[f32; 4]]) -> f32 {
@@ -79,7 +79,7 @@ fn conversion_is_pixel_identical_at_every_depth() {
         assert!((l.opacity - 0.6).abs() < 1e-6, "opacity stays on the smart layer");
         let sm = active_smart(&s);
         let SmartSource::Embedded { file_name, bytes } = &sm.source else { panic!() };
-        assert!(file_name.ends_with(".pcraft"));
+        assert!(file_name.ends_with(".sary"));
         // The nested document is cropped to the content, including the off-canvas part.
         let inner = decode_source(file_name, bytes).unwrap();
         assert_eq!((inner.size.width, inner.size.height), (46, 33));
@@ -454,7 +454,7 @@ fn rasterize_and_via_copy() {
 }
 
 #[test]
-fn pcraft_round_trip_keeps_live_smart_objects() {
+fn sary_round_trip_keeps_live_smart_objects() {
     for depth in [8, 16] {
         let mut s = session(depth);
         paint(&mut s);
@@ -464,8 +464,8 @@ fn pcraft_round_trip_keeps_live_smart_objects() {
         s.execute("filter.noise.addNoise", json!({"amount": 20, "seed": 3})).unwrap();
         s.execute("layer.smartFilter.blendingOptions", json!({"opacity": 0.5, "blend": "screen"})).unwrap();
         let doc = s.active().unwrap().doc.clone();
-        let bytes = photocraft_format::save_to_bytes(&doc, &Default::default()).unwrap();
-        let back = photocraft_format::load_from_bytes(&bytes).unwrap();
+        let bytes = sary_format::save_to_bytes(&doc, &Default::default()).unwrap();
+        let back = sary_format::load_from_bytes(&bytes).unwrap();
         let id = s.active().unwrap().active_layer.unwrap();
         let (a, b) = (smart(&doc, id).unwrap(), smart(&back, id).unwrap());
         assert_eq!(a, b, "depth {depth}");
@@ -487,13 +487,13 @@ fn psd_placed_layer_renders_from_lnk2_data() {
     let mut inner = Document::with_background(
         "in",
         Size::new(10, 8),
-        photocraft_color::ColorMode::Rgb,
-        photocraft_color::SampleType::U8,
-        photocraft_color::Color::rgba(0.0, 1.0, 0.0, 1.0),
+        sary_color::ColorMode::Rgb,
+        sary_color::SampleType::U8,
+        sary_color::Color::rgba(0.0, 1.0, 0.0, 1.0),
     );
     inner.layers[0].surface_mut().unwrap().fill_rect(Rect::new(0, 0, 5, 8), &[1.0, 0.0, 0.0, 1.0]);
-    let png = photocraft_io::export(&inner, "png", &Default::default()).unwrap().bytes;
-    let lnk2 = photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile { uuid: "uuid-1".into(), file_name: "in.png".into(), bytes: png });
+    let png = sary_io::export(&inner, "png", &Default::default()).unwrap().bytes;
+    let lnk2 = sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile { uuid: "uuid-1".into(), file_name: "in.png".into(), bytes: png });
     let mut s = session(8);
     s.edit("place", |doc, active| {
         doc.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(lnk2)));
@@ -523,14 +523,14 @@ fn psd_placed_layer_renders_from_lnk2_data() {
 
 #[test]
 fn export_replace_and_linked_contents() {
-    let dir = std::env::temp_dir().join(format!("pcraft-smart-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-smart-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let mut s = session(8);
     paint(&mut s);
     convert(&mut s);
-    let out = dir.join("contents.pcraft");
+    let out = dir.join("contents.sary");
     let r = s.execute("layer.smartObjects.exportContents", json!({"path": out.to_str().unwrap()})).unwrap();
-    assert!(photocraft_format::is_pcraft(&std::fs::read(&out).unwrap()));
+    assert!(sary_format::is_sary(&std::fs::read(&out).unwrap()));
     assert_eq!(r["converted"], false);
     // Another extension exports the contents in that format.
     for (ext, magic) in [("png", &b"\x89PNG"[..]), ("jpeg", &b"\xFF\xD8\xFF"[..]), ("psd", &b"8BPS"[..])] {
@@ -545,12 +545,12 @@ fn export_replace_and_linked_contents() {
     let png_doc = Document::with_background(
         "p",
         Size::new(4, 4),
-        photocraft_color::ColorMode::Rgb,
-        photocraft_color::SampleType::U8,
-        photocraft_color::Color::rgba(1.0, 1.0, 0.0, 1.0),
+        sary_color::ColorMode::Rgb,
+        sary_color::SampleType::U8,
+        sary_color::Color::rgba(1.0, 1.0, 0.0, 1.0),
     );
     let png = dir.join("yellow.png");
-    std::fs::write(&png, photocraft_io::export(&png_doc, "png", &Default::default()).unwrap().bytes).unwrap();
+    std::fs::write(&png, sary_io::export(&png_doc, "png", &Default::default()).unwrap().bytes).unwrap();
     s.execute("layer.smartObjects.replaceContents", json!({"path": png.to_str().unwrap()})).unwrap();
     let sm = active_smart(&s);
     assert_eq!(sm.cache.as_ref().unwrap().content_bounds(), Rect::new(-6, 5, -2, 9), "transform kept");
@@ -562,7 +562,7 @@ fn export_replace_and_linked_contents() {
     let mut red = png_doc.clone();
     let rb = red.bounds();
     red.layers[0].surface_mut().unwrap().fill_rect(rb, &[1.0, 0.0, 0.0, 1.0]);
-    std::fs::write(&linked, photocraft_io::export(&red, "png", &Default::default()).unwrap().bytes).unwrap();
+    std::fs::write(&linked, sary_io::export(&red, "png", &Default::default()).unwrap().bytes).unwrap();
     s.execute("layer.smartObjects.updateAllModifiedContent", json!({})).unwrap();
     assert_eq!(active_smart(&s).cache.unwrap().rgba(-5, 6), [1.0, 0.0, 0.0, 1.0]);
     s.execute("layer.smartObjects.convertToEmbedded", json!({})).unwrap();
@@ -613,7 +613,7 @@ fn smart_filter_blur_repeats_the_canvas_edge_like_a_layer_filter() {
                 for y in r.y0..r.y1 {
                     for x in r.x0..r.x1 {
                         let v = if (x / 8 + y / 8) % 2 == 0 { 0.2 } else { 0.9 };
-                        data.extend(photocraft_raster::from_rgba(&fmt, [v, 0.5, 1.0 - v, 1.0]));
+                        data.extend(sary_raster::from_rgba(&fmt, [v, 0.5, 1.0 - v, 1.0]));
                     }
                 }
                 surf.write_region(r, &data);
@@ -678,7 +678,7 @@ fn warp_on_a_distorted_smart_object_follows_the_corners() {
     let inv = h.inverse().unwrap();
     let src: Vec<(f64, f64)> = quad.iter().map(|p| inv.apply(p[0], p[1])).collect();
     let b = src.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, p| [b[0].min(p.0), b[1].min(p.1), b[2].max(p.0), b[3].max(p.1)]);
-    sm.warp = Some(photocraft_geom::warp::Warp::custom(photocraft_geom::warp::BezierMesh::identity(b, 1, 1), b));
+    sm.warp = Some(sary_geom::warp::Warp::custom(sary_geom::warp::BezierMesh::identity(b, 1, 1), b));
     let layer = Layer::new("w", LayerContent::Smart(sm));
     let doc_warp = crate::warp_cmds::smart_warp_doc_space(&layer).unwrap();
     let pts = doc_warp.mesh.unwrap().points;
@@ -713,7 +713,7 @@ fn identity_mesh_on_a_skewed_smart_object_changes_nothing() {
         let (x, y) = h.apply(b[0] + u * (b[2] - b[0]), b[1] + v * (b[3] - b[1]));
         [x, y]
     };
-    let mesh = photocraft_geom::warp::BezierMesh::fit(&place, vec![0.0, 1.0], vec![0.0, 0.25, 1.0]);
+    let mesh = sary_geom::warp::BezierMesh::fit(&place, vec![0.0, 1.0], vec![0.0, 0.25, 1.0]);
     let rect = [x0, y0, x1, y1 + 10.0];
     s.execute("layer.smartObjects.warp", json!({"layer": id, "style": "custom", "rect": rect, "mesh": mesh})).unwrap();
     assert!(mean_diff(&before, &flat(&s)) < 0.01, "mean diff {}", mean_diff(&before, &flat(&s)));
@@ -875,8 +875,8 @@ fn automation_smart_contents_accepts_memory_sources_and_explicit_targets() {
         if psd_uuid {
             s.edit("PSD source", |doc, _| {
                 let SmartSource::Embedded { file_name, bytes } = smart(doc, LayerId(id))?.source.clone() else { panic!() };
-                let linked = photocraft_io::linked::LinkedFile { uuid: "embedded-id".into(), file_name, bytes: bytes.to_vec() };
-                doc.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(photocraft_io::linked::encode_linked_file(&linked))));
+                let linked = sary_io::linked::LinkedFile { uuid: "embedded-id".into(), file_name, bytes: bytes.to_vec() };
+                doc.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(sary_io::linked::encode_linked_file(&linked))));
                 smart_mut(doc, LayerId(id))?.source = SmartSource::Linked { path: linked.uuid };
                 Ok(())
             })
@@ -899,11 +899,11 @@ fn contents_file() -> std::path::PathBuf {
     let doc = Document::with_background(
         "source",
         Size::new(4, 4),
-        photocraft_doc::ColorMode::Rgb,
-        photocraft_doc::SampleType::U8,
-        photocraft_color::Color::rgb(1.0, 0.0, 0.0),
+        sary_doc::ColorMode::Rgb,
+        sary_doc::SampleType::U8,
+        sary_color::Color::rgb(1.0, 0.0, 0.0),
     );
-    let path = std::env::temp_dir().join(format!("pcraft-contents-{}-{}.pcraft", std::process::id(), doc.id.0));
+    let path = std::env::temp_dir().join(format!("sary-contents-{}-{}.sary", std::process::id(), doc.id.0));
     std::fs::write(&path, encode_source(&doc).unwrap()).unwrap();
     path
 }
@@ -968,11 +968,11 @@ fn automation_smart_contents_refuses_disk_sources_before_changes() {
 fn automation_smart_contents_checks_nested_reads_at_nontrivial_placements() {
     let path = contents_file();
     for (scale, psd_uuid, allowed) in [(1.0, false, true), (1.5, false, false), (1.5, true, true)] {
-        let mut inner = Document::new("inner", Size::new(4, 4), photocraft_doc::ColorMode::Rgb, photocraft_doc::SampleType::U8);
+        let mut inner = Document::new("inner", Size::new(4, 4), sary_doc::ColorMode::Rgb, sary_doc::SampleType::U8);
         let source_path = if psd_uuid {
             let linked =
-                photocraft_io::linked::LinkedFile { uuid: "nested-id".into(), file_name: "source.pcraft".into(), bytes: std::fs::read(&path).unwrap() };
-            inner.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(photocraft_io::linked::encode_linked_file(&linked))));
+                sary_io::linked::LinkedFile { uuid: "nested-id".into(), file_name: "source.sary".into(), bytes: std::fs::read(&path).unwrap() };
+            inner.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(sary_io::linked::encode_linked_file(&linked))));
             linked.uuid
         } else {
             path.to_string_lossy().into_owned()
@@ -986,7 +986,7 @@ fn automation_smart_contents_checks_nested_reads_at_nontrivial_placements() {
         parent.layers.push(Layer::new(
             "outer",
             LayerContent::Smart(SmartObject::new(
-                SmartSource::Embedded { file_name: "inner.pcraft".into(), bytes: Arc::new(encode_source(&inner).unwrap()) },
+                SmartSource::Embedded { file_name: "inner.sary".into(), bytes: Arc::new(encode_source(&inner).unwrap()) },
                 Affine { m: [scale, 0.0, 0.0, scale, 0.0, 0.0] },
                 Some(cache),
             )),
@@ -1045,12 +1045,12 @@ fn inspect_reports_the_smart_source() {
     let inner = Document::with_background(
         "in",
         Size::new(4, 4),
-        photocraft_color::ColorMode::Rgb,
-        photocraft_color::SampleType::U8,
-        photocraft_color::Color::rgba(0.0, 1.0, 0.0, 1.0),
+        sary_color::ColorMode::Rgb,
+        sary_color::SampleType::U8,
+        sary_color::Color::rgba(0.0, 1.0, 0.0, 1.0),
     );
-    let png = photocraft_io::export(&inner, "png", &Default::default()).unwrap().bytes;
-    let lnk2 = photocraft_io::linked::encode_linked_file(&photocraft_io::linked::LinkedFile { uuid: "uuid-1".into(), file_name: "in.png".into(), bytes: png });
+    let png = sary_io::export(&inner, "png", &Default::default()).unwrap().bytes;
+    let lnk2 = sary_io::linked::encode_linked_file(&sary_io::linked::LinkedFile { uuid: "uuid-1".into(), file_name: "in.png".into(), bytes: png });
     let mut s = session(8);
     s.edit("place", |doc, active| {
         doc.metadata.psd_global_blocks.push((*b"8BIM", *b"lnk2", Arc::new(lnk2)));
@@ -1081,18 +1081,18 @@ fn inspect_reports_the_smart_source() {
 
 #[test]
 fn displace_smart_filter_reads_its_map_path_on_re_render() {
-    let dir = std::env::temp_dir().join(format!("pcraft-displace-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("sary-displace-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     // A white map displaces by the full scale; mid-grey would not move anything.
     let white = Document::with_background(
         "map",
         Size::new(W as u32, H as u32),
-        photocraft_color::ColorMode::Rgb,
-        photocraft_color::SampleType::U8,
-        photocraft_color::Color::rgba(1.0, 1.0, 1.0, 1.0),
+        sary_color::ColorMode::Rgb,
+        sary_color::SampleType::U8,
+        sary_color::Color::rgba(1.0, 1.0, 1.0, 1.0),
     );
     let map = dir.join("white.png");
-    std::fs::write(&map, photocraft_io::export(&white, "png", &Default::default()).unwrap().bytes).unwrap();
+    std::fs::write(&map, sary_io::export(&white, "png", &Default::default()).unwrap().bytes).unwrap();
     for depth in DEPTHS {
         let mut s = session(depth);
         paint(&mut s);

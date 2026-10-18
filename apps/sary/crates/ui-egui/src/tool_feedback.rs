@@ -8,7 +8,7 @@
 
 use egui::{Color32, Pos2, Shape, Stroke, pos2, vec2};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::state::Tool;
 
 /// The intent a selection tool's next gesture has, shown as a cursor badge (none for New).
@@ -89,7 +89,7 @@ pub fn selection_mode(tool: Tool, bar: u8, m: egui::Modifiers) -> &'static str {
 /// [`selection_mode`] for the active document: with nothing selected, ⌥ (or ⇧⌥) has nothing to
 /// subtract from or intersect with, so it draws a new selection, as in Photoshop (where ⌥ then
 /// only draws a marquee from its centre). An options-bar Subtract or Intersect is kept (#1106).
-pub fn document_selection_mode(app: &PhotocraftApp, tool: Tool, m: egui::Modifiers) -> &'static str {
+pub fn document_selection_mode(app: &SaryApp, tool: Tool, m: egui::Modifiers) -> &'static str {
     let mode = selection_mode(tool, app.ui.selection_mode, m);
     let selected = app.session.active().and_then(|st| st.doc.selection.as_ref()).is_some_and(|s| !s.content_bounds().is_empty());
     if m.alt && !selected && matches!(mode, "subtract" | "intersect") && selection_mode(tool, app.ui.selection_mode, egui::Modifiers::NONE) == "replace" {
@@ -101,7 +101,7 @@ pub fn document_selection_mode(app: &PhotocraftApp, tool: Tool, m: egui::Modifie
 
 /// The badge the cursor of `tool` shows with modifiers `m` (None for non-selection tools or New;
 /// the anchor point tools show theirs).
-pub fn badge(app: &PhotocraftApp, tool: Tool, m: egui::Modifiers) -> Option<Badge> {
+pub fn badge(app: &SaryApp, tool: Tool, m: egui::Modifiers) -> Option<Badge> {
     // Add / Delete Anchor Point: + or − beside the crosshair, as on Photoshop's pen cursors (⌥
     // swaps them; ⌘ is Direct Selection, which shows none).
     if let Some(t) = crate::anchor_tools::effective(tool, m) {
@@ -111,7 +111,7 @@ pub fn badge(app: &PhotocraftApp, tool: Tool, m: egui::Modifiers) -> Option<Badg
     // there), four arrows on an anchor (a press drags it).
     if let Some(p) = app.hover_doc.filter(|_| tool == Tool::CurvaturePen) {
         return crate::direct_select::curvature_hover(app, p, m)
-            .map(|h| if matches!(h, photocraft_vector::edit::Hit::Segment(..)) { Badge::Add } else { Badge::Move });
+            .map(|h| if matches!(h, sary_vector::edit::Hit::Segment(..)) { Badge::Add } else { Badge::Move });
     }
     // The Pen over the active path with Auto Add/Delete on: what a click would do (#4144).
     if let Some(p) = app.hover_doc.filter(|_| tool == Tool::Pen) {
@@ -256,7 +256,7 @@ mod tests {
 
     #[test]
     fn badge_follows_modifiers_and_the_options_bar() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), Default::default());
         let none = egui::Modifiers::NONE;
         let (shift, alt) = (egui::Modifiers::SHIFT, egui::Modifiers::ALT);
         let both = egui::Modifiers { shift: true, alt: true, ..Default::default() };

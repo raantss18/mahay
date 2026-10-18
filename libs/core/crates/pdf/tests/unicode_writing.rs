@@ -5,7 +5,7 @@
 use backend::geom::Point;
 use backend::page::PageSettings;
 use backend::text::{GlyphId, KrillaGlyph};
-use craft_pdf::write::{self, Metadata, Writer, backend};
+use mahay_pdf::write::{self, Metadata, Writer, backend};
 use hayro_cmap::BfString;
 use hayro_interpret::{
     BlendMode, ClipPath, Context, Device, GlyphDrawMode, Image, InterpreterCache, InterpreterSettings, Paint, PathDrawMode, SoftMask, TransformExt,
@@ -13,12 +13,12 @@ use hayro_interpret::{
 };
 use kurbo::{Affine, BezPath, Rect};
 
-#[cfg(craft_pdf_unicode_fixtures)]
-const INTER: &[u8] = include_bytes!(concat!(env!("CRAFT_PDF_TEST_FONT_DIR"), "/Inter-Regular.ttf"));
-#[cfg(craft_pdf_unicode_fixtures)]
-const ARABIC: &[u8] = include_bytes!(concat!(env!("CRAFT_PDF_TEST_FONT_DIR"), "/NotoSansArabic.ttf"));
-#[cfg(craft_pdf_unicode_fixtures)]
-const THAI: &[u8] = include_bytes!(concat!(env!("CRAFT_PDF_TEST_FONT_DIR"), "/NotoSansThai[wdth,wght].ttf"));
+#[cfg(mahay_pdf_unicode_fixtures)]
+const INTER: &[u8] = include_bytes!(concat!(env!("MAHAY_PDF_TEST_FONT_DIR"), "/Inter-Regular.ttf"));
+#[cfg(mahay_pdf_unicode_fixtures)]
+const ARABIC: &[u8] = include_bytes!(concat!(env!("MAHAY_PDF_TEST_FONT_DIR"), "/NotoSansArabic.ttf"));
+#[cfg(mahay_pdf_unicode_fixtures)]
+const THAI: &[u8] = include_bytes!(concat!(env!("MAHAY_PDF_TEST_FONT_DIR"), "/NotoSansThai[wdth,wght].ttf"));
 
 #[derive(Default)]
 struct TextDevice {
@@ -83,7 +83,7 @@ fn mapped_document(font_bytes: &[u8], text: &str, variations: Option<&[([u8; 4],
     writer.finish().unwrap()
 }
 
-#[cfg_attr(not(craft_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and craft_pdf_unicode_fixtures cfg")]
+#[cfg_attr(not(mahay_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and mahay_pdf_unicode_fixtures cfg")]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn embedded_unicode_mappings_survive_serialization_and_reopen_as_page_text() {
@@ -109,7 +109,7 @@ fn reopened_text(bytes: &[u8]) -> TextDevice {
     device
 }
 
-#[cfg_attr(not(craft_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and craft_pdf_unicode_fixtures cfg")]
+#[cfg_attr(not(mahay_pdf_unicode_fixtures), ignore = "requires hash-verified external fonts and mahay_pdf_unicode_fixtures cfg")]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
 #[cfg_attr(not(target_arch = "wasm32"), test)]
 fn variable_coordinates_change_embedded_outlines_and_preserve_real_text() {
@@ -128,12 +128,12 @@ fn variable_coordinates_change_embedded_outlines_and_preserve_real_text() {
 }
 
 fn fixture_fonts() -> [&'static [u8]; 3] {
-    #[cfg(craft_pdf_unicode_fixtures)]
+    #[cfg(mahay_pdf_unicode_fixtures)]
     {
         [INTER, ARABIC, THAI]
     }
-    #[cfg(not(craft_pdf_unicode_fixtures))]
+    #[cfg(not(mahay_pdf_unicode_fixtures))]
     {
-        panic!("enable craft_pdf_unicode_fixtures and supply CRAFT_PDF_TEST_FONT_DIR to run this contract")
+        panic!("enable mahay_pdf_unicode_fixtures and supply MAHAY_PDF_TEST_FONT_DIR to run this contract")
     }
 }

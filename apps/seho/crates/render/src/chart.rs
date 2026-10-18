@@ -1,11 +1,11 @@
 //! Charts: title, plot area with axes and gridlines, series marks, legend.
 
-use deckcraft_color::{ColorTransform, Rgba, SchemeSlot};
-use deckcraft_model::Shape;
-use deckcraft_model::chart::{Chart, ChartType, TrendlineType, axis_scale};
-use deckcraft_model::resolve::Ctx;
-use deckcraft_model::style::{ColorRef, Fill};
-use deckcraft_model::text::{Align, Anchor, Bullet, TextBody};
+use seho_color::{ColorTransform, Rgba, SchemeSlot};
+use seho_model::Shape;
+use seho_model::chart::{Chart, ChartType, TrendlineType, axis_scale};
+use seho_model::resolve::Ctx;
+use seho_model::style::{ColorRef, Fill};
+use seho_model::text::{Align, Anchor, Bullet, TextBody};
 use kurbo::{Affine, BezPath, Point, Rect, Shape as _};
 use vello_cpu::RenderContext;
 
@@ -23,13 +23,13 @@ pub fn series_color(ctx: &Ctx, c: &Chart, i: usize) -> Rgba {
     let round = if mono { i } else { i / 6 };
     match round {
         0 => base,
-        1 => deckcraft_color::apply(base, &[ColorTransform::Shade(60000)]),
-        2 => deckcraft_color::apply(base, &[ColorTransform::Tint(60000)]),
-        n => deckcraft_color::apply(base, &[ColorTransform::LumMod(100000 - (n as i32 % 5) * 12000)]),
+        1 => seho_color::apply(base, &[ColorTransform::Shade(60000)]),
+        2 => seho_color::apply(base, &[ColorTransform::Tint(60000)]),
+        n => seho_color::apply(base, &[ColorTransform::LumMod(100000 - (n as i32 % 5) * 12000)]),
     }
 }
 
-pub(crate) fn series_fill(ctx: &Ctx, c: &Chart, i: usize, s: Option<&deckcraft_model::chart::Series>) -> Rgba {
+pub(crate) fn series_fill(ctx: &Ctx, c: &Chart, i: usize, s: Option<&seho_model::chart::Series>) -> Rgba {
     match s.and_then(|s| s.fill.as_ref()) {
         Some(Fill::Solid { color: cc }) => ctx.color(cc, None),
         _ => series_color(ctx, c, i),
@@ -37,7 +37,7 @@ pub(crate) fn series_fill(ctx: &Ctx, c: &Chart, i: usize, s: Option<&deckcraft_m
 }
 
 /// The fill of point `k` of a series: its own (`c:dPt`) where the file gives one, else the series'.
-fn point_fill(ctx: &Ctx, c: &Chart, i: usize, s: &deckcraft_model::chart::Series, k: usize) -> Rgba {
+fn point_fill(ctx: &Ctx, c: &Chart, i: usize, s: &seho_model::chart::Series, k: usize) -> Rgba {
     match s.point_fills.iter().find(|(p, _)| *p == k).map(|(_, f)| f) {
         Some(Fill::Solid { color: cc }) => ctx.color(cc, None),
         _ => series_fill(ctx, c, i, Some(s)),
@@ -46,7 +46,7 @@ fn point_fill(ctx: &Ctx, c: &Chart, i: usize, s: &deckcraft_model::chart::Series
 
 /// Fill of one bar: a `<c:dPt>` fill wins, and a single-series chart that varies colours by point uses one accent per point
 /// (not waterfalls, which are never read from a `<c:barChart>`).
-fn bar_fill(ctx: &Ctx, c: &Chart, si: usize, pi: usize, s: &deckcraft_model::chart::Series) -> Rgba {
+fn bar_fill(ctx: &Ctx, c: &Chart, si: usize, pi: usize, s: &seho_model::chart::Series) -> Rgba {
     if s.point_fills.iter().any(|(k, _)| *k == pi) {
         return point_fill(ctx, c, si, s, pi);
     }
@@ -87,7 +87,7 @@ pub(crate) fn smooth_path(pts: &[Point]) -> BezPath {
 
 /// A line series' colour: its line's own (where PowerPoint keeps it), else its fill's, else the
 /// palette's.
-pub(crate) fn series_line(ctx: &Ctx, c: &Chart, i: usize, s: &deckcraft_model::chart::Series) -> Rgba {
+pub(crate) fn series_line(ctx: &Ctx, c: &Chart, i: usize, s: &seho_model::chart::Series) -> Rgba {
     match s.line.as_ref().and_then(|l| l.fill.as_ref()) {
         Some(Fill::Solid { color: cc }) => ctx.color(cc, None),
         _ => series_fill(ctx, c, i, Some(s)),
@@ -139,7 +139,7 @@ pub(crate) fn label(
         }
     }
     let tmp = Shape { text: Some(body.clone()), ..Default::default() };
-    crate::draw_text(ctx, rctx, &tmp, &body, r, m, &deckcraft_text::NoFields, None);
+    crate::draw_text(ctx, rctx, &tmp, &body, r, m, &seho_text::NoFields, None);
 }
 
 fn fmt_num(v: f64) -> String {
@@ -218,7 +218,7 @@ fn draw_inner(ctx: &mut RenderContext, rctx: &Ctx, c: &Chart, m: Affine, w: f64,
             &Rect::new(0.0, 0.0, w, h).to_path(0.1),
             Rect::new(0.0, 0.0, w, h),
             m,
-            deckcraft_geom::preset::FillMode::Norm,
+            seho_geom::preset::FillMode::Norm,
             1.0,
             rctx.pres,
         );
@@ -403,7 +403,7 @@ fn draw_inner(ctx: &mut RenderContext, rctx: &Ctx, c: &Chart, m: Affine, w: f64,
         Rect::new(area.x0 + gutter, area.y0, area.x1 - gutter_r, area.y1 - base * 1.8)
     };
     if let Some(f) = &c.plot_fill {
-        crate::paint::fill_path(ctx, rctx, f, None, &plot.to_path(0.1), plot, m, deckcraft_geom::preset::FillMode::Norm, 1.0, rctx.pres);
+        crate::paint::fill_path(ctx, rctx, f, None, &plot.to_path(0.1), plot, m, seho_geom::preset::FillMode::Norm, 1.0, rctx.pres);
     }
     let span = (max - min).max(1e-9);
     // Values past the axis limits (fixed ones, or zero on an axis that starts above it) stop at
@@ -576,7 +576,7 @@ fn draw_inner(ctx: &mut RenderContext, rctx: &Ctx, c: &Chart, m: Affine, w: f64,
     // Error bars, drawn over every series: (position across the value axis, from, to, cap length, cap).
     let mut err_marks: Vec<(f64, f64, f64, f64, bool)> = vec![];
     if let Some(bk) = bar_kind {
-        let bars: Vec<(usize, &deckcraft_model::chart::Series)> =
+        let bars: Vec<(usize, &seho_model::chart::Series)> =
             c.series.iter().enumerate().filter(|(_, s)| c.series_kind(s).is_bar_like()).collect();
         let ns = bars.len().max(1);
         // Gap width and overlap are fractions of one bar's width: a category's band holds its bars
@@ -589,7 +589,7 @@ fn draw_inner(ctx: &mut RenderContext, rctx: &Ctx, c: &Chart, m: Affine, w: f64,
         let step = bar * (1.0 - ov);
         let group = bar + step * (n - 1.0);
         // Error bars need each series' mean and spread: worked out once, not per point.
-        let stats: Vec<deckcraft_model::chart::SeriesStats> = bars.iter().map(|(_, s)| deckcraft_model::chart::SeriesStats::of(&s.values)).collect();
+        let stats: Vec<seho_model::chart::SeriesStats> = bars.iter().map(|(_, s)| seho_model::chart::SeriesStats::of(&s.values)).collect();
         for i in 0..ncat {
             let mut pos_acc = 0.0;
             let mut neg_acc = 0.0;
@@ -1113,7 +1113,7 @@ mod tests {
 
     #[test]
     fn forecast_reserves_at_most_three_category_slots() {
-        use deckcraft_model::chart::Trendline;
+        use seho_model::chart::Trendline;
         let mut c = Chart::sample(ChartType::Line);
         c.series[0].trendlines.push(Trendline { forward: Some(10.0), backward: Some(0.5), ..Default::default() });
         assert_eq!(forecast_pad(&c), (0.5, 3.0));

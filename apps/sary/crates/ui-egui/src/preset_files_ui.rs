@@ -9,7 +9,7 @@
 
 use serde_json::{Value, json};
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 
 /// Extensions handled here rather than by the document importer (`.aco`/`.ase` swatches go to
 /// the Swatches panel through [`crate::swatches_ui::import_bytes`]).
@@ -31,7 +31,7 @@ pub const BRUSH_IMAGE_EXTS: &[&str] = &["png", "jpg", "jpeg", "tif", "tiff", "ps
 
 /// Brushes panel / brush preset picker › Import Brushes…: an `.abr` joins the brush library as a
 /// group (as File › Open does), an image file becomes a new brush preset with that image as its tip.
-pub fn import_brushes(app: &mut PhotocraftApp) -> Result<Value, String> {
+pub fn import_brushes(app: &mut SaryApp) -> Result<Value, String> {
     let exts: Vec<&str> = std::iter::once("abr").chain(BRUSH_IMAGE_EXTS.iter().copied()).collect();
     app.pick_file_bytes_filtered(&exts, |app, name, bytes| match open(app, &name, &bytes) {
         Some(r) => r.map(|()| Value::Null),
@@ -40,7 +40,7 @@ pub fn import_brushes(app: &mut PhotocraftApp) -> Result<Value, String> {
 }
 
 /// An image file as a brush tip: a new preset named after the file, made the current brush.
-pub fn import_brush_image(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> Result<Value, String> {
+pub fn import_brush_image(app: &mut SaryApp, name: &str, bytes: &[u8]) -> Result<Value, String> {
     let file = std::path::Path::new(name).file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_else(|| name.to_string());
     let mut p = source(name, bytes);
     if p.get("data").is_some() {
@@ -57,7 +57,7 @@ pub fn import_brush_image(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> 
 }
 
 /// Import from a gradient picker through the same preset command as File › Open.
-pub(crate) fn import_gradients_dialog(app: &mut PhotocraftApp) {
+pub(crate) fn import_gradients_dialog(app: &mut SaryApp) {
     let result = app.pick_file_bytes_filtered(&["grd"], |app, name, bytes| {
         if ext(&name) != "grd" {
             return Err(tl!("Choose a gradient file (.grd).").into());
@@ -80,11 +80,11 @@ fn source(name: &str, bytes: &[u8]) -> Value {
         return json!({"path": name});
     }
     let _ = name;
-    json!({"data": photocraft_engine::paint::tile::b64_encode(bytes)})
+    json!({"data": sary_engine::paint::tile::b64_encode(bytes)})
 }
 
 /// Import a preset file; `None` when `name` isn't one.
-pub fn open(app: &mut PhotocraftApp, name: &str, bytes: &[u8]) -> Option<Result<(), String>> {
+pub fn open(app: &mut SaryApp, name: &str, bytes: &[u8]) -> Option<Result<(), String>> {
     let (cmd, what) = match ext(name).as_str() {
         "abr" => ("brush.presets.importAbr", "brushes"),
         "grd" => ("gradient.presets.importGrd", "gradients"),
@@ -149,17 +149,17 @@ mod tests {
     /// Import Brushes… with a PNG: the image becomes the current brush's tip (TOOL-213-12).
     #[test]
     fn import_brushes_turns_an_image_into_a_brush_tip() {
-        use photocraft_engine::paint::TipShape;
+        use sary_engine::paint::TipShape;
         let mut px = vec![255u8; 16 * 16];
         for y in 4..12 {
             for x in 6..9 {
                 px[y * 16 + x] = 0;
             }
         }
-        let img = photocraft_codecs::Image::from_u8(16, 16, photocraft_codecs::ChannelLayout::Gray, px).unwrap();
-        let png = photocraft_codecs::encode(&img, photocraft_codecs::Format::Png, &Default::default()).unwrap();
+        let img = sary_codecs::Image::from_u8(16, 16, sary_codecs::ChannelLayout::Gray, px).unwrap();
+        let png = sary_codecs::encode(&img, sary_codecs::Format::Png, &Default::default()).unwrap();
         let (show, asked) = crate::file_dialog::fake(vec![Some(crate::file_dialog::FileDialogAnswer::Contents("Leaf.png".into(), png))]);
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services { file_dialog: Some(show), ..Default::default() });
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services { file_dialog: Some(show), ..Default::default() });
         import_brushes(&mut app).unwrap();
         app.poll_file_dialog(&egui::Context::default(), None);
         match asked.borrow().first() {

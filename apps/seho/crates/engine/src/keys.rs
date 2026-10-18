@@ -289,7 +289,7 @@ impl Session {
         let st = self.doc()?;
         let Some(t) = st.selection.text.clone() else { return Ok(Value::Null) };
         let Some((r, c)) = t.cell else { return Ok(Value::Null) };
-        let Some(deckcraft_model::ShapeKind::Table(tb)) = st.shape(t.shape).map(|s| s.kind.clone()) else { return Ok(Value::Null) };
+        let Some(seho_model::ShapeKind::Table(tb)) = st.shape(t.shape).map(|s| s.kind.clone()) else { return Ok(Value::Null) };
         let (nr, nc) = (tb.n_rows(), tb.n_cols().max(1));
         let idx = r * nc + c;
         // Cells hidden under a merged cell are skipped.

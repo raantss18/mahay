@@ -14,7 +14,7 @@
 //! ```
 //!
 //! The list is in application order (first = bottom, applied first), like
-//! [`SmartObject::smart_filters`](photocraft_doc::SmartObject). Filters PhotoCraft implements map
+//! [`SmartObject::smart_filters`](sary_doc::SmartObject). Filters Sary implements map
 //! to their command id and dialog parameters; any other filter becomes a
 //! [`UNSUPPORTED_FILTER`] entry that keeps its descriptor verbatim (hex in `params.psd`), so it is
 //! listed, can be hidden, reordered or deleted, and is written back unchanged.
@@ -22,15 +22,15 @@
 //! Camera Raw and Displace keep their whole item as a template next to the editable settings
 //! (Displace's carries the embedded displacement map, see `displace_map.rs`).
 
-use photocraft_color::{BlendMode, ColorMode, PixelFormat, SampleType};
-use photocraft_doc::{LayerMask, SmartFilter};
-use photocraft_geom::warp::{Warp, WarpStyle};
-use photocraft_geom::{Affine, Rect as GeomRect};
-use photocraft_psd::Compression;
-use photocraft_psd::Rect as PsdRect;
-use photocraft_psd::descriptor::{Class, Descriptor, Id, ObjectArray, ReferenceItem, UnicodeString, Value, VersionedDescriptor};
-use photocraft_psd::filter_effects::{EffectsPlane, FilterEffectsItem};
-use photocraft_raster::Surface;
+use sary_color::{BlendMode, ColorMode, PixelFormat, SampleType};
+use sary_doc::{LayerMask, SmartFilter};
+use sary_geom::warp::{Warp, WarpStyle};
+use sary_geom::{Affine, Rect as GeomRect};
+use sary_psd::Compression;
+use sary_psd::Rect as PsdRect;
+use sary_psd::descriptor::{Class, Descriptor, Id, ObjectArray, ReferenceItem, UnicodeString, Value, VersionedDescriptor};
+use sary_psd::filter_effects::{EffectsPlane, FilterEffectsItem};
+use sary_raster::Surface;
 use serde_json::{Map, Value as J, json};
 
 use crate::blocks::{enum_of, get_desc, num};
@@ -42,7 +42,7 @@ mod displace;
 
 pub use displace::embedded_map as displace_embedded_map;
 
-/// Command id of a Photoshop smart filter PhotoCraft does not implement. Its params hold the
+/// Command id of a Photoshop smart filter Sary does not implement. Its params hold the
 /// filter's name, Photoshop filter id and descriptor (`psd`, hex); it renders as a pass-through.
 pub const UNSUPPORTED_FILTER: &str = "psd.unsupportedFilter";
 
@@ -131,7 +131,7 @@ pub fn filter_stack(fx: &Descriptor) -> FilterStack {
 
 // ---------- the filters we model ----------
 
-/// Photoshop filter → PhotoCraft command, keyed by the `Fltr` class (and `filterID`).
+/// Photoshop filter → Sary command, keyed by the `Fltr` class (and `filterID`).
 struct Known {
     class: &'static str,
     filter_id: i32,
@@ -400,7 +400,7 @@ fn gallery_item(f: &SmartFilter) -> Result<Descriptor, String> {
         }) {
             return Err(format!("gallery setting `{key}.{k}` has no PSD equivalent"));
         }
-        let defaults = photocraft_algo::GalleryFilter::from_key(key).map(photocraft_algo::GalleryEffect::new);
+        let defaults = sary_algo::GalleryFilter::from_key(key).map(sary_algo::GalleryEffect::new);
         let settings: Vec<(&str, Value)> =
             g.settings.iter().map(|(psd, ours)| (*psd, pi(params, ours, defaults.as_ref().map_or(0.0, |x| f64::from(x.get(ours)))))).collect();
         out.push((g.code, settings, e.get("visible").and_then(J::as_bool).unwrap_or(true)));
@@ -697,7 +697,7 @@ fn quad_points(s: &PlacedSpec<'_>) -> [f64; 8] {
     let (w, h) = s.size;
     let [a, b, c, d, e, f] = s.transform.m;
     let map = |x: f64, y: f64| match &s.perspective {
-        Some(p) => photocraft_algo::transform::Homography(*p).apply(x, y),
+        Some(p) => sary_algo::transform::Homography(*p).apply(x, y),
         None => (a * x + c * y + e, b * x + d * y + f),
     };
     let [x0, y0, x1, y1] = if s.perspective.is_some() { [0.0, 0.0, w, h] } else { crate::blocks::placed_frame(s.warp, w, h) };
@@ -953,7 +953,7 @@ pub fn feid_item(placed: &str, unfiltered: &Surface, mask: Option<&LayerMask>, b
     // Fully transparent pixels carry white, as in Photoshop's own cache: filters that look at
     // colour regardless of alpha (Shadows/Highlights) read it.
     let mut vals = px.read_region(r);
-    let white = photocraft_raster::from_rgba(&doc_fmt, [1.0, 1.0, 1.0, 1.0]);
+    let white = sary_raster::from_rgba(&doc_fmt, [1.0, 1.0, 1.0, 1.0]);
     for p in vals.chunks_exact_mut(cc + 1) {
         if p[cc] <= 0.0 {
             p[..cc].copy_from_slice(&white[..cc]);
@@ -1207,7 +1207,7 @@ mod tests {
     #[test]
     fn gallery_table_matches_the_gallery_filters() {
         for g in &GALLERY_EFFECTS {
-            let f = photocraft_algo::GalleryFilter::from_key(g.key).unwrap();
+            let f = sary_algo::GalleryFilter::from_key(g.key).unwrap();
             let keys: Vec<&str> = f.params().iter().map(|p| p.key).collect();
             for (_, ours) in g.settings {
                 assert!(keys.contains(ours), "{}.{ours}", g.key);
@@ -1302,9 +1302,9 @@ mod tests {
             assert!((a - b).abs() < 1e-9);
         }
         assert_eq!(p.stack, Some(stack));
-        let tb = photocraft_psd::TaggedBlock::new(*b"SoLd", sold.clone());
+        let tb = sary_psd::TaggedBlock::new(*b"SoLd", sold.clone());
         tb.check_structure().unwrap();
-        let pl = photocraft_psd::TaggedBlock::new(*b"PlLd", plld_bytes(&spec, &mut w));
+        let pl = sary_psd::TaggedBlock::new(*b"PlLd", plld_bytes(&spec, &mut w));
         pl.check_structure().unwrap();
         // A template keeps its other keys; an unmoved transform keeps its exact quad.
         let mut tmpl = sold_descriptor(&sold).unwrap();
@@ -1320,7 +1320,7 @@ mod tests {
     /// and comes back as the same projective map; an affine one reads back as no perspective.
     #[test]
     fn perspective_placement_round_trips_through_sold() {
-        let h = photocraft_algo::transform::Homography::rect_to_quad([0.0, 0.0, 64.0, 32.0], [[10.0, 5.0], [80.0, 8.0], [70.0, 50.0], [12.0, 40.0]]).unwrap();
+        let h = sary_algo::transform::Homography::rect_to_quad([0.0, 0.0, 64.0, 32.0], [[10.0, 5.0], [80.0, 8.0], [70.0, 50.0], [12.0, 40.0]]).unwrap();
         let mut w = Vec::new();
         let mut spec = PlacedSpec {
             idnt: "id",
@@ -1359,7 +1359,7 @@ mod tests {
         assert!(quad_moved(&template, &spec), "moved half a pixel");
         spec.transform = t;
         spec.perspective =
-            photocraft_algo::transform::Homography::rect_to_quad([0.0, 0.0, 20.0, 10.0], [[3.0, 4.0], [23.0, 4.0], [20.0, 12.0], [3.0, 14.0]]).map(|h| h.0);
+            sary_algo::transform::Homography::rect_to_quad([0.0, 0.0, 20.0, 10.0], [[3.0, 4.0], [23.0, 4.0], [20.0, 12.0], [3.0, 14.0]]).map(|h| h.0);
         assert!(quad_moved(&template, &spec), "one corner moved (Distort)");
         assert!(quad_moved(&Descriptor::new("null"), &spec), "no stored quad");
     }
@@ -1412,7 +1412,7 @@ mod tests {
 
     #[test]
     fn warps_are_written_and_read_back() {
-        use photocraft_geom::warp::BezierMesh;
+        use sary_geom::warp::BezierMesh;
         let bounds = [0.0, 0.0, 60.0, 30.0];
         let mut custom = BezierMesh::identity(bounds, 1, 1);
         custom.points[15] = [67.0, 30.0];
@@ -1445,7 +1445,7 @@ mod tests {
     /// import: a spilled mesh comes back with the same transform and the quad Photoshop expects.
     #[test]
     fn warp_control_box_quad_round_trips() {
-        use photocraft_geom::warp::BezierMesh;
+        use sary_geom::warp::BezierMesh;
         let mut mesh = BezierMesh::identity([0.0, 0.0, 50.0, 25.0], 1, 1);
         mesh.points[0] = [-10.0, -5.0];
         mesh.points[15] = [60.0, 25.0];

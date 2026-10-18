@@ -3,11 +3,11 @@
 //! commands (`view.newGuide` / `view.moveGuide` / `view.deleteGuide`).
 
 use egui::{Align2, Color32, Pos2, Rect, Sense, Stroke, pos2, vec2};
-use photocraft_doc::Document;
-use photocraft_engine::prefs::{GuidesGridAndSlices, Unit};
+use sary_doc::Document;
+use sary_engine::prefs::{GuidesGridAndSlices, Unit};
 use serde_json::json;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::theme::Tokens;
 
@@ -15,12 +15,12 @@ pub const RULER: f32 = 16.0;
 
 /// A `#rrggbb` preference colour.
 fn pref_color(s: &str, fallback: Color32) -> Color32 {
-    photocraft_engine::prefs::parse_hex(s).map_or(fallback, |c| Color32::from_rgb(c[0], c[1], c[2]))
+    sary_engine::prefs::parse_hex(s).map_or(fallback, |c| Color32::from_rgb(c[0], c[1], c[2]))
 }
 
 /// Draw a line in a Guides/Grid preference style (lines, dashed lines, dots).
-fn styled_line(painter: &egui::Painter, a: Pos2, b: Pos2, stroke: Stroke, style: photocraft_engine::prefs::LineStyle) {
-    use photocraft_engine::prefs::LineStyle;
+fn styled_line(painter: &egui::Painter, a: Pos2, b: Pos2, stroke: Stroke, style: sary_engine::prefs::LineStyle) {
+    use sary_engine::prefs::LineStyle;
     match style {
         LineStyle::Lines => {
             painter.line_segment([a, b], stroke);
@@ -107,7 +107,7 @@ impl GuideDrag {
 }
 
 /// Canvas area left after the rulers.
-pub fn content_rect(app: &PhotocraftApp, rect: Rect) -> Rect {
+pub fn content_rect(app: &SaryApp, rect: Rect) -> Rect {
     if app.ui.extras.rulers { Rect::from_min_max(rect.min + vec2(RULER, RULER), rect.max) } else { rect }
 }
 
@@ -124,7 +124,7 @@ pub(crate) fn grid_major_px(g: &GuidesGridAndSlices, dpi: f64, size: [f64; 2], p
 
 /// View › Show › Grid, from Preferences › Guides, Grid & Slices (spacing, subdivisions, colour,
 /// style). Photoshop's default is a gridline every inch with 4 subdivisions.
-pub fn draw_grid(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, doc: &Document) {
+pub fn draw_grid(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform, doc: &Document) {
     let g = &app.session.prefs().guides_grid_and_slices;
     let ppi = app.session.prefs().units_and_rulers.point_size.per_inch();
     let (w, h) = (doc.size.width as f64, doc.size.height as f64);
@@ -176,7 +176,7 @@ pub fn guide_cursor(xf: &ViewXform, vertical: bool) -> egui::CursorIcon {
     crate::tool_cursor::resize(if vertical { [1.0, 0.0] } else { [0.0, 1.0] }, xf)
 }
 
-pub fn draw_guides(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, doc: &Document) {
+pub fn draw_guides(app: &SaryApp, painter: &egui::Painter, xf: &ViewXform, doc: &Document) {
     let clip = painter.clip_rect();
     let drag = app.guide_drag;
     let g = &app.session.prefs().guides_grid_and_slices;
@@ -214,7 +214,7 @@ pub fn draw_guides(app: &PhotocraftApp, painter: &egui::Painter, xf: &ViewXform,
 }
 
 /// Existing guide under a document point (within 4 screen px).
-pub fn guide_at(app: &PhotocraftApp, x: f64, y: f64) -> Option<(bool, usize)> {
+pub fn guide_at(app: &SaryApp, x: f64, y: f64) -> Option<(bool, usize)> {
     // Hidden canvas guides are not interactive: the Move tool must reach the layer below.
     // Keep hit testing consistent with the visibility gate in canvas::draw.
     if !app.ui.extras.guides || !app.ui.view.shows(app.ui.view.show.canvas_guides) || app.ui.extras.lock_guides {
@@ -238,7 +238,7 @@ pub fn guide_at(app: &PhotocraftApp, x: f64, y: f64) -> Option<(bool, usize)> {
 /// Finish a guide drag: create, move, or delete (dropped outside the canvas). An existing guide
 /// released where it was pressed is a click: it's selected and stays put, as in Photoshop; a
 /// moved one stays selected.
-pub fn finish_drag(app: &mut PhotocraftApp, d: GuideDrag) {
+pub fn finish_drag(app: &mut SaryApp, d: GuideDrag) {
     let Some(size) = app.session.active().map(|s| s.doc.size) else { return };
     if let Some(i) = d.index
         && (d.pos - d.press).abs() * f64::from(app.point_zoom().max(0.01)) < 0.5
@@ -309,7 +309,7 @@ fn snap_px_to_tick(px: f64, origin: f64, tick: f64) -> f64 {
 
 /// Where a zero-point drag from the ruler corner lands for the pointer at document `d`: on the
 /// nearest ruler tick (`ticks`, px per axis) with Shift, else View › Snap To targets.
-fn origin_drop(app: &mut PhotocraftApp, d: [f64; 2], shift: bool, origin: [f64; 2], ticks: [f64; 2]) -> [f64; 2] {
+fn origin_drop(app: &mut SaryApp, d: [f64; 2], shift: bool, origin: [f64; 2], ticks: [f64; 2]) -> [f64; 2] {
     if shift {
         [snap_px_to_tick(d[0], origin[0], ticks[0]), snap_px_to_tick(d[1], origin[1], ticks[1])]
     } else {
@@ -328,7 +328,7 @@ fn ruler_pos(xf: &ViewXform, vertical: bool, u: f64, px_per_unit: f64, zero: [f6
 /// Document pixels per ruler unit and the labelled tick step (in ruler units) of the top ruler
 /// (`y_axis` false) or the left one, from Preferences › Units & Rulers and the zoom. Minor ticks
 /// sit at tenths of the step.
-fn ruler_scale(app: &PhotocraftApp, xf: &ViewXform, y_axis: bool) -> (f64, f64) {
+fn ruler_scale(app: &SaryApp, xf: &ViewXform, y_axis: bool) -> (f64, f64) {
     let ur = &app.session.prefs().units_and_rulers;
     let (unit, ppi) = (ur.rulers, ur.point_size.per_inch());
     let (dpi, size) =
@@ -341,7 +341,7 @@ fn ruler_scale(app: &PhotocraftApp, xf: &ViewXform, y_axis: bool) -> (f64, f64) 
 
 /// `pos` (document px) moved to the nearest tick mark the ruler draws (counted from the zero point): where a guide lands when
 /// Shift is held while dragging it out of a ruler, as in Photoshop (#3770).
-fn snap_to_tick(app: &PhotocraftApp, xf: &ViewXform, vertical: bool, pos: f64) -> f64 {
+fn snap_to_tick(app: &SaryApp, xf: &ViewXform, vertical: bool, pos: f64) -> f64 {
     // A vertical guide sits at an x position, which the top ruler measures.
     let (px_per_unit, step) = ruler_scale(app, xf, !vertical);
     // Ticks count from the zero point (#2955), which a vertical guide measures along x.
@@ -358,7 +358,7 @@ fn ruler_label(v: f64, step: f64, whole: bool) -> String {
 
 /// Rulers along the top and left of `full` (the canvas rect before `content_rect`), with the
 /// pointer position marked; dragging out of a ruler creates a guide.
-pub fn draw_rulers(app: &mut PhotocraftApp, ui: &mut egui::Ui, full: Rect, xf: &ViewXform) {
+pub fn draw_rulers(app: &mut SaryApp, ui: &mut egui::Ui, full: Rect, xf: &ViewXform) {
     let t = Tokens::get(ui.ctx());
     let top = Rect::from_min_max(pos2(full.left() + RULER, full.top()), pos2(full.right(), full.top() + RULER));
     let left = Rect::from_min_max(pos2(full.left(), full.top() + RULER), pos2(full.left() + RULER, full.bottom()));
@@ -458,7 +458,7 @@ pub fn draw_rulers(app: &mut PhotocraftApp, ui: &mut egui::Ui, full: Rect, xf: &
 
 /// The ruler corner: drag the zero point out of it (cross hairs mark where it lands; Shift snaps
 /// to the ruler ticks), double-click it to put the zero point back at the image's top-left.
-fn corner_origin(app: &mut PhotocraftApp, ui: &egui::Ui, resp: &egui::Response, p: &egui::Painter, xf: &ViewXform, origin: [f64; 2], ticks: [f64; 2]) {
+fn corner_origin(app: &mut SaryApp, ui: &egui::Ui, resp: &egui::Response, p: &egui::Painter, xf: &ViewXform, origin: [f64; 2], ticks: [f64; 2]) {
     let id = resp.id.with("origin-drag");
     if resp.hovered() || resp.dragged() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
@@ -500,7 +500,7 @@ mod tests {
         let mut failures = Vec::new();
         for theme in crate::theme::ThemeKind::ALL {
             for (zoom, flip, rotation, width) in [(1.0, false, 0.0, 560.0), (1.0, false, 0.0, 800.0), (0.25, true, 0.0, 560.0), (2.0, false, 30.0, 560.0)] {
-                let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+                let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
                 app.run("file.new", json!({"width": 256, "height": 128})).unwrap();
                 let full = Rect::from_min_size(pos2(32.0, 32.0), vec2(width - 80.0, 320.0));
                 let corner = Rect::from_min_size(full.min, vec2(RULER, RULER));
@@ -513,7 +513,7 @@ mod tests {
                     },
                     app,
                 );
-                PhotocraftApp::setup_context(&h.ctx, theme);
+                SaryApp::setup_context(&h.ctx, theme);
                 h.event(egui::Event::PointerMoved(corner.center()));
                 h.run_steps(4);
                 let mut ticks = 0;
@@ -548,7 +548,7 @@ mod tests {
     }
 
     /// Rulers alone in a 400×300 frame at 100 %, centred on a 256×128 document.
-    fn ruler_harness(app: PhotocraftApp) -> (egui_kittest::Harness<'static, PhotocraftApp>, Rect, ViewXform) {
+    fn ruler_harness(app: SaryApp) -> (egui_kittest::Harness<'static, SaryApp>, Rect, ViewXform) {
         let full = Rect::from_min_size(pos2(0.0, 0.0), vec2(400.0, 300.0));
         let rect = Rect::from_min_max(full.min + vec2(RULER, RULER), full.max);
         let xf = ViewXform { rect, zoom: 1.0, center: [128.0, 64.0], flip: false, rotation: 0.0, aspect: 1.0 };
@@ -559,12 +559,12 @@ mod tests {
         (h, full, xf)
     }
 
-    fn press(h: &mut egui_kittest::Harness<'static, PhotocraftApp>, pos: Pos2, pressed: bool, modifiers: egui::Modifiers) {
+    fn press(h: &mut egui_kittest::Harness<'static, SaryApp>, pos: Pos2, pressed: bool, modifiers: egui::Modifiers) {
         h.event(egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers });
         h.run_steps(2);
     }
 
-    fn drag_corner_to(h: &mut egui_kittest::Harness<'static, PhotocraftApp>, full: Rect, to: Pos2, modifiers: egui::Modifiers) {
+    fn drag_corner_to(h: &mut egui_kittest::Harness<'static, SaryApp>, full: Rect, to: Pos2, modifiers: egui::Modifiers) {
         let corner = Rect::from_min_size(full.min, vec2(RULER, RULER)).center();
         h.event(egui::Event::ModifiersChanged(modifiers));
         h.event(egui::Event::PointerMoved(corner));
@@ -579,7 +579,7 @@ mod tests {
         h.run_steps(1);
     }
 
-    fn origin(h: &egui_kittest::Harness<'static, PhotocraftApp>) -> [f64; 2] {
+    fn origin(h: &egui_kittest::Harness<'static, SaryApp>) -> [f64; 2] {
         h.state().session.active().unwrap().doc.ruler_origin
     }
 
@@ -588,7 +588,7 @@ mod tests {
     /// resets it.
     #[test]
     fn dragging_the_ruler_corner_sets_the_zero_point_and_double_click_resets_it() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 256, "height": 128})).unwrap();
         app.ui.extras.snap = false;
         let (mut h, full, xf) = ruler_harness(app);
@@ -656,7 +656,7 @@ mod tests {
     #[test]
     fn info_panel_position_reads_from_the_zero_point() {
         use egui_kittest::kittest::Queryable;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.run("view.setRulerOrigin", json!({"x": 20, "y": 5})).unwrap();
         app.hover_doc = Some([50.5, 20.5]);
@@ -672,7 +672,7 @@ mod tests {
     #[test]
     fn info_panel_shows_guide_drag_position_outside_canvas() {
         use egui_kittest::kittest::Queryable;
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.run("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.hover_doc = None;
         app.guide_drag = Some(GuideDrag { vertical: true, index: None, pos: 42.0, press: 42.0 });
@@ -716,7 +716,7 @@ mod tests {
 
     #[test]
     fn hidden_guides_are_not_hit_tested() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.sync_views();
         app.session.execute("view.newGuide", json!({"orientation": "vertical", "position": 50})).unwrap();
@@ -767,7 +767,7 @@ mod tests {
 
     #[test]
     fn picking_a_ruler_unit_changes_the_preference() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         assert_eq!(app.session.prefs().units_and_rulers.rulers, Unit::Pixels);
         // The context menu applies its pick exactly as the preference pane does.
         app.run("prefs.set", json!({"path": "unitsAndRulers.rulers", "value": "cm"})).unwrap();
@@ -782,8 +782,8 @@ mod tests {
         let saved = Rc::new(RefCell::new(None::<String>));
         let launch = |saved: &Rc<RefCell<Option<String>>>| {
             let (load, store) = (saved.clone(), saved.clone());
-            PhotocraftApp::new(
-                photocraft_engine::Session::new(),
+            SaryApp::new(
+                sary_engine::Session::new(),
                 crate::Services {
                     load_prefs: Some(Box::new(move || load.borrow().clone())),
                     save_prefs: Some(Box::new(move |text| {
@@ -807,7 +807,7 @@ mod tests {
 
     #[test]
     fn guide_drags_create_move_and_delete() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 200, "height": 100})).unwrap();
         app.sync_views();
         finish_drag(&mut app, GuideDrag { vertical: true, index: None, pos: 50.0, press: 50.0 });
@@ -830,7 +830,7 @@ mod tests {
         use crate::canvas::{ToolEvent, tool_event};
         use crate::state::Tool;
         for (tool, locked) in [(Tool::Brush, false), (Tool::RectMarquee, false), (Tool::Lasso, false), (Tool::MagicWand, false), (Tool::RectMarquee, true)] {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 80, "height": 60, "background": "transparent"})).unwrap();
             app.sync_views();
             app.ui.tool = tool;
@@ -838,7 +838,7 @@ mod tests {
             let layer = app.session.active().unwrap().active_layer.unwrap();
             app.session
                 .edit("paint", |doc, _| {
-                    doc.layer_mut(layer).unwrap().surface_mut().unwrap().fill_rect(photocraft_geom::Rect::new(10, 10, 30, 30), &[1.0, 0.0, 0.0, 1.0]);
+                    doc.layer_mut(layer).unwrap().surface_mut().unwrap().fill_rect(sary_geom::Rect::new(10, 10, 30, 30), &[1.0, 0.0, 0.0, 1.0]);
                     Ok(())
                 })
                 .unwrap();
@@ -980,7 +980,7 @@ mod tests {
         let rect = Rect::from_min_max(full.min + vec2(RULER, RULER), full.max);
         let xf = ViewXform { rect, zoom: 1.0, center: [128.0, 64.0], flip: false, rotation: 0.0, aspect: 1.0 };
         let drag = |from: Pos2, modifiers: egui::Modifiers| {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 256, "height": 128})).unwrap();
             let mut h = egui_kittest::Harness::builder().with_size(vec2(400.0, 300.0)).build_ui_state(move |ui, app| draw_rulers(app, ui, full, &xf), app);
             let to = xf.to_screen(37.0, 90.0);
@@ -1009,7 +1009,7 @@ mod tests {
         let rect = Rect::from_min_max(full.min + vec2(RULER, RULER), full.max);
         let xf = ViewXform { rect, zoom: 1.0, center: [128.0, 64.0], flip: false, rotation: 0.0, aspect: 1.0 };
         let new_app = || {
-            let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+            let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.run("file.new", json!({"width": 256, "height": 128})).unwrap();
             app
         };

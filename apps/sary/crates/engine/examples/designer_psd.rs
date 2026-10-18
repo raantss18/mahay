@@ -5,10 +5,10 @@
 //! through engine commands and saved through the real PSD exporter.
 //!
 //! ```sh
-//! cargo run -p photocraft-engine --example designer_psd -- out.psd
+//! cargo run -p sary-engine --example designer_psd -- out.psd
 //! ```
 
-use photocraft_engine::Session;
+use sary_engine::Session;
 use serde_json::{Value, json};
 
 const NAMES: &[&str] = &[
@@ -175,7 +175,7 @@ fn main() -> Result<(), String> {
     g.run("layer.linkLayers", json!({}));
     let doc = g.s.active().map(|d| (*d.doc).clone()).ok_or("no document")?;
     let layers = doc.walk().len();
-    let bytes = photocraft_io::export(&doc, &out, &Default::default()).map_err(|e| e.to_string())?.bytes;
+    let bytes = sary_io::export(&doc, &out, &Default::default()).map_err(|e| e.to_string())?.bytes;
     std::fs::write(&out, &bytes).map_err(|e| e.to_string())?;
     println!("wrote {out}: {layers} layers, {} bytes", bytes.len());
     Ok(())

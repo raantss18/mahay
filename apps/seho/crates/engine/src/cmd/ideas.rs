@@ -3,8 +3,8 @@
 //! resizes the slide's own shapes and crops pictures to their new box; it changes only that
 //! slide. Everything is computed here, offline.
 
-use deckcraft_geom::Xfrm;
-use deckcraft_model::{Fill, Presentation, Rgba, Shape, ShapeKind};
+use seho_geom::Xfrm;
+use seho_model::{Fill, Presentation, Rgba, Shape, ShapeKind};
 use serde_json::{Value, json};
 
 use super::*;
@@ -181,7 +181,7 @@ pub fn apply_idea(doc: &mut Presentation, sel: &Selection, index: usize, id: &st
         slide.shapes.insert(0, pic);
     }
     if band && let Some(t) = slide.shapes.iter_mut().find(|s| s.ph.as_ref().is_some_and(|p| p.kind.is_title())) {
-        t.fill = Some(Fill::solid(deckcraft_model::ColorRef::rgb(Rgba::rgba(255, 255, 255, 220))));
+        t.fill = Some(Fill::solid(seho_model::ColorRef::rgb(Rgba::rgba(255, 255, 255, 220))));
     }
     Ok(())
 }
@@ -208,8 +208,8 @@ mod tests {
 
     use std::sync::Arc;
 
-    use deckcraft_model::style::PictureFill;
-    use deckcraft_model::{PhType, Placeholder, ShapeId};
+    use seho_model::style::PictureFill;
+    use seho_model::{PhType, Placeholder, ShapeId};
 
     use super::*;
 
@@ -223,13 +223,13 @@ mod tests {
             id: ShapeId(500),
             ph: Some(Placeholder { kind: PhType::Title, ..Default::default() }),
             xfrm: Some(Xfrm::new(50.0, 30.0, 860.0, 90.0)),
-            text: Some(deckcraft_model::text::TextBody::from_text("Harbour at dawn")),
+            text: Some(seho_model::text::TextBody::from_text("Harbour at dawn")),
             ..Default::default()
         };
         let body = Shape {
             id: ShapeId(501),
             xfrm: Some(Xfrm::new(50.0, 140.0, 860.0, 350.0)),
-            text: Some(deckcraft_model::text::TextBody::from_text("one\ntwo")),
+            text: Some(seho_model::text::TextBody::from_text("one\ntwo")),
             ..Default::default()
         };
         slide.shapes.push(title);

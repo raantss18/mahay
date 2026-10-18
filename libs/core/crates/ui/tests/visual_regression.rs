@@ -3,7 +3,7 @@
 //! These are paired same-renderer comparisons, not portable GPU golden files. The reference
 //! paths deliberately do not call the shared components. Literal geometry and colors specify
 //! the baseline; deliberate mutations prove color, spacing and stroke regressions are caught.
-//! Set CRAFT_UI_VISUAL_DIR to retain bounded before/after/difference PNGs and comparison tables.
+//! Set MAHAY_UI_VISUAL_DIR to retain bounded before/after/difference PNGs and comparison tables.
 
 #[path = "visual/fixtures.rs"]
 mod fixtures;
@@ -148,7 +148,7 @@ struct Artifacts {
 
 impl Artifacts {
     fn new(suite: &str) -> Self {
-        let directory = std::env::var_os("CRAFT_UI_VISUAL_DIR").map(|root| PathBuf::from(root).join(suite));
+        let directory = std::env::var_os("MAHAY_UI_VISUAL_DIR").map(|root| PathBuf::from(root).join(suite));
         if let Some(directory) = &directory {
             std::fs::create_dir_all(directory).unwrap();
         }
@@ -237,8 +237,8 @@ fn visual_comparisons_detect_color_spacing_and_stroke_mutations() {
 
 #[test]
 fn toolbar_fitting_matches_literal_group_and_overflow_positions() {
-    use craft_ui::buttons::IconButton;
-    use craft_ui::layout::fit_toolbar;
+    use mahay_ui::buttons::IconButton;
+    use mahay_ui::layout::fit_toolbar;
     use egui::{Align, Layout, Stroke, StrokeKind, UiBuilder, pos2, vec2};
 
     let mut renderer = WgpuTestRenderer::new();
@@ -292,7 +292,7 @@ fn toolbar_fitting_matches_literal_group_and_overflow_positions() {
 
 #[test]
 fn widget_palette_renders_all_five_states_with_existing_borders_and_expansion() {
-    use craft_ui::theme::WidgetPalette;
+    use mahay_ui::theme::WidgetPalette;
     use egui::{CornerRadius, Stroke, StrokeKind, pos2, vec2};
 
     let mut renderer = WgpuTestRenderer::new();
@@ -353,7 +353,7 @@ fn widget_palette_renders_all_five_states_with_existing_borders_and_expansion() 
 
 #[test]
 fn svg_preparation_matches_literal_raster_references_at_all_scales() {
-    use craft_ui::icons::{SvgIconSet, SvgStyle};
+    use mahay_ui::icons::{SvgIconSet, SvgStyle};
     use egui::{
         ImageSource,
         load::{Bytes, ImagePoll, SizeHint},

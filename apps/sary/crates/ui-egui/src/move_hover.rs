@@ -6,10 +6,10 @@
 //! pointer resting on the canvas costs nothing per frame.
 
 use egui::{Pos2, Stroke};
-use photocraft_doc::{DocId, Document, Layer, LayerContent, LayerId};
-use photocraft_geom::Rect;
+use sary_doc::{DocId, Document, Layer, LayerContent, LayerId};
+use sary_geom::Rect;
 
-use crate::PhotocraftApp;
+use crate::SaryApp;
 use crate::canvas::ViewXform;
 use crate::state::Tool;
 
@@ -27,7 +27,7 @@ pub(crate) struct Hover {
 /// nothing is highlighted: the preference is off, another tool is current, a click wouldn't
 /// Auto-Select (it's off without ⌘, or the selected pixels move instead), a button is down, or a
 /// drag or transform is under way.
-pub(crate) fn target(app: &mut PhotocraftApp, at: Option<[f64; 2]>, command: bool, pressed: bool) -> Option<Rect> {
+pub(crate) fn target(app: &mut SaryApp, at: Option<[f64; 2]>, command: bool, pressed: bool) -> Option<Rect> {
     if !app.session.prefs().tools.show_highlight_on_rollover
         || app.ui.tool != Tool::Move
         || pressed
@@ -52,7 +52,7 @@ pub(crate) fn target(app: &mut PhotocraftApp, at: Option<[f64; 2]>, command: boo
         app.canvas_hover_layer = h.target_layer;
         return h.bounds;
     }
-    let target_layer = photocraft_engine::pick_cmds::auto_select_target(&st.doc, at[0], at[1], group);
+    let target_layer = sary_engine::pick_cmds::auto_select_target(&st.doc, at[0], at[1], group);
     let bounds = target_layer.and_then(|id| outline(&st.doc, id));
     let target_layer = if bounds.is_some() { target_layer } else { None };
     app.move_hover = Some(Hover { doc, revision, at, group, target_layer, bounds });
@@ -79,7 +79,7 @@ fn bounds(doc: &Document, l: &Layer) -> Rect {
     if let Some(a) = l.artboard() {
         return a.rect;
     }
-    let content = |s| photocraft_compose::bounds::content_bounds(s);
+    let content = |s| sary_compose::bounds::content_bounds(s);
     match &l.content {
         LayerContent::Group(_) | LayerContent::Adjustment(_) => Rect::EMPTY,
         // A fill layer covers the canvas; its mask limits it.
@@ -90,7 +90,7 @@ fn bounds(doc: &Document, l: &Layer) -> Rect {
 
 /// The document-space bounds to outline: either a layer hovered in the Layers panel, or what a
 /// click at `at` would pick with the Move tool.
-pub(crate) fn active_outline(app: &mut PhotocraftApp, at: Option<[f64; 2]>, command: bool, pressed: bool) -> Option<Rect> {
+pub(crate) fn active_outline(app: &mut SaryApp, at: Option<[f64; 2]>, command: bool, pressed: bool) -> Option<Rect> {
     if !app.session.prefs().tools.show_highlight_on_rollover {
         app.canvas_hover_layer = None;
         return None;
@@ -113,7 +113,7 @@ pub(crate) fn active_outline(app: &mut PhotocraftApp, at: Option<[f64; 2]>, comm
 }
 
 /// Draws the highlight on the active document's canvas, in the theme's accent colour.
-pub(crate) fn draw(app: &mut PhotocraftApp, painter: &egui::Painter, xf: &ViewXform, idx: usize, hover: Option<Pos2>) {
+pub(crate) fn draw(app: &mut SaryApp, painter: &egui::Painter, xf: &ViewXform, idx: usize, hover: Option<Pos2>) {
     if app.session.active_index() != Some(idx) {
         return;
     }
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn rollover_outlines_the_layer_a_click_would_pick() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn layer_panel_hover_outlines_layer_on_canvas() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session
@@ -196,7 +196,7 @@ mod tests {
 
     #[test]
     fn canvas_hover_sets_canvas_hover_layer() {
-        let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
         app.session.execute("file.new", json!({"width": 64, "height": 64})).unwrap();
         app.session.execute("layer.new.layer", json!({})).unwrap();
         app.session

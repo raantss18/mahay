@@ -9,7 +9,7 @@
 # Clean-room: every entry was written from the plain meaning of the English label using ordinary
 # Italian computing vocabulary (livello, pennello, selezione, quadro ...). No proprietary localisation
 # resource, string table or product UI was consulted or copied; add entries the same way.
-# Product and technology names (PhotoCraft, ArtCraft, OpenType, CMYK, Lab ...) stay in Latin
+# Product and technology names (Sary, Mahay, OpenType, CMYK, Lab ...) stay in Latin
 # letters; the trailing … of dialog commands is kept.
 
 # Channel Options and New Spot Channel (#3761)
@@ -787,11 +787,11 @@
 	Timeline	Timeline
 	Tool Presets	Predefiniti strumento
 	Tools	Strumenti
-	About PhotoCraft	Informazioni su PhotoCraft
-	PhotoCraft Website	Sito web PhotoCraft
-	PhotoCraft on GitHub	PhotoCraft su GitHub
-	ArtCraft Website	Sito web ArtCraft
-	Join the ArtCraft Discord…	Unisciti al Discord di ArtCraft…
+	About Sary	Informazioni su Sary
+	Sary Website	Sito web Sary
+	Sary on GitHub	Sary su GitHub
+	Mahay Website	Sito web Mahay
+	Join the Mahay Discord…	Unisciti al Discord di Mahay…
 	Report an Issue…	Segnala un problema…
 	WIA Support…	Supporto WIA…
 	Apply	Applica
@@ -844,7 +844,7 @@
 	All Caps	Tutto maiuscolo
 	All Slices	Tutte le sezioni
 	All User Slices	Tutte le sezioni utente
-	All shortcuts reset to PhotoCraft defaults.	Tutte le scorciatoie ripristinate ai predefiniti di PhotoCraft.
+	All shortcuts reset to Sary defaults.	Tutte le scorciatoie ripristinate ai predefiniti di Sary.
 	Alt	Alt
 	Always use pressure for opacity	Usa sempre pressione per opacità
 	Always use pressure for size	Usa sempre pressione per dimensione
@@ -1096,8 +1096,8 @@
 	Drop an image or PSD anywhere to open it.	Trascina un'immagine o PSD ovunque per aprirlo.
 	Native file drag-and-drop is unavailable	Il drag-and-drop nativo file non è disponibile su Wayland
 	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or copy the image in your file manager and paste it with {paste}.	Il drag-and-drop nativo non è ancora supportato su Wayland. Usa File › Apri, oppure copia l'immagine nel file manager e incollala con {paste}.
-	To drop files, start PhotoCraft under XWayland: `{command}`	Per trascinare file, avvia PhotoCraft sotto XWayland: `{command}`
-	Or set Preferences › Performance › Linux display server to X11: PhotoCraft then always starts under XWayland.	Oppure imposta Preferenze › Prestazioni › Server grafico Linux su X11: PhotoCraft partirà sempre sotto XWayland.
+	To drop files, start Sary under XWayland: `{command}`	Per trascinare file, avvia Sary sotto XWayland: `{command}`
+	Or set Preferences › Performance › Linux display server to X11: Sary then always starts under XWayland.	Oppure imposta Preferenze › Prestazioni › Server grafico Linux su X11: Sary partirà sempre sotto XWayland.
 	Edit › Paste	Modifica › Incolla
 	Duplicate Layers…	Duplica livelli…
 	Duplicate style	Duplica stile
@@ -1345,9 +1345,9 @@
 	Perspective Warp is not active	Altera prospettiva non attiva
 	Perspective Warp: draw planes along the image's perspective, then switch to Warp	Altera prospettiva: disegna piani lungo la prospettiva immagine, poi passa ad Altera
 	Photo Filter	Filtro fotografico
-	PhotoCraft	PhotoCraft
-	PhotoCraft Manages Colors	PhotoCraft gestisce i colori
-	PhotoCraft — an open-source, native image editor written in Rust.	PhotoCraft — editor immagini nativo open-source scritto in Rust.
+	Sary	Sary
+	Sary Manages Colors	Sary gestisce i colori
+	Sary — an open-source, native image editor written in Rust.	Sary — editor immagini nativo open-source scritto in Rust.
 	Pin Depth:	Profondità pin:
 	Pixel Length:	Lunghezza pixel:
 	Pixels/Centimeter	Pixel/Centimetro
@@ -1423,11 +1423,11 @@
 	Import Shortcuts…	Importa scorciatoie…
 	Load a keyboard shortcut set saved as .kys	Carica un set di scorciatoie da tastiera salvato come .kys
 	Imported {n} shortcuts from {file}. Click OK to keep them.	Importate {n} scorciatoie da {file}. Fai clic su OK per conservarle.
-	{n} commands are not in PhotoCraft.	{n} comandi non esistono in PhotoCraft.
+	{n} commands are not in Sary.	{n} comandi non esistono in Sary.
 	Keyboard shortcuts imported	Scorciatoie da tastiera importate
 	Your keyboard shortcut set {set} is in use here: {n} shortcuts differ from the defaults. Edit › Keyboard Shortcuts shows them; Reset All to Defaults undoes this.	Il tuo set di scorciatoie da tastiera {set} è in uso qui: {n} scorciatoie differiscono dai predefiniti. Modifica › Scorciatoie da tastiera le mostra; Ripristina tutto ai predefiniti annulla l'importazione.
 	Import keyboard shortcuts?	Importare le scorciatoie da tastiera?
-	PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?	PhotoCraft ha trovato su questo computer il tuo set di scorciatoie da tastiera {set} di un altro editor di immagini: {n} delle sue scorciatoie differiscono da quelle di PhotoCraft. Importarlo?
+	Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?	Sary ha trovato su questo computer il tuo set di scorciatoie da tastiera {set} di un altro editor di immagini: {n} delle sue scorciatoie differiscono da quelle di Sary. Importarlo?
 	Edit › Keyboard Shortcuts › Reset All to Defaults undoes an import.	Modifica › Scorciatoie da tastiera › Ripristina tutto ai predefiniti annulla un'importazione.
 	Don't Import	Non importare
 	The keyboard shortcut set was not imported: {error}	Il set di scorciatoie da tastiera non è stato importato: {error}
@@ -1617,7 +1617,7 @@
 	Apple Watch 45mm	Apple Watch 45mm
 	Aqua	Acqua
 	Art & Illustration	Arte e illustrazione
-	ArtCraft	ArtCraft
+	Mahay	Mahay
 	Background Eraser Tool	Strumento Gomma per sfondo
 	Bevel & Emboss	Smusso e rilievo
 	Blend Mode	Metodo di fusione
@@ -1653,7 +1653,7 @@
 	Current Tool	Strumento corrente
 	Custom Shape Tool	Strumento Forma personale
 	Cyans	Ciano
-	Default PhotoCraft Size	Dimensione predefinita PhotoCraft
+	Default Sary Size	Dimensione predefinita Sary
 	Delete Workspace	Elimina area di lavoro
 	Diamond	Diamante
 	Dimensions:	Dimensioni:
@@ -1764,7 +1764,7 @@
 	Pen Tool	Strumento Penna
 	Convert Point Tool	Strumento Converti punto
 	Photo	Foto
-	PhotoCraft website	Sito web PhotoCraft
+	Sary website	Sito web Sary
 	Picas	Pica
 	Pillow Emboss	Rilievo cuscino
 	Pixel Replacement	Sostituzione pixel
@@ -2104,7 +2104,7 @@
 	System Info	Info sistema
 	More panels	Altri pannelli
 	More documents	Altri documenti
-	These settings aren't available in PhotoCraft yet.	Queste impostazioni non sono ancora disponibili in PhotoCraft.
+	These settings aren't available in Sary yet.	Queste impostazioni non sono ancora disponibili in Sary.
 	Graphics	Grafica
 	Reset GPU Backend	Reimposta backend GPU
 	Applies at next launch.	Si applica al prossimo avvio.
@@ -2317,7 +2317,7 @@
 	Automatic uses GPU acceleration when available and falls back to CPU rendering on errors.	Automatico usa accelerazione GPU quando disponibile e ripiega su CPU in caso di errori.
 	Switched to CPU rendering	Passato a rendering CPU
 	GPU acceleration could not continue. Your documents are unchanged.	Accelerazione GPU non ha potuto continuare. I documenti sono invariati.
-	PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter.	PhotoCraft sta componendo immagini su CPU. La finestra può ancora usare adattatore grafico.
+	Sary is using the CPU image compositor. The window may still use your graphics adapter.	Sary sta componendo immagini su CPU. La finestra può ancora usare adattatore grafico.
 	Retry GPU requires a restart. Save your work first.	Riprovare GPU richiede riavvio. Salva prima il lavoro.
 	Keep Using CPU	Continua su CPU
 	Retry GPU	Riprova GPU
@@ -2392,7 +2392,7 @@ cameraRaw	Amount	Quantità
 	Use tablet pressure to change pen width	Usa pressione tavoletta per cambiare la larghezza della penna
 
 
-# About ▸ Contributors / Models (credits, craftrules standards/contributors.md)
+# About ▸ Contributors / Models (credits, mahay-rules standards/contributors.md)
 	About	Informazioni
 	Contributors	Collaboratori
 	Models	Modelli
@@ -2557,7 +2557,7 @@ fontWeight	Italic	Corsivo
 	Color to Alpha…	Colore ad alfa…
 	Transparency Threshold	Soglia di trasparenza
 	Opacity Threshold	Soglia di opacità
-	PhotoCraft — Screen Color Picker	PhotoCraft — Selettore colore schermo
+	Sary — Screen Color Picker	Sary — Selettore colore schermo
 
 	Rasterize svg groups deeper than	Rasterizza i gruppi SVG oltre questa profondità
 	0 turns this threshold off; SVG groups nested deeper than 100 levels are always rasterized.	0 disattiva questa soglia; i gruppi SVG annidati oltre 100 livelli vengono sempre rasterizzati.
@@ -3329,7 +3329,7 @@ layerLabel	No Color	Nessun colore
 	Restart Required	Riavvio necessario
 	Restart	Riavvia
 	Quit	Esci
-	Quit PhotoCraft	Esci da PhotoCraft
+	Quit Sary	Esci da Sary
 	Close Window	Chiudi finestra
 	New Window	Nuova finestra
 	Open Image	Apri immagine
@@ -3533,7 +3533,7 @@ layerLabel	No Color	Nessun colore
 	Custom Pixel Aspect Ratio	Proporzioni pixel personalizzate
 	32-bit Preview Options	Opzioni anteprima 32 bit
 	New Guide	Nuova guida
-	Join the ArtCraft Discord	Unisciti al Discord di ArtCraft
+	Join the Mahay Discord	Unisciti al Discord di Mahay
 	Report an Issue	Segnala un problema
 	Load Files into Stack	Carica file in pila
 	Statistics	Statistiche
@@ -3833,7 +3833,7 @@ layerLabel	No Color	Nessun colore
 	Mezzotint	Mezzatinta
 	Mosaic	Mosaico
 	Motion Blur	Movimento sfocato
-	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or run PhotoCraft under XWayland with `WAYLAND_DISPLAY= photocraft`.	Il drag-and-drop nativo dei file non è ancora supportato su Wayland. Usa File › Apri, oppure avvia PhotoCraft sotto XWayland con `WAYLAND_DISPLAY= photocraft`.
+	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or run Sary under XWayland with `WAYLAND_DISPLAY= sary`.	Il drag-and-drop nativo dei file non è ancora supportato su Wayland. Usa File › Apri, oppure avvia Sary sotto XWayland con `WAYLAND_DISPLAY= sary`.
 	Neon Glow	Bagliore neon
 	New Guide Layout	Nuovo layout guide
 	New Video Layer from File	Nuovo livello video da file
@@ -4014,9 +4014,9 @@ layerLabel	No Color	Nessun colore
 	Saved {path}; image assets: {n} in {dir}	Salvato: {path}; risorse immagine: {n} in {dir}
 	{message} (notes: {n}; {warning})	{message} (note: {n}; {warning})
 	Preferences can't be saved	Impossibile salvare le preferenze
-	PhotoCraft keeps retrying; until a save succeeds, preference changes are lost when it closes.	PhotoCraft continua a riprovare; finché un salvataggio non riesce, le modifiche alle preferenze andranno perse alla chiusura.
+	Sary keeps retrying; until a save succeeds, preference changes are lost when it closes.	Sary continua a riprovare; finché un salvataggio non riesce, le modifiche alle preferenze andranno perse alla chiusura.
 	GPU retry scheduled	Nuovo tentativo GPU programmato
-	Save your work and restart PhotoCraft to retry GPU acceleration. CPU rendering remains active for this session.	Salva il lavoro e riavvia PhotoCraft per riprovare l'accelerazione GPU. Per questa sessione resta attivo il rendering su CPU.
+	Save your work and restart Sary to retry GPU acceleration. CPU rendering remains active for this session.	Salva il lavoro e riavvia Sary per riprovare l'accelerazione GPU. Per questa sessione resta attivo il rendering su CPU.
 	GPU device was lost; using the CPU renderer.	Dispositivo GPU perso; uso il rendering su CPU.
 	GPU error; using the CPU renderer.	Errore GPU; uso il rendering su CPU.
 	Couldn't open {name}: {error}	Impossibile aprire {name}: {error}
@@ -4086,7 +4086,7 @@ navigator	Zoom	Zoom
 	on	attivo
 	off	disattivo
 	This adjustment ({key}) is kept as imported and can't be edited yet.	Questa regolazione ({key}) resta come è stata importata e non si può ancora modificare.
-	Join the ArtCraft Discord ({url})	Unisciti al Discord di ArtCraft ({url})
+	Join the Mahay Discord ({url})	Unisciti al Discord di Mahay ({url})
 	{index} of {total}	{index} di {total}
 	{shortcut} assigned.	{shortcut} assegnata.
 	{shortcut} is already in use by {commands} and will be removed from it when you click OK.	{shortcut} è già usata da {commands} e verrà rimossa quando fai clic su OK.
@@ -4106,7 +4106,7 @@ navigator	Zoom	Zoom
 	{name} (Photoshop)	{name} (Photoshop)
 	{message} ({note})	{message} ({note})
 @plural	Loaded {n} action from {file}|Loaded {n} actions from {file}	Caricata {n} azione da {file}|Caricate {n} azioni da {file}
-@plural	{n} step has no PhotoCraft equivalent yet|{n} steps have no PhotoCraft equivalent yet	{n} passaggio non ha ancora un equivalente in PhotoCraft|{n} passaggi non hanno ancora un equivalente in PhotoCraft
+@plural	{n} step has no Sary equivalent yet|{n} steps have no Sary equivalent yet	{n} passaggio non ha ancora un equivalente in Sary|{n} passaggi non hanno ancora un equivalente in Sary
 @plural	Saved {n} action to {file}|Saved {n} actions to {file}	Salvata {n} azione in {file}|Salvate {n} azioni in {file}
 @plural	{n} step with no Photoshop equivalent left out|{n} steps with no Photoshop equivalent left out	Omesso {n} passaggio senza equivalente in Photoshop|Omessi {n} passaggi senza equivalente in Photoshop
 
@@ -4313,7 +4313,7 @@ shape	Appearance	Aspetto
 	Clear Selected Guides	Cancella guide selezionate
 	Delete this set	Elimina questo set
 	New Set…	Nuovo set…
-	PhotoCraft Defaults	Predefiniti di PhotoCraft
+	Sary Defaults	Predefiniti di Sary
 	Save a list of these shortcuts as a web page	Salva un elenco di queste scorciatoie come pagina web
 	Save the changes to this set	Salva le modifiche in questo set
 	Save these shortcuts as a .kys file	Salva queste scorciatoie come file .kys

@@ -4,7 +4,7 @@
 # Integer plural forms: one|few|many (1, 21; 2–4, 22–24; 0, 5–19).
 # Rule: https://www.unicode.org/cldr/charts/48/supplemental/language_plural_rules.html#uk
 # Preserve {name} placeholders, shortcut names and trailing dialog ellipses.
-# Original translations from the meaning of PhotoCraft's English source keys.
+# Original translations from the meaning of Sary's English source keys.
 # No proprietary translation resources were used.
 # Licensed MIT OR Apache-2.0. See LICENSE-translations.txt and ATTRIBUTION.md.
 
@@ -506,12 +506,12 @@
 	Hide All	Приховати все
 
 # Help
-	About PhotoCraft	Про PhotoCraft
-	PhotoCraft Website	Вебсайт PhotoCraft
-	PhotoCraft on GitHub	PhotoCraft на GitHub
+	About Sary	Про Sary
+	Sary Website	Вебсайт Sary
+	Sary on GitHub	Sary на GitHub
 	Report an Issue…	Повідомити про проблему…
-	ArtCraft Website	Вебсайт ArtCraft
-	Join the ArtCraft Discord…	Приєднатися до Discord ArtCraft…
+	Mahay Website	Вебсайт Mahay
+	Join the Mahay Discord…	Приєднатися до Discord Mahay…
 	System Info…	Інформація про систему…
 
 # Tools and options bar
@@ -589,11 +589,11 @@
 	Import Shortcuts…	Імпортувати сполучення клавіш…
 	Load a keyboard shortcut set saved as .kys	Завантажити набір сполучень клавіш, збережений як .kys
 	Imported {n} shortcuts from {file}. Click OK to keep them.	Імпортовано сполучень клавіш: {n} із {file}. Натисніть OK, щоб зберегти їх.
-	{n} commands are not in PhotoCraft.	Команд, яких немає в PhotoCraft: {n}.
+	{n} commands are not in Sary.	Команд, яких немає в Sary: {n}.
 	Keyboard shortcuts imported	Сполучення клавіш імпортовано
 	Your keyboard shortcut set {set} is in use here: {n} shortcuts differ from the defaults. Edit › Keyboard Shortcuts shows them; Reset All to Defaults undoes this.	Тут використовується ваш набір сполучень клавіш {set}: сполучень, що відрізняються від стандартних: {n}. Їх показує Редагування › Сполучення клавіш; «Скинути все до стандартних» скасовує імпорт.
 	Import keyboard shortcuts?	Імпортувати сполучення клавіш?
-	PhotoCraft found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from PhotoCraft's. Import it?	PhotoCraft знайшов на цьому комп'ютері ваш набір сполучень клавіш {set} з іншого графічного редактора: сполучень, що відрізняються від PhotoCraft: {n}. Імпортувати його?
+	Sary found your keyboard shortcut set {set} from another image editor on this computer: {n} of its shortcuts differ from Sary's. Import it?	Sary знайшов на цьому комп'ютері ваш набір сполучень клавіш {set} з іншого графічного редактора: сполучень, що відрізняються від Sary: {n}. Імпортувати його?
 	Edit › Keyboard Shortcuts › Reset All to Defaults undoes an import.	Редагування › Сполучення клавіш › «Скинути все до стандартних» скасовує імпорт.
 	Don't Import	Не імпортувати
 	The keyboard shortcut set was not imported: {error}	Набір сполучень клавіш не імпортовано: {error}
@@ -896,7 +896,7 @@
 	Embed Color Profile	Вбудувати колірний профіль
 	Assign Profile…	Призначити профіль…
 	Convert to Profile…	Перетворити на профіль…
-	PhotoCraft Manages Colors	PhotoCraft керує кольорами
+	Sary Manages Colors	Sary керує кольорами
 	Printer Manages Colors	Принтер керує кольорами
 	(print to the printer)	(друк на принтері)
 	Absolute Colorimetric	Абсолютний колориметричний
@@ -1489,15 +1489,15 @@
 	Use File › Open, or paste a copied image with {paste}.	Скористайтеся меню Файл › Відкрити або вставте скопійоване зображення за допомогою {paste}.
 	Native file drag-and-drop is unavailable	Нативне перетягування файлів недоступне
 	Native file drag-and-drop is not supported on Wayland yet. Use File › Open, or copy the image in your file manager and paste it with {paste}.	Нативне перетягування файлів у Wayland ще не підтримується. Скористайтеся меню Файл › Відкрити або скопіюйте зображення у файловому менеджері та вставте його за допомогою {paste}.
-	To drop files, start PhotoCraft under XWayland: `{command}`	Щоб перетягувати файли, запустіть PhotoCraft під XWayland: `{command}`
-	Or set Preferences › Performance › Linux display server to X11: PhotoCraft then always starts under XWayland.	Або виберіть X11 у Налаштування › Продуктивність › Сервер відображення Linux: PhotoCraft завжди запускатиметься під XWayland.
+	To drop files, start Sary under XWayland: `{command}`	Щоб перетягувати файли, запустіть Sary під XWayland: `{command}`
+	Or set Preferences › Performance › Linux display server to X11: Sary then always starts under XWayland.	Або виберіть X11 у Налаштування › Продуктивність › Сервер відображення Linux: Sary завжди запускатиметься під XWayland.
 	Edit › Paste	Редагування › Вставити
 	Photo	Фото
 	Print	Друк
 	Art & Illustration	Мистецтво та ілюстрація
 	Mobile	Мобільні пристрої
 	Film & Video	Фільм і відео
-	Default PhotoCraft Size	Типовий розмір PhotoCraft
+	Default Sary Size	Типовий розмір Sary
 	Clipboard	Буфер обміну
 	Photo (2 × 3 in)	Фото (2 × 3 дюйми)
 	Photo (4 × 6 in)	Фото (4 × 6 дюймів)
@@ -1649,8 +1649,8 @@
 	Reverse	Зворотний
 	Align with layer	Вирівняти за шаром
 	Join us on Discord	Приєднуйтеся до нас у Discord
-	PhotoCraft website	Вебсайт PhotoCraft
-	ArtCraft	ArtCraft
+	Sary website	Вебсайт Sary
+	Mahay	Mahay
 	GitHub	GitHub
 	No character style	Без стилю символів
 	No author	Автор відсутній
@@ -1675,9 +1675,9 @@
 	Don't Save	Не зберігати
 	No	Ні
 	Yes	Так
-	These settings aren't available in PhotoCraft yet.	Ці параметри ще недоступні у PhotoCraft.
+	These settings aren't available in Sary yet.	Ці параметри ще недоступні у Sary.
 	Shortcut removed.	Клавіатурне скорочення вилучено.
-	All shortcuts reset to PhotoCraft defaults.	Усі клавіатурні скорочення скинуто до типових значень PhotoCraft.
+	All shortcuts reset to Sary defaults.	Усі клавіатурні скорочення скинуто до типових значень Sary.
 	Add Shortcut	Додати клавіатурне скорочення
 	Delete Shortcut	Видалити клавіатурне скорочення
 	Press keys…	Натисніть клавіші…
@@ -2165,8 +2165,8 @@
 	Output:	Вихід:
 	Paint Overlay	Малювати накладання
 	Pattern Size	Розмір візерунка
-	PhotoCraft	PhotoCraft
-	PhotoCraft — an open-source, native image editor written in Rust.	PhotoCraft — нативний редактор зображень із відкритим кодом, написаний на Rust.
+	Sary	Sary
+	Sary — an open-source, native image editor written in Rust.	Sary — нативний редактор зображень із відкритим кодом, написаний на Rust.
 	Position and Size	Положення та розмір
 	Preserve Details	Зберігати деталі
 	Preserve Luminosity	Зберігати світність
@@ -2479,7 +2479,7 @@
 	Automatic uses GPU acceleration when available and falls back to CPU rendering on errors.	Автоматичний режим використовує прискорення GPU, коли воно доступне, та переходить на рендеринг CPU в разі помилок.
 	Switched to CPU rendering	Перехід на рендеринг CPU
 	GPU acceleration could not continue. Your documents are unchanged.	Прискорення GPU не може продовжувати роботу. Ваші документи не змінено.
-	PhotoCraft is using the CPU image compositor. The window may still use your graphics adapter.	PhotoCraft використовує компонувальник зображень CPU. Вікно може й далі використовувати ваш графічний адаптер.
+	Sary is using the CPU image compositor. The window may still use your graphics adapter.	Sary використовує компонувальник зображень CPU. Вікно може й далі використовувати ваш графічний адаптер.
 	Retry GPU requires a restart. Save your work first.	Повторна спроба використати GPU потребує перезапуску. Спочатку збережіть роботу.
 	Keep Using CPU	Продовжити з CPU
 	Retry GPU	Повторити спробу з GPU
@@ -2560,7 +2560,7 @@ cameraRaw	Roughness	Шорсткість
 	Use tablet pressure to change pen width	Використовувати натиск планшета для зміни ширини пера
 
 
-# About ▸ Contributors / Models (credits, craftrules standards/contributors.md)
+# About ▸ Contributors / Models (credits, mahay-rules standards/contributors.md)
 	About	Про програму
 	Contributors	Учасники
 	Models	Моделі
@@ -3332,7 +3332,7 @@ cameraRaw	Masking	Маскування
 	Custom Pixel Aspect Ratio	Довільне співвідношення сторін пікселя
 	32-bit Preview Options	Параметри 32-бітного перегляду
 	New Guide	Нова напрямна
-	Join the ArtCraft Discord	Приєднатися до Discord ArtCraft
+	Join the Mahay Discord	Приєднатися до Discord Mahay
 	Report an Issue	Повідомити про проблему
 	WIA Support	Підтримка WIA
 	Load Files into Stack	Завантажити файли у стос
@@ -3721,7 +3721,7 @@ cameraData	Lens	Об'єктив
 	Click: smooth point · Double-click: corner · Drag a point: move · Click first point: close · {key} finish	Клацання: плавна точка · Подвійне клацання: кут · Перетягування точки: перемістити · Клацання першої точки: замкнути · {key}: завершити
 	Search settings…	Пошук налаштувань…
 	No matching settings	Немає відповідних налаштувань
-	PhotoCraft — Screen Color Picker	PhotoCraft — Піпетка кольору екрана
+	Sary — Screen Color Picker	Sary — Піпетка кольору екрана
 # Edit › Content-Aware Fill workspace
 	Sampling Brush Tool	Пензель області вибірки
 	Sampling Area Overlay	Накладання області вибірки
@@ -3841,7 +3841,7 @@ curves	Smooth	Згладити
 	{name} (Photoshop)	{name} (Photoshop)
 	{message} ({note})	{message} ({note})
 @plural	Loaded {n} action from {file}|Loaded {n} actions from {file}	Завантажено {n} операцію з {file}|Завантажено {n} операції з {file}|Завантажено {n} операцій з {file}
-@plural	{n} step has no PhotoCraft equivalent yet|{n} steps have no PhotoCraft equivalent yet	{n} крок ще не має відповідника в PhotoCraft|{n} кроки ще не мають відповідника в PhotoCraft|{n} кроків ще не мають відповідника в PhotoCraft
+@plural	{n} step has no Sary equivalent yet|{n} steps have no Sary equivalent yet	{n} крок ще не має відповідника в Sary|{n} кроки ще не мають відповідника в Sary|{n} кроків ще не мають відповідника в Sary
 @plural	Saved {n} action to {file}|Saved {n} actions to {file}	Збережено {n} операцію до {file}|Збережено {n} операції до {file}|Збережено {n} операцій до {file}
 @plural	{n} step with no Photoshop equivalent left out|{n} steps with no Photoshop equivalent left out	Пропущено {n} крок без відповідника в Photoshop|Пропущено {n} кроки без відповідника в Photoshop|Пропущено {n} кроків без відповідника в Photoshop
 
@@ -3891,7 +3891,7 @@ curves	Smooth	Згладити
 	Clear Selected Guides	Очистити вибрані напрямні
 	Delete this set	Видалити цей набір
 	New Set…	Новий набір…
-	PhotoCraft Defaults	Стандартні PhotoCraft
+	Sary Defaults	Стандартні Sary
 	Save a list of these shortcuts as a web page	Зберегти список цих клавіатурних скорочень як вебсторінку
 	Save the changes to this set	Зберегти зміни в цьому наборі
 	Save these shortcuts as a .kys file	Зберегти ці клавіатурні скорочення як файл .kys

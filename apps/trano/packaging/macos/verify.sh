@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Check the macOS release artifact exactly as users download it:
 #
-#   $DIST/artcraft-launcher-<version>-macos-<arch>.dmg   signed, notarized, ticket stapled; the
+#   $DIST/trano-<version>-macos-<arch>.dmg   signed, notarized, ticket stapled; the
 #                                                       app inside is Developer ID signed with the
 #                                                       hardened runtime and carries every arch
 #
@@ -16,8 +16,8 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 
-PKG=artcraft-launcher
-APP_NAME="ArtCraft Launcher"
+PKG=trano
+APP_NAME="Mahay Trano"
 
 ARCH=universal
 while [ $# -gt 0 ]; do

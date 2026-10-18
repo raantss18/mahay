@@ -8,7 +8,7 @@
 //! edge's own gradient direction, give or take a few degrees); pair two near-horizontal with two near-vertical lines; keep
 //! the quadrilaterals whose four sides lie on edges, and choose the largest.
 
-use pdfcraft_geom::perspective::{Point, order_quad};
+use taratasy_geom::perspective::{Point, order_quad};
 
 /// The working size: the long side of the shrunken picture, in pixels.
 const WORK: usize = 400;

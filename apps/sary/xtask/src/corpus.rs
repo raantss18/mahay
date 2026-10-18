@@ -8,18 +8,18 @@ use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::corpus_pins::{
-    self, AG_PSD_COMMIT, HEIC_RS_COMMIT, OPENEXR_COMMIT, PHOTOCRAFT_CORPUS_COMMIT, PILLOW_HEIF_COMMIT, PNGSUITE_SHA256, PNGSUITE_URL, PSD_TOOLS_COMMIT,
+    self, AG_PSD_COMMIT, HEIC_RS_COMMIT, OPENEXR_COMMIT, SARY_CORPUS_COMMIT, PILLOW_HEIF_COMMIT, PNGSUITE_SHA256, PNGSUITE_URL, PSD_TOOLS_COMMIT,
 };
 use crate::pinned::{PinnedCorpus, USER_AGENT};
 use crate::{cargo, root, run};
 
 /// Crates with corpus tests (behind their `corpus` feature).
-pub const CORPUS_CRATES: &[&str] = &["photocraft-psd", "photocraft-codecs", "photocraft-io", "photocraft-engine"];
+pub const CORPUS_CRATES: &[&str] = &["sary-psd", "sary-codecs", "sary-io", "sary-engine"];
 /// Opt-in corpus crates: fetched and tested only with `test-corpus --pixls`.
-pub const PIXLS_CRATES: &[&str] = &["photocraft-raw"];
+pub const PIXLS_CRATES: &[&str] = &["sary-raw"];
 
 /// Corpus crates with a `heif` feature: test-corpus enables it so the HEIF corpus tests run.
-const HEIF_CRATES: &[&str] = &["photocraft-codecs", "photocraft-io"];
+const HEIF_CRATES: &[&str] = &["sary-codecs", "sary-io"];
 
 /// Paths whose changes make `test-corpus --changed` run (the file-format and rendering crates).
 const CRITICAL: &[&str] = &[
@@ -83,19 +83,19 @@ pub fn cmd(args: &[&str]) -> Result<(), String> {
     Ok(())
 }
 
-/// The authoring clone of photocraft-corpus: `$PHOTOCRAFT_CORPUS_REPO`, else `../photocraft-corpus`.
+/// The authoring clone of sary-corpus: `$SARY_CORPUS_REPO`, else `../sary-corpus`.
 fn local_clone() -> Result<PathBuf, String> {
-    if let Some(p) = std::env::var_os("PHOTOCRAFT_CORPUS_REPO").filter(|v| !v.is_empty()) {
+    if let Some(p) = std::env::var_os("SARY_CORPUS_REPO").filter(|v| !v.is_empty()) {
         return Ok(PathBuf::from(p));
     }
-    let sibling = root().parent().map(|p| p.join("photocraft-corpus"));
+    let sibling = root().parent().map(|p| p.join("sary-corpus"));
     sibling.filter(|s| s.join("photoshop").is_dir()).ok_or_else(|| {
-        "no local photocraft-corpus clone: expected ../photocraft-corpus next to this checkout, or set PHOTOCRAFT_CORPUS_REPO=<path>".to_string()
+        "no local sary-corpus clone: expected ../sary-corpus next to this checkout, or set SARY_CORPUS_REPO=<path>".to_string()
     })
 }
 
 /// Fetches every corpus that is missing or stale (verified ones are left alone). With `local`,
-/// `corpus/photoshop` is copied from the authoring clone of photocraft-corpus instead. With
+/// `corpus/photoshop` is copied from the authoring clone of sary-corpus instead. With
 /// `update`, every pinned corpus is refetched and its manifest rewritten (`--update-manifest`).
 pub fn fetch_all(local: bool, update: bool) -> Result<(), String> {
     fetch_pngsuite()?;
@@ -133,9 +133,9 @@ fn list() {
   cargo xtask test-corpus       fetch, then run every corpus test (--release --features corpus)
 
   corpus/photoshop/  [{}] our Photoshop-authored oracles (MIT OR Apache-2.0), from
-                     https://github.com/storytold/photocraft-corpus at {PHOTOCRAFT_CORPUS_COMMIT}
+                     https://github.com/raantss18/mahay-corpus at {SARY_CORPUS_COMMIT}
                      manifest xtask/photoshop-corpus.sha256. Fetch: --photoshop
-                     (--photoshop --local copies from ../photocraft-corpus or $PHOTOCRAFT_CORPUS_REPO)
+                     (--photoshop --local copies from ../sary-corpus or $SARY_CORPUS_REPO)
   corpus/psd/        [{}] 170 small psd-tools + ag-psd files (MIT), psd-tools@{} and
                      ag-psd@{}, manifest xtask/psd-corpus.sha256. Fetch: --psd
   corpus/psd-tools/  [{}] the full psd-tools test set (MIT) at {PSD_TOOLS_COMMIT}
@@ -407,7 +407,7 @@ pub fn test_cmd(args: &[&str]) -> Result<(), String> {
         match *a {
             "-p" | "--package" => {
                 let name = it.next().ok_or("-p needs a crate name")?;
-                let full = if name.starts_with("photocraft-") { (*name).to_string() } else { format!("photocraft-{name}") };
+                let full = if name.starts_with("sary-") { (*name).to_string() } else { format!("sary-{name}") };
                 if !CORPUS_CRATES.contains(&full.as_str()) && !PIXLS_CRATES.contains(&full.as_str()) {
                     return Err(format!("{full} has no corpus tests (crates: {} or the opt-in {})", CORPUS_CRATES.join(", "), PIXLS_CRATES.join(", ")));
                 }
@@ -423,8 +423,8 @@ pub fn test_cmd(args: &[&str]) -> Result<(), String> {
     // `--pixls` opts in (and fetches), and a raw change under --changed does too: the raw
     // corpus tests are not part of the default set until a maintainer decides otherwise.
     let wants_pixls = ours.contains(&"--pixls") || crates.iter().any(|c| PIXLS_CRATES.contains(&c.as_str())) || raw_changed;
-    if wants_pixls && !crates.iter().any(|c| c == "photocraft-raw") {
-        crates.push("photocraft-raw".to_string());
+    if wants_pixls && !crates.iter().any(|c| c == "sary-raw") {
+        crates.push("sary-raw".to_string());
     }
     if wants_pixls {
         crate::pinned::fetch_pixls(false)?;
@@ -481,7 +481,7 @@ mod tests {
     impl Fixture {
         fn new() -> Self {
             let id = PNGSUITE_STAGE_ID.fetch_add(1, Ordering::Relaxed);
-            let path = std::env::temp_dir().join(format!("photocraft-pngsuite-test-{}-{id}", std::process::id()));
+            let path = std::env::temp_dir().join(format!("sary-pngsuite-test-{}-{id}", std::process::id()));
             std::fs::create_dir(&path).unwrap();
             Self(path)
         }
@@ -711,7 +711,7 @@ mod tests {
     // enables emission; it stays alive so cleanup must kill and reap that particular child.
     #[test]
     fn pngsuite_stream_fixture() {
-        if std::env::var_os("PHOTOCRAFT_PNGSUITE_STREAM_TEST").is_some() {
+        if std::env::var_os("SARY_PNGSUITE_STREAM_TEST").is_some() {
             let mut out = std::io::stdout().lock();
             for _ in 0..256 {
                 let _ = out.write_all(&[0xa5; 8192]);
@@ -723,7 +723,7 @@ mod tests {
     fn stream_child() -> Child {
         Command::new(std::env::current_exe().unwrap())
             .args(["--exact", "corpus::tests::pngsuite_stream_fixture", "--nocapture"])
-            .env("PHOTOCRAFT_PNGSUITE_STREAM_TEST", "1")
+            .env("SARY_PNGSUITE_STREAM_TEST", "1")
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .spawn()
