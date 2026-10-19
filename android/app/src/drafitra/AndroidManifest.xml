@@ -16,6 +16,57 @@
                 <data android:mimeType="application/dxf" />
                 <data android:mimeType="application/x-autocad" />
             </intent-filter>
+            <!-- by extension, generic type: dwg, dxf -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathAdvancedPattern=".*\\.[dD][wW][gG]" />
+                <data android:pathAdvancedPattern=".*\\.[dD][xX][fF]" />
+                <data android:pathPattern=".*\\.dwg" />
+                <data android:pathPattern=".*\\..*\\.dwg" />
+                <data android:pathPattern=".*\\..*\\..*\\.dwg" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.dwg" />
+                <data android:pathPattern=".*\\.DWG" />
+                <data android:pathPattern=".*\\..*\\.DWG" />
+                <data android:pathPattern=".*\\..*\\..*\\.DWG" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.DWG" />
+                <data android:pathPattern=".*\\.dxf" />
+                <data android:pathPattern=".*\\..*\\.dxf" />
+                <data android:pathPattern=".*\\..*\\..*\\.dxf" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.dxf" />
+                <data android:pathPattern=".*\\.DXF" />
+                <data android:pathPattern=".*\\..*\\.DXF" />
+                <data android:pathPattern=".*\\..*\\..*\\.DXF" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.DXF" />
+            </intent-filter>
+            <!-- by extension, no type: dwg, dxf -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:host="*" />
+                <data android:pathAdvancedPattern=".*\\.[dD][wW][gG]" />
+                <data android:pathAdvancedPattern=".*\\.[dD][xX][fF]" />
+                <data android:pathPattern=".*\\.dwg" />
+                <data android:pathPattern=".*\\..*\\.dwg" />
+                <data android:pathPattern=".*\\..*\\..*\\.dwg" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.dwg" />
+                <data android:pathPattern=".*\\.DWG" />
+                <data android:pathPattern=".*\\..*\\.DWG" />
+                <data android:pathPattern=".*\\..*\\..*\\.DWG" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.DWG" />
+                <data android:pathPattern=".*\\.dxf" />
+                <data android:pathPattern=".*\\..*\\.dxf" />
+                <data android:pathPattern=".*\\..*\\..*\\.dxf" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.dxf" />
+                <data android:pathPattern=".*\\.DXF" />
+                <data android:pathPattern=".*\\..*\\.DXF" />
+                <data android:pathPattern=".*\\..*\\..*\\.DXF" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.DXF" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

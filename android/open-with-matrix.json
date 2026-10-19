@@ -1,0 +1,338 @@
+{
+ "drafitra": {
+  "extensions": [
+   "dwg",
+   "dxf"
+  ],
+  "package": "org.mahay.drafitra",
+  "types": [
+   "image/vnd.dxf",
+   "image/vnd.dwg",
+   "application/x-dxf",
+   "application/acad",
+   "application/dxf",
+   "application/x-autocad"
+  ]
+ },
+ "endrika": {
+  "extensions": [
+   "endrika",
+   "jfif",
+   "jpe",
+   "jpeg",
+   "jpg",
+   "png",
+   "svg"
+  ],
+  "package": "org.mahay.endrika",
+  "types": [
+   "application/x-endrika",
+   "image/svg+xml",
+   "image/png",
+   "image/jpeg"
+  ]
+ },
+ "feo": {
+  "extensions": [
+   "aac",
+   "aif",
+   "aiff",
+   "flac",
+   "kar",
+   "m4a",
+   "mid",
+   "midi",
+   "mp3",
+   "mpga",
+   "ogg",
+   "opus",
+   "scraft",
+   "wav"
+  ],
+  "package": "org.mahay.feo",
+  "types": [
+   "application/x-feo-session",
+   "audio/x-wav",
+   "audio/wav",
+   "audio/vnd.wave",
+   "audio/x-aiff",
+   "audio/aiff",
+   "audio/flac",
+   "audio/x-flac",
+   "audio/mpeg",
+   "audio/midi",
+   "audio/x-midi",
+   "audio/*"
+  ]
+ },
+ "hazavana": {
+  "extensions": [
+   "arw",
+   "avif",
+   "cr2",
+   "cr3",
+   "dng",
+   "heic",
+   "heif",
+   "hif",
+   "jfif",
+   "jpe",
+   "jpeg",
+   "jpg",
+   "nef",
+   "orf",
+   "pef",
+   "png",
+   "raf",
+   "rw2",
+   "rwl",
+   "srw",
+   "tif",
+   "tiff",
+   "webp"
+  ],
+  "package": "org.mahay.hazavana",
+  "types": [
+   "image/heic",
+   "image/heif",
+   "image/jpeg",
+   "image/png",
+   "image/tiff",
+   "image/webp",
+   "image/x-adobe-dng",
+   "image/x-sony-arw",
+   "image/x-canon-cr2",
+   "image/x-canon-cr3",
+   "image/x-nikon-nef",
+   "image/x-fuji-raf",
+   "image/x-olympus-orf",
+   "image/x-panasonic-rw2",
+   "image/x-panasonic-rw",
+   "image/x-pentax-pef",
+   "image/*"
+  ]
+ },
+ "hetsika": {
+  "extensions": [
+   "3ga",
+   "3gp",
+   "3gpp",
+   "avi",
+   "divx",
+   "f4v",
+   "lrv",
+   "m2t",
+   "m2ts",
+   "m4v",
+   "mkv",
+   "mov",
+   "mp4",
+   "mpe",
+   "mpeg",
+   "mpg",
+   "mts",
+   "mxf",
+   "qt",
+   "vob",
+   "webm"
+  ],
+  "package": "org.mahay.hetsika",
+  "types": [
+   "application/x-hetsika",
+   "video/mp4",
+   "video/x-m4v",
+   "video/quicktime",
+   "video/x-matroska",
+   "video/webm",
+   "video/vnd.avi",
+   "video/x-msvideo",
+   "application/mxf",
+   "video/mp2t",
+   "video/mpeg",
+   "video/3gpp",
+   "video/*"
+  ]
+ },
+ "pejy": {
+  "extensions": [
+   "idml",
+   "pejy"
+  ],
+  "package": "org.mahay.pejy",
+  "types": [
+   "application/x-pejy",
+   "application/vnd.adobe.indesign-idml-package"
+  ]
+ },
+ "sary": {
+  "extensions": [
+   "avif",
+   "avifs",
+   "bmp",
+   "exr",
+   "gif",
+   "hdr",
+   "ico",
+   "jfif",
+   "jpe",
+   "jpeg",
+   "jpg",
+   "kra",
+   "krz",
+   "ora",
+   "pbm",
+   "pdn",
+   "pgm",
+   "png",
+   "pnm",
+   "ppm",
+   "psb",
+   "psd",
+   "qoi",
+   "sary",
+   "tga",
+   "tif",
+   "tiff",
+   "webp"
+  ],
+  "package": "org.mahay.sary",
+  "types": [
+   "application/x-sary",
+   "image/x-paintnet",
+   "image/openraster",
+   "application/x-krita",
+   "image/vnd.adobe.photoshop",
+   "image/x-psd",
+   "image/x-psb",
+   "image/png",
+   "image/jpeg",
+   "image/tiff",
+   "image/webp",
+   "image/gif",
+   "image/bmp",
+   "image/x-tga",
+   "image/x-icon",
+   "image/vnd.microsoft.icon",
+   "image/x-portable-anymap",
+   "image/x-portable-bitmap",
+   "image/x-portable-graymap",
+   "image/x-portable-pixmap",
+   "image/x-exr",
+   "image/vnd.radiance",
+   "image/avif",
+   "image/qoi",
+   "image/*"
+  ]
+ },
+ "seho": {
+  "extensions": [
+   "odp",
+   "pot",
+   "potx",
+   "pps",
+   "ppsx",
+   "ppt",
+   "pptx",
+   "seho"
+  ],
+  "package": "org.mahay.seho",
+  "types": [
+   "application/x-seho",
+   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+   "application/vnd.openxmlformats-officedocument.presentationml.template",
+   "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+   "application/vnd.ms-powerpoint",
+   "application/vnd.oasis.opendocument.presentation"
+  ]
+ },
+ "soratra": {
+  "extensions": [
+   "cls",
+   "doc",
+   "docm",
+   "docx",
+   "dot",
+   "dotm",
+   "dotx",
+   "dtx",
+   "latex",
+   "ltx",
+   "markdown",
+   "md",
+   "mkd",
+   "odt",
+   "rtf",
+   "sty",
+   "tex",
+   "txt"
+  ],
+  "package": "org.mahay.soratra",
+  "types": [
+   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+   "application/vnd.ms-word.document.macroEnabled.12",
+   "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+   "application/vnd.ms-word.template.macroEnabled.12",
+   "application/msword",
+   "application/msword-template",
+   "application/vnd.oasis.opendocument.text",
+   "application/rtf",
+   "text/rtf",
+   "text/markdown",
+   "text/x-tex",
+   "text/html",
+   "text/plain"
+  ]
+ },
+ "tabilao": {
+  "extensions": [
+   "csv",
+   "ods",
+   "tsv",
+   "xls",
+   "xlsb",
+   "xlsm",
+   "xlsx",
+   "xlt",
+   "xltx"
+  ],
+  "package": "org.mahay.tabilao",
+  "types": [
+   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   "application/vnd.ms-excel.sheet.macroEnabled.12",
+   "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+   "application/vnd.oasis.opendocument.spreadsheet",
+   "text/csv",
+   "text/tab-separated-values",
+   "text/comma-separated-values",
+   "application/vnd.ms-excel"
+  ]
+ },
+ "taratasy": {
+  "extensions": [
+   "pdf"
+  ],
+  "package": "org.mahay.taratasy",
+  "types": [
+   "application/pdf"
+  ]
+ },
+ "tsilo": {
+  "extensions": [
+   "ai",
+   "eps",
+   "epsf",
+   "epsi",
+   "pdf",
+   "ps",
+   "svg"
+  ],
+  "package": "org.mahay.tsilo",
+  "types": [
+   "image/svg+xml",
+   "application/pdf",
+   "application/postscript",
+   "application/illustrator",
+   "image/x-eps"
+  ]
+ }
+}

@@ -13,9 +13,11 @@ Three kinds of intent filter per app, for VIEW and EDIT (D22):
    types in 1) and from the app's own `*.mime.xml`.
 3. **By file extension, with no type**, for providers that give none.
 
-Extension filters need one path pattern per case and per number of dots in the file name (Android's
-`pathPattern` has no real wildcard for a dotted name), so each extension is written as
-`.*\\.ext`, `.*\\..*\\.ext`... with `[eE][xX][tT]` for both cases.
+Extension filters use two kinds of path patterns. Android's simple glob (`pathPattern`) has no
+character classes and its `.*` does not backtrack over dots, so each extension is written in lower
+and upper case, once per number of dots in the file name (`.*\\.ext`, `.*\\..*\\.ext`...). From
+Android 12, `pathAdvancedPattern` takes real character classes: one pattern per extension
+(`.*\\.[eE][xX][tT]`), any case, any number of dots.
 
 "Share" (SEND) uses the MIME types only. Only `content://` documents are accepted at run time
 (MahayActivity.isContentUri): no `file://` filter is declared, so an app is never offered a file
@@ -136,11 +138,20 @@ def case_insensitive(ext):
 
 
 def path_patterns(exts):
+    """`pathPattern` values: Android's simple glob has no character classes, so each extension is
+    written in lower and in upper case, once per number of dots in the file name (its `.*` does not
+    backtrack over dots)."""
     patterns = []
     for ext in exts:
-        for dots in range(DOT_LEVELS):
-            patterns.append(".*" + "".join("\\\\..*" for _ in range(dots)) + "\\\\." + case_insensitive(ext))
+        for variant in dict.fromkeys((ext.lower(), ext.upper())):
+            for dots in range(DOT_LEVELS):
+                patterns.append(".*" + "".join("\\\\..*" for _ in range(dots)) + "\\\\." + variant)
     return patterns
+
+
+def advanced_patterns(exts):
+    """`pathAdvancedPattern` values (Android 12+, real character classes): one per extension, any case."""
+    return [".*\\\\." + case_insensitive(ext) for ext in exts]
 
 
 def manifest(types, exts):
@@ -160,7 +171,10 @@ def manifest(types, exts):
             </intent-filter>
 '''
     if exts:
-        paths = "\n".join(f'                <data android:pathPattern="{p}" />' for p in path_patterns(exts))
+        paths = "\n".join(
+            [f'                <data android:pathAdvancedPattern="{p}" />' for p in advanced_patterns(exts)]
+            + [f'                <data android:pathPattern="{p}" />' for p in path_patterns(exts)]
+        )
         for label, typed in (("by extension, generic type", True), ("by extension, no type", False)):
             kind = '                <data android:mimeType="*/*" />\n' if typed else ""
             out += f'''            <!-- {label}: {", ".join(exts)} -->

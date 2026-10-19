@@ -12,6 +12,57 @@
                 <data android:mimeType="application/x-pejy" />
                 <data android:mimeType="application/vnd.adobe.indesign-idml-package" />
             </intent-filter>
+            <!-- by extension, generic type: idml, pejy -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathAdvancedPattern=".*\\.[iI][dD][mM][lL]" />
+                <data android:pathAdvancedPattern=".*\\.[pP][eE][jJ][yY]" />
+                <data android:pathPattern=".*\\.idml" />
+                <data android:pathPattern=".*\\..*\\.idml" />
+                <data android:pathPattern=".*\\..*\\..*\\.idml" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.idml" />
+                <data android:pathPattern=".*\\.IDML" />
+                <data android:pathPattern=".*\\..*\\.IDML" />
+                <data android:pathPattern=".*\\..*\\..*\\.IDML" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.IDML" />
+                <data android:pathPattern=".*\\.pejy" />
+                <data android:pathPattern=".*\\..*\\.pejy" />
+                <data android:pathPattern=".*\\..*\\..*\\.pejy" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.pejy" />
+                <data android:pathPattern=".*\\.PEJY" />
+                <data android:pathPattern=".*\\..*\\.PEJY" />
+                <data android:pathPattern=".*\\..*\\..*\\.PEJY" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.PEJY" />
+            </intent-filter>
+            <!-- by extension, no type: idml, pejy -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" android:host="*" />
+                <data android:pathAdvancedPattern=".*\\.[iI][dD][mM][lL]" />
+                <data android:pathAdvancedPattern=".*\\.[pP][eE][jJ][yY]" />
+                <data android:pathPattern=".*\\.idml" />
+                <data android:pathPattern=".*\\..*\\.idml" />
+                <data android:pathPattern=".*\\..*\\..*\\.idml" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.idml" />
+                <data android:pathPattern=".*\\.IDML" />
+                <data android:pathPattern=".*\\..*\\.IDML" />
+                <data android:pathPattern=".*\\..*\\..*\\.IDML" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.IDML" />
+                <data android:pathPattern=".*\\.pejy" />
+                <data android:pathPattern=".*\\..*\\.pejy" />
+                <data android:pathPattern=".*\\..*\\..*\\.pejy" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.pejy" />
+                <data android:pathPattern=".*\\.PEJY" />
+                <data android:pathPattern=".*\\..*\\.PEJY" />
+                <data android:pathPattern=".*\\..*\\..*\\.PEJY" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.PEJY" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

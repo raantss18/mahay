@@ -46,11 +46,14 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
       pptx → Seho, pdf → Taratasy et Tsilo, png et svg → Sary, Hazavana, Endrika, mp3 → Feo,
       mp4 → Hetsika. Un fichier sans type reconnu (`application/octet-stream`) : aucune app.
 - [x] Générateur : filtres par extension (type générique et sans type), `content` seulement ;
-      manifestes à régénérer et à tester après le build 0.2.2.
+      manifestes générés et committés. Le test a trouvé un vrai défaut (les classes de lettres `[dD]`
+      ne marchent pas dans `pathPattern`) : motifs simples en minuscules et majuscules + `pathAdvancedPattern`
+      (Android 12+) ; corrigé le 2026-10-20.
 - [ ] Types sans MIME standard par app : IDML, DXF/DWG, RAW (CR2, NEF, ARW, DNG), PSD, XCF, MIDI…
 - [x] `scripts/android-open-with-test.py` : matrice app × type × extension (`cmd package query-activities`),
-      échoue si une app disparaît d'une liste ou réclame des fichiers qui ne sont pas les siens ;
-      reste à le lancer sur l'émulateur avec les nouveaux manifestes.
+      échoue si une app disparaît d'une liste ou réclame des fichiers qui ne sont pas les siens.
+      Lancé sur l'émulateur Android 16 : Soratra et Pejy, 119 cas, 0 échec. Reste à le lancer sur les 13 apps
+      avec le build 0.2.3.
 - [x] « Partager vers » (SEND, un fichier) : déjà déclaré pour chaque app.
 - [ ] SEND_MULTIPLE (plusieurs fichiers : photos → Hazavana, audio → Feo, vidéo → Hetsika) : demande une liste
       de fichiers côté Java et Rust.
