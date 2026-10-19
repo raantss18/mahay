@@ -1244,7 +1244,7 @@ Help
   Enable Logging | help.enableLogging
   Reveal Logging File | help.revealLogFile
   ---
-  Join the Mahay Discord... | help.discord
+  Join the Mahay GitHub... | help.discord
   Provide Feedback... | help.reportIssue
   ---
   Mahay Website | help.website

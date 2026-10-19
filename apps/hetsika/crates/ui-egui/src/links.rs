@@ -126,8 +126,9 @@ mod tests {
 
     #[test]
     fn urls_follow_the_mahay_scheme() {
-        assert_eq!(APP_PAGE, format!("{WEBSITE}/apps/{APP}"));
-        assert_eq!(GITHUB, format!("https://github.com/raantss18/{APP}"));
+        // Mahay is one repository: the app page and the source are both the monorepo.
+        assert_eq!(APP_PAGE, WEBSITE);
+        assert_eq!(GITHUB, "https://github.com/raantss18/mahay");
         assert!(ALL.iter().all(|(id, _, u)| id.starts_with("help.") && u.starts_with("https://")));
         assert_eq!(url_for("help.discord"), Some(DISCORD));
         assert_eq!(url_for("help.nope"), None);
