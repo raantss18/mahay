@@ -1217,6 +1217,10 @@ const DIALOG_CENTRED_FRAMES: u8 = 2;
 /// that, so dragging the title bar moves it (#732). egui keeps it on screen if it grows past the
 /// bottom.
 fn place_dialog<'a>(ctx: &egui::Context, id: egui::Id, w: egui::Window<'a>) -> egui::Window<'a> {
+    // A phone (D23): the dialog fills the screen and scrolls, instead of floating over a small window.
+    if mahay_ui::adaptive::FormFactor::of(ctx).is_compact() {
+        return w.fixed_rect(ctx.content_rect().shrink(2.0)).vscroll(true).movable(false);
+    }
     let w = w.pivot(egui::Align2::CENTER_TOP);
     match ctx.data(|d| d.get_temp::<(egui::Id, u8)>(dialog_top_key())) {
         Some((open, frames)) if open == id && frames >= DIALOG_CENTRED_FRAMES => w,

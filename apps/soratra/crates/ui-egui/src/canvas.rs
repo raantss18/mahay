@@ -944,7 +944,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     // View › Switch Modes: dark paper, inverted document colours.
     let dark_page = app.session.view.dark_mode;
     let dark_paper = soratra_render::DARK_PAPER;
-    let show_ruler = app.session.view.ruler && app.session.view.mode == soratra_layout::ViewMode::Print && !app.session.view.read_mode;
+    let show_ruler = app.session.view.ruler
+        && app.session.view.mode == soratra_layout::ViewMode::Print
+        && !app.session.view.read_mode
+        && mahay_ui::adaptive::FormFactor::of_ui(ui) == mahay_ui::adaptive::FormFactor::Expanded;
     let (hruler, vruler, area) = if show_ruler {
         let h = Rect::from_min_max(pos2(full.min.x + RULER, full.min.y), pos2(full.max.x, full.min.y + RULER));
         let v = Rect::from_min_max(pos2(full.min.x, full.min.y + RULER), pos2(full.min.x + RULER, full.max.y));
@@ -2529,6 +2532,9 @@ fn rulers(app: &mut WordApp, ui: &mut Ui, h: Rect, v: Rect, rects: &[Rect], layo
     let t = Tokens::get(ui.ctx());
     let p = ui.painter();
     let corner = Rect::from_min_max(pos2(v.min.x, h.min.y), pos2(v.max.x, h.max.y));
+    // The rulers draw their own tab and indent handles over themselves and scroll with the page.
+    mahay_ui::adaptive::register_overlay(ui.ctx(), h);
+    mahay_ui::adaptive::register_scroll_region(ui.ctx(), h);
     p.rect_filled(corner, 0.0, t.canvas);
     p.rect_filled(h, 0.0, t.canvas);
     p.rect_filled(v, 0.0, t.canvas);
@@ -4350,8 +4356,7 @@ mod tests {
     /// only Go To selects the bookmark's text (#1236).
     #[test]
     fn a_link_to_a_bookmark_puts_the_caret_at_its_start() {
-        let mut a =
-            WordApp::new(soratra_engine::Session::new(soratra_doc::Document::from_text("Alpha beta gamma\nSee here")), Default::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::from_text("Alpha beta gamma\nSee here")), Default::default());
         a.run("select.text", json!({"text": "beta"})).unwrap();
         a.run("insert.bookmark", json!({"name": "Spot"})).unwrap();
         a.run("select.text", json!({"text": "here"})).unwrap();

@@ -2553,6 +2553,9 @@ fn control_click_as_secondary(events: &mut [egui::Event], held: &mut bool) {
 mod tests_perf;
 
 #[cfg(test)]
+mod tests_phone;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use egui_kittest::kittest::Queryable;
