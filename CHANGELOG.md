@@ -3,6 +3,24 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Phone and tablet layouts that follow the window width, with no setting** (D23). Compact
+  (< 600 dp), medium (600–839) and expanded (≥ 840, the desktop layout, unchanged) are worked out
+  every frame, so rotation, split screen and floating windows change the layout by themselves.
+  Done in **Soratra, Tabilao, Seho and Taratasy**: touch-sized title bar, scrolling tab strip with
+  the rarely used buttons in one menu, scrolling ribbon, status bar and mode bar, side panels and
+  the slide list as full-window drawers, full-screen dialogs in Soratra. The ribbons no longer
+  overlap or leave the screen. The other apps follow. Shared piece: `mahay_ui::adaptive`
+  (`FormFactor`, a scrolling command bar, a layout audit used by one test per app at 360, 400,
+  600 and 840 points).
+
+### Changed
+
+- **Seho**: the ribbon scrolls instead of cutting off groups that do not fit the window.
+
 ## [0.2.2] — 2026-10-19 (alpha)
 
 ### Added

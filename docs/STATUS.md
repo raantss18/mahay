@@ -14,6 +14,9 @@ verified; everything else says how far it was checked.
 | Tabilao on Android phone (1080×2400)              | x86_64 emulator: starts, grid and formula bar usable; ribbon clipped (see known gaps)       |
 | Taratasy on Android tablet                        | x86_64 emulator: starts on its Home screen                                                  |
 | Soratra on Android tablet                         | x86_64 emulator: new blank document, typing with the soft keyboard (spell check works), Enter makes a paragraph, the page moves above the keyboard |
+| Phone layout by window width (D23), Soratra, Tabilao, Taratasy | x86_64 emulator `mahay_phone` (1080×2400 at 420 dpi = **411 dp** wide), 0.2.3 branch: touch title bar, scrolling tab strip with a menu, scrolling ribbon, status bar; Soratra new document, Tabilao empty book, Taratasy Home and mode bar. Landscape (914 dp) gives the desktop layout. Screenshots: `docs/img/phone-*.png` |
+| Phone layout, Seho                                | built and started on the phone emulator: title bar and Home screen seen; editor, tab row and slide drawer **only tested headlessly** (`tests/phone_layout.rs`) |
+| Layout audit at 360, 400, 600 and 840 pt          | headless (egui_kittest), one test per app on every tab or mode: Soratra, Tabilao, Seho, Taratasy. Each failed on the old layout (70 to 580 findings) and passes now |
 | Save As to shared storage (Soratra)               | File ▸ Save As ▸ Browse opens Android's picker; `Document1.docx` written to Downloads with the typed text |
 | Write-back to the original document               | edit, File ▸ Save: the copy in Downloads gets the new paragraph                            |
 | Release signing                                   | local keystore (`~/.mahay/release.jks`, outside git); `apksigner verify` on the APKs: SHA-256 `1e0abb5d…c777` |
@@ -58,6 +61,9 @@ verified; everything else says how far it was checked.
 |--------------------------|------------------------------------------------------------------------------------------------------|------------------------------------------------------------|
 | Phones (compact width)   | Desktop ribbons (Soratra, Tabilao, Seho) are clipped on the right in portrait                         | a compact ribbon/toolbar per app; landscape works better meanwhile |
 | APK size (arm64)         | Sary 23.2, Taratasy 17.6, Soratra 17.1, Seho 12.2, Tabilao 8.5, Mahay HUB 4.8 MB                         | optional OCR/JS features off on Android, `cargo bloat`     |
+| Phone: File screens      | Soratra's File screen and Seho's Home are the desktop screens: the left menu is 435 px (Soratra) and 350 px (Seho) wide on a 411 dp screen, the content is cut; Soratra's page opens at 100%, wider than the phone | adapt the backstage views and fit the page to the width in Compact |
+| Phone: touch targets     | the ribbon's small buttons are about 22 dp high (bars, tabs and menus are 44–48 dp); only Soratra and Tabilao were looked at in portrait and landscape; Medium (600–839 dp) only headless | stack fewer small buttons per column in Compact; a tablet in portrait for Medium |
+| Phone: other apps        | Sary, Hazavana, Feo, Hetsika, Tsilo, Endrika, Pejy, Drafitra, Tselatra still have the desktop layout; five Taratasy tests (About dialog, Ukrainian) already failed before this change | per `TODO.md`, in order of use |
 | Dialogs and keyboard     | a dialog doesn't move above the soft keyboard                                                        | apply the keyboard inset to egui windows                   |
 | Folders                  | folder pickers (batch export, OCR to a folder, pinned folders) answer "cancelled" on Android         | `ACTION_OPEN_DOCUMENT_TREE` support in `mahay-android`     |
 | Printing                 | no printing on Android                                                                               | Android print framework via the shell                      |
@@ -69,6 +75,6 @@ verified; everything else says how far it was checked.
 ## Next steps
 
 1. Run the arm64 APKs on a real Android phone and tablet; fix what breaks.
-2. Compact (phone) layouts for the ribbon apps.
+2. Compact (phone) layouts: Soratra, Tabilao, Seho and Taratasy done; the other nine apps next.
 3. Shrink Taratasy and Soratra.
 4. Import the next apps (Tsilo, Endrika, Pejy).

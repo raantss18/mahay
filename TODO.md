@@ -28,17 +28,21 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 - [ ] P2 : Android 14+, propriété des mises à jour (`setRequestUpdateOwnership`), à évaluer.
 
 ### P0 — Vue téléphone et tablette automatique (D23)
-- [ ] Classes de largeur (compact < 600 dp, moyen 600–839, étendu ≥ 840) calculées à chaque image :
+- [x] Classes de largeur (compact < 600 dp, moyen 600–839, étendu ≥ 840) calculées à chaque image :
       rotation, écran partagé, fenêtres flottantes, pliables. Aucun réglage.
-- [ ] Brique commune `FormFactor` dans `libs/core` : cibles tactiles ≥ 48 dp, marges, dialogues
-      plein écran en compact.
-- [ ] Soratra, Tabilao, Seho : ruban replié (onglets dans un menu, groupes sur une barre défilante),
-      **rien ne se superpose** ni ne sort de l'écran.
+- [x] Brique commune `FormFactor` dans `libs/core` (`mahay_ui::adaptive`) : cibles tactiles ≥ 48 dp,
+      marges, dialogues plein écran en compact, barre de commandes défilante, audit de disposition.
+- [x] Soratra, Tabilao, Seho : ruban replié (onglets dans un menu, groupes sur une barre défilante),
+      **rien ne se superpose** ni ne sort de l'écran. (Soratra vérifié sur l'émulateur téléphone ; reste
+      les écrans « Fichier » (menu de gauche de 435 px) et le zoom de la page.)
 - [ ] Mahay HUB : 1 colonne en compact, 2 en moyen, 4 en étendu (aujourd'hui toujours 4).
-- [ ] Taratasy, Sary, Hazavana : panneaux latéraux en tiroirs, barres d'outils défilantes.
+- [x] Taratasy : un panneau à la fois (Document, Outils, Inspecteur), barres défilantes.
+- [ ] Sary, Hazavana : panneaux latéraux en tiroirs, barres d'outils défilantes.
 - [ ] Feo, Hetsika, Tselatra, Tsilo, Endrika, Pejy, Drafitra : même socle, par ordre d'usage sur téléphone.
 - [ ] Test automatique par app : à 360, 400, 600 et 840 dp, aucun widget cliquable n'en chevauche un autre.
-- [ ] Bureau inchangé : à ≥ 840 dp la disposition d'origine reste identique.
+      Fait : Soratra, Tabilao, Seho, Taratasy (`tests_phone.rs`, `tests/phone_layout.rs`). Reste : les 9 autres.
+- [x] Bureau inchangé : à ≥ 840 dp la disposition d'origine reste identique (seule exception : le ruban de
+      Seho défile au lieu de couper ses groupes).
 
 ### P0 — « Ouvrir avec » (D22)
 - [x] Vérifié le 2026-10-19 (émulateur Android 16, apps 0.2.1) : docx → Soratra, xlsx → Tabilao,
