@@ -110,9 +110,11 @@ Naoty : Python d'abord. Le moteur reste à confirmer par les sondages.
 - [x] Clés dans `release-keys/` (local, ignoré par git) ; secrets décrits dans `docs/BUILDING.md`.
 - [x] Secrets dans GitHub (5 secrets en place depuis le 2026-10-19) : la CI peut publier les
       versions suivantes.
-- [ ] Essayer une release par la CI (Actions ▸ Release ▸ Run workflow) sur une version de test, pour
-      ne plus dépendre de cet ordinateur : comparer les APK (même signature, même taille) et le
-      temps de build.
+- [x] Essai à blanc de la release par la CI (2026-10-19, `ref=main`, `apps=tabilao`, `dry_run=true`) :
+      réussi en une dizaine de minutes ; l'APK construit par GitHub est signé avec la même clé de release,
+      et la signature de `SHA256SUMS.txt` est vérifiée (workflow réécrit, il ne signait pas avant).
+- [ ] Essai à blanc complet (`apps=all`) : comparer noms et tailles avec un build local, mesurer la durée
+      (les gros apps : Taratasy, Sary, Tselatra, Hetsika) et l'espace disque des machines GitHub.
 
 ### « À propos » façon Tontolo
 - [x] Page commune `mahay-about` (version, mises à jour, QR code, auteur, licences) en fr/en/mg.
