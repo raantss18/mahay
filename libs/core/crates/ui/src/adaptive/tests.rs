@@ -98,3 +98,14 @@ fn a_nested_background_is_not_an_overlap() {
     });
     assert!(audit(&ctx).is_empty());
 }
+
+#[test]
+fn a_thin_resize_grip_over_an_edge_is_not_an_overlap() {
+    let ctx = Context::default();
+    frame(&ctx, 360.0, |ui| {
+        let at = ui.max_rect().min;
+        ui.put(Rect::from_min_size(at, vec2(200.0, 60.0)), egui::Button::new("list"));
+        ui.interact(Rect::from_min_size(at + vec2(197.0, 0.0), vec2(6.0, 60.0)), egui::Id::new("grip"), Sense::click());
+    });
+    assert!(audit(&ctx).is_empty(), "{:?}", audit(&ctx));
+}

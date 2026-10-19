@@ -29,6 +29,8 @@ pub struct Finding {
 
 /// How far two widgets may intrude on each other without counting as an overlap (borders touch).
 const SLACK: f32 = 1.0;
+/// Widgets no thicker than this are resize grips and splitters, which overlap what they resize.
+const GRIP: f32 = 8.0;
 
 fn near(a: &Rect, b: &Rect) -> bool {
     (a.min - b.min).abs().max_elem() < 1.0 && (a.max - b.max).abs().max_elem() < 1.0
@@ -79,7 +81,9 @@ pub fn audit_excluding(ctx: &Context, skip: &[Rect]) -> Vec<Finding> {
             let overlap = both.width() > SLACK && both.height() > SLACK;
             let nested = visible.contains_rect(*visible_b) || visible_b.contains_rect(*visible);
             let on_purpose = overlays.iter().any(|o| near(o, visible) || near(o, visible_b) || o.expand(1.0).contains_rect(*visible) || o.expand(1.0).contains_rect(*visible_b));
-            if overlap && !nested && !on_purpose {
+            // A resize grip or splitter (a thin strip) is drawn over the edge of what it resizes.
+            let grip = [visible, visible_b].iter().any(|r| r.width().min(r.height()) <= GRIP);
+            if overlap && !nested && !on_purpose && !grip {
                 found.push(Finding { kind: FindingKind::Overlap, id: *id, rect: *visible, other: Some(*visible_b) });
             }
         }
