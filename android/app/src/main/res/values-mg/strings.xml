@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="updates_channel">Fanavaozana Mahay</string>
+    <plurals name="updates_ready">
+        <item quantity="one">Fanavaozana %d vonona</item>
+        <item quantity="other">Fanavaozana %d vonona</item>
+    </plurals>
+    <string name="updates_ready_tap">Sokafy i Mahay HUB hametrahana azy</string>
+</resources>

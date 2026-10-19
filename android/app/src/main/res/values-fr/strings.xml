@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="updates_channel">Mises à jour Mahay</string>
+    <plurals name="updates_ready">
+        <item quantity="one">%d mise à jour prête</item>
+        <item quantity="other">%d mises à jour prêtes</item>
+    </plurals>
+    <string name="updates_ready_tap">Ouvrez Mahay HUB pour les installer</string>
+</resources>

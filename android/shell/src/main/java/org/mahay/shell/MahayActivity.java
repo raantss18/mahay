@@ -8,7 +8,9 @@ import android.content.Context;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.ComponentName;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageInstaller;
 import android.database.Cursor;
@@ -293,13 +295,7 @@ public class MahayActivity extends GameActivity {
             return 1;
         }
         // Only files this app downloaded itself, under its own storage.
-        try {
-            String own = getFilesDir().getParentFile().getCanonicalPath() + File.separator;
-            String real = new File(path).getCanonicalPath();
-            if (!real.startsWith(own) || !real.endsWith(".apk")) return 2;
-        } catch (java.io.IOException e) {
-            return 2;
-        }
+        if (!ApkInstaller.isOwnApk(this, path)) return 2;
         runOnUiThread(() -> {
             installQueue.add(path);
             if (installing == null) installNext();
@@ -312,33 +308,102 @@ public class MahayActivity extends GameActivity {
         if (path == null) return;
         installing = path;
         try {
-            PackageInstaller pi = getPackageManager().getPackageInstaller();
-            PackageInstaller.SessionParams params =
-                    new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
-            if (android.os.Build.VERSION.SDK_INT >= 31) {
-                // Android 12+ skips its confirmation when this app is the installer of record of
-                // the package being updated; otherwise it answers STATUS_PENDING_USER_ACTION and
-                // the receiver shows the dialog as before.
-                params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
-            }
-            File apk = new File(path);
-            int id = pi.createSession(params);
-            try (PackageInstaller.Session session = pi.openSession(id)) {
-                try (InputStream in = new FileInputStream(apk);
-                     OutputStream out = session.openWrite("mahay.apk", 0, apk.length())) {
-                    copy(in, out);
-                    session.fsync(out);
-                }
-                Intent cb = new Intent(INSTALL_ACTION).setPackage(getPackageName());
-                int flags = PendingIntent.FLAG_UPDATE_CURRENT
-                        | (android.os.Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
-                session.commit(PendingIntent.getBroadcast(this, id, cb, flags).getIntentSender());
-            }
+            ApkInstaller.commit(this, path, null, new Intent(INSTALL_ACTION).setPackage(getPackageName()));
         } catch (Exception e) {
             Log.w(TAG, "install failed: " + path, e);
             installing = null;
             nativeOnInstalled(path, false, String.valueOf(e.getMessage()));
             installNext();
+        }
+    }
+
+    // ---- Mahay HUB and the apps it manages (decision D21) -----------------------------------
+
+    private static final String HUB = "org.mahay.hub";
+    private static final int REQ_NOTIFICATIONS = 0x4d03;
+
+    /**
+     * Ask Mahay HUB to update this app. 0: asked; 1: the hub isn't installed; 2: the hub isn't
+     * signed with the same certificate as this app; 3: the hub didn't take the request; 4: this
+     * app doesn't hold the hub's permission (it was installed before the hub). Any other answer
+     * than 0 leaves the app to update itself.
+     */
+    public int handOffToHub() {
+        PackageManager pm = getPackageManager();
+        try {
+            pm.getPackageInfo(HUB, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return 1;
+        }
+        if (!hubSignedLikeUs(pm)) return 2;
+        Intent i = new Intent("org.mahay.hub.UPDATE_APP")
+                .setComponent(new ComponentName(HUB, "org.mahay.shell.UpdateRequestService"))
+                .putExtra("package", getPackageName());
+        try {
+            return startService(i) == null ? 3 : 0;
+        } catch (SecurityException e) {
+            return 4;
+        } catch (IllegalStateException e) {
+            return 3;
+        }
+    }
+
+    /** Whether Mahay HUB is installed and signed with the certificate this app is signed with. */
+    public boolean hubUsable() {
+        PackageManager pm = getPackageManager();
+        try {
+            pm.getPackageInfo(HUB, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+        return hubSignedLikeUs(pm);
+    }
+
+    private boolean hubSignedLikeUs(PackageManager pm) {
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                PackageInfo mine = pm.getPackageInfo(getPackageName(), PackageManager.GET_SIGNING_CERTIFICATES);
+                if (mine.signingInfo == null || mine.signingInfo.hasMultipleSigners()) return false;
+                android.content.pm.Signature[] signers = mine.signingInfo.getApkContentsSigners();
+                if (signers == null || signers.length != 1) return false;
+                return pm.hasSigningCertificate(HUB, signers[0].toByteArray(), PackageManager.CERT_INPUT_RAW_X509);
+            }
+            return pm.checkSignatures(getPackageName(), HUB) == PackageManager.SIGNATURE_MATCH;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Hub: (re)schedule the daily background update, or cancel it. */
+    public void scheduleUpdates(boolean auto, boolean mobile) {
+        HubUpdates.schedule(this, auto, mobile);
+    }
+
+    /** Hub: 0 no network, 1 unmetered, 2 metered. */
+    public int networkState() {
+        return HubUpdates.network(this);
+    }
+
+    /** Hub: install a download Rust verified, with no dialog of ours; Android asks only if it must. */
+    public boolean installBackground(String id, String path, String sha256) {
+        return HubUpdates.install(this, id, path, sha256, false);
+    }
+
+    /** Hub: how many updates are waiting for the user's tap. */
+    public int waitingUpdates() {
+        return HubUpdates.waitingCount(this);
+    }
+
+    /** Hub: whether the "updates ready" notification can be shown. */
+    public boolean notificationsAllowed() {
+        android.app.NotificationManager nm = (android.app.NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        return nm != null && nm.areNotificationsEnabled();
+    }
+
+    /** Hub: ask Android 13+ for the notification permission (only after the user chose to). */
+    public void requestNotifications() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            runOnUiThread(() -> requestPermissions(new String[] {"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIFICATIONS));
         }
     }
 

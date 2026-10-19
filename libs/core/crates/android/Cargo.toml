@@ -14,6 +14,8 @@ repository.workspace = true
 [features]
 # `EguiBridge`: soft keyboard and clipboard for an eframe app.
 egui = ["dep:egui", "dep:mahay-about", "dep:mahay-update"]
+# Mahay HUB: the JNI entry points of its background update job.
+hub = ["dep:mahay-update"]
 
 [target.'cfg(target_os = "android")'.dependencies]
 egui = { workspace = true, optional = true }

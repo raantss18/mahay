@@ -26,6 +26,9 @@ mod imp;
 #[cfg(any(target_os = "android", test))]
 mod cleanup;
 
+#[cfg(all(target_os = "android", feature = "hub"))]
+mod hub;
+
 #[cfg(target_os = "android")]
 pub use imp::*;
 

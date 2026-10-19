@@ -378,6 +378,71 @@ pub fn install_apk(path: &Path) -> Result<(), String> {
     }
 }
 
+/// Ask Mahay HUB to update this app (decision D21). `Ok` when the request was sent; `Err` says
+/// why the hub can't take it, and the app then updates itself.
+pub fn hand_off_to_hub() -> Result<(), String> {
+    match with_activity(|env, act| env.call_method(act, "handOffToHub", "()I", &[])?.i()) {
+        Some(0) => Ok(()),
+        Some(1) => Err("Mahay HUB isn't installed".into()),
+        Some(2) => Err("Mahay HUB isn't signed with this app's certificate".into()),
+        Some(4) => Err("this app doesn't hold Mahay HUB's permission".into()),
+        _ => Err("Mahay HUB didn't take the request".into()),
+    }
+}
+
+/// Whether Mahay HUB is installed and signed with the same certificate as this app.
+pub fn hub_usable() -> bool {
+    with_activity(|env, act| env.call_method(act, "hubUsable", "()Z", &[])?.z()).unwrap_or(false)
+}
+
+/// Hub: schedule the daily background update (kept across reboots), or cancel it.
+pub fn schedule_updates(auto: bool, mobile_data: bool) {
+    with_activity(|env, act| {
+        env.call_method(act, "scheduleUpdates", "(ZZ)V", &[JValue::Bool(u8::from(auto)), JValue::Bool(u8::from(mobile_data))])?;
+        Ok(())
+    });
+}
+
+/// Hub: 0 no network, 1 unmetered, 2 metered (`mahay_update::managed::Network::from_code`).
+pub fn network_state() -> i32 {
+    with_activity(|env, act| env.call_method(act, "networkState", "()I", &[])?.i()).unwrap_or(0)
+}
+
+/// Hub: hand a verified download to Android's installer without a dialog of ours; Android asks
+/// the user only when it must. `sha256` is checked again while the file is copied.
+pub fn install_background(id: &str, path: &Path, sha256: &str) -> bool {
+    let p = path.to_string_lossy().into_owned();
+    with_activity(|env, act| {
+        let (id, p, sha) = (env.new_string(id)?, env.new_string(&p)?, env.new_string(sha256)?);
+        env.call_method(
+            act,
+            "installBackground",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z",
+            &[JValue::Object(&id), JValue::Object(&p), JValue::Object(&sha)],
+        )?
+        .z()
+    })
+    .unwrap_or(false)
+}
+
+/// Hub: how many updates wait for the user's tap.
+pub fn waiting_updates() -> i32 {
+    with_activity(|env, act| env.call_method(act, "waitingUpdates", "()I", &[])?.i()).unwrap_or(0)
+}
+
+/// Hub: whether notifications can be shown.
+pub fn notifications_allowed() -> bool {
+    with_activity(|env, act| env.call_method(act, "notificationsAllowed", "()Z", &[])?.z()).unwrap_or(false)
+}
+
+/// Hub: ask for the notification permission (Android 13+). Call it only after the user chose to.
+pub fn request_notifications() {
+    with_activity(|env, act| {
+        env.call_method(act, "requestNotifications", "()V", &[])?;
+        Ok(())
+    });
+}
+
 /// The installed version of another app (`org.mahay.sary`), or `None` when it isn't installed.
 pub fn installed_version(package: &str) -> Option<String> {
     with_activity(|env, act| {
@@ -664,14 +729,14 @@ fn with_activity<T>(f: impl FnOnce(&mut JNIEnv, &JObject) -> jni::errors::Result
     }
 }
 
-fn jstring(env: &mut JNIEnv, s: &JString) -> Option<String> {
+pub(crate) fn jstring(env: &mut JNIEnv, s: &JString) -> Option<String> {
     if s.is_null() {
         return None;
     }
     env.get_string(s).ok().map(Into::into)
 }
 
-fn string_array<'a>(env: &mut JNIEnv<'a>, items: &[&str]) -> jni::errors::Result<JObjectArray<'a>> {
+pub(crate) fn string_array<'a>(env: &mut JNIEnv<'a>, items: &[&str]) -> jni::errors::Result<JObjectArray<'a>> {
     let len = i32::try_from(items.len()).unwrap_or(i32::MAX);
     let array = env.new_object_array(len, "java/lang/String", JObject::null())?;
     for (i, item) in (0..len).zip(items) {

@@ -43,6 +43,8 @@ pub fn t(lang: Lang, key: &str) -> &'static str {
         "ready_short" => Some(("update ready", "mise à jour prête", "fanavaozana vonona")),
         "whats_new" => Some(("What's new", "Nouveautés", "Ny vaovao")),
         "install" => Some(("Install", "Installer", "Apetraho")),
+        "via_hub" => Some(("Updating through Mahay HUB…", "Mise à jour par Mahay HUB…", "Havaozin'i Mahay HUB izao…")),
+        "managed_by_hub" => Some(("Mahay HUB installs this update for you.", "Mahay HUB installe cette mise à jour pour vous.", "Mahay HUB no mametraka ity fanavaozana ity ho anao.")),
         "later" => Some(("Later", "Plus tard", "Rahatrizay")),
         "failed" => Some(("Update failed", "Échec de la mise à jour", "Tsy nety ny fanavaozana")),
         "check_now" => Some(("Check now", "Vérifier maintenant", "Jereo izao")),

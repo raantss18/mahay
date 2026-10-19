@@ -20,6 +20,9 @@ pub enum State {
     Downloading { version: String, progress: f32 },
     /// Downloaded and verified: offer to install.
     Ready { update: Downloaded, notes: Option<String> },
+    /// A newer version exists and Mahay HUB, which manages this app, will download and install
+    /// it: this app downloads nothing.
+    Managed { version: String },
     Failed(Error),
 }
 
@@ -31,6 +34,9 @@ pub struct Checker {
     app: &'static str,
     dir: PathBuf,
     can_install: bool,
+    /// Whether Mahay HUB manages this app right now (installed and signed with our certificate).
+    /// Asked at every check, so installing or removing the hub takes effect at once.
+    managed: Option<Arc<dyn Fn() -> bool + Send + Sync>>,
     state: Arc<Mutex<State>>,
     waker: Waker,
 }
@@ -48,7 +54,16 @@ impl Checker {
     /// `dir` keeps the downloaded update and the settings (`update.json`). `can_install` is false
     /// where the app can't replace itself (a .deb install): then a newer version is only reported.
     pub fn new(app: &'static str, dir: PathBuf, can_install: bool, waker: impl Fn() + Send + Sync + 'static) -> Self {
-        Checker { app, dir, can_install, state: Arc::new(Mutex::new(State::Idle)), waker: Arc::new(waker) }
+        Checker { app, dir, can_install, managed: None, state: Arc::new(Mutex::new(State::Idle)), waker: Arc::new(waker) }
+    }
+
+    /// Let Mahay HUB take over updates while `managed()` is true: a newer version is then only
+    /// reported ([`State::Managed`]) and nothing is downloaded here, so the update is not
+    /// fetched twice. When it is false the app updates itself as before.
+    #[must_use]
+    pub fn managed_by(mut self, managed: impl Fn() -> bool + Send + Sync + 'static) -> Self {
+        self.managed = Some(Arc::new(managed));
+        self
     }
 
     pub fn state(&self) -> State {
@@ -112,6 +127,9 @@ impl Checker {
         }
         if !self.can_install {
             return self.set(State::Available { version: release.version.clone() });
+        }
+        if self.managed.as_ref().is_some_and(|managed| managed()) {
+            return self.set(State::Managed { version: release.version.clone() });
         }
         let version = release.version.clone();
         self.set(State::Downloading { version: version.clone(), progress: 0.0 });

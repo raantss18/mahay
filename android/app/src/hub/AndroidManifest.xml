@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Mahay HUB only: Android 11+ hides other apps unless they are declared here. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The permission that lets Mahay apps (and only apps signed with the same certificate) ask the hub to update them. -->
+    <permission
+        android:name="org.mahay.permission.MANAGE"
+        android:protectionLevel="signature" />
+    <!-- Wi-Fi or mobile data? Updates run on unmetered networks unless the user allows mobile data. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The daily background update survives a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- "N updates ready" when Android still needs a tap; asked from the hub's settings, never at start-up. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <queries>
         <package android:name="org.mahay.sary" />
         <package android:name="org.mahay.taratasy" />
@@ -16,4 +27,21 @@
         <package android:name="org.mahay.tselatra" />
         <package android:name="org.mahay.drafitra" />
     </queries>
+
+    <application>
+        <!-- Exported, but only for apps holding the signature permission. -->
+        <service
+            android:name="org.mahay.shell.UpdateRequestService"
+            android:exported="true"
+            android:permission="org.mahay.permission.MANAGE" />
+        <!-- Started by the system's job scheduler only. -->
+        <service
+            android:name="org.mahay.shell.UpdateJobService"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- The installer's answers, to this app only. -->
+        <receiver
+            android:name="org.mahay.shell.HubInstallReceiver"
+            android:exported="false" />
+    </application>
 </manifest>

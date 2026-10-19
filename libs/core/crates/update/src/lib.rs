@@ -16,6 +16,7 @@
 
 mod checker;
 pub mod key;
+pub mod managed;
 
 pub use checker::{Checker, State};
 
