@@ -18,6 +18,6 @@ eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "
 egui = { workspace = true }
 egui_extras = { workspace = true, features = ["svg"] }
 log = { workspace = true }
-mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui"] }
+mahay-android = { path = "../../../../libs/core/crates/android", features = ["egui", "hub"] }
 mahay-about = { path = "../../../../libs/core/crates/about" }
 mahay-update = { path = "../../../../libs/core/crates/update" }
