@@ -2355,6 +2355,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "mahay-sync"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "log",
+ "mahay-atomic",
+ "ring",
+ "roxmltree",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.21",
+ "ureq",
+ "zeroize",
+]
+
+[[package]]
 name = "mahay-ui"
 version = "0.1.0"
 dependencies = [
