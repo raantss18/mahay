@@ -23,7 +23,7 @@ impl Panel {
             Self::Inspector => "inspector",
         }
     }
-    fn label(self) -> &'static str {
+    pub(crate) fn label(self) -> &'static str {
         match self {
             Self::Canvas => "Document",
             Self::Tools => "Tools",
@@ -396,37 +396,28 @@ pub fn show(app: &mut crate::TaratasyApp, ui: &mut egui::Ui) {
         // Availability is a render projection: the saved group, selection and width survive Home.
         let _ = rendered.apply(Action::Close { panel: Panel::Inspector });
     }
-    let output = DockArea::new(egui::Id::new("taratasy-docking")).show_with_limits(
-        ui,
-        &rendered,
-        &style,
-        |panel| crate::i18n::t(panel.label()).into(),
-        permissions,
-        panel_limits,
-        |ui, panel| match panel {
-            Panel::Canvas => {
-                ui.painter().rect_filled(ui.max_rect(), 0.0, t.pasteboard);
-                match app.active {
-                    None if app.combine_showing() => crate::combine_ui::page(app, ui),
-                    None => crate::home::show(app, ui),
-                    Some(index) => match crate::compare_ui::side_by_side(app, index) {
-                        Some((old, new)) => crate::compare_ui::compare_area(app, old, new, ui),
-                        None => crate::canvas::document_area(app, index, ui),
-                    },
-                }
-            }
-            Panel::Tools => crate::panels::left_panel(app, ui),
-            Panel::Inspector => {
-                ui.data_mut(|data| data.insert_temp(egui::Id::new("taratasy-inspector-body"), ui.max_rect()));
-                crate::panels::right_panel(app, ui);
-            }
-        },
-    );
+    // A phone or a narrow window (D23): one panel at a time, switched from a bar, instead of docked columns.
+    let actions = if mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact() {
+        compact_show(app, ui, &rendered, &t);
+        Vec::new()
+    } else {
+        DockArea::new(egui::Id::new("taratasy-docking"))
+            .show_with_limits(
+                ui,
+                &rendered,
+                &style,
+                |panel| crate::i18n::t(panel.label()).into(),
+                permissions,
+                panel_limits,
+                |ui, panel| panel_body(app, ui, panel, &t),
+            )
+            .actions
+    };
     let _ = sync(&mut workspace, app);
     drain_reveals(&mut workspace, app);
     publish_visibility(app, &workspace);
     app.docking = workspace;
-    for mut action in output.actions {
+    for mut action in actions {
         if app.active.is_none()
             && let Action::ResizeSplit { path, .. } = &mut action
         {
@@ -439,6 +430,55 @@ pub fn show(app: &mut crate::TaratasyApp, ui: &mut egui::Ui) {
             app.notify_fmt("Panel move was not applied: {error}", &[("error", &error)]);
         }
     }
+}
+
+/// What a panel shows.
+fn panel_body(app: &mut crate::TaratasyApp, ui: &mut egui::Ui, panel: &Panel, t: &crate::theme::Tokens) {
+    match panel {
+        Panel::Canvas => {
+            ui.painter().rect_filled(ui.max_rect(), 0.0, t.pasteboard);
+            match app.active {
+                None if app.combine_showing() => crate::combine_ui::page(app, ui),
+                None => crate::home::show(app, ui),
+                Some(index) => match crate::compare_ui::side_by_side(app, index) {
+                    Some((old, new)) => crate::compare_ui::compare_area(app, old, new, ui),
+                    None => crate::canvas::document_area(app, index, ui),
+                },
+            }
+        }
+        Panel::Tools => crate::panels::left_panel(app, ui),
+        Panel::Inspector => {
+            ui.data_mut(|data| data.insert_temp(egui::Id::new("taratasy-inspector-body"), ui.max_rect()));
+            crate::panels::right_panel(app, ui);
+        }
+    }
+}
+
+/// The compact workspace: a bar of touch-sized buttons (Document, Tools, Inspector: those the layout has)
+/// and the chosen panel over the whole window.
+fn compact_show(app: &mut crate::TaratasyApp, ui: &mut egui::Ui, rendered: &Layout<Panel>, t: &crate::theme::Tokens) {
+    use mahay_ui::adaptive::MIN_TOUCH;
+    let present: Vec<Panel> = Panel::ALL.iter().copied().filter(|p| rendered.contains(p)).collect();
+    let key = egui::Id::new("taratasy-compact-panel");
+    let current = ui.data(|d| d.get_temp::<Panel>(key)).filter(|p| present.contains(p)).unwrap_or(Panel::Canvas);
+    if present.len() > 1 {
+        egui::Panel::top("compact_panels")
+            .exact_size(MIN_TOUCH)
+            .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(8, 0)).stroke(egui::Stroke::new(1.0, t.divider)))
+            .show(ui, |ui| {
+                ui.horizontal_centered(|ui| {
+                    ui.spacing_mut().item_spacing.x = 6.0;
+                    for panel in &present {
+                        let label = crate::i18n::t(panel.label());
+                        let button = egui::Button::selectable(*panel == current, label).min_size(egui::vec2(96.0, MIN_TOUCH - 8.0));
+                        if ui.add(button).clicked() {
+                            ui.data_mut(|d| d.insert_temp(key, *panel));
+                        }
+                    }
+                });
+            });
+    }
+    egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.panel)).show(ui, |ui| panel_body(app, ui, &current, t));
 }
 
 fn panel_limits(panel: &Panel) -> PanelLimits {
