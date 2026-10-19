@@ -31,29 +31,38 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 - [x] Page commune `mahay-about` (version, mises à jour, QR code, auteur, licences) en fr/en/mg.
 - [x] Branchée dans Sary, Taratasy, Soratra, Tabilao, Seho et Mahay HUB ; aucune mention de
       l'upstream dans l'interface.
-- [ ] La brancher dans les « À propos » des 8 nouvelles apps (Tsilo, Endrika, Pejy, Hazavana,
+- [x] La brancher dans les « À propos » des 8 nouvelles apps (Tsilo, Endrika, Pejy, Hazavana,
       Feo, Hetsika, Tselatra, Drafitra).
 
 ### Associations de fichiers (« Ouvrir avec »)
-- [ ] Android : filtres VIEW / EDIT / SEND par app, générés depuis les types MIME déclarés pour
+- [x] Android : filtres VIEW / EDIT / SEND par app, générés depuis les types MIME déclarés pour
       Linux (Tabilao = tableurs, Sary = images, Taratasy = PDF, Soratra = textes, Seho =
       présentations, Tsilo = SVG/EPS, Hazavana = photos et RAW, Feo = audio, Hetsika = vidéo,
       Drafitra = DXF/DWG, Pejy = IDML, Endrika = ses fichiers et images).
-- [ ] Chaque app ouvre le fichier reçu (au lancement et quand elle tourne déjà).
+- [x] Chaque app ouvre le fichier reçu (au lancement et quand elle tourne déjà).
 - [ ] Linux : vérifier les `.desktop` / `mime.xml` des 14 apps (Tselatra n'en déclare aucun).
 
 ### Campagnes de pub (comme Tontolo)
-- [ ] `press/` : gabarit d'affiche 1080 × 1440 fr/en/mg, QR code vers la dernière version,
+- [x] `press/` : gabarit d'affiche 1080 × 1440 fr/en/mg, QR code vers la dernière version,
       `build_campaign.py`, `docs/CAMPAIGNS.md` (une campagne par jour, liée aux mises à jour).
-- [ ] Première campagne : « Installez Mahay HUB, il installe le reste » + une affiche par app.
+- [x] Première campagne : « Installez Mahay HUB, il installe le reste » + une affiche par app.
 - [ ] Affiche de version 0.2.0 jointe à la release ; légendes pour les réseaux.
 
 ### Les 13 apps sur Android
 - [x] Sary, Taratasy, Soratra, Tabilao, Seho (0.1.0).
 - [x] Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra : importées, renommées,
       compilent pour Android (0.2.0).
-- [ ] Construire et lancer les 8 nouvelles sur l'émulateur tablette et téléphone.
+- [x] Les 8 nouvelles démarrent sur l'émulateur tablette (x86_64, sans plantage).
+- [ ] Les essayer sur l'émulateur téléphone, et ouvrir un fichier reçu (« Ouvrir avec ») dans chacune.
 - [ ] Tselatra : passer aux crates média de Hetsika au lieu de FilmCraft épinglé (D17).
+
+### Nettoyage hérité de l'upstream
+- [x] Plus de serveur ArtCraft : Endrika ne se connecte plus à `collab.craftapps.dev` par défaut.
+- [x] Liens morts (`raantss18/<app>`, `…/apps/<app>`) remplacés par le dépôt `raantss18/mahay`.
+- [x] Libellés « Discord » et « mahay.com » remplacés (Discussions, GitHub, Mahay HUB) ; catalogues réalignés.
+- [ ] Tests upstream encore rouges après le renommage (liens, réseaux sociaux retirés, tris) : à
+      remettre au vert app par app (voir Linux et CI).
+- [ ] Traductions françaises et malgaches des libellés communautaires (« Rejoindre les discussions »).
 
 ### Publication 0.2.0
 - [ ] APK signés (14 × 2 ABI) et AppImage/.deb des 14 apps.

@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-10-18 (release 0.1.0, alpha). Only what was actually run is marked as
+Last updated: 2026-10-19 (release 0.2.0 in preparation, alpha). Only what was actually run is marked as
 verified; everything else says how far it was checked.
 
 ## Verified
@@ -23,19 +23,25 @@ verified; everything else says how far it was checked.
 | Linux builds of all six apps                      | GitHub Actions CI on Ubuntu 24.04 (green), and local release builds                       |
 | Linux packages                                    | AppImage and .deb for all six apps; Tabilao's AppImage extracted and `--version` run     |
 | Security audit                                    | `cargo audit` on all workspaces, APK manifests checked: see `docs/SECURITY_AUDIT.md`     |
+| The eight later apps on Android tablet (0.2.0)    | Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra: x86_64 emulator, each starts on its home screen, no crash in the log |
+| Mahay HUB 0.2.0 on Android tablet                 | lists the 13 apps, sees all 13 installed, Open on each                                   |
+| Linux packages of all 14 apps (0.2.0)             | `scripts/linux-build.sh`: AppImage and .deb for each                                      |
+| Translation catalogues after the relabel          | `cargo test -p <app>-ui-egui -- i18n` green in all 13 ui crates                           |
 
 ## Built, not yet exercised on a device
 
 - arm64-v8a APKs: built and signed; the emulator here is x86_64, so they ran on no device.
   **A test on a real phone and tablet is the next step.**
 - Linux AppImage/.deb packaging: upstream scripts, renamed; produced by the release workflow.
+- Direct install and self-update from Mahay HUB: unit-tested (signatures, versions), needs a
+  published 0.2.0 to exercise end to end.
+- "Open with" on Android for the eight later apps: intent filters generated, not yet tried.
 
 ## Not built here
 
 - Windows and macOS: code paths untouched, no toolchains in this environment.
-- The eight later apps (Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra):
-  inventoried (`docs/APPS_INVENTORY.md`), not imported yet.
-- The ArtCraft AI app (Tauri + React), sync (phase C) and the model hub (phase D).
+- The ArtCraft AI app (Tauri + React), cloud sync (0.3.0, `docs/SYNC.md`), live sync (phase C)
+  and the model hub (phase D).
 
 ## Known gaps
 
@@ -50,8 +56,8 @@ verified; everything else says how far it was checked.
 | Clipboard                | text only on Android (no images or rich text)                                                         | `ClipData` with HTML/URI                                   |
 | Stylus                   | pressure isn't passed to Sary's brushes on Android                                                    | read pressure from the motion events                        |
 | Soft keyboard            | the app repaints every 80 ms while the keyboard is open (winit doesn't wake it for IME text)          | upstream fix in winit, then drop the polling               |
-| Translations             | strings changed for Mahay (Discussions instead of Discord) fall back to English in other languages   | update the catalogues                                       |
-| Upstream tests           | not run after the rename                                                                              | run per crate in CI                                         |
+| Translations             | community labels in other languages were filled from related strings ("GitHub" for Discord)          | review French and Malagasy wording                          |
+| Upstream tests           | translation tests green; some UI tests still assert upstream links, social accounts and app order    | fix per app, then run per crate in CI                       |
 
 ## Next steps
 
