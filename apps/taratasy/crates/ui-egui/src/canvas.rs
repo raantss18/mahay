@@ -13,7 +13,7 @@ use taratasy_engine::{DocId, Edit};
 use taratasy_render::{DestView, DocInfo, LayerOp, LinkTarget, PRINT_TAG, PageText, RenderPool, RenderRequest, RequestKind, Tile, device_pixels};
 
 use crate::theme::{self, Tokens};
-use crate::{TaratasyApp, QuickTool, RightPanel, comments, icons, widgets};
+use crate::{QuickTool, RightPanel, TaratasyApp, comments, icons, widgets};
 
 /// Logical pixels per PDF point at 100% (96 dpi, like browsers).
 pub const PT: f32 = 96.0 / 72.0;
@@ -385,6 +385,8 @@ pub struct DocView {
     pub notice_dismissed: bool,
     /// The user has been told that the form's scripts were turned off (it is said once).
     pub scripts_off_noted: bool,
+    /// LaTeX `animate` players being played (#169).
+    pub animations: crate::animate_ui::Players,
     /// The file changed on disk while this document had unsaved changes: the notice bar asks
     /// before replacing it (#431).
     pub disk_changed: bool,
@@ -702,6 +704,7 @@ impl DocView {
             page_input_reselect: false,
             notice_dismissed: false,
             scripts_off_noted: false,
+            animations: Default::default(),
             disk_changed: false,
             close_requested: false,
             snapshot: None,
@@ -3029,6 +3032,9 @@ pub fn document_area(app: &mut TaratasyApp, index: usize, ui: &mut egui::Ui) {
                 view.current = i;
                 open_boxes = true;
             }
+            // LaTeX `animate` players: drawn over the page raster, and their clicks are theirs.
+            let on_animation =
+                crate::animate_ui::page(ui, painter, &resp, &xf, i, info, doc, &mut view.animations, scale, tool == QuickTool::Select && !preparing);
             // `over_field`: a form field is under the pointer and has set its cursor.
             let (on_field, over_field) = if preparing {
                 let field_tool = match tool {
@@ -3042,6 +3048,7 @@ pub fn document_area(app: &mut TaratasyApp, index: usize, ui: &mut egui::Ui) {
             } else {
                 use crate::forms_ui::FieldPointer;
                 let field = if tool == QuickTool::Select
+                    && !on_animation
                     && !(editing_content && can_modify && crate::content_ui::select_grabs(ui, &xf, i, info, &added, view))
                     && !comments::select_grabs(ui, &pcx, view)
                 {
@@ -3146,7 +3153,14 @@ pub fn document_area(app: &mut TaratasyApp, index: usize, ui: &mut egui::Ui) {
             {
                 view.links.context = Some((i, l.index));
             }
-            let consumed = on_objects || on_edit_text || on_link || on_content || boxing || on_field || comments::page_input(ui, &resp, &pcx, view);
+            let consumed = on_animation
+                || on_objects
+                || on_edit_text
+                || on_link
+                || on_content
+                || boxing
+                || on_field
+                || comments::page_input(ui, &resp, &pcx, view);
 
             let preview_target =
                 (matches!(tool, QuickTool::Select | QuickTool::Fill(_)) && !comments_hidden).then_some(view.comments.selected).flatten();

@@ -14,6 +14,8 @@ taratasy-fonts = { workspace = true }
 hayro = { workspace = true }
 hayro-syntax = { workspace = true }
 lopdf = { workspace = true }
+# Reads LaTeX `animate` players' scripts (their frame rate), with a size cap.
+flate2 = { workspace = true }
 kurbo = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }

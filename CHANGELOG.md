@@ -5,6 +5,14 @@ versions follow [SemVer](https://semver.org/).
 
 ## [0.2.1] — 2026-10-19 (alpha)
 
+### Added
+
+- **Taratasy plays animated PDFs** made with LaTeX's `animate` package (Beamer slides): a tap
+  or click plays and pauses, and the control bar under the animation (play, pause, step,
+  first and last frame, speed) works. Each frame is drawn once, in the background, so playing
+  stays smooth on a tablet. These PDFs played nowhere but in Acrobat, because the animation is
+  JavaScript; Taratasy plays them without running it.
+
 ### Fixed
 
 - **Typing on Android shows each letter at once**, in every app. When Android opened the

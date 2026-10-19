@@ -95,6 +95,17 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 
 ---
 
+## Animations dans les PDF (Taratasy)
+
+- [x] 0.2.1 : animations LaTeX `animate` (diapos Beamer) jouées sans JavaScript : clic = lecture /
+      pause, barre de contrôle (lecture, pause, pas à pas, début/fin, vitesse), images rendues une
+      fois en arrière-plan puis gardées ; outil `page_render` avec `animation_frame`.
+- [ ] Options `loop` et `palindrome`, lecture automatique à l'ouverture de la page (`autoplay`).
+- [ ] Animations à calques (option `timeline` d'animate, groupes de contenu optionnel).
+- [ ] Mode présentation plein écran : lancer l'animation avec Espace / touche flèche.
+- [ ] Soratra et Seho : ouvrir un PDF Beamer comme présentation (aujourd'hui seul Taratasy lit les PDF).
+- [ ] Vérifier sur une vraie tablette (mémoire des textures, fluidité à 18 images/s).
+
 ## Android : qualité
 
 - [ ] Tester les APK arm64 sur un vrai téléphone et une vraie tablette (GPU Vulkan, clavier,

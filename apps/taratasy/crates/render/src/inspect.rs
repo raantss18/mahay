@@ -33,6 +33,8 @@ const MAX_LAYER_STATE: usize = 1024;
 /// File specifications retained from a remote-Go-To action are deliberately small.
 const MAX_REMOTE_FILE_SPEC_BYTES: usize = 4096;
 const MAX_REMOTE_DESTINATION_NAME_BYTES: usize = 1024;
+/// Longest `animate` script read for its frame rate (the package's are a few kilobytes).
+const MAX_ANIMATE_SCRIPT_BYTES: usize = 64 * 1024;
 
 /// At most this many layers are read from all of `/RBGroups` together.
 const MAX_LAYER_GROUP_ENTRIES: usize = 4096;
@@ -78,6 +80,8 @@ pub struct DocInfo {
     pub attachments: Vec<Attachment>,
     /// Pages with a presentation transition (`/Trans`) or display time (`/Dur`), in page order.
     pub transitions: Vec<PageTransition>,
+    /// LaTeX `animate` players, which Taratasy plays without their scripts.
+    pub animations: Vec<crate::animate::Animation>,
     pub warnings: Vec<String>,
 }
 
@@ -634,6 +638,7 @@ impl<'a> Inspector<'a> {
         }
         self.annotations(info);
         self.transitions(info);
+        self.animations(info);
         let mut field_seen = HashSet::new();
         if let Some(form) = catalog.get(b"AcroForm").ok().and_then(|o| self.dict(o))
             && let Ok(fields) = form.get(b"Fields").and_then(|o| self.resolve(o).as_array())
@@ -1147,6 +1152,72 @@ impl<'a> Inspector<'a> {
         info.annotations.sort_by(|a, b| a.page.cmp(&b.page).then(b.rect[3].total_cmp(&a.rect[3])));
     }
 
+    /// LaTeX `animate` players (see [`crate::animate`]): a widget `anm<n>` with frame widgets
+    /// `<n>.0`, `<n>.1`, … on the same page. Bounded by the page's annotations.
+    fn animations(&self, info: &mut DocInfo) {
+        use crate::animate::{Animation, Control, ControlAction, DEFAULT_FPS, script_fps};
+        for (page, &pid) in self.page_ids.iter().enumerate() {
+            let Ok(page_dict) = self.doc.get_dictionary(pid) else { continue };
+            let Ok(Object::Array(annots)) = page_dict.get(b"Annots").map(|o| self.resolve(o)) else { continue };
+            // Widgets by their own (partial) name; `animate` names each one directly.
+            let mut named: HashMap<String, (ObjectId, &Dictionary)> = HashMap::new();
+            for a in annots {
+                let Object::Reference(id) = a else { continue };
+                let Some(d) = self.dict(a) else { continue };
+                if self.name(d, b"Subtype").as_deref() != Some("Widget") {
+                    continue;
+                }
+                if let Some(name) = d.get(b"T").ok().and_then(|o| self.pdf_text(o, 64)) {
+                    named.entry(name).or_insert((*id, d));
+                }
+            }
+            let mut numbers: Vec<u32> = named.keys().filter_map(|k| k.strip_prefix("anm")?.parse().ok()).collect();
+            numbers.sort_unstable();
+            for number in numbers {
+                let Some(&(display, d)) = named.get(&format!("anm{number}")) else { continue };
+                let frames: Vec<(u32, u16)> = (0..named.len()).map_while(|i| named.get(&format!("{number}.{i}")).map(|(id, _)| *id)).collect();
+                if frames.len() < 2 {
+                    continue;
+                }
+                let fps = self.widget_scripts(d).iter().find_map(|js| script_fps(js, number)).unwrap_or(DEFAULT_FPS);
+                let prefix = format!("{number}.");
+                let mut controls: Vec<Control> = named
+                    .iter()
+                    .filter_map(|(name, (id, c))| {
+                        let action = ControlAction::from_suffix(name.strip_prefix(&prefix)?)?;
+                        Some(Control { action, rect: rect4(self.resolve(c.get(b"Rect").unwrap_or(&Object::Null))), id: *id })
+                    })
+                    .collect();
+                controls.sort_by_key(|c| c.id);
+                info.animations.push(Animation {
+                    page,
+                    number,
+                    rect: rect4(self.resolve(d.get(b"Rect").unwrap_or(&Object::Null))),
+                    display,
+                    frames,
+                    fps,
+                    controls,
+                });
+            }
+        }
+    }
+
+    /// The JavaScript of a widget's additional actions (`/AA`), each at most
+    /// [`MAX_ANIMATE_SCRIPT_BYTES`] long; scripts that are longer or can't be read are left out.
+    fn widget_scripts(&self, d: &Dictionary) -> Vec<String> {
+        let Some(aa) = d.get(b"AA").ok().and_then(|o| self.dict(o)) else { return Vec::new() };
+        aa.iter()
+            .filter_map(|(_, action)| {
+                let js = self.dict(action)?.get(b"JS").ok()?;
+                match self.resolve(js) {
+                    Object::String(bytes, _) => limited_pdf_string(bytes, MAX_ANIMATE_SCRIPT_BYTES),
+                    Object::Stream(s) => bounded_stream_text(s, MAX_ANIMATE_SCRIPT_BYTES),
+                    _ => None,
+                }
+            })
+            .collect()
+    }
+
     fn link(&self, page: usize, index: usize, d: &Dictionary) -> Option<Link> {
         let rect = rect4(self.resolve(d.get(b"Rect").ok()?));
         let target = if let Ok(dest) = d.get(b"Dest") {
@@ -1552,6 +1623,22 @@ fn close_outline(open: &mut Vec<(usize, OutlineItem)>, roots: &mut Vec<OutlineIt
             None => roots.push(item),
         }
     }
+}
+
+/// A stream's text, decoded (no filter or `/FlateDecode` only) to at most `max` bytes; `None`
+/// past that or on any other filter.
+fn bounded_stream_text(s: &lopdf::Stream, max: usize) -> Option<String> {
+    use std::io::Read;
+    let bytes = match s.dict.get(b"Filter").ok() {
+        None => s.content.get(..s.content.len().min(max.saturating_add(1)))?.to_vec(),
+        Some(Object::Name(n)) if n.as_slice() == b"FlateDecode" => {
+            let mut out = Vec::new();
+            flate2::read::ZlibDecoder::new(s.content.as_slice()).take(u64::try_from(max).ok()?.saturating_add(1)).read_to_end(&mut out).ok()?;
+            out
+        }
+        _ => return None,
+    };
+    (bytes.len() <= max).then(|| String::from_utf8_lossy(&bytes).into_owned())
 }
 
 fn rect4(o: &Object) -> [f32; 4] {

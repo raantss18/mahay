@@ -162,7 +162,9 @@ pub fn tools() -> Vec<ToolDef> {
             .ro()
             .with(schema(json!({ "doc": doc(), "page": { "type": "integer", "minimum": 1 }, "dpi": { "type": "number", "minimum": 1, "maximum": 600 },
                 "hide_text_block": { "type": "integer", "minimum": 1, "description": "Render an inline editor background without this paragraph (index from text_paragraphs). Does not modify the document." },
-                "hide_added_text": { "type": "integer", "minimum": 1, "description": "Render a retyping background without this added text item (added index from object_list). Mutually exclusive with hide_text_block. Does not modify the document." }
+                "hide_added_text": { "type": "integer", "minimum": 1, "description": "Render a retyping background without this added text item (added index from object_list). Mutually exclusive with hide_text_block. Does not modify the document." },
+                "animation_frame": { "type": "integer", "minimum": 1, "description": "Render a LaTeX animate player on the page at this frame (1 = first) instead of as saved, as Taratasy plays it. Does not modify the document." },
+                "animation": { "type": "integer", "minimum": 0, "description": "With animation_frame: which player, by the number animate gives it (anm<n>); default the first one on the page." }
             }), &["doc", "page"])),
         t("object_list", "List editable objects", "List existing paragraphs, Image/Form artwork and added content once, with source kind/index references, displayed rectangles and document generation. Indexes change when content changes; use generation in object_move to reject stale references.")
             .ro().with(schema(json!({"doc":doc(),"page":{"type":"integer","minimum":1}}), &["doc","page"])),

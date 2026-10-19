@@ -9760,6 +9760,18 @@ evidence = []
 notes = ""
 
 [[feature]]
+id = "view.latex-animate"
+title = "Play LaTeX animate animations"
+area = "N"
+tier = "P2"
+milestone = "M12"
+status = "shipped"
+commands = []
+tools = ["page_render"]
+evidence = ["crates/render/tests/animate.rs::an_animate_player_is_found_with_its_frames_rate_and_controls", "crates/render/tests/animate.rs::each_frame_renders_in_place_of_the_display_widget", "crates/render/src/animate.rs::a_click_plays_to_the_end_and_stops_there_then_starts_over", "crates/automation/tests/automation.rs::page_render_draws_an_animate_frame_without_changing_the_document", "crates/ui-egui/tests/ui_group/animate.rs::a_click_plays_an_animate_player_to_its_last_frame"]
+notes = "PDFs made with the LaTeX animate package (Beamer slides) play without their JavaScript (#169): the viewer finds each player (anm<n> and its frame widgets), reads its frame rate from the script, and shows one frame widget at a time, rendered once per zoom on a worker thread and kept as textures. A click plays and pauses; the control bar (play, pause, step, first/last, speed) works. page_render draws any frame (animation_frame). Not yet: the package's loop and palindrome options, autoplay on page open, timeline (OCG-based) animations, and the speed shown in the bar"
+
+[[feature]]
 id = "misc.legacy-multimedia"
 title = "Legacy multimedia (screen annotations, renditions)"
 area = "N"

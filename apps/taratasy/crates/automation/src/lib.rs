@@ -36,10 +36,10 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use serde_json::{Value, json};
 use taratasy_engine::{CombineSource, DocId, Document, Edit, Session, commands};
 use taratasy_platform::staging::{StagingName, staging_suffixes};
 use taratasy_render::{PageRenderer, PageText, RenderConfig, RenderRequest, RequestKind};
-use serde_json::{Value, json};
 
 pub use taratasy_render::Pixels;
 pub use tools::{ToolDef, tools};
@@ -1835,6 +1835,24 @@ impl Automation {
                 .and_then(|n| n.checked_sub(1))
                 .ok_or_else(|| ToolError::InvalidArgs("hide_added_text must be a positive added text index from object_list".into()))?;
             self.doc(a)?.added_text_preview(page, index).map_err(failed)?.render_background(scale).map_err(failed)?
+        } else if let Some(frame) = a.opt_int("animation_frame")? {
+            let number = a.opt_int("animation")?;
+            let anim = self
+                .doc(a)?
+                .info
+                .animations
+                .iter()
+                .find(|x| x.page == page && number.is_none_or(|n| i64::from(x.number) == n))
+                .cloned()
+                .ok_or_else(|| ToolError::InvalidArgs(format!("page {} has no such animate player", page + 1)))?;
+            let frame = usize::try_from(frame)
+                .ok()
+                .and_then(|f| f.checked_sub(1))
+                .filter(|f| *f < anim.frames.len())
+                .ok_or_else(|| ToolError::InvalidArgs(format!("animation_frame must be between 1 and {}", anim.frames.len())))?;
+            let player = taratasy_render::animate::Player { frame, ..Default::default() };
+            let req = RenderRequest { page, kind: RequestKind::Pixels, tile: None, scale, tag: 0, preview: false };
+            self.renderer(id)?.render_annotation_variant(req, Arc::new(player.visibility(&anim)))
         } else {
             self.renderer(id)?.render(RenderRequest { page, kind: RequestKind::Pixels, tile: None, scale, tag: 0, preview: false })
         };

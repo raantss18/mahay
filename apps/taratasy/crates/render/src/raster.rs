@@ -443,6 +443,17 @@ impl PageRenderer {
 
     /// Render one page. Never panics.
     pub fn render(&mut self, req: RenderRequest) -> RenderedPage {
+        self.render_with_annotations(req, None)
+    }
+
+    /// Render one page with some annotations shown or hidden whatever their flags say
+    /// (object number, generation, visible): one frame of a LaTeX `animate` player, which
+    /// shows one of its hidden frame widgets at a time. Never panics.
+    pub fn render_annotation_variant(&mut self, req: RenderRequest, visibility: Arc<Vec<(i32, i32, bool)>>) -> RenderedPage {
+        self.render_with_annotations(req, Some(visibility))
+    }
+
+    fn render_with_annotations(&mut self, req: RenderRequest, visibility: Option<Arc<Vec<(i32, i32, bool)>>>) -> RenderedPage {
         let start = Stopwatch::start();
         if self.pdf.is_some() {
             self.stats.render_requests += 1;
@@ -462,7 +473,10 @@ impl PageRenderer {
         };
         let cache = RenderCache::new();
         let warnings = Arc::new(Mutex::new(Vec::new()));
-        let settings = warning_settings(&self.settings, warnings.clone());
+        let mut settings = warning_settings(&self.settings, warnings.clone());
+        if let Some(visibility) = visibility {
+            settings.annotation_visibility = visibility;
+        }
         let r = render_page(pdf, &cache, &settings, self.config.reject_oversize, request_reading(&self.config, &req), req);
         let warnings = take_warnings(&warnings);
         if matches!(r, Err((_, true))) {

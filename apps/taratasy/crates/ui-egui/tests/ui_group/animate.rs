@@ -77,3 +77,66 @@ fn a_fillable_field_beside_push_buttons_still_shows_the_form_bar() {
     h.get_by_label_contains("This document contains 2 interactive form fields.");
     h.get_by_label("Highlight fields");
 }
+
+/// A one-page 200 × 200 PDF with an `animate` player of three frames at 30 fps over
+/// [50 50 150 150]: `anm0` shows frame 0, the frames are hidden push buttons.
+fn player_pdf() -> Vec<u8> {
+    let colour = |rgb: &str| {
+        let body = format!("{rgb} rg 0 0 100 100 re f");
+        format!("<< /Type /XObject /Subtype /Form /BBox [0 0 100 100] /Length {} >>\nstream\n{body}\nendstream", body.len())
+    };
+    let widget = |name: &str, ap: u32, flags: u32| {
+        format!("<< /Type /Annot /Subtype /Widget /FT /Btn /Ff 65537 /T ({name}) /F {flags} /Rect [50 50 150 150] /P 3 0 R /AP << /N {ap} 0 R >> >>")
+    };
+    let display = "<< /Type /Annot /Subtype /Widget /FT /Btn /Ff 65537 /T (anm0) /F 4 /Rect [50 50 150 150] /P 3 0 R /AP << /N 5 0 R >> \
+         /AA << /PO << /S /JavaScript /JS (a0_fps=30;) >> >> >>";
+    let objs: Vec<String> = vec![
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [8 0 R 9 0 R 10 0 R 11 0 R] >> >>".into(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /Annots [8 0 R 9 0 R 10 0 R 11 0 R] >>".into(),
+        "<< /Length 0 >>\nstream\n\nendstream".into(),
+        colour("1 0 0"),
+        colour("0 1 0"),
+        colour("0 0 1"),
+        display.into(),
+        widget("0.0", 5, 2),
+        widget("0.1", 6, 2),
+        widget("0.2", 7, 2),
+    ];
+    let mut out = b"%PDF-1.7\n".to_vec();
+    let mut offsets = Vec::new();
+    for (i, o) in objs.iter().enumerate() {
+        offsets.push(out.len());
+        out.extend_from_slice(format!("{} 0 obj\n{o}\nendobj\n", i + 1).as_bytes());
+    }
+    let xref = out.len();
+    out.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objs.len() + 1).as_bytes());
+    for o in offsets {
+        out.extend_from_slice(format!("{o:010} 00000 n \n").as_bytes());
+    }
+    out.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objs.len() + 1).as_bytes());
+    out
+}
+
+#[test]
+fn a_click_plays_an_animate_player_to_its_last_frame() {
+    let mut h = open(player_pdf());
+    assert_eq!(h.state().views[0].animations.state(0, 0), Some((0, false)), "stopped on frame 1 before a click");
+    let r = h.state().views[0].page_screen_rect(0).expect("page 1 on screen");
+    let at = r.center();
+    h.hover_at(at);
+    h.run_steps(2);
+    h.drag_at(at);
+    h.drop_at(at);
+    h.run_steps(2);
+    assert_eq!(h.state().views[0].animations.state(0, 0), Some((0, true)), "the click starts it");
+    // Frames are drawn on a worker thread: let it run until the player stops.
+    for _ in 0..400 {
+        if h.state().views[0].animations.state(0, 0) == Some((2, false)) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        h.run_steps(1);
+    }
+    assert_eq!(h.state().views[0].animations.state(0, 0), Some((2, false)), "it stops on the last frame");
+}

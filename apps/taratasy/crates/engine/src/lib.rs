@@ -479,6 +479,12 @@ fn undrawn_notices(prev: &taratasy_cos::Document, next: &taratasy_cos::Document)
 }
 
 impl Document {
+    /// A renderer of the document as displayed, with its view settings, for drawing the frames
+    /// of its LaTeX `animate` players ([`taratasy_render::animate`]) away from the page pool.
+    pub fn animation_renderer(&self) -> taratasy_render::PageRenderer {
+        taratasy_render::PageRenderer::new(self.display.clone(), self.config.clone())
+    }
+
     /// How the document opens (Document Properties ▸ Initial View).
     /// Accessibility ▸ Check for accessibility: the full check (`None` if the document can't be
     /// read for editing).

@@ -111,6 +111,10 @@ pub struct InterpreterSettings {
     /// Taratasy patch: viewer overrides for optional content groups (object number, generation,
     /// visible), applied on top of the document's default configuration (Layers panel toggles).
     pub ocg_overrides: Arc<Vec<(i32, i32, bool)>>,
+    /// Taratasy patch: viewer overrides for annotation visibility (object number, generation,
+    /// visible), taking the place of the annotation's Hidden and NoView flags. A LaTeX
+    /// `animate` player shows one hidden frame widget at a time this way.
+    pub annotation_visibility: Arc<Vec<(i32, i32, bool)>>,
     /// Taratasy patch: once this is `true`, interpretation stops before the next content
     /// operator. What was drawn is then incomplete, so only set it when the output will be
     /// thrown away (a viewer's render whose result nobody can receive any more).
@@ -140,6 +144,7 @@ impl Default for InterpreterSettings {
             render_annotations: true,
             hide_comments: false,
             ocg_overrides: Arc::new(Vec::new()),
+            annotation_visibility: Arc::new(Vec::new()),
             cancelled: None,
             preview: false,
         }
@@ -182,8 +187,16 @@ pub fn interpret_page<'a>(
             let flags = annot.get::<u32>(F).unwrap_or(0);
 
             // Annotation should be hidden (Hidden = bit 2, NoView = bit 6).
-            // Taratasy patch: NoView was not honoured upstream.
-            if flags & (2 | 32) != 0 {
+            // Taratasy patch: NoView was not honoured upstream; a viewer override decides first.
+            let overridden = annot.obj_id().and_then(|id| {
+                context
+                    .settings
+                    .annotation_visibility
+                    .iter()
+                    .find(|(num, generation, _)| hayro_syntax::object::ObjectIdentifier::new(*num, *generation) == id)
+                    .map(|(_, _, visible)| *visible)
+            });
+            if !overridden.unwrap_or(flags & (2 | 32) == 0) {
                 continue;
             }
             // Taratasy patch: "Hide all comments" keeps widgets and links.

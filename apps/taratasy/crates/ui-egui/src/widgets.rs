@@ -499,18 +499,7 @@ pub fn progress_notice(app: &TaratasyApp, ctx: &egui::Context) -> bool {
     cancel
 }
 
-/// The Mahay wordmark (Storyteller's brand, docs/brand/; not open source), sized to `height`.
-pub fn mahay_logo(ui: &mut egui::Ui, height: f32) -> Response {
-    let dark = ui.visuals().dark_mode;
-    let (uri, bytes): (&str, &'static [u8]) = if dark {
-        ("bytes://mahay-logo-white.svg", include_bytes!("../../../docs/brand/mahay-logo-white.svg"))
-    } else {
-        ("bytes://mahay-logo.svg", include_bytes!("../../../docs/brand/mahay-logo.svg"))
-    };
-    ui.add(egui::Image::from_bytes(uri, bytes).max_height(height).alt_text("Mahay"))
-}
-
-/// The Mahay mark (brand blue, works on light and dark), `size` points square.
+/// The Mahay mark (Mahay's own, brand/ at the repository root), `size` points square.
 pub fn mahay_mark(ui: &mut egui::Ui, size: f32) -> Response {
     ui.add(
         egui::Image::from_bytes("bytes://mahay-mark.svg", include_bytes!("../../../docs/brand/mahay-mark.svg"))

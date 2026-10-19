@@ -30,6 +30,7 @@ macro_rules! tl_ctx {
 
 mod a11y_ui;
 mod actions_ui;
+pub mod animate_ui;
 mod appearance;
 pub mod canvas;
 mod chrome;
@@ -49,6 +50,9 @@ mod compare_ui;
 pub mod control;
 mod create_multiple_ui;
 mod create_ui;
+// Upstream's contributor credits: kept with the contributor files, no longer shown (the About
+// window is Mahay's shared page, docs/DECISIONS.md D18).
+#[allow(dead_code)]
 mod credits;
 mod crop;
 mod drag_pointer;

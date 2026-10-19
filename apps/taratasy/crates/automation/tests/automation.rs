@@ -2,10 +2,10 @@
 
 use std::path::{Path, PathBuf};
 
+use serde_json::{Value, json};
 #[cfg(feature = "mcp")]
 use taratasy_automation::mcp::McpServer;
 use taratasy_automation::{Automation, Content, ToolError, tools};
-use serde_json::{Value, json};
 
 /// A PDF with `n` 200×300 pt pages reading "Page 1", "Page 2", …
 fn fixture(n: usize) -> Vec<u8> {
@@ -460,8 +460,8 @@ fn added_arabic_text_keeps_copy_search_and_editor_order_after_retyping_and_reope
 
 #[test]
 fn arabic_actual_text_stays_logical_through_editor_tools_and_save_reopen() {
-    use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
     use std::sync::Arc;
+    use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
 
     let dir = workdir("arabic-actual-text");
     let logical = "سَلَام 123 (PDF)";
@@ -490,8 +490,8 @@ fn arabic_actual_text_stays_logical_through_editor_tools_and_save_reopen() {
 
 #[test]
 fn arabic_ligature_actual_text_is_one_editable_word_through_save_reopen() {
-    use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
     use std::sync::Arc;
+    use taratasy_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
 
     let dir = workdir("arabic-ligature-actual-text");
     let mut doc = Document::open(Arc::new(fixture(1))).unwrap();
@@ -6561,5 +6561,67 @@ fn a_root_less_write_output_is_atomic_too() {
     assert_eq!(names, ["page.png"], "no staging file left beside it");
     let e = free.write_output(&dir.join("new").to_string_lossy(), &[4]).unwrap_err();
     assert!(matches!(&e, ToolError::Failed(m) if m.contains("is a folder")), "{e:?}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// A one-page PDF with a LaTeX `animate` player of two frames (red, then blue) at
+/// [50 50 150 150] on a 200-point page.
+fn animate_pdf() -> Vec<u8> {
+    let colour = |rgb: &str| {
+        let body = format!("{rgb} rg 0 0 100 100 re f");
+        format!("<< /Type /XObject /Subtype /Form /BBox [0 0 100 100] /Length {} >>\nstream\n{body}\nendstream", body.len())
+    };
+    let widget = |name: &str, ap: u32, flags: u32| {
+        format!("<< /Type /Annot /Subtype /Widget /FT /Btn /Ff 65537 /T ({name}) /F {flags} /Rect [50 50 150 150] /P 3 0 R /AP << /N {ap} 0 R >> >>")
+    };
+    let objs: Vec<String> = vec![
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [7 0 R 8 0 R 9 0 R] >> >>".into(),
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R /Annots [7 0 R 8 0 R 9 0 R] >>".into(),
+        "<< /Length 0 >>\nstream\n\nendstream".into(),
+        colour("1 0 0"),
+        colour("0 0 1"),
+        widget("anm0", 5, 4),
+        widget("0.0", 5, 2),
+        widget("0.1", 6, 2),
+    ];
+    let mut out = b"%PDF-1.7\n".to_vec();
+    let mut offsets = Vec::new();
+    for (i, o) in objs.iter().enumerate() {
+        offsets.push(out.len());
+        out.extend_from_slice(format!("{} 0 obj\n{o}\nendobj\n", i + 1).as_bytes());
+    }
+    let xref = out.len();
+    out.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objs.len() + 1).as_bytes());
+    for o in offsets {
+        out.extend_from_slice(format!("{o:010} 00000 n \n").as_bytes());
+    }
+    out.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objs.len() + 1).as_bytes());
+    out
+}
+
+/// LaTeX `animate` players (#169): page_render draws any frame, as the viewer plays it.
+#[test]
+fn page_render_draws_an_animate_frame_without_changing_the_document() {
+    let dir = workdir("animate-frame");
+    std::fs::write(dir.join("anim.pdf"), animate_pdf()).unwrap();
+    let mut a = auto(&dir);
+    let doc = ok(&mut a, "doc_open", json!({ "path": "anim.pdf" }))["doc"].as_u64().unwrap();
+    let middle = |a: &mut Automation, args: Value| -> [u8; 3] {
+        let out = a.call("page_render", &args).unwrap();
+        let Content::Png { data, .. } = &out[0] else { panic!("expected an image") };
+        let mut reader = png::Decoder::new(std::io::Cursor::new(data.as_slice())).read_info().unwrap();
+        let mut buf = vec![0; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut buf).unwrap();
+        let channels = info.line_size / info.width as usize;
+        let at = 100 * info.line_size + 100 * channels;
+        [buf[at], buf[at + 1], buf[at + 2]]
+    };
+    assert_eq!(middle(&mut a, json!({ "doc": doc, "page": 1, "dpi": 72 })), [255, 0, 0], "as saved: frame 1");
+    assert_eq!(middle(&mut a, json!({ "doc": doc, "page": 1, "dpi": 72, "animation_frame": 2 })), [0, 0, 255]);
+    assert_eq!(middle(&mut a, json!({ "doc": doc, "page": 1, "dpi": 72, "animation_frame": 2, "animation": 0 })), [0, 0, 255]);
+    assert_eq!(middle(&mut a, json!({ "doc": doc, "page": 1, "dpi": 72 })), [255, 0, 0], "the document is unchanged");
+    assert!(matches!(err(&mut a, "page_render", json!({ "doc": doc, "page": 1, "animation_frame": 3 })), ToolError::InvalidArgs(_)));
+    assert!(matches!(err(&mut a, "page_render", json!({ "doc": doc, "page": 1, "animation_frame": 1, "animation": 7 })), ToolError::InvalidArgs(_)));
     let _ = std::fs::remove_dir_all(&dir);
 }
