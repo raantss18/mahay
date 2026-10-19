@@ -343,19 +343,36 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 - **Why:** upstream moves by ~100 commits a day; only a small share matters for Mahay's users,
   and the risk is in what Mahay changed, not in what upstream added.
 
-## D25 — The LaTeX editor's engine (proposed, awaiting the M0 spike)
+## D25 — The LaTeX editor's engine: Tectonic, with conditions (decided after the M0 spike)
 
-- **Status:** proposed on 2026-10-19; becomes a decision when the spike (docs/NEW_APPS.md, M0)
-  has built the engine for Android and measured it.
-- **Proposal:** TeXnika (the 15th app) compiles with **Tectonic** (XeTeX as an embedded Rust crate)
-  against a **curated offline bundle** delivered as signed packs, with a fast Rust math layout for
-  the instant layer and the exact PDF built in the background. Editor intelligence is written in
-  Rust (texlab is GPL-3.0 and cannot be embedded).
+- **Status:** **accepted with conditions** on 2026-10-20, after the M0 spike (docs/NEW_APPS.md,
+  "M0 spike results"; `experiments/tex-m0/`). Linux: go. Android: go with conditions: built for
+  `x86_64` and `aarch64`, compiled 12 documents on the x86_64 emulator offline, but **not yet run
+  on an arm64 device**.
+- **Decision:** TeXnika (the 15th app) compiles with **Tectonic** 0.17 (XeTeX as an embedded Rust
+  crate, MIT) against a **curated offline directory bundle** delivered as signed packs, with a fast Rust
+  math layout for the instant layer and the exact PDF built in the background. Editor intelligence is
+  written in Rust (texlab is GPL-3.0 and cannot be embedded).
+- **Measured (spike):** engine 9.1 MB (arm64) / 9.4 MB (x86_64) stripped, 2.1 to 2.6 MB compressed;
+  a warm rebuild of an article 0.4 to 1.1 s on Linux, 0.7 to 1.8 s on the emulator; peak memory 160 to
+  230 MB; the bundle slice used by 13 documents is 24.9 MB raw, 5 MB compressed.
+- **Conditions (must be met before the Android release; none blocks M1 on Linux):**
+  1. **ICU on Android:** the NDK has ICU only from API 31 (minSdk is 26) and no converters: ship ICU4C
+     with slim data, or replace the few ICU calls by Rust, or raise minSdk for this app (decide at M3).
+  2. **Real-device check:** build is proven for arm64, speed and memory are not (the emulator runs on the
+     host CPU); measure on the tablet and a phone before M3 is called done, with a fallback of a lighter
+     format or a memory cap if a phone cannot afford ~220 MB.
+  3. **biblatex needs a Rust BibLaTeX backend** (no `biber`): natbib/BibTeX is fine, so the backend is M5,
+     not a blocker for M1 to M4.
+  4. **Fonts by name** do not reach the bundle (file names do); stub fontconfig and graphite2 on Android
+     (no system fonts by name, no Graphite): acceptable, to be documented in the UI.
+  5. Pack licences: `pgfplots` and some hyphenation patterns are GPL (separate data packs with licence
+     texts), some headers need confirming (docs/NEW_APPS.md).
 - **Alternatives:** WebAssembly TeX engines (heavy, slow), a new TeX engine in Rust (years; none
   complete exists), Typst (not LaTeX).
-- **Fallback if the Android build of Tectonic fails:** a WebAssembly engine, or Linux first with
-  Android after.
-- **Open risks:** the NDK build of Tectonic's C libraries, `biblatex` without `biber`, pack size.
+- **Fallback if a condition cannot be met:** Android after Linux (TeXnika as a Linux app and a
+  remote-compile mode on Android through a Linux server) before any WebAssembly engine; the spike found
+  no blocker that needs it.
 
 ## D26 — The notebook is a native Jupyter client (proposed)
 

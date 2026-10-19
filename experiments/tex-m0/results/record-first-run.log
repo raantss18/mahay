@@ -1,0 +1,40 @@
+== a_article
+error: a_article.tex:18: Undefined control sequence
+RESULT ok=0 ms=223529 hwm_kb=267064 pdf_bytes=0 synctex_bytes=0 error=the XeTeX engine had an unrecoverable error: halted on potentially-recoverable error as specified
+files: 308
+== b_tikz
+RESULT ok=1 ms=82806 hwm_kb=266380 pdf_bytes=7657 synctex_bytes=0
+files: 362
+== c_natbib
+RESULT ok=1 ms=4887 hwm_kb=266196 pdf_bytes=13328 synctex_bytes=0
+files: 250
+== d_beamer
+Missing character: There is no 5 ("35) in font nullfont!
+warning: could not represent character "5" (0x35) in font "nullfont"
+warning:   you may need to load the `fontspec` package and use (e.g.) \setmainfont to
+warning:   choose a different font that covers the unrepresentable character(s)
+warning: d_beamer.tex:9: 
+Missing character: There is no 1 ("31) in font nullfont!
+warning: could not represent character "1" (0x31) in font "nullfont"
+warning: d_beamer.tex:9: Missing character: There is no 1 ("31) in font nullfont!
+warning: could not represent character "1" (0x31) in font "nullfont"
+warning: d_beamer.tex:9: 
+Missing character: There is no 1 ("31) in font nullfont!
+warning: could not represent character "1" (0x31) in font "nullfont"
+warning: d_beamer.tex:9: Missing character: There is no 1 ("31) in font nullfont!
+warning: could not represent character "1" (0x31) in font "nullfont"
+RESULT ok=1 ms=49259 hwm_kb=265540 pdf_bytes=24552 synctex_bytes=0
+files: 418
+== e_fontspec
+error: e_fontspec.tex:4: Package fontspec Error: The font "Latin Modern Roman" cannot be found.
+
+For immediate help type H <return>
+RESULT ok=0 ms=12869 hwm_kb=264476 pdf_bytes=0 synctex_bytes=0 error=the XeTeX engine had an unrecoverable error: halted on potentially-recoverable error as specified
+files: 244
+== f_biblatex
+
+===============================================================================
+INFO - This is Biber 2.22
+INFO - Logfile is 'f_biblatex.blg'
+INFO - Reading 'f_biblatex.bcf'
+ERROR - Error: Found biblatex control file version 3.8, expected version 3.11.

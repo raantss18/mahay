@@ -1,0 +1,27 @@
+[package]
+name = "tex-m0"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Throwaway spike (docs/NEW_APPS.md, M0): not part of the Mahay suite.
+[workspace]
+
+[dependencies]
+tectonic = { version = "=0.17.0", default-features = false }
+tectonic_bundles = "0.4"
+tectonic_errors = "0.3"
+anyhow = "1"
+tectonic_bridge_core = ">=0.3"
+
+[features]
+# `online`: also allow the default online bundle (Linux spike only; the product is offline).
+default = ["online"]
+online = ["tectonic/geturl-reqwest"]
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"

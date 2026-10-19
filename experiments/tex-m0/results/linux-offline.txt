@@ -1,0 +1,27 @@
+sample run result
+a_article cold RESULT ok=1 ms=2751 hwm_kb=227988 pdf_bytes=40541 synctex_bytes=3486
+a_article warm RESULT ok=1 ms=700 hwm_kb=178812 pdf_bytes=40541 synctex_bytes=3486
+b_tikz cold RESULT ok=1 ms=3038 hwm_kb=228788 pdf_bytes=7657 synctex_bytes=2177
+b_tikz warm RESULT ok=1 ms=1070 hwm_kb=181572 pdf_bytes=7657 synctex_bytes=2177
+c_natbib cold RESULT ok=1 ms=2188 hwm_kb=229340 pdf_bytes=13328 synctex_bytes=1168
+c_natbib warm RESULT ok=1 ms=374 hwm_kb=175064 pdf_bytes=13328 synctex_bytes=1168
+d_beamer cold RESULT ok=1 ms=3104 hwm_kb=228828 pdf_bytes=24552 synctex_bytes=6346
+d_beamer warm RESULT ok=1 ms=1733 hwm_kb=181172 pdf_bytes=24552 synctex_bytes=6346
+e_fontspec cold RESULT ok=1 ms=2519 hwm_kb=226032 pdf_bytes=10789 synctex_bytes=589
+e_fontspec warm RESULT ok=1 ms=669 hwm_kb=178008 pdf_bytes=10789 synctex_bytes=589
+f_biblatex cold RESULT ok=0 ms=3433 hwm_kb=225512 pdf_bytes=0 synctex_bytes=0 error=the external tool exited with error code 2
+f_biblatex warm RESULT ok=0 ms=1376 hwm_kb=176952 pdf_bytes=0 synctex_bytes=0 error=the external tool exited with error code 2
+g_math cold RESULT ok=1 ms=3132 hwm_kb=225648 pdf_bytes=18213 synctex_bytes=3335
+g_math warm RESULT ok=1 ms=1057 hwm_kb=181424 pdf_bytes=18213 synctex_bytes=3335
+h_figs cold RESULT ok=1 ms=2388 hwm_kb=225764 pdf_bytes=13350 synctex_bytes=1297
+h_figs warm RESULT ok=1 ms=434 hwm_kb=177180 pdf_bytes=13350 synctex_bytes=1297
+i_standalone cold RESULT ok=1 ms=2687 hwm_kb=225796 pdf_bytes=813 synctex_bytes=1252
+i_standalone warm RESULT ok=1 ms=617 hwm_kb=176912 pdf_bytes=813 synctex_bytes=1252
+j_babel cold RESULT ok=1 ms=2426 hwm_kb=223668 pdf_bytes=4299 synctex_bytes=659
+j_babel warm RESULT ok=1 ms=684 hwm_kb=176712 pdf_bytes=4299 synctex_bytes=659
+k_algx cold RESULT ok=1 ms=2587 hwm_kb=226136 pdf_bytes=9066 synctex_bytes=934
+k_algx warm RESULT ok=1 ms=516 hwm_kb=176308 pdf_bytes=9066 synctex_bytes=934
+l_unimath cold RESULT ok=1 ms=3990 hwm_kb=223240 pdf_bytes=6754 synctex_bytes=1011
+l_unimath warm RESULT ok=1 ms=1949 hwm_kb=189104 pdf_bytes=6754 synctex_bytes=1011
+m_fonts cold RESULT ok=1 ms=4243 hwm_kb=221272 pdf_bytes=8171 synctex_bytes=559
+m_fonts warm RESULT ok=1 ms=981 hwm_kb=176540 pdf_bytes=8171 synctex_bytes=559

@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,bm,cancel,esint,physics,siunitx,thmtools,tcolorbox,listings,algorithm2e}
+\declaretheorem{theorem}
+\begin{document}
+\begin{theorem}\label{t} $\bm{x}\cdot\cancel{y}$, $\oint_C f\,ds$, $\dv{f}{x}$, \SI{9.81}{\meter\per\second\squared}. \end{theorem}
+\begin{tcolorbox}[title=Box]Colourful box.\end{tcolorbox}
+\begin{lstlisting}[language=Python]
+def f(x): return x*x
+\end{lstlisting}
+\begin{algorithm}[H]\KwIn{$n$}\For{$i\leftarrow 1$ \KwTo $n$}{print $i$}\end{algorithm}
+\end{document}

@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{fontspec}
+% Tectonic finds bundle fonts by FILE name (family names only reach fontconfig's system fonts).
+\setmainfont{lmroman10-regular.otf}[BoldFont=lmroman10-bold.otf,ItalicFont=lmroman10-italic.otf,BoldItalicFont=lmroman10-bolditalic.otf]
+\setsansfont{lmsans10-regular.otf}[BoldFont=lmsans10-bold.otf,ItalicFont=lmsans10-oblique.otf]
+\setmonofont{lmmono10-regular.otf}
+\begin{document}
+Roman text, \textsf{sans text}, \texttt{mono text}, \textbf{bold}, \textit{italic}. Accents: éàüñ ﬁ ﬂ.
+\end{document}
