@@ -3,7 +3,7 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [0.2.1] — 2026-10-19 (alpha)
 
 ### Fixed
 

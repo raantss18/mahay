@@ -2219,7 +2219,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hub"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "eframe",
  "egui",
@@ -2244,7 +2244,7 @@ dependencies = [
 
 [[package]]
 name = "hub-android"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "eframe",
  "egui",
@@ -2258,7 +2258,7 @@ dependencies = [
 
 [[package]]
 name = "hub-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "semver",
  "serde",
@@ -2267,7 +2267,7 @@ dependencies = [
 
 [[package]]
 name = "hub-native"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "dirs 6.0.0",
  "dunce",
@@ -2287,7 +2287,7 @@ dependencies = [
 
 [[package]]
 name = "hub-ui-egui"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "egui",
  "egui_extras",
@@ -2303,7 +2303,7 @@ dependencies = [
 
 [[package]]
 name = "hub-web"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "eframe",
  "egui",
@@ -6140,7 +6140,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xtask"
-version = "0.2.0"
+version = "0.2.1"
 
 [[package]]
 name = "yoke"

@@ -4627,7 +4627,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "arboard",
  "eframe",
@@ -4650,7 +4650,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-android"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "eframe",
  "egui",
@@ -4663,7 +4663,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-calc"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "log",
  "tabilao-core",
@@ -4675,7 +4675,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-chart"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde",
  "tabilao-calc",
@@ -4686,7 +4686,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-cli"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "log",
  "quick-xml",
@@ -4698,7 +4698,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "js-sys",
  "serde",
@@ -4708,7 +4708,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-engine"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "image",
  "log",
@@ -4729,7 +4729,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-formula"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde",
  "tabilao-core",
@@ -4738,7 +4738,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-functions"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "regex",
  "tabilao-core",
@@ -4746,7 +4746,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-mcp"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "log",
  "serde_json",
@@ -4755,7 +4755,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-model"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4767,18 +4767,18 @@ dependencies = [
 
 [[package]]
 name = "tabilao-numfmt"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "tabilao-core",
 ]
 
 [[package]]
 name = "tabilao-pdf"
-version = "0.2.0"
+version = "0.2.1"
 
 [[package]]
 name = "tabilao-ui-egui"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "egui",
  "egui_kittest",
@@ -4801,7 +4801,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-web"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "eframe",
  "egui",
@@ -4818,7 +4818,7 @@ dependencies = [
 
 [[package]]
 name = "tabilao-xlsx"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "aes",
  "quick-xml",
@@ -6268,7 +6268,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde_json",
  "tabilao-engine",
