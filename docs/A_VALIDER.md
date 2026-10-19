@@ -20,3 +20,18 @@ Proposés par l'assistant, à relire par un locuteur natif avant une diffusion l
 | Volavolao ny endrika                              | Dessinez vos interfaces                     |
 | Fanavaozana / Havaozina ho azy                    | Mise à jour / mettre à jour automatiquement |
 | Apetraho / Rahatrizay / Ny vaovao                 | Installer / Plus tard / Nouveautés          |
+
+## README Mahay (2026-10-19)
+
+Proposé par l'assistant (README.mg.md), à relire par un locuteur natif :
+
+| Terme ou phrase                                                  | Sens voulu                                             |
+|------------------------------------------------------------------|--------------------------------------------------------|
+| Rindranasa 14 hamoronana sy hiasana amin'ny birao                | 14 apps de création et de bureautique                  |
+| Malalaka, teratany, manokana                                     | Libres, natives, privées                               |
+| Fakana iray ihany                                                | Un seul téléchargement                                 |
+| Ny tena ilaina                                                   | Configuration requise                                  |
+| Mpikajy / Sary (graphismes) / Toerana (stockage) / Aterineto     | Processeur / Graphismes / Stockage / Réseau            |
+| Avelao hametraka rindranasa tsy fantatra i Mahay HUB             | Autoriser Mahay HUB à installer des apps inconnues     |
+| Mila FUSE 2 (`libfuse2`) ny AppImage                             | L'AppImage demande FUSE 2                              |
+| Maivana ny rindranasa tsirairay ka azo apetraka tsirairay        | Chaque app est assez légère pour s'installer seule     |

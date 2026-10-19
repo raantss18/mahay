@@ -65,6 +65,21 @@ def main():
     out.append("> 🇬🇧 Download **Mahay HUB** only: it installs and updates every other app. "
                "🇲🇬 **Mahay HUB** ihany no alaina: izy no mametraka sy manavao ny rindranasa hafa rehetra.")
     out.append("")
+    out.append("## 🖥️ Configuration requise · System requirements")
+    out.append("")
+    out.append("| | 📱 Android | 🐧 Linux |")
+    out.append("|---|---|---|")
+    out.append("| Système · System | Android 8.0 (API 26) ou plus récent · or newer, téléphone ou tablette | x86_64, glibc 2.39 ou plus · or newer (Ubuntu 24.04, Debian 13, Fedora 40, Arch) |")
+    out.append("| Processeur · Processor | ARM 64 bits (`arm64-v8a`) ; `x86_64` pour émulateurs et Chromebooks | x86_64 |")
+    out.append("| Graphismes · Graphics | GPU avec OpenGL ES (Vulkan si disponible) | pilote GPU Vulkan ou OpenGL |")
+    out.append("| Stockage · Storage | ≈ 5 Mo Mahay HUB, jusqu'à ≈ 25 Mo par app | idem (AppImage) |")
+    out.append("| Réseau · Network | inutile, sauf téléchargement et mises à jour · only for downloads and updates | idem |")
+    out.append("| Autre · Other | autoriser « installer des apps inconnues » pour Mahay HUB | AppImage : FUSE 2 (`libfuse2`) ou `--appimage-extract-and-run` |")
+    out.append("")
+    out.append("Testé · Tested: Android 16 (API 36), émulateurs x86_64 (téléphone 1080×2400, tablette 2560×1600), Linux x86_64. "
+               "Les APK arm64 ne sont pas encore essayés sur un vrai appareil · arm64 APKs not yet run on a real device. "
+               "Détails · Details: [docs/STATUS.md](https://github.com/" + REPO + "/blob/main/docs/STATUS.md).")
+    out.append("")
     out.append(f"## ✨ Nouveautés de la version {v}")
     out.append("")
     out.append(changelog_section(v))

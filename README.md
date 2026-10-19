@@ -2,46 +2,114 @@
   <img src="docs/img/mahay-logo.svg" alt="Mahay" width="360">
 </p>
 
-> **Language / Langue / Fiteny:** **English** · [Français](README.fr.md) · [Malagasy](README.mg.md)
+<h3 align="center">Fourteen creative and office apps. Free, native, private.<br>One download. Linux, Android phones and tablets.</h3>
 
-**Mahay** (Malagasy: *skilled, able*) is a free, local-first suite of creative and office apps
-for **Linux** and **Android phones and tablets**. Each app is native Rust: no Electron, no
-WebView, no account and no telemetry. Your files stay on your device.
+<p align="center">
+  <a href="https://github.com/raantss18/mahay/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/raantss18/mahay?label=release&color=3b5bdb"></a>
+  <img alt="Status: alpha" src="https://img.shields.io/badge/status-alpha-e8590c">
+  <img alt="Platforms: Android, Linux" src="https://img.shields.io/badge/platforms-Android%20%C2%B7%20Linux-2b8a3e">
+  <img alt="Written in Rust" src="https://img.shields.io/badge/written%20in-Rust-b7410e">
+  <a href="LICENSE-MIT"><img alt="License: MIT or Apache-2.0" src="https://img.shields.io/badge/license-MIT%20%7C%20Apache--2.0-495057"></a>
+</p>
 
-Mahay is a fork of the [ArtCraft](https://github.com/storytold) crafting apps, renamed and
-ported to Android. See [NOTICE](NOTICE).
+<p align="center">
+  <b>English</b> · <a href="README.fr.md">Français</a> · <a href="README.mg.md">Malagasy</a>
+  &nbsp;|&nbsp;
+  <a href="https://github.com/raantss18/mahay/releases/latest">Download</a> ·
+  <a href="#system-requirements">Requirements</a> ·
+  <a href="#the-apps">The apps</a> ·
+  <a href="docs/STATUS.md">Status</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
 
-> **Status: alpha (0.2).** The apps work, but expect rough edges, especially on phones. See
-> [docs/STATUS.md](docs/STATUS.md) for what works, what doesn't and what was tested.
+---
+
+**Mahay** (Malagasy: *skilled, able*) is a suite of **14 apps** to write, calculate, present, draw,
+edit photos, audio and video, lay out pages and design interfaces. Every app is **native Rust**:
+no Electron, no WebView, no account, no telemetry. Your files stay on your device, everything works
+offline, and each app is small enough to install on its own.
+
+Mahay is a fork of the [ArtCraft](https://github.com/storytold) crafting apps, renamed and ported
+to **Android phones and tablets** and **Linux**. See [NOTICE](NOTICE).
+
+> **Status: alpha (0.2).** The apps work and are tested on Android and Linux, but expect rough
+> edges, especially on phones. [docs/STATUS.md](docs/STATUS.md) lists what works, what doesn't and
+> what was tested on which device.
+
+## Why Mahay
+
+|   |   |
+|---|---|
+| 🔒 **Private by design** | No account, no telemetry, no cloud required. Documents open from, and save back to, wherever you keep them. |
+| ⚡ **Native and light** | One APK per app, from about 5 MB (Mahay HUB) to about 25 MB. No browser engine inside. |
+| 📴 **Offline first** | Everything works without a connection. The network is used only to check for updates. |
+| 🔄 **Always up to date** | Signed updates (Ed25519 + SHA-256), checked daily, installed with one tap. |
+| 📱 **Made for touch** | The layout follows the window width, with no setting: phone, tablet, split screen, desktop. |
+| 🧰 **Opens your files** | DOCX, XLSX, PPTX, PDF, PSD, SVG, DXF and more, from Files, Drive or an e-mail. |
 
 ## The apps
 
 <p align="center"><img src="docs/img/icons.png" alt="The Mahay icon family" width="760"></p>
 
-| App          | What it does                                    | Linux | Android |
-|--------------|-------------------------------------------------|-------|---------|
-| **Mahay HUB** | the hub: installs, opens and updates every app  | yes   | yes     |
-| **Sary**     | image editor (layers, PSD, raw)                 | yes   | alpha   |
-| **Taratasy** | PDF: read, annotate, fill, sign, organise       | yes   | alpha   |
-| **Soratra**  | word processor (DOCX, ODT)                      | yes   | alpha   |
-| **Tabilao**  | spreadsheet (XLSX, ODS, CSV)                    | yes   | alpha   |
-| **Seho**     | presentations (PPTX)                            | yes   | alpha   |
-| **Tsilo**    | vector illustration                             | yes   | alpha   |
-| **Endrika**  | interface design and prototyping                | yes   | alpha   |
-| **Pejy**     | page layout and publishing                      | yes   | alpha   |
-| **Hazavana** | photo library and raw development               | yes   | alpha   |
-| **Feo**      | recording, editing and mixing audio             | yes   | alpha   |
-| **Hetsika**  | video editing                                   | yes   | alpha   |
-| **Tselatra** | motion graphics and visual effects              | yes   | alpha   |
-| **Drafitra** | technical drawing (CAD)                         | yes   | alpha   |
+| App | What it does | Linux | Android |
+|-----|--------------|:-----:|:-------:|
+| **Mahay HUB** | the hub: installs, opens and updates every app | ✅ | ✅ |
+| **Soratra** | word processor (DOCX, ODT) | ✅ | alpha |
+| **Tabilao** | spreadsheet (XLSX, ODS, CSV) | ✅ | alpha |
+| **Seho** | presentations (PPTX) | ✅ | alpha |
+| **Taratasy** | PDF: read, annotate, fill, sign, organise | ✅ | alpha |
+| **Sary** | image editor (layers, PSD, raw) | ✅ | alpha |
+| **Hazavana** | photo library and raw development | ✅ | alpha |
+| **Tsilo** | vector illustration | ✅ | alpha |
+| **Pejy** | page layout and publishing | ✅ | alpha |
+| **Endrika** | interface design and prototyping | ✅ | alpha |
+| **Drafitra** | technical drawing (CAD) | ✅ | alpha |
+| **Feo** | recording, editing and mixing audio | ✅ | alpha |
+| **Hetsika** | video editing | ✅ | alpha |
+| **Tselatra** | motion graphics and visual effects | ✅ | alpha |
 
+### On a phone
+
+The ribbon apps turn into a touch layout on narrow windows: scrolling tabs and command bars, side
+panels as drawers, nothing overlapping or leaving the screen. It is picked from the window width
+alone, so rotating the phone or opening split screen changes it by itself. Soratra, Tabilao, Seho
+and Taratasy have it so far (in development for 0.2.3); the other apps follow.
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="docs/img/phone-soratra-portrait.png" alt="Soratra on a phone" width="250"><br><sub><b>Soratra</b>: word processor</sub></td>
+    <td align="center"><img src="docs/img/phone-tabilao-portrait.png" alt="Tabilao on a phone" width="250"><br><sub><b>Tabilao</b>: spreadsheet</sub></td>
+    <td align="center"><img src="docs/img/phone-taratasy-portrait.png" alt="Taratasy on a phone" width="250"><br><sub><b>Taratasy</b>: PDF</sub></td>
+  </tr>
+</table>
 
 ## Install: just Mahay HUB
 
-Download **Mahay HUB** from the [latest release](https://github.com/raantss18/mahay/releases/latest):
-`hub-…-android-arm64-v8a.apk` on Android 8+ (phones and tablets), `hub-…-linux-x86_64.AppImage`
-on Linux. **Mahay HUB installs, opens and updates every other app**, straight from the release.
-Every app also updates itself (checked daily, signed files, you confirm the install).
+1. Download **Mahay HUB** from the [latest release](https://github.com/raantss18/mahay/releases/latest):
+   `hub-…-android-arm64-v8a.apk` for Android phones and tablets (the right file for almost every
+   device), `hub-…-linux-x86_64.AppImage` for Linux.
+2. Open it. On Android, allow Mahay HUB to install apps when Android asks.
+3. Tap **Install** on the apps you want. **Mahay HUB installs, opens and updates every other app**,
+   straight from the release. Each app also updates itself.
+
+Android may show a "Play Protect" warning for apps installed outside the Play Store: choose
+*Scan* or *Install anyway*. Every file is signed and its fingerprint is in `SHA256SUMS.txt`.
+
+## System requirements
+
+| | **Android** | **Linux** |
+|---|---|---|
+| **System** | Android 8.0 (API 26) or newer, phone or tablet | 64-bit (x86_64) distribution with glibc 2.39 or newer: Ubuntu 24.04, Debian 13, Fedora 40, Arch and newer |
+| **Processor** | 64-bit ARM (`arm64-v8a`), most phones and tablets since 2017. `x86_64` builds are for emulators, Chromebooks and Android on PC | x86_64 |
+| **Graphics** | A GPU with OpenGL ES (Vulkan where available) | A GPU driver with Vulkan or OpenGL |
+| **Storage** | About 5 MB for Mahay HUB, up to about 25 MB per app, plus your documents | About the same per app (AppImage) |
+| **Memory** | Not measured yet: more is better for Sary, Hazavana, Hetsika and Tselatra (large images and video) | same |
+| **Network** | Not needed. Only to download Mahay HUB and updates | same |
+| **Other** | Allow "install unknown apps" for Mahay HUB | AppImage needs FUSE 2 (`libfuse2`), or run it with `--appimage-extract-and-run` |
+
+Tested so far: Android 16 (API 36) on x86_64 emulators (a 1080×2400 phone and a 2560×1600 tablet)
+and Linux x86_64. The arm64 APKs are built and signed but have not been run on a real device yet:
+[docs/STATUS.md](docs/STATUS.md) says exactly what was verified and what was not.
 
 ## Works with your files
 
@@ -53,17 +121,10 @@ works too. Saving writes back to the file you opened.
 
 ## Always up to date
 
-Mahay updates itself, like Tontolo: each app (and Mahay HUB for all of them) checks the latest
-release when it starts and once a day, downloads it in the background, checks its signature
-(Ed25519) and SHA-256, then offers **Install**. On Android you confirm with one tap; on Linux the
-AppImage replaces itself and restarts. You can turn it off in **About**.
-
-## Light by design
-
-- One APK per app: you only download what you use (from about 5 MB for Mahay HUB to about 25 MB for the largest apps).
-- Native code with whole-program optimisation, no browser engine inside.
-- Works fully offline. Documents open from, and save back to, wherever you keep them (Files,
-  Drive, a USB stick) through Android's own document picker.
+Mahay updates itself: each app (and Mahay HUB for all of them) checks the latest release when it
+starts and once a day, downloads it in the background, verifies its signature (Ed25519) and
+SHA-256, then offers **Install**. On Android you confirm with one tap; on Linux the AppImage
+replaces itself and restarts. You can turn it off in **About**.
 
 ## Build from source
 
@@ -77,8 +138,14 @@ cd apps/tabilao && cargo run --release -p tabilao
 scripts/android-build.sh --abi arm64-v8a tabilao
 ```
 
-Details: [docs/BUILDING.md](docs/BUILDING.md). Design decisions: [docs/DECISIONS.md](docs/DECISIONS.md).
-Porting notes: [docs/PORTING_AUDIT.md](docs/PORTING_AUDIT.md).
+Each app is its own Cargo workspace under `apps/`; shared code lives in `libs/core`. Details:
+[docs/BUILDING.md](docs/BUILDING.md) · design decisions: [docs/DECISIONS.md](docs/DECISIONS.md) ·
+porting notes: [docs/PORTING_AUDIT.md](docs/PORTING_AUDIT.md) · roadmap: [TODO.md](TODO.md).
+
+## Security
+
+Found a vulnerability? Please report it privately, as described in [SECURITY.md](SECURITY.md).
+The audit notes are in [docs/SECURITY_AUDIT.md](docs/SECURITY_AUDIT.md).
 
 ## License
 
