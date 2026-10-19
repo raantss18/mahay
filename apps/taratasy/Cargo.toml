@@ -5,7 +5,7 @@ exclude = ["vendor"]
 default-members = ["crates/*", "apps/taratasy", "apps/taratasy-cli", "xtask"]
 
 [workspace.package]
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
@@ -21,39 +21,39 @@ mahay-print = { path = "../../libs/core/crates/print", version = "0.1.0" }
 # Whether a path stored in a document may be opened (GoToR link targets).
 mahay-docpath = { path = "../../libs/core/crates/docpath", version = "0.1.0" }
 # internal
-taratasy-geom = { path = "crates/geom", version = "0.2.1" }
-taratasy-filters = { path = "crates/filters", version = "0.2.1" }
-taratasy-cos = { path = "crates/cos", version = "0.2.1" }
-taratasy-crypt = { path = "crates/crypt", version = "0.2.1" }
-taratasy-organize = { path = "crates/organize", version = "0.2.1" }
-taratasy-measure = { path = "crates/measure", version = "0.2.1" }
-taratasy-annot = { path = "crates/annot", version = "0.2.1" }
-taratasy-audit = { path = "crates/audit", version = "0.2.1" }
-taratasy-fonts = { path = "crates/fonts", version = "0.2.1" }
-taratasy-model = { path = "crates/model", version = "0.2.1" }
-taratasy-content = { path = "crates/content", version = "0.2.1" }
-taratasy-redact = { path = "crates/redact", version = "0.2.1" }
-taratasy-print = { path = "crates/print", version = "0.2.1" }
-taratasy-xfdf = { path = "crates/xfdf", version = "0.2.1" }
-taratasy-sign = { path = "crates/sign", version = "0.2.1" }
-taratasy-optimize = { path = "crates/optimize", version = "0.2.1" }
-taratasy-a11y = { path = "crates/a11y", version = "0.2.1" }
-taratasy-oracle = { path = "crates/oracle", version = "0.2.1" }
-taratasy-testkit = { path = "crates/testkit", version = "0.2.1" }
-taratasy-ocr = { path = "crates/ocr", version = "0.2.1" }
-taratasy-js = { path = "crates/js", version = "0.2.1" }
-taratasy-compare = { path = "crates/compare", version = "0.2.1" }
-taratasy-preflight = { path = "crates/preflight", version = "0.2.1" }
-taratasy-export = { path = "crates/export", version = "0.2.1" }
-taratasy-edit = { path = "crates/edit", version = "0.2.1" }
-taratasy-create = { path = "crates/create", version = "0.2.1" }
-taratasy-forms = { path = "crates/forms", version = "0.2.1" }
-taratasy-xfa = { path = "crates/xfa", version = "0.2.1" }
-taratasy-render = { path = "crates/render", version = "0.2.1" }
-taratasy-engine = { path = "crates/engine", version = "0.2.1" }
-taratasy-platform = { path = "crates/platform", version = "0.2.1" }
-taratasy-ui-egui = { path = "crates/ui-egui", version = "0.2.1" }
-taratasy-automation = { path = "crates/automation", version = "0.2.1", default-features = false }
+taratasy-geom = { path = "crates/geom", version = "0.2.2" }
+taratasy-filters = { path = "crates/filters", version = "0.2.2" }
+taratasy-cos = { path = "crates/cos", version = "0.2.2" }
+taratasy-crypt = { path = "crates/crypt", version = "0.2.2" }
+taratasy-organize = { path = "crates/organize", version = "0.2.2" }
+taratasy-measure = { path = "crates/measure", version = "0.2.2" }
+taratasy-annot = { path = "crates/annot", version = "0.2.2" }
+taratasy-audit = { path = "crates/audit", version = "0.2.2" }
+taratasy-fonts = { path = "crates/fonts", version = "0.2.2" }
+taratasy-model = { path = "crates/model", version = "0.2.2" }
+taratasy-content = { path = "crates/content", version = "0.2.2" }
+taratasy-redact = { path = "crates/redact", version = "0.2.2" }
+taratasy-print = { path = "crates/print", version = "0.2.2" }
+taratasy-xfdf = { path = "crates/xfdf", version = "0.2.2" }
+taratasy-sign = { path = "crates/sign", version = "0.2.2" }
+taratasy-optimize = { path = "crates/optimize", version = "0.2.2" }
+taratasy-a11y = { path = "crates/a11y", version = "0.2.2" }
+taratasy-oracle = { path = "crates/oracle", version = "0.2.2" }
+taratasy-testkit = { path = "crates/testkit", version = "0.2.2" }
+taratasy-ocr = { path = "crates/ocr", version = "0.2.2" }
+taratasy-js = { path = "crates/js", version = "0.2.2" }
+taratasy-compare = { path = "crates/compare", version = "0.2.2" }
+taratasy-preflight = { path = "crates/preflight", version = "0.2.2" }
+taratasy-export = { path = "crates/export", version = "0.2.2" }
+taratasy-edit = { path = "crates/edit", version = "0.2.2" }
+taratasy-create = { path = "crates/create", version = "0.2.2" }
+taratasy-forms = { path = "crates/forms", version = "0.2.2" }
+taratasy-xfa = { path = "crates/xfa", version = "0.2.2" }
+taratasy-render = { path = "crates/render", version = "0.2.2" }
+taratasy-engine = { path = "crates/engine", version = "0.2.2" }
+taratasy-platform = { path = "crates/platform", version = "0.2.2" }
+taratasy-ui-egui = { path = "crates/ui-egui", version = "0.2.2" }
+taratasy-automation = { path = "crates/automation", version = "0.2.2", default-features = false }
 
 # pdf
 hayro = "0.7.1"

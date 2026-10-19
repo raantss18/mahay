@@ -1305,7 +1305,7 @@ checksum = "66b7e2430c6dff6a955451e2cfc438f09cea1965a9d6f87f7e3b90decc014099"
 
 [[package]]
 name = "endrika"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arboard",
  "eframe",
@@ -1333,7 +1333,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-android"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arboard",
  "eframe",
@@ -1354,7 +1354,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-doc",
  "endrika-engine",
@@ -1368,7 +1368,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-collab"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "endrika-color",
@@ -1383,7 +1383,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-collab-net"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "endrika-collab",
@@ -1406,7 +1406,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-color"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "kurbo",
  "serde",
@@ -1415,7 +1415,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-doc"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-color",
  "endrika-geom",
@@ -1427,7 +1427,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-engine"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "endrika-collab",
@@ -1455,7 +1455,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-format"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-doc",
  "endrika-pathops",
@@ -1470,7 +1470,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-geom"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "kurbo",
  "serde",
@@ -1478,7 +1478,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-layout"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-doc",
  "endrika-geom",
@@ -1486,7 +1486,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-mcp"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "endrika-collab-net",
@@ -1502,7 +1502,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-pathops"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-doc",
  "endrika-geom",
@@ -1511,7 +1511,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-pdf"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-color",
  "endrika-doc",
@@ -1528,7 +1528,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-plugin"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-color",
  "serde",
@@ -1541,7 +1541,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-render"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "crc32fast",
  "endrika-color",
@@ -1559,7 +1559,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-server"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "crc32fast",
  "ctrlc",
@@ -1583,7 +1583,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-svg"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "endrika-color",
@@ -1599,7 +1599,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-text"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-doc",
  "endrika-geom",
@@ -1613,7 +1613,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-ui-egui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "base64 0.22.1",
  "egui",
@@ -1639,7 +1639,7 @@ dependencies = [
 
 [[package]]
 name = "endrika-web"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "eframe",
  "egui",
@@ -6132,7 +6132,7 @@ checksum = "9440ea3e5aeabb0ac63af70daf835274065238cdd0cec83418f417eae38bacee"
 
 [[package]]
 name = "xtask"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "endrika-engine",
  "serde_json",

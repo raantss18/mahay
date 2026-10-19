@@ -3653,7 +3653,7 @@ dependencies = [
 
 [[package]]
 name = "pejy"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arboard",
  "eframe",
@@ -3676,7 +3676,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-android"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "eframe",
  "egui",
@@ -3690,7 +3690,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "pejy-color",
  "pejy-compose",
@@ -3706,7 +3706,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-color"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "kurbo",
  "mahay-cms",
@@ -3718,7 +3718,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-compose"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "fancy-regex",
  "hypher",
@@ -3738,7 +3738,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-doc"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "pejy-color",
  "pejy-geom",
@@ -3750,7 +3750,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-engine"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "caseless",
  "hayro-cmap",
@@ -3789,7 +3789,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-epub"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "pejy-color",
  "pejy-doc",
@@ -3798,7 +3798,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-fonts"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "core-text",
  "harfrust 0.13.3",
@@ -3811,7 +3811,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-format"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "pejy-doc",
  "pejy-images",
@@ -3823,7 +3823,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-geom"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "flo_curves",
  "kurbo",
@@ -3836,7 +3836,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-idml"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "log",
  "pejy-color",
@@ -3851,7 +3851,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-images"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "log",
@@ -3866,7 +3866,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-mcp"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "log",
@@ -3879,7 +3879,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-pdf"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hayro-cmap",
  "hayro-interpret",
@@ -3901,7 +3901,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-pptx"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "pejy-color",
@@ -3918,7 +3918,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-render"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hayro",
  "image",
@@ -3936,7 +3936,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-textimport"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "pejy-doc",
  "quick-xml",
@@ -3945,7 +3945,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-tools"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "pejy-color",
  "pejy-compose",
@@ -3957,7 +3957,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-ui-egui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "egui",
  "egui_kittest",
@@ -3985,7 +3985,7 @@ dependencies = [
 
 [[package]]
 name = "pejy-web"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "eframe",
  "egui",
@@ -7441,7 +7441,7 @@ checksum = "9440ea3e5aeabb0ac63af70daf835274065238cdd0cec83418f417eae38bacee"
 
 [[package]]
 name = "xtask"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "serde_json",
 ]

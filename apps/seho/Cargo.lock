@@ -3761,7 +3761,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "seho"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "arboard",
  "cpal",
@@ -3781,7 +3781,7 @@ dependencies = [
 
 [[package]]
 name = "seho-android"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cpal",
  "eframe",
@@ -3797,7 +3797,7 @@ dependencies = [
 
 [[package]]
 name = "seho-anim"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "seho-geom",
  "seho-model",
@@ -3806,7 +3806,7 @@ dependencies = [
 
 [[package]]
 name = "seho-av1"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "rayon",
  "seho-bitstream",
@@ -3815,14 +3815,14 @@ dependencies = [
 
 [[package]]
 name = "seho-bitstream"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "proptest",
 ]
 
 [[package]]
 name = "seho-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "seho-engine",
  "seho-mcp",
@@ -3831,14 +3831,14 @@ dependencies = [
 
 [[package]]
 name = "seho-color"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "seho-engine"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "i_overlay",
  "image",
@@ -3863,7 +3863,7 @@ dependencies = [
 
 [[package]]
 name = "seho-fonts"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "epaint_default_fonts",
  "harfrust 0.13.3",
@@ -3875,7 +3875,7 @@ dependencies = [
 
 [[package]]
 name = "seho-format"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "seho-model",
  "serde",
@@ -3886,7 +3886,7 @@ dependencies = [
 
 [[package]]
 name = "seho-geom"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "kurbo",
  "serde",
@@ -3894,7 +3894,7 @@ dependencies = [
 
 [[package]]
 name = "seho-h264"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "rayon",
  "seho-bitstream",
@@ -3903,7 +3903,7 @@ dependencies = [
 
 [[package]]
 name = "seho-hevc"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "rayon",
  "seho-bitstream",
@@ -3912,7 +3912,7 @@ dependencies = [
 
 [[package]]
 name = "seho-isobmff"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "seho-bitstream",
  "thiserror 2.0.21",
@@ -3920,11 +3920,11 @@ dependencies = [
 
 [[package]]
 name = "seho-matroska"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "seho-mcp"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "log",
  "seho-engine",
@@ -3934,7 +3934,7 @@ dependencies = [
 
 [[package]]
 name = "seho-media"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "log",
@@ -3952,7 +3952,7 @@ dependencies = [
 
 [[package]]
 name = "seho-metafile"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "kurbo",
@@ -3961,7 +3961,7 @@ dependencies = [
 
 [[package]]
 name = "seho-model"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "seho-color",
  "seho-geom",
@@ -3973,15 +3973,15 @@ dependencies = [
 
 [[package]]
 name = "seho-ogg"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "seho-opus"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "seho-pdf"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hayro-syntax",
  "krilla",
@@ -3999,7 +3999,7 @@ dependencies = [
 
 [[package]]
 name = "seho-pptx"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "log",
@@ -4015,7 +4015,7 @@ dependencies = [
 
 [[package]]
 name = "seho-render"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "image",
  "kurbo",
@@ -4034,7 +4034,7 @@ dependencies = [
 
 [[package]]
 name = "seho-text"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "seho-color",
@@ -4048,7 +4048,7 @@ dependencies = [
 
 [[package]]
 name = "seho-ui-egui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "egui",
  "egui_kittest",
@@ -4071,7 +4071,7 @@ dependencies = [
 
 [[package]]
 name = "seho-vp9"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "rayon",
  "seho-bitstream",
@@ -4080,7 +4080,7 @@ dependencies = [
 
 [[package]]
 name = "seho-web"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "eframe",
  "egui",
@@ -6118,7 +6118,7 @@ checksum = "9440ea3e5aeabb0ac63af70daf835274065238cdd0cec83418f417eae38bacee"
 
 [[package]]
 name = "xtask"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "serde_json",
 ]

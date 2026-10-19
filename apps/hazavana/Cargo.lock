@@ -2421,7 +2421,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "eframe",
  "egui",
@@ -2447,7 +2447,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-android"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "eframe",
  "egui",
@@ -2462,7 +2462,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-catalog"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "crc32fast",
  "hazavana-develop",
@@ -2479,7 +2479,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-cli"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "dhat",
  "hazavana-codecs",
@@ -2495,7 +2495,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-codecs"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "avif-serialize",
  "bytemuck",
@@ -2526,7 +2526,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-color"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-geom",
  "proptest",
@@ -2535,7 +2535,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-denoise"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "faer-core",
  "hazavana-denoise-core",
@@ -2552,7 +2552,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-denoise-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-raster",
  "miniz_oxide 0.8.9",
@@ -2567,7 +2567,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-develop"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-color",
  "hazavana-geom",
@@ -2579,7 +2579,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-engine"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "ab_glyph",
  "harfrust",
@@ -2622,7 +2622,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-faces"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-testkit",
  "matrixmultiply",
@@ -2637,7 +2637,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-fetch"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "log",
  "rustls",
@@ -2647,7 +2647,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-geocode"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "miniz_oxide 0.8.9",
  "serde",
@@ -2655,7 +2655,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-geom"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "proptest",
  "serde",
@@ -2663,7 +2663,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-gpu"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "bytemuck",
  "hazavana-color",
@@ -2683,7 +2683,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-heif"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "heic-rs",
  "rayon",
@@ -2691,14 +2691,14 @@ dependencies = [
 
 [[package]]
 name = "hazavana-inpaint"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "rayon",
 ]
 
 [[package]]
 name = "hazavana-lensdb"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-develop",
  "hazavana-geom",
@@ -2707,7 +2707,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-mcp"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-codecs",
  "hazavana-engine",
@@ -2718,7 +2718,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-merge"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-codecs",
  "hazavana-color",
@@ -2734,7 +2734,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-meta"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-geom",
  "hazavana-tiff",
@@ -2746,7 +2746,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-pipeline"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-color",
  "hazavana-develop",
@@ -2764,7 +2764,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-preview"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-raster",
  "jpeg-encoder",
@@ -2776,7 +2776,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-raster"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-color",
  "hazavana-geom",
@@ -2788,7 +2788,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-raw"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "dhat",
  "hazavana-color",
@@ -2812,7 +2812,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-scenes"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-color",
  "hazavana-raster",
@@ -2823,7 +2823,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-segment"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "candle-core",
  "candle-nn",
@@ -2837,7 +2837,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-slideshow"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "hazavana-raster",
  "serde",
@@ -2846,15 +2846,15 @@ dependencies = [
 
 [[package]]
 name = "hazavana-sysmem"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "hazavana-testkit"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "hazavana-tiff"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "proptest",
  "serde",
@@ -2863,7 +2863,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-ui-egui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "egui",
  "egui_kittest",
@@ -2893,7 +2893,7 @@ dependencies = [
 
 [[package]]
 name = "hazavana-web"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "crc32fast",
  "eframe",
@@ -6704,7 +6704,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "brotli",
  "flate2",
