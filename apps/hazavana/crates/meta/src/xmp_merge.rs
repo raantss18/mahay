@@ -23,7 +23,7 @@ use std::collections::{BTreeSet, HashSet};
 
 use quick_xml::events::Event;
 
-use crate::xmp::{XmpError, canonical_name, parse_xmp};
+use crate::xmp::{MAX_DEPTH, MAX_NODES, XmpError, canonical_name, parse_xmp, too_many_namespaces};
 
 /// Which properties [`merge_xmp`] takes from the fresh packet. Names are canonical
 /// `prefix:name` (prefixes as [`crate::parse_xmp`] reports them); `prefix:*` is a whole namespace.
@@ -108,13 +108,13 @@ fn scan(s: &str) -> Result<Scan, XmpError> {
         match ev {
             Event::Start(ref e) | Event::Empty(ref e) => {
                 count += 1;
-                if count > 200_000 || stack.len() > 64 {
+                if count > MAX_NODES || stack.len() > MAX_DEPTH {
                     return Err(XmpError::TooComplex);
                 }
                 let empty = matches!(ev, Event::Empty(_));
                 let mut scope = Vec::new();
                 let mut raw_attrs = Vec::new();
-                // repeated names are refused with a set, in linear time (quick-xml's own check is quadratic)
+                // repeated names are refused with a set, in linear time (quick-xml's check was quadratic before 0.41)
                 let mut seen = HashSet::new();
                 for a in e.attributes().with_checks(false) {
                     let a = a.map_err(|e| XmpError::Xml(e.to_string()))?;
@@ -131,6 +131,9 @@ fn scan(s: &str) -> Result<Scan, XmpError> {
                     raw_attrs.push((k, v));
                 }
                 scopes.push(scope);
+                if too_many_namespaces(&scopes) {
+                    return Err(XmpError::TooComplex);
+                }
                 let raw_name = String::from_utf8_lossy(e.name().as_ref()).into_owned();
                 let name = canonical_name(&raw_name, &scopes);
                 let kind = match stack.last() {

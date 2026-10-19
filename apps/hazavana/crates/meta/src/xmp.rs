@@ -148,8 +148,16 @@ impl Node {
     }
 }
 
-const MAX_DEPTH: usize = 64;
-const MAX_NODES: usize = 200_000;
+pub(crate) const MAX_DEPTH: usize = 64;
+pub(crate) const MAX_NODES: usize = 200_000;
+/// Namespace declarations in scope at once. Name resolution scans them per element and attribute,
+/// so without a cap one tag with N declarations costs O(N²) (100 000 took 33 s to parse).
+pub(crate) const MAX_NS_IN_SCOPE: usize = 256;
+
+/// `scopes` (one entry per open element) holds more declarations than [`MAX_NS_IN_SCOPE`].
+pub(crate) fn too_many_namespaces(scopes: &[Vec<(String, String)>]) -> bool {
+    scopes.iter().map(Vec::len).sum::<usize>() > MAX_NS_IN_SCOPE
+}
 
 /// `prefix:local` with the prefix canonicalised by namespace URI (see [`NAMESPACES`]).
 pub(crate) fn canonical_name(qname: &str, scopes: &[Vec<(String, String)>]) -> String {
@@ -251,6 +259,9 @@ fn parse_tree(s: &str) -> Result<Node, XmpError> {
                     }
                 }
                 scopes.push(scope);
+                if too_many_namespaces(&scopes) {
+                    return Err(XmpError::TooComplex);
+                }
                 let name = canonical(&String::from_utf8_lossy(e.name().as_ref()), &scopes);
                 let attrs = raw_attrs.into_iter().map(|(k, v)| (canonical(&k, &scopes), v)).collect();
                 let node = Node { name, attrs, ..Default::default() };
