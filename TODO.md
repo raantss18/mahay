@@ -66,6 +66,25 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 
 ---
 
+## Nouvelles apps — Porofo (éditeur LaTeX) et Kajy (notebook) ([dossier](docs/NEW_APPS.md), D25, D26)
+
+Proposition, en attente des réponses de l'auteur (ordre, taille des paquets, langages).
+- [ ] **M0 — sondage** : Tectonic compile pour Linux **et Android** (arm64, x86_64) un article avec
+      `amsmath`, `tikz` et BibTeX **hors ligne**, depuis un mini-bundle choisi ; mesurer taille et
+      temps. Décide le moteur (D25).
+- [ ] M1 : éditeur + PDF côte à côte sur Linux (coloration, compilation après une pause, erreurs, SyncTeX).
+- [ ] M2 : niveau TeXstudio (complétion, plan, projets, bibliographie, palette de symboles, snippets, orthographe).
+- [ ] M3 : Android (clavier tactile, rangée de touches `\ { } $ ^ _`, vue compacte, paquets téléchargés).
+- [ ] M4 : niveau LyX/BaKoMa (formules et figures rendues dans le texte, vue « structure »).
+- [ ] M5 : tous les paquets, backend biblatex, fr/en/mg, accessibilité.
+- [ ] Briques communes : `mahay-editor` (éditeur de code), `mahay-math` (formules, depuis la mise en page
+      de Soratra), `mahay-pdfview` (depuis Taratasy), `mahay-pack` (paquets signés).
+- [ ] **K0 — sondage** : CPython et un noyau sur Android ; client Jupyter Rust face à un `ipykernel` Linux.
+- [ ] K1 → K4 : carnet sur Linux, Android avec noyau distant, paquet Python, autres noyaux.
+- [ ] Valider les noms Porofo et Kajy ([A_VALIDER](docs/A_VALIDER.md)).
+
+---
+
 ## 0.2.0 — Mahay HUB, mises à jour automatiques, 14 apps (en cours)
 
 ### Mahay HUB (l'accueil, seul fichier à télécharger)

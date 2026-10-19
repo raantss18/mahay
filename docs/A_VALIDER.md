@@ -20,3 +20,10 @@ Proposés par l'assistant, à relire par un locuteur natif avant une diffusion l
 | Volavolao ny endrika                              | Dessinez vos interfaces                     |
 | Fanavaozana / Havaozina ho azy                    | Mise à jour / mettre à jour automatiquement |
 | Apetraho / Rahatrizay / Ny vaovao                 | Installer / Plus tard / Nouveautés          |
+
+## Noms des nouvelles apps (proposés le 2026-10-19)
+
+| Nom proposé | Sens voulu                                        | Pour              |
+|-------------|---------------------------------------------------|-------------------|
+| Porofo      | preuve (on prouve des théorèmes, on écrit des maths) | l'éditeur LaTeX |
+| Kajy        | calcul, calculer                                  | le carnet de calcul (notebook) |
