@@ -1,36 +1,89 @@
 name: Release
 
-# Builds every app for Linux and Android from a tag (v0.1.0) and attaches the files to the
-# GitHub release: <app>-<version>-linux-x86_64.AppImage/.deb and
-# <app>-<version>-android-<abi>.apk, plus SHA256SUMS.txt (the names Mahay HUB looks for).
-
-# Started by hand (Actions ▸ Release ▸ Run workflow) once the signing secrets are set:
-# MAHAY_KEYSTORE_B64 (base64 of the .jks), MAHAY_KEYSTORE_PASSWORD, MAHAY_KEY_ALIAS,
-# MAHAY_KEY_PASSWORD. See docs/BUILDING.md. Release 0.1.0 was built and signed locally.
+# Builds the apps for Linux and Android, signs the checksum list and publishes the release the way
+# scripts/stage-release.sh and scripts/publish-release.sh do locally (same files, same names, same
+# checks in scripts/finalize-release.sh), so a release from here installs and updates like one
+# built on the owner's computer.
+#
+# Started by hand: Actions ▸ Release ▸ Run workflow.
+#   - ref: a tag (v0.2.3) to publish, or a branch (main) for a trial
+#   - apps: "all", or a comma list for a quick trial (for example tabilao)
+#   - dry_run: true (the default) builds and checks everything and publishes NOTHING
+# Needs the secrets MAHAY_KEYSTORE_B64, MAHAY_KEYSTORE_PASSWORD, MAHAY_KEY_ALIAS, MAHAY_KEY_PASSWORD
+# and UPDATE_SIGNING_KEY (release-keys/set-github-secrets.sh, docs/BUILDING.md).
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Tag to build and publish (for example v0.2.0)"
+      ref:
+        description: "Tag to publish (v0.2.3), or a branch for a trial"
         required: true
+        default: main
+      apps:
+        description: "Apps to build: all, or a comma list (a trial: tabilao)"
+        required: true
+        default: all
+      dry_run:
+        description: "Build and check only: nothing is published"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      apps: ${{ steps.plan.outputs.apps }}
+      version: ${{ steps.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - id: plan
+        env:
+          SELECTED: ${{ inputs.apps }}
+          REF: ${{ inputs.ref }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          all='["hub","sary","taratasy","soratra","tabilao","seho","tsilo","endrika","pejy","hazavana","feo","hetsika","tselatra","drafitra"]'
+          version=$(cat VERSION)
+          if [ "$SELECTED" = all ]; then
+            apps=$all
+          else
+            apps=$(printf '%s' "$SELECTED" | tr -d ' ' | jq -R -c 'split(",")')
+            echo "$apps" | jq -e --argjson all "$all" 'all(. as $a | $all | index($a) != null)' >/dev/null \
+              || { echo "unknown app in: $SELECTED" >&2; exit 1; }
+          fi
+          if [ "$DRY_RUN" != true ]; then
+            [ "$REF" = "v$version" ] || { echo "to publish, ref must be the tag v$version (VERSION says $version), not $REF" >&2; exit 1; }
+            [ "$SELECTED" = all ] || { echo "to publish, apps must be all" >&2; exit 1; }
+            grep -q "^## \[$version\]" CHANGELOG.md || { echo "CHANGELOG.md has no section for $version" >&2; exit 1; }
+          fi
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Building $version: $apps (dry run: $DRY_RUN)"
+
   linux:
+    needs: plan
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        app: [hub, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.ref }}
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
@@ -44,27 +97,41 @@ jobs:
             libfontconfig1-dev libssl-dev desktop-file-utils zsync libfuse2
           echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
           sudo apt-get update && sudo apt-get install -y nfpm
-      - name: Package
-        run: apps/${{ matrix.app }}/packaging/linux/package.sh --formats "appimage deb"
+      - name: Build and package (AppImage and .deb)
         env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          MAHAY_SUPABASE_URL: ${{ secrets.MAHAY_SUPABASE_URL }}
+          MAHAY_SUPABASE_KEY: ${{ secrets.MAHAY_SUPABASE_KEY }}
+          MAHAY_GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.MAHAY_GOOGLE_ANDROID_CLIENT_ID }}
+          MAHAY_GOOGLE_DESKTOP_CLIENT_ID: ${{ secrets.MAHAY_GOOGLE_DESKTOP_CLIENT_ID }}
+          MAHAY_GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.MAHAY_GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: scripts/linux-build.sh ${{ matrix.app }}
+      - name: Check the packages exist
+        env:
+          APP: ${{ matrix.app }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          for f in "$APP-$VERSION-linux-x86_64.AppImage" "$APP-$VERSION-linux-x86_64.deb"; do
+            test -s "apps/$APP/dist/release/$f" || { echo "missing $f" >&2; exit 1; }
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.app }}
-          path: |
-            apps/${{ matrix.app }}/dist/*.AppImage
-            apps/${{ matrix.app }}/dist/*.deb
+          path: apps/${{ matrix.app }}/dist/release/*
+          retention-days: 3
 
   android:
+    needs: plan
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        app: [hub, sary, taratasy, soratra, tabilao, seho, tsilo, endrika, pejy, hazavana, feo, hetsika, tselatra, drafitra]
+        app: ${{ fromJSON(needs.plan.outputs.apps) }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.ref }}
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -81,39 +148,75 @@ jobs:
           workspaces: apps/${{ matrix.app }} -> ../../target/android
           key: release-android
       - run: cargo install cargo-ndk --locked
-      - name: Build signed APKs and AAB
+      - name: Build the signed APKs
         env:
           MAHAY_KEYSTORE_B64: ${{ secrets.MAHAY_KEYSTORE_B64 }}
           MAHAY_KEYSTORE_PASSWORD: ${{ secrets.MAHAY_KEYSTORE_PASSWORD }}
           MAHAY_KEY_ALIAS: ${{ secrets.MAHAY_KEY_ALIAS }}
           MAHAY_KEY_PASSWORD: ${{ secrets.MAHAY_KEY_PASSWORD }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          APP: ${{ matrix.app }}
+          MAHAY_SUPABASE_URL: ${{ secrets.MAHAY_SUPABASE_URL }}
+          MAHAY_SUPABASE_KEY: ${{ secrets.MAHAY_SUPABASE_KEY }}
+          MAHAY_GOOGLE_ANDROID_CLIENT_ID: ${{ secrets.MAHAY_GOOGLE_ANDROID_CLIENT_ID }}
+          MAHAY_GOOGLE_DESKTOP_CLIENT_ID: ${{ secrets.MAHAY_GOOGLE_DESKTOP_CLIENT_ID }}
+          MAHAY_GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.MAHAY_GOOGLE_DESKTOP_CLIENT_SECRET }}
         run: |
           test -n "$MAHAY_KEYSTORE_B64" || { echo "release key not configured" >&2; exit 1; }
           echo "$MAHAY_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
           export MAHAY_KEYSTORE="$RUNNER_TEMP/release.jks"
-          scripts/android-build.sh --abi all --aab ${{ matrix.app }}
-          TAG="${{ inputs.tag }}" scripts/release-names.sh "${TAG#v}"
+          scripts/android-build.sh --abi all "$APP"
+          scripts/release-names.sh "$VERSION"
       - uses: actions/upload-artifact@v4
         with:
           name: android-${{ matrix.app }}
-          path: dist/release/*
+          path: dist/release/*.apk
+          retention-days: 3
 
   publish:
-    needs: [linux, android]
+    needs: [plan, linux, android]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/download-artifact@v4
         with:
-          path: out
+          path: collected
           merge-multiple: true
-      - name: Checksums and release
+      - name: Gather the files
+        run: |
+          mkdir -p dist/release
+          mv collected/* dist/release/
+          ls dist/release | wc -l
+      - name: Checksums, signature and checks
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          ALL: ${{ inputs.apps }}
+        run: |
+          test -n "$UPDATE_SIGNING_KEY" || { echo "update signing key not configured" >&2; exit 1; }
+          umask 077
+          printf '%s\n' "$UPDATE_SIGNING_KEY" > "$RUNNER_TEMP/update-signing.pem"
+          export UPDATE_SIGNING_KEY_FILE="$RUNNER_TEMP/update-signing.pem" REQUIRE_APKSIGNER=1 ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          if [ "$ALL" = all ]; then scripts/finalize-release.sh "$VERSION" --require-all; else scripts/finalize-release.sh "$VERSION"; fi
+          (cd dist/release && sha256sum -c --quiet SHA256SUMS.txt)
+          rm -f "$RUNNER_TEMP/update-signing.pem"
+      - name: Publish as the latest release
+        if: ${{ !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
         run: |
-          cd out
-          find . -type f -exec mv {} . \; 2>/dev/null || true
-          sha256sum -- *.apk *.aab *.AppImage *.deb 2>/dev/null > SHA256SUMS.txt
-          TAG="${{ inputs.tag }}"
-          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --latest \
-            --title "Mahay $TAG" --notes-file ../CHANGELOG.md -- *
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --latest \
+            --title "Mahay $VERSION" --notes-file dist/release-notes.md dist/release/*
+      - name: Keep the files of a dry run for a day
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-run-release
+          path: |
+            dist/release/SHA256SUMS.txt
+            dist/release/SHA256SUMS.txt.sig
+            dist/release-notes.md
+          retention-days: 1

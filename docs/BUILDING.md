@@ -68,6 +68,7 @@ USB key, a password manager). Losing it means Android refuses updates of install
 | `release-keys/keystore.properties` | the same for Gradle (`android/keystore.properties` links to it)  |
 | `release-keys/update-signing.pem`  | Ed25519 private key that signs `SHA256SUMS` → `SHA256SUMS.sig`   |
 | `release-keys/SECRETS.md`          | the values below, filled in, and the certificate fingerprints   |
+| `release-keys/accounts.env`        | the sync account's public build values (Supabase, Google client IDs) |
 | `release-keys/set-github-secrets.sh` | uploads the five secrets to GitHub Actions                    |
 
 The public half of the update key is committed: `.github/update-signing.pub`, and embedded in
@@ -84,6 +85,11 @@ GitHub Actions secrets (Settings ▸ Secrets and variables ▸ Actions), set wit
 | `MAHAY_KEY_ALIAS`         | `mahay`                                       |
 | `MAHAY_KEY_PASSWORD`      | key password (`release-keys/signing.env`)     |
 | `UPDATE_SIGNING_KEY`      | `release-keys/update-signing.pem` (PEM text)  |
+| `MAHAY_SUPABASE_URL`, `MAHAY_SUPABASE_KEY` | the sync account (0.3.0): Supabase project URL and anon key, from `release-keys/accounts.env` (public by design) |
+| `MAHAY_GOOGLE_ANDROID_CLIENT_ID`, `MAHAY_GOOGLE_DESKTOP_CLIENT_ID`, `MAHAY_GOOGLE_DESKTOP_CLIENT_SECRET` | Google OAuth clients for Drive (public values; a desktop client's "secret" is documented by Google as not confidential) |
+
+The sync values are read at compile time (`option_env!`); a build without them simply hides the
+account screen. Setup: `docs/ACCOUNTS_SETUP.md`.
 
 Local builds read `android/keystore.properties`; without it, release APKs get the debug key
 (and installed apps then refuse them as updates).

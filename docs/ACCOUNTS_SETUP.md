@@ -23,8 +23,7 @@ ne voit que les fichiers qu'il a créés). Conception : [SYNC.md](SYNC.md), déc
    - Recopier le *Client ID* et générer un *Client secret* dans Supabase.
 4. **Authentication ▸ Providers ▸ Google** : activer (identifiants créés à l'étape 2, ci-dessous).
 5. **Authentication ▸ URL Configuration ▸ Redirect URLs** : ajouter
-   `org.mahay.hub://login-callback/` (Android) et `http://localhost:43824/` (Linux, port à
-   confirmer à l'implémentation).
+   `org.mahay.hub://login-callback/` (Android) et `http://localhost:43824/` (Linux ; le port est fixé à 43824).
 6. **SQL Editor** : exécuter (les petites données de chaque utilisateur, chiffrées côté appareil ;
    chacun ne voit que ses lignes) :
 
@@ -46,32 +45,46 @@ ne voit que les fichiers qu'il a créés). Conception : [SYNC.md](SYNC.md), déc
 
 ## 2. Google Cloud (connexion Google et Drive)
 
+Valeurs à utiliser (toutes publiques) :
+
+| | |
+|---|---|
+| Page d'accueil | `https://github.com/raantss18/mahay` |
+| Politique de confidentialité | `https://github.com/raantss18/mahay/blob/main/docs/PRIVACY.md` (déjà écrite, fr et en) |
+| Nom de l'app | `Mahay` |
+| Paquet Android du hub | `org.mahay.hub` |
+| Empreinte **SHA-1** de la clé de signature | `49:FC:E8:AE:44:E6:DD:E9:F0:25:BF:11:CA:10:AA:E1:19:A3:F2:9D` |
+| Empreinte SHA-256 | `1E:0A:BB:5D:8F:F4:08:14:15:DB:4E:96:09:7F:66:1E:61:87:15:C2:E6:A0:FD:48:FD:42:5D:5C:A2:AC:C7:77` |
+
 1. console.cloud.google.com : créer un projet `Mahay`.
 2. **APIs & Services ▸ Library** : activer **Google Drive API**.
-3. **OAuth consent screen** (« Google Auth Platform ») : type *External*, nom de l'app `Mahay`,
-   e-mail d'assistance, page d'accueil `https://github.com/raantss18/mahay`, une page de
-   confidentialité (je la rédige dans le dépôt), puis les portées `openid`, `email`, `profile` et
-   `https://www.googleapis.com/auth/drive.file`.
-   - `drive.file` est une portée **non sensible** : pas d'audit de sécurité, seulement la
-     vérification de la marque (nom, logo, domaine). Tant que l'application est en mode
-     « Testing », les jetons expirent après 7 jours et seuls les testeurs listés peuvent se
-     connecter : il faudra la passer en « In production » avant la 0.3.0.
-4. **Credentials ▸ Create credentials ▸ OAuth client ID** :
-   - un client *Web application* pour Supabase (redirection
-     `https://<réf-du-projet>.supabase.co/auth/v1/callback`) : son *Client ID* et son *Client secret*
-     vont dans Supabase (étape 1.4) ;
-   - les clients pour Drive sur l'appareil (Android et Linux) : le type exact et la redirection
-     seront confirmés à l'implémentation ; je te dirai alors lesquels créer.
+3. **OAuth consent screen** (« Google Auth Platform ») : type *External*, nom `Mahay`, e-mail d'assistance,
+   page d'accueil et politique de confidentialité (ci-dessus), puis les portées `openid`, `email`, `profile`
+   et `https://www.googleapis.com/auth/drive.file`.
+   - `drive.file` est une portée **non sensible** : pas d'audit de sécurité, seulement la vérification de la
+     marque (nom, logo, domaine). En mode « Testing », les jetons expirent après 7 jours et seuls les
+     testeurs listés peuvent se connecter : il faut passer en « In production » avant la 0.3.0. Google peut
+     demander un domaine vérifié pour la page d'accueil : je peux activer GitHub Pages
+     (`raantss18.github.io/mahay`) comme page d'accueil et de confidentialité si c'est le cas.
+4. **Credentials ▸ Create credentials ▸ OAuth client ID**, trois clients :
+   - **Web application**, pour Supabase : redirection
+     `https://<réf-du-projet>.supabase.co/auth/v1/callback`. Son *Client ID* et son *Client secret* vont dans
+     Supabase (étape 1.4) ; **le secret n'est jamais mis ailleurs**.
+   - **Android**, pour Drive sur Android : paquet `org.mahay.hub` et l'empreinte SHA-1 ci-dessus. Son
+     *Client ID* (public) va dans `release-keys/accounts.env` (`MAHAY_GOOGLE_ANDROID_CLIENT_ID`).
+   - **Desktop app**, pour Drive sur Linux (redirection sur la boucle locale). Son *Client ID* et son secret
+     (que Google dit non confidentiel pour une app installée) vont dans `accounts.env`.
 
 ## 3. Ce qu'il me faut au final
 
-Seulement des **noms** et des emplacements, jamais les secrets :
+Seulement des **valeurs publiques**, jamais un secret :
 
 | Valeur | Où la mettre |
 |---|---|
-| Project URL et clé anon Supabase | `release-keys/` et secrets GitHub `MAHAY_SUPABASE_URL`, `MAHAY_SUPABASE_KEY` |
-| Client ID Google pour Drive | `release-keys/` et secret GitHub `MAHAY_GOOGLE_CLIENT_ID` |
-| Secrets clients (GitHub, Google) | uniquement dans Supabase, jamais dans le dépôt |
+| Project URL et clé anon Supabase | `release-keys/accounts.env` (`MAHAY_SUPABASE_URL`, `MAHAY_SUPABASE_KEY`) |
+| Client IDs Google (Android, Desktop) | `release-keys/accounts.env` |
+| Secret du client Desktop | `release-keys/accounts.env` (non confidentiel pour une app installée) |
+| Secrets du client Web Google et de l'app OAuth GitHub | uniquement dans Supabase, et le gestionnaire de mots de passe |
 
-Quand c'est fait, dis-moi simplement « les comptes sont créés » : je vérifie les noms des secrets
-avec `gh secret list` et je branche `mahay-account`.
+Puis `release-keys/set-github-secrets.sh` les envoie à GitHub. Dis-moi simplement « les comptes sont créés » :
+je vérifie les **noms** des secrets avec `gh secret list` et je branche `mahay-account`.

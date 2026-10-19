@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Gather a release's files into dist/release/: the APKs under their release names, each app's
-# Linux AppImage (+ .zsync) and .deb at the app's current version, and SHA256SUMS.txt.
+# Linux AppImage (+ .zsync) and .deb at the app's current version, then finish it
+# (scripts/finalize-release.sh: SHA256SUMS.txt, signature, checks, release page).
 #
 #   scripts/stage-release.sh 0.1.0
 set -euo pipefail
@@ -15,11 +16,5 @@ for app in hub sary taratasy soratra tabilao seho tsilo endrika pejy hazavana fe
     [ -e "$f" ] && cp "$f" dist/release/ || echo "missing: $f" >&2
   done
 done
-(cd dist/release && sha256sum -- *.apk *.AppImage *.deb > SHA256SUMS.txt)
-# Sign the checksum list (Ed25519): the apps refuse any update without a valid signature.
-key=${UPDATE_SIGNING_KEY_FILE:-release-keys/update-signing.pem}
-[ -f "$key" ] || { echo "no update-signing key at $key: the release can't be signed" >&2; exit 1; }
-openssl pkeyutl -sign -inkey "$key" -rawin -in dist/release/SHA256SUMS.txt -out dist/release/SHA256SUMS.txt.sig
-openssl pkeyutl -verify -pubin -inkey .github/update-signing.pub -rawin -in dist/release/SHA256SUMS.txt -sigfile dist/release/SHA256SUMS.txt.sig
-python3 -I scripts/release-notes.py "$version" > dist/release-notes.md
-ls -la dist/release
+# Checksums, signature, key checks and the release page: the same code the CI uses.
+scripts/finalize-release.sh "$version"
