@@ -18,6 +18,10 @@ versions follow [SemVer](https://semver.org/).
   certificate: "Install" in the update bar says "Updating through Mahay HUB…" and the app doesn't
   download the update a second time. Without the hub, every app still updates itself as before.
 - English, French and Malagasy texts for all of it (Malagasy to be reviewed, `docs/A_VALIDER.md`).
+- **"Open with" finds Mahay for more files (D22).** Each app is now also offered for its documents by
+  **file extension** when a file manager reports no type or a generic one (IDML, DXF, RAW photos,
+  `.tex`, ...), in addition to the MIME type. A new test (`scripts/android-open-with-test.py`) asks
+  Android which apps answer each case and fails if an app drops out or claims files that are not its own.
 
 ### Security
 

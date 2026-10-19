@@ -34,7 +34,8 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
       plein écran en compact.
 - [ ] Soratra, Tabilao, Seho : ruban replié (onglets dans un menu, groupes sur une barre défilante),
       **rien ne se superpose** ni ne sort de l'écran.
-- [ ] Mahay HUB : 1 colonne en compact, 2 en moyen, 4 en étendu (aujourd'hui toujours 4).
+- [x] Mahay HUB : les colonnes suivent déjà la largeur (largeur ÷ 300 dp, de 1 à 4) ; à regarder sur le
+      téléphone quand les vues compactes seront fusionnées.
 - [ ] Taratasy, Sary, Hazavana : panneaux latéraux en tiroirs, barres d'outils défilantes.
 - [ ] Feo, Hetsika, Tselatra, Tsilo, Endrika, Pejy, Drafitra : même socle, par ordre d'usage sur téléphone.
 - [ ] Test automatique par app : à 360, 400, 600 et 840 dp, aucun widget cliquable n'en chevauche un autre.
