@@ -122,6 +122,8 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 - [x] Pression tactile : 1.0 pour un doigt, vraie pression pour un stylet (`getToolType`).
       Construit, pas encore essayé sur un appareil (doigt et stylet).
 - [ ] Dialogues au-dessus du clavier virtuel (les fenêtres egui ignorent les marges).
+- [ ] Android ouvre seul le clavier quand un dialogue place le curseur dans un champ (Sary ▸ Nouveau
+      document) : le refermer tant que l'utilisateur n'a pas touché le champ (lire l'encart IME).
 - [x] Nettoyer les copies de documents anciennes dans `files/docs/` (30 jours, au démarrage,
       fil séparé ; les Enregistrer sous jamais placés sont gardés). Pas encore essayé sur un appareil.
 - [ ] Sélecteur de dossier (`ACTION_OPEN_DOCUMENT_TREE`) : Taratasy, Hazavana, Feo, Hetsika.
