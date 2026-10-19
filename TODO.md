@@ -44,6 +44,24 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 - [x] Bureau inchangé : à ≥ 840 dp la disposition d'origine reste identique (seule exception : le ruban de
       Seho défile au lieu de couper ses groupes).
 
+### P0 — Tactile : défiler au doigt, sans sélectionner (0.2.3)
+Signalé le 2026-10-19 sur téléphone : dans **Soratra**, glisser un doigt sur le texte **sélectionne**
+au lieu de défiler, et il n'y a pas de barre de défilement.
+- [x] Soratra : un glissement au doigt défile la page (avec inertie) ; la sélection se fait par
+      appui long ou au stylet/souris ; barre de défilement pleine et large en compact. Vérifié sur
+      l'émulateur téléphone (`adb input swipe` : la page suit, rien n'est sélectionné). Reste : poignées
+      de sélection au doigt, menu contextuel à l'appui long.
+- [ ] **Constaté sur l'émulateur : Tabilao a le même défaut** (un glissement sur la grille sélectionne
+      D1:D20 au lieu de défiler). Même règle dans toutes les apps à zone de texte ou de dessin : un doigt défile/déplace la vue,
+      le stylet et la souris sélectionnent ou dessinent (Tabilao : cellules, Seho : diapo, Sary,
+      Tsilo, Pejy, Endrika, Drafitra : doigt = déplacer la vue, deux doigts = zoomer).
+- [ ] Audit tactile des 14 apps, sur l'émulateur téléphone : défilement, sélection, zoom à deux doigts,
+      appui long = menu contextuel, cibles ≥ 48 dp, survol (hover) sans équivalent tactile, glisser-
+      déposer, poignées de redimensionnement trop fines, clavier virtuel qui masque le champ.
+- [ ] Un test par app (egui_kittest, événements `Touch`) : un glissement tactile fait défiler et ne
+      sélectionne pas.
+- [ ] Rapport : liste des incompatibilités trouvées, par app, dans `docs/STATUS.md`.
+
 ### P0 — « Ouvrir avec » (D22)
 - [x] Vérifié le 2026-10-19 (émulateur Android 16, apps 0.2.1) : docx → Soratra, xlsx → Tabilao,
       pptx → Seho, pdf → Taratasy et Tsilo, png et svg → Sary, Hazavana, Endrika, mp3 → Feo,

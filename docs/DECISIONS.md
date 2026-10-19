@@ -295,7 +295,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   Each app has a test that runs it on every ribbon tab (or mode) at 360, 400, 600 and 840 points.
   Exceptions are declared by the UI, not by the test: `command_bar` and `register_scroll_region`
   mark what scrolls, `register_overlay` marks an overlay on purpose (a scroll chevron, a ruler's
-  handles), and thin strips (≤ 8 points: resize grips) may overlap what they resize. Each test was
+  handles), and thin strips (≤ 12 points: resize grips, scroll bars) may overlap what they resize. Each test was
   seen failing on the old layout (Soratra, Tabilao, Seho, Taratasy: 70 to 580 findings).
 - **Done so far (0.2.3 branch):** Soratra, Tabilao, Seho, Taratasy. The rest follow in the order of
   `TODO.md`.

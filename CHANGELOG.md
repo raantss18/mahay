@@ -17,6 +17,12 @@ versions follow [SemVer](https://semver.org/).
   (`FormFactor`, a scrolling command bar, a layout audit used by one test per app at 360, 400,
   600 and 840 points).
 
+### Fixed
+
+- **Soratra on a phone: a finger drag scrolls the page** (with coasting) instead of selecting text;
+  a long press first still selects. A solid scroll bar a finger can grab shows on narrow windows.
+  Tabilao, Seho and the other apps still select on a finger drag (see `TODO.md`).
+
 ### Changed
 
 - **Seho**: the ribbon scrolls instead of cutting off groups that do not fit the window.
