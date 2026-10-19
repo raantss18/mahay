@@ -425,6 +425,15 @@ pub fn install_background(id: &str, path: &Path, sha256: &str) -> bool {
     .unwrap_or(false)
 }
 
+/// Hub: whether an app says it is on screen.
+pub fn is_app_foreground(package: &str) -> bool {
+    with_activity(|env, act| {
+        let pkg = env.new_string(package)?;
+        env.call_method(act, "isAppForeground", "(Ljava/lang/String;)Z", &[JValue::Object(&pkg)])?.z()
+    })
+    .unwrap_or(false)
+}
+
 /// Hub: how many updates wait for the user's tap.
 pub fn waiting_updates() -> i32 {
     with_activity(|env, act| env.call_method(act, "waitingUpdates", "()I", &[])?.i()).unwrap_or(0)

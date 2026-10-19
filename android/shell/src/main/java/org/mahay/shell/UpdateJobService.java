@@ -58,6 +58,8 @@ public class UpdateJobService extends JobService {
     private void runOnce(String only, boolean explicit) {
         List<String> installed = new ArrayList<>();
         for (String id : nativeApps()) {
+            // An open app is left for later unless the user just asked for its update.
+            if (!explicit && HubUpdates.isForeground(this, "org.mahay." + id)) continue;
             try {
                 PackageInfo info = getPackageManager().getPackageInfo("org.mahay." + id, 0);
                 if (info.versionName != null) installed.add(id + "=" + info.versionName);

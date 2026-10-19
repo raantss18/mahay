@@ -5,6 +5,8 @@
     <permission
         android:name="org.mahay.permission.MANAGE"
         android:protectionLevel="signature" />
+    <!-- Android 12+ lets the installer of record update an app without asking (D21) only when it holds this permission. -->
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
     <!-- Wi-Fi or mobile data? Updates run on unmetered networks unless the user allows mobile data. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- The daily background update survives a reboot. -->

@@ -15,14 +15,21 @@ import android.util.Log;
  */
 public class UpdateRequestService extends Service {
     static final String ACTION = "org.mahay.hub.UPDATE_APP";
+    /** An app says whether it is on screen, so background updates leave it alone. */
+    static final String ACTION_STATE = "org.mahay.hub.APP_STATE";
     static final String EXTRA_PACKAGE = "package";
+    static final String EXTRA_FOREGROUND = "foreground";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String pkg = intent == null || !ACTION.equals(intent.getAction()) ? null : intent.getStringExtra(EXTRA_PACKAGE);
+        String action = intent == null ? null : intent.getAction();
+        String pkg = intent == null ? null : intent.getStringExtra(EXTRA_PACKAGE);
         // Cheap sanity check here; the real check (an exact match against the suite) is Rust's.
-        if (pkg != null && pkg.length() <= 64 && pkg.matches("[a-z][a-z0-9_.]*")) {
+        boolean valid = pkg != null && pkg.length() <= 64 && pkg.matches("[a-z][a-z0-9_.]*");
+        if (valid && ACTION.equals(action)) {
             HubUpdates.request(this, pkg);
+        } else if (valid && ACTION_STATE.equals(action)) {
+            HubUpdates.setForeground(this, pkg, intent.getBooleanExtra(EXTRA_FOREGROUND, false));
         } else {
             Log.w("MahayHub", "ignored an update request without a valid package name");
         }

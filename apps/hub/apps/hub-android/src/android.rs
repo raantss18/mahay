@@ -161,6 +161,8 @@ impl Hub {
         self.auto_running.store(true, Ordering::Relaxed);
         let installed: Vec<String> = ON_ANDROID
             .into_iter()
+            // An open app is left for later: Android would replace it under the user's hands.
+            .filter(|id| !mahay_android::is_app_foreground(&format!("org.mahay.{id}")))
             .filter_map(|id| mahay_android::installed_version(&format!("org.mahay.{id}")).map(|v| format!("{id}={v}")))
             .collect();
         let (dir, running, ctx) = (self.data_dir.clone(), self.auto_running.clone(), self.ctx.clone());
@@ -446,8 +448,8 @@ impl eframe::App for Hub {
                     {
                         install_all = true;
                     }
-                    if hub.waiting > 0 {
-                        ui.colored_label(egui::Color32::from_rgb(0xE0, 0x8A, 0x1E), format!("{} {}", hub.waiting, t.waiting));
+                    if hub.waiting > 0 && ON_ANDROID.iter().any(|id| hub.outdated(id)) {
+                        ui.colored_label(egui::Color32::from_rgb(0xE0, 0x8A, 0x1E), format!("{}: {}", t.waiting, hub.waiting));
                     }
                     egui::CollapsingHeader::new(t.settings).id_salt("hub-settings").show(ui, |ui| {
                         let mut auto = hub.settings.auto;

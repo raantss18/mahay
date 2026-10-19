@@ -77,6 +77,27 @@ final class HubUpdates {
         if (js.schedule(b.build()) != JobScheduler.RESULT_SUCCESS) Log.w(TAG, "couldn't schedule the requested update");
     }
 
+    // ---- Apps in use ------------------------------------------------------------------------
+
+    private static final long FOREGROUND_MAX_MS = 6L * 3600 * 1000;
+
+    /**
+     * An app tells the hub it is on screen (or not). Android replaces an open app without asking,
+     * which could lose unsaved work, so background updates skip an app that says it is open. The
+     * mark expires after six hours in case the app was killed before it could say it left.
+     */
+    static void setForeground(Context ctx, String packageName, boolean foreground) {
+        SharedPreferences.Editor e = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit();
+        if (foreground) e.putLong("fg_" + packageName, System.currentTimeMillis());
+        else e.remove("fg_" + packageName);
+        e.apply();
+    }
+
+    static boolean isForeground(Context ctx, String packageName) {
+        long at = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong("fg_" + packageName, 0);
+        return at > 0 && System.currentTimeMillis() - at < FOREGROUND_MAX_MS;
+    }
+
     /** The package names asked for since the last call. */
     static Set<String> takeRequested(Context ctx) {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);

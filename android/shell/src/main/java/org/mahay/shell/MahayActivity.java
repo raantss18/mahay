@@ -374,6 +374,37 @@ public class MahayActivity extends GameActivity {
         }
     }
 
+    /** Hub: whether an app says it is on screen (background updates skip it). */
+    public boolean isAppForeground(String pkg) {
+        return HubUpdates.isForeground(this, pkg);
+    }
+
+    /** Tell Mahay HUB, when it manages this app, whether this app is on screen. */
+    private void tellHub(boolean foreground) {
+        if (HUB.equals(getPackageName())) return;
+        try {
+            if (!hubUsable()) return;
+            startService(new Intent("org.mahay.hub.APP_STATE")
+                    .setComponent(new ComponentName(HUB, "org.mahay.shell.UpdateRequestService"))
+                    .putExtra("package", getPackageName())
+                    .putExtra("foreground", foreground));
+        } catch (Exception e) {
+            // No hub, no permission, or Android refused: nothing to do.
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        tellHub(true);
+    }
+
+    @Override
+    protected void onPause() {
+        tellHub(false);
+        super.onPause();
+    }
+
     /** Hub: (re)schedule the daily background update, or cancel it. */
     public void scheduleUpdates(boolean auto, boolean mobile) {
         HubUpdates.schedule(this, auto, mobile);
