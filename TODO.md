@@ -81,17 +81,24 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 - [ ] Écran Compte dans Mahay HUB (fr/en/mg), « Bonjour » + prénom.
 
 ### Stockage et chiffrement
-- [ ] Phrase secrète de synchronisation : PBKDF2 310 000 itérations, bloc de vérification `meta/check`.
-- [ ] Chiffrement AES-256-GCM par blocs de 1 Mio ; noms et dossiers chiffrés ; manifeste chiffré.
+- [x] Phrase secrète de synchronisation : PBKDF2 310 000 itérations, bloc de vérification `meta/check`
+      (`mahay-sync`, copie `check.json` sur le stockage).
+- [ ] Copie du bloc `meta/check` dans `sync_items` (attend le projet Supabase).
+- [x] Chiffrement AES-256-GCM par blocs de 1 Mio ; noms et dossiers chiffrés ; manifeste chiffré.
 - [ ] Google Drive (`drive.file`, dossier `Mahay/`) : client OAuth Google, vérification de marque.
-- [ ] Nextcloud / WebDAV : URL + mot de passe d'application.
+- [x] Nextcloud / WebDAV : URL + mot de passe d'application (backend `WebDav`, testé contre un
+      serveur local ; pas encore essayé sur un vrai Nextcloud).
+- [ ] Écran Nextcloud dans Mahay HUB ; mot de passe d'application dans le stockage sécurisé.
 - [ ] Table `sync_items` (réglages, fichiers récents, apps installées) avec règles RLS par utilisateur.
 
 ### Moteur `mahay-sync`
-- [ ] Analyse, journal hors ligne, envoi et réception en arrière-plan (WorkManager sur Android).
-- [ ] Conflits : garder les deux versions ; corbeille de 30 jours.
+- [x] Analyse, journal hors ligne, envoi et réception (`Engine::sync`).
+- [ ] Synchro en arrière-plan : minuterie dans Mahay HUB, WorkManager sur Android.
+- [ ] Gros fichiers en flux (aujourd'hui un fichier entier est en mémoire pendant l'envoi).
+- [x] Conflits : garder les deux versions ; corbeille de 30 jours (avec restauration).
 - [ ] État dans Mahay HUB : compte, stockage, dernière synchro, conflits.
-- [ ] Tests : chiffrement (vecteurs), conflits, coupure réseau ; audit de sécurité dédié.
+- [x] Tests : chiffrement (vecteurs), conflits, coupure réseau.
+- [ ] Audit de sécurité dédié de `mahay-sync`.
 
 ---
 

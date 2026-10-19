@@ -1,0 +1,28 @@
+[package]
+name = "mahay-sync"
+description = "End-to-end encrypted file sync for the Mahay suite: AES-256-GCM chunks, encrypted manifest, offline journal, conflict copies and a 30-day sync bin over any blob store (WebDAV/Nextcloud, memory)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+# Every dependency is already in this workspace's Cargo.lock (ring comes with rustls, through
+# mahay-update): the crate adds no new package.
+[dependencies]
+ring = "0.17"
+ureq = { version = "3.4", default-features = false, features = ["rustls"] }
+serde.workspace = true
+serde_json.workspace = true
+base64 = "0.22"
+roxmltree = "0.20"
+thiserror.workspace = true
+zeroize = "1.8"
+log = "0.4"
+mahay-atomic.workspace = true
+
+[dev-dependencies]
+tempfile = "3"

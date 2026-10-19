@@ -5,6 +5,14 @@ versions follow [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **`mahay-sync`, the core of 0.3.0's cloud sync** (not in any app yet): end-to-end encryption
+  (PBKDF2-HMAC-SHA256 passphrase key with a check block, AES-256-GCM in 1 MiB chunks, encrypted
+  names and manifest), a Nextcloud/WebDAV backend, and a sync engine with an offline journal,
+  conflict copies `name (conflit <device> <date>).ext` and a 30-day sync bin. Sign-in (Supabase)
+  and Google Drive come next. Protocol: `docs/SYNC.md`.
+
 ### Security
 
 - **Hazavana**: quick-xml 0.41 fixes RUSTSEC-2026-0194 and RUSTSEC-2026-0195 (denial of service on

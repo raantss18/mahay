@@ -28,6 +28,7 @@ mahay-quit = { path = "crates/quit" }
 mahay-settings = { path = "crates/settings" }
 mahay-ui = { path = "crates/ui" }
 mahay-update = { path = "crates/update" }
+mahay-sync = { path = "crates/sync" }
 mahay-about = { path = "crates/about" }
 egui = { version = "0.36", default-features = false }
 rayon = "1"
