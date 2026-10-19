@@ -4,7 +4,7 @@
 
 use egui::{Context, Id, Rect};
 
-use super::command_bar::scroll_regions;
+use super::command_bar::{overlays, scroll_regions};
 
 /// What is wrong with a widget.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -30,6 +30,10 @@ pub struct Finding {
 /// How far two widgets may intrude on each other without counting as an overlap (borders touch).
 const SLACK: f32 = 1.0;
 
+fn near(a: &Rect, b: &Rect) -> bool {
+    (a.min - b.min).abs().max_elem() < 1.0 && (a.max - b.max).abs().max_elem() < 1.0
+}
+
 /// Clickable widgets of the last frame, per layer, as `(id, full rect, visible rect)`.
 fn clickables(ctx: &Context) -> Vec<(egui::LayerId, Id, Rect, Rect)> {
     ctx.viewport(|v| {
@@ -47,9 +51,16 @@ fn clickables(ctx: &Context) -> Vec<(egui::LayerId, Id, Rect, Rect)> {
 /// scroll area is not on screen and is not examined; one cut by a scroll area that registered itself
 /// ([`super::register_scroll_region`], done by [`super::command_bar`]) may run past the edge.
 pub fn audit(ctx: &Context) -> Vec<Finding> {
+    audit_excluding(ctx, &[])
+}
+
+/// Like [`audit`], leaving out everything that lies inside one of `skip` (the document page or
+/// canvas, which scrolls and draws its own handles).
+pub fn audit_excluding(ctx: &Context, skip: &[Rect]) -> Vec<Finding> {
     let screen = ctx.content_rect();
     let regions = scroll_regions(ctx);
-    let all = clickables(ctx);
+    let overlays = overlays(ctx);
+    let all: Vec<_> = clickables(ctx).into_iter().filter(|(_, _, _, v)| !skip.iter().any(|s| s.expand(1.0).contains_rect(*v))).collect();
     let mut found = Vec::new();
     for (i, (layer, id, rect, visible)) in all.iter().enumerate() {
         if !visible.is_positive() {
@@ -67,7 +78,8 @@ pub fn audit(ctx: &Context) -> Vec<Finding> {
             let both = visible.intersect(*visible_b);
             let overlap = both.width() > SLACK && both.height() > SLACK;
             let nested = visible.contains_rect(*visible_b) || visible_b.contains_rect(*visible);
-            if overlap && !nested {
+            let on_purpose = overlays.iter().any(|o| near(o, visible) || near(o, visible_b) || o.expand(1.0).contains_rect(*visible) || o.expand(1.0).contains_rect(*visible_b));
+            if overlap && !nested && !on_purpose {
                 found.push(Finding { kind: FindingKind::Overlap, id: *id, rect: *visible, other: Some(*visible_b) });
             }
         }
