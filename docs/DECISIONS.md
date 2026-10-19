@@ -320,15 +320,36 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 
 ## D23 — Phone and tablet layouts follow the window, automatically
 
-- **Decision:** the layout depends on the **window width in dp** (compact < 600, medium 600–839,
-  expanded ≥ 840, Android's window size classes), computed every frame, never on a "phone" or
-  "tablet" flag or a setting. Rotation, split screen, floating windows and foldables therefore
-  change it by themselves. Expanded keeps today's desktop layout unchanged.
-- **Compact rules:** nothing overlaps or leaves the screen; ribbons collapse into one scrolling
-  command bar with the tabs in a menu; side panels become drawers; dialogs fill the screen; touch
-  targets are at least 48 dp.
-- **Why:** one rule for every app and every device shape, testable without a device (a layout
-  test at 360, 400, 600 and 840 dp).
+- **Decision:** the layout depends on the **window width in points** (dp on Android) and nothing
+  else: compact < 600, medium 600–839, expanded ≥ 840 (Android's window size classes). It is
+  computed every frame, never from a "phone" or "tablet" flag or a setting, so rotation, split
+  screen, floating windows and foldables change it by themselves. A width resting on a threshold
+  does not flicker: the class changes only once the width is 8 points past it (`FormFactor::next`).
+  Expanded keeps today's desktop layout unchanged.
+- **Where it lives:** `libs/core/crates/ui/src/adaptive` (`mahay_ui::adaptive`): `FormFactor`
+  (`of`, `from_width`, `next`, `command_height`), `MIN_TOUCH` (48), `touch_spacing`,
+  `dialog_window` / `dialog_rect` (a dialog fills the window in Compact), `command_bar` (one row of
+  commands that scrolls, never wraps, never leaves the window) and the layout audit (below).
+- **Compact rules:** nothing overlaps or leaves the screen; the ribbon is one scrolling command
+  bar and the tabs a scrolling strip, with the rarely used buttons in one menu; side panels become
+  drawers (the whole window, one at a time); dialogs fill the screen; touch targets are at least
+  48 dp (44 where a bar is crowded). **Medium** keeps the desktop structure where it fits and uses
+  the touch title bar and status bar. Wide-only furniture (rulers, resize grips, the slide list
+  beside the slide) goes away or becomes a drawer below 840.
+- **The test:** `mahay_ui::adaptive::audit` reads the last frame of any egui context and reports
+  clickable widgets that overlap (neither containing the other) and widgets outside the window.
+  Each app has a test that runs it on every ribbon tab (or mode) at 360, 400, 600 and 840 points.
+  Exceptions are declared by the UI, not by the test: `command_bar` and `register_scroll_region`
+  mark what scrolls, `register_overlay` marks an overlay on purpose (a scroll chevron, a ruler's
+  handles), and thin strips (≤ 12 points: resize grips, scroll bars) may overlap what they resize. Each test was
+  seen failing on the old layout (Soratra, Tabilao, Seho, Taratasy: 70 to 580 findings).
+- **Done so far (0.2.3 branch):** Soratra, Tabilao, Seho, Taratasy. The rest follow in the order of
+  `TODO.md`.
+- **Why:** one rule for every app and every device shape, testable without a device.
+- **Alternatives:** a phone/tablet flag or a "mobile layout" setting (wrong in split screen, on
+  foldables and on a tablet used upright; a setting nobody finds); scaling the whole UI to fit a
+  phone (ribbon text unreadable, desktop changed); a separate mobile UI per app (a second UI to keep
+  in step with each upstream import).
 
 ## D24 — Following ArtCraft's repositories
 

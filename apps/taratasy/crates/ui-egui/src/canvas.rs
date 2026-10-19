@@ -3657,6 +3657,7 @@ pub fn document_area(app: &mut TaratasyApp, index: usize, ui: &mut egui::Ui) {
     // backdrop/older tiles instead of queueing a storm of interprets (one per frame) that
     // the workers cannot cancel mid-operator. Fresh tiles go out once the pan settles;
     // pages with nothing on screen yet still queue.
+    mahay_ui::adaptive::register_scroll_region(ui.ctx(), out.inner_rect);
     let scroll_offset = out.state.offset;
     let now_settle = ui.input(|i| i.time);
     if (scroll_offset - view.last_scroll).length() > 2.0 {

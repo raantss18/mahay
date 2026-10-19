@@ -9,13 +9,33 @@ use soratra_doc::{Pos, StoryRef};
 use crate::WordApp;
 use crate::theme::{Tokens, regular, semibold};
 
+/// On a phone (D23) a side pane is a drawer: it takes the whole width and only one is shown at a time
+/// (closing it with its X reveals the next); elsewhere panes keep their own width and all show.
+fn drawer_free(taken: &mut bool, compact: bool) -> bool {
+    if compact && *taken {
+        return false;
+    }
+    *taken = true;
+    true
+}
+
+fn pane_width(compact: bool, avail: f32, desktop: f32) -> f32 {
+    if compact { avail } else { desktop }
+}
+
 pub fn show(app: &mut WordApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
+    let compact = mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact();
+    let avail = ui.available_width();
+    let mut drawer_taken = false;
     // SmartArt Design › Text Pane, while a SmartArt graphic Soratra can edit is selected.
-    if app.session.view.smart_art_pane && soratra_engine::cmd::smart_art::selected_smart_art(&app.session).is_some() {
+    if app.session.view.smart_art_pane
+        && soratra_engine::cmd::smart_art::selected_smart_art(&app.session).is_some()
+        && drawer_free(&mut drawer_taken, compact)
+    {
         egui::Panel::left("smart_art_pane")
-            .default_size(250.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 250.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| {
                 if header(ui, "Text Pane") {
@@ -25,52 +45,52 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 crate::dialogs_smart_art::text_pane(app, ui);
             });
     }
-    if app.session.view.nav_pane {
+    if app.session.view.nav_pane && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::left("nav_pane")
-            .default_size(260.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 260.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| nav(app, ui));
     }
-    if app.session.view.clipboard_pane {
+    if app.session.view.clipboard_pane && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::left("clipboard_pane")
-            .default_size(250.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 250.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| clipboard(app, ui));
     }
-    if app.session.view.styles_pane {
+    if app.session.view.styles_pane && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::right("styles_pane")
-            .default_size(250.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 250.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| styles(app, ui));
     }
-    if app.session.view.style_inspector {
+    if app.session.view.style_inspector && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::right("style_inspector")
-            .default_size(240.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 240.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| inspector(app, ui));
     }
-    if app.session.view.accessibility_pane {
+    if app.session.view.accessibility_pane && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::right("accessibility_pane")
-            .default_size(280.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 280.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| crate::a11y_pane::accessibility(app, ui));
     }
-    if app.session.view.alt_text_pane {
+    if app.session.view.alt_text_pane && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::right("alt_text_pane")
-            .default_size(260.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 260.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| crate::a11y_pane::alt_text(app, ui));
     }
-    if app.restrict.open {
+    if app.restrict.open && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::right("restrict_pane")
-            .default_size(270.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 270.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| {
                 if header(ui, "Restrict Editing") {
@@ -80,10 +100,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                 crate::dialogs_review::restrict_pane(app, ui);
             });
     }
-    if app.session.view.comments_pane {
+    if app.session.view.comments_pane && drawer_free(&mut drawer_taken, compact) {
         egui::Panel::right("comments_pane")
-            .default_size(290.0)
-            .resizable(true)
+            .default_size(pane_width(compact, avail, 290.0))
+            .resizable(!compact)
             .frame(egui::Frame::NONE.fill(t.panel).inner_margin(10).stroke(Stroke::new(1.0, t.border)))
             .show(ui, |ui| comments(app, ui));
     }

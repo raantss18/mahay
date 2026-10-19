@@ -4,7 +4,7 @@ use egui::{Align, Align2, Color32, CornerRadius, Layout, Rect, Sense, Stroke, ve
 
 use crate::canvas::{DocView, Fit, PageLayout};
 use crate::theme::{self, ThemePreference, Tokens};
-use crate::{Dialog, Mode, TaratasyApp, PropsTab, RightPanel, icons, widgets, window_controls};
+use crate::{Dialog, Mode, PropsTab, RightPanel, TaratasyApp, icons, widgets, window_controls};
 
 /// Height of the tab strip when it doubles as the macOS title bar (#789). AppKit draws the traffic
 /// lights itself, centred in the standard 28 pt title-bar band at the top of the window, and moving
@@ -28,13 +28,27 @@ const STRIP_BUTTON: f32 = 28.0;
 
 pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
+    // A phone (D23): Home, the tabs, Open and one menu; touch-sized, nothing else on the strip.
+    let compact = mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact();
     // macOS: the strip is the 28 pt title bar, so the traffic lights are centred in it; tabs and
     // buttons shrink to keep a margin above and below.
     let mac = cfg!(target_os = "macos") && app.integrated_titlebar;
     let left = if mac { MAC_CONTENT_LEFT as i8 } else { 8 };
-    let (tab_h, button) = if mac { (MAC_TITLE_BAR - 2.0, 24.0) } else { (TAB_HEIGHT, STRIP_BUTTON) };
+    let (tab_h, button) = if compact {
+        (mahay_ui::adaptive::MIN_TOUCH - 4.0, mahay_ui::adaptive::MIN_TOUCH - 4.0)
+    } else if mac {
+        (MAC_TITLE_BAR - 2.0, 24.0)
+    } else {
+        (TAB_HEIGHT, STRIP_BUTTON)
+    };
     egui::Panel::top("tab_strip")
-        .exact_size(if mac { MAC_TITLE_BAR } else { TAB_STRIP })
+        .exact_size(if compact {
+            mahay_ui::adaptive::MIN_TOUCH
+        } else if mac {
+            MAC_TITLE_BAR
+        } else {
+            TAB_STRIP
+        })
         .frame(egui::Frame::NONE.fill(t.titlebar).inner_margin(egui::Margin { left, right: 10, top: 0, bottom: 0 }))
         .show(ui, |ui| {
             let full = ui.max_rect();
@@ -67,12 +81,20 @@ pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                     app.combine_tab.focused = false;
                 }
                 // Keep the two icon buttons, Discord's text/padding and three gaps outside the scrolling tabs.
-                let controls_width = ui.fonts_mut(|f| f.layout_no_wrap("Discussions".into(), theme::medium(13.0), t.text).size().x)
-                    + 2.0 * button
-                    + 50.0
-                    + window_controls::width(&controls.right);
+                let controls_width = if compact {
+                    button + 8.0
+                } else {
+                    ui.fonts_mut(|f| f.layout_no_wrap("Discussions".into(), theme::medium(13.0), t.text).size().x)
+                        + 2.0 * button
+                        + 50.0
+                        + window_controls::width(&controls.right)
+                };
                 // Open stays in sight after the tabs: its icon, text and padding, and the gaps around it.
-                let open_width = ui.fonts_mut(|f| f.layout_no_wrap(tl!("Open").into(), theme::medium(13.0), t.text).size().x) + 38.0 + 12.0;
+                let open_width = if compact {
+                    button + 8.0
+                } else {
+                    ui.fonts_mut(|f| f.layout_no_wrap(tl!("Open").into(), theme::medium(13.0), t.text).size().x) + 38.0 + 12.0
+                };
                 let mut tabs_width = (ui.available_width() - controls_width - open_width).max(0.0);
                 // Tabs shrink to share the strip (names end in "…") and scroll only once they reach
                 // their narrowest; then arrows either side say so and step through them.
@@ -266,8 +288,32 @@ pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                 }
                 ui.add_space(4.0);
                 let tip = crate::commands::command_tip(ui.ctx(), tl!("Open a PDF ({key})"), "file.open");
-                if widgets::ghost_button_sized(ui, "plus", tl!("Open"), tab_h).on_hover_text(tip).clicked() {
+                let open = if compact {
+                    icons::button(ui, "plus", button, false, tl!("Open"))
+                } else {
+                    widgets::ghost_button_sized(ui, "plus", tl!("Open"), tab_h)
+                };
+                if open.on_hover_text(tip).clicked() {
                     app.open_dialog();
+                }
+                if compact {
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        let more = icons::button(ui, "ellipsis", button, false, tl!("Menu"));
+                        egui::Popup::menu(&more).show(|ui| {
+                            ui.set_min_width(220.0);
+                            ui.menu_button(tl!("Display theme"), |ui| theme_menu(app, ui));
+                            if ui.add(egui::Button::new(tl!("Keyboard shortcuts")).min_size(egui::vec2(0.0, mahay_ui::adaptive::MIN_TOUCH))).clicked()
+                            {
+                                app.dialog = Some(Dialog::Shortcuts);
+                                ui.close();
+                            }
+                            if ui.add(egui::Button::new("Discussions").min_size(egui::vec2(0.0, mahay_ui::adaptive::MIN_TOUCH))).clicked() {
+                                app.execute("help.discord");
+                                ui.close();
+                            }
+                        });
+                    });
+                    return;
                 }
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     if !controls.right.is_empty() {
@@ -300,7 +346,10 @@ pub fn tab_strip(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                         app.dialog = Some(Dialog::Shortcuts);
                     }
                     // One click to the community, from anywhere in the app.
-                    if widgets::ghost_button_sized(ui, "messages-square", "Discussions", tab_h).on_hover_text(taratasy_engine::links::DISCORD).clicked() {
+                    if widgets::ghost_button_sized(ui, "messages-square", "Discussions", tab_h)
+                        .on_hover_text(taratasy_engine::links::DISCORD)
+                        .clicked()
+                    {
                         app.execute("help.discord");
                     }
                 });
@@ -490,6 +539,9 @@ fn tab(
 
 pub fn mode_bar(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
+    if mahay_ui::adaptive::FormFactor::of_ui(ui).is_touch_layout() {
+        return mode_bar_touch(app, ui, &t);
+    }
     egui::Panel::top("mode_bar")
         .exact_size(48.0)
         .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(10, 0)).stroke(Stroke::new(1.0, t.divider)))
@@ -529,6 +581,59 @@ pub fn mode_bar(app: &mut TaratasyApp, ui: &mut egui::Ui) {
                         app.palette_open = true;
                     }
                 });
+            });
+        });
+}
+
+/// The mode bar of a phone or a narrow window (D23): Menu, the modes, Print, Save and Properties in a row that
+/// scrolls, and Search as an icon that stays in sight.
+fn mode_bar_touch(app: &mut TaratasyApp, ui: &mut egui::Ui, t: &Tokens) {
+    use mahay_ui::adaptive::{MIN_TOUCH, command_bar};
+    egui::Panel::top("mode_bar")
+        .exact_size(MIN_TOUCH)
+        .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(6, 0)).stroke(Stroke::new(1.0, t.divider)))
+        .show(ui, |ui| {
+            ui.horizontal_centered(|ui| {
+                ui.spacing_mut().item_spacing.x = 2.0;
+                let bar_w = (ui.available_width() - MIN_TOUCH).max(0.0);
+                ui.allocate_ui_with_layout(egui::vec2(bar_w, MIN_TOUCH), Layout::left_to_right(Align::Center), |ui| {
+                    ui.set_max_width(bar_w);
+                    command_bar(ui, "mode_bar_touch", |ui| {
+                        ui.spacing_mut().item_spacing.x = 2.0;
+                        main_menu(app, ui);
+                        ui.add_space(6.0);
+                        for (mode, label) in [
+                            (Mode::AllTools, "All tools"),
+                            (Mode::Read, "Read"),
+                            (Mode::Edit, "Edit"),
+                            (Mode::Convert, "Convert"),
+                            (Mode::Sign, "E-Sign"),
+                        ] {
+                            if widgets::mode_tab(ui, tl!(label), app.mode == mode).clicked() {
+                                app.switch_mode(mode, true);
+                            }
+                        }
+                        ui.add_space(6.0);
+                        let has_doc = app.active.is_some();
+                        ui.add_enabled_ui(has_doc, |ui| {
+                            let tip = crate::commands::command_tip(ui.ctx(), tl!("Print ({key})"), "print.dialog");
+                            if icons::button(ui, "printer", 40.0, false, &tip).clicked() {
+                                app.run_command("print.dialog");
+                            }
+                            let tip = crate::commands::command_tip(ui.ctx(), tl!("Save ({key})"), "file.save");
+                            if icons::button(ui, "save", 40.0, false, &tip).clicked() {
+                                app.run_command("file.save");
+                            }
+                            let tip = crate::commands::command_tip(ui.ctx(), tl!("Document properties ({key})"), "file.properties");
+                            if icons::button(ui, "info", 40.0, false, &tip).clicked() {
+                                app.dialog = Some(Dialog::Properties(PropsTab::Description));
+                            }
+                        });
+                    });
+                });
+                if icons::button(ui, "search", 40.0, false, tl!("Find tools and commands")).clicked() {
+                    app.palette_open = true;
+                }
             });
         });
 }

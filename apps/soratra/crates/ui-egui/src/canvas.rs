@@ -121,6 +121,8 @@ pub struct CanvasState {
     pub(crate) ink_ui: crate::ink::InkUi,
     /// Wheel/touchpad scrolling (smooth notches, touchpad momentum).
     pub(crate) wheel: crate::scroll::CanvasScroll,
+    /// The finger gesture over the page, if one is in progress (a drag scrolls, a long press selects).
+    pub(crate) touch: Option<crate::touch_scroll::Gesture>,
     /// Middle-click scrolling (#1065).
     pub(crate) auto_scroll: crate::autoscroll::AutoScroll,
     /// The scroll offset and its maximum at the end of last frame.
@@ -248,6 +250,7 @@ impl Default for CanvasState {
             alt_code: String::new(),
             alt_code_echo: None,
             wheel: Default::default(),
+            touch: None,
             auto_scroll: Default::default(),
             scroll_offset: egui::Vec2::ZERO,
             scroll_max: egui::Vec2::ZERO,
@@ -294,6 +297,13 @@ impl CanvasState {
     /// True while a mouse drag-select is in progress (the mini toolbar waits for mouse-up).
     pub fn drag_selecting(&self) -> bool {
         self.dragging
+    }
+
+    /// Ends a drag-select the press began: the finger turned out to be scrolling the page.
+    pub(crate) fn cancel_drag_select(&mut self) {
+        self.dragging = false;
+        self.column_drag = None;
+        self.unit_drag = None;
     }
 }
 
@@ -944,7 +954,10 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     // View › Switch Modes: dark paper, inverted document colours.
     let dark_page = app.session.view.dark_mode;
     let dark_paper = soratra_render::DARK_PAPER;
-    let show_ruler = app.session.view.ruler && app.session.view.mode == soratra_layout::ViewMode::Print && !app.session.view.read_mode;
+    let show_ruler = app.session.view.ruler
+        && app.session.view.mode == soratra_layout::ViewMode::Print
+        && !app.session.view.read_mode
+        && mahay_ui::adaptive::FormFactor::of_ui(ui) == mahay_ui::adaptive::FormFactor::Expanded;
     let (hruler, vruler, area) = if show_ruler {
         let h = Rect::from_min_max(pos2(full.min.x + RULER, full.min.y), pos2(full.max.x, full.min.y + RULER));
         let v = Rect::from_min_max(pos2(full.min.x, full.min.y + RULER), pos2(full.min.x + RULER, full.max.y));
@@ -1118,7 +1131,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     } else {
         app.canvas.auto_scroll.update(ui, area)
     };
-    let delta = wheel_delta + auto_delta + middle_delta;
+    let finger_delta = crate::touch_scroll::frame(app, ui, area);
+    let delta = wheel_delta + auto_delta + middle_delta + finger_delta;
     let mut scroll_area = egui::ScrollArea::both()
         .id_salt("canvas_scroll")
         .auto_shrink([false, false])
@@ -1127,6 +1141,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         .scroll_source(egui::scroll_area::ScrollSource { mouse_wheel: false, ..Default::default() });
     if app.session.view.read_mode {
         scroll_area = scroll_area.scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
+    } else if mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact() {
+        // A phone has no mouse wheel to find the page by: a solid bar that a finger can grab (D23).
+        ui_area.style_mut().spacing.scroll = egui::style::ScrollStyle { bar_width: 12.0, ..egui::style::ScrollStyle::solid() };
     }
     if delta != egui::Vec2::ZERO || app.canvas.scroll_request.is_some() || app.session.view.read_mode {
         let before = app.canvas.scroll_offset;
@@ -2529,6 +2546,9 @@ fn rulers(app: &mut WordApp, ui: &mut Ui, h: Rect, v: Rect, rects: &[Rect], layo
     let t = Tokens::get(ui.ctx());
     let p = ui.painter();
     let corner = Rect::from_min_max(pos2(v.min.x, h.min.y), pos2(v.max.x, h.max.y));
+    // The rulers draw their own tab and indent handles over themselves and scroll with the page.
+    mahay_ui::adaptive::register_overlay(ui.ctx(), h);
+    mahay_ui::adaptive::register_scroll_region(ui.ctx(), h);
     p.rect_filled(corner, 0.0, t.canvas);
     p.rect_filled(h, 0.0, t.canvas);
     p.rect_filled(v, 0.0, t.canvas);
@@ -4350,8 +4370,7 @@ mod tests {
     /// only Go To selects the bookmark's text (#1236).
     #[test]
     fn a_link_to_a_bookmark_puts_the_caret_at_its_start() {
-        let mut a =
-            WordApp::new(soratra_engine::Session::new(soratra_doc::Document::from_text("Alpha beta gamma\nSee here")), Default::default());
+        let mut a = WordApp::new(soratra_engine::Session::new(soratra_doc::Document::from_text("Alpha beta gamma\nSee here")), Default::default());
         a.run("select.text", json!({"text": "beta"})).unwrap();
         a.run("insert.bookmark", json!({"name": "Spot"})).unwrap();
         a.run("select.text", json!({"text": "here"})).unwrap();

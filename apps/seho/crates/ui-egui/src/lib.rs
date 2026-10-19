@@ -142,11 +142,7 @@ fn purpose_of(purpose: &str) -> FilePurpose {
 }
 
 fn is_presentation_name(lower: &str) -> bool {
-    lower.ends_with(".seho")
-        || lower.ends_with(".slidecraft")
-        || lower.ends_with(".pptx")
-        || lower.ends_with(".potx")
-        || lower.ends_with(".ppsx")
+    lower.ends_with(".seho") || lower.ends_with(".slidecraft") || lower.ends_with(".pptx") || lower.ends_with(".potx") || lower.ends_with(".ppsx")
 }
 
 /// File → Open keeps the requested operation: a presentation opens, an outline becomes slides.
@@ -1813,13 +1809,16 @@ impl SlideApp {
             match self.ui.view {
                 ViewMode::Sorter => sorter::show(self, ui),
                 ViewMode::NotesPage => sorter::notes_page(self, ui),
+                ViewMode::Normal | ViewMode::Reading if mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact() && thumbs::drawer_open(ui.ctx()) => {
+                    thumbs::drawer(self, ui);
+                }
                 ViewMode::Outline | ViewMode::Normal | ViewMode::Reading => {
                     if self.ui.pane.is_some() {
                         panes::show(self, ui);
                     }
                     if self.ui.view == ViewMode::Outline {
                         sorter::outline_pane(self, ui);
-                    } else {
+                    } else if !mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact() {
                         thumbs::show(self, ui);
                     }
                     egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.canvas)).show(ui, |ui| {
@@ -2194,10 +2193,9 @@ mod tests {
             pics[0]
         };
         let insert = |app: &mut SlideApp| {
-            let id =
-                app.session.execute("insert.picture", &json!({"name": "a.svg", "data": seho_engine::cmd::base64_encode(&svg("red"))})).unwrap()
-                    ["id"]
-                    .clone();
+            let id = app.session.execute("insert.picture", &json!({"name": "a.svg", "data": seho_engine::cmd::base64_encode(&svg("red"))})).unwrap()
+                ["id"]
+                .clone();
             app.session.execute("edit.select", &json!({"ids": [id]})).unwrap();
             media(app)
         };

@@ -3,8 +3,8 @@
 use std::sync::Arc;
 
 use egui::{Align2, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use tabilao_engine::model::{Sheet, Visibility};
 use serde_json::json;
+use tabilao_engine::model::{Sheet, Visibility};
 
 use crate::SheetApp;
 use crate::icons::{self, Icon};
@@ -225,6 +225,10 @@ pub fn sheet_tabs(app: &mut SheetApp, ui: &mut Ui) {
 }
 
 pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
+    let form = mahay_ui::adaptive::FormFactor::of_ui(ui);
+    if form.is_touch_layout() {
+        return status_bar_touch(app, ui, form);
+    }
     let t = Tokens::get(ui.ctx());
     egui::Panel::bottom("status_bar").exact_size(26.0).frame(egui::Frame::NONE.fill(t.status_bar).inner_margin(egui::Margin::symmetric(12, 0))).show(
         ui,
@@ -338,11 +342,77 @@ pub fn status_bar(app: &mut SheetApp, ui: &mut Ui) {
     );
 }
 
+/// The status bar of a phone or a narrow window (D23): one scrolling row with the mode, the selection's
+/// Sum / Count / Average, the zoom (a tap opens the Zoom dialog; pinch zooms too) and the view buttons.
+fn status_bar_touch(app: &mut SheetApp, ui: &mut Ui, form: mahay_ui::adaptive::FormFactor) {
+    let t = Tokens::get(ui.ctx());
+    let side = form.command_height(26.0);
+    egui::Panel::bottom("status_bar").exact_size(side).frame(egui::Frame::NONE.fill(t.status_bar).inner_margin(egui::Margin::symmetric(8, 0))).show(
+        ui,
+        |ui| {
+            mahay_ui::adaptive::command_bar(ui, "status_touch", |ui| {
+                ui.spacing_mut().item_spacing.x = 10.0;
+                let mode = match app.session.mode {
+                    tabilao_engine::Mode::Ready => "Ready",
+                    tabilao_engine::Mode::Enter => "Enter",
+                    tabilao_engine::Mode::Edit => "Edit",
+                    tabilao_engine::Mode::Point => "Point",
+                };
+                ui.label(egui::RichText::new(app.ui.language.tr(mode)).font(theme::ui_font(12.5)).color(t.text_dim));
+                if let Some(d) = app.session.active() {
+                    if !d.calc.circular.is_empty() {
+                        ui.label(egui::RichText::new("Circular References").font(theme::ui_font(12.5)).color(t.danger));
+                    }
+                    if let Some(sh) = d.wb.active()
+                        && !d.selection.is_single_cell()
+                    {
+                        let st = tabilao_engine::display::stats(sh, &d.selection.ranges);
+                        let mut parts = Vec::new();
+                        if st.numeric > 0 {
+                            parts.push(format!("Sum: {}", st.sum));
+                        }
+                        if st.count > 0 {
+                            parts.push(format!("Count: {}", st.count));
+                        }
+                        for p in parts {
+                            ui.label(egui::RichText::new(p).font(theme::ui_font(12.5)).color(t.text_dim));
+                        }
+                    }
+                }
+                let zoom = app.session.active().and_then(|d| d.wb.active().map(|s| s.zoom)).unwrap_or(100);
+                let zl = ui.add(
+                    egui::Button::new(egui::RichText::new(format!("{zoom}%")).font(theme::ui_font(12.5)).color(t.text_dim))
+                        .frame(false)
+                        .min_size(vec2(0.0, side)),
+                );
+                if zl.clicked() {
+                    app.open_dialog("zoom", json!({}));
+                }
+                for (icon, tip, mode, cmd) in [
+                    (Icon::PageBreak, "Page Break Preview", "pageBreakPreview", "view.pageBreakPreview"),
+                    (Icon::PageLayout, "Page Layout", "pageLayout", "view.pageLayout"),
+                    (Icon::Normal, "Normal", "normal", "view.normal"),
+                ] {
+                    let (r, resp) = ui.allocate_exact_size(vec2(side, side), Sense::click());
+                    let cur = app.session.active().and_then(|d| d.wb.active().map(|s| s.view.as_str())).unwrap_or("normal");
+                    if cur == mode {
+                        ui.painter().rect_filled(r.shrink(6.0), 4.0, t.pressed);
+                    }
+                    icons::paint(ui.painter(), Rect::from_center_size(r.center(), vec2(16.0, 16.0)), icon, t.text_dim);
+                    if resp.on_hover_text(tip).clicked() {
+                        app.run_or_alert(cmd, json!({}));
+                    }
+                }
+            });
+        },
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::{navigator_items, rename_needs_focus};
-    use tabilao_engine::model::{Sheet, Visibility};
     use std::sync::Arc;
+    use tabilao_engine::model::{Sheet, Visibility};
 
     #[test]
     fn rename_field_takes_focus_once_and_lets_go_on_commit() {

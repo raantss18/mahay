@@ -3136,7 +3136,8 @@ impl eframe::App for TaratasyApp {
         }
         chrome::tab_strip(self, ui);
         chrome::mode_bar(self, ui);
-        if self.active.is_some() {
+        let compact = mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact();
+        if self.active.is_some() && !compact {
             chrome::right_rail(self, ui);
             // Read mode hides the tools, not the navigation panes: the rail stays visible
             // there, so its buttons (Bookmarks, Page thumbnails, ...) must open their panels.
@@ -3152,7 +3153,11 @@ impl eframe::App for TaratasyApp {
         }
         let t = theme::Tokens::get(&ctx);
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.pasteboard)).show(ui, |ui| {
-            if self.mode == Mode::Read {
+            if self.mode == Mode::Read && compact && self.active.is_some() && self.right.is_some() {
+                // A phone: the side panel (opened from Menu › Side panels) takes the window; its close
+                // button gives the page back.
+                panels::right_panel(self, ui);
+            } else if self.mode == Mode::Read {
                 match self.active {
                     None if self.combine_showing() => combine_ui::page(self, ui),
                     None => home::show(self, ui),

@@ -243,6 +243,25 @@ impl CanvasScroll {
         now
     }
 
+    /// A finger dragging the page: it follows 1:1 and coasts after the lift ([`Self::finger_lift`]).
+    /// `delta` is this frame's finger movement in screen points; non-finite input is ignored.
+    pub fn finger(&mut self, delta: Vec2, dt: f32) -> Vec2 {
+        if !delta.is_finite() {
+            return Vec2::ZERO;
+        }
+        if SYNTH_MOMENTUM {
+            self.momentum.feed(delta, dt);
+        }
+        delta
+    }
+
+    /// The finger lifted: coast if the flick was fast enough.
+    pub fn finger_lift(&mut self) {
+        if SYNTH_MOMENTUM {
+            self.momentum.release();
+        }
+    }
+
     /// The scroll ran into the end of the document: stop coasting and drop queued notches.
     pub fn hit_edge(&mut self) {
         self.momentum.cancel();

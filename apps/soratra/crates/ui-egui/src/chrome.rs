@@ -1,6 +1,7 @@
 //! Title bar (Quick Access Toolbar, title, search, account) and status bar.
 
 use egui::{Align2, Rect, Sense, Stroke, Ui, pos2, vec2};
+use mahay_ui::adaptive::{FormFactor, command_bar};
 use serde_json::json;
 use soratra_doc::StoryRef;
 
@@ -224,6 +225,10 @@ impl MacTitleBar {
 }
 
 pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
+    let form = FormFactor::of_ui(ui);
+    if form.is_touch_layout() {
+        return title_bar_touch(app, ui, form);
+    }
     let t = Tokens::get(ui.ctx());
     // macOS: shorter, so the system's traffic lights are centred in it; the tallest controls
     // shrink to keep a margin above and below them.
@@ -395,6 +400,10 @@ pub fn title_bar(app: &mut WordApp, ui: &mut Ui) {
 }
 
 pub fn status_bar(app: &mut WordApp, ui: &mut Ui) {
+    let form = FormFactor::of_ui(ui);
+    if form.is_touch_layout() {
+        return status_bar_touch(app, ui, form);
+    }
     let t = Tokens::get(ui.ctx());
     egui::Panel::bottom("status")
         .exact_size(26.0)
@@ -582,6 +591,158 @@ impl WordApp {
         }
         self.word_count.1
     }
+}
+
+/// A square icon button of `side` points (a touch target) running command `id`.
+fn touch_icon_button(ui: &mut Ui, app: &mut WordApp, icon: &str, tip: &str, id: &str, enabled: bool, side: f32) {
+    let t = Tokens::get(ui.ctx());
+    let (r, resp) = ui.allocate_exact_size(vec2(side, side), Sense::click());
+    if resp.hovered() && enabled {
+        ui.painter().rect_filled(r.shrink(6.0), 6.0, t.hover);
+    }
+    let c = if enabled { t.icon } else { t.text_disabled };
+    icons::paint(ui.painter(), Rect::from_center_size(r.center(), vec2(20.0, 20.0)), icon, c, if enabled { t.accent } else { c });
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, tip));
+    if resp.clicked() && enabled {
+        let _ = app.run(id, json!({}));
+    }
+}
+
+/// The title bar of a phone or a narrow window (D23): Undo, Redo, the document's name (a tap renames
+/// it), Search and the account, each at least 44 points wide. AutoSave and the rest of the Quick
+/// Access Toolbar stay reachable through Search and the File menu.
+fn title_bar_touch(app: &mut WordApp, ui: &mut Ui, form: FormFactor) {
+    let t = Tokens::get(ui.ctx());
+    let side = form.command_height(38.0);
+    egui::Panel::top("title_bar")
+        .exact_size(side)
+        .frame(egui::Frame::NONE.fill(t.title_bar).inner_margin(egui::Margin { left: 4, right: 4, top: 0, bottom: 0 }))
+        .show(ui, |ui| {
+            ui.horizontal_centered(|ui| {
+                ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+                let (undo, redo) = (app.session.can_undo(), app.session.can_redo());
+                let undo_tip = crate::i18n::prefixed("Undo", app.session.undo_label().unwrap_or(""));
+                touch_icon_button(ui, app, "undo", &undo_tip, "edit.undo", undo, side);
+                touch_icon_button(ui, app, "redo", tl!("Redo"), "edit.redo", redo, side);
+                let mid = (ui.available_width() - 2.0 * side).max(0.0);
+                let (r, resp) = ui.allocate_exact_size(vec2(mid, side), Sense::click());
+                let title = if !app.has_document() {
+                    "Soratra".to_string()
+                } else {
+                    format!(
+                        "{} — {}",
+                        app.title_stem(),
+                        if app.session.dirty {
+                            tl!("Edited")
+                        } else if app.session.path.is_some() {
+                            tl!("Saved")
+                        } else {
+                            tl!("Not saved")
+                        }
+                    )
+                };
+                if mid > 24.0 {
+                    let mut job = egui::text::LayoutJob::single_section(
+                        title.chars().take(240).collect(),
+                        egui::text::TextFormat::simple(TypeRung::Chrome.semibold(), t.text),
+                    );
+                    job.wrap = egui::text::TextWrapping { max_width: mid - 8.0, max_rows: 1, break_anywhere: true, overflow_character: Some('…') };
+                    let galley = ui.painter().layout_job(job);
+                    ui.painter().galley(pos2(r.min.x + 4.0, r.center().y - galley.size().y / 2.0), galley, t.text);
+                }
+                resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, &title));
+                if resp.on_hover_text(tl!("Rename Document")).clicked() && app.has_document() {
+                    let _ = app.run("file.rename", json!({}));
+                }
+                touch_icon_button(ui, app, "search", tl!("Search"), "tools.search", true, side);
+                let (r, resp) = ui.allocate_exact_size(vec2(side, side), Sense::click());
+                let d = (side - 12.0).min(32.0);
+                ui.painter().circle_filled(r.center(), d / 2.0, t.accent);
+                resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tl!("Account")));
+                let initials: String = app.session.user_initials().chars().take(2).collect();
+                ui.painter().text(r.center(), Align2::CENTER_CENTER, initials, semibold(10.5), t.on_accent);
+                if resp.on_hover_text(format!("{} — set your name in File › Options", app.session.author)).clicked() {
+                    let _ = app.run("ui.backstage", json!({"value": true, "page": "options", "pane": "general"}));
+                }
+            });
+        });
+}
+
+/// The status bar of a phone or a narrow window (D23): one scrolling row of page, words and language,
+/// then the view buttons, each a touch target. Zoom is by pinch or the Zoom dialog.
+fn status_bar_touch(app: &mut WordApp, ui: &mut Ui, form: FormFactor) {
+    let t = Tokens::get(ui.ctx());
+    let side = form.command_height(26.0);
+    egui::Panel::bottom("status")
+        .exact_size(side)
+        .frame(
+            egui::Frame::NONE
+                .fill(t.status_bar)
+                .inner_margin(egui::Margin { left: 8, right: 8, top: 0, bottom: 0 })
+                .stroke(Stroke::new(1.0, t.border)),
+        )
+        .show(ui, |ui| {
+            if !app.has_document() {
+                return;
+            }
+            command_bar(ui, "status_touch", |ui| {
+                ui.spacing_mut().item_spacing = vec2(6.0, 0.0);
+                let text = |ui: &mut Ui, s: &str| -> egui::Response {
+                    let label = egui::RichText::new(s).font(TypeRung::Caption.regular()).color(t.text_dim);
+                    ui.add(egui::Button::new(label).frame(false).min_size(vec2(0.0, side)))
+                };
+                let l = app.session.layout();
+                let page = if app.session.selects_whole_story() {
+                    app.session.page_hint.min(l.pages.len().saturating_sub(1)) + 1
+                } else {
+                    l.caret_on(&app.session.sel.focus, app.session.page_hint).map(|c| c.page + 1).unwrap_or(1)
+                };
+                if text(ui, &crate::i18n::fmt(tl!("Page {page} of {pages}"), &[("page", &page.to_string()), ("pages", &l.pages.len().to_string())]))
+                    .clicked()
+                {
+                    let _ = app.run("ui.dialog", json!({"name": "goto"}));
+                }
+                let words = app.cached_word_count();
+                let wtxt = if app.session.sel.is_collapsed() || crate::objects::selected(app).is_some() {
+                    crate::i18n::fmt(tl!("{words} words"), &[("words", &words.to_string())])
+                } else {
+                    let sw = soratra_doc::count_words(&app.session.selected_text());
+                    crate::i18n::fmt(tl!("{selected} of {words} words"), &[("selected", &sw.to_string()), ("words", &words.to_string())])
+                };
+                if text(ui, &wtxt).clicked() {
+                    let _ = app.run("ui.dialog", json!({"name": "wordCount"}));
+                }
+                let lang = crate::ribbon::caret_language(app);
+                let resp = text(ui, &lang);
+                egui::Popup::menu(&resp).show(|ui| {
+                    ui.set_min_width(200.0);
+                    crate::ribbon::language_menu(ui, app);
+                });
+                if let Some((msg, at)) = &app.status_msg
+                    && crate::now_ms() - at < 6000.0
+                {
+                    text(ui, msg);
+                }
+                let mode = app.session.view.mode;
+                let read = app.session.view.read_mode;
+                for (icon, id, name, on) in [
+                    ("webLayout", "view.webLayout", tl!("Web Layout"), mode == soratra_layout::ViewMode::Web),
+                    ("printLayout", "view.printLayout", tl!("Print Layout"), mode == soratra_layout::ViewMode::Print && !read),
+                    ("readMode", "view.readMode", tl!("Read Mode"), read),
+                    ("focus", "view.focus", tl!("Focus"), false),
+                ] {
+                    let (r, resp) = ui.allocate_exact_size(vec2(side, side), Sense::click());
+                    if on {
+                        ui.painter().rect_filled(r.shrink(4.0), 4.0, t.checked);
+                    }
+                    icons::paint(ui.painter(), Rect::from_center_size(r.center(), vec2(18.0, 18.0)), icon, t.icon, t.accent);
+                    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::SelectableLabel, true, on, name));
+                    if resp.on_hover_text(name).clicked() {
+                        let _ = app.run(id, json!({}));
+                    }
+                }
+            });
+        });
 }
 
 #[cfg(test)]

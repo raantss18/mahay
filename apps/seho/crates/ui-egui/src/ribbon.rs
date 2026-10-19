@@ -1,9 +1,11 @@
 //! Title bar, ribbon tabs and the ribbon card with every tab's groups.
 
+use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
 use seho_engine::Target;
 use seho_model::{ShapeKind, anim::AnimClass};
-use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
 use serde_json::{Value, json};
+
+use mahay_ui::adaptive::{FormFactor, MIN_TOUCH, command_bar, register_scroll_region};
 
 use crate::SlideApp;
 use crate::icons::{self, Icon};
@@ -53,6 +55,10 @@ fn run(app: &mut SlideApp, id: &str, p: Value) {
 
 /// The window's title row: traffic-light space, quick access, centred title, actions.
 pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
+    let form = FormFactor::of_ui(ui);
+    if form.is_touch_layout() {
+        return title_bar_touch(app, ui, form);
+    }
     let t = Tokens::get(ui.ctx());
     let (height, left, control_h) = title_geometry(app.integrated_titlebar);
     egui::Panel::top("title_bar").exact_size(height).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
@@ -75,8 +81,7 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         let has_doc = app.session.active().is_some();
         let dirty = app.session.active().is_some_and(|d| d.is_dirty());
         crate::qat::show(app, &mut child);
-        let title =
-            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "Seho".into());
+        let title = app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "Seho".into());
         ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
         // Right side.
         let mut right = ui.new_child(
@@ -160,71 +165,84 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
     if !TABS.contains(&app.ui.tab.as_str()) && !ctx_tabs.contains(&app.ui.tab.as_str()) {
         app.ui.tab = "Home".into();
     }
-    let h = 28.0 + if app.ui.ribbon_collapsed { 4.0 } else { RIBBON_H + 20.0 };
+    let touch = FormFactor::of_ui(ui).is_touch_layout();
+    // A phone or a narrow window: touch-sized tabs in a scrolling row, the groups in a scrolling card (D23).
+    let tabs_h = if touch { MIN_TOUCH } else { 28.0 };
+    let h = tabs_h + if app.ui.ribbon_collapsed { 4.0 } else { RIBBON_H + 20.0 };
     egui::Panel::top("ribbon").exact_size(h).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
         let rect = ui.max_rect();
-        // Tabs. File comes first and opens the File tab's full-window view (Backstage), as in
-        // PowerPoint.
-        let mut x = rect.min.x + 12.0;
-        let y = rect.min.y + 2.0;
-        {
-            let w = ui.fonts_mut(|f| f.layout_no_wrap("File".to_string(), theme::font(13.0), t.text).size().x) + 18.0;
-            let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
-            let resp = ui.interact(r, ui.id().with("tab_file"), Sense::click());
-            resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "File"));
-            if resp.hovered() {
-                ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
-            }
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, "File", theme::font(13.0), t.text);
-            if resp.on_hover_text("File (Alt+F)").clicked() {
-                app.open_backstage(crate::backstage::Page::Home);
-            }
-            x += w + 2.0;
-        }
-        let all: Vec<(&str, bool)> = TABS.iter().map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
-        for (name, contextual) in all {
-            let font = theme::font(13.0);
-            let w = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), t.text).size().x) + 18.0;
-            let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
-            let resp = ui.interact(r, ui.id().with(("tab", name)), Sense::click());
-            let active = app.ui.tab == name;
-            if resp.hovered() && !active {
-                ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
-            }
-            let col = if contextual { t.contextual } else { t.text };
-            let f = if active { theme::bold(13.0) } else { font };
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, name, f, col);
-            if active {
-                let uw = (w - 20.0).max(16.0);
-                ui.painter().rect_filled(Rect::from_center_size(pos2(r.center().x, r.max.y - 1.0), vec2(uw, 3.0)), CornerRadius::same(1), t.accent);
-            }
-            if resp.clicked() {
-                if active {
-                    app.ui.ribbon_collapsed = !app.ui.ribbon_collapsed;
-                } else {
-                    app.ui.tab = name.to_string();
-                    app.ui.ribbon_collapsed = false;
+        if touch {
+            tab_row_touch(app, ui, rect, &ctx_tabs, tabs_h, t);
+        } else {
+            // Tabs. File comes first and opens the File tab's full-window view (Backstage), as in
+            // PowerPoint.
+            let mut x = rect.min.x + 12.0;
+            let y = rect.min.y + 2.0;
+            {
+                let w = ui.fonts_mut(|f| f.layout_no_wrap("File".to_string(), theme::font(13.0), t.text).size().x) + 18.0;
+                let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
+                let resp = ui.interact(r, ui.id().with("tab_file"), Sense::click());
+                resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, "File"));
+                if resp.hovered() {
+                    ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
                 }
+                ui.painter().text(r.center(), Align2::CENTER_CENTER, "File", theme::font(13.0), t.text);
+                if resp.on_hover_text("File (Alt+F)").clicked() {
+                    app.open_backstage(crate::backstage::Page::Home);
+                }
+                x += w + 2.0;
             }
-            if resp.double_clicked() {
-                app.ui.ribbon_collapsed = !app.ui.ribbon_collapsed;
+            let all: Vec<(&str, bool)> = TABS.iter().map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
+            for (name, contextual) in all {
+                let font = theme::font(13.0);
+                let w = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), t.text).size().x) + 18.0;
+                let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
+                let resp = ui.interact(r, ui.id().with(("tab", name)), Sense::click());
+                let active = app.ui.tab == name;
+                if resp.hovered() && !active {
+                    ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
+                }
+                let col = if contextual { t.contextual } else { t.text };
+                let f = if active { theme::bold(13.0) } else { font };
+                ui.painter().text(r.center(), Align2::CENTER_CENTER, name, f, col);
+                if active {
+                    let uw = (w - 20.0).max(16.0);
+                    ui.painter().rect_filled(
+                        Rect::from_center_size(pos2(r.center().x, r.max.y - 1.0), vec2(uw, 3.0)),
+                        CornerRadius::same(1),
+                        t.accent,
+                    );
+                }
+                if resp.clicked() {
+                    if active {
+                        app.ui.ribbon_collapsed = !app.ui.ribbon_collapsed;
+                    } else {
+                        app.ui.tab = name.to_string();
+                        app.ui.ribbon_collapsed = false;
+                    }
+                }
+                if resp.double_clicked() {
+                    app.ui.ribbon_collapsed = !app.ui.ribbon_collapsed;
+                }
+                x += w + 2.0;
             }
-            x += w + 2.0;
         }
         if app.ui.ribbon_collapsed {
             return;
         }
         // The white card.
-        let card = Rect::from_min_max(pos2(rect.min.x + 8.0, rect.min.y + 30.0), pos2(rect.max.x - 8.0, rect.min.y + 30.0 + RIBBON_H + 10.0));
+        let card = Rect::from_min_max(
+            pos2(rect.min.x + 8.0, rect.min.y + tabs_h + 2.0),
+            pos2(rect.max.x - 8.0, rect.min.y + tabs_h + 2.0 + RIBBON_H + 10.0),
+        );
         ui.painter().rect_filled(card.translate(vec2(0.0, 1.0)), CornerRadius::same(10), t.card_border);
         ui.painter().rect_filled(card, CornerRadius::same(10), t.card);
         let inner = Rect::from_min_size(pos2(card.min.x + 10.0, card.min.y + 5.0), vec2(card.width() - 20.0, RIBBON_H));
         let mut cui = ui.new_child(egui::UiBuilder::new().max_rect(inner).layout(egui::Layout::left_to_right(egui::Align::Min)));
         cui.set_clip_rect(inner.expand2(vec2(0.0, 3.0)));
         cui.spacing_mut().item_spacing.x = 1.0;
-        let ui = &mut cui;
         let tab = app.ui.tab.clone();
-        match tab.as_str() {
+        let body = |app: &mut SlideApp, ui: &mut Ui| match tab.as_str() {
             "Home" => home(app, ui),
             "Insert" => insert(app, ui),
             "Draw" => draw(app, ui),
@@ -246,7 +264,150 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             "Handout Master" => handout_master(app, ui),
             "Notes Master" => notes_master(app, ui),
             _ => {}
-        }
+        };
+        // Groups that do not fit the card scroll (they used to be cut off); at desktop widths all fit and
+        // nothing changes (D23).
+        let out = egui::ScrollArea::horizontal()
+            .id_salt("ribbon_card_scroll")
+            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
+            .auto_shrink([false, false])
+            .show(&mut cui, |ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.spacing_mut().item_spacing.x = 1.0;
+                    if touch {
+                        ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                    }
+                    body(app, ui);
+                });
+            });
+        register_scroll_region(cui.ctx(), out.inner_rect);
+    });
+}
+
+/// A square icon button of `side` points (a touch target).
+fn touch_icon(ui: &mut Ui, icon: Icon, tip: &str, enabled: bool, side: f32) -> egui::Response {
+    let t = Tokens::get(ui.ctx());
+    let (rect, resp) = ui.allocate_exact_size(vec2(side, side), if enabled { Sense::click() } else { Sense::hover() });
+    let painter = ui.painter_at(rect);
+    icons::paint(&painter, Rect::from_center_size(rect.center(), vec2(20.0, 20.0)), icon, t.text, !enabled);
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, enabled, tip));
+    resp.on_hover_text(tip)
+}
+
+/// The title row of a phone or a narrow window (D23): Undo, Redo, the name, Search, Present and one
+/// menu with the rest, each a touch target.
+fn title_bar_touch(app: &mut SlideApp, ui: &mut Ui, form: FormFactor) {
+    let t = Tokens::get(ui.ctx());
+    let side = form.command_height(TITLE_H);
+    egui::Panel::top("title_bar").exact_size(side).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
+        ui.horizontal_centered(|ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            let has_doc = app.session.active().is_some();
+            let dirty = app.session.active().is_some_and(|d| d.is_dirty());
+            if touch_icon(ui, Icon::Undo, "Undo", enabled(app, "edit.undo"), side).clicked() {
+                run(app, "edit.undo", json!({}));
+            }
+            if touch_icon(ui, Icon::Redo, "Redo", enabled(app, "edit.redo"), side).clicked() {
+                run(app, "edit.redo", json!({}));
+            }
+            let present_w = 84.0;
+            let mid = (ui.available_width() - 2.0 * side - present_w).max(0.0);
+            let (r, _) = ui.allocate_exact_size(vec2(mid, side), Sense::hover());
+            if mid > 24.0 {
+                let title =
+                    app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "Seho".into());
+                let mut job = egui::text::LayoutJob::single_section(title, egui::text::TextFormat::simple(theme::font(13.0), t.text));
+                job.wrap = egui::text::TextWrapping { max_width: mid - 8.0, max_rows: 1, break_anywhere: true, overflow_character: Some('…') };
+                let galley = ui.painter().layout_job(job);
+                ui.painter().galley(pos2(r.min.x + 4.0, r.center().y - galley.size().y / 2.0), galley, t.text);
+            }
+            if touch_icon(ui, Icon::Search, "Search commands (⇧⌘P)", true, side).clicked() {
+                app.palette = Some((String::new(), 0));
+            }
+            let present = ui.add(
+                egui::Button::new(egui::RichText::new("Present").color(t.accent_text).font(theme::bold(13.0)))
+                    .fill(t.accent)
+                    .corner_radius(16.0)
+                    .min_size(vec2(present_w - 8.0, 32.0)),
+            );
+            if present.clicked() && has_doc {
+                let from = app.session.active().map(|d| d.selection.slide).unwrap_or(0);
+                app.start_show(from, false);
+            }
+            ui.add_space(8.0);
+            let more = touch_icon(ui, Icon::More, "More commands", true, side);
+            egui::Popup::menu(&more).show(|ui| {
+                ui.set_min_width(220.0);
+                let item = |ui: &mut Ui, label: &str, on: bool| ui.add_enabled(on, egui::Button::new(label).min_size(vec2(0.0, MIN_TOUCH))).clicked();
+                if item(ui, "Home", true) {
+                    run(app, "app.home", json!({}));
+                    ui.close();
+                }
+                if item(ui, "Save", has_doc) {
+                    app.save();
+                    ui.close();
+                }
+                if item(ui, "Export", has_doc) {
+                    run(app, "app.exportDialog", json!({}));
+                    ui.close();
+                }
+                if item(ui, "Comments", has_doc) {
+                    run(app, "view.pane", json!({"pane": "comments", "toggle": true}));
+                    ui.close();
+                }
+                if item(ui, "Light/Dark appearance", true) {
+                    run(app, "view.dark", json!({}));
+                    ui.close();
+                }
+            });
+        });
+    });
+}
+
+/// The tab row of a phone or a narrow window (D23): File and the tabs in a row that scrolls, each at
+/// least 48 points high.
+fn tab_row_touch(app: &mut SlideApp, ui: &mut Ui, rect: Rect, ctx_tabs: &[&'static str], tabs_h: f32, t: Tokens) {
+    let row = Rect::from_min_size(rect.min, vec2(rect.width(), tabs_h));
+    ui.scope_builder(egui::UiBuilder::new().max_rect(row), |ui| {
+        command_bar(ui, "tabs_touch", |ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            let seen = ui.ctx().data(|d| d.get_temp::<String>(egui::Id::new("tabs_touch_seen"))).unwrap_or_default();
+            let all: Vec<(&str, bool)> =
+                std::iter::once(("File", false)).chain(TABS.iter().map(|s| (*s, false))).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
+            for (name, contextual) in all {
+                let active = name != "File" && app.ui.tab == name;
+                let font = if active { theme::bold(13.0) } else { theme::font(13.0) };
+                let w = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), t.text).size().x) + 28.0;
+                let (r, resp) = ui.allocate_exact_size(vec2(w.max(MIN_TOUCH), tabs_h), Sense::click());
+                resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, name));
+                let col = if contextual { t.contextual } else { t.text };
+                ui.painter().text(r.center(), Align2::CENTER_CENTER, name, font, col);
+                if active {
+                    ui.painter().rect_filled(
+                        Rect::from_center_size(pos2(r.center().x, r.max.y - 2.0), vec2((r.width() - 20.0).max(16.0), 3.0)),
+                        CornerRadius::same(1),
+                        t.accent,
+                    );
+                    if seen != name {
+                        resp.scroll_to_me(Some(egui::Align::Center));
+                    }
+                }
+                if resp.clicked() {
+                    if name == "File" {
+                        app.open_backstage(crate::backstage::Page::Home);
+                    } else if active {
+                        app.ui.ribbon_collapsed = !app.ui.ribbon_collapsed;
+                    } else {
+                        app.ui.tab = name.to_string();
+                        app.ui.ribbon_collapsed = false;
+                    }
+                }
+            }
+            if app.ui.tab != seen {
+                let now = app.ui.tab.clone();
+                ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new("tabs_touch_seen"), now));
+            }
+        });
     });
 }
 
@@ -1564,12 +1725,7 @@ fn design(app: &mut SlideApp, ui: &mut Ui) {
             egui::Grid::new("bgstyles").show(ui, |ui| {
                 let sc = scheme(app);
                 for i in 1..=12 {
-                    let slots = [
-                        seho_color::SchemeSlot::Lt1,
-                        seho_color::SchemeSlot::Lt2,
-                        seho_color::SchemeSlot::Dk2,
-                        seho_color::SchemeSlot::Dk1,
-                    ];
+                    let slots = [seho_color::SchemeSlot::Lt1, seho_color::SchemeSlot::Lt2, seho_color::SchemeSlot::Dk2, seho_color::SchemeSlot::Dk1];
                     let base = theme::to_color32(sc.get(slots[(i - 1) % 4]));
                     let shade = match (i - 1) / 4 {
                         0 => base,

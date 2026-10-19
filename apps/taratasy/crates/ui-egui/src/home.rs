@@ -20,7 +20,7 @@ fn card_lift(ui: &egui::Ui, t: &Tokens, rect: Rect, press: theme::Press) {
 
 pub fn show(app: &mut TaratasyApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
-    egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
+    let scrolled = egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
         egui::Frame::NONE.inner_margin(egui::Margin { left: 36, right: 36, top: 28, bottom: 28 }).show(ui, |ui| {
             ui.label(egui::RichText::new(tl!("Welcome to Taratasy")).font(theme::semibold(24.0)));
             ui.label(
@@ -212,6 +212,7 @@ pub fn show(app: &mut TaratasyApp, ui: &mut egui::Ui) {
             );
         });
     });
+    mahay_ui::adaptive::register_scroll_region(ui.ctx(), scrolled.inner_rect);
 }
 
 #[cfg(test)]

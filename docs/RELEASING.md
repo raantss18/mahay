@@ -41,7 +41,7 @@ pre-releases.
 ## The release page
 
 `scripts/release-notes.py` writes it, Tontolo-style: **Mahay HUB first** (Android arm64 = the right
-choice in 95 % of cases; AppImage for Linux), the note that Mahay updates itself, the new
+choice in 95 % of cases; AppImage for Linux), the system requirements (kept in step with the README), the note that Mahay updates itself, the new
 features from the CHANGELOG, then the other apps' files folded away (Mahay HUB downloads them).
 
 ## From CI (without this computer)

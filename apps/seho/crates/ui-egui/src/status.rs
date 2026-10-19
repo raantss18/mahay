@@ -9,6 +9,10 @@ use crate::theme::{self, Tokens};
 use crate::{SlideApp, ViewMode};
 
 pub fn status_bar(app: &mut SlideApp, ui: &mut Ui) {
+    let form = mahay_ui::adaptive::FormFactor::of_ui(ui);
+    if form.is_touch_layout() {
+        return status_bar_touch(app, ui, form);
+    }
     let t = Tokens::get(ui.ctx());
     egui::Panel::bottom("status").exact_size(28.0).frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
         let rect = ui.max_rect();
@@ -88,6 +92,81 @@ pub fn status_bar(app: &mut SlideApp, ui: &mut Ui) {
     });
 }
 
+/// The status bar of a phone or a narrow window (D23): one scrolling row of touch targets: the slide
+/// (a tap opens the slide list on a phone), the language, the view buttons, the zoom, Comments and Notes.
+fn status_bar_touch(app: &mut SlideApp, ui: &mut Ui, form: mahay_ui::adaptive::FormFactor) {
+    let t = Tokens::get(ui.ctx());
+    let side = form.command_height(28.0);
+    egui::Panel::bottom("status").exact_size(side).frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(6, 0))).show(
+        ui,
+        |ui| {
+            let Some(st) = app.session.active() else { return };
+            let n = st.doc.slides.len();
+            let left = match st.selection.target {
+                seho_engine::Target::Slides => format!("Slide {} of {}", (st.selection.slide + 1).min(n.max(1)), n),
+                _ => "Slide Master".to_string(),
+            };
+            mahay_ui::adaptive::command_bar(ui, "status_touch", |ui| {
+                ui.spacing_mut().item_spacing.x = 4.0;
+                let text = |ui: &mut Ui, s: &str| {
+                    ui.add(egui::Button::new(egui::RichText::new(s).font(theme::font(12.0)).color(t.text_dim)).frame(false).min_size(vec2(0.0, side)))
+                };
+                if text(ui, &left).clicked() && form.is_compact() {
+                    crate::thumbs::toggle_drawer(ui.ctx(), app.session.active().map(|d| d.selection.slide).unwrap_or(0));
+                }
+                let (lang, no_proof) = crate::dialogs::selected_language(app);
+                let name = crate::squiggles::lang_name(&lang) + if no_proof { " (not checked)" } else { "" };
+                if text(ui, &name).on_hover_text("Language").clicked() {
+                    app.dialog = Some(crate::dialogs::Dialog::new("language"));
+                }
+                if let Some(msg) = app.fresh_status() {
+                    text(ui, &msg);
+                    ui.ctx().request_repaint_after(std::time::Duration::from_millis(500));
+                }
+                let view = app.ui.view;
+                let icon = |ui: &mut Ui, icon: Icon, tip: &str, on: bool| {
+                    let t = Tokens::get(ui.ctx());
+                    let (r, resp) = ui.allocate_exact_size(vec2(side, side), Sense::click());
+                    if on {
+                        ui.painter().rect_filled(r.shrink(4.0), CornerRadius::same(4), t.selected);
+                    }
+                    icons::paint(ui.painter(), Rect::from_center_size(r.center(), vec2(18.0, 18.0)), icon, t.text_dim, false);
+                    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tip));
+                    resp.on_hover_text(tip).clicked()
+                };
+                if icon(ui, Icon::ViewNormalSmall, "Normal", view == ViewMode::Normal) {
+                    app.ui.view = ViewMode::Normal;
+                }
+                if icon(ui, Icon::ViewSorterSmall, "Slide Sorter", view == ViewMode::Sorter) {
+                    app.ui.view = ViewMode::Sorter;
+                }
+                if icon(ui, Icon::ViewReadingSmall, "Reading View", false) {
+                    let _ = app.run("view.reading", json!({}));
+                }
+                if icon(ui, Icon::ViewShowSmall, "Slide Show", false) {
+                    let i = app.session.active().map(|d| d.selection.slide).unwrap_or(0);
+                    app.start_show(i, false);
+                }
+                let pct = (app.canvas_scale * 100.0).round();
+                if text(ui, &format!("{pct}%")).clicked() {
+                    let _ = app.run("view.zoomDialog", json!({}));
+                }
+                if icon(ui, Icon::FitSmall, "Fit slide to current window", false) {
+                    app.ui.zoom = None;
+                }
+                let c_on = app.ui.pane.as_deref() == Some("comments");
+                if icon(ui, Icon::CommentsSmall, "Comments", c_on) {
+                    let _ = app.run("view.pane", json!({"pane": "comments", "toggle": true}));
+                }
+                let n_on = app.ui.notes;
+                if icon(ui, Icon::NotesSmall, "Notes", n_on) {
+                    app.ui.notes = !n_on;
+                }
+            });
+        },
+    );
+}
+
 fn small_icon(ui: &mut Ui, icon: Icon, tip: &str, on: bool) -> egui::Response {
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(vec2(26.0, 20.0), Sense::click());
@@ -134,8 +213,9 @@ pub fn notes_pane(app: &mut SlideApp, ui: &mut Ui) {
         }
     }
     let notes = app.session.active().and_then(|st| st.current_slide()).map(|s| s.notes.clone()).unwrap_or_default();
+    let compact = mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact();
     egui::Panel::bottom("notes")
-        .resizable(true)
+        .resizable(!compact)
         .default_size(app.ui.notes_height)
         .size_range(36.0..=400.0)
         .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(8, 6)))

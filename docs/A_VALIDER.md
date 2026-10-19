@@ -50,3 +50,18 @@ Proposés par l'assistant, à relire par un locuteur natif avant une diffusion l
 | Fanavaozana %d vonona / Sokafy i Mahay HUB hametrahana azy              | %d mise(s) à jour prête(s) / Ouvrez Mahay HUB pour les installer    |
 | Fanavaozana Mahay                                                       | Mises à jour Mahay (nom du canal de notification)                   |
 | README.mg.md, « Amin'ny Android, i Mahay HUB no mikarakara… » (paragraphe entier)  | Sur Android, Mahay HUB s'occupe des autres apps (voir README.md) |
+
+## README Mahay (2026-10-19)
+
+Proposé par l'assistant (README.mg.md), à relire par un locuteur natif :
+
+| Terme ou phrase                                                  | Sens voulu                                             |
+|------------------------------------------------------------------|--------------------------------------------------------|
+| Rindranasa 14 hamoronana sy hiasana amin'ny birao                | 14 apps de création et de bureautique                  |
+| Malalaka, teratany, manokana                                     | Libres, natives, privées                               |
+| Fakana iray ihany                                                | Un seul téléchargement                                 |
+| Ny tena ilaina                                                   | Configuration requise                                  |
+| Mpikajy / Sary (graphismes) / Toerana (stockage) / Aterineto     | Processeur / Graphismes / Stockage / Réseau            |
+| Avelao hametraka rindranasa tsy fantatra i Mahay HUB             | Autoriser Mahay HUB à installer des apps inconnues     |
+| Mila FUSE 2 (`libfuse2`) ny AppImage                             | L'AppImage demande FUSE 2                              |
+| Maivana ny rindranasa tsirairay ka azo apetraka tsirairay        | Chaque app est assez légère pour s'installer seule     |

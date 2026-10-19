@@ -1,12 +1,53 @@
 //! The slide thumbnail pane (Normal view): numbered thumbnails grouped by section, selection,
 //! drag-to-reorder, and the slide context menu.
 
-use seho_engine::Target;
 use egui::{Align2, Color32, CornerRadius, Rect, Sense, Stroke, Ui, pos2, vec2};
+use seho_engine::Target;
 use serde_json::json;
 
 use crate::SlideApp;
 use crate::theme::{self, Tokens};
+
+/// On a phone (D23) the slide list is a drawer: it takes the whole window while it is open (a tap on a
+/// slide closes it) and the status bar's slide button opens it. Remembers the slide it was opened on.
+fn drawer_key() -> egui::Id {
+    egui::Id::new("seho_thumbs_drawer")
+}
+
+pub fn drawer_open(ctx: &egui::Context) -> bool {
+    ctx.data(|d| d.get_temp::<usize>(drawer_key())).is_some()
+}
+
+pub fn toggle_drawer(ctx: &egui::Context, slide: usize) {
+    ctx.data_mut(|d| {
+        if d.get_temp::<usize>(drawer_key()).is_some() {
+            d.remove::<usize>(drawer_key());
+        } else {
+            d.insert_temp(drawer_key(), slide);
+        }
+    });
+}
+
+/// The slide list as a full-window drawer. Closes when another slide is chosen.
+pub fn drawer(app: &mut SlideApp, ui: &mut Ui) {
+    let t = Tokens::get(ui.ctx());
+    let opened_on = ui.ctx().data(|d| d.get_temp::<usize>(drawer_key())).unwrap_or(0);
+    let in_master = app.session.active().is_some_and(|d| d.selection.target != Target::Slides);
+    egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
+        if in_master {
+            master_list(app, ui);
+            return;
+        }
+        egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
+            ui.add_space(8.0);
+            list(app, ui);
+            ui.add_space(20.0);
+        });
+    });
+    if app.session.active().is_some_and(|d| d.selection.slide != opened_on) {
+        ui.ctx().data_mut(|d| d.remove::<usize>(drawer_key()));
+    }
+}
 
 pub fn show(app: &mut SlideApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
@@ -287,12 +328,7 @@ fn master_list(app: &mut SlideApp, ui: &mut Ui) {
                     &doc,
                     mi,
                     li,
-                    &seho_render::RenderOpts {
-                        scale: px.0 as f64 / doc.slide_size.width.max(1.0),
-                        edit: true,
-                        size: Some(px),
-                        ..Default::default()
-                    },
+                    &seho_render::RenderOpts { scale: px.0 as f64 / doc.slide_size.width.max(1.0), edit: true, size: Some(px), ..Default::default() },
                 );
                 let tex = crate::textures::upload_editor(ui.ctx(), format!("ml-{mi}-{li:?}"), crate::textures::to_color_image(&pic, false));
                 ui.painter().image(tex.id(), img, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);

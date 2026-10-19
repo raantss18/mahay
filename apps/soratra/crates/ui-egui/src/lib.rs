@@ -77,6 +77,7 @@ pub mod system_clipboard;
 pub mod table_mouse;
 pub mod table_pen;
 pub mod table_resize;
+pub mod touch_scroll;
 pub mod table_ruler;
 pub mod theme;
 pub mod widgets;
@@ -2551,6 +2552,9 @@ fn control_click_as_secondary(events: &mut [egui::Event], held: &mut bool) {
 
 #[cfg(test)]
 mod tests_perf;
+
+#[cfg(test)]
+mod tests_phone;
 
 #[cfg(test)]
 mod tests {

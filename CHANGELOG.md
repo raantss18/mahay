@@ -22,6 +22,25 @@ versions follow [SemVer](https://semver.org/).
   **file extension** when a file manager reports no type or a generic one (IDML, DXF, RAW photos,
   `.tex`, ...), in addition to the MIME type. A new test (`scripts/android-open-with-test.py`) asks
   Android which apps answer each case and fails if an app drops out or claims files that are not its own.
+- **Phone and tablet layouts that follow the window width, with no setting** (D23). Compact
+  (< 600 dp), medium (600–839) and expanded (≥ 840, the desktop layout, unchanged) are worked out
+  every frame, so rotation, split screen and floating windows change the layout by themselves.
+  Done in **Soratra, Tabilao, Seho and Taratasy**: touch-sized title bar, scrolling tab strip with
+  the rarely used buttons in one menu, scrolling ribbon, status bar and mode bar, side panels and
+  the slide list as full-window drawers, full-screen dialogs in Soratra. The ribbons no longer
+  overlap or leave the screen. The other apps follow. Shared piece: `mahay_ui::adaptive`
+  (`FormFactor`, a scrolling command bar, a layout audit used by one test per app at 360, 400,
+  600 and 840 points).
+
+### Fixed
+
+- **Soratra on a phone: a finger drag scrolls the page** (with coasting) instead of selecting text;
+  a long press first still selects. A solid scroll bar a finger can grab shows on narrow windows.
+  Tabilao, Seho and the other apps still select on a finger drag (see `TODO.md`).
+
+### Changed
+
+- **Seho**: the ribbon scrolls instead of cutting off groups that do not fit the window.
 
 ### Security
 

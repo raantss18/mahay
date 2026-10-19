@@ -2465,6 +2465,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mahay-ui"
+version = "0.1.0"
+dependencies = [
+ "egui",
+]
+
+[[package]]
 name = "mahay-update"
 version = "0.1.0"
 dependencies = [
@@ -4055,6 +4062,7 @@ dependencies = [
  "js-sys",
  "log",
  "mahay-about",
+ "mahay-ui",
  "seho-anim",
  "seho-color",
  "seho-engine",

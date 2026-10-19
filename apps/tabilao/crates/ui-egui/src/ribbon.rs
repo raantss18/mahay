@@ -1,14 +1,15 @@
 //! Title bar (Quick Access Toolbar), ribbon tabs and ribbon groups, and keyboard shortcuts.
 
 use egui::{Align2, Color32, Key, Modifiers, Rect, Sense, Stroke, StrokeKind, Ui, pos2, vec2};
-use tabilao_engine::model::{HAlign, Style, VAlign};
 use serde_json::json;
+use tabilao_engine::model::{HAlign, Style, VAlign};
 
 use crate::SheetApp;
 use crate::icons::{self, Icon};
 use crate::keytips::keytip_table;
 use crate::theme::{self, Tokens};
 use crate::widgets::{big_button, color_palette, icon_button, small_button, split_button, toggle_button};
+use mahay_ui::adaptive::{FormFactor, command_bar, register_scroll_region};
 
 pub const TABS: &[&str] = &["Home", "Insert", "Draw", "Page Layout", "Formulas", "Data", "Review", "View", "Automate"];
 
@@ -36,6 +37,10 @@ const TITLE_CONTROL_H: f32 = if MAC { 22.0 } else { 26.0 };
 const _: () = assert!(TITLE_CONTROL_H < TITLE_BAR_H, "title-bar controls keep a margin above and below");
 
 pub fn title_bar(app: &mut SheetApp, ui: &mut Ui) {
+    let form = FormFactor::of_ui(ui);
+    if form.is_touch_layout() {
+        return title_bar_touch(app, ui, form);
+    }
     let t = Tokens::get(ui.ctx());
     let ch = TITLE_CONTROL_H;
     egui::Panel::top("title_bar").exact_size(TITLE_BAR_H).frame(egui::Frame::NONE.fill(t.window)).show(ui, |ui| {
@@ -165,15 +170,19 @@ pub fn title_bar(app: &mut SheetApp, ui: &mut Ui) {
 pub fn show(app: &mut SheetApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let collapsed = app.ui.ribbon_collapsed;
-    let h = if collapsed { 34.0 } else { 34.0 + 92.0 };
+    let form = FormFactor::of_ui(ui);
+    let touch = form.is_touch_layout();
+    // The tab row of a phone or a narrow window has touch-sized tabs and scrolls (D23).
+    let tabs_h = if touch { form.command_height(32.0).max(40.0) } else { 32.0 };
+    let h = if collapsed { tabs_h + 2.0 } else { tabs_h + 2.0 + 92.0 };
     egui::Panel::top("ribbon")
         .exact_size(h)
         .frame(egui::Frame::NONE.fill(t.window).inner_margin(egui::Margin { left: 10, right: 10, top: 0, bottom: 6 }))
         .show(ui, |ui| {
             // Tabs row.
-            let tabs_rect = Rect::from_min_size(ui.cursor().min, vec2(ui.available_width(), 32.0));
+            let tabs_rect = Rect::from_min_size(ui.cursor().min, vec2(ui.available_width(), tabs_h));
             ui.scope_builder(egui::UiBuilder::new().max_rect(tabs_rect), |ui| {
-                ui.horizontal(|ui| {
+                let tabs_row = |ui: &mut Ui| {
                     ui.spacing_mut().item_spacing.x = 2.0;
                     ui.add_space(8.0);
                     file_menu(app, ui);
@@ -186,7 +195,7 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
                         let font = theme::ui_font(13.5);
                         let label = app.ui.language.tr(tab);
                         let tw = ui.painter().layout_no_wrap(label.to_string(), font.clone(), t.text).size().x;
-                        let (r, resp) = ui.allocate_exact_size(vec2(tw + 22.0, 30.0), Sense::click());
+                        let (r, resp) = ui.allocate_exact_size(vec2(tw + 22.0, tabs_h - 2.0), Sense::click());
                         if resp.hovered() && !active {
                             ui.painter().rect_filled(r.shrink2(vec2(2.0, 4.0)), 5.0, t.hover);
                         }
@@ -219,7 +228,12 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
                             keytip(app, ui, sequence, pos2(r.center().x, r.bottom() - 1.0));
                         }
                     }
-                });
+                };
+                if touch {
+                    command_bar(ui, "ribbon_tabs", tabs_row);
+                } else {
+                    ui.horizontal(tabs_row);
+                }
             });
             if collapsed {
                 return;
@@ -230,26 +244,32 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
             ui.painter().rect_stroke(card, 10.0, Stroke::new(1.0, t.ribbon_border), StrokeKind::Inside);
             let inner = card.shrink2(vec2(10.0, 6.0));
             ui.scope_builder(egui::UiBuilder::new().max_rect(inner), |ui| {
-                egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden).show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
-                        match app.ui.ribbon_tab.as_str() {
-                            "Home" => home(app, ui),
-                            "Insert" => insert(app, ui),
-                            "Draw" => draw(app, ui),
-                            "Page Layout" => page_layout(app, ui),
-                            "Formulas" => formulas(app, ui),
-                            "Data" => data(app, ui),
-                            "Review" => review(app, ui),
-                            "View" => view(app, ui),
-                            "Automate" => automate(app, ui),
-                            "Table Design" => table_design(app, ui),
-                            "Chart Design" => chart_design(app, ui),
-                            crate::paper_view::TAB => crate::paper_view::ribbon_tab(app, ui),
-                            _ => home(app, ui),
-                        }
+                let scroll =
+                    egui::ScrollArea::horizontal().scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden).show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.spacing_mut().item_spacing = vec2(2.0, 2.0);
+                            // A narrow window scrolls the groups instead of wrapping their labels (D23).
+                            if touch {
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                            }
+                            match app.ui.ribbon_tab.as_str() {
+                                "Home" => home(app, ui),
+                                "Insert" => insert(app, ui),
+                                "Draw" => draw(app, ui),
+                                "Page Layout" => page_layout(app, ui),
+                                "Formulas" => formulas(app, ui),
+                                "Data" => data(app, ui),
+                                "Review" => review(app, ui),
+                                "View" => view(app, ui),
+                                "Automate" => automate(app, ui),
+                                "Table Design" => table_design(app, ui),
+                                "Chart Design" => chart_design(app, ui),
+                                crate::paper_view::TAB => crate::paper_view::ribbon_tab(app, ui),
+                                _ => home(app, ui),
+                            }
+                        });
                     });
-                });
+                register_scroll_region(ui.ctx(), scroll.inner_rect);
             });
         });
 }
@@ -259,7 +279,8 @@ pub fn show(app: &mut SheetApp, ui: &mut Ui) {
 fn file_menu(app: &mut SheetApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     let label = egui::RichText::new(app.ui.language.tr("File")).font(theme::ui_font(13.5)).color(t.accent);
-    let file = ui.add(egui::Button::new(label).frame(false).min_size(vec2(46.0, 30.0)));
+    let file_h = if FormFactor::of_ui(ui).is_touch_layout() { mahay_ui::adaptive::MIN_TOUCH - 8.0 } else { 30.0 };
+    let file = ui.add(egui::Button::new(label).frame(false).min_size(vec2(46.0, file_h)));
     if file.clicked() {
         app.open_backstage(crate::backstage::Page::Home);
     }
@@ -2513,4 +2534,91 @@ mod checkbox_on_tests {
         assert!(checkbox_on(false, false));
         assert!(!checkbox_on(false, true));
     }
+}
+
+/// The title bar of a phone or a narrow window (D23): Undo, Redo, the workbook's name, Search, and one
+/// menu with the rest (Home, Save, New, Open, Share, Comments, theme…), each a touch target.
+fn title_bar_touch(app: &mut SheetApp, ui: &mut Ui, form: FormFactor) {
+    let t = Tokens::get(ui.ctx());
+    let side = form.command_height(38.0);
+    egui::Panel::top("title_bar").exact_size(side).frame(egui::Frame::NONE.fill(t.window)).show(ui, |ui| {
+        ui.horizontal_centered(|ui| {
+            ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+            let can_undo = app.session.active().is_some_and(|d| !d.undo.is_empty());
+            let can_redo = app.session.active().is_some_and(|d| !d.redo.is_empty());
+            if icon_button(ui, Icon::Undo, if can_undo { t.text_dim } else { t.text_disabled }, "Undo", vec2(side, side)).clicked() && can_undo {
+                app.run_or_alert("edit.undo", json!({}));
+            }
+            if icon_button(ui, Icon::Redo, if can_redo { t.text_dim } else { t.text_disabled }, "Redo", vec2(side, side)).clicked() && can_redo {
+                app.run_or_alert("edit.redo", json!({}));
+            }
+            let mid = (ui.available_width() - 2.0 * side).max(0.0);
+            let (r, _) = ui.allocate_exact_size(vec2(mid, side), Sense::hover());
+            let title = app.session.active().map(|d| d.display_title()).unwrap_or_default();
+            let dirty = app.session.active().is_some_and(|d| d.is_dirty());
+            if mid > 24.0 {
+                let mut job = egui::text::LayoutJob::single_section(
+                    format!("{title}{}", if dirty { " •" } else { "" }),
+                    egui::text::TextFormat::simple(theme::ui_bold(13.0), t.text),
+                );
+                job.wrap = egui::text::TextWrapping { max_width: mid - 8.0, max_rows: 1, break_anywhere: true, overflow_character: Some('…') };
+                let galley = ui.painter().layout_job(job);
+                ui.painter().galley(pos2(r.min.x + 4.0, r.center().y - galley.size().y / 2.0), galley, t.text);
+            }
+            let search = icon_button(ui, Icon::Search, t.text_dim, "Search commands (⌘⇧Space)", vec2(side, side));
+            if search.clicked() {
+                app.open_dialog("commandSearch", json!({}));
+            }
+            let more = icon_button(ui, Icon::More, t.text_dim, "More commands", vec2(side, side));
+            egui::Popup::menu(&more).show(|ui| {
+                ui.set_min_width(240.0);
+                let item = |ui: &mut Ui, label: &str| ui.add(egui::Button::new(label).min_size(vec2(0.0, mahay_ui::adaptive::MIN_TOUCH))).clicked();
+                if item(ui, "Home") {
+                    app.open_dialog("start", json!({}));
+                    ui.close();
+                }
+                if item(ui, "Save") && app.commit_edit(0, 0, false, false) {
+                    app.run_or_alert("file.save", json!({}));
+                    ui.close();
+                }
+                for (label, id) in [
+                    ("New Workbook", "file.new"),
+                    ("Open…", "file.open"),
+                    ("Save As…", "file.saveAs"),
+                    ("Sort A to Z", "data.sortAscending"),
+                    ("Calculate Now", "formulas.calculateNow"),
+                ] {
+                    if item(ui, label) {
+                        app.run_or_alert(id, json!({}));
+                        ui.close();
+                    }
+                }
+                if item(ui, "Print…") {
+                    app.print_now(json!({}));
+                    ui.close();
+                }
+                ui.separator();
+                if item(ui, "Export as PDF…") {
+                    app.run_or_alert("file.exportPdf", json!({}));
+                    ui.close();
+                }
+                for (label, fmt) in
+                    [("Save a Copy as Excel Workbook (.xlsx)…", "xlsx"), ("Export as CSV…", "csv"), ("Export as Web Page (.html)…", "html")]
+                {
+                    if item(ui, label) {
+                        app.open_dialog("saveCopy", json!({"format": fmt}));
+                        ui.close();
+                    }
+                }
+                if item(ui, "Comments") {
+                    app.open_dialog("comments", json!({}));
+                    ui.close();
+                }
+                if item(ui, "Dark Mode") {
+                    act(app, "view.darkMode", json!({}));
+                    ui.close();
+                }
+            });
+        });
+    });
 }
