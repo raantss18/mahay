@@ -239,3 +239,60 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   copies forever (the folder only grows); delete on close (apps don't report closing a document).
 - **Why:** the originals live in the user's storage, so a copy is only a cache: backing it up
   doubles private data in the user's cloud, and keeping it forever wastes space.
+
+## D21 — Mahay HUB manages the other apps
+
+- **Decision:** the apps Mahay HUB installs are its sub-apps. Android asks for no confirmation
+  when the **installer of record** updates an app (Android 12+, `USER_ACTION_NOT_REQUIRED`), so:
+  1. every install session asks for no confirmation when it can; the hub is the installer of
+     record of what it installs, and an app installed some other way joins after one confirmed
+     update;
+  2. a sub-app hands "Install update" to the hub when the hub is installed, through an explicit
+     intent to a hub component guarded by a signature-level permission (only Mahay-signed apps
+     can use it); without the hub it updates itself as before and Android asks to allow "install
+     unknown apps" for it, so every app also works alone;
+  3. the hub updates all its apps by itself ("Update automatically", on by default): at start,
+     then every day, and in the background through a scheduled job that loads the same native
+     updater (so the Ed25519 check of `SHA256SUMS.txt` stays in one place); a notification says
+     so when Android still needs a tap.
+- **Limits Android imposes:** the first install of each app always needs the user's tap; below
+  Android 12 each update is confirmed; an app that is open while updated is restarted.
+- **Alternatives:** one APK holding all 14 apps (more than 200 MB of native code, and no app
+  could be installed alone); `sharedUserId` (deprecated, impossible on installed apps); Play's
+  dynamic features (no Play Store); privileged or root installers (not for a sideloaded app).
+- **Why:** it removes the repeated confirmations the user complained about without redoing any
+  app, keeps the signed-update rules (D15) and keeps every app installable alone.
+
+## D22 — "Open with" on Android
+
+- **Decision:** each app's intent filters match its documents by MIME type **and by extension**
+  (a `pathPattern` with `application/octet-stream` and `*/*`), for `content` and `file` URIs,
+  because many file managers give no MIME type or a generic one. Verified by a matrix test
+  (`cmd package query-activities` on the emulator) that fails if an app drops out of a list.
+- **Why:** a filter on the MIME type alone resolves on the emulator but not for files a manager
+  reports as `application/octet-stream` (IDML, DXF, RAW photos, …).
+
+## D23 — Phone and tablet layouts follow the window, automatically
+
+- **Decision:** the layout depends on the **window width in dp** (compact < 600, medium 600–839,
+  expanded ≥ 840, Android's window size classes), computed every frame, never on a "phone" or
+  "tablet" flag or a setting. Rotation, split screen, floating windows and foldables therefore
+  change it by themselves. Expanded keeps today's desktop layout unchanged.
+- **Compact rules:** nothing overlaps or leaves the screen; ribbons collapse into one scrolling
+  command bar with the tabs in a menu; side panels become drawers; dialogs fill the screen; touch
+  targets are at least 48 dp.
+- **Why:** one rule for every app and every device shape, testable without a device (a layout
+  test at 360, 400, 600 and 840 dp).
+
+## D24 — Following ArtCraft's repositories
+
+- **Decision:** a weekly watcher (`scripts/upstream-watch.py`, `.github/workflows/upstream-watch.yml`)
+  reports what moved upstream and flags security and crash fixes, licence changes and new network
+  endpoints; the owner is told through one GitHub issue. Changes are adopted per app, per revision,
+  by cherry-pick or three-way merge of the *renamed* trees, and the recorded revision moves only
+  after the result builds and passes (`docs/UPSTREAM.md`).
+- **Alternatives:** merging upstream branches (every Mahay change would conflict on each merge);
+  rebasing Mahay's changes on upstream (rewrites history, same conflicts); ignoring upstream
+  (security and crash fixes would never arrive).
+- **Why:** upstream moves by ~100 commits a day; only a small share matters for Mahay's users,
+  and the risk is in what Mahay changed, not in what upstream added.

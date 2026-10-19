@@ -1,0 +1,42 @@
+name: Upstream watch
+
+# Once a week: compare the revisions imported from github.com/storytold (docs/APPS_INVENTORY.md)
+# with the upstream default branches, and keep one issue up to date when something needs a look
+# (a security or crash fix, a changed licence, a new network endpoint). Nothing is merged.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare with upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -I scripts/upstream-watch.py --out upstream-report.md --json upstream.json
+      - name: Keep the review issue up to date
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if python3 -I -c "import json,sys; sys.exit(0 if json.load(open('upstream.json'))['important'] else 1)"; then
+            gh label create upstream --color BFD4F2 --description "Changes in the upstream repositories" --force
+            number=$(gh issue list --label upstream --state open --json number --jq '.[0].number // empty')
+            if [ -n "$number" ]; then
+              gh issue edit "$number" --body-file upstream-report.md
+            else
+              gh issue create --title "Upstream changes to review" --label upstream --body-file upstream-report.md
+            fi
+          else
+            echo "Nothing to review."
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: upstream-report
+          path: upstream-report.md

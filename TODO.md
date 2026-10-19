@@ -5,6 +5,67 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 
 ---
 
+## Priorités — confort Android (0.2.3 → 0.3.0)
+
+**P0** = ce que l'utilisateur subit tous les jours · **P1** = ensuite · **P2** = plus tard.
+Décisions : [D21](docs/DECISIONS.md) mises à jour gérées par Mahay HUB · D22 « Ouvrir avec » ·
+D23 vue téléphone/tablette automatique · D24 suivi d'ArtCraft ([guide](docs/UPSTREAM.md)).
+
+### P0 — Mises à jour sans confirmer chaque app (D21)
+Limites d'Android : la **première installation** de chaque app demande toujours un appui ; avant
+Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise à jour redémarre.
+- [ ] `installApk` : `USER_ACTION_NOT_REQUIRED` (Android 12+). Mesurer sur l'émulateur ce qui devient
+      silencieux (le hub installateur d'origine : `adb install -i org.mahay.hub`).
+- [ ] Les apps confient « Installer la mise à jour » à Mahay HUB quand il est installé (permission
+      de signature `org.mahay.permission.MANAGE`, intent explicite) ; sans lui, elles se mettent à
+      jour seules comme aujourd'hui : chaque app reste installable séparément.
+- [ ] Mahay HUB : « Mettre à jour automatiquement » (activé par défaut), au lancement puis chaque jour.
+- [ ] Tâche d'arrière-plan (JobScheduler) : vérifier et installer hub fermé ; notification « N mises
+      à jour » quand Android demande encore un appui (Android < 12, app installée autrement).
+- [ ] Une app installée à la main passe sous la gestion du hub après une confirmation.
+- [ ] « Tout installer » : la première installation de la suite en file d'attente, un écran à la fois.
+- [ ] Expliquer les limites dans l'écran du hub et les README.
+- [ ] P2 : Android 14+, propriété des mises à jour (`setRequestUpdateOwnership`), à évaluer.
+
+### P0 — Vue téléphone et tablette automatique (D23)
+- [ ] Classes de largeur (compact < 600 dp, moyen 600–839, étendu ≥ 840) calculées à chaque image :
+      rotation, écran partagé, fenêtres flottantes, pliables. Aucun réglage.
+- [ ] Brique commune `FormFactor` dans `libs/core` : cibles tactiles ≥ 48 dp, marges, dialogues
+      plein écran en compact.
+- [ ] Soratra, Tabilao, Seho : ruban replié (onglets dans un menu, groupes sur une barre défilante),
+      **rien ne se superpose** ni ne sort de l'écran.
+- [ ] Mahay HUB : 1 colonne en compact, 2 en moyen, 4 en étendu (aujourd'hui toujours 4).
+- [ ] Taratasy, Sary, Hazavana : panneaux latéraux en tiroirs, barres d'outils défilantes.
+- [ ] Feo, Hetsika, Tselatra, Tsilo, Endrika, Pejy, Drafitra : même socle, par ordre d'usage sur téléphone.
+- [ ] Test automatique par app : à 360, 400, 600 et 840 dp, aucun widget cliquable n'en chevauche un autre.
+- [ ] Bureau inchangé : à ≥ 840 dp la disposition d'origine reste identique.
+
+### P0 — « Ouvrir avec » (D22)
+- [x] Vérifié le 2026-10-19 (émulateur Android 16, apps 0.2.1) : docx → Soratra, xlsx → Tabilao,
+      pptx → Seho, pdf → Taratasy et Tsilo, png et svg → Sary, Hazavana, Endrika, mp3 → Feo,
+      mp4 → Hetsika. Un fichier sans type reconnu (`application/octet-stream`) : aucune app.
+- [ ] Filtres élargis : chaque extension de l'app avec `application/octet-stream` et `*/*`
+      (`pathPattern`), schémas `content` et `file`.
+- [ ] Types sans MIME standard par app : IDML, DXF/DWG, RAW (CR2, NEF, ARW, DNG), PSD, XCF, MIDI…
+- [ ] `scripts/android-open-with-test.sh` : matrice app × type × schéma (`cmd package query-activities`),
+      échoue si une app disparaît d'une liste.
+- [ ] « Partager vers » (SEND, SEND_MULTIPLE) : images → Sary, Hazavana, Endrika ; audio → Feo ;
+      vidéo → Hetsika ; PDF → Taratasy.
+- [ ] Toujours absent sur un vrai appareil : relever la version d'Android, le gestionnaire de
+      fichiers et le type du fichier.
+
+### P1 — Suivre ArtCraft sans rien casser (D24)
+- [x] `scripts/upstream-watch.py` + workflow hebdomadaire `upstream-watch.yml` : compare l'amont aux
+      révisions importées, trie (sécurité, plantage, dépendances…), signale licence et nouveaux
+      points d'accès réseau, ouvre une issue `upstream` ([guide](docs/UPSTREAM.md)).
+- [ ] `scripts/upstream-sync.py` : instantanés base / amont / Mahay, renommage par `rebrand.py`,
+      fusion à trois voies, liste des conflits.
+- [ ] Première adoption, en cherry-pick : correctifs de plantage et de dépassement (Sary, Seho, Feo,
+      Mahay HUB).
+- [ ] Ne rien adopter qui touche : serveurs ArtCraft, télémétrie, flux de mises à jour, liens sociaux.
+
+---
+
 ## 0.2.0 — Mahay HUB, mises à jour automatiques, 14 apps (en cours)
 
 ### Mahay HUB (l'accueil, seul fichier à télécharger)
@@ -117,7 +178,7 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 
 - [ ] Tester les APK arm64 sur un vrai téléphone et une vraie tablette (GPU Vulkan, clavier,
       stylet, rotation, écran partagé, pliable).
-- [ ] Mode compact (téléphone) : rubans de Soratra, Tabilao, Seho repliés sous 600 dp ;
+- [ ] Mode compact (téléphone) → voir « P0 — Vue téléphone et tablette automatique » ; reste à y ranger :
       panneaux de Taratasy, Sary et des nouvelles apps.
 - [x] Pression tactile : 1.0 pour un doigt, vraie pression pour un stylet (`getToolType`).
       Construit, pas encore essayé sur un appareil (doigt et stylet).
