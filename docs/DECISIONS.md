@@ -285,7 +285,10 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   5. A sub-app installed **after** the hub with `uses-permission org.mahay.permission.MANAGE`
      holds it (`granted=true`); the hub's service, `UpdateJobService` and result receiver are
      refused to `adb shell` (SECURITY_AUDIT).
-  6. The daily job (`JobScheduler`, periodic, persisted) ran at once when scheduled
+  6. Foreground guard: with Feo 0.2.0 on screen (it had told the hub through `APP_STATE`), the
+     hub's job (`cmd jobscheduler run -f`, the gate of one run per hour having passed) answered
+     "ok, 0 ready" and left Feo at 0.2.0 although 0.2.1 was out.
+  7. The daily job (`JobScheduler`, periodic, persisted) ran at once when scheduled
      (constraints met) and went through the same Rust updater: "update run: ok, 0 ready" when
      everything was current.
   Not measured: the silent-update throttle Android may apply to repeated updates of one app (the

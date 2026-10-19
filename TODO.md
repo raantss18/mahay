@@ -20,10 +20,10 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
       de signature `org.mahay.permission.MANAGE`, intent explicite) ; sans lui, elles se mettent à
       jour seules comme aujourd'hui : chaque app reste installable séparément.
 - [x] Mahay HUB : « Mettre à jour automatiquement » (activé par défaut), au lancement puis chaque jour.
-- [x] Tâche d'arrière-plan (JobScheduler) : vérifier et installer hub fermé ; notification « N mises
+- [x] (vérifié : tâche + garde « app ouverte » ; non vérifié : notification, redémarrage) Tâche d'arrière-plan (JobScheduler) : vérifier et installer hub fermé ; notification « N mises
       à jour » quand Android demande encore un appui (Android < 12, app installée autrement).
 - [x] Une app installée à la main passe sous la gestion du hub après une confirmation.
-- [x] « Tout installer » : la première installation de la suite en file d'attente, un écran à la fois.
+- [x] (construit, non essayé : les 13 apps sont déjà installées sur l'émulateur) « Tout installer » : la première installation de la suite en file d'attente, un écran à la fois.
 - [x] Expliquer les limites dans l'écran du hub et les README.
 - [ ] P2 : Android 14+, propriété des mises à jour (`setRequestUpdateOwnership`), à évaluer.
 
