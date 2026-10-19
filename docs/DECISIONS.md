@@ -301,7 +301,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 
 - **Status:** proposed on 2026-10-19; becomes a decision when the spike (docs/NEW_APPS.md, M0)
   has built the engine for Android and measured it.
-- **Proposal:** Porofo (the 15th app) compiles with **Tectonic** (XeTeX as an embedded Rust crate)
+- **Proposal:** TeXnika (the 15th app) compiles with **Tectonic** (XeTeX as an embedded Rust crate)
   against a **curated offline bundle** delivered as signed packs, with a fast Rust math layout for
   the instant layer and the exact PDF built in the background. Editor intelligence is written in
   Rust (texlab is GPL-3.0 and cannot be embedded).
@@ -314,7 +314,7 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 ## D26 — The notebook is a native Jupyter client (proposed)
 
 - **Status:** proposed on 2026-10-19, to confirm by the K0 spike (docs/NEW_APPS.md).
-- **Proposal:** Kajy (the 16th app) speaks the Jupyter messaging protocol natively in Rust over
+- **Proposal:** Naoty (the 16th app) speaks the Jupyter messaging protocol natively in Rust over
   ZeroMQ, with local, remote and built-in kernels; Python on Android is an optional pack with its
   own small kernel embedding CPython. Notebooks never execute by themselves.
 - **Alternatives:** a WebView running JupyterLab (heavy, breaks the native, light principle), a

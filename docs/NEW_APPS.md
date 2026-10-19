@@ -1,6 +1,8 @@
 # New apps: a LaTeX editor (15th) and a notebook (16th)
 
-Status: **proposal** (2026-10-19), written from the owner's request. Nothing here is built;
+Status: **agreed in principle** (2026-10-19): the owner chose the names, one release (0.3.0), packs
+of 50 to 100 MB, a first TeXnika with the real engine and the instant math layer (LyX-style blocks
+come after), Python first for Naoty. The engine itself stays open until the spikes report. Nothing here is built;
 every number marked "to measure" comes from the spike in M0/K0, never from this page.
 
 > A LaTeX editor as complete as possible but light: LyX/BaKoMa-style, with TeXstudio's speed,
@@ -15,16 +17,16 @@ every number marked "to measure" comes from the spike in M0/K0, never from this 
   **packs** the user installs once, signed and verified like updates (D15).
 - Phone and tablet layouts follow the window width (D23); installed and updated through Mahay HUB
   (D21), names in Malagasy.
-- Names (to validate, `A_VALIDER.md`): **Porofo** (proof) for the LaTeX editor, **Kajy**
-  (calculation) for the notebook.
+- Names, chosen by the owner: **TeXnika** for the LaTeX editor, **Naoty** for the notebook
+  (`A_VALIDER.md`: meanings to confirm).
 
 ---
 
-## App 15 — Porofo, the LaTeX editor
+## App 15 — TeXnika, the LaTeX editor
 
 ### What it must feel like
 
-| Model | What Porofo takes from it |
+| Model | What TeXnika takes from it |
 |---|---|
 | **TeXstudio** | a fast source editor: highlighting, completion of commands, labels and citations, snippets, symbol palette, structure tree, projects, error list, SyncTeX |
 | **LyX** | structure-first editing: sections, lists, theorems, figures and tables as blocks you can fold, move and restyle without reading the markup |
@@ -54,14 +56,14 @@ What Tectonic does **not** do, and the plan for each: only XeTeX (no pdfTeX/LuaT
 almost all documents, not for `\write18`/`minted`/LuaTeX-only packages); `biber` (Perl) is not
 part of it, so BibTeX/natbib work out of the box and **biblatex needs a replacement backend**
 (a small Rust BibLaTeX processor is on the list, flagged as risk); its default bundle is
-downloaded from the internet, so Porofo ships a **curated offline bundle** instead.
+downloaded from the internet, so TeXnika ships a **curated offline bundle** instead.
 `texlab` (the usual LaTeX language server) is GPL-3.0 and cannot be embedded: editor
 intelligence is written in Rust on a permissive parser (`tree-sitter-latex` licence to check,
 otherwise our own lexer, which LaTeX's syntax makes small).
 
 ### Packs ("preinstalled packages")
 
-Installed from inside Porofo (or Mahay HUB), signed, offline afterwards. Sizes: **to measure**.
+Installed from inside TeXnika (or Mahay HUB), signed, offline afterwards. Sizes: **to measure**.
 
 | Pack | Content |
 |---|---|
@@ -118,7 +120,7 @@ about two seconds or less; idle memory under about 150 MB with a 100-page projec
 
 ---
 
-## App 16 — Kajy, the notebook
+## App 16 — Naoty, the notebook
 
 A native Jupyter client in the same spirit: light, beautiful, offline, Android and Linux.
 
@@ -145,24 +147,19 @@ A native Jupyter client in the same spirit: light, beautiful, offline, Android a
 
 ---
 
-## Order of work (proposal)
+## Order of work (decided)
 
-| Version | Content |
+One release holds everything: **0.3.0 = account and sync (D20) + TeXnika + Naoty**, after the
+comfort release 0.2.3 (Mahay-managed updates, phone layouts, Open with).
+
+| Step | Content |
 |---|---|
-| 0.2.3 | comfort: Mahay-managed updates, phone layouts for the first apps, Open with |
-| 0.3.0 | account and sync (D20) |
-| 0.4.0 | Porofo M0–M3 |
-| 0.5.0 | Kajy K0–K2, Porofo M4–M5 |
+| 0.2.2 | being released (Android keyboard fix, security, animated PDFs in Taratasy) |
+| 0.2.3 | comfort for Android: hub-managed updates, phone layouts for the first apps, Open with |
+| spikes | M0 (can Tectonic run on Android?) and K0 (Python and a Jupyter client on Android) decide the engines before any app code |
+| 0.3.0 | sync and account, TeXnika M1–M3, Naoty K1–K3 (Python, local and remote kernels) |
+| 0.3.x | TeXnika M4–M5 (LyX-style blocks, all packs, biblatex), Naoty K4 (other kernels) |
 
-The order between 0.3.0 and 0.4.0 is the owner's call. The two spikes (M0, K0) can run before
-either, since they decide what is possible.
-
-## Questions for the owner
-
-1. Order: sync before the LaTeX editor, or the other way round?
-2. How heavy may the packs be (a "Core + Mathematics" pack of about 50–100 MB, or smaller and
-   fewer packages)?
-3. Is a first Porofo with the real engine and an instant math layer enough (M1–M3), with LyX-style
-   blocks coming later (M4)?
-4. Notebook languages first: Python only (numpy, sympy, matplotlib), or Julia, Lean 4 or others?
-5. Names: Porofo and Kajy, or others?
+Decided answers: packs of 50–100 MB are fine ("Core + Mathematics"); a first TeXnika with the
+real engine and the instant math layer is enough; Naoty starts with Python (numpy, sympy,
+matplotlib), then other languages.

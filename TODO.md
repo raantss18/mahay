@@ -66,9 +66,11 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 
 ---
 
-## Nouvelles apps — Porofo (éditeur LaTeX) et Kajy (notebook) ([dossier](docs/NEW_APPS.md), D25, D26)
+## Nouvelles apps — TeXnika (éditeur LaTeX) et Naoty (notebook) ([dossier](docs/NEW_APPS.md), D25, D26)
 
-Proposition, en attente des réponses de l'auteur (ordre, taille des paquets, langages).
+Décidé le 2026-10-19 : tout dans la **0.3.0** avec la synchronisation ; paquets de 50 à 100 Mo
+acceptés ; première TeXnika = vrai moteur + formules instantanées (blocs façon LyX ensuite) ;
+Naoty : Python d'abord. Le moteur reste à confirmer par les sondages.
 - [ ] **M0 — sondage** : Tectonic compile pour Linux **et Android** (arm64, x86_64) un article avec
       `amsmath`, `tikz` et BibTeX **hors ligne**, depuis un mini-bundle choisi ; mesurer taille et
       temps. Décide le moteur (D25).
@@ -81,7 +83,7 @@ Proposition, en attente des réponses de l'auteur (ordre, taille des paquets, la
       de Soratra), `mahay-pdfview` (depuis Taratasy), `mahay-pack` (paquets signés).
 - [ ] **K0 — sondage** : CPython et un noyau sur Android ; client Jupyter Rust face à un `ipykernel` Linux.
 - [ ] K1 → K4 : carnet sur Linux, Android avec noyau distant, paquet Python, autres noyaux.
-- [ ] Valider les noms Porofo et Kajy ([A_VALIDER](docs/A_VALIDER.md)).
+- [x] Noms choisis par l'auteur : TeXnika et Naoty (sens à confirmer, [A_VALIDER](docs/A_VALIDER.md)).
 
 ---
 
@@ -154,9 +156,11 @@ Proposition, en attente des réponses de l'auteur (ordre, taille des paquets, la
 
 ---
 
-## 0.3.0 — Compte et synchronisation en ligne (après la 0.2.0, [D20](docs/DECISIONS.md), [SYNC](docs/SYNC.md))
+## 0.3.0 — Compte, synchronisation, TeXnika et Naoty (une seule release, [D20](docs/DECISIONS.md), [SYNC](docs/SYNC.md))
 
 ### Compte (comme Tontolo)
+- [ ] **À faire par l'auteur** ([guide pas à pas](docs/ACCOUNTS_SETUP.md)) : projet Supabase + projet Google
+      Cloud (API Drive, écran de consentement `drive.file`) ; les noms des secrets suffisent, jamais les valeurs.
 - [ ] Projet Supabase : fournisseurs Google et GitHub, redirections `org.mahay.hub://login-callback/`
       et boucle locale Linux ; clés dans `release-keys/` et `docs/BUILDING.md`.
 - [ ] `mahay-account` : « Continuer avec Google / GitHub » (PKCE), jetons dans le stockage sécurisé
