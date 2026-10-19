@@ -3,6 +3,28 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Mahay HUB manages the other apps (D21).** On Android 12+ the hub, as the installer of record,
+  updates the apps it installed **without asking you to confirm each one**. Mahay HUB gets
+  "Update automatically" (on by default: at start, every day, and in the background when the hub
+  is closed, kept across reboots), "Also on mobile data" (off by default: only Wi-Fi and other
+  unmetered networks), a notification "N updates ready" when Android still needs a tap (asked
+  from the settings, never at start-up), and **Install all**, a queue that installs the suite one
+  app after the other. An app that is open is left alone by the background update.
+- **An app hands its update to Mahay HUB** when the hub is installed and signed with the same
+  certificate: "Install" in the update bar says "Updating through Mahay HUB…" and the app doesn't
+  download the update a second time. Without the hub, every app still updates itself as before.
+- English, French and Malagasy texts for all of it (Malagasy to be reviewed, `docs/A_VALIDER.md`).
+
+### Security
+
+- New signature-level permission `org.mahay.permission.MANAGE` guards the hub's only exported
+  component; the hub's job and install receiver are not exported. Refused from `adb shell`
+  (`docs/SECURITY_AUDIT.md`).
+
 ## [0.2.2] — 2026-10-19 (alpha)
 
 ### Added

@@ -257,6 +257,42 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
      so when Android still needs a tap.
 - **Limits Android imposes:** the first install of each app always needs the user's tap; below
   Android 12 each update is confirmed; an app that is open while updated is restarted.
+- **Design details:** an app managed by the hub only *reports* a newer version (`State::Managed`)
+  and downloads nothing itself, so mobile data is spent once; the hub's headless updater
+  (`mahay_update::managed`) takes only a package name, matched exactly against the 13 sub-apps,
+  and honours the user's settings (automatic on by default, unmetered networks only unless
+  "Also on mobile data"; a request from an app's own bar may use any network). Java hashes the
+  APK while copying it into the install session, so what Rust verified is what installs.
+- **Measured (2026-10-19, Android 16 tablet emulator, x86_64, hub 0.2.2 as installer of record
+  of Feo 0.2.0 → 0.2.1, real release downloaded from GitHub):**
+  1. `setRequireUserAction(USER_ACTION_NOT_REQUIRED)` alone is **not enough**: with the hub as
+     installer of record (`dumpsys package` → `installerPackageName=org.mahay.hub`) and "install
+     unknown apps" allowed, Android still answered `STATUS_PENDING_USER_ACTION` (the session
+     showed `requireUserAction=NOT_REQUIRED`). The installer must also hold the normal
+     permission **`android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION`** (declared in the
+     hub's manifest, granted at install).
+  2. With it, from the hub's "Update all": **no dialog**, Feo went 0.2.0 → 0.2.1 in a few seconds
+     and the hub stayed on screen.
+  3. With it, from Feo's own update bar (Feo on screen): "Install" → "Updating through Mahay HUB…"
+     → the hub job downloaded and verified the file and committed the session → **no dialog**,
+     Feo was replaced (and closed) by Android. Android therefore does **not** defer the update
+     of an app that is on screen: that is why background runs skip apps that say they are open
+     (`APP_STATE`), and only an update the user asked for in that app is allowed to replace it.
+  4. An app installed by hand (`adb install`, installer `null`): the hub's update showed Android's
+     dialog once ("Do you want to update this app?"); after it, `installerPackageName` was
+     `org.mahay.hub`, so later updates were silent. This is "joins hub management after one
+     confirmed update".
+  5. A sub-app installed **after** the hub with `uses-permission org.mahay.permission.MANAGE`
+     holds it (`granted=true`); the hub's service, `UpdateJobService` and result receiver are
+     refused to `adb shell` (SECURITY_AUDIT).
+  6. The daily job (`JobScheduler`, periodic, persisted) ran at once when scheduled
+     (constraints met) and went through the same Rust updater: "update run: ok, 0 ready" when
+     everything was current.
+  Not measured: the silent-update throttle Android may apply to repeated updates of one app (the
+  platform has a configurable one; the first updates here went through minutes apart), Android
+  below 12 (each update then asks, the notification says so), the notification on a real device,
+  and an app installed before the hub that was never granted the permission (it falls back to
+  updating itself: `startService` throws `SecurityException`).
 - **Alternatives:** one APK holding all 14 apps (more than 200 MB of native code, and no app
   could be installed alone); `sharedUserId` (deprecated, impossible on installed apps); Play's
   dynamic features (no Play Store); privileged or root installers (not for a sideloaded app).

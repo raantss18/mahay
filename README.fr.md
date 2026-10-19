@@ -60,6 +60,17 @@ dernière version au démarrage puis chaque jour, la télécharge en arrière-pl
 signature (Ed25519) et son SHA-256, puis propose **Installer**. Sur Android, un appui suffit ;
 sous Linux, l'AppImage se remplace et redémarre. Désactivable dans **À propos**.
 
+**Sur Android, Mahay HUB s'occupe des autres apps.** Installez d'abord Mahay HUB, puis vos apps
+depuis lui : à partir d'Android 12, il les met à jour pour vous, au lancement, chaque jour et en
+arrière-plan, sans vous demander de confirmer chacune. Une app installée autrement passe sous sa
+gestion après une mise à jour confirmée. Limites imposées par Android : **la première
+installation de chaque app demande toujours un appui** (**Tout installer** du hub les met en file,
+une confirmation chacune) ; avant Android 12, chaque mise à jour est confirmée (la notification du
+hub dit combien attendent) ; une app ouverte pendant sa mise à jour redémarre, donc la mise à jour
+en arrière-plan laisse les apps ouvertes pour plus tard. En arrière-plan, seul le Wi-Fi est
+utilisé, sauf si vous activez **Aussi en données mobiles** dans les réglages du hub. Chaque app
+fonctionne et se met aussi à jour seule, sans le hub.
+
 ## Léger par conception
 
 - Un APK par app : vous ne téléchargez que ce que vous utilisez (d'environ 5 Mo pour Mahay HUB à environ 25 Mo pour les plus grosses apps).

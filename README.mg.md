@@ -56,6 +56,16 @@ ny feo ao amin'ny **Feo**, ny horonantsary ao amin'ny **Hetsika**.
 Manavao ny tenany i Mahay: mijery ny dikan-teny farany isan'andro ny rindranasa tsirairay (sy i
 Mahay HUB ho an'ny rehetra), maka azy, manamarina ny sonia (Ed25519), dia manolotra **Apetraho**.
 
+**Amin'ny Android, i Mahay HUB no mikarakara ny rindranasa hafa.** Apetraho aloha i Mahay HUB,
+avy eo ny rindranasanao avy aminy: manomboka amin'ny Android 12, izy no mavao azy ireo, rehefa
+misokatra, isan'andro ary ao ambadika, tsy mangataka fanamafisana isaky ny rindranasa. Ny
+fametrahana voalohany isaky ny rindranasa dia mila tsindrona foana (ny **Apetraho daholo** dia
+mandahatra azy ireo, fanamafisana iray isaky ny rindranasa); alohan'ny Android 12 dia
+ekena ny fanavaozana rehetra; ny rindranasa misokatra dia avela hatrany aorian'ny fanavaozana
+ao ambadika. Ny Wi-Fi ihany no ampiasaina ao ambadika, raha tsy mampiasa ny **Amin'ny data finday
+koa** ao amin'ny fanamboarana. Mandeha sy mavao ho azy koa ny rindranasa tsirairay raha tsy
+misy ny hub.
+
 ## Maivana
 
 - APK iray isaky ny rindranasa: izay ampiasainao ihany no alainao (5 hatramin'ny 23 Mo).

@@ -69,6 +69,62 @@ CI now runs `cargo audit` on every workspace (`.github/workflows/ci.yml`, job "S
 - **Old copies:** copies in `files/docs/` untouched for 30 days are deleted at start-up, except
   open ones and Save As files never placed outside the app (kept with a `<n>.unsaved` marker).
 - **Debuggable:** no (release builds), R8 minification on.
+- **Hub JNI:** `UpdateJobService.nativeRun/nativeApps` (in the hub's library only, feature `hub`)
+  take strings and return strings; no pointer or handle crosses the boundary, and the job runs with
+  no activity.
+
+### Mahay HUB manages the other apps (D21)
+
+New in the hub APK (`android/app/src/hub/AndroidManifest.xml`) and one line in every app:
+
+| Component / permission                         | Exported | Guard                                              |
+|------------------------------------------------|----------|----------------------------------------------------|
+| `org.mahay.permission.MANAGE` (defined by hub) | n/a      | `protectionLevel="signature"`; every app has `uses-permission` |
+| `UpdateRequestService` (`org.mahay.hub.UPDATE_APP`, `org.mahay.hub.APP_STATE`) | yes | `android:permission="org.mahay.permission.MANAGE"` |
+| `UpdateJobService` (daily and requested jobs)  | no       | `android.permission.BIND_JOB_SERVICE` (the system only) |
+| `HubInstallReceiver` (installer answers)       | no       | not exported                                       |
+| hub permissions: `ACCESS_NETWORK_STATE`, `RECEIVE_BOOT_COMPLETED`, `POST_NOTIFICATIONS` (asked from the settings, never at start-up), `UPDATE_PACKAGES_WITHOUT_USER_ACTION` | | normal permissions |
+
+**Refused from an unprivileged caller** (checked 2026-10-19, Android 16 emulator, `adb shell` is uid 2000):
+
+```
+$ adb shell am startservice -n org.mahay.hub/org.mahay.shell.UpdateRequestService -a org.mahay.hub.UPDATE_APP --es package org.mahay.sary
+Error: Requires permission org.mahay.permission.MANAGE
+  logcat: Permission Denial: Accessing service org.mahay.hub/org.mahay.shell.UpdateRequestService from pid=6012, uid=2000 requires org.mahay.permission.MANAGE
+$ adb shell am startservice -n org.mahay.hub/org.mahay.shell.UpdateJobService
+Error: Requires permission not exported from uid 10222
+$ adb shell am broadcast -n org.mahay.hub/org.mahay.shell.HubInstallReceiver -a org.mahay.hub.INSTALL_RESULT --es app sary
+(accepted by `am`, never delivered: the hub process did not start)
+```
+
+And accepted from a Mahay app: Feo (signed with Mahay's certificate, holds the permission) asked
+the hub to update it and the hub did (see STATUS).
+
+- **Only a package name goes in.** The service takes one string extra, the requester's package. It
+  is sanity-checked in Java (length, characters) and then matched **exactly** against the suite's
+  13 sub-apps in Rust (`mahay_update::managed::app_for_package`: not the hub, no prefix or case
+  tolerance, no path, no URI; unit-tested with 15 hostile names). Everything else (what to
+  download, from where, which file) is derived by the hub from the signed release.
+- **Same chain as before.** The hub's headless updater calls the same `mahay_update::download`:
+  signed `SHA256SUMS.txt` (Ed25519), SHA-256 per file, GitHub over https only, never a downgrade
+  (the installed version is read from Android, not trusted from the caller). Java then hashes the
+  bytes **while copying them into the install session** and abandons the session on a mismatch, so
+  there is no gap between "verified" and "installed". Only `.apk` files inside the hub's own
+  storage are accepted.
+- **Both ends check the certificate.** An app hands its update to the hub only if
+  `PackageManager.hasSigningCertificate(hub, <own signer>)` holds (single signer); the hub's
+  service additionally requires the signature permission. An app signed with another key can
+  neither call the hub nor be impersonated by a fake hub (it fails the certificate check and the
+  app updates itself as before).
+- **Trust that remains:** any app signed with Mahay's key can ask the hub to update it, and can
+  say it is "on screen" (`APP_STATE`, which only postpones a background update). That is the
+  same trust as the key that signs the updates themselves.
+- **Permission squatting:** if an unrelated app declared `org.mahay.permission.MANAGE` before the
+  hub was installed, Android would refuse to install the hub (duplicate permission), not grant
+  anything to the squatter. Not exercised.
+- **Network policy:** background runs use unmetered networks only unless the user switches on
+  "Also on mobile data"; an update the user asks for from an app's own bar may use any network.
+- **Notifications** carry no data from outside: a count and the hub's own launch intent.
 
 ## 3. Native code added by Mahay
 

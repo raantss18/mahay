@@ -58,6 +58,16 @@ release when it starts and once a day, downloads it in the background, checks it
 (Ed25519) and SHA-256, then offers **Install**. On Android you confirm with one tap; on Linux the
 AppImage replaces itself and restarts. You can turn it off in **About**.
 
+**On Android, Mahay HUB looks after the other apps.** Install Mahay HUB first, then your apps
+from it: on Android 12+ it updates them for you, at start, every day and in the background,
+without asking you to confirm each one. An app you installed some other way joins after one
+confirmed update. Limits Android imposes: **the first install of each app always needs a tap**
+(Mahay HUB's **Install all** queues them, one confirmation each); below Android 12 every update is
+confirmed (the hub's notification says how many are waiting); an app that is open when it is
+updated restarts, so the background update leaves open apps for later. Background updates use
+Wi-Fi only, unless you switch on **Also on mobile data** in the hub's settings. Every app also
+works and updates alone, without the hub.
+
 ## Light by design
 
 - One APK per app: you only download what you use (from about 5 MB for Mahay HUB to about 25 MB for the largest apps).
