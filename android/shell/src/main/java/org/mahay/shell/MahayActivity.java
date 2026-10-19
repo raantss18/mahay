@@ -315,6 +315,12 @@ public class MahayActivity extends GameActivity {
             PackageInstaller pi = getPackageManager().getPackageInstaller();
             PackageInstaller.SessionParams params =
                     new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                // Android 12+ skips its confirmation when this app is the installer of record of
+                // the package being updated; otherwise it answers STATUS_PENDING_USER_ACTION and
+                // the receiver shows the dialog as before.
+                params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED);
+            }
             File apk = new File(path);
             int id = pi.createSession(params);
             try (PackageInstaller.Session session = pi.openSession(id)) {
