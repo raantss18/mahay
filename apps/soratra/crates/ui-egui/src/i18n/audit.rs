@@ -172,7 +172,7 @@ impl Exempt {
             || plain.starts_with('@') // contributor handles
             || plain.starts_with("Style") || plain.starts_with("Table Style ") // a new style's default name
             || plain.contains('┬') || plain.contains('\u{2061}') // equation input (UnicodeMath), drawn as math
-            || matches!(plain, "Soratra" | "Soratra User" | "Discord" | "https://" | "auto" | "I. II. III." | "i. ii. iii.")
+            || matches!(plain, "Soratra" | "Soratra User" | "Discussions" | "https://" | "auto" | "I. II. III." | "i. ii. iii.")
             || plain == "CONFIDENTIAL" // the watermark dialog's text: document content, kept as typed
             || plain == "Figure 1" // the caption dialog's sample: the label goes into the document as is
     }
@@ -187,6 +187,10 @@ fn untranslated_interface_text() {
     pseudo::set(true);
     let mut found: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut record = |app: &WordApp, state: &str, drawn: Vec<String>| {
+        // The shared Mahay About page translates itself (mahay-about: English, French, Malagasy).
+        if matches!(app.dialog, Some(crate::dialogs::Dialog::About { .. })) {
+            return;
+        }
         let exempt = Exempt::new(app);
         for t in drawn.into_iter().filter(|t| english_words(t) && !exempt.allows(app, t)) {
             found.entry(t).or_default().push(state.to_string());

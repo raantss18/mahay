@@ -26,7 +26,7 @@
 	About Tsilo	O aplikaci Tsilo
 	Align to Path	Zarovnat k cestě
 	Cut Path at Selected Anchor Points	Rozdělit cestu ve vybraných kotevních bodech
-	Join Our Discord	Připojit se k našemu Discordu
+	Join Our GitHub	Připojit se k našemu GitHubu
 	Language	Jazyk
 	UI Brightness	Jas rozhraní
 	Dark	Tmavý
@@ -701,7 +701,7 @@
 	Symbol Libraries	Knihovny symbolů
 	Help	Nápověda
 	Mahay Website	Web Mahay
-	Tsilo on mahay.com	Tsilo na mahay.com
+	Tsilo on Mahay HUB	Tsilo na Mahay HUB
 	Tsilo on GitHub	Tsilo na GitHubu
 	Search Commands…	Hledat příkazy…
 	Tsilo Help…	Nápověda Tsilo…
@@ -3724,9 +3724,9 @@ effect	Regular	Pravidelný
 	Vector illustration — fast, open, scriptable.	Vektorová ilustrace — rychlá, otevřená, skriptovatelná.
 	Welcome to Tsilo	Vítejte ve Tsilou
 	Mahay website	Web Mahay
-	Discord	Discord
-	Join our Discord	Připojit se k našemu Discordu
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Připojte se ke komunitě Mahay na Discordu (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	Připojit se k našemu GitHubu
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Připojte se ke komunitě Mahay na GitHubu (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Zdrojový kód na GitHubu
 	All Tools	Všechny nástroje
 	Draw	Kresba

@@ -20,7 +20,7 @@ fn harness(setup: impl FnOnce(&mut TaratasyApp) + 'static) -> Harness<'static, T
 #[test]
 fn discord_button_in_the_top_bar_opens_discord() {
     let mut h = harness(|_| {});
-    h.get_by_label("Discord").click();
+    h.get_by_label("Discussions").click();
     h.run_steps(2);
     assert_eq!(h.state().last_opened_url.as_deref(), Some(links::DISCORD));
     assert_eq!(links::DISCORD, "https://github.com/raantss18/mahay/discussions");

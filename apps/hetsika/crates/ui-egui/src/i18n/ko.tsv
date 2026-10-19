@@ -1162,7 +1162,7 @@
 	Hetsika Help…	Hetsika 도움말…
 	Hetsika hit an error	Hetsika 오류 발생
 	Hetsika keeps the rest of the RAM free for other applications.	Hetsika는 나머지 RAM을 다른 앱용으로 비워 둡니다.
-	Hetsika on mahay.com	mahay.com의 Hetsika
+	Hetsika on Mahay HUB	Mahay HUB의 Hetsika
 	Hetsika on GitHub	GitHub의 Hetsika
 	Hetsika Project	Hetsika 프로젝트
 	Hetsika quit unexpectedly while “{name}” had unsaved changes.	“{name}”의 변경 사항을 저장하지 않은 채 Hetsika가 비정상 종료되었습니다.
@@ -1573,11 +1573,11 @@
 	Italian	이탈리아어
 	Japanese	일본어
 	JetBrains Mono	JetBrains Mono
-	Join the Mahay Discord	Mahay Discord 참여
-	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	Mahay Discord 참여(github.com/raantss18/mahay/discussions)
-	Join the Mahay Discord…	Mahay Discord 참여…
+	Join the Mahay discussions	Mahay GitHub 참여
+	Join the Mahay GitHub (github.com/raantss18/mahay/discussions)	Mahay GitHub 참여(github.com/raantss18/mahay/discussions)
+	Join the Mahay discussions…	Mahay GitHub 참여…
 	Join Through Edits	통과 편집 결합
-	Join us on Discord	Discord 참여하기
+	Join us on GitHub	GitHub 참여하기
 	JPEG	JPEG
 	JPEG Sequence	JPEG 시퀀스
 	just now	방금
@@ -3596,3 +3596,4 @@
 	Shows the version, community links and credits in a Hetsika window.	Hetsika 창에 버전, 커뮤니티 링크, 제작진을 보여 줍니다.
 	Couldn't open your web browser	웹 브라우저를 열 수 없습니다
 	Open this address in your browser yourself:	이 주소를 브라우저에서 직접 여세요:
+	Join the discussions	GitHub 참여하기

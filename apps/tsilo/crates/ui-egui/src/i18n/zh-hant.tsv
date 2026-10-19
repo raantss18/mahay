@@ -722,7 +722,7 @@
 	Discard Recovered Documents	捨棄已復原的文件
 	Discard White Overprint in Output	輸出時捨棄白色疊印
 	Discarded {} recovered document(s)	已捨棄 {} 份復原的文件
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	選擇性連字號
 	Discretionary Ligatures	任意連字
 	Display All Blacks Accurately	精確顯示所有黑色
@@ -1525,9 +1525,9 @@ file-filter	Templates	範本
 	Italian	義大利文
 	Japanese	日文
 	Join	連接
-	Join Our Discord	加入我們的 Discord
-	Join our Discord	加入我們的 Discord
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	加入 Discord 上的 Mahay 社群 (github.com/raantss18/mahay/discussions)
+	Join Our GitHub	加入我們的 GitHub
+	Join the discussions	加入我們的 GitHub
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	加入 GitHub 上的 Mahay 社群 (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	合併每個段落的各行
 	Join Tool	連接工具
 	Justification…	對齊設定…
@@ -4202,7 +4202,7 @@ mark-style	Japanese	日式
 	Tsilo	Tsilo
 	Tsilo didn't quit normally last time. These documents had unsaved changes:	Tsilo 上次未正常結束。下列文件有未儲存的變更：
 	Tsilo Help…	Tsilo 說明…
-	Tsilo on mahay.com	mahay.com 上的 Tsilo
+	Tsilo on Mahay HUB	Mahay HUB 上的 Tsilo
 	Tsilo on GitHub	GitHub 上的 Tsilo
 	Vectors	向量
 	Version {version} — open-source vector illustration in pure Rust.	版本 {version} — 以純 Rust 打造的開放原始碼向量插畫軟體。

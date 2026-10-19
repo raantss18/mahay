@@ -755,7 +755,7 @@
 	Discard Recovered Documents	Ignorer les documents récupérés
 	Discard White Overprint in Output	Ignorer la surimpression du blanc en sortie
 	Discarded {} recovered document(s)	{} document(s) récupéré(s) ignoré(s)
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	Tiret conditionnel
 	Discretionary Ligatures	Ligatures conditionnelles
 	Display All Blacks Accurately	Afficher tous les noirs avec précision
@@ -1529,9 +1529,9 @@
 	Italian	Italien
 	Japanese	Japonais
 	Join	Joindre
-	Join Our Discord	Rejoignez notre Discord
-	Join our Discord	Rejoignez notre Discord
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Rejoignez la communauté Mahay sur Discord (github.com/raantss18/mahay/discussions)
+	Join Our GitHub	Rejoignez notre GitHub
+	Join the discussions	Rejoignez notre GitHub
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Rejoignez la communauté Mahay sur GitHub (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Joindre les lignes de chaque paragraphe
 	Join Tool	Outil Jonction
 	Justification…	Justification…
@@ -3441,7 +3441,7 @@
 	Vector illustration — fast, open, scriptable.	Illustration vectorielle — rapide, ouverte, scriptable.
 	Tsilo didn't quit normally last time. These documents had unsaved changes:	Tsilo ne s’est pas fermé normalement la dernière fois. Ces documents comportaient des modifications non enregistrées :
 	Tsilo Help…	Aide de Tsilo…
-	Tsilo on mahay.com	Tsilo sur mahay.com
+	Tsilo on Mahay HUB	Tsilo sur Mahay HUB
 	Tsilo on GitHub	Tsilo sur GitHub
 	Vectors	Vecteurs
 	Version {version} — open-source vector illustration in pure Rust.	Version {version} — illustration vectorielle open source en pur Rust.

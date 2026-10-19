@@ -67,7 +67,8 @@ use crate::{DocState, EngineError, Result, Session, TextEdit, ViewState, bad, sp
 /// online sharing stays off until the user enters a server in Preferences.
 pub const DEFAULT_SERVER: &str = match option_env!("ENDRIKA_DEFAULT_SERVER") {
     Some(server) => server,
-    None => "wss://collab.craftapps.dev/",
+    // Mahay runs no collaboration server (D20): sharing stays off until the user enters one.
+    None => "",
 };
 
 /// Most selected ids one presence update carries (the rest aren't shown to others).

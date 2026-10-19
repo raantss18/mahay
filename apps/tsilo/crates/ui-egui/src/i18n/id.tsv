@@ -12,7 +12,7 @@
 	About Tsilo	Tentang Tsilo
 	Align to Path	Sejajarkan ke jalur
 	Cut Path at Selected Anchor Points	Potong jalur pada titik jangkar terseleksi
-	Join Our Discord	Gabung ke Discord kami
+	Join Our GitHub	Gabung ke GitHub kami
 	Language	Bahasa
 	UI Brightness	Kecerahan UI
 	Dark	Gelap
@@ -645,7 +645,7 @@
 	Symbol Libraries	Pustaka simbol
 	Help	Bantuan
 	Mahay Website	Situs web Mahay
-	Tsilo on mahay.com	Tsilo di mahay.com
+	Tsilo on Mahay HUB	Tsilo di Mahay HUB
 	Tsilo on GitHub	Tsilo di GitHub
 	Search Commands…	Cari perintah…
 	Tsilo Help…	Bantuan Tsilo…
@@ -3490,9 +3490,9 @@ effect	Regular	Reguler
 	Vector illustration — fast, open, scriptable.	Ilustrasi vektor — cepat, terbuka, mendukung skrip.
 	Welcome to Tsilo	Selamat datang di Tsilo
 	Mahay website	Situs web Mahay
-	Discord	Discord
-	Join our Discord	Gabung ke Discord kami
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Bergabunglah dengan komunitas Mahay di Discord (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	Gabung ke GitHub kami
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Bergabunglah dengan komunitas Mahay di GitHub (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Kode sumber di GitHub
 	All Tools	Semua alat
 	Draw	Menggambar

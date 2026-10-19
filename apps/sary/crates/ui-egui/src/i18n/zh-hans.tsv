@@ -800,7 +800,7 @@
 	Sary Website	Sary 网站
 	Sary on GitHub	Sary 的 GitHub 页面
 	Mahay Website	Mahay 网站
-	Join the Mahay Discord…	加入 Mahay 的 Discord 社区…
+	Join the Mahay discussions…	加入 Mahay 的 GitHub 社区…
 	Report an Issue…	报告问题…
 	WIA Support…	WIA 支持…
 	Apply	应用
@@ -1084,7 +1084,7 @@
 	Diffusion	扩散
 	Discard the embedded profile (don't color manage)	丢弃嵌入的配置文件（不进行色彩管理）
 	Discontiguous	不连续
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	关闭
 	Display P3	Display P3
 	Display Text	显示文字
@@ -1221,7 +1221,7 @@
 	Invert All	全部反相
 	Invert has no settings.	反相没有可调整的设置。
 	Italic	斜体
-	Join us on Discord	加入我们的 Discord 社区
+	Join us on GitHub	加入我们的 GitHub 社区
 	Justify all	全部两端对齐
 	Justify last centered	两端对齐，末行居中
 	Justify last left	两端对齐，末行左对齐
@@ -2851,3 +2851,4 @@ curves	Smooth	平滑
 	Increase Brush Size	增大画笔大小
 	Decrease Brush Hardness	减小画笔硬度
 	Increase Brush Hardness	增大画笔硬度
+	Join the discussions	加入我们的 GitHub 社区

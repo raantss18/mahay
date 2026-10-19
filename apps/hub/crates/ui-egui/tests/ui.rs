@@ -496,7 +496,7 @@ fn grid_shows_every_status_and_installs_on_click() {
     h.get_by_label_contains("0.4.1 installed → 0.5.0 released");
     // The window has no title bar of its own here (the web build, and the tests).
     assert!(h.query_by_label("Close").is_none());
-    assert!(h.query_all_by_label_contains("Discord").count() >= 2); // header link and footer link
+    assert!(h.query_all_by_label_contains("Discussions").count() >= 2); // header link and footer link
     assert!(h.query_all_by_label("Coming soon").count() >= 1);
     h.get_by_label_contains("48 MB of 131 MB");
     h.get_by_label("Update all (2)").click();
@@ -802,7 +802,7 @@ fn settings_link_to_discord() {
     snapshot(&mut h, "settings-dark");
     h.get_by_label("Questions, ideas and news from the Mahay team");
     // The header button and the one in Settings.
-    assert!(h.query_all_by_label_contains("Discord").count() >= 2);
+    assert!(h.query_all_by_label_contains("Discussions").count() >= 2);
 }
 
 #[test]
@@ -835,7 +835,7 @@ fn links_to_the_website_github_and_each_apps_pages() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
     // Footer: website, GitHub and Discord.
-    for label in ["Website", "GitHub", "Discord"] {
+    for label in ["Website", "GitHub", "Discussions"] {
         assert!(h.query_all_by_label(label).count() >= 1, "{label}");
     }
     // Cards: every app links to its repo and to its own page on mahay.com (plus the footer's).
@@ -883,7 +883,7 @@ fn all_opened(h: &mut Harness<'_, Option<LauncherUi>>, label: &str) -> Vec<Strin
 fn links_open_the_right_pages() {
     let (mut h, _) = harness(ViewMode::Grid, egui::Theme::Dark, true);
     h.run_steps(6);
-    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://github.com/raantss18/mahay/discussions"));
+    assert_eq!(click_opens(&mut h, "Discussions").as_deref(), Some("https://github.com/raantss18/mahay/discussions"));
     // The footer's Mahay links and each card's own pages.
     let github = all_opened(&mut h, "GitHub");
     assert!(github.contains(&"https://github.com/raantss18".to_string()), "{github:?}");
@@ -907,7 +907,7 @@ fn links_open_the_right_pages() {
 fn discord_link_opens_app_when_discord_is_installed() {
     let (mut h, _) = harness_with_discord(Some(hub_core::catalog::DISCORD_APP_URL));
     h.run_steps(6);
-    assert_eq!(click_opens(&mut h, "Discord").as_deref(), Some("https://github.com/raantss18/mahay/discussions"));
+    assert_eq!(click_opens(&mut h, "Discussions").as_deref(), Some("https://github.com/raantss18/mahay/discussions"));
 }
 
 #[test]
@@ -1529,7 +1529,7 @@ fn the_rate_limit_notice_never_runs_under_the_footer_links() {
         // Everything on the footer's right: the three links, the social icons and (when there's
         // room) the platform.
         let mut right = Vec::new();
-        for label in ["Website", "GitHub", "Discord", "X", "YouTube", "TikTok", "Instagram", "LinkedIn"] {
+        for label in ["Website", "GitHub", "Discussions", "X", "YouTube", "TikTok", "Instagram", "LinkedIn"] {
             right.extend(h.query_all_by_label(label).map(|n| n.rect()).filter(|r| (r.center().y - notice.center().y).abs() < 12.0));
         }
         assert_eq!(right.len(), 8, "{width}: {right:?}");

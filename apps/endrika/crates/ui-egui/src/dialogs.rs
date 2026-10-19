@@ -134,7 +134,7 @@ fn about_body(ui: &mut egui::Ui, t: &Tokens) {
         "Interface design and prototyping. A free, open-source, clean-room design tool written from scratch in Rust, part of the Mahay apps.",
     ));
     ui.add_space(8.0);
-    ui.hyperlink_to("mahay.com/apps/endrika", "https://github.com/raantss18/mahay");
+    ui.hyperlink_to("Mahay HUB", "https://github.com/raantss18/mahay");
     ui.hyperlink_to(tr("Join the discussions"), "https://github.com/raantss18/mahay/discussions");
     ui.add_space(8.0);
     ui.label(

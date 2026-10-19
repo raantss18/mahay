@@ -56,7 +56,7 @@ impl Tray {
         let show = MenuItem::new(i18n::t("Show Mahay HUB"), true, None);
         let check = MenuItem::new(i18n::t("Check for Updates"), true, None);
         use hub_core::catalog::{GITHUB_URL, WEBSITE_URL};
-        let website = MenuItem::new(i18n::t("Visit mahay.com"), true, None);
+        let website = MenuItem::new(i18n::t("Visit Mahay HUB"), true, None);
         let github = MenuItem::new(i18n::t("Mahay on GitHub"), true, None);
         let discord = MenuItem::new(i18n::t("Join the Mahay discussions"), true, None);
         let quit = MenuItem::new(i18n::t("Quit Mahay HUB"), true, None);
@@ -109,7 +109,7 @@ impl Tray {
         let labels = vec![
             (show, "Show Mahay HUB"),
             (check, "Check for Updates"),
-            (website, "Visit mahay.com"),
+            (website, "Visit Mahay HUB"),
             (github, "Mahay on GitHub"),
             (discord, "Join the Mahay discussions"),
             (quit, "Quit Mahay HUB"),

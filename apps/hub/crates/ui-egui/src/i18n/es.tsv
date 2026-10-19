@@ -40,7 +40,7 @@
 	Installed version	Versión instalada
 	Latest version	Última versión
 	Newest release	Publicación más reciente
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	Sitio web
 	Classic apps	Aplicaciones clásicas
@@ -124,7 +124,7 @@
 	Apps you hid	Aplicaciones que ocultaste
 	Checked {ago} · using {sources}	Comprobado {ago} · con {sources}
 	{a} and {b}	{a} y {b}
-	Join the Discord	Únete al Discord
+	Join the discussions	Únete al GitHub
 	Learn more	Más información
 	Minimize	Minimizar
 	Maximize	Maximizar
@@ -186,7 +186,7 @@ month	Dec	dic.
 	Installing for {platform}	Instalación para {platform}
 	Downloads for {platform}	Descargas para {platform}
 	No downloads for this system	No hay descargas para este sistema
-	Join the Mahay community on Discord	Únete a la comunidad de Mahay en Discord
+	Join the Mahay community on GitHub	Únete a la comunidad de Mahay en GitHub
 	Mahay on {name}	Mahay en {name}
 	Couldn't open {name}: {e}	No se pudo abrir {name}: {e}
 	Download cancelled	Descarga cancelada
@@ -309,7 +309,7 @@ filter	Installed	Instaladas
 @id	sort.installed	Versión instalada
 @id	sort.latest	Última versión
 @id	sort.released	Publicación más reciente
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	Sitio web
 @id	update.check	Buscar actualizaciones
@@ -323,9 +323,9 @@ filter	Installed	Instaladas
 @id	appearance.theme	Apariencia
 	Show Mahay HUB	Mostrar Mahay HUB
 	Check for Updates	Buscar actualizaciones
-	Visit mahay.com	Visitar mahay.com
+	Visit Mahay HUB	Visitar Mahay HUB
 	Mahay on GitHub	Mahay en GitHub
-	Join the Mahay Discord	Únete al Discord de Mahay
+	Join the Mahay discussions	Únete al GitHub de Mahay
 @plural	Mahay HUB · {n} update available|Mahay HUB · {n} updates available	Mahay HUB · {n} actualización disponible|Mahay HUB · {n} actualizaciones disponibles
 	Install folder	Carpeta de instalación
 	Default install folder	Carpeta de instalación predeterminada

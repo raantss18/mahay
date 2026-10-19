@@ -124,7 +124,7 @@ fn main() -> ExitCode {
         Some("validate-pdf") => report(validate_pdf(args.get(1).map(String::as_str))),
         Some("links") => {
             use pejy_engine::links::*;
-            outln!("Discord   {DISCORD}\nWebsite   {WEBSITE}\nApp page  {APP_PAGE}\nGitHub    {GITHUB}\nIssues    {ISSUES}");
+            outln!("GitHub   {DISCORD}\nWebsite   {WEBSITE}\nApp page  {APP_PAGE}\nGitHub    {GITHUB}\nIssues    {ISSUES}");
             ExitCode::SUCCESS
         }
         // Asking for help is not an error: it goes to stdout and succeeds. An unknown command

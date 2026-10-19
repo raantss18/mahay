@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/raantss18/mahay"><b>Endrika on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay"><b>Endrika in Mahay HUB</b></a> ·
   <a href="https://github.com/raantss18/mahay">Mahay</a> ·
   <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
@@ -327,7 +327,7 @@ The Mahay apps share the same conventions: clean-room and pure Rust, native on m
 
 <p align="center">
   <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
-  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay HUB</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
   <a href="https://github.com/raantss18/mahay">Endrika</a>
 </p>

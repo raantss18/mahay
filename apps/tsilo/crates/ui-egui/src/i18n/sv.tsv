@@ -740,7 +740,7 @@
 	Discard Recovered Documents	Släng återställda dokument
 	Discard White Overprint in Output	Släng vit övertryckning i utdata
 	Discarded {} recovered document(s)	Slängde {} återställda dokument
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	Mjukt bindestreck
 	Discretionary Ligatures	Valfria ligaturer
 	Display All Blacks Accurately	Visa alla svarta korrekt
@@ -1504,9 +1504,9 @@
 	Italian	Italienska
 	Japanese	Japanska
 	Join	Foga samman
-	Join Our Discord	Gå med i vår Discord
-	Join our Discord	Gå med i vår Discord
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Gå med i Mahay-gemenskapen på Discord (github.com/raantss18/mahay/discussions)
+	Join Our GitHub	Gå med i vår GitHub
+	Join the discussions	Gå med i vår GitHub
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Gå med i Mahay-gemenskapen på GitHub (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Foga samman raderna i varje stycke
 	Join Tool	Sammanfogningsverktyg
 	Justification…	Justering…
@@ -3385,7 +3385,7 @@
 	Vector illustration — fast, open, scriptable.	Vektorillustration – snabb, öppen, skriptbar.
 	Tsilo didn't quit normally last time. These documents had unsaved changes:	Tsilo avslutades inte normalt förra gången. De här dokumenten hade osparade ändringar:
 	Tsilo Help…	Tsilo-hjälp…
-	Tsilo on mahay.com	Tsilo på mahay.com
+	Tsilo on Mahay HUB	Tsilo på Mahay HUB
 	Tsilo on GitHub	Tsilo på GitHub
 	Vectors	Vektorer
 	Version {version} — open-source vector illustration in pure Rust.	Version {version} – vektorillustration med öppen källkod i ren Rust.

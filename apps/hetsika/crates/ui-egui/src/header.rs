@@ -122,11 +122,11 @@ pub fn show(app: &mut HetsikaApp, ui: &mut egui::Ui, rect: Rect) {
     p.galley_with_override_text_color(pos2(wr.min.x + 4.0, rect.center().y - wg.size().y / 2.0), wg, if wresp.hovered() { t.text } else { t.text_dim });
     // Community: a labelled Discord button, always one click away.
     {
-        let label = "Discord";
+        let label = "Discussions";
         let g = p.layout_no_wrap(label.to_string(), Tokens::ui(12.0), Color32::WHITE);
         let w = g.size().x + 34.0;
         let r = Rect::from_min_size(pos2(wr.min.x - w - 14.0, rect.center().y - 12.0), vec2(w, 24.0));
-        let resp = ui.interact(r, egui::Id::new("hdr-discord"), Sense::click()).on_hover_text(tl!("Join the Mahay Discord (github.com/raantss18/mahay/discussions)"));
+        let resp = ui.interact(r, egui::Id::new("hdr-discord"), Sense::click()).on_hover_text(tl!("Join the Mahay GitHub (github.com/raantss18/mahay/discussions)"));
         app.auto.add("header.discord", r, "Join the Mahay discussions");
         ui.painter().rect_filled(r, 12.0, if resp.hovered() { t.accent_hover } else { t.accent });
         icons::paint(ui.painter(), Rect::from_center_size(pos2(r.min.x + 14.0, r.center().y), vec2(14.0, 14.0)), Icon::Chat, Color32::WHITE);

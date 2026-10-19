@@ -300,7 +300,7 @@
 	Comment	批注
 	Comments	批注
 	Comments Pane	批注窗格
-	Community\nDiscord	社区\nDiscord
+	Community\nGitHub	社区\nGitHub
 	Compact	紧凑
 	Compare	比较
 	Compress Pictures	压缩图片
@@ -355,8 +355,8 @@
 	Dictate	听写
 	Different First Page	首页不同
 	Different Odd & Even Pages	奇偶页不同
-	Discord	Discord
-	Discord community	Discord 社区
+	Discussions	Discussions
+	GitHub community	GitHub 社区
 	Display	显示
 	Display for Review	显示以供审阅
 	Distribute Columns	平均分布各列
@@ -515,8 +515,8 @@
 	Inspect Document	检查文档
 	Interface language:	界面语言：
 	Italic	倾斜
-	Join the Mahay community on Discord	加入 Discord 上的 Mahay 社区
-	Join us on Discord: github.com/raantss18/mahay/discussions	在 Discord 上加入我们：github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	加入 GitHub 上的 Mahay 社区
+	Join us on GitHub: github.com/raantss18/mahay/discussions	在 GitHub 上加入我们：github.com/raantss18/mahay/discussions
 	Justify	两端对齐
 	Keep Lines Together	段中不分页
 	Keep lines together	段中不分页
@@ -1230,7 +1230,7 @@
 	Insert a new equation (Alt+=)	插入新公式 (Alt+=)
 	Leave the equation (Esc)	退出公式 (Esc)
 	Preview	预览
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	绘制墨迹
 	Erase Ink	擦除墨迹
 	Hide Ink	隐藏墨迹
@@ -2269,3 +2269,5 @@
 	All Fonts	所有字体
 	Spike	图文场
 	Insert Spike	插入图文场
+	Community\nDiscussions	社区\nGitHub
+	Community discussions	社区\nGitHub

@@ -778,7 +778,7 @@
 	Sary Website	Site do Sary
 	Sary on GitHub	Sary no GitHub
 	Mahay Website	Site do Mahay
-	Join the Mahay Discord…	Participe do Discord do Mahay…
+	Join the Mahay discussions…	Participe do GitHub do Mahay…
 	Report an Issue…	Relatar um problema…
 	WIA Support…	Suporte a WIA…
 	Apply	Aplicar
@@ -1062,7 +1062,7 @@
 	Diffusion	Difusão
 	Discard the embedded profile (don't color manage)	Descartar o perfil incorporado (não gerenciar cores)
 	Discontiguous	Não contíguo
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Dispensar
 	Display P3	Display P3
 	Display Text	Texto de exibição
@@ -1191,7 +1191,7 @@
 	Invert All	Inverter tudo
 	Invert has no settings.	Inverter não tem configurações.
 	Italic	Itálico
-	Join us on Discord	Participe do nosso Discord
+	Join us on GitHub	Participe do nosso GitHub
 	Justify all	Justificar tudo
 	Justify last centered	Justificar com a última linha centralizada
 	Justify last left	Justificar com a última linha à esquerda
@@ -3476,7 +3476,7 @@ layerLabel	No Color	Sem cor
 	Custom Pixel Aspect Ratio	Proporção de pixel personalizada
 	32-bit Preview Options	Opções de visualização de 32 bits
 	New Guide	Nova guia
-	Join the Mahay Discord	Entrar no Discord do Mahay
+	Join the Mahay GitHub	Entrar no GitHub do Mahay
 	Report an Issue	Relatar um problema
 	Load Files into Stack	Carregar arquivos em pilha
 	Statistics	Estatísticas
@@ -4020,3 +4020,4 @@ layerLabel	No Color	Sem cor
 	Increase Brush Size	Aumentar tamanho do pincel
 	Decrease Brush Hardness	Diminuir dureza do pincel
 	Increase Brush Hardness	Aumentar dureza do pincel
+	Join the discussions	Participe do nosso GitHub

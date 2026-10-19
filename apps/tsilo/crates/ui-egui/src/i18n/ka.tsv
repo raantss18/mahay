@@ -19,7 +19,7 @@
 	About Tsilo	Tsilo-ის შესახებ
 	Align to Path	ტრაექტორიაზე სწორება
 	Cut Path at Selected Anchor Points	ტრაექტორიის გაჭრა მონიშნულ საყრდენ წერტილებზე
-	Join Our Discord	შემოგვიერთდით Discord-ზე
+	Join Our GitHub	შემოგვიერთდით GitHub-ზე
 	Language	ენა
 	UI Brightness	ინტერფეისის სიკაშკაშე
 	Dark	ბნელი
@@ -588,7 +588,7 @@
 	Symbol Libraries	სიმბოლოების ბიბლიოთეკები
 	Help	დახმარება
 	Mahay Website	Mahay-ის ვებსაიტი
-	Tsilo on mahay.com	Tsilo mahay.com-ზე
+	Tsilo on Mahay HUB	Tsilo Mahay HUB-ზე
 	Tsilo on GitHub	Tsilo GitHub-ზე
 	Search Commands…	ბრძანებების ძიება…
 	Tsilo Help…	Tsilo-ის დახმარება…
@@ -3275,9 +3275,9 @@ effect	Regular	ჩვეულებრივი
 	Vector illustration — fast, open, scriptable.	ვექტორული ილუსტრაცია — სწრაფი, ღია, სკრიპტებით მართვადი.
 	Welcome to Tsilo	კეთილი იყოს თქვენი მობრძანება Tsilo-ში
 	Mahay website	Mahay-ის ვებსაიტი
-	Discord	Discord
-	Join our Discord	შემოგვიერთდით Discord-ზე
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	შემოუერთდით Mahay-ის საზოგადოებას Discord-ზე (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	შემოგვიერთდით GitHub-ზე
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	შემოუერთდით Mahay-ის საზოგადოებას GitHub-ზე (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	საწყისი კოდი GitHub-ზე
 	All Tools	ყველა ხელსაწყო
 	Draw	ხატვა

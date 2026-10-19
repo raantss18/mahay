@@ -73,7 +73,7 @@ comment menu	Edit	సవరించు
 	Side panels	సైడ్ ప్యానెల్‌లు
 	Enable Acrobat JavaScript	Acrobat JavaScriptను ప్రారంభించు
 	OK	సరే
-	Join our Discord	మా Discordలో చేరండి
+	Join the discussions	మా GitHubలో చేరండి
 	Close	మూసివేయి
 	Next / previous match	తదుపరి / మునుపటి సరిపోలిక
 	Copy selected text	ఎంచుకున్న టెక్స్ట్‌ను కాపీ చేయి
@@ -142,7 +142,7 @@ comment menu	Edit	సవరించు
 	Welcome to Taratasy	Taratasyకు స్వాగతం
 	An open-source PDF workbench — local, private, and scriptable.	ఓపెన్-సోర్స్ PDF వర్క్‌బెంచ్ — మీ కంప్యూటర్‌లోనే నడుస్తుంది, గోప్యంగా ఉంటుంది, స్క్రిప్ట్‌లతో ఆటోమేట్ చేయవచ్చు.
 	Join the Mahay community	Mahay కమ్యూనిటీలో చేరండి
-	Get help, share feedback and follow development on Discord.	Discordలో సహాయం పొందండి, మీ అభిప్రాయాన్ని పంచుకోండి, అభివృద్ధిని అనుసరించండి.
+	Get help, share feedback and follow development on GitHub.	GitHubలో సహాయం పొందండి, మీ అభిప్రాయాన్ని పంచుకోండి, అభివృద్ధిని అనుసరించండి.
 	Recommended tools	సిఫార్సు చేసిన సాధనాలు
 	Use now	ఇప్పుడే ఉపయోగించు
 	Open file	ఫైల్‌ను తెరువు
@@ -287,7 +287,7 @@ comment menu	Edit	సవరించు
 	Split document…	పత్రాన్ని విభజించు…
 	Number pages…	పేజీలకు సంఖ్యలు వేయి…
 	Keyboard shortcuts	కీబోర్డ్ షార్ట్‌కట్‌లు
-	Join the Mahay Discord	Mahay Discordలో చేరండి
+	Join the Mahay discussions	Mahay GitHubలో చేరండి
 	Taratasy web page	Taratasy వెబ్ పేజీ
 	Taratasy on GitHub	GitHubలో Taratasy
 	Mahay website	Mahay వెబ్‌సైట్

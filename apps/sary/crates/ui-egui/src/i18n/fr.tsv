@@ -785,7 +785,7 @@
 	Sary Website	Site web de Sary
 	Sary on GitHub	Sary sur GitHub
 	Mahay Website	Site web d'Mahay
-	Join the Mahay Discord…	Rejoindre le Discord d'Mahay…
+	Join the Mahay discussions…	Rejoindre le GitHub d'Mahay…
 	Report an Issue…	Signaler un problème…
 	WIA Support…	Prise en charge de WIA…
 	Apply	Appliquer
@@ -1067,7 +1067,7 @@
 	Diffusion	Diffusion
 	Discard the embedded profile (don't color manage)	Ignorer le profil incorporé (sans gestion des couleurs)
 	Discontiguous	Non contigu
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Fermer
 	Display P3	Display P3
 	Display Text	Texte affiché
@@ -1196,7 +1196,7 @@
 	Invert All	Tout inverser
 	Invert has no settings.	Inverser n'a aucun réglage.
 	Italic	Italique
-	Join us on Discord	Rejoignez-nous sur Discord
+	Join us on GitHub	Rejoignez-nous sur GitHub
 	Justify all	Justifier tout
 	Justify last centered	Justifier, dernière ligne centrée
 	Justify last left	Justifier, dernière ligne à gauche
@@ -3238,3 +3238,4 @@ curves	Smooth	Lisser
 	Increase Brush Size	Augmenter la taille du pinceau
 	Decrease Brush Hardness	Réduire la dureté du pinceau
 	Increase Brush Hardness	Augmenter la dureté du pinceau
+	Join the discussions	Rejoignez-nous sur GitHub

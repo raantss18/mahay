@@ -86,7 +86,7 @@ pub(super) const TABLE: &[(&str, &str)] = &[
     ("Insert Math Expression", "Insérer une expression mathématique"),
     ("Insert Pages", "Insérer des pages"),
     ("Internet Standard RGB (sRGB)", "RVB standard Internet (sRGB)"),
-    ("Join the Mahay discussions", "Rejoindre le Discord d'Mahay"),
+    ("Join the Mahay discussions", "Rejoindre le GitHub d'Mahay"),
     ("Join the community", "Rejoindre la communauté"),
     ("Kerning", "Crénage"),
     ("Layout/Index", "Page/Index"),

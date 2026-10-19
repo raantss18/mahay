@@ -257,7 +257,7 @@
 	Comment	댓글
 	Comments	댓글
 	Comments Pane	댓글 창
-	Community\nDiscord	커뮤니티\nDiscord
+	Community\nGitHub	커뮤니티\nGitHub
 	Compact	간결하게
 	Compare	비교
 	Compress Pictures	그림 압축
@@ -335,8 +335,8 @@
 	Different First Page	첫 페이지 다르게 지정
 	Different Odd & Even Pages	홀수 페이지와 짝수 페이지 다르게 지정
 	Direct formatting	직접 서식
-	Discord	Discord
-	Discord community	Discord 커뮤니티
+	Discussions	Discussions
+	GitHub community	GitHub 커뮤니티
 	Display	표시
 	Display for Review	검토용 표시
 	Distribute Columns	열 균등 분할
@@ -498,8 +498,8 @@
 	Inspect Styles at Selection	선택 영역의 스타일 검사
 	Interface language:	인터페이스 언어:
 	Italic	기울임꼴
-	Join the Mahay community on Discord	Discord에서 Mahay 커뮤니티에 참여하세요
-	Join us on Discord: github.com/raantss18/mahay/discussions	Discord에서 함께하세요: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	GitHub에서 Mahay 커뮤니티에 참여하세요
+	Join us on GitHub: github.com/raantss18/mahay/discussions	GitHub에서 함께하세요: github.com/raantss18/mahay/discussions
 	Justify	양쪽 맞춤
 	Keep Lines Together	현재 단락의 모든 줄을 한 페이지에 유지
 	Keep lines together	현재 단락의 모든 줄을 한 페이지에 유지
@@ -1212,7 +1212,7 @@
 	Insert a new equation (Alt+=)	새 수식 삽입 (Alt+=)
 	Leave the equation (Esc)	수식 종료 (Esc)
 	Preview	미리 보기
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	잉크 그리기
 	Erase Ink	잉크 지우기
 	Hide Ink	잉크 숨기기
@@ -2510,3 +2510,5 @@ preview	Title	제목
 	All Fonts	모든 글꼴
 	Spike	스파이크
 	Insert Spike	스파이크 삽입
+	Community\nDiscussions	커뮤니티\nGitHub
+	Community discussions	커뮤니티\nGitHub

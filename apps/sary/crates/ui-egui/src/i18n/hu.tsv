@@ -617,8 +617,8 @@
 	Internet Standard RGB	Internetes szabványos RGB
 	Inverse	Megfordítás
 	Iris Blur…	Íriszelmosás…
-	Join the Mahay Discord	Csatlakozás az Mahay Discordhoz
-	Join the Mahay Discord…	Csatlakozás az Mahay Discordhoz…
+	Join the Mahay GitHub	Csatlakozás az Mahay GitHubhoz
+	Join the Mahay discussions…	Csatlakozás az Mahay GitHubhoz…
 	Language	Nyelv
 	Language Options	Nyelvi beállítások
 	Large	Nagy
@@ -1770,7 +1770,7 @@ layerLabel	Magenta	Bíbor
 	Delete Tool Preset	Eszköz-előbeállítás törlése
 	Delete tool preset	Eszköz-előbeállítás törlése
 	Delete Workspace	Munkaterület törlése
-	Discord	Discord
+	Discussions	Discussions
 	Doc: {w} × {h} px	Dok.: {w} × {h} px
 	Drag a box or click four corners · drag the corners onto the edges of a skewed shape · {commit} commits · Esc cancels	Húzz egy keretet, vagy kattints a négy sarokra · húzd a sarkokat a ferde alakzat éleire · {commit}: véglegesítés · Esc: megszakítás
 	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Húzz egy körbevágási keretet · belül húzva mozgatod · az élekkel átméretezed ({ratio}: arány, {centre}: középről) · Space: mozgatás rajzolás közben · nyilak: léptetés · X: tájolás cseréje · {commit}: véglegesítés · Esc: megszakítás
@@ -1825,7 +1825,7 @@ layerLabel	Magenta	Bíbor
 	Intersect with	Metszet ezzel
 	Intersect with selection  ({key})	Metszet a kijelöléssel  ({key})
 	Invalid panel layout; restored the default dock	Érvénytelen panelelrendezés; az alapértelmezett dokkolás visszaállítva
-	Join the Mahay Discord ({url})	Csatlakozz az Mahay Discord-szerveréhez ({url})
+	Join the Mahay GitHub ({url})	Csatlakozz az Mahay GitHub-szerveréhez ({url})
 	Keyboard Shortcuts	Billentyűparancsok
 	Kind	Fajta
 	Lasso	Lasszó
@@ -3312,7 +3312,7 @@ cameraRaw	Yellow	Sárga
 	Interpret Footage	Videoanyag értelmezése
 	Interval	Intervallum
 	Invalid {mode} profile	Érvénytelen profil ({mode})
-	Join us on Discord	Csatlakozz hozzánk a Discordon
+	Join us on GitHub	Csatlakozz hozzánk a GitHubon
 	Keep Using CPU	Marad a CPU
 	Kernel	Szűrőmag
 	Keyboard	Billentyűzet
@@ -4149,3 +4149,4 @@ cameraRaw	Yellow	Sárga
 	Increase Brush Size	Ecsetméret növelése
 	Decrease Brush Hardness	Ecsetkeménység csökkentése
 	Increase Brush Hardness	Ecsetkeménység növelése
+	Join the discussions	Csatlakozz hozzánk a GitHubon

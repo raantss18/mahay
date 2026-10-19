@@ -148,7 +148,7 @@
 	Comment	Megjegyzés
 	Comments	Megjegyzések
 	Comments Pane	Megjegyzések panel
-	Community\nDiscord	Közösségi\nDiscord
+	Community\nGitHub	Közösségi\nGitHub
 	Compact	Tömör
 	Compare	Összehasonlítás
 	Compress Pictures	Képek tömörítése
@@ -201,8 +201,8 @@
 	Dictate	Diktálás
 	Different First Page	Eltérő első oldal
 	Different Odd & Even Pages	Eltérő páros és páratlan oldalak
-	Discord	Discord
-	Discord community	Discord-közösség
+	Discussions	Discussions
+	GitHub community	GitHub-közösség
 	Display	Megjelenítés
 	Display for Review	Megjelenítés véleményezéshez
 	Distribute Columns	Oszlopok egyenletes elosztása
@@ -373,8 +373,8 @@
 	Intense Reference	Erős hivatkozás
 	Interface language:	Felület nyelve:
 	Italic	Dőlt
-	Join the Mahay community on Discord	Csatlakozz az Mahay közösséghez a Discordon
-	Join us on Discord: github.com/raantss18/mahay/discussions	Csatlakozz hozzánk a Discordon: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Csatlakozz az Mahay közösséghez a GitHubon
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Csatlakozz hozzánk a GitHubon: github.com/raantss18/mahay/discussions
 	Justify	Sorkizárás
 	Keep Lines Together	Sorok együtt tartása
 	Keep lines together	Sorok együtt tartása
@@ -1094,7 +1094,7 @@
 	Insert a new equation (Alt+=)	Új egyenlet beszúrása (Alt+=)
 	Leave the equation (Esc)	Kilépés az egyenletből (Esc)
 	Preview	Előnézet
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Browse…	Tallózás…
 	AaBbYyZz	AaBbYyZz ŐőŰű
 	Align Top Left	Igazítás balra fel
@@ -2652,3 +2652,5 @@
 	All Fonts	Összes betűtípus
 	Spike	Gyűjtő
 	Insert Spike	Beszúrás a gyűjtőből
+	Community\nDiscussions	Közösségi\nGitHub
+	Community discussions	Közösségi\nGitHub

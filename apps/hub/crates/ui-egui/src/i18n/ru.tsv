@@ -38,7 +38,7 @@
 	Installed version	Установленная версия
 	Latest version	Последняя версия
 	Newest release	Новый релиз
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	Веб-сайт
 	Classic apps	Классические приложения
@@ -123,7 +123,7 @@
 	Apps you hid	Приложения, которые вы скрыли
 	Checked {ago} · using {sources}	Проверено {ago} · через {sources}
 	{a} and {b}	{a} и {b}
-	Join the Discord	Присоединиться к Discord
+	Join the discussions	Присоединиться к GitHub
 	Learn more	Подробнее
 	Minimize	Свернуть
 	Maximize	Развернуть
@@ -191,7 +191,7 @@ month	Dec	дек.
 	Installing for {platform}	Установка для {platform}
 	Downloads for {platform}	Скачивание для {platform}
 	No downloads for this system	Нет загрузок для этой системы
-	Join the Mahay community on Discord	Присоединиться к сообществу Mahay в Discord
+	Join the Mahay community on GitHub	Присоединиться к сообществу Mahay в GitHub
 	Mahay on {name}	Mahay в {name}
 	Couldn't open {name}: {e}	Не удалось открыть {name}: {e}
 	Download cancelled	Скачивание отменено
@@ -309,7 +309,7 @@ filter	Installed	Установлены
 @id	sort.installed	Установленная версия
 @id	sort.latest	Последняя версия
 @id	sort.released	Новый релиз
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	Веб-сайт
 @id	update.check	Проверить обновления
@@ -325,9 +325,9 @@ filter	Installed	Установлены
 # Tray (menu bar) menu and tooltip
 	Show Mahay HUB	Показать Mahay HUB
 	Check for Updates	Проверить обновления
-	Visit mahay.com	Открыть mahay.com
+	Visit Mahay HUB	Открыть Mahay HUB
 	Mahay on GitHub	Mahay на GitHub
-	Join the Mahay Discord	Присоединиться к Discord Mahay
+	Join the Mahay discussions	Присоединиться к GitHub Mahay
 	App details	О приложении
 	Close (Esc)	Закрыть (Esc)
 	Features	Возможности

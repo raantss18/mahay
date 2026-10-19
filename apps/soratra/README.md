@@ -32,7 +32,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/raantss18/mahay"><b>Soratra on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay"><b>Soratra in Mahay HUB</b></a> ·
   <a href="https://github.com/raantss18/mahay">Mahay</a> ·
   <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
@@ -352,7 +352,7 @@ And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and vid
 
 <p align="center">
   <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
-  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay HUB</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
   <a href="https://github.com/raantss18/mahay">Soratra</a>
 </p>

@@ -12,7 +12,7 @@
 	About Tsilo	Om Tsilo
 	Align to Path	Justér til kurve
 	Cut Path at Selected Anchor Points	Klip kurve ved valgte ankerpunkter
-	Join Our Discord	Slut dig til vores Discord
+	Join Our GitHub	Slut dig til vores GitHub
 	Language	Sprog
 	UI Brightness	Lysstyrke i brugerfladen
 	Dark	Mørk
@@ -645,7 +645,7 @@
 	Symbol Libraries	Symbolbiblioteker
 	Help	Hjælp
 	Mahay Website	Mahays websted
-	Tsilo on mahay.com	Tsilo på mahay.com
+	Tsilo on Mahay HUB	Tsilo på Mahay HUB
 	Tsilo on GitHub	Tsilo på GitHub
 	Search Commands…	Søg i kommandoer…
 	Tsilo Help…	Hjælp til Tsilo…
@@ -3490,9 +3490,9 @@ effect	Regular	Regular
 	Vector illustration — fast, open, scriptable.	Vektorillustration — hurtig, åben, scriptbar.
 	Welcome to Tsilo	Velkommen til Tsilo
 	Mahay website	Mahay-websted
-	Discord	Discord
-	Join our Discord	Deltag i vores Discord
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Deltag i Mahay-fællesskabet på Discord (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	Deltag i vores GitHub
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Deltag i Mahay-fællesskabet på GitHub (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Kildekode på GitHub
 	All Tools	Alle værktøjer
 	Draw	Tegn

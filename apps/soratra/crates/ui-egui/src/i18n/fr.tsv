@@ -226,7 +226,7 @@
 	Comment	Commentaire
 	Comments	Commentaires
 	Comments Pane	Volet Commentaires
-	Community\nDiscord	Communauté\nDiscord
+	Community\nGitHub	Communauté\nGitHub
 	Compact	Compact
 	Compare	Comparer
 	Compress Pictures	Compresser les images
@@ -298,8 +298,8 @@
 	Different First Page	Première page différente
 	Different Odd & Even Pages	Pages paires et impaires différentes
 	Direct formatting	Mise en forme directe
-	Discord	Discord
-	Discord community	Communauté Discord
+	Discussions	Discussions
+	GitHub community	Communauté GitHub
 	Display	Affichage
 	Display for Review	Affichage pour la révision
 	Distribute Columns	Répartir les colonnes
@@ -459,8 +459,8 @@
 	Inspect Styles at Selection	Inspecter les styles de la sélection
 	Interface language:	Langue de l’interface :
 	Italic	Italique
-	Join the Mahay community on Discord	Rejoignez la communauté Mahay sur Discord
-	Join us on Discord: github.com/raantss18/mahay/discussions	Rejoignez-nous sur Discord : github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Rejoignez la communauté Mahay sur GitHub
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Rejoignez-nous sur GitHub : github.com/raantss18/mahay/discussions
 	Justify	Justifier
 	Keep Lines Together	Lignes solidaires
 	Keep lines together	Lignes solidaires
@@ -1157,7 +1157,7 @@
 	Insert a new equation (Alt+=)	Insérer une nouvelle équation (Alt+=)
 	Leave the equation (Esc)	Quitter l’équation (Esc)
 	Preview	Aperçu
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Dessiner à l’encre
 	Erase Ink	Effacer l’encre
 	Hide Ink	Masquer l’encre
@@ -2264,3 +2264,5 @@
 	All Fonts	Toutes les polices
 	Spike	Pique-notes
 	Insert Spike	Insérer le pique-notes
+	Community\nDiscussions	Communauté\nGitHub
+	Community discussions	Communauté\nGitHub

@@ -340,7 +340,7 @@
 	Comment	Коментар
 	Comments	Коментари
 	Comments Pane	Окно коментара
-	Community\nDiscord	Заједница\nна Discord-у
+	Community\nGitHub	Заједница\nна GitHub-у
 	Compact	Сажето
 	Compare	Упоређивање
 	Compress Pictures	Компресуј слике
@@ -395,8 +395,8 @@
 	Dictate	Диктирање
 	Different First Page	Другачија прва страна
 	Different Odd & Even Pages	Другачије непарне и парне стране
-	Discord	Discord
-	Discord community	Заједница на Discord-у
+	Discussions	Discussions
+	GitHub community	Заједница на GitHub-у
 	Display	Приказ
 	Display for Review	Приказ за преглед
 	Distribute Columns	Равномерно размести колоне
@@ -555,8 +555,8 @@
 	Inspect Document	Прегледај документ
 	Interface language:	Језик интерфејса:
 	Italic	Курзив
-	Join the Mahay community on Discord	Придружите се Mahay заједници на Discord-у
-	Join us on Discord: github.com/raantss18/mahay/discussions	Придружите нам се на Discord-у: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Придружите се Mahay заједници на GitHub-у
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Придружите нам се на GitHub-у: github.com/raantss18/mahay/discussions
 	Justify	Обострано поравнање
 	Keep Lines Together	Задржи редове заједно
 	Keep lines together	Задржи редове заједно
@@ -1287,7 +1287,7 @@
 	Reset Crop	Поништи исецање
 	Insert a new equation (Alt+=)	Уметни нову једначину (Alt+=)
 	Leave the equation (Esc)	Напусти једначину (Esc)
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Цртај мастилом
 	Erase Ink	Обриши мастило
 	Hide Ink	Сакриј мастило
@@ -2271,3 +2271,5 @@
 	All Fonts	Сви фонтови
 	Spike	Сакупљач
 	Insert Spike	Уметни из сакупљача
+	Community\nDiscussions	Заједница\nна GitHub-у
+	Community discussions	Заједница\nна GitHub-у

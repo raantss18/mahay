@@ -234,7 +234,7 @@
 	Comment	Kommentar
 	Comments	Kommentare
 	Comments Pane	Kommentarbereich
-	Community\nDiscord	Community-\nDiscord
+	Community\nGitHub	Community-\nGitHub
 	Compact	Kompakt
 	Compare	Vergleichen
 	Compress Pictures	Bilder komprimieren
@@ -287,8 +287,8 @@
 	Dictate	Diktieren
 	Different First Page	Andere erste Seite
 	Different Odd & Even Pages	Andere gerade und ungerade Seiten
-	Discord	Discord
-	Discord community	Discord-Community
+	Discussions	Discussions
+	GitHub community	GitHub-Community
 	Display	Anzeige
 	Display for Review	Anzeige zur Überprüfung
 	Distribute Columns	Spalten verteilen
@@ -446,8 +446,8 @@
 	Inspect Document	Dokument prüfen
 	Interface language:	Benutzeroberflächensprache:
 	Italic	Kursiv
-	Join the Mahay community on Discord	Treten Sie der Mahay-Community auf Discord bei
-	Join us on Discord: github.com/raantss18/mahay/discussions	Besuchen Sie uns auf Discord: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Treten Sie der Mahay-Community auf GitHub bei
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Besuchen Sie uns auf GitHub: github.com/raantss18/mahay/discussions
 	Justify	Blocksatz
 	Keep Lines Together	Zeilen nicht trennen
 	Keep lines together	Zeilen nicht trennen
@@ -1141,7 +1141,7 @@
 	Insert a new equation (Alt+=)	Eine neue Formel einfügen (Alt+=)
 	Leave the equation (Esc)	Die Formel verlassen (Esc)
 	Preview	Vorschau
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Freihand zeichnen
 	Erase Ink	Freihand radieren
 	Hide Ink	Freihand ausblenden
@@ -2256,3 +2256,5 @@
 	All Fonts	Alle Schriftarten
 	Spike	Sammlung
 	Insert Spike	Sammlung einfügen
+	Community\nDiscussions	Community-\nGitHub
+	Community discussions	Community-\nGitHub

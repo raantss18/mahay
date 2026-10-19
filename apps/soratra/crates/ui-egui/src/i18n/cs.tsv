@@ -242,7 +242,7 @@
 	Comment	Komentář
 	Comments	Komentáře
 	Comments Pane	Podokno komentářů
-	Community\nDiscord	Komunita\nDiscord
+	Community\nGitHub	Komunita\nGitHub
 	Compact	Kompaktní
 	Company	Společnost
 	Compare	Porovnat
@@ -324,8 +324,8 @@
 	Direct formatting	Přímé formátování
 	Direction:	Směr:
 	Directory	Katalog
-	Discord	Discord
-	Discord community	Komunita na Discordu
+	Discussions	Discussions
+	GitHub community	Komunita na GitHubu
 	Display	Zobrazení
 	Display for Review	Zobrazení k revizi
 	Distribute Columns	Rovnoměrně rozložit sloupce
@@ -489,7 +489,7 @@
 	✓ None	✓ Žádné
 	Function	Funkce
 	General	Obecné
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Glow	Záře
 	Glow Colors	Barvy záře
 	Go To	Přejít na
@@ -603,8 +603,8 @@
 	Interface theme:	Motiv rozhraní:
 	Interface\nTheme	Motiv\nrozhraní
 	Italic	Kurzíva
-	Join the Mahay community on Discord	Připojte se ke komunitě Mahay na Discordu
-	Join us on Discord: github.com/raantss18/mahay/discussions	Připojte se k nám na Discordu: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Připojte se ke komunitě Mahay na GitHubu
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Připojte se k nám na GitHubu: github.com/raantss18/mahay/discussions
 	Justification	Zarovnání
 	Justified	Do bloku
 	Justify	Do bloku
@@ -2648,3 +2648,5 @@ preview	Title	Ukázka
 	All Fonts	Všechna písma
 	Spike	Sběrač
 	Insert Spike	Vložit ze sběrače
+	Community\nDiscussions	Komunita\nGitHub
+	Community discussions	Komunita\nGitHub

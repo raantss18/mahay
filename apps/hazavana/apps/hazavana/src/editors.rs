@@ -112,7 +112,7 @@ fn launcher(app: &str) -> Result<Launcher, String> {
         return Ok(if cfg!(target_os = "macos") { Launcher::MacApp(app.to_string()) } else { Launcher::Program(PathBuf::from(app)) });
     }
     find_sary().ok_or_else(|| {
-        "Sary isn't installed. Get it from mahay.com/apps/sary, or give where it is in Settings ▸ External Editing.".to_string()
+        "Sary isn't installed. Get it from Mahay HUB, or give where it is in Settings ▸ External Editing.".to_string()
     })
 }
 

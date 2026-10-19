@@ -797,7 +797,7 @@
 	Sary Website	Sitio web de Sary
 	Sary on GitHub	Sary en GitHub
 	Mahay Website	Sitio web de Mahay
-	Join the Mahay Discord…	Únase al Discord de Mahay…
+	Join the Mahay discussions…	Únase al GitHub de Mahay…
 	Report an Issue…	Informar de un problema…
 	WIA Support…	Compatibilidad con WIA…
 	Apply	Aplicar
@@ -1081,7 +1081,7 @@
 	Diffusion	Difusión
 	Discard the embedded profile (don't color manage)	Descartar el perfil incrustado (no gestionar el color)
 	Discontiguous	No contiguo
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Descartar
 	Display P3	Display P3
 	Display Text	Texto de visualización
@@ -1216,7 +1216,7 @@
 	Invert All	Invertir todo
 	Invert has no settings.	Invertir no tiene ajustes.
 	Italic	Cursiva
-	Join us on Discord	Únase a nuestro Discord
+	Join us on GitHub	Únase a nuestro GitHub
 	Justify all	Justificar todo
 	Justify last centered	Justificar última centrada
 	Justify last left	Justificar última a la izquierda
@@ -3519,7 +3519,7 @@ layerLabel	No Color	Sin color
 	Custom Pixel Aspect Ratio	Relación de aspecto de píxel personalizada
 	32-bit Preview Options	Opciones de vista previa de 32 bits
 	New Guide	Nueva guía
-	Join the Mahay Discord	Únase al Discord de Mahay
+	Join the Mahay GitHub	Únase al GitHub de Mahay
 	Report an Issue	Informar de un problema
 	Load Files into Stack	Cargar archivos en pila
 	Statistics	Estadísticas
@@ -4053,7 +4053,7 @@ layerLabel	No Color	Sin color
 navigator	Zoom	Zoom
 	Apply {option}: {state}	Aplicar {option}: {state}
 	This adjustment ({key}) is kept as imported and can't be edited yet.	Este ajuste ({key}) se conserva como se importó y aún no puede editarse.
-	Join the Mahay Discord ({url})	Unirse al Discord de Mahay ({url})
+	Join the Mahay GitHub ({url})	Unirse al GitHub de Mahay ({url})
 	{index} of {total}	{index} de {total}
 	{shortcut} assigned.	{shortcut} asignado.
 	{shortcut} is already in use by {commands} and will be removed from it when you click OK.	{shortcut} ya está en uso por {commands} y se quitará al hacer clic en Aceptar.
@@ -4192,3 +4192,4 @@ navigator	Zoom	Zoom
 	Increase Brush Size	Aumentar tamaño del pincel
 	Decrease Brush Hardness	Reducir dureza del pincel
 	Increase Brush Hardness	Aumentar dureza del pincel
+	Join the discussions	Únase a nuestro GitHub

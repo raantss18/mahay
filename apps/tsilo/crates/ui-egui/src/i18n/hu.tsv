@@ -991,7 +991,7 @@
 	Discard Recovered Documents	Helyreállított dokumentumok elvetése
 	Discard White Overprint in Output	Fehér felülnyomás elvetése a kimenetben
 	Discarded {} recovered document(s)	Elvetett helyreállított dokumentumok: {}
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	Feltételes elválasztójel
 	Discretionary Ligatures	Választható ligatúrák
 	Display All Blacks Accurately	Minden fekete pontos megjelenítése
@@ -1930,9 +1930,9 @@ file-filter	Templates	Sablonok
 	Its graphics, colors and text styles are deleted from this machine.	A grafikái, színei és szövegstílusai törlődnek erről a gépről.
 	Japanese	Japán
 	Join	Összekapcsolás
-	Join Our Discord	Csatlakozz a Discordunkhoz
-	Join our Discord	Csatlakozz a Discordunkhoz
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Csatlakozz az Mahay-közösséghez a Discordon (github.com/raantss18/mahay/discussions)
+	Join Our GitHub	Csatlakozz a GitHubunkhoz
+	Join the discussions	Csatlakozz a GitHubunkhoz
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Csatlakozz az Mahay-közösséghez a GitHubon (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Bekezdések sorainak összefűzése
 	Join Tool	Összekapcsolás
 	Joins	Csatlakozások
@@ -4122,7 +4122,7 @@ mark-style	Japanese	Japán
 	Tsilo documents: one locked object, updated when the file changes.	Tsilo-dokumentumok: egyetlen zárolt objektum, amely a fájl változásakor frissül.
 	Tsilo Generic CMYK (SWOP-like)	Tsilo általános CMYK (SWOP-szerű)
 	Tsilo Help…	Tsilo súgó…
-	Tsilo on mahay.com	A Tsilo a mahay.com oldalon
+	Tsilo on Mahay HUB	A Tsilo a Mahay HUB oldalon
 	Tsilo on GitHub	A Tsilo a GitHubon
 	Tsilo Swatches (.vcswatches)	Tsilo-színminták (.vcswatches)
 	Vectors	Vektorok

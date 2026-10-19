@@ -791,7 +791,7 @@
 	Sary Website	Sito web Sary
 	Sary on GitHub	Sary su GitHub
 	Mahay Website	Sito web Mahay
-	Join the Mahay Discord…	Unisciti al Discord di Mahay…
+	Join the Mahay discussions…	Unisciti al GitHub di Mahay…
 	Report an Issue…	Segnala un problema…
 	WIA Support…	Supporto WIA…
 	Apply	Applica
@@ -1078,7 +1078,7 @@
 	Diffusion	Diffusione
 	Discard the embedded profile (don't color manage)	Scarta profilo incorporato (non gestire colore)
 	Discontiguous	Non contiguo
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Chiudi
 	Display P3	Display P3
 	Display Text	Mostra testo
@@ -1211,7 +1211,7 @@
 	Invert All	Inverti tutto
 	Invert has no settings.	Inverti non ha impostazioni.
 	Italic	Corsivo
-	Join us on Discord	Unisciti al nostro Discord
+	Join us on GitHub	Unisciti al nostro GitHub
 	Justify all	Giustifica tutto
 	Justify last centered	Giustifica ultimo centrato
 	Justify last left	Giustifica ultimo a sinistra
@@ -3533,7 +3533,7 @@ layerLabel	No Color	Nessun colore
 	Custom Pixel Aspect Ratio	Proporzioni pixel personalizzate
 	32-bit Preview Options	Opzioni anteprima 32 bit
 	New Guide	Nuova guida
-	Join the Mahay Discord	Unisciti al Discord di Mahay
+	Join the Mahay GitHub	Unisciti al GitHub di Mahay
 	Report an Issue	Segnala un problema
 	Load Files into Stack	Carica file in pila
 	Statistics	Statistiche
@@ -4086,7 +4086,7 @@ navigator	Zoom	Zoom
 	on	attivo
 	off	disattivo
 	This adjustment ({key}) is kept as imported and can't be edited yet.	Questa regolazione ({key}) resta come è stata importata e non si può ancora modificare.
-	Join the Mahay Discord ({url})	Unisciti al Discord di Mahay ({url})
+	Join the Mahay GitHub ({url})	Unisciti al GitHub di Mahay ({url})
 	{index} of {total}	{index} di {total}
 	{shortcut} assigned.	{shortcut} assegnata.
 	{shortcut} is already in use by {commands} and will be removed from it when you click OK.	{shortcut} è già usata da {commands} e verrà rimossa quando fai clic su OK.
@@ -4347,3 +4347,4 @@ shape	Appearance	Aspetto
 	GPU Memory (MB, 0 = Automatic)	Memoria GPU (MB, 0 = Automatico)
 	{name} was changed by another app after it was opened or saved here.	{name} è stato modificato da un'altra app dopo essere stato aperto o salvato qui.
 	Replace it with this document, or cancel and use File › Save As to keep both.	Sostituiscilo con questo documento, oppure annulla e usa File › Salva con nome per tenerli entrambi.
+	Join the discussions	Unisciti al nostro GitHub

@@ -479,7 +479,7 @@
 	Common Radicals	Uobičajeni korijeni
 	Common Subscripts and Superscripts	Uobičajeni donji i gornji indeksi
 	Communication	Komunikacija
-	Community\nDiscord	Zajednica\nDiscord
+	Community\nGitHub	Zajednica\nGitHub
 	Compact	Kompaktno
 	Company	Tvrtka
 	Compare	Usporedi
@@ -653,8 +653,8 @@
 	Direct formatting	Izravno oblikovanje
 	Direction:	Smjer:
 	Directory	Katalog
-	Discord	Discord
-	Discord community	Discord zajednica
+	Discussions	Discussions
+	GitHub community	GitHub zajednica
 	Display	Prikaz
 	Display for Review	Prikaz za pregled
 	Display name	Prikazno ime
@@ -1142,8 +1142,8 @@
 	Italian	Talijanski
 	Italic	Kurziv
 	Japanese	Japanski
-	Join the Mahay community on Discord	Pridružite se Mahay zajednici na Discordu
-	Join us on Discord: github.com/raantss18/mahay/discussions	Pridružite nam se na Discordu: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Pridružite se Mahay zajednici na GitHubu
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Pridružite nam se na GitHubu: github.com/raantss18/mahay/discussions
 	Journal	Časopis
 	Justification	Obostrano poravnanje
 	Justification of a display equation	Poravnanje istaknute jednadžbe
@@ -2471,7 +2471,7 @@ preview	Title	Naslov
 	can't split at the first row	nije moguće podijeliti na prvom retku
 	development build	razvojna verzija
 	from Unicode (hex)	iz Unicodea (heksadecimalno)
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	i, ii, iii, …	i, ii, iii, …
 	lowercase	mala slova
 	n×n Identity Matrix	Jedinična matrica n×n
@@ -2656,3 +2656,5 @@ preview	Title	Naslov
 	Moved to:	Premješteno u:
 	Spike	Skupljač
 	Insert Spike	Umetni iz skupljača
+	Community\nDiscussions	Zajednica\nGitHub
+	Community discussions	Zajednica\nGitHub

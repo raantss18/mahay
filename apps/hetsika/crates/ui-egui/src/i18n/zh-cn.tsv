@@ -130,7 +130,7 @@
 	Fill frame	填满帧
 	Hetsika Help…	Hetsika 帮助…
 	Hetsika on GitHub	GitHub 上的 Hetsika
-	Hetsika on mahay.com	mahay.com 上的 Hetsika
+	Hetsika on Mahay HUB	Mahay HUB 上的 Hetsika
 	Find Next	查找下一个
 	Find…	查找…
 	Fit	适配
@@ -174,7 +174,7 @@
 	Insert Frame Hold Segment	插入帧定格片段
 	Install Motion Graphics Template…	安装动态图形模板…
 	Interpret Footage…	解释素材…
-	Join the Mahay Discord…	加入 Mahay Discord…
+	Join the Mahay discussions…	加入 Mahay GitHub…
 	Keyboard Shortcuts…	键盘快捷键…
 	Label	标签
 	Labels…	标签…
@@ -369,7 +369,7 @@
 	Master volume: use the Audio Track Mixer	主音量：请使用音频轨道混音器调整
 	Search	搜索
 	Quick Export	快速导出
-	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	加入 Mahay Discord（github.com/raantss18/mahay/discussions）
+	Join the Mahay GitHub (github.com/raantss18/mahay/discussions)	加入 Mahay GitHub（github.com/raantss18/mahay/discussions）
 	Cancel	取消
 	OK	确定
 	Interpret Footage	解释素材
@@ -409,7 +409,7 @@
 	All Empty Tracks	所有空轨道
 	Version {version}	版本 {version}
 	A clean-room, pure-Rust non-linear video editor. Part of the Mahay family.	一款净室实现的纯 Rust 非线性视频编辑器，属于 Mahay 家族。
-	Join the Mahay Discord	加入 Mahay Discord
+	Join the Mahay discussions	加入 Mahay GitHub
 	Source code on GitHub	GitHub 上的源代码
 	Report an issue	报告问题
 	MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).	MIT 或 Apache-2.0。字体：Inter、Noto Serif 与 JetBrains Mono（SIL OFL 1.1）。
@@ -450,7 +450,7 @@
 	Bars and Tone	彩条与音调
 	SMPTE HD bars with 1 kHz reference tone	带 1 kHz 参考音调的 SMPTE HD 彩条
 	Community	社区
-	Join us on Discord	在 Discord 上加入我们
+	Join us on GitHub	在 GitHub 上加入我们
 	OMF Export Settings	OMF 导出设置
 	AAF Export Settings	AAF 导出设置
 	OMF Title:	OMF 标题：
@@ -3585,3 +3585,4 @@
 	Shows the version, community links and credits in a Hetsika window.	在 Hetsika 窗口中显示版本、社区链接和致谢。
 	Couldn't open your web browser	无法打开网页浏览器
 	Open this address in your browser yourself:	请自行在浏览器中打开此地址：
+	Join the discussions	在 GitHub 上加入我们

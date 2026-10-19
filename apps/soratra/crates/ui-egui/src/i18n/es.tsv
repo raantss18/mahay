@@ -280,7 +280,7 @@
 	Comment	Comentario
 	Comments	Comentarios
 	Comments Pane	Panel de comentarios
-	Community\nDiscord	Comunidad\nDiscord
+	Community\nGitHub	Comunidad\nGitHub
 	Compact	Compacto
 	Compare	Comparar
 	Compress Pictures	Comprimir imágenes
@@ -335,8 +335,8 @@
 	Different First Page	Primera página diferente
 	Different Odd & Even Pages	Páginas pares e impares diferentes
 	Direct formatting	Formato directo
-	Discord	Discord
-	Discord community	Comunidad de Discord
+	Discussions	Discussions
+	GitHub community	Comunidad de GitHub
 	Display	Mostrar
 	Display for Review	Mostrar para revisión
 	Distribute Columns	Distribuir columnas
@@ -513,8 +513,8 @@
 	Inspect Styles at Selection	Inspeccionar estilos de la selección
 	Interface language:	Idioma de la interfaz:
 	Italic	Cursiva
-	Join the Mahay community on Discord	Únete a la comunidad de Mahay en Discord
-	Join us on Discord: github.com/raantss18/mahay/discussions	Únete a nosotros en Discord: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Únete a la comunidad de Mahay en GitHub
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Únete a nosotros en GitHub: github.com/raantss18/mahay/discussions
 	Justify	Justificar
 	Keep Lines Together	Mantener líneas juntas
 	Keep Text Only	Mantener solo el texto
@@ -1256,7 +1256,7 @@
 	Insert a new equation (Alt+=)	Insertar una ecuación nueva (Alt+=)
 	Leave the equation (Esc)	Salir de la ecuación (Esc)
 	Preview	Vista previa
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Dibujar tinta
 	Erase Ink	Borrar tinta
 	Hide Ink	Ocultar tinta
@@ -2623,3 +2623,5 @@ preview	Title	Título
 	All Fonts	Todas las fuentes
 	Spike	Acumulador
 	Insert Spike	Insertar acumulador
+	Community\nDiscussions	Comunidad\nGitHub
+	Community discussions	Comunidad\nGitHub

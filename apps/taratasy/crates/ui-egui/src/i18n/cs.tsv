@@ -117,7 +117,7 @@
 	Split document…	Rozdělit dokument…
 	Number pages…	Očíslovat stránky…
 	Keyboard shortcuts	Klávesové zkratky
-	Join the Mahay Discord	Připojit se ke komunitě Mahay na Discordu
+	Join the Mahay discussions	Připojit se ke komunitě Mahay na GitHubu
 	Taratasy web page	Webová stránka Taratasy
 	Taratasy on GitHub	Taratasy na GitHubu
 	Mahay website	Web Mahay
@@ -224,7 +224,7 @@ key	Space	Mezerník
 	{folder} is already pinned to Home	Složka {folder} už je připnutá na úvodní obrazovce
 	You can pin up to {n} folders. Unpin one first.	Připnout lze nejvýše {n} složek. Nejdříve některou odepněte.
 	Pinned {folder} to Home	Složka {folder} je připnutá na úvodní obrazovce
-	Join our Discord	Připojit se k našemu Discordu
+	Join the discussions	Připojit se k našemu GitHubu
 	Close	Zavřít
 	Next / previous match	Další / předchozí shoda
 	Copy selected text	Kopírovat vybraný text
@@ -282,7 +282,7 @@ key	Space	Mezerník
 	Welcome to Taratasy	Vítá vás Taratasy
 	An open-source PDF workbench — local, private, and scriptable.	Open-source dílna pro PDF — lokální, soukromá a skriptovatelná.
 	Join the Mahay community	Připojte se ke komunitě Mahay
-	Get help, share feedback and follow development on Discord.	Získejte pomoc, sdílejte zpětnou vazbu a sledujte vývoj na Discordu.
+	Get help, share feedback and follow development on GitHub.	Získejte pomoc, sdílejte zpětnou vazbu a sledujte vývoj na GitHubu.
 	Recommended tools	Doporučené nástroje
 	Use now	Použít
 	Open file	Otevřít soubor

@@ -40,7 +40,7 @@
 	Installed version	Telepített verzió
 	Latest version	Legújabb verzió
 	Newest release	Legújabb kiadás
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	Webhely
 	Classic apps	Eredeti alkalmazások
@@ -125,7 +125,7 @@
 	Apps you hid	Az általad elrejtett alkalmazások
 	Checked {ago} · using {sources}	Ellenőrizve: {ago} · {sources}
 	{a} and {b}	{a} és {b}
-	Join the Discord	Csatlakozás a Discordhoz
+	Join the discussions	Csatlakozás a GitHubhoz
 	Learn more	További információ
 	Minimize	Kis méret
 	Maximize	Teljes méret
@@ -193,7 +193,7 @@ month	Dec	dec.
 	Installing for {platform}	Telepítés {platform} rendszerre
 	Downloads for {platform}	Letöltések {platform} rendszerre
 	No downloads for this system	Nincsenek letöltések ehhez a rendszerhez
-	Join the Mahay community on Discord	Csatlakozz az Mahay közösségéhez a Discordon
+	Join the Mahay community on GitHub	Csatlakozz az Mahay közösségéhez a GitHubon
 	Mahay on {name}	Mahay – {name}
 	Couldn't open {name}: {e}	{name} nem nyitható meg: {e}
 	Download cancelled	Letöltés megszakítva
@@ -327,7 +327,7 @@ filter	Installed	Telepítve
 @id	sort.installed	Telepített verzió
 @id	sort.latest	Legújabb verzió
 @id	sort.released	Legújabb kiadás
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	Webhely
 @id	update.check	Frissítések keresése
@@ -343,9 +343,9 @@ filter	Installed	Telepítve
 # Tray (menu bar) menu and tooltip
 	Show Mahay HUB	Mahay HUB megjelenítése
 	Check for Updates	Frissítések keresése
-	Visit mahay.com	mahay.com megnyitása
+	Visit Mahay HUB	Mahay HUB megnyitása
 	Mahay on GitHub	Mahay a GitHubon
-	Join the Mahay Discord	Csatlakozás az Mahay Discord-közösségéhez
+	Join the Mahay discussions	Csatlakozás az Mahay GitHub-közösségéhez
 @plural	Mahay HUB · {n} update available|Mahay HUB · {n} updates available	Mahay HUB · {n} frissítés elérhető|Mahay HUB · {n} frissítés elérhető
 	Install folder	Telepítési mappa
 	Default install folder	Alapértelmezett telepítési mappa

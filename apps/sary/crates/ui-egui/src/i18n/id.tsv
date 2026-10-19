@@ -778,7 +778,7 @@
 	Sary Website	Situs Web Sary
 	Sary on GitHub	Sary di GitHub
 	Mahay Website	Situs Web Mahay
-	Join the Mahay Discord…	Gabung ke Discord Mahay…
+	Join the Mahay discussions…	Gabung ke GitHub Mahay…
 	Report an Issue…	Laporkan Masalah…
 	WIA Support…	Dukungan WIA…
 	Apply	Terapkan
@@ -1061,7 +1061,7 @@
 	Diffusion	Difusi
 	Discard the embedded profile (don't color manage)	Buang profil tertanam (tanpa manajemen warna)
 	Discontiguous	Tidak Berdekatan
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Tutup
 	Display P3	Display P3
 	Display Text	Teks Tampilan
@@ -1190,7 +1190,7 @@
 	Invert All	Balikkan Semua
 	Invert has no settings.	Invert tidak punya pengaturan.
 	Italic	Miring
-	Join us on Discord	Gabung bareng kami di Discord
+	Join us on GitHub	Gabung bareng kami di GitHub
 	Justify all	Rata penuh semua
 	Justify last centered	Rata penuh, baris terakhir di tengah
 	Justify last left	Rata penuh, baris terakhir di kiri
@@ -3225,3 +3225,4 @@ curves	Smooth	Haluskan
 	Increase Brush Size	Perbesar ukuran kuas
 	Decrease Brush Hardness	Kurangi kekerasan kuas
 	Increase Brush Hardness	Tambah kekerasan kuas
+	Join the discussions	Gabung bareng kami di GitHub

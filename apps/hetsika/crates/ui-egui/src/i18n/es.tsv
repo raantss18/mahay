@@ -135,7 +135,7 @@
 	Fill frame	Rellenar fotograma
 	Hetsika Help…	Ayuda de Hetsika…
 	Hetsika on GitHub	Hetsika en GitHub
-	Hetsika on mahay.com	Hetsika en mahay.com
+	Hetsika on Mahay HUB	Hetsika en Mahay HUB
 	Find Next	Buscar siguiente
 	Find…	Buscar…
 	Fit	Ajustar
@@ -179,7 +179,7 @@
 	Insert Frame Hold Segment	Insertar segmento de fotograma congelado
 	Install Motion Graphics Template…	Instalar plantilla de animación…
 	Interpret Footage…	Interpretar material…
-	Join the Mahay Discord…	Únete al Discord de Mahay…
+	Join the Mahay discussions…	Únete al GitHub de Mahay…
 	Keyboard Shortcuts…	Atajos de teclado…
 	Label	Etiqueta
 	Labels…	Etiquetas…
@@ -374,7 +374,7 @@
 	Master volume: use the Audio Track Mixer	Volumen maestro: usa el mezclador de pistas de audio
 	Search	Buscar
 	Quick Export	Exportación rápida
-	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	Únete al Discord de Mahay (github.com/raantss18/mahay/discussions)
+	Join the Mahay GitHub (github.com/raantss18/mahay/discussions)	Únete al GitHub de Mahay (github.com/raantss18/mahay/discussions)
 	Cancel	Cancelar
 	OK	Aceptar
 	Interpret Footage	Interpretar material
@@ -418,7 +418,7 @@
 	Delete Empty Caption Tracks	Eliminar pistas de subtítulos vacías
 	Version {version}	Versión {version}
 	A clean-room, pure-Rust non-linear video editor. Part of the Mahay family.	Un editor de video no lineal en Rust puro, desarrollado en sala limpia. Parte de la familia Mahay.
-	Join the Mahay Discord	Únete al Discord de Mahay
+	Join the Mahay discussions	Únete al GitHub de Mahay
 	Source code on GitHub	Código fuente en GitHub
 	Report an issue	Informar de un problema
 	MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).	MIT OR Apache-2.0. Fuentes: Inter, Noto Serif y JetBrains Mono (SIL OFL 1.1).
@@ -459,7 +459,7 @@
 	Bars and Tone	Barras y tono
 	SMPTE HD bars with 1 kHz reference tone	Barras SMPTE HD con tono de referencia de 1 kHz
 	Community	Comunidad
-	Join us on Discord	Únete a nosotros en Discord
+	Join us on GitHub	Únete a nosotros en GitHub
 	OMF Export Settings	Ajustes de exportación OMF
 	AAF Export Settings	Ajustes de exportación AAF
 	OMF Title:	Título OMF:
@@ -3610,3 +3610,4 @@
 	Shows the version, community links and credits in a Hetsika window.	Muestra la versión, los enlaces de la comunidad y los créditos en una ventana de Hetsika.
 	Couldn't open your web browser	No se pudo abrir el navegador web
 	Open this address in your browser yourself:	Abre esta dirección tú mismo en el navegador:
+	Join the discussions	Únete a nosotros en GitHub

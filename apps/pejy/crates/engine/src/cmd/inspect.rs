@@ -10,7 +10,7 @@ pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(query "document.inspect", "Inspect Document", [], None, "{} → pages, spreads, items, stories (with overset), styles, swatches, selection", has_doc, inspect),
         cmd!(query "app.links", "Community & Project Links", [], None,
-            "{} → {discord, website, appPage, github, issues} (Mahay Discord, website, Pejy page and repository)", always, |_, _| Ok(crate::links::all())),
+            "{} → {discord, website, appPage, github, issues} (Mahay GitHub, website, Pejy page and repository)", always, |_, _| Ok(crate::links::all())),
         cmd!(query "document.list", "List Documents", [], None, "{}", always, |s, _| {
             let preview = s.new_document_preview();
             Ok(json!(s

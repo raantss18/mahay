@@ -276,7 +276,7 @@
 	Comment	Коментар
 	Comments	Коментарі
 	Comments Pane	Панель коментарів
-	Community\nDiscord	Спільнота\nDiscord
+	Community\nGitHub	Спільнота\nGitHub
 	Compact	Компактний
 	Compare	Порівняти
 	Compress Pictures	Стиснути зображення
@@ -354,8 +354,8 @@
 	Different First Page	Інша перша сторінка
 	Different Odd & Even Pages	Різні парні й непарні сторінки
 	Direct formatting	Пряме форматування
-	Discord	Discord
-	Discord community	Спільнота Discord
+	Discussions	Discussions
+	GitHub community	Спільнота GitHub
 	Display	Відображення
 	Display for Review	Відображення для рецензування
 	Distribute Columns	Розподілити стовпці
@@ -517,8 +517,8 @@
 	Inspect Styles at Selection	Переглянути стилі у виділенні
 	Interface language:	Мова інтерфейсу:
 	Italic	Курсив
-	Join the Mahay community on Discord	Приєднатися до спільноти Mahay у Discord
-	Join us on Discord: github.com/raantss18/mahay/discussions	Приєднуйтеся до нас у Discord: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Приєднатися до спільноти Mahay у GitHub
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Приєднуйтеся до нас у GitHub: github.com/raantss18/mahay/discussions
 	Justify	За шириною
 	Keep Lines Together	Не розривати рядки абзацу
 	Keep lines together	Не розривати рядки абзацу
@@ -1230,7 +1230,7 @@
 	Insert a new equation (Alt+=)	Вставити нове рівняння (Alt+=)
 	Leave the equation (Esc)	Вийти з рівняння (Esc)
 	Preview	Попередній перегляд
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Малювати чорнилом
 	Erase Ink	Стерти чорнило
 	Hide Ink	Сховати чорнило
@@ -2269,3 +2269,5 @@
 	All Fonts	Усі шрифти
 	Spike	Накопичувач
 	Insert Spike	Вставити з накопичувача
+	Community\nDiscussions	Спільнота\nGitHub
+	Community discussions	Спільнота\nGitHub

@@ -139,7 +139,7 @@
 	Fill frame	Preencher quadro
 	Hetsika Help…	Ajuda do Hetsika…
 	Hetsika on GitHub	Hetsika no GitHub
-	Hetsika on mahay.com	Hetsika no mahay.com
+	Hetsika on Mahay HUB	Hetsika no Mahay HUB
 	Find Next	Localizar próximo
 	Find…	Localizar…
 	Fit	Ajustar
@@ -183,7 +183,7 @@
 	Insert Frame Hold Segment	Inserir segmento de quadro congelado
 	Install Motion Graphics Template…	Instalar modelo de gráficos de movimento…
 	Interpret Footage…	Interpretar clipes…
-	Join the Mahay Discord…	Entre no Discord do Mahay…
+	Join the Mahay discussions…	Entre no GitHub do Mahay…
 	Keyboard Shortcuts…	Atalhos de teclado…
 	Label	Rótulo
 	Labels…	Rótulos…
@@ -378,7 +378,7 @@
 	Master volume: use the Audio Track Mixer	Volume principal: use o misturador de faixas de áudio
 	Search	Pesquisar
 	Quick Export	Exportação rápida
-	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	Entre no Discord do Mahay (github.com/raantss18/mahay/discussions)
+	Join the Mahay GitHub (github.com/raantss18/mahay/discussions)	Entre no GitHub do Mahay (github.com/raantss18/mahay/discussions)
 	Cancel	Cancelar
 	OK	OK
 	Interpret Footage	Interpretar clipes
@@ -422,7 +422,7 @@
 	Delete Empty Caption Tracks	Excluir faixas de legendas vazias
 	Version {version}	Versão {version}
 	A clean-room, pure-Rust non-linear video editor. Part of the Mahay family.	Um editor de vídeo não linear em Rust puro, desenvolvido em sala limpa. Parte da família Mahay.
-	Join the Mahay Discord	Entre no Discord do Mahay
+	Join the Mahay discussions	Entre no GitHub do Mahay
 	Source code on GitHub	Código-fonte no GitHub
 	Report an issue	Relatar um problema
 	MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).	MIT OR Apache-2.0. Fontes: Inter, Noto Serif e JetBrains Mono (SIL OFL 1.1).
@@ -463,7 +463,7 @@
 	Bars and Tone	Barras e tom
 	SMPTE HD bars with 1 kHz reference tone	Barras SMPTE HD com tom de referência de 1 kHz
 	Community	Comunidade
-	Join us on Discord	Junte-se a nós no Discord
+	Join us on GitHub	Junte-se a nós no GitHub
 	OMF Export Settings	Configurações de exportação OMF
 	AAF Export Settings	Configurações de exportação AAF
 	OMF Title:	Título OMF:
@@ -3578,3 +3578,4 @@
 
 # The native macOS application menu (Settings…).
 	Settings	Preferências
+	Join the discussions	Junte-se a nós no GitHub

@@ -327,7 +327,7 @@ pub fn app_bar(app: &mut DesignApp, ui: &mut egui::Ui) {
                             }
                             ui.add_space(8.0);
                             // Always one click away: the Mahay community Discord.
-                            if crate::about::discord_button(ui, "Discord", vec2(78.0, 22.0)) {
+                            if crate::about::discord_button(ui, "Discussions", vec2(78.0, 22.0)) {
                                 let _ = app.run("help.discord", json!({}));
                             }
                             tools_start = ui.min_rect().min.x;
@@ -1076,7 +1076,7 @@ fn community_card(app: &mut DesignApp, ui: &mut egui::Ui) {
                 ));
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
-                    for (text, id) in [("Pejy page", "help.appPage"), ("GitHub", "help.github"), ("mahay.com", "help.website")] {
+                    for (text, id) in [("Pejy page", "help.appPage"), ("GitHub", "help.github"), ("Mahay HUB", "help.website")] {
                         let url = pejy_engine::links::get(&id[5..]).unwrap_or_default();
                         let l = ui
                             .add(egui::Label::new(egui::RichText::new(text).size(12.0).color(t.accent).underline()).sense(Sense::click()))

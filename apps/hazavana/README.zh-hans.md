@@ -552,7 +552,7 @@ Hazavana 是 **Mahay apps** 之一：来自 [Mahay](https://github.com/raantss18
 
 <p align="center">
   <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
-  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay HUB</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
   <a href="https://github.com/raantss18/mahay">Hazavana</a>
 </p>

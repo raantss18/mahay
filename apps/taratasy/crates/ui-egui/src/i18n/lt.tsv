@@ -615,7 +615,7 @@
 	From {file}	Iš {file}
 	From:	Nuo:
 	Front side only	Tik priekinė pusė
-	Get help, share feedback and follow development on Discord.	Gaukite pagalbos, pateikite atsiliepimų ir sekite naujienas „Discord“.
+	Get help, share feedback and follow development on GitHub.	Gaukite pagalbos, pateikite atsiliepimų ir sekite naujienas „GitHub“.
 	Go to a page view	Pereiti į puslapio rodinį
 	Go to page {p}	Pereiti į puslapį {p}
 	Go to the page	Pereiti į puslapį
@@ -667,7 +667,7 @@
 	JavaScript Console	JavaScript konsolė
 	JavaScript is turned off (Preferences ▸ JavaScript).	JavaScript išjungtas (Nuostatos > JavaScript).
 	JavaScript, e.g. getField("total").value	JavaScript, pvz., getField("total").value
-	Join our Discord	Prisijunkite prie mūsų „Discord“ serverio
+	Join the discussions	Prisijunkite prie mūsų „GitHub“ serverio
 	Join the Mahay community	Prisijunkite prie „Mahay“ bendruomenės
 	Justify	Abipusė lygiuotė
 	Keep source fonts	Išsaugoti šaltinio šriftus
@@ -1478,7 +1478,7 @@
 	Insert text	Įterpti tekstą
 	JavaScript	JavaScript
 	JavaScript console…	JavaScript konsolė…
-	Join the Mahay Discord	Prisijungti prie „Mahay“ „Discord“ serverio
+	Join the Mahay discussions	Prisijungti prie „Mahay“ „GitHub“ serverio
 	Light gray	Šviesiai pilka
 	Line	Linija
 	Link	Saitas

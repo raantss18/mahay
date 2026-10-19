@@ -149,7 +149,7 @@
 	Comment	Komentarz
 	Comments	Komentarze
 	Comments Pane	Okienko komentarzy
-	Community\nDiscord	Społeczność\nDiscord
+	Community\nGitHub	Społeczność\nGitHub
 	Compact	Zwarte
 	Compare	Porównaj
 	Compress Pictures	Kompresuj obrazy
@@ -201,8 +201,8 @@
 	Different First Page	Inna pierwsza strona
 	Different Odd & Even Pages	Inne strony parzyste i nieparzyste
 	Direct formatting	Formatowanie bezpośrednie
-	Discord	Discord
-	Discord community	Społeczność na Discordzie
+	Discussions	Discussions
+	GitHub community	Społeczność na GitHubzie
 	Display	Wyświetlanie
 	Display for Review	Wyświetlanie do recenzji
 	Distribute Columns	Rozłóż kolumny
@@ -364,8 +364,8 @@
 	Inspect Styles at Selection	Przejrzyj style zaznaczenia
 	Interface language:	Język interfejsu:
 	Italic	Kursywa
-	Join the Mahay community on Discord	Dołącz do społeczności Mahay na Discordzie
-	Join us on Discord: github.com/raantss18/mahay/discussions	Dołącz do nas na Discordzie: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Dołącz do społeczności Mahay na GitHubzie
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Dołącz do nas na GitHubzie: github.com/raantss18/mahay/discussions
 	Justify	Wyjustuj
 	Keep Lines Together	Zachowaj wiersze razem
 	Keep Text Only	Zachowaj tylko tekst
@@ -1055,7 +1055,7 @@
 	Insert a new equation (Alt+=)	Wstaw nowe równanie (Alt+=)
 	Leave the equation (Esc)	Opuść równanie (Esc)
 	Preview	Podgląd
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	English (United Kingdom)	Angielski (Wielka Brytania)
 	Polish	Polski
 	Do Not Check Spelling or Grammar	Nie sprawdzaj pisowni ani gramatyki
@@ -2661,3 +2661,5 @@ preview	Title	Tytuł
 	All Fonts	Wszystkie czcionki
 	Spike	Zbieracz
 	Insert Spike	Wstaw ze zbieracza
+	Community\nDiscussions	Społeczność\nGitHub
+	Community discussions	Społeczność\nGitHub

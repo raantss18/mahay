@@ -136,7 +136,7 @@ impl Server {
                     "capabilities": {"tools": {}, "resources": {}},
                     "serverInfo": {"name": "pejy", "title": "Pejy", "version": env!("CARGO_PKG_VERSION"), "websiteUrl": pejy_engine::links::APP_PAGE},
                     "instructions": format!(
-                        "{INSTRUCTIONS} Backend: {}. Community: {} (Discord), {} (app page), {} (source). The `app.links` command returns these links.",
+                        "{INSTRUCTIONS} Backend: {}. Community: {} (GitHub), {} (app page), {} (source). The `app.links` command returns these links.",
                         self.backend.describe(),
                         pejy_engine::links::DISCORD,
                         pejy_engine::links::APP_PAGE,

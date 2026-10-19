@@ -511,7 +511,7 @@
 	Sary on GitHub	Sary на GitHub
 	Report an Issue…	Повідомити про проблему…
 	Mahay Website	Вебсайт Mahay
-	Join the Mahay Discord…	Приєднатися до Discord Mahay…
+	Join the Mahay discussions…	Приєднатися до GitHub Mahay…
 	System Info…	Інформація про систему…
 
 # Tools and options bar
@@ -1648,7 +1648,7 @@
 	Preserve Transparency	Зберігати прозорість
 	Reverse	Зворотний
 	Align with layer	Вирівняти за шаром
-	Join us on Discord	Приєднуйтеся до нас у Discord
+	Join us on GitHub	Приєднуйтеся до нас у GitHub
 	Sary website	Вебсайт Sary
 	Mahay	Mahay
 	GitHub	GitHub
@@ -2080,7 +2080,7 @@
 	Delete tool preset	Видалити набір інструмента
 	Depth Jitter	Коливання глибини
 	Discontiguous	Несуміжні
-	Discord	Discord
+	Discussions	Discussions
 	Display P3	Display P3
 	Display Text	Показувати текст
 	Divide…	Розділити…
@@ -3332,7 +3332,7 @@ cameraRaw	Masking	Маскування
 	Custom Pixel Aspect Ratio	Довільне співвідношення сторін пікселя
 	32-bit Preview Options	Параметри 32-бітного перегляду
 	New Guide	Нова напрямна
-	Join the Mahay Discord	Приєднатися до Discord Mahay
+	Join the Mahay GitHub	Приєднатися до GitHub Mahay
 	Report an Issue	Повідомити про проблему
 	WIA Support	Підтримка WIA
 	Load Files into Stack	Завантажити файли у стос
@@ -3938,3 +3938,4 @@ curves	Smooth	Згладити
 	This shape layer must be rasterized before proceeding. It will no longer be editable as a shape. Rasterize the shape?	Щоб продовжити, потрібно растеризувати цей шар фігури. Після цього його більше не можна буде редагувати як фігуру. Растеризувати фігуру?
 	This Smart Object must be rasterized before proceeding. Its contents will no longer be editable. Rasterize the Smart Object?	Щоб продовжити, потрібно растеризувати цей смартоб’єкт. Після цього його вміст більше не можна буде редагувати. Растеризувати смартоб’єкт?
 	This fill layer must be rasterized before proceeding. Its fill content will no longer be editable. Rasterize the layer?	Щоб продовжити, потрібно растеризувати цей шар заливки. Після цього його заливку більше не можна буде редагувати. Растеризувати шар?
+	Join the discussions	Приєднуйтеся до нас у GitHub

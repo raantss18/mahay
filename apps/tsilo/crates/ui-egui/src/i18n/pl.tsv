@@ -30,7 +30,7 @@
 	About Tsilo	O programie Tsilo
 	Align to Path	Wyrównaj do ścieżki
 	Cut Path at Selected Anchor Points	Rozetnij ścieżkę w zaznaczonych punktach kontrolnych
-	Join Our Discord	Dołącz do naszego Discorda
+	Join Our GitHub	Dołącz do naszego GitHuba
 	Language	Język
 	UI Brightness	Jasność interfejsu
 	Dark	Ciemny
@@ -649,7 +649,7 @@
 	Symbol Libraries	Biblioteki symboli
 	Help	Pomoc
 	Mahay Website	Strona Mahay
-	Tsilo on mahay.com	Tsilo w mahay.com
+	Tsilo on Mahay HUB	Tsilo w Mahay HUB
 	Tsilo on GitHub	Tsilo w serwisie GitHub
 	Search Commands…	Szukaj poleceń…
 	Tsilo Help…	Pomoc Tsilo…
@@ -3563,9 +3563,9 @@ effect	Regular	Normalny
 	Vector illustration — fast, open, scriptable.	Ilustracja wektorowa — szybka, otwarta, skryptowalna.
 	Welcome to Tsilo	Witamy w Tsilo
 	Mahay website	Strona Mahay
-	Discord	Discord
-	Join our Discord	Dołącz do naszego Discorda
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Dołącz do społeczności Mahay na Discordzie (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	Dołącz do naszego GitHuba
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Dołącz do społeczności Mahay na GitHubzie (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Kod źródłowy w serwisie GitHub
 	All Tools	Wszystkie narzędzia
 	Draw	Rysuj

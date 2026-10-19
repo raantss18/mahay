@@ -289,7 +289,7 @@ impl eframe::App for Hub {
                             ui.add(egui::Image::new(src).fit_to_exact_size(egui::vec2(56.0, 56.0)));
                         }
                         ui.vertical(|ui| {
-                            ui.label(egui::RichText::new("Mahay").size(30.0).strong());
+                            ui.label(egui::RichText::new("Mahay HUB").size(30.0).strong());
                             ui.label(egui::RichText::new(t.subtitle).size(15.0).weak());
                         });
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {

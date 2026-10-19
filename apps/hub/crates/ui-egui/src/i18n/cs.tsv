@@ -26,7 +26,7 @@
 	Installed version	Nainstalovaná verze
 	Latest version	Nejnovější verze
 	Newest release	Nejnovější vydání
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	Web
 	Classic apps	Klasické aplikace
@@ -111,7 +111,7 @@
 	Apps you hid	Aplikace, které jste skryli
 	Checked {ago} · using {sources}	Zkontrolováno {ago} · zdroje: {sources}
 	{a} and {b}	{a} a {b}
-	Join the Discord	Připojit se na Discord
+	Join the discussions	Připojit se na GitHub
 	Learn more	Další informace
 	Minimize	Minimalizovat
 	Maximize	Maximalizovat
@@ -173,7 +173,7 @@ month	Dec	12.
 	Installing for {platform}	Instalace pro {platform}
 	Downloads for {platform}	Stažení pro {platform}
 	No downloads for this system	Pro tento systém nejsou k dispozici žádné soubory ke stažení
-	Join the Mahay community on Discord	Připojit se ke komunitě Mahay na Discordu
+	Join the Mahay community on GitHub	Připojit se ke komunitě Mahay na GitHubu
 	Mahay on {name}	Mahay na {name}
 	Couldn't open {name}: {e}	{name} nelze otevřít: {e}
 	Download cancelled	Stahování zrušeno
@@ -296,7 +296,7 @@ filter	Installed	Nainstalováno
 @id	sort.installed	Nainstalovaná verze
 @id	sort.latest	Nejnovější verze
 @id	sort.released	Nejnovější vydání
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	Web
 @id	update.check	Zkontrolovat aktualizace
@@ -310,9 +310,9 @@ filter	Installed	Nainstalováno
 @id	appearance.theme	Vzhled
 	Show Mahay HUB	Zobrazit Mahay HUB
 	Check for Updates	Zkontrolovat aktualizace
-	Visit mahay.com	Navštívit mahay.com
+	Visit Mahay HUB	Navštívit Mahay HUB
 	Mahay on GitHub	Mahay na GitHubu
-	Join the Mahay Discord	Připojit se na Mahay Discord
+	Join the Mahay discussions	Připojit se na Mahay GitHub
 @plural	Mahay HUB · {n} update available|Mahay HUB · {n} updates available	Mahay HUB · {n} dostupná aktualizace|Mahay HUB · {n} dostupné aktualizace|Mahay HUB · {n} dostupných aktualizací
 	Install folder	Instalační složka
 	Default install folder	Výchozí instalační složka

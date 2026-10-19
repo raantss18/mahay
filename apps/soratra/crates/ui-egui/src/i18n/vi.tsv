@@ -222,7 +222,7 @@
 	Comment	Nhận xét
 	Comments	Nhận xét
 	Comments Pane	Ngăn nhận xét
-	Community\nDiscord	Cộng đồng\nDiscord
+	Community\nGitHub	Cộng đồng\nGitHub
 	Compact	Thu gọn
 	Compare	So sánh
 	Compress Pictures	Nén ảnh
@@ -275,8 +275,8 @@
 	Different First Page	Trang đầu khác biệt
 	Different Odd & Even Pages	Trang chẵn & lẻ khác nhau
 	Direct formatting	Định dạng trực tiếp
-	Discord	Discord
-	Discord community	Cộng đồng Discord
+	Discussions	Discussions
+	GitHub community	Cộng đồng GitHub
 	Display	Hiển thị
 	Display for Review	Hiển thị để xem lại
 	Distribute Columns	Chia đều cột
@@ -441,8 +441,8 @@
 	Inspect Styles at Selection	Kiểm tra kiểu tại vùng chọn
 	Interface language:	Ngôn ngữ giao diện:
 	Italic	In nghiêng
-	Join the Mahay community on Discord	Tham gia cộng đồng Mahay trên Discord
-	Join us on Discord: github.com/raantss18/mahay/discussions	Tham gia cùng chúng tôi trên Discord: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Tham gia cộng đồng Mahay trên GitHub
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Tham gia cùng chúng tôi trên GitHub: github.com/raantss18/mahay/discussions
 	Justify	Căn đều
 	Keep Lines Together	Giữ các dòng cùng nhau
 	Keep Text Only	Chỉ giữ văn bản
@@ -1154,7 +1154,7 @@
 	Insert a new equation (Alt+=)	Chèn phương trình mới (Alt+=)
 	Leave the equation (Esc)	Rời khỏi phương trình (Esc)
 	Preview	Xem thử
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Vẽ mực
 	Erase Ink	Xóa mực
 	Hide Ink	Ẩn mực
@@ -2696,3 +2696,5 @@ template	Letter	Thư
 	All Fonts	Tất cả phông chữ
 	Spike	Bộ gom
 	Insert Spike	Chèn bộ gom
+	Community\nDiscussions	Cộng đồng\nGitHub
+	Community discussions	Cộng đồng\nGitHub

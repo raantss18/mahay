@@ -764,7 +764,7 @@
 	Sary Website	Sary Web Sitesi
 	Sary on GitHub	GitHub'da Sary
 	Mahay Website	Mahay Web Sitesi
-	Join the Mahay Discord…	Mahay Discord'una katılın…
+	Join the Mahay discussions…	Mahay GitHub'una katılın…
 	Report an Issue…	Bir Sorun Bildirin…
 	WIA Support…	WIA Desteği…
 	Apply	Uygula
@@ -1039,7 +1039,7 @@
 	Diffusion	Difüzyon
 	Discard the embedded profile (don't color manage)	Gömülü profili atın (renk yönetimi yapmayın)
 	Discontiguous	bitişik değil
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Reddet
 	Display P3	Display P3
 	Display Text	Metni Görüntüle
@@ -1171,7 +1171,7 @@
 	Invert All	Tümünü Ters Çevir
 	Invert has no settings.	Tersine çevirmenin hiçbir ayarı yoktur.
 	Italic	italik
-	Join us on Discord	Discord'da bize katılın
+	Join us on GitHub	GitHub'da bize katılın
 	Justify all	Hepsini gerekçelendir
 	Justify last centered	Son ortayı iki yana yasla
 	Justify last left	Son sola yasla
@@ -3009,7 +3009,7 @@ cameraRaw	Color	Renk
 	Custom Pixel Aspect Ratio	Özel Piksel En Boy Oranı
 	32-bit Preview Options	32 bit Önizleme Seçenekleri
 	New Guide	Yeni Kılavuz
-	Join the Mahay Discord	Mahay Discord'una katılın
+	Join the Mahay GitHub	Mahay GitHub'una katılın
 	Report an Issue	Sorun Bildir
 	Load Files into Stack	Dosyaları Yığına Yükle
 	Statistics	İstatistikler
@@ -3960,3 +3960,4 @@ cameraData	Lens	Lens
 	Increase Brush Size	Fırça boyutunu büyüt
 	Decrease Brush Hardness	Fırça sertliğini azalt
 	Increase Brush Hardness	Fırça sertliğini artır
+	Join the discussions	GitHub'da bize katılın

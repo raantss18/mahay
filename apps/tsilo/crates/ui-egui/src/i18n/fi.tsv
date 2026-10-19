@@ -34,7 +34,7 @@
 	About Tsilo	Tietoja Tsiloista
 	Align to Path	Tasaa polkuun
 	Cut Path at Selected Anchor Points	Leikkaa polku valituista ankkuripisteistä
-	Join Our Discord	Liity Discordiimme
+	Join Our GitHub	Liity GitHubiimme
 	Language	Kieli
 	UI Brightness	Käyttöliittymän kirkkaus
 	Dark	Tumma
@@ -692,7 +692,7 @@
 	Symbol Libraries	Symbolikirjastot
 	Help	Ohje
 	Mahay Website	Mahay-verkkosivusto
-	Tsilo on mahay.com	Tsilo mahay.comissa
+	Tsilo on Mahay HUB	Tsilo Mahay HUBissa
 	Tsilo on GitHub	Tsilo GitHubissa
 	Search Commands…	Hae komentoja…
 	Tsilo Help…	Tsilo-ohje…
@@ -3657,9 +3657,9 @@ effect	Regular	Normaali
 	Vector illustration — fast, open, scriptable.	Vektorikuvitusta – nopea, avoin, skriptattava.
 	Welcome to Tsilo	Tervetuloa Tsiloiin
 	Mahay website	Mahayin verkkosivusto
-	Discord	Discord
-	Join our Discord	Liity Discordiimme
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Liity Mahay-yhteisöön Discordissa (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	Liity GitHubiimme
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Liity Mahay-yhteisöön GitHubissa (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Lähdekoodi GitHubissa
 	All Tools	Kaikki työkalut
 	Draw	Piirrä

@@ -738,7 +738,7 @@
 	Discard Recovered Documents	Отхвърляне на възстановени документи
 	Discard White Overprint in Output	Премахване на бял надпечат при изход
 	Discarded {} recovered document(s)	Отхвърлени възстановени документи: {}
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	Избираемо сричкопренасяне
 	Discretionary Ligatures	Избираеми лигатури
 	Display All Blacks Accurately	Показване на цялото черно точно
@@ -1504,9 +1504,9 @@
 	Italian	Италиански
 	Japanese	Японски
 	Join	Свързване
-	Join Our Discord	Присъединете се към нашия Discord
-	Join our Discord	Присъединете се към нашия Discord
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Присъединете се към общността на Mahay в Discord (github.com/raantss18/mahay/discussions)
+	Join Our GitHub	Присъединете се към нашия GitHub
+	Join the discussions	Присъединете се към нашия GitHub
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Присъединете се към общността на Mahay в GitHub (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Свързване на редовете на всеки параграф
 	Join Tool	Инструмент „Свързване“
 	Justification…	Подравняване…
@@ -3385,7 +3385,7 @@
 	Vector illustration — fast, open, scriptable.	Векторна илюстрация — бърза, отворена, скриптуема.
 	Tsilo didn't quit normally last time. These documents had unsaved changes:	Tsilo не се затвори нормално последния път. Тези документи съдържаха незапазени промени:
 	Tsilo Help…	Помощ за Tsilo…
-	Tsilo on mahay.com	Tsilo в mahay.com
+	Tsilo on Mahay HUB	Tsilo в Mahay HUB
 	Tsilo on GitHub	Tsilo в GitHub
 	Vectors	Вектори
 	Version {version} — open-source vector illustration in pure Rust.	Версия {version} — векторна илюстрация с отворен код на чист Rust.

@@ -145,7 +145,7 @@
 	Comment	Yorum
 	Comments	Yorumlar
 	Comments Pane	Yorumlar Bölmesi
-	Community\nDiscord	Topluluk\nDiscord'u
+	Community\nGitHub	Topluluk\nGitHub'u
 	Compact	Kompakt
 	Compare	Karşılaştır
 	Compress Pictures	Resimleri Sıkıştır
@@ -199,8 +199,8 @@
 	Dictate	Dikte Et
 	Different First Page	İlk Sayfa Farklı
 	Different Odd & Even Pages	Tek ve Çift Sayfalar Farklı
-	Discord	Discord
-	Discord community	Discord topluluğu
+	Discussions	Discussions
+	GitHub community	GitHub topluluğu
 	Display	Görüntü
 	Display for Review	İnceleme Görünümü
 	Distribute Columns	Sütunları Eşit Dağıt
@@ -372,8 +372,8 @@
 	Inspect Document	Belgeyi İncele
 	Interface language:	Arayüz dili:
 	Italic	İtalik
-	Join the Mahay community on Discord	Discord'da Mahay topluluğuna katılın
-	Join us on Discord: github.com/raantss18/mahay/discussions	Discord'da bize katılın: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	GitHub'da Mahay topluluğuna katılın
+	Join us on GitHub: github.com/raantss18/mahay/discussions	GitHub'da bize katılın: github.com/raantss18/mahay/discussions
 	Justify	İki Yana Yasla
 	Keep Lines Together	Satırları Birlikte Tut
 	Keep lines together	Satırları birlikte tut
@@ -1104,7 +1104,7 @@ preview	Title	Örnek
 	Insert a new equation (Alt+=)	Yeni denklem ekle (Alt+=)
 	Leave the equation (Esc)	Denklemden çık (Esc)
 	Preview	Önizleme
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Browse…	Gözat…
 
 # Equation gallery, themes, watermarks, paper sizes, table styles and other strings the
@@ -2653,3 +2653,5 @@ preview	Title	Örnek
 	All Fonts	Tüm Yazı Tipleri
 	Spike	Biriktirici
 	Insert Spike	Biriktiriciyi Ekle
+	Community\nDiscussions	Topluluk\nGitHub'u
+	Community discussions	Topluluk\nGitHub'u

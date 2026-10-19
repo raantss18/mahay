@@ -12,7 +12,7 @@
 	About Tsilo	Over Tsilo
 	Align to Path	Uitlijnen op pad
 	Cut Path at Selected Anchor Points	Pad knippen op geselecteerde ankerpunten
-	Join Our Discord	Word lid van onze Discord
+	Join Our GitHub	Word lid van onze GitHub
 	Language	Taal
 	UI Brightness	UI-helderheid
 	Dark	Donker
@@ -659,7 +659,7 @@
 	Symbol Libraries	Symboolbibliotheken
 	Help	Help
 	Mahay Website	Mahay-website
-	Tsilo on mahay.com	Tsilo op mahay.com
+	Tsilo on Mahay HUB	Tsilo op Mahay HUB
 	Tsilo on GitHub	Tsilo op GitHub
 	Search Commands…	Opdrachten zoeken…
 	Tsilo Help…	Tsilo-help…
@@ -3504,9 +3504,9 @@ effect	Regular	Regelmatig
 	Vector illustration — fast, open, scriptable.	Vectorillustratie — snel, open, scriptbaar.
 	Welcome to Tsilo	Welkom bij Tsilo
 	Mahay website	Website van Mahay
-	Discord	Discord
-	Join our Discord	Word lid van onze Discord
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Word lid van de Mahay-community op Discord (github.com/raantss18/mahay/discussions)
+	Discussions	Discussions
+	Join the discussions	Word lid van onze GitHub
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Word lid van de Mahay-community op GitHub (github.com/raantss18/mahay/discussions)
 	Source code on GitHub	Broncode op GitHub
 	All Tools	Alle gereedschappen
 	Draw	Tekenen

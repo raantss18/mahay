@@ -1856,10 +1856,10 @@ const TABLE: &[(&str, [&str; 5])] = &[
         "Join the Mahay discussions…",
         [
             "Join the Mahay discussions…",
-            "Rejoindre le Discord d'Mahay…",
+            "Rejoindre le GitHub d'Mahay…",
             "Join the Mahay discussions…",
             "Join the Mahay discussions…",
-            "加入 Mahay Discord…",
+            "加入 Mahay GitHub…",
         ],
     ),
     ("Last Object Below", ["Last Object Below", "Dernier objet en dessous", "Last Object Below", "Last Object Below", "下方最后一个对象"]),
@@ -3744,7 +3744,7 @@ const TABLE: &[(&str, [&str; 5])] = &[
         "Include Stroke Weight",
         ["Include Stroke Weight", "Inclure l'épaisseur du contour", "Include Stroke Weight", "Include Stroke Weight", "包含描边粗细"],
     ),
-    ("Join the discussions", ["Join the discussions", "Rejoindre notre Discord", "Join the discussions", "Join the discussions", "加入我们的 Discord 社区"]),
+    ("Join the discussions", ["Join the discussions", "Rejoindre notre GitHub", "Join the discussions", "Join the discussions", "加入我们的 GitHub 社区"]),
     ("Keep Violations", ["Keep Violations", "Infractions d'enchaînement", "Keep Violations", "Keep Violations", "保持选项违规"]),
     (
         "Overprint [Black] Swatch at 100%",

@@ -38,7 +38,7 @@
 	Installed version	Version installée
 	Latest version	Dernière version
 	Newest release	Version la plus récente
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	Site web
 	Classic apps	Applications classiques
@@ -123,7 +123,7 @@
 	Apps you hid	Applications que vous avez masquées
 	Checked {ago} · using {sources}	Vérifié {ago} · via {sources}
 	{a} and {b}	{a} et {b}
-	Join the Discord	Rejoindre le Discord
+	Join the discussions	Rejoindre le GitHub
 	Learn more	En savoir plus
 	Minimize	Réduire
 	Maximize	Agrandir
@@ -191,7 +191,7 @@ month	Dec	déc.
 	Installing for {platform}	Installation pour {platform}
 	Downloads for {platform}	Téléchargements pour {platform}
 	No downloads for this system	Aucun téléchargement pour ce système
-	Join the Mahay community on Discord	Rejoindre la communauté Mahay sur Discord
+	Join the Mahay community on GitHub	Rejoindre la communauté Mahay sur GitHub
 	Mahay on {name}	Mahay sur {name}
 	Couldn't open {name}: {e}	Impossible d'ouvrir {name} : {e}
 	Download cancelled	Téléchargement annulé
@@ -311,7 +311,7 @@ filter	Installed	Installées
 @id	sort.installed	Version installée
 @id	sort.latest	Dernière version
 @id	sort.released	Version la plus récente
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	Site web
 @id	update.check	Rechercher des mises à jour
@@ -327,9 +327,9 @@ filter	Installed	Installées
 # Tray (menu bar) menu and tooltip
 	Show Mahay HUB	Afficher Mahay HUB
 	Check for Updates	Rechercher des mises à jour
-	Visit mahay.com	Visiter mahay.com
+	Visit Mahay HUB	Visiter Mahay HUB
 	Mahay on GitHub	Mahay sur GitHub
-	Join the Mahay Discord	Rejoindre le Discord d'Mahay
+	Join the Mahay discussions	Rejoindre le GitHub d'Mahay
 	App details	Détails de l'application
 	Close (Esc)	Fermer (Esc)
 	Features	Fonctionnalités

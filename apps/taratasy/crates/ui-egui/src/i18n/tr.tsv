@@ -60,7 +60,7 @@
 	Flatten Fill & Sign when saving	Kaydederken Doldur ve İmzala'yı düzleştir
 	Text, marks and signatures become part of the page. Other comments stay editable.	Metin, işaretler ve imzalar sayfanın bir parçası olur. Diğer yorumlar düzenlenebilir kalır.
 	OK	Tamam
-	Join our Discord	Discord'umuza katılın
+	Join the discussions	GitHub'umuza katılın
 	Close	Kapat
 	Next / previous match	Sonraki / önceki eşleşme
 	Copy selected text	Seçilen metni kopyala
@@ -123,7 +123,7 @@
 	Welcome to Taratasy	Taratasy'a Hoş Geldiniz
 	An open-source PDF workbench — local, private, and scriptable.	Açık kaynaklı bir PDF çalışma alanı — yerel, gizli ve komut dosyalarıyla yönetilebilir.
 	Join the Mahay community	Mahay topluluğuna katılın
-	Get help, share feedback and follow development on Discord.	Discord'da yardım alın, geri bildirim paylaşın ve geliştirmeyi takip edin.
+	Get help, share feedback and follow development on GitHub.	GitHub'da yardım alın, geri bildirim paylaşın ve geliştirmeyi takip edin.
 	Recommended tools	Önerilen araçlar
 	Use now	Şimdi kullan
 	Open file	Dosya aç
@@ -268,7 +268,7 @@
 	Split document…	Belgeyi böl…
 	Number pages…	Sayfaları numaralandır…
 	Keyboard shortcuts	Klavye kısayolları
-	Join the Mahay Discord	Mahay Discord'una katıl
+	Join the Mahay discussions	Mahay GitHub'una katıl
 	Taratasy web page	Taratasy web sayfası
 	Taratasy on GitHub	GitHub'da Taratasy
 	Mahay website	Mahay web sitesi

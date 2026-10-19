@@ -42,7 +42,7 @@
 	Installed version	インストール済みバージョン
 	Latest version	最新バージョン
 	Newest release	最新リリース
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	ウェブサイト
 	Classic apps	クラシックアプリ
@@ -127,7 +127,7 @@
 	Apps you hid	非表示にしたアプリ
 	Checked {ago} · using {sources}	最終確認: {ago} · 取得元: {sources}
 	{a} and {b}	{a} と {b}
-	Join the Discord	Discord に参加
+	Join the discussions	GitHub に参加
 	Learn more	詳細を見る
 	Minimize	最小化
 	Maximize	最大化
@@ -195,7 +195,7 @@ month	Dec	12月
 	Installing for {platform}	{platform} にインストール
 	Downloads for {platform}	{platform} 用のダウンロード
 	No downloads for this system	このシステム用のダウンロードはありません
-	Join the Mahay community on Discord	Discord で Mahay コミュニティに参加
+	Join the Mahay community on GitHub	GitHub で Mahay コミュニティに参加
 	Mahay on {name}	{name} の Mahay
 	Couldn't open {name}: {e}	{name} を開けませんでした: {e}
 	Download cancelled	ダウンロードをキャンセルしました
@@ -329,7 +329,7 @@ filter	Installed	インストール済み
 @id	sort.installed	インストール済みバージョン
 @id	sort.latest	最新バージョン
 @id	sort.released	最新リリース
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	ウェブサイト
 @id	update.check	更新を確認
@@ -345,9 +345,9 @@ filter	Installed	インストール済み
 # Tray (menu bar) menu and tooltip
 	Show Mahay HUB	Mahay HUB を表示
 	Check for Updates	更新を確認
-	Visit mahay.com	mahay.com を開く
+	Visit Mahay HUB	Mahay HUB を開く
 	Mahay on GitHub	GitHub の Mahay
-	Join the Mahay Discord	Mahay Discord に参加
+	Join the Mahay discussions	Mahay GitHub に参加
 @plural	Mahay HUB · {n} update available|Mahay HUB · {n} updates available	Mahay HUB · {n} 件の更新があります
 	Install folder	インストール先フォルダー
 	Default install folder	既定のインストール先フォルダー

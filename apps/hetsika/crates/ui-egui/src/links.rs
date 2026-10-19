@@ -21,7 +21,7 @@ pub const ISSUES: &str = "https://github.com/raantss18/mahay/issues";
 pub const ALL: [(&str, &str, &str); 5] = [
     ("help.discord", "Join the Mahay discussions…", DISCORD),
     ("help.website", "Mahay Website", WEBSITE),
-    ("help.appPage", "Hetsika on mahay.com", APP_PAGE),
+    ("help.appPage", "Hetsika on Mahay HUB", APP_PAGE),
     ("help.github", "Hetsika on GitHub", GITHUB),
     ("help.reportIssue", "Report an Issue…", ISSUES),
 ];

@@ -611,7 +611,7 @@ theme	Appearance	Giao diện
 	From {file}	Từ {file}
 	From:	Từ:
 	Front side only	Chỉ mặt trước
-	Get help, share feedback and follow development on Discord.	Nhận trợ giúp, chia sẻ phản hồi và theo dõi quá trình phát triển trên Discord.
+	Get help, share feedback and follow development on GitHub.	Nhận trợ giúp, chia sẻ phản hồi và theo dõi quá trình phát triển trên GitHub.
 	Go to a page view	Đi tới một chế độ xem trang
 	Go to page {p}	Đi tới trang {p}
 	Go to the page	Đi tới trang
@@ -663,7 +663,7 @@ theme	Appearance	Giao diện
 	JavaScript Console	Bảng điều khiển JavaScript
 	JavaScript is turned off (Preferences ▸ JavaScript).	JavaScript đã bị tắt (Tùy chọn > JavaScript).
 	JavaScript, e.g. getField("total").value	JavaScript, ví dụ getField("total").value
-	Join our Discord	Tham gia Discord của chúng tôi
+	Join the discussions	Tham gia GitHub của chúng tôi
 	Join the Mahay community	Tham gia cộng đồng Mahay
 	Justify	Căn đều
 	Keep source fonts	Giữ phông chữ nguồn
@@ -1469,7 +1469,7 @@ theme	Appearance	Giao diện
 	Insert text	Chèn văn bản
 	JavaScript	JavaScript
 	JavaScript console…	Bảng điều khiển JavaScript…
-	Join the Mahay Discord	Tham gia Discord của Mahay
+	Join the Mahay discussions	Tham gia GitHub của Mahay
 	Light gray	Xám nhạt
 	Line	Đường thẳng
 	Link	Liên kết

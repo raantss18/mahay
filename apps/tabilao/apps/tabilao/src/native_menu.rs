@@ -174,7 +174,7 @@ fn tree() -> Vec<(&'static str, Vec<Entry>)> {
             vec![
                 ("Agent Control (MCP)…", "dialog:agents", None),
                 ("Contributors…", "dialog:about:Contributors", None),
-                ("Tabilao on mahay.com", "url:https://github.com/raantss18/mahay", None),
+                ("Tabilao on Mahay HUB", "url:https://github.com/raantss18/mahay", None),
                 ("Join the Mahay discussions…", "url:https://github.com/raantss18/mahay/discussions", None),
             ],
         ),

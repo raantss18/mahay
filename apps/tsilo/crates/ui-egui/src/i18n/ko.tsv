@@ -42,7 +42,7 @@
 	Favorites	즐겨찾기
 	Flip	뒤집기
 	Japanese	일본어
-	Join Our Discord	Discord 참여하기
+	Join Our GitHub	GitHub 참여하기
 	Line-end Punctuation Half Width	줄 끝 문장 부호 반각
 	Mojikumi Set	모지쿠미 세트
 	Kinsoku Set	긴소쿠 세트
@@ -682,7 +682,7 @@
 	Symbol Libraries	심볼 라이브러리
 	Help	도움말
 	Mahay Website	Mahay 웹사이트
-	Tsilo on mahay.com	mahay.com의 Tsilo
+	Tsilo on Mahay HUB	Mahay HUB의 Tsilo
 	Tsilo on GitHub	GitHub의 Tsilo
 	Search Commands…	명령 검색…
 	Tsilo Help…	Tsilo 도움말…
@@ -1798,8 +1798,8 @@
 	Isolate Group	그룹 격리
 	Italian	이탈리아어
 	Join Tool	결합 도구
-	Join our Discord	Discord 참여하기
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Discord에서 Mahay 커뮤니티에 참여하세요 (github.com/raantss18/mahay/discussions)
+	Join the discussions	GitHub 참여하기
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	GitHub에서 Mahay 커뮤니티에 참여하세요 (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	각 단락의 줄 결합
 	Justification…	양끝 맞춤…
 	Keep Formatting	서식 유지
@@ -3252,7 +3252,7 @@ gradient-kind	Radial	방사형
 	Delete these {n} graphic styles?	그래픽 스타일 {n}개를 삭제하시겠습니까?
 	Delete this {n} graphic style?	그래픽 스타일 {n}개를 삭제하시겠습니까?
 	Discarded {} recovered document(s)	복구된 문서 {}개를 삭제했습니다
-	Discord	Discord
+	Discussions	Discussions
 	Do Not Move	이동 안 함
 	Document Swatches	문서 견본
 	Document profile	문서 프로파일

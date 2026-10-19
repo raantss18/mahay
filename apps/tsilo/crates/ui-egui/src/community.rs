@@ -13,7 +13,7 @@ const DISCORD: Color32 = Color32::from_rgb(0x58, 0x65, 0xF2);
 /// The Discord button's label, height and width.
 fn discord_layout(ui: &Ui, large: bool) -> (std::sync::Arc<egui::Galley>, f32, f32) {
     let (h, font, label) =
-        if large { (36.0, theme::semibold(14.0), tl!("Join the discussions")) } else { (24.0, egui::FontId::proportional(12.0), "Discord") };
+        if large { (36.0, theme::semibold(14.0), tl!("Join the discussions")) } else { (24.0, egui::FontId::proportional(12.0), "Discussions") };
     let galley = ui.painter().layout_no_wrap(label.to_string(), font, Color32::PLACEHOLDER);
     let w = galley.size().x + h * 0.55 + h * 0.9;
     (galley, h, w)
@@ -43,7 +43,7 @@ pub fn discord_button(app: &mut TsiloApp, ui: &mut Ui, large: bool) -> egui::Res
         icons::paint(ui, "message-circle", ir, DISCORD);
         ui.painter().galley(egui::pos2(ir.right() + h * 0.2, at.y), galley, if resp.hovered() { t.text_strong } else { t.text });
     }
-    let resp = resp.on_hover_text(tl!("Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)"));
+    let resp = resp.on_hover_text(tl!("Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)"));
     if resp.clicked() {
         app.open_link("help.discord");
     }
@@ -69,7 +69,7 @@ pub fn links(app: &mut TsiloApp, ui: &mut Ui) {
     let l = app.session.execute("help.links", &serde_json::json!({})).unwrap_or_default();
     let s = |k: &str| l[k].as_str().unwrap_or("").to_string();
     link(app, ui, "globe", tl!("Mahay website"), "help.website", &s("website"));
-    link(app, ui, "external-link", tl!("Tsilo on mahay.com"), "help.appPage", &s("appPage"));
+    link(app, ui, "external-link", tl!("Tsilo on Mahay HUB"), "help.appPage", &s("appPage"));
     link(app, ui, "git-branch", tl!("Source code on GitHub"), "help.github", &s("github"));
 }
 

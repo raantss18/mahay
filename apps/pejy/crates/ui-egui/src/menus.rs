@@ -1814,7 +1814,7 @@ fn run_ui_inner(app: &mut DesignApp, id: &str, p: &Value) -> Option<Result<Value
         }
         "help.app" => match p.get("app").and_then(Value::as_str) {
             Some(slug) if !slug.is_empty() && slug.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') => {
-                let url = format!("{}/apps/{slug}", pejy_engine::links::WEBSITE);
+                let url = format!("https://github.com/raantss18/mahay/tree/main/apps/{slug}");
                 app.ui.pending_urls.push(url.clone());
                 Ok(json!({"url": url}))
             }

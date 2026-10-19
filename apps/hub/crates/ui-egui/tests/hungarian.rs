@@ -162,7 +162,7 @@ fn check_settings_layout() {
         h.run_steps(8);
         // The footer has the same services, and the cards behind the modal have Webhely and GitHub
         // links as one 14px line of text; keep only the settings body's buttons (34px) and icons (24px).
-        let discord = h.get_by_label("Csatlakozás a Discordhoz").rect();
+        let discord = h.get_by_label("Csatlakozás a GitHubhoz").rect();
         let theme = h.get_by_label("Rendszerbeállítás szerint").rect();
         assert!(screen.contains_rect(discord), "community links must be reachable by scrolling");
         assert!(theme.bottom() < done.top(), "appearance controls must scroll above the fixed actions");

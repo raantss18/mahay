@@ -800,7 +800,7 @@
 	Sary Website	Web Sary
 	Sary on GitHub	Sary na GitHubu
 	Mahay Website	Web Mahay
-	Join the Mahay Discord…	Připojit se k Discordu Mahay…
+	Join the Mahay discussions…	Připojit se k GitHubu Mahay…
 	Report an Issue…	Nahlásit problém…
 	WIA Support…	Podpora WIA…
 	Apply	Použít
@@ -1091,7 +1091,7 @@
 	Diffusion	Difuze
 	Discard the embedded profile (don't color manage)	Zahodit vložený profil (bez správy barev)
 	Discontiguous	Nesouvislé
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Zavřít
 	Display P3	Display P3
 	Display Text	Zobrazený text
@@ -1226,7 +1226,7 @@
 	Invert All	Invertovat vše
 	Invert has no settings.	Invertovat nemá žádná nastavení.
 	Italic	Kurzíva
-	Join us on Discord	Přidejte se k nám na Discordu
+	Join us on GitHub	Přidejte se k nám na GitHubu
 	Justify all	Do bloku vše
 	Justify last centered	Do bloku, poslední řádek na střed
 	Justify last left	Do bloku, poslední řádek vlevo
@@ -3713,7 +3713,7 @@ navigator	Zoom	Zvětšení
 	on	zapnuto
 	off	vypnuto
 	This adjustment ({key}) is kept as imported and can't be edited yet.	Tato úprava ({key}) se uchovává v importované podobě a zatím ji nelze měnit.
-	Join the Mahay Discord ({url})	Přidejte se na Discord Mahay ({url})
+	Join the Mahay GitHub ({url})	Přidejte se na GitHub Mahay ({url})
 	{index} of {total}	{index} z {total}
 @plural	{n} step|{n} steps	{n} krok|{n} kroky|{n} kroků
 	{shortcut} assigned.	Zkratka {shortcut} přiřazena.
@@ -3838,3 +3838,4 @@ navigator	Zoom	Zvětšení
 	Increase Brush Size	Zvětšit velikost štětce
 	Decrease Brush Hardness	Snížit tvrdost štětce
 	Increase Brush Hardness	Zvýšit tvrdost štětce
+	Join the discussions	Přidejte se k nám na GitHubu

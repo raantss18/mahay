@@ -273,7 +273,7 @@ fn rail_ui(app: &mut TselatraApp, ui: &mut egui::Ui, p: &egui::Painter, rail: Re
     // Community links at the foot (below the pages when the window is short).
     let links = [
         (Icon::Chat, "Join the Mahay discussions", "help.discord"),
-        (Icon::Globe, "mahay.com", "help.website"),
+        (Icon::Globe, "Mahay HUB", "help.website"),
         (Icon::Globe, "Tselatra home page", "help.appPage"),
         (Icon::Code, "Tselatra on GitHub", "help.github"),
     ];

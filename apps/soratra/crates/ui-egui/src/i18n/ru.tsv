@@ -146,7 +146,7 @@
 	Comment	Комментарий
 	Comments	Комментарии
 	Comments Pane	Область комментариев
-	Community\nDiscord	Сообщество\nDiscord
+	Community\nGitHub	Сообщество\nGitHub
 	Compact	Компактный
 	Compare	Сравнить
 	Compress Pictures	Сжать рисунки
@@ -203,8 +203,8 @@
 	Dictate	Диктовка
 	Different First Page	Особая первая страница
 	Different Odd & Even Pages	Разные для чётных и нечётных страниц
-	Discord	Discord
-	Discord community	Сообщество в Discord
+	Discussions	Discussions
+	GitHub community	Сообщество в GitHub
 	Display	Отображение
 	Display for Review	Отображение исправлений
 	Distribute Columns	Выровнять ширину столбцов
@@ -375,8 +375,8 @@
 	Intense Reference	Сильная ссылка
 	Interface language:	Язык интерфейса:
 	Italic	Курсив
-	Join the Mahay community on Discord	Присоединяйтесь к сообществу Mahay в Discord
-	Join us on Discord: github.com/raantss18/mahay/discussions	Присоединяйтесь к нам в Discord: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Присоединяйтесь к сообществу Mahay в GitHub
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Присоединяйтесь к нам в GitHub: github.com/raantss18/mahay/discussions
 	Justify	По ширине
 	Keep Lines Together	Не разрывать абзац
 	Keep lines together	Не разрывать абзац
@@ -1104,7 +1104,7 @@ preview	Title	Пример
 	Insert a new equation (Alt+=)	Вставить новое уравнение (Alt+=)
 	Leave the equation (Esc)	Выйти из уравнения (Esc)
 	Preview	Предварительный просмотр
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Browse…	Обзор…
 
 # Equation gallery, themes, watermarks, paper sizes, table styles and other strings the
@@ -2654,3 +2654,5 @@ preview	Title	Пример
 	All Fonts	Все шрифты
 	Spike	Копилка
 	Insert Spike	Вставить из копилки
+	Community\nDiscussions	Сообщество\nGitHub
+	Community discussions	Сообщество\nGitHub

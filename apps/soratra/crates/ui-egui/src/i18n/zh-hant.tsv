@@ -289,7 +289,7 @@
 	Comment	註解
 	Comments	註解
 	Comments Pane	註解窗格
-	Community\nDiscord	社群\nDiscord
+	Community\nGitHub	社群\nGitHub
 	Compact	緊密
 	Compare	比較
 	Compress Pictures	壓縮圖片
@@ -344,8 +344,8 @@
 	Dictate	聽寫
 	Different First Page	首頁不同
 	Different Odd & Even Pages	奇偶頁不同
-	Discord	Discord
-	Discord community	Discord 社群
+	Discussions	Discussions
+	GitHub community	GitHub 社群
 	Display	顯示
 	Display for Review	顯示以供檢閱
 	Distribute Columns	平均分配欄寬
@@ -504,8 +504,8 @@
 	Inspect Document	檢查文件
 	Interface language:	介面語言：
 	Italic	斜體
-	Join the Mahay community on Discord	加入 Discord 上的 Mahay 社群
-	Join us on Discord: github.com/raantss18/mahay/discussions	在 Discord 上加入我們：github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	加入 GitHub 上的 Mahay 社群
+	Join us on GitHub: github.com/raantss18/mahay/discussions	在 GitHub 上加入我們：github.com/raantss18/mahay/discussions
 	Justify	左右對齊
 	Keep Lines Together	段落中不分頁
 	Keep lines together	段落中不分頁
@@ -1219,7 +1219,7 @@
 	Insert a new equation (Alt+=)	插入新方程式 (Alt+=)
 	Leave the equation (Esc)	離開方程式 (Esc)
 	Preview	預覽
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	繪製筆跡
 	Erase Ink	擦除筆跡
 	Hide Ink	隱藏筆跡
@@ -2258,3 +2258,5 @@
 	All Fonts	所有字型
 	Spike	收集區
 	Insert Spike	插入收集區
+	Community\nDiscussions	社群\nGitHub
+	Community discussions	社群\nGitHub

@@ -874,7 +874,7 @@
 	Full screen mode	Celozaslonski način
 	General	Splošno
 	Geospatial location	Geoprostorska lokacija
-	Get help, share feedback and follow development on Discord.	Poiščite pomoč, delite povratne informacije in spremljajte razvoj na Discordu.
+	Get help, share feedback and follow development on GitHub.	Poiščite pomoč, delite povratne informacije in spremljajte razvoj na GitHubu.
 	Go to a page view	Pojdi na pogled strani
 	Go to page {p}	Pojdi na stran {p}
 	Go to page…	Pojdi na stran…
@@ -980,8 +980,8 @@
 	JavaScript console…	Konzola JavaScript…
 	JavaScript is turned off (Preferences ▸ JavaScript).	JavaScript je izklopljen (Nastavitve > JavaScript).
 	JavaScript, e.g. getField("total").value	JavaScript, npr. getField("total").value
-	Join our Discord	Discord kanal
-	Join the Mahay Discord	Pridružite se Discordu Mahay
+	Join the discussions	GitHub kanal
+	Join the Mahay discussions	Pridružite se GitHubu Mahay
 	Join the Mahay community	Pridružite se skupnosti Mahay
 	July	Julij
 	June	Junij

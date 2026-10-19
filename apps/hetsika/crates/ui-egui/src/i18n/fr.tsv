@@ -137,7 +137,7 @@
 	Fill frame	Remplir l'image
 	Hetsika Help…	Aide de Hetsika…
 	Hetsika on GitHub	Hetsika sur GitHub
-	Hetsika on mahay.com	Hetsika sur mahay.com
+	Hetsika on Mahay HUB	Hetsika sur Mahay HUB
 	Find Next	Rechercher le suivant
 	Find…	Rechercher…
 	Fit	Adapter
@@ -181,7 +181,7 @@
 	Insert Frame Hold Segment	Insérer un segment d'image figée
 	Install Motion Graphics Template…	Installer un modèle d'animation graphique…
 	Interpret Footage…	Interpréter le métrage…
-	Join the Mahay Discord…	Rejoindre le Discord d'Mahay…
+	Join the Mahay discussions…	Rejoindre le GitHub d'Mahay…
 	Keyboard Shortcuts…	Raccourcis clavier…
 	Label	Étiquette
 	Labels…	Étiquettes…
@@ -376,7 +376,7 @@
 	Master volume: use the Audio Track Mixer	Volume principal : utilisez le Mixeur de pistes audio
 	Search	Rechercher
 	Quick Export	Exportation rapide
-	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	Rejoindre le Discord d'Mahay (github.com/raantss18/mahay/discussions)
+	Join the Mahay GitHub (github.com/raantss18/mahay/discussions)	Rejoindre le GitHub d'Mahay (github.com/raantss18/mahay/discussions)
 	Cancel	Annuler
 	OK	OK
 	Interpret Footage	Interpréter le métrage
@@ -420,7 +420,7 @@
 	Delete Empty Caption Tracks	Supprimer les pistes de sous-titres vides
 	Version {version}	Version {version}
 	A clean-room, pure-Rust non-linear video editor. Part of the Mahay family.	Un éditeur vidéo non linéaire en pur Rust, conçu en salle blanche. Membre de la famille Mahay.
-	Join the Mahay Discord	Rejoindre le Discord d'Mahay
+	Join the Mahay discussions	Rejoindre le GitHub d'Mahay
 	Source code on GitHub	Code source sur GitHub
 	Report an issue	Signaler un problème
 	MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).	MIT OR Apache-2.0. Polices : Inter, Noto Serif et JetBrains Mono (SIL OFL 1.1).
@@ -461,7 +461,7 @@
 	Bars and Tone	Barres et tonalité
 	SMPTE HD bars with 1 kHz reference tone	Barres SMPTE HD avec tonalité de référence à 1 kHz
 	Community	Communauté
-	Join us on Discord	Rejoignez-nous sur Discord
+	Join us on GitHub	Rejoignez-nous sur GitHub
 	OMF Export Settings	Paramètres d'exportation OMF
 	AAF Export Settings	Paramètres d'exportation AAF
 	OMF Title:	Titre OMF :
@@ -3577,3 +3577,4 @@
 	Export the labels to a preset file…	Exporter les étiquettes dans un fichier de paramètre prédéfini…
 	Show the presets folder	Afficher le dossier des paramètres prédéfinis
 	Delete this preset	Supprimer ce paramètre prédéfini
+	Join the discussions	Rejoignez-nous sur GitHub

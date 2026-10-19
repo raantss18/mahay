@@ -46,7 +46,7 @@
 	Favorites	お気に入り
 	Flip	反転
 	Japanese	日本語
-	Join Our Discord	Discord に参加
+	Join Our GitHub	GitHub に参加
 	Line-end Punctuation Half Width	行末約物半角
 	Mojikumi Set	文字組み
 	Kinsoku Set	禁則処理
@@ -684,7 +684,7 @@
 	Symbol Libraries	シンボルライブラリ
 	Help	ヘルプ
 	Mahay Website	Mahay の Web サイト
-	Tsilo on mahay.com	mahay.com の Tsilo
+	Tsilo on Mahay HUB	Mahay HUB の Tsilo
 	Tsilo on GitHub	GitHub の Tsilo
 	Search Commands…	コマンドを検索…
 	Tsilo Help…	Tsilo ヘルプ…
@@ -1765,8 +1765,8 @@
 	Isolate Group	グループを分離
 	Italian	イタリア語
 	Join Tool	結合ツール
-	Join our Discord	Discord に参加
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Discord で Mahay コミュニティに参加 (github.com/raantss18/mahay/discussions)
+	Join the discussions	GitHub に参加
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	GitHub で Mahay コミュニティに参加 (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	段落内の行を連結
 	Justification…	文字組み…
 	Keep Formatting	書式を保持
@@ -3259,7 +3259,7 @@ gradient-kind	Radial	円形
 	Delete these {n} graphic styles?	これら {n} 個のグラフィックスタイルを削除しますか？
 	Delete this {n} graphic style?	この {n} 個のグラフィックスタイルを削除しますか？
 	Discarded {} recovered document(s)	復元したドキュメント {} 個を破棄しました
-	Discord	Discord
+	Discussions	Discussions
 	Do Not Move	移動しない
 	Document Swatches	ドキュメントのスウォッチ
 	Document profile	ドキュメントプロファイル

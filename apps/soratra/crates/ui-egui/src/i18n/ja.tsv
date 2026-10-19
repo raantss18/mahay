@@ -288,7 +288,7 @@
 	Comment	コメント
 	Comments	コメント
 	Comments Pane	コメント ウィンドウ
-	Community\nDiscord	コミュニティ\nDiscord
+	Community\nGitHub	コミュニティ\nGitHub
 	Compact	コンパクト
 	Compare	比較
 	Compress Pictures	図の圧縮
@@ -343,8 +343,8 @@
 	Dictate	ディクテーション
 	Different First Page	先頭ページのみ別指定
 	Different Odd & Even Pages	奇数/偶数ページ別指定
-	Discord	Discord
-	Discord community	Discord コミュニティ
+	Discussions	Discussions
+	GitHub community	GitHub コミュニティ
 	Display	表示
 	Display for Review	変更内容の表示
 	Distribute Columns	列の幅を揃える
@@ -503,8 +503,8 @@
 	Inspect Document	ドキュメント検査
 	Interface language:	表示言語:
 	Italic	斜体
-	Join the Mahay community on Discord	Discord の Mahay コミュニティに参加
-	Join us on Discord: github.com/raantss18/mahay/discussions	Discord で参加: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	GitHub の Mahay コミュニティに参加
+	Join us on GitHub: github.com/raantss18/mahay/discussions	GitHub で参加: github.com/raantss18/mahay/discussions
 	Justify	両端揃え
 	Keep Lines Together	段落を分割しない
 	Keep lines together	段落を分割しない
@@ -1218,7 +1218,7 @@
 	Insert a new equation (Alt+=)	新しい数式を挿入 (Alt+=)
 	Leave the equation (Esc)	数式を終了 (Esc)
 	Preview	プレビュー
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	インクで描く
 	Erase Ink	インクを消す
 	Hide Ink	インクを隠す
@@ -2257,3 +2257,5 @@
 	All Fonts	すべてのフォント
 	Spike	スパイク
 	Insert Spike	スパイクの挿入
+	Community\nDiscussions	コミュニティ\nGitHub
+	Community discussions	コミュニティ\nGitHub

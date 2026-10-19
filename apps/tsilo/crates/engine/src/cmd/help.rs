@@ -12,19 +12,19 @@ pub const WEBSITE_URL: &str = "https://github.com/raantss18/mahay";
 
 /// This app's page on the website.
 pub fn app_page_url() -> String {
-    format!("{WEBSITE_URL}/apps/{APP_ID}")
+    format!("{WEBSITE_URL}/tree/main/apps/{APP_ID}")
 }
 
 /// This app's source repository.
 pub fn github_url() -> String {
-    format!("https://github.com/raantss18/{APP_ID}")
+    format!("{WEBSITE_URL}/tree/main/apps/{APP_ID}")
 }
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
-        cmd!(query "help.discord", "Join Our Discord", ["Help"], None, "{} → {url} the Mahay community Discord", always, |_, _| url(DISCORD_URL.into())),
+        cmd!(query "help.discord", "Join Our GitHub", ["Help"], None, "{} → {url} the Mahay community GitHub", always, |_, _| url(DISCORD_URL.into())),
         cmd!(query "help.website", "Mahay Website", ["Help"], None, "{} → {url}", always, |_, _| url(WEBSITE_URL.into())),
-        cmd!(query "help.appPage", "Tsilo on mahay.com", ["Help"], None, "{} → {url} this app's page", always, |_, _| url(app_page_url())),
+        cmd!(query "help.appPage", "Tsilo on Mahay HUB", ["Help"], None, "{} → {url} this app's page", always, |_, _| url(app_page_url())),
         cmd!(query "help.github", "Tsilo on GitHub", ["Help"], None, "{} → {url} source code, issues and releases", always, |_, _| url(github_url())),
         cmd!(query "help.links", "Links", [], None, "{} → {discord, website, appPage, github}", always, |_, _| {
             Ok(json!({ "discord": DISCORD_URL, "website": WEBSITE_URL, "appPage": app_page_url(), "github": github_url() }))

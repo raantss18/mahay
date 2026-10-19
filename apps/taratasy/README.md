@@ -28,7 +28,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/raantss18/mahay"><b>Taratasy on mahay.com</b></a> ·
+  <a href="https://github.com/raantss18/mahay"><b>Taratasy in Mahay HUB</b></a> ·
   <a href="https://github.com/raantss18/mahay">Mahay</a> ·
   <a href="https://github.com/raantss18/mahay">All Mahay apps</a>
 </p>
@@ -434,7 +434,7 @@ The summary is in **[ROADMAP.md](ROADMAP.md)**; the full assessment by dimension
 
 ## Downloads
 
-**New to Taratasy?** Download it from the [Taratasy page on mahay.com](https://github.com/raantss18/mahay). That's the easiest way to install it.
+**New to Taratasy?** Download it from the [Taratasy page in Mahay HUB](https://github.com/raantss18/mahay). That's the easiest way to install it.
 
 **Want a specific build or format?** On GitHub, the [latest release](https://github.com/raantss18/mahay/releases/latest) has every build listed below, and [all releases](https://github.com/raantss18/mahay/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
@@ -559,7 +559,7 @@ And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and vid
 
 <p align="center">
   <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
-  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay HUB</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay apps</a> ·
   <a href="https://github.com/raantss18/mahay">Taratasy</a>
 </p>

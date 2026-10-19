@@ -468,8 +468,8 @@ fn about_tab(app: &mut HetsikaApp, ui: &mut egui::Ui) {
     };
     link(ui, "discord", Icon::Chat, tl!("Join the Mahay discussions"), links::DISCORD, true);
     ui.add_space(6.0);
-    link(ui, "website", Icon::Globe, "mahay.com", links::WEBSITE, false);
-    link(ui, "appPage", Icon::Globe, tl!("Hetsika on mahay.com"), links::APP_PAGE, false);
+    link(ui, "website", Icon::Globe, "Mahay HUB", links::WEBSITE, false);
+    link(ui, "appPage", Icon::Globe, tl!("Hetsika on Mahay HUB"), links::APP_PAGE, false);
     link(ui, "github", Icon::Code, tl!("Source code on GitHub"), links::GITHUB, false);
     link(ui, "reportIssue", Icon::Code, tl!("Report an issue"), links::ISSUES, false);
     ui.add_space(10.0);

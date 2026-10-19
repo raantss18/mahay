@@ -25,7 +25,7 @@
 	Installed version	已安装版本
 	Latest version	最新版本
 	Newest release	发布日期
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	网站
 	Classic apps	经典应用
@@ -113,7 +113,7 @@ month	Dec	12月
 	Installing for {platform}	安装平台：{platform}
 	Downloads for {platform}	下载平台：{platform}
 	No downloads for this system	此系统暂无可用下载
-	Join the Mahay community on Discord	加入 Discord 上的 Mahay 社区
+	Join the Mahay community on GitHub	加入 GitHub 上的 Mahay 社区
 	Mahay on {name}	Mahay 的 {name} 主页
 	Available to install	可安装
 	Available	可用
@@ -208,7 +208,7 @@ filter	Installed	已安装
 @id	sort.installed	已安装版本
 @id	sort.latest	最新版本
 @id	sort.released	发布日期
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	网站
 @id	update.check	检查更新
@@ -223,7 +223,7 @@ filter	Installed	已安装
 	Update	更新
 	New	新
 	Classic	经典
-	Join the Discord	加入 Discord
+	Join the discussions	加入 GitHub
 	Minimize	最小化
 	Maximize	最大化
 	Restore	还原
@@ -231,9 +231,9 @@ filter	Installed	已安装
 	Show in Explorer	在资源管理器中显示
 	Show Mahay HUB	显示 Mahay HUB
 	Check for Updates	检查更新
-	Visit mahay.com	访问 mahay.com
+	Visit Mahay HUB	访问 Mahay HUB
 	Mahay on GitHub	Mahay 的 GitHub 主页
-	Join the Mahay Discord	加入 Mahay Discord 社区
+	Join the Mahay discussions	加入 Mahay GitHub 社区
 @plural	Mahay HUB · {n} update available|Mahay HUB · {n} updates available	Mahay HUB · 有 {n} 个可用更新
 @plural	{n} app|{n} apps	{n} 个应用
 sary	Image editing	图像编辑

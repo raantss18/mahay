@@ -40,7 +40,7 @@
 	Installed version	Zainstalowana wersja
 	Latest version	Najnowsza wersja
 	Newest release	Najnowsze wydanie
-	Discord	Discord
+	Discussions	Discussions
 	GitHub	GitHub
 	Website	Strona
 	Classic apps	Klasyczne aplikacje
@@ -126,7 +126,7 @@
 	Apps you hid	Aplikacje ukryte przez ciebie
 	Checked {ago} · using {sources}	Ostatnio sprawdzono {ago} · przy użyciu {sources}
 	{a} and {b}	{a} i {b}
-	Join the Discord	Dołącz na Discorda
+	Join the discussions	Dołącz na GitHuba
 	Learn more	Więcej
 	Minimize	Minimalizuj
 	Maximize	Maksymalizuj
@@ -194,7 +194,7 @@ month	Dec	gru
 	Installing for {platform}	Instalowanie dla {platform}
 	Downloads for {platform}	Do pobrania dla {platform}
 	No downloads for this system	Brak pobrań dla tego systemu
-	Join the Mahay community on Discord	Dołącz do społeczności Mahay na Discordzie
+	Join the Mahay community on GitHub	Dołącz do społeczności Mahay na GitHubzie
 	Mahay on {name}	Mahay w serwisie {name}
 	Couldn't open {name}: {e}	Nie udało się otworzyć {name}: {e}
 	Download cancelled	Anulowano pobieranie
@@ -328,7 +328,7 @@ filter	Installed	Zainstalowane
 @id	sort.installed	Zainstalowana wersja
 @id	sort.latest	Najnowsza wersja
 @id	sort.released	Najnowsze wydanie
-@id	help.discord	Discord
+@id	help.discord	Discussions
 @id	help.github	GitHub
 @id	help.website	Strona
 @id	update.check	Sprawdź dostępność aktualizacji
@@ -344,9 +344,9 @@ filter	Installed	Zainstalowane
 # Tray (menu bar) menu and tooltip
 	Show Mahay HUB	Pokaż Mahay HUB
 	Check for Updates	Sprawdź dostępność aktualizacji
-	Visit mahay.com	Odwiedź mahay.com
+	Visit Mahay HUB	Odwiedź Mahay HUB
 	Mahay on GitHub	Mahay na GitHubie
-	Join the Mahay Discord	Dołącz do Discorda Mahay
+	Join the Mahay discussions	Dołącz do GitHuba Mahay
 @plural	Mahay HUB · {n} update available|Mahay HUB · {n} updates available	Mahay HUB · {n} dostępna aktualizacja|Mahay HUB · {n} dostępne aktualizacje|Mahay HUB · {n} dostępnych aktualizacji
 	Install folder	Folder instalacji
 	Default install folder	Domyślny folder instalacji

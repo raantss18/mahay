@@ -42,8 +42,8 @@ fn click(h: &mut Harness<'_, TselatraApp>, id: &str) {
 #[test]
 fn discord_pill_fits_its_label() {
     let h = harness();
-    let e = h.state().auto.find("header.discord").expect("the Discord pill").clone();
-    let text = h.ctx.fonts_mut(|f| f.layout_no_wrap("Discord".into(), tselatra_ui_egui::theme::Tokens::semibold(12.0), egui::Color32::WHITE).size().x);
+    let e = h.state().auto.find("header.discord").expect("the GitHub pill").clone();
+    let text = h.ctx.fonts_mut(|f| f.layout_no_wrap("Discussions".into(), tselatra_ui_egui::theme::Tokens::semibold(12.0), egui::Color32::WHITE).size().x);
     // Padding 10, the 14 px icon, a 6 px gap, the text, padding 12.
     assert!((e.rect[2] - (text + 42.0)).abs() < 0.5, "{} for a {text} px label", e.rect[2]);
 }

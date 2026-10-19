@@ -776,7 +776,7 @@
 	Sary Website	Website van Sary
 	Sary on GitHub	Sary op GitHub
 	Mahay Website	Website van Mahay
-	Join the Mahay Discord…	Deelnemen aan de Mahay-Discord…
+	Join the Mahay discussions…	Deelnemen aan de Mahay-GitHub…
 	Report an Issue…	Probleem melden…
 	WIA Support…	WIA-ondersteuning…
 	Apply	Toepassen
@@ -1060,7 +1060,7 @@
 	Diffusion	Diffusie
 	Discard the embedded profile (don't color manage)	Het ingesloten profiel negeren (geen kleurbeheer)
 	Discontiguous	Niet-aaneengesloten
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Sluiten
 	Display P3	Display P3
 	Display Text	Tekst tonen
@@ -1195,7 +1195,7 @@
 	Invert All	Alles omkeren
 	Invert has no settings.	Omkeren heeft geen instellingen.
 	Italic	Cursief
-	Join us on Discord	Doe mee op Discord
+	Join us on GitHub	Doe mee op GitHub
 	Justify all	Alles uitvullen
 	Justify last centered	Uitvullen, laatste regel gecentreerd
 	Justify last left	Uitvullen, laatste regel links
@@ -3038,7 +3038,7 @@ cameraRaw	Color	Kleur
 	Custom Pixel Aspect Ratio	Aangepaste pixelverhouding
 	32-bit Preview Options	Voorvertoningsopties 32-bit
 	New Guide	Nieuwe hulplijn
-	Join the Mahay Discord	Deelnemen aan de Mahay-Discord
+	Join the Mahay GitHub	Deelnemen aan de Mahay-GitHub
 	Report an Issue	Probleem melden
 	Load Files into Stack	Bestanden in stapel laden
 	Statistics	Statistieken
@@ -3990,3 +3990,4 @@ curves	Smooth	Vloeiend maken
 	Increase Brush Size	Penseelgrootte vergroten
 	Decrease Brush Hardness	Penseelhardheid verlagen
 	Increase Brush Hardness	Penseelhardheid verhogen
+	Join the discussions	Doe mee op GitHub

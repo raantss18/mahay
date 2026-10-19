@@ -712,7 +712,7 @@
 	Discard Recovered Documents	Απόρριψη ανακτημένων εγγράφων
 	Discard White Overprint in Output	Παράλειψη λευκής επιτύπωσης στην έξοδο
 	Discarded {} recovered document(s)	Απορρίφθηκαν {} ανακτημένα έγγραφα
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	Προαιρετικό ενωτικό
 	Discretionary Ligatures	Προαιρετικά συμπλέγματα χαρακτήρων
 	Display All Blacks Accurately	Ακριβής απεικόνιση όλων των μαύρων
@@ -1462,8 +1462,8 @@
 	Isolate Blending	Απομόνωση ανάμειξης
 	Isolate Group	Απομόνωση ομάδας
 	Join	Ένωση
-	Join Our Discord	Ελάτε στο Discord μας
-	Join our Discord	Ελάτε στο Discord μας
+	Join Our GitHub	Ελάτε στο GitHub μας
+	Join the discussions	Ελάτε στο GitHub μας
 	Join the lines of each paragraph	Ένωση γραμμών κάθε παραγράφου
 	Join Tool	Ένωση (Join Tool)
 	Justification…	Πλήρης στοίχιση…
@@ -2393,7 +2393,7 @@ theme	Appearance	Εμφάνιση
 	How colours outside the press's gamut are separated.	Πώς διαχωρίζονται τα χρώματα εκτός της χρωματικής γκάμας του τυπογραφικού πιεστηρίου.
 	Italian	Ιταλικά
 	Japanese	Ιαπωνικά
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Γίνετε μέλος της κοινότητας Mahay στο Discord (github.com/raantss18/mahay/discussions)
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Γίνετε μέλος της κοινότητας Mahay στο GitHub (github.com/raantss18/mahay/discussions)
 	Keep a link to an image file instead of only embedding it	Διατήρηση συνδέσμου προς το αρχείο εικόνας αντί μόνο της ενσωμάτωσής του
 	Keep the pasted color as a new swatch with a numbered name.	Διατήρηση του επικολλημένου χρώματος ως νέο δείγμα με αριθμημένο όνομα.
 	Each entry of the file is matched to a Tsilo tool, command or panel. Check the matches and answer what is left.	Κάθε καταχώριση του αρχείου αντιστοιχίζεται σε εργαλείο, εντολή ή πίνακα του Tsilo. Ελέγξτε τις αντιστοιχίσεις και συμπληρώστε όσα απομένουν.
@@ -3705,7 +3705,7 @@ theme	Appearance	Εμφάνιση
 	Vector illustration — fast, open, scriptable.	Διανυσματική σχεδίαση — γρήγορη, ανοιχτή και αυτοματοποιήσιμη.
 	Tsilo didn't quit normally last time. These documents had unsaved changes:	Το Tsilo δεν τερματίστηκε κανονικά την προηγούμενη φορά. Τα ακόλουθα έγγραφα είχαν μη αποθηκευμένες αλλαγές:
 	Tsilo Help…	Βοήθεια Tsilo…
-	Tsilo on mahay.com	Tsilo στο mahay.com
+	Tsilo on Mahay HUB	Tsilo στο Mahay HUB
 	Tsilo on GitHub	Tsilo στο GitHub
 	Vectors	Διανύσματα
 	Version {version} — open-source vector illustration in pure Rust.	Έκδοση {version} — διανυσματική σχεδίαση ανοιχτού κώδικα εξ ολοκλήρου σε Rust.

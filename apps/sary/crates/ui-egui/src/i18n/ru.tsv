@@ -534,7 +534,7 @@
 	Sary on GitHub	Sary на GitHub
 	Report an Issue…	Сообщить о проблеме…
 	Mahay Website	Сайт Mahay
-	Join the Mahay Discord…	Discord сообщества Mahay…
+	Join the Mahay discussions…	GitHub сообщества Mahay…
 	System Info…	Информация о системе…
 
 # Tools and options bar
@@ -1670,7 +1670,7 @@
 	Preserve Transparency	Сохранить прозрачность
 	Reverse	Обратить
 	Align with layer	По слою
-	Join us on Discord	Мы в Discord
+	Join us on GitHub	Мы в GitHub
 	Sary website	Сайт Sary
 	Mahay	Mahay
 	GitHub	GitHub
@@ -2097,7 +2097,7 @@
 	Delete tool preset	Удалить набор инструментов
 	Depth Jitter	Колебание глубины
 	Discontiguous	Несмежные пикселы
-	Discord	Discord
+	Discussions	Discussions
 	Display P3	Display P3
 	Display Text	Показывать текст
 	Divide…	Деление…
@@ -3203,3 +3203,4 @@ curves	Smooth	Сгладить
 	Increase Brush Size	Увеличить размер кисти
 	Decrease Brush Hardness	Уменьшить жёсткость кисти
 	Increase Brush Hardness	Увеличить жёсткость кисти
+	Join the discussions	Мы в GitHub

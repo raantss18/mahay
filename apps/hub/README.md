@@ -268,7 +268,7 @@ And [**Mahay**](https://github.com/raantss18/mahay) itself, our AI image and vid
 
 <p align="center">
   <a href="https://github.com/raantss18/mahay/discussions"><b>github.com/raantss18/mahay/discussions</b></a> ·
-  <a href="https://github.com/raantss18/mahay">mahay.com</a> ·
+  <a href="https://github.com/raantss18/mahay">Mahay HUB</a> ·
   <a href="https://github.com/raantss18/mahay">The Mahay App Suite</a> ·
   <a href="https://github.com/raantss18/mahay">Mahay HUB</a>
 </p>

@@ -884,7 +884,7 @@
 	Discard Recovered Documents	Loại bỏ tài liệu đã phục hồi
 	Discard White Overprint in Output	Loại bỏ in chồng màu trắng khi xuất
 	Discarded {} recovered document(s)	Đã loại bỏ {} tài liệu đã phục hồi
-	Discord	Discord
+	Discussions	Discussions
 	Discretionary Hyphen	Gạch nối tùy chọn
 	Discretionary Ligatures	Chữ ghép tùy chọn
 	Display All Blacks Accurately	Hiển thị tất cả màu đen chính xác
@@ -1810,9 +1810,9 @@ file-filter	Templates	Mẫu
 	Its graphics, colors and text styles are deleted from this machine.	Đồ họa, màu sắc và kiểu văn bản của nó sẽ bị xóa khỏi máy này.
 	Japanese	Tiếng Nhật
 	Join	Nối
-	Join Our Discord	Tham gia Discord
-	Join our Discord	Tham gia Discord của chúng tôi
-	Join the Mahay community on Discord (github.com/raantss18/mahay/discussions)	Tham gia cộng đồng Mahay trên Discord (github.com/raantss18/mahay/discussions)
+	Join Our GitHub	Tham gia GitHub
+	Join the discussions	Tham gia GitHub của chúng tôi
+	Join the Mahay community on GitHub (github.com/raantss18/mahay/discussions)	Tham gia cộng đồng Mahay trên GitHub (github.com/raantss18/mahay/discussions)
 	Join the lines of each paragraph	Nối các dòng trong mỗi đoạn văn
 	Join Tool	Công cụ Nối
 	Joins	Kiểu nối
@@ -3807,7 +3807,7 @@ mark-style	Japanese	Kiểu Nhật
 	Tsilo didn't quit normally last time. These documents had unsaved changes:	Tsilo không thoát bình thường lần trước. Các tài liệu này có thay đổi chưa lưu:
 	Tsilo documents: one locked object, updated when the file changes.	Tài liệu Tsilo: một đối tượng bị khóa, cập nhật khi tệp thay đổi.
 	Tsilo Help…	Trợ giúp Tsilo…
-	Tsilo on mahay.com	Tsilo trên mahay.com
+	Tsilo on Mahay HUB	Tsilo trên Mahay HUB
 	Tsilo on GitHub	Tsilo trên GitHub
 	Vectors	Vector
 	Version	Phiên bản

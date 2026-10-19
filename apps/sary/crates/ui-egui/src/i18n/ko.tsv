@@ -771,7 +771,7 @@
 	Sary Website	Sary 웹사이트
 	Sary on GitHub	GitHub의 Sary
 	Mahay Website	Mahay 웹사이트
-	Join the Mahay Discord…	Mahay Discord 참여…
+	Join the Mahay discussions…	Mahay GitHub 참여…
 	Report an Issue…	문제 신고…
 	WIA Support…	WIA 지원…
 	Apply	적용
@@ -1057,7 +1057,7 @@
 	Diffusion	확산
 	Discard the embedded profile (don't color manage)	포함된 프로파일 버리기(색상 관리 안 함)
 	Discontiguous	비인접
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	닫기
 	Display P3	Display P3
 	Display Text	표시 텍스트
@@ -1186,7 +1186,7 @@
 	Invert All	모두 반전
 	Invert has no settings.	반전에는 설정이 없습니다.
 	Italic	기울임꼴
-	Join us on Discord	Discord 참여
+	Join us on GitHub	GitHub 참여
 	Justify all	모든 줄 양쪽 정렬
 	Justify last centered	마지막 줄 가운데 정렬
 	Justify last left	마지막 줄 왼쪽 정렬
@@ -2678,7 +2678,7 @@ cameraRaw	Color	색상
 	Custom Pixel Aspect Ratio	사용자 정의 픽셀 종횡비
 	32-bit Preview Options	32비트 미리 보기 옵션
 	New Guide	새 안내선
-	Join the Mahay Discord	Mahay Discord 참여
+	Join the Mahay GitHub	Mahay GitHub 참여
 	Report an Issue	문제 신고
 	WIA Support	WIA 지원
 	Load Files into Stack	파일을 스택으로 불러오기
@@ -3409,3 +3409,4 @@ curves	Smooth	매끄럽게
 	Increase Brush Size	브러시 크기 늘리기
 	Decrease Brush Hardness	브러시 경도 줄이기
 	Increase Brush Hardness	브러시 경도 늘리기
+	Join the discussions	GitHub 참여

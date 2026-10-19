@@ -137,7 +137,7 @@
 	Fill frame	フレームを埋める
 	Hetsika Help…	Hetsika ヘルプ…
 	Hetsika on GitHub	GitHub の Hetsika
-	Hetsika on mahay.com	mahay.com の Hetsika
+	Hetsika on Mahay HUB	Mahay HUB の Hetsika
 	Find Next	次を検索
 	Find…	検索…
 	Fit	合わせる
@@ -181,7 +181,7 @@
 	Insert Frame Hold Segment	フレームホールドセグメントを挿入
 	Install Motion Graphics Template…	モーショングラフィックステンプレートをインストール…
 	Interpret Footage…	素材を解釈…
-	Join the Mahay Discord…	Mahay の Discord に参加…
+	Join the Mahay discussions…	Mahay の GitHub に参加…
 	Keyboard Shortcuts…	キーボードショートカット…
 	Label	ラベル
 	Labels…	ラベル…
@@ -375,7 +375,7 @@
 	Master volume: use the Audio Track Mixer	マスター音量はオーディオトラックミキサーで調整してください
 	Search	検索
 	Quick Export	クイック書き出し
-	Join the Mahay Discord (github.com/raantss18/mahay/discussions)	Mahay の Discord に参加 (github.com/raantss18/mahay/discussions)
+	Join the Mahay GitHub (github.com/raantss18/mahay/discussions)	Mahay の GitHub に参加 (github.com/raantss18/mahay/discussions)
 	Cancel	キャンセル
 	OK	OK
 	Interpret Footage	素材を解釈
@@ -415,7 +415,7 @@
 	All Empty Tracks	すべての空のトラック
 	Version {version}	バージョン {version}
 	A clean-room, pure-Rust non-linear video editor. Part of the Mahay family.	Rust だけで書かれた、クリーンルーム設計のノンリニアビデオ編集ソフトです。Mahay ファミリーの一員です。
-	Join the Mahay Discord	Mahay の Discord に参加
+	Join the Mahay discussions	Mahay の GitHub に参加
 	Source code on GitHub	GitHub のソースコード
 	Report an issue	問題を報告
 	MIT OR Apache-2.0. Fonts: Inter, Noto Serif and JetBrains Mono (SIL OFL 1.1).	MIT OR Apache-2.0。フォント: Inter、Noto Serif、JetBrains Mono (SIL OFL 1.1)。
@@ -456,7 +456,7 @@
 	Bars and Tone	カラーバーとトーン
 	SMPTE HD bars with 1 kHz reference tone	1 kHz 基準トーン付きの SMPTE HD カラーバー
 	Community	コミュニティ
-	Join us on Discord	Discord に参加
+	Join us on GitHub	GitHub に参加
 	OMF Export Settings	OMF 書き出し設定
 	AAF Export Settings	AAF 書き出し設定
 	OMF Title:	OMF タイトル:
@@ -3609,3 +3609,4 @@
 	Shows the version, community links and credits in a Hetsika window.	バージョン、コミュニティへのリンク、クレジットを Hetsika のウィンドウに表示します。
 	Couldn't open your web browser	ウェブブラウザーを開けませんでした
 	Open this address in your browser yourself:	このアドレスをご自身でブラウザーで開いてください：
+	Join the discussions	GitHub に参加

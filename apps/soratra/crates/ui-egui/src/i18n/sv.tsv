@@ -273,7 +273,7 @@
 	Comment	Kommentar
 	Comments	Kommentarer
 	Comments Pane	Kommentarspanel
-	Community\nDiscord	Discord-\ncommunity
+	Community\nGitHub	GitHub-\ncommunity
 	Compact	Kompakt
 	Compare	Jämför
 	Compress Pictures	Komprimera bilder
@@ -328,8 +328,8 @@
 	Different First Page	Annan första sida
 	Different Odd & Even Pages	Olika udda och jämna sidor
 	Direct formatting	Direkt formatering
-	Discord	Discord
-	Discord community	Discord-community
+	Discussions	Discussions
+	GitHub community	GitHub-community
 	Display	Visning
 	Display for Review	Visning för granskning
 	Distribute Columns	Fördela kolumner
@@ -506,8 +506,8 @@
 	Inspect Styles at Selection	Inspektera stilar vid markeringen
 	Interface language:	Gränssnittsspråk:
 	Italic	Kursiv
-	Join the Mahay community on Discord	Gå med i Mahays community på Discord
-	Join us on Discord: github.com/raantss18/mahay/discussions	Gå med i Mahays community på Discord: github.com/raantss18/mahay/discussions
+	Join the Mahay community on GitHub	Gå med i Mahays community på GitHub
+	Join us on GitHub: github.com/raantss18/mahay/discussions	Gå med i Mahays community på GitHub: github.com/raantss18/mahay/discussions
 	Justify	Marginaljustera
 	Keep Lines Together	Håll ihop raderna
 	Keep Text Only	Behåll bara texten
@@ -1246,7 +1246,7 @@
 	Insert a new equation (Alt+=)	Infoga en ny ekvation (Alt+=)
 	Leave the equation (Esc)	Lämna ekvationen (Esc)
 	Preview	Förhandsvisning
-	mahay.com/apps/soratra	mahay.com/apps/soratra
+	Mahay HUB	Mahay HUB
 	Draw Ink	Rita med bläck
 	Erase Ink	Sudda bläck
 	Hide Ink	Dölj bläck
@@ -2671,3 +2671,5 @@ preview	Title	Titel
 	Moved to:	Flyttat till:
 	Spike	Samlare
 	Insert Spike	Infoga samlare
+	Community\nDiscussions	GitHub-\ncommunity
+	Community discussions	GitHub-\ncommunity

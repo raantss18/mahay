@@ -138,7 +138,7 @@ pub const UI_COMMANDS: &[UiCommand] = &[
     uic!("mode.export", "Export", ["File", "Export"], Some("Cmd+M")),
     uic!("help.discord", "Join the Mahay discussions…", ["Help"], None),
     uic!("help.website", "Mahay Website", ["Help"], None),
-    uic!("help.appPage", "Hetsika on mahay.com", ["Help"], None),
+    uic!("help.appPage", "Hetsika on Mahay HUB", ["Help"], None),
     uic!("help.github", "Hetsika on GitHub", ["Help"], None),
     uic!("help.reportIssue", "Report an Issue…", ["Help"], None),
     uic!("help.revealLogFiles", "Reveal Log Files…", ["Help"], None),

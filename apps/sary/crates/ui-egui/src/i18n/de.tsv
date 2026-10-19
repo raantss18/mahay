@@ -789,7 +789,7 @@
 	Sary Website	Sary-Website
 	Sary on GitHub	Sary auf GitHub
 	Mahay Website	Mahay-Website
-	Join the Mahay Discord…	Mahay-Discord beitreten…
+	Join the Mahay discussions…	Mahay-GitHub beitreten…
 	Report an Issue…	Problem melden…
 	WIA Support…	WIA-Unterstützung…
 	Apply	Anwenden
@@ -1074,7 +1074,7 @@
 	Diffusion	Diffusion
 	Discard the embedded profile (don't color manage)	Eingebettetes Profil verwerfen (keine Farbverwaltung)
 	Discontiguous	Nicht benachbart
-	Discord	Discord
+	Discussions	Discussions
 	Dismiss	Ausblenden
 	Display P3	Display P3
 	Display Text	Text anzeigen
@@ -1209,7 +1209,7 @@
 	Invert All	Alle invertieren
 	Invert has no settings.	Invertieren hat keine Einstellungen.
 	Italic	Kursiv
-	Join us on Discord	Tritt unserem Discord bei
+	Join us on GitHub	Tritt unserem GitHub bei
 	Justify all	Alles im Blocksatz
 	Justify last centered	Letzte Zeile zentriert
 	Justify last left	Letzte Zeile links
@@ -2773,7 +2773,7 @@ curves	Smooth	Glätten
 	Medium Blue	Mittelblau
 	Light Gray	Hellgrau
 # Status messages, system info and tool names
-	Join the Mahay Discord ({url})	Dem Mahay-Discord beitreten ({url})
+	Join the Mahay GitHub ({url})	Dem Mahay-GitHub beitreten ({url})
 	Nothing to paste: the clipboard holds no image	Nichts einzufügen: Die Zwischenablage enthält kein Bild
 	Graphics adapter: {adapter}	Grafikadapter: {adapter}
 	Backend: {backend} ({type})	Backend: {backend} ({type})
@@ -3230,3 +3230,4 @@ curves	Smooth	Glätten
 	GPU Memory (MB, 0 = Automatic)	GPU-Speicher (MB, 0 = Automatisch)
 	{name} was changed by another app after it was opened or saved here.	{name} wurde von einer anderen App geändert, nachdem es hier geöffnet oder gespeichert wurde.
 	Replace it with this document, or cancel and use File › Save As to keep both.	Ersetze die Datei durch dieses Dokument oder brich ab und nutze Datei › Speichern unter, um beide zu behalten.
+	Join the discussions	Tritt unserem GitHub bei
