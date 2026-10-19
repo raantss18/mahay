@@ -83,7 +83,12 @@ Naoty : Python d'abord. Le moteur reste à confirmer par les sondages.
 - [ ] M5 : tous les paquets, backend biblatex, fr/en/mg, accessibilité.
 - [ ] Briques communes : `mahay-editor` (éditeur de code), `mahay-math` (formules, depuis la mise en page
       de Soratra), `mahay-pdfview` (depuis Taratasy), `mahay-pack` (paquets signés).
-- [ ] **K0 — sondage** : CPython et un noyau sur Android ; client Jupyter Rust face à un `ipykernel` Linux.
+- [x] **K0 — sondage** (2026-10-20, [résultats](docs/NEW_APPS.md), D26, `experiments/naoty-k0`) : **go Linux et Android** sous conditions.
+      Client Rust ↔ `ipykernel` Linux, noyau Rust + CPython (pyo3, `zeromq`), noyau distant (WebSocket) : OK.
+      CPython 3.13 compilé pour Android, numpy / matplotlib (Agg) / sympy exécutés sur l'émulateur ;
+      `pyzmq` a des roues Android sur PyPI (pas un blocage). Paquet « Python + numpy » 15,5 Mo,
+      tout (+ graphiques, sympy) 34 Mo. Reste : roues numpy/matplotlib anciennes et d'un seul index
+      (Chaquopy), exécution du paquet sur un vrai appareil (exec interdit, `dlopen` oui), arm64 non exécuté.
 - [ ] K1 → K4 : carnet sur Linux, Android avec noyau distant, paquet Python, autres noyaux.
 - [x] Noms choisis par l'auteur : TeXnika et Naoty (sens à confirmer, [A_VALIDER](docs/A_VALIDER.md)).
 

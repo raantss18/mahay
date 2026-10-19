@@ -357,11 +357,35 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   Android after.
 - **Open risks:** the NDK build of Tectonic's C libraries, `biblatex` without `biber`, pack size.
 
-## D26 — The notebook is a native Jupyter client (proposed)
+## D26 — The notebook is a native Jupyter client (go, with conditions)
 
-- **Status:** proposed on 2026-10-19, to confirm by the K0 spike (docs/NEW_APPS.md).
-- **Proposal:** Naoty (the 16th app) speaks the Jupyter messaging protocol natively in Rust over
-  ZeroMQ, with local, remote and built-in kernels; Python on Android is an optional pack with its
-  own small kernel embedding CPython. Notebooks never execute by themselves.
-- **Alternatives:** a WebView running JupyterLab (heavy, breaks the native, light principle), a
-  Pyodide/WebAssembly Python (slow, large), remote kernels only (no offline use).
+- **Status:** proposed on 2026-10-19; **K0 spike done 2026-10-20: go on Linux and on Android**,
+  with the conditions below (numbers and recipe: docs/NEW_APPS.md "K0 results",
+  `experiments/naoty-k0/README.md`).
+- **Decision:** Naoty (the 16th app) speaks the Jupyter messaging protocol natively in Rust over
+  ZeroMQ (`jupyter-zmq-client` + `jupyter-protocol` + `nbformat`, BSD-3, on the pure-Rust `zeromq`
+  crate, MIT: no C library), with local, remote and built-in kernels. Notebooks never execute by
+  themselves.
+- **Linux:** go. Local kernel = the system's `ipykernel` / any kernelspec, remote kernel =
+  `jupyter-websocket-client` (BSD-3) to a Jupyter server with a token. Both tested.
+- **Android:** go, with the **Python pack** (CPython 3.13 built with the official
+  `Android/android.py`, numpy / matplotlib / Pillow from the Chaquopy index, sympy from PyPI).
+  Pack of 15.5 MB (Core + numpy) to 34 MB (with plots and sympy) to download, 60–146 MB installed.
+  Remote kernel (Jupyter server) stays the light fallback for a tablet that does not install the
+  pack. Kernel inside the pack: **start with the stock `ipykernel`** (`pyzmq` has Android wheels on
+  PyPI, so it is not a blocker: no protocol to maintain, completion and inspection for free, +10 MB,
+  2.2 s start) and keep our Rust kernel (1.6 MB, 0.07 s start, ~300 lines, missing interrupt,
+  completion, inspection) as the fast path to harden in K3 if the start time matters on real
+  devices.
+- **Conditions (open risks, to close in K2–K3):** (1) the scientific wheels depend on one
+  third-party index and are old (numpy 1.26, OpenBLAS 2017, Python 3.13 only): plan to rebuild them
+  ourselves if the index disappears or a security issue appears; (2) a downloaded pack cannot be
+  `exec`'d on API 29+: ship the launcher in the APK and `dlopen` `libpython` from the pack (to
+  prove with a real APK); (3) arm64 was built but never run; (4) `nbformat` writes 4.5 only
+  (old notebooks are upgraded on save); (5) connect a ZeroMQ socket only after the kernel has bound
+  its ports (1.1 s reconnect backoff otherwise); (6) bundle bytecode (5 s to 0.6 s on the first
+  scientific import).
+- **Alternatives rejected:** a WebView running JupyterLab (heavy, breaks the native, light
+  principle), a Pyodide/WebAssembly Python (slow, large), remote kernels only (no offline use; kept
+  as the fallback, not the only path).
+

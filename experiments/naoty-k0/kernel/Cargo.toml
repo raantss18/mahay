@@ -1,0 +1,15 @@
+[package]
+name = "naoty-kernel"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# Pure-Rust ZeroMQ (zeromq crate, MIT) + Jupyter wire format and HMAC signing (BSD-3).
+jupyter-zmq-client = { version = "1", default-features = false, features = ["tokio-runtime", "ring"] }
+jupyter-protocol = "2.0.2"
+pyo3 = { version = "0.30", features = ["auto-initialize"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "fs"] }
+serde_json = "1"
+anyhow = "1"
+futures = "0.3"
