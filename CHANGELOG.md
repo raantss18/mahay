@@ -28,6 +28,15 @@ versions follow [SemVer](https://semver.org/).
   updates), both explained in `docs/SECURITY_AUDIT.md`.
 - Releases are published as "latest" (not pre-releases), so apps can find them.
 
+### Fixed
+
+- Endrika no longer connects to the upstream collaboration server: online sharing stays off
+  until you enter a server of your own.
+- Links that led to pages that do not exist (an app's own repository or page) now open Mahay's
+  repository; "Discord" and "mahay.com" labels now say Discussions, GitHub or Mahay HUB.
+- Security: rustls 0.23.46, and the new apps use rustls's `ring` provider (the vulnerable
+  `rustls-webpki` 0.102 is gone).
+
 ### Removed
 
 - Upstream names, links and contributor lists from the About pages.
