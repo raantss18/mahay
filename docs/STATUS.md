@@ -36,6 +36,14 @@ verified; everything else says how far it was checked.
 - Direct install and self-update from Mahay HUB: unit-tested (signatures, versions), needs a
   published 0.2.0 to exercise end to end.
 - "Open with" on Android for the eight later apps: intent filters generated, not yet tried.
+- Touch pressure on Android (next version): the shell tells Rust each pointer's tool type, and
+  a finger now draws at pressure 1.0 while a stylus or its eraser keeps its real pressure. Built
+  (`mahay-android` and the Sary APK for x86_64), not tried with a finger or a stylus on a device.
+- Backups (next version): Android backups and device transfers leave out the document copies
+  (`files/docs`), update downloads and temporary files. Built, no backup or restore run yet.
+- Old document copies (next version): copies untouched for 30 days are deleted at start-up on a
+  worker thread, except open ones and unplaced Save As files. Unit-tested on Linux; not yet run
+  on a device.
 
 ## Not built here
 
@@ -49,12 +57,11 @@ verified; everything else says how far it was checked.
 |--------------------------|------------------------------------------------------------------------------------------------------|------------------------------------------------------------|
 | Phones (compact width)   | Desktop ribbons (Soratra, Tabilao, Seho) are clipped on the right in portrait                         | a compact ribbon/toolbar per app; landscape works better meanwhile |
 | APK size (arm64)         | Sary 23.2, Taratasy 17.6, Soratra 17.1, Seho 12.2, Tabilao 8.5, Mahay HUB 4.8 MB                         | optional OCR/JS features off on Android, `cargo bloat`     |
-| Touch drawing            | a finger draws with near-zero pressure in Sary (thin lines)                                          | pressure 1.0 for fingers, real pressure for a stylus       |
 | Dialogs and keyboard     | a dialog doesn't move above the soft keyboard                                                        | apply the keyboard inset to egui windows                   |
 | Folders                  | folder pickers (batch export, OCR to a folder, pinned folders) answer "cancelled" on Android         | `ACTION_OPEN_DOCUMENT_TREE` support in `mahay-android`     |
 | Printing                 | no printing on Android                                                                               | Android print framework via the shell                      |
 | Clipboard                | text only on Android (no images or rich text)                                                         | `ClipData` with HTML/URI                                   |
-| Stylus                   | pressure isn't passed to Sary's brushes on Android                                                    | read pressure from the motion events                        |
+| Stylus                   | finger and stylus pressure built, never tried with a real stylus on Android                          | test on a tablet with a pen                                 |
 | Soft keyboard            | the app repaints every 80 ms while the keyboard is open (winit doesn't wake it for IME text)          | upstream fix in winit, then drop the polling               |
 | Translations             | community labels in other languages were filled from related strings ("GitHub" for Discord)          | review French and Malagasy wording                          |
 | Upstream tests           | translation tests green; some UI tests still assert upstream links, social accounts and app order    | fix per app, then run per crate in CI                       |

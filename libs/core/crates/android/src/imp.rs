@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicI32, AtomicU8, Ordering};
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant, SystemTime};
@@ -83,6 +83,24 @@ pub fn init(app: &AndroidApp, tag: &'static str) {
     if let Some(p) = launch_file() {
         with_state(|s| s.opened.push(p));
     }
+    start_cleanup();
+}
+
+/// Delete old document copies on a worker thread, a little after start-up so the app's own
+/// first reads come first. Copies in use (tracked, or open in this process) are kept.
+fn start_cleanup() {
+    let spawned = std::thread::Builder::new().name("mahay-docs-cleanup".into()).spawn(|| {
+        std::thread::sleep(Duration::from_secs(20));
+        let mut open: Vec<PathBuf> = with_state(|s| s.tracked.keys().cloned().collect()).unwrap_or_default();
+        open.extend(crate::cleanup::open_files());
+        let removed = crate::cleanup::clean_old_copies(&docs_dir(), crate::cleanup::KEEP_COPIES, &open);
+        if removed > 0 {
+            log::info!("removed {removed} document copies untouched for 30 days");
+        }
+    });
+    if let Err(e) = spawned {
+        log::warn!("couldn't start the document cleanup: {e}");
+    }
 }
 
 /// Called when something arrives from Java (a picked document). Typically
@@ -151,6 +169,12 @@ pub fn save_target(suggested: &str) -> PathBuf {
     let name =
         Path::new(suggested).file_name().map(|n| n.to_string_lossy().into_owned()).filter(|n| !n.is_empty()).unwrap_or_else(|| "Document".into());
     let path = fresh_dir().join(&name);
+    // Until the user chooses a place, this is the only copy: the cleanup must keep it.
+    if let Some(marker) = crate::cleanup::unsaved_marker(&path)
+        && let Err(e) = std::fs::write(&marker, b"")
+    {
+        log::warn!("couldn't mark {} as unsaved: {e}", path.display());
+    }
     with_state(|s| {
         s.tracked.insert(path.clone(), Tracked { link: Link::PendingExport { name }, synced: None });
     });
@@ -380,6 +404,49 @@ pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnInstalled(
     wake();
 }
 
+/// What touches the screen, from `MotionEvent.getToolType`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolType {
+    Unknown,
+    Finger,
+    Stylus,
+    Mouse,
+    Eraser,
+    Palm,
+}
+
+/// Pointer ids tracked for [`tool_type`]; Android numbers pointers from 0 and reuses the lowest
+/// free id, so higher ids don't occur in practice.
+const POINTERS: usize = 32;
+static TOOL_TYPES: [AtomicU8; POINTERS] = [const { AtomicU8::new(0) }; POINTERS];
+
+/// The tool last seen for a touch pointer id (egui's `TouchId`, winit's `Touch::id`).
+pub fn tool_type(pointer_id: u64) -> ToolType {
+    let raw = usize::try_from(pointer_id).ok().and_then(|i| TOOL_TYPES.get(i)).map_or(0, |t| t.load(Ordering::Relaxed));
+    match raw {
+        1 => ToolType::Finger,
+        2 => ToolType::Stylus,
+        3 => ToolType::Mouse,
+        4 => ToolType::Eraser,
+        5 => ToolType::Palm,
+        _ => ToolType::Unknown,
+    }
+}
+
+/// `MahayActivity.nativeOnToolType(int pointerId, int toolType)`: called on the UI thread for
+/// each pointer of a touch or hover event, before GameActivity queues the event for Rust.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnToolType(
+    _env: JNIEnv,
+    _class: JClass,
+    pointer_id: jni::sys::jint,
+    tool_type: jni::sys::jint,
+) {
+    if let (Some(slot), Ok(tool)) = (usize::try_from(pointer_id).ok().and_then(|i| TOOL_TYPES.get(i)), u8::try_from(tool_type)) {
+        slot.store(tool, Ordering::Relaxed);
+    }
+}
+
 /// Text on the Android clipboard.
 pub fn clipboard_text() -> Option<String> {
     with_activity(|env, act| {
@@ -442,6 +509,10 @@ pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnExported(mut e
     let synced = std::fs::metadata(&path).and_then(|m| m.modified()).ok();
     with_state(|s| match uri {
         Some(uri) => {
+            // Saved outside the app: from now on the local file is a copy like any other.
+            if let Some(marker) = crate::cleanup::unsaved_marker(&path) {
+                let _ = std::fs::remove_file(marker);
+            }
             s.tracked.insert(path, Tracked { link: Link::Uri { uri }, synced });
         }
         None => {

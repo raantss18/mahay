@@ -227,3 +227,15 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 - **Why:** free for the user and for the project, scales without a server bill, and the provider
   (Google, the Nextcloud host, Supabase) only ever sees encrypted blobs. Same principles as
   Tontolo (user's choice, 2026-10-18). Protocol: `docs/SYNC.md`.
+
+## D21 — Android backups and old document copies
+
+- **Decision:** Android backups keep settings but leave out `files/docs/` (document copies),
+  `files/updates/`, `files/update.json` and `files/cache/`. Copies in `files/docs/` untouched
+  for 30 days are deleted at start-up on a worker thread; a copy open in the process, tracked
+  by `mahay-android`, or marked `<n>.unsaved` (a Save As never placed outside the app, the only
+  copy) is kept.
+- **Alternatives:** `allowBackup="false"` (simplest, but loses settings on a new phone); keep
+  copies forever (the folder only grows); delete on close (apps don't report closing a document).
+- **Why:** the originals live in the user's storage, so a copy is only a cache: backing it up
+  doubles private data in the user's cloud, and keeping it forever wastes space.

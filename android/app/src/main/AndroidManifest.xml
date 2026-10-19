@@ -17,6 +17,8 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/Mahay"
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:resizeableActivity="true"
         android:hasFragileUserData="true"
         android:supportsRtl="true">

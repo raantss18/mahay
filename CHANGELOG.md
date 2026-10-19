@@ -3,6 +3,21 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- **Android: a finger draws at full pressure.** Sary drew thin lines with a finger, whose
+  pressure Android reports near zero; a stylus and its eraser keep their real pressure.
+- **Android backups leave out document copies**, update downloads and temporary files (Android 12+
+  and older); settings are still backed up.
+
+### Fixed
+
+- **Android: old document copies are cleaned up.** Copies in the app's storage untouched for
+  30 days are deleted at start-up, in the background; open documents and Save As files not yet
+  placed outside the app are kept.
+
 ## [0.2.0] — 2026-10-18 (alpha)
 
 ### Added
