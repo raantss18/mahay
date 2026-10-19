@@ -121,6 +121,8 @@ pub struct CanvasState {
     pub(crate) ink_ui: crate::ink::InkUi,
     /// Wheel/touchpad scrolling (smooth notches, touchpad momentum).
     pub(crate) wheel: crate::scroll::CanvasScroll,
+    /// The finger gesture over the page, if one is in progress (a drag scrolls, a long press selects).
+    pub(crate) touch: Option<crate::touch_scroll::Gesture>,
     /// Middle-click scrolling (#1065).
     pub(crate) auto_scroll: crate::autoscroll::AutoScroll,
     /// The scroll offset and its maximum at the end of last frame.
@@ -248,6 +250,7 @@ impl Default for CanvasState {
             alt_code: String::new(),
             alt_code_echo: None,
             wheel: Default::default(),
+            touch: None,
             auto_scroll: Default::default(),
             scroll_offset: egui::Vec2::ZERO,
             scroll_max: egui::Vec2::ZERO,
@@ -294,6 +297,13 @@ impl CanvasState {
     /// True while a mouse drag-select is in progress (the mini toolbar waits for mouse-up).
     pub fn drag_selecting(&self) -> bool {
         self.dragging
+    }
+
+    /// Ends a drag-select the press began: the finger turned out to be scrolling the page.
+    pub(crate) fn cancel_drag_select(&mut self) {
+        self.dragging = false;
+        self.column_drag = None;
+        self.unit_drag = None;
     }
 }
 
@@ -1121,7 +1131,8 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
     } else {
         app.canvas.auto_scroll.update(ui, area)
     };
-    let delta = wheel_delta + auto_delta + middle_delta;
+    let finger_delta = crate::touch_scroll::frame(app, ui, area);
+    let delta = wheel_delta + auto_delta + middle_delta + finger_delta;
     let mut scroll_area = egui::ScrollArea::both()
         .id_salt("canvas_scroll")
         .auto_shrink([false, false])
@@ -1130,6 +1141,9 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         .scroll_source(egui::scroll_area::ScrollSource { mouse_wheel: false, ..Default::default() });
     if app.session.view.read_mode {
         scroll_area = scroll_area.scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden);
+    } else if mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact() {
+        // A phone has no mouse wheel to find the page by: a solid bar that a finger can grab (D23).
+        ui_area.style_mut().spacing.scroll = egui::style::ScrollStyle { bar_width: 12.0, ..egui::style::ScrollStyle::solid() };
     }
     if delta != egui::Vec2::ZERO || app.canvas.scroll_request.is_some() || app.session.view.read_mode {
         let before = app.canvas.scroll_offset;

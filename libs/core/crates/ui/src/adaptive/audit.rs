@@ -29,8 +29,8 @@ pub struct Finding {
 
 /// How far two widgets may intrude on each other without counting as an overlap (borders touch).
 const SLACK: f32 = 1.0;
-/// Widgets no thicker than this are resize grips and splitters, which overlap what they resize.
-const GRIP: f32 = 8.0;
+/// Widgets no thicker than this are resize grips, splitters and scroll bars, which overlap what they sit on.
+const GRIP: f32 = 12.0;
 
 fn near(a: &Rect, b: &Rect) -> bool {
     (a.min - b.min).abs().max_elem() < 1.0 && (a.max - b.max).abs().max_elem() < 1.0
