@@ -1,0 +1,100 @@
+use egui::{Context, RawInput, Rect, Sense, pos2, vec2};
+
+use super::*;
+
+fn frame(ctx: &Context, width: f32, ui_fn: impl FnMut(&mut egui::Ui)) {
+    let input = RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(width, 600.0))), ..Default::default() };
+    let mut ui_fn = ui_fn;
+    for _ in 0..2 {
+        let mut out = ctx.run_ui(input.clone(), |ui| {
+            egui::CentralPanel::default().show(ui, |ui| ui_fn(ui));
+        });
+        out.textures_delta.clear();
+    }
+}
+
+#[test]
+fn thresholds_are_600_and_840() {
+    assert_eq!(FormFactor::from_width(360.0), FormFactor::Compact);
+    assert_eq!(FormFactor::from_width(411.0), FormFactor::Compact);
+    assert_eq!(FormFactor::from_width(599.9), FormFactor::Compact);
+    assert_eq!(FormFactor::from_width(600.0), FormFactor::Medium);
+    assert_eq!(FormFactor::from_width(839.9), FormFactor::Medium);
+    assert_eq!(FormFactor::from_width(840.0), FormFactor::Expanded);
+}
+
+#[test]
+fn hysteresis_stops_flicker_at_a_threshold() {
+    let mut class = FormFactor::Expanded;
+    let mut seen = Vec::new();
+    for w in [900.0, 845.0, 839.0, 835.0, 833.0, 831.0, 835.0, 845.0, 849.0, 841.0] {
+        class = FormFactor::next(class, w);
+        seen.push(class);
+    }
+    // Expanded until 831 (< 832), back only at 848 or more.
+    use FormFactor::*;
+    assert_eq!(seen, [Expanded, Expanded, Expanded, Expanded, Expanded, Medium, Medium, Medium, Expanded, Expanded]);
+    // A width resting on 600 for a hundred frames never changes the class.
+    let mut c = FormFactor::Compact;
+    for _ in 0..100 {
+        c = FormFactor::next(c, 600.0);
+    }
+    assert_eq!(c, FormFactor::Compact);
+    // It is stable when applied to its own result.
+    for w in [0.0, 300.0, 592.0, 600.0, 608.0, 700.0, 832.0, 840.0, 848.0, 2000.0] {
+        for start in [FormFactor::Compact, FormFactor::Medium, FormFactor::Expanded] {
+            let once = FormFactor::next(start, w);
+            assert_eq!(FormFactor::next(once, w), once, "{start:?} at {w}");
+        }
+    }
+}
+
+#[test]
+fn of_follows_the_window_every_frame() {
+    let ctx = Context::default();
+    let mut seen = Vec::new();
+    for w in [360.0, 700.0, 1000.0, 700.0, 360.0] {
+        frame(&ctx, w, |ui| seen.push(FormFactor::of_ui(ui)));
+    }
+    seen.dedup();
+    assert_eq!(seen, [FormFactor::Compact, FormFactor::Medium, FormFactor::Expanded, FormFactor::Medium, FormFactor::Compact]);
+}
+
+#[test]
+fn audit_sees_overlap_and_off_screen_widgets() {
+    let ctx = Context::default();
+    frame(&ctx, 360.0, |ui| {
+        let at = ui.max_rect().min;
+        ui.put(Rect::from_min_size(at, vec2(100.0, 40.0)), egui::Button::new("a"));
+        ui.put(Rect::from_min_size(at + vec2(60.0, 0.0), vec2(100.0, 40.0)), egui::Button::new("b"));
+        ui.put(Rect::from_min_size(pos2(300.0, 100.0), vec2(100.0, 40.0)), egui::Button::new("c"));
+    });
+    let kinds: Vec<_> = audit(&ctx).iter().map(|f| f.kind).collect();
+    assert!(kinds.contains(&FindingKind::Overlap), "{kinds:?}");
+    assert!(kinds.contains(&FindingKind::OutsideWindow), "{kinds:?}");
+}
+
+#[test]
+fn audit_passes_a_scrolling_bar_wider_than_the_window() {
+    let ctx = Context::default();
+    frame(&ctx, 360.0, |ui| {
+        command_bar(ui, "bar", |ui| {
+            for i in 0..30 {
+                ui.add(egui::Button::new(format!("Command {i}")).min_size(vec2(0.0, MIN_TOUCH)));
+            }
+        });
+    });
+    assert!(audit(&ctx).is_empty(), "{:?}", audit(&ctx));
+    assert!(small_targets(&ctx, MIN_TOUCH).is_empty(), "{:?}", small_targets(&ctx, MIN_TOUCH));
+}
+
+#[test]
+fn a_nested_background_is_not_an_overlap() {
+    let ctx = Context::default();
+    frame(&ctx, 360.0, |ui| {
+        let r = Rect::from_min_size(ui.max_rect().min, vec2(300.0, 60.0));
+        ui.interact(r, egui::Id::new("bg"), Sense::click());
+        ui.put(Rect::from_min_size(r.min + vec2(10.0, 10.0), vec2(80.0, 40.0)), egui::Button::new("x"));
+    });
+    assert!(audit(&ctx).is_empty());
+}
