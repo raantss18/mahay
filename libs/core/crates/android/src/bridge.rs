@@ -1,4 +1,5 @@
-//! What eframe doesn't do on Android: the soft keyboard and the system clipboard.
+//! What eframe doesn't do on Android: the soft keyboard, the system clipboard and finger
+//! pressure.
 
 /// Call [`EguiBridge::after_ui`] at the end of every frame.
 #[derive(Debug, Default)]
@@ -142,6 +143,17 @@ impl EguiBridge {
                 self.ime_seen.clear();
             }
             None => {}
+        }
+        // Android reports a finger's contact size as its pressure, near zero for a light touch:
+        // a finger paints at full pressure, as a mouse does. A stylus (or its eraser end) keeps
+        // its real pressure.
+        for e in &mut raw.events {
+            if let egui::Event::Touch { id, force, .. } = e
+                && matches!(crate::tool_type(id.0), crate::ToolType::Finger | crate::ToolType::Palm)
+                && force.is_some()
+            {
+                *force = Some(1.0);
+            }
         }
         if self.keyboard {
             let now = crate::ime_text();

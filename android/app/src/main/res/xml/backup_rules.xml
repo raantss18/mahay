@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: what Auto Backup takes. Same exclusions as
+     data_extraction_rules.xml (document copies, update downloads, temporary files). -->
+<full-backup-content>
+    <exclude domain="file" path="docs/" />
+    <exclude domain="file" path="updates/" />
+    <exclude domain="file" path="update.json" />
+    <exclude domain="file" path="cache/" />
+</full-backup-content>

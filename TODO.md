@@ -112,9 +112,11 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
       stylet, rotation, écran partagé, pliable).
 - [ ] Mode compact (téléphone) : rubans de Soratra, Tabilao, Seho repliés sous 600 dp ;
       panneaux de Taratasy, Sary et des nouvelles apps.
-- [ ] Pression tactile : 1.0 pour un doigt, vraie pression pour un stylet (`getToolType`).
+- [x] Pression tactile : 1.0 pour un doigt, vraie pression pour un stylet (`getToolType`).
+      Construit, pas encore essayé sur un appareil (doigt et stylet).
 - [ ] Dialogues au-dessus du clavier virtuel (les fenêtres egui ignorent les marges).
-- [ ] Nettoyer les copies de documents anciennes dans `files/docs/`.
+- [x] Nettoyer les copies de documents anciennes dans `files/docs/` (30 jours, au démarrage,
+      fil séparé ; les Enregistrer sous jamais placés sont gardés). Pas encore essayé sur un appareil.
 - [ ] Sélecteur de dossier (`ACTION_OPEN_DOCUMENT_TREE`) : Taratasy, Hazavana, Feo, Hetsika.
 - [ ] Impression Android ; presse-papiers riche (HTML, images).
 - [ ] Alléger Sary, Taratasy, Soratra (fonctions OCR/JS optionnelles, `cargo bloat`).
@@ -132,7 +134,8 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 - [x] Audit des 8 nouvelles apps : rustls 0.23.46, fournisseur TLS `ring` (rustls-webpki corrigé).
 - [x] Hazavana : quick-xml 0.41 (RUSTSEC-2026-0194/0195) ; espaces de noms XMP plafonnés (lecture quadratique).
 - [ ] Fuzz du chemin des documents Android (`mahay-android`).
-- [ ] Revoir `allowBackup` (les sauvegardes incluent les copies de documents).
+- [x] Revoir `allowBackup` : les sauvegardes excluent `files/docs`, les mises à jour et `files/cache`
+      (`dataExtractionRules` API 31+, `fullBackupContent` avant). Sauvegarde réelle pas encore essayée.
 
 ## Phases suivantes du cahier des charges
 

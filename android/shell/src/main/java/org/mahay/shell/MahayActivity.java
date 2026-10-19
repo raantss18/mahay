@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import com.google.androidgamesdk.GameActivity;
 import com.google.androidgamesdk.gametextinput.State;
@@ -52,6 +53,7 @@ public class MahayActivity extends GameActivity {
     private static native void nativeOnExported(String path, String uri);
     private static native void nativeOnInstalled(String path, boolean ok, String message);
     private static native void nativeOnImeChanged(boolean dismissed);
+    private static native void nativeOnToolType(int pointerId, int toolType);
 
     private static final String INSTALL_ACTION = "org.mahay.shell.INSTALL_STATUS";
     /** APKs waiting to be installed, one confirmation at a time. */
@@ -102,6 +104,40 @@ public class MahayActivity extends GameActivity {
         if (got != null) {
             nativeOnOpened(0, got[0], got[1], got[2].isEmpty() ? null : got[2]);
         }
+    }
+
+    // ---- Touch tool types --------------------------------------------------------------------
+
+    /**
+     * winit's touch events carry no tool type: tell Rust, before GameActivity queues the event,
+     * which pointer is a finger and which a stylus, so a finger draws at full pressure. The
+     * native call only stores two ints; it never waits for the Rust thread.
+     */
+    private void noteToolTypes(MotionEvent ev) {
+        if (noToolTypes) return;
+        try {
+            for (int i = 0; i < ev.getPointerCount(); i++) {
+                nativeOnToolType(ev.getPointerId(i), ev.getToolType(i));
+            }
+        } catch (UnsatisfiedLinkError e) {
+            // A native library built before this call existed: touch still works, at its pressure.
+            noToolTypes = true;
+        }
+    }
+
+    private static boolean noToolTypes;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        noteToolTypes(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent ev) {
+        // A hovering stylus.
+        noteToolTypes(ev);
+        return super.dispatchGenericMotionEvent(ev);
     }
 
     // ---- Called from Rust -------------------------------------------------------------------

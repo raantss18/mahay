@@ -13,6 +13,7 @@
 //!   blocking it would deadlock the activity, whose Java side waits for the native thread
 //!   while the picker covers the window.
 //! - VIEW / SEND intents: the launch document comes out of the first [`poll`].
+//! - Copies untouched for 30 days are deleted at start-up, on a worker thread.
 //! - [`launch_app`], [`is_installed`], [`open_url`]: what Mahay HUB needs to start sibling apps.
 //! - [`set_keyboard`], [`clipboard_text`], [`set_clipboard_text`]: soft keyboard and clipboard.
 //!
@@ -21,6 +22,9 @@
 
 #[cfg(target_os = "android")]
 mod imp;
+
+#[cfg(any(target_os = "android", test))]
+mod cleanup;
 
 #[cfg(target_os = "android")]
 pub use imp::*;

@@ -23,3 +23,7 @@ android-activity = { version = "0.6", features = ["game-activity"] }
 android_logger = { version = "0.15", default-features = false }
 jni = "0.21"
 log = "0.4"
+
+[dev-dependencies]
+# The `cleanup` module's tests run on the host.
+log = "0.4"

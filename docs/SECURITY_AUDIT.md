@@ -61,8 +61,13 @@ CI now runs `cargo audit` on every workspace (`.github/workflows/ci.yml`, job "S
 - **Display names** from providers are reduced to their last path segment; `.`/`..`/empty
   become `document`, so a malicious provider can't write outside the per-document folder.
 - **Links:** `openUrl` opens only `http`, `https` and `mailto`.
-- **Backups:** `allowBackup=true`, so Android backups include the local copies of opened
-  documents. Kept for users who rely on device backups; listed in TODO for review.
+- **Backups:** `allowBackup=true` for settings, but the backup rules (`res/xml/
+  data_extraction_rules.xml` for Android 12+, `backup_rules.xml` before) leave out the local
+  copies of opened documents (`files/docs/`), update downloads and their state
+  (`files/updates/`, `files/update.json`) and temporary files (`files/cache/`). The originals
+  stay where the user keeps them; a copy in a backup could leak a private document.
+- **Old copies:** copies in `files/docs/` untouched for 30 days are deleted at start-up, except
+  open ones and Save As files never placed outside the app (kept with a `<n>.unsaved` marker).
 - **Debuggable:** no (release builds), R8 minification on.
 
 ## 3. Native code added by Mahay

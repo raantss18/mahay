@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31): what cloud backups and device transfers take. Settings and the apps'
+     own data go along; never the copies of the user's documents (files/docs: the originals stay
+     where the user keeps them, and a copy may be private), nor update downloads, their state
+     and the temporary files (files/updates, files/update.json, files/cache). Keep in step with
+     backup_rules.xml. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="docs/" />
+        <exclude domain="file" path="updates/" />
+        <exclude domain="file" path="update.json" />
+        <exclude domain="file" path="cache/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="docs/" />
+        <exclude domain="file" path="updates/" />
+        <exclude domain="file" path="update.json" />
+        <exclude domain="file" path="cache/" />
+    </device-transfer>
+</data-extraction-rules>
