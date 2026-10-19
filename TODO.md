@@ -85,8 +85,11 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 - [x] `SHA256SUMS.txt` signé par `scripts/stage-release.sh` ; test qui prouve que les apps
       acceptent ces signatures.
 - [x] Clés dans `release-keys/` (local, ignoré par git) ; secrets décrits dans `docs/BUILDING.md`.
-- [ ] Mettre les secrets dans GitHub (`release-keys/set-github-secrets.sh`) pour que la CI
-      publie les releases suivantes.
+- [x] Secrets dans GitHub (5 secrets en place depuis le 2026-10-19) : la CI peut publier les
+      versions suivantes.
+- [ ] Essayer une release par la CI (Actions ▸ Release ▸ Run workflow) sur une version de test, pour
+      ne plus dépendre de cet ordinateur : comparer les APK (même signature, même taille) et le
+      temps de build.
 
 ### « À propos » façon Tontolo
 - [x] Page commune `mahay-about` (version, mises à jour, QR code, auteur, licences) en fr/en/mg.
