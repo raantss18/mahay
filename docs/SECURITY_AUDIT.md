@@ -26,7 +26,7 @@ Tool: `cargo audit` (RustSec advisory database, fetched 2026-10-18) on every `Ca
 |----------------------------------|--------------------------|----------------------------|---------------------------------------------------------------------------------------------|
 | RUSTSEC-2026-0346..0349          | rustls 0.23.45           | Endrika, Hazavana, Hetsika | **fixed**: 0.23.46                                                                          |
 | RUSTSEC-2026-0049, -0098, -0099, -0104 | rustls-webpki 0.102.8 | Hazavana (model downloads), Hetsika (speech models) | **fixed**: the abandoned `rustls-rustcrypto` alpha provider that pulled it was replaced by rustls's `ring` provider |
-| RUSTSEC-2026-0194, -0195         | quick-xml 0.38.4         | Hazavana (XMP, lens data)  | **open, low**: quadratic time / large allocation on a malicious XML packet (denial of service only). Fix needs quick-xml 0.41's API; tracked in TODO |
+| RUSTSEC-2026-0194, -0195         | quick-xml 0.38.4         | Hazavana (XMP, lens data)  | **fixed** (after 0.2.0): quick-xml 0.41.0. Hazavana's readers didn't reach either path (plain `Reader`, own duplicate check), but its own namespace resolution was quadratic too (one tag with 100 000 `xmlns:` took 33 s to read, 91 s to merge): now capped at 256 declarations in scope (`TooComplex`); test `crates/meta/tests/hostile_xml.rs` |
 | RUSTSEC-2026-0367..0369          | zip 2.4 / 3.0 / 7.2 / 8.6 | Endrika, Pejy, Hazavana, Hetsika, Mahay HUB | not reachable (no `extract()` call), as above |
 | RUSTSEC-2023-0071                | rsa 0.9                  | Hazavana, Hetsika          | accepted, as above (no decryption oracle)                                                   |
 

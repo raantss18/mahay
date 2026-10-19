@@ -130,7 +130,7 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 - [x] `cargo audit` sur les workspaces dans la CI ; rustls corrigé ; zip/rsa documentés.
 - [x] Shell Android : URI `content://` seulement, réécriture limitée au dossier de l'app.
 - [x] Audit des 8 nouvelles apps : rustls 0.23.46, fournisseur TLS `ring` (rustls-webpki corrigé).
-- [ ] Hazavana : passer quick-xml à 0.41 (RUSTSEC-2026-0194/0195, déni de service sur XML piégé).
+- [x] Hazavana : quick-xml 0.41 (RUSTSEC-2026-0194/0195) ; espaces de noms XMP plafonnés (lecture quadratique).
 - [ ] Fuzz du chemin des documents Android (`mahay-android`).
 - [ ] Revoir `allowBackup` (les sauvegardes incluent les copies de documents).
 

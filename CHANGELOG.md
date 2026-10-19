@@ -3,6 +3,15 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Security
+
+- **Hazavana**: quick-xml 0.41 fixes RUSTSEC-2026-0194 and RUSTSEC-2026-0195 (denial of service on
+  malicious XML), and CI no longer ignores them. An XMP sidecar or embedded packet declaring
+  thousands of namespaces no longer stalls reading or saving metadata for minutes: more than 256
+  declarations in scope is refused as too complex (the sidecar is backed up before it's replaced).
+
 ## [0.2.1] — 2026-10-19 (alpha)
 
 ### Added
