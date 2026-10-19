@@ -28,13 +28,24 @@ impl EguiBridge {
         let lang = mahay_about::Lang::from_tag(&crate::locale());
         let dir = crate::data_dir().unwrap_or_else(|| std::path::PathBuf::from("/data/local/tmp"));
         let repaint = ctx.clone();
-        let checker = mahay_update::Checker::new(app.id, dir, true, move || repaint.request_repaint());
+        let mut checker = mahay_update::Checker::new(app.id, dir, true, move || repaint.request_repaint());
+        // Decision D21: while Mahay HUB is installed and signed like this app, it downloads and
+        // installs this app's updates (Android asks for no confirmation when the installer of
+        // record updates an app), so this app only reports that one exists. The hub itself and an
+        // app without the hub update themselves, as before.
+        let managed = app.id != "hub";
+        if managed {
+            checker = checker.managed_by(crate::hub_usable);
+        }
         mahay_about::register(app, lang, checker, Box::new(|update| {
             if !mahay_update::still_valid(update) {
                 return Err("The downloaded update was changed on disk; it will be downloaded again.".into());
             }
             crate::install_apk(&update.path)
         }));
+        if managed {
+            mahay_about::register_handoff(Box::new(crate::hand_off_to_hub));
+        }
         Self::default()
     }
 

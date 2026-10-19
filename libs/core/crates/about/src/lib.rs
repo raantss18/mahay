@@ -37,6 +37,18 @@ struct Registered {
 
 #[cfg(not(target_arch = "wasm32"))]
 static REGISTERED: std::sync::OnceLock<Registered> = std::sync::OnceLock::new();
+/// Asks Mahay HUB to update this app. `Err` says why it can't (the hub is missing or isn't
+/// signed with the same certificate); the app then updates itself as before.
+#[cfg(not(target_arch = "wasm32"))]
+pub type HandOffFn = Box<dyn Fn() -> Result<(), String> + Send + Sync>;
+
+#[cfg(not(target_arch = "wasm32"))]
+static HANDOFF: std::sync::OnceLock<HandOffFn> = std::sync::OnceLock::new();
+/// When the update was last handed to the hub; the bar says so for [`HANDED_FOR`].
+#[cfg(not(target_arch = "wasm32"))]
+static HANDED: std::sync::Mutex<Option<std::time::Instant>> = std::sync::Mutex::new(None);
+#[cfg(not(target_arch = "wasm32"))]
+const HANDED_FOR: std::time::Duration = std::time::Duration::from_secs(120);
 #[cfg(not(target_arch = "wasm32"))]
 static BANNER: std::sync::Mutex<Option<UpdateBanner>> = std::sync::Mutex::new(None);
 
@@ -45,6 +57,40 @@ static BANNER: std::sync::Mutex<Option<UpdateBanner>> = std::sync::Mutex::new(No
 pub fn register(app: AppInfo, lang: Lang, checker: Checker, install: InstallFn) {
     checker.start_auto();
     let _ = REGISTERED.set(Registered { app, lang, checker, install });
+}
+
+/// Android apps: register how to hand an update to Mahay HUB (once, at start-up, after
+/// [`register`]). The "Install" of a [`State::Managed`] update calls it.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn register_handoff(handoff: HandOffFn) {
+    let _ = HANDOFF.set(handoff);
+}
+
+/// The "Install" of an update Mahay HUB will install. On success the bar says "updating through
+/// Mahay HUB"; when the hub can't take it, this app checks again and, the hub being unusable
+/// now, downloads the update itself (the usual "Install" then follows).
+#[cfg(not(target_arch = "wasm32"))]
+fn hand_off(checker: &Checker) -> Result<(), String> {
+    let result = match HANDOFF.get() {
+        Some(f) => f(),
+        None => Err("no hub".into()),
+    };
+    match result {
+        Ok(()) => {
+            *HANDED.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(std::time::Instant::now());
+            Ok(())
+        }
+        Err(_) => {
+            checker.check_now();
+            Ok(())
+        }
+    }
+}
+
+/// Whether an update was handed to the hub a moment ago.
+#[cfg(not(target_arch = "wasm32"))]
+fn handed_off() -> bool {
+    HANDED.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some_and(|t| t.elapsed() < HANDED_FOR)
 }
 
 /// Desktop start-up: register `app`'s updater. From an AppImage, updates install themselves
@@ -241,6 +287,21 @@ fn updates_section(ui: &mut Ui, lang: Lang, checker: &Checker, install: Option<I
                 ui.colored_label(Color32::from_rgb(0xD7, 0x26, 0x3D), e);
             }
         }
+        State::Managed { version } => {
+            ui.label(RichText::new(format!("{} {version}", t(lang, "ready"))).strong());
+            if handed_off() {
+                ui.horizontal(|ui| {
+                    ui.spinner();
+                    ui.label(t(lang, "via_hub"));
+                });
+                ui.ctx().request_repaint_after(std::time::Duration::from_secs(1));
+            } else {
+                ui.label(RichText::new(t(lang, "managed_by_hub")).weak());
+                if ui.button(t(lang, "install")).clicked() {
+                    let _ = hand_off(checker);
+                }
+            }
+        }
         State::Failed(e) => {
             ui.colored_label(Color32::from_rgb(0xD7, 0x26, 0x3D), format!("{}: {e}", t(lang, "failed")));
         }
@@ -263,8 +324,12 @@ pub struct UpdateBanner {
 #[cfg(not(target_arch = "wasm32"))]
 impl UpdateBanner {
     pub fn show(&mut self, ctx: &egui::Context, app: AppInfo, lang: Lang, checker: &Checker, install: Install<'_>) {
-        let State::Ready { update, notes } = checker.state() else { return };
-        if self.later.as_deref() == Some(update.version.as_str()) {
+        let (version, notes, ready) = match checker.state() {
+            State::Ready { update, notes } => (update.version.clone(), notes, Some(update)),
+            State::Managed { version } => (version, None, None),
+            _ => return,
+        };
+        if self.later.as_deref() == Some(version.as_str()) {
             return;
         }
         egui::Area::new(egui::Id::new("mahay-update-banner"))
@@ -277,7 +342,7 @@ impl UpdateBanner {
                         if let Some(tex) = icon(ui.ctx(), app.id) {
                             ui.add(egui::Image::new(&tex).fit_to_exact_size(vec2(28.0, 28.0)));
                         }
-                        ui.label(RichText::new(format!("{} {} — {}", app.name, update.version, t(lang, "ready_short"))).strong());
+                        ui.label(RichText::new(format!("{} {version} — {}", app.name, t(lang, "ready_short"))).strong());
                     });
                     if self.notes_open
                         && let Some(notes) = &notes
@@ -289,14 +354,21 @@ impl UpdateBanner {
                     }
                     ui.horizontal(|ui| {
                         let install_button = egui::Button::new(RichText::new(t(lang, "install")).strong()).min_size(vec2(110.0, 40.0));
-                        if ui.add(install_button).clicked() {
-                            self.error = install(&update).err();
+                        if handed_off() {
+                            ui.spinner();
+                            ui.label(t(lang, "via_hub"));
+                            ui.ctx().request_repaint_after(std::time::Duration::from_secs(1));
+                        } else if ui.add(install_button).clicked() {
+                            self.error = match &ready {
+                                Some(update) => install(update).err(),
+                                None => hand_off(checker).err(),
+                            };
                         }
                         if notes.is_some() && ui.add(egui::Button::new(t(lang, "whats_new")).min_size(vec2(0.0, 40.0))).clicked() {
                             self.notes_open = !self.notes_open;
                         }
                         if ui.add(egui::Button::new(t(lang, "later")).min_size(vec2(0.0, 40.0))).clicked() {
-                            self.later = Some(update.version.clone());
+                            self.later = Some(version.clone());
                             checker.dismiss();
                         }
                     });

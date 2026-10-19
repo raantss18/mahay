@@ -14,17 +14,17 @@ D23 vue téléphone/tablette automatique · D24 suivi d'ArtCraft ([guide](docs/U
 ### P0 — Mises à jour sans confirmer chaque app (D21)
 Limites d'Android : la **première installation** de chaque app demande toujours un appui ; avant
 Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise à jour redémarre.
-- [ ] `installApk` : `USER_ACTION_NOT_REQUIRED` (Android 12+). Mesurer sur l'émulateur ce qui devient
+- [x] `installApk` : `USER_ACTION_NOT_REQUIRED` (Android 12+). Mesurer sur l'émulateur ce qui devient
       silencieux (le hub installateur d'origine : `adb install -i org.mahay.hub`).
-- [ ] Les apps confient « Installer la mise à jour » à Mahay HUB quand il est installé (permission
+- [x] Les apps confient « Installer la mise à jour » à Mahay HUB quand il est installé (permission
       de signature `org.mahay.permission.MANAGE`, intent explicite) ; sans lui, elles se mettent à
       jour seules comme aujourd'hui : chaque app reste installable séparément.
-- [ ] Mahay HUB : « Mettre à jour automatiquement » (activé par défaut), au lancement puis chaque jour.
-- [ ] Tâche d'arrière-plan (JobScheduler) : vérifier et installer hub fermé ; notification « N mises
+- [x] Mahay HUB : « Mettre à jour automatiquement » (activé par défaut), au lancement puis chaque jour.
+- [x] (vérifié : tâche + garde « app ouverte » ; non vérifié : notification, redémarrage) Tâche d'arrière-plan (JobScheduler) : vérifier et installer hub fermé ; notification « N mises
       à jour » quand Android demande encore un appui (Android < 12, app installée autrement).
-- [ ] Une app installée à la main passe sous la gestion du hub après une confirmation.
-- [ ] « Tout installer » : la première installation de la suite en file d'attente, un écran à la fois.
-- [ ] Expliquer les limites dans l'écran du hub et les README.
+- [x] Une app installée à la main passe sous la gestion du hub après une confirmation.
+- [x] (construit, non essayé : les 13 apps sont déjà installées sur l'émulateur) « Tout installer » : la première installation de la suite en file d'attente, un écran à la fois.
+- [x] Expliquer les limites dans l'écran du hub et les README.
 - [ ] P2 : Android 14+, propriété des mises à jour (`setRequestUpdateOwnership`), à évaluer.
 
 ### P0 — Vue téléphone et tablette automatique (D23)

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mahay HUB's "updates ready" notification. Malagasy: see docs/A_VALIDER.md. -->
+    <string name="updates_channel">Mahay updates</string>
+    <plurals name="updates_ready">
+        <item quantity="one">%d update ready</item>
+        <item quantity="other">%d updates ready</item>
+    </plurals>
+    <string name="updates_ready_tap">Open Mahay HUB to install them</string>
+</resources>

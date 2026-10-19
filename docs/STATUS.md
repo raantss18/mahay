@@ -27,9 +27,21 @@ verified; everything else says how far it was checked.
 | Mahay HUB 0.2.0 on Android tablet                 | lists the 13 apps, sees all 13 installed, Open on each                                   |
 | Linux packages of all 14 apps (0.2.0)             | `scripts/linux-build.sh`: AppImage and .deb for each                                      |
 | Typing latency on Android (after the fix)        | x86_64 tablet emulator, Soratra and Tabilao: each letter shows in the next frame, the keyboard opened by Android or by a tap; Backspace, Enter, dismiss and reopen |
+| Mahay HUB manages Feo (D21), measured | Android 16 tablet emulator, hub 0.2.2 + Feo 0.2.0: hub "Update all" updates Feo to the real 0.2.1 release with **no dialog** (needs `UPDATE_PACKAGES_WITHOUT_USER_ACTION`; without it Android asks, even for the installer of record) |
+| Feo hands its update to the hub               | Feo (0.2.0, on screen) shows "update ready" without downloading; Install → "Updating through Mahay HUB…" → hub job downloads, verifies, installs, no dialog |
+| App installed by hand joins hub management    | installer `null`: one Android dialog on the hub's update, then `installerPackageName=org.mahay.hub` |
+| Background job and foreground guard           | JobScheduler job scheduled by the hub runs the Rust headless updater ("update run: ok"); an app that says it is on screen is skipped |
+| Hub components refused to `adb shell`         | `UpdateRequestService` needs `org.mahay.permission.MANAGE`; job service and receiver not exported (SECURITY_AUDIT) |
+| mahay-update managed logic                    | `cargo test -p mahay-update`: 22 pass (exact package names, pending list, queue order, settings, network policy, job refusals); arm64 `cargo ndk check` of the hub |
 | Translation catalogues after the relabel          | `cargo test -p <app>-ui-egui -- i18n` green in all 13 ui crates                           |
 
 ## Built, not yet exercised on a device
+
+- Mahay HUB managing the apps (D21), the parts not run: "Install all" (the emulator has all 13
+  installed), the "updates waiting" notification and the notification permission request,
+  Android below 12, the "Also on mobile data" switch on a real mobile network, the daily job over a
+  reboot, an app installed before the hub (permission not granted, falls back to self-update),
+  and the silent-update throttle Android may apply to repeated updates.
 
 - arm64-v8a APKs: built and signed; the emulator here is x86_64, so they ran on no device.
   **A test on a real phone and tablet is the next step.**

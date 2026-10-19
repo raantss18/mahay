@@ -4,8 +4,16 @@
     <!-- Automatic updates (Tontolo's model): download verified releases from GitHub. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Install the downloaded update (and, from Mahay HUB, the other Mahay apps) through Android's
-         installer; the user confirms every install. -->
+         installer; the user confirms an install unless Android lets the installer of record update silently. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Mahay HUB manages the other apps (D21): this lets an app ask the hub to update it. The
+         permission is defined by the hub with protectionLevel="signature": only apps signed with
+         Mahay's certificate hold it. -->
+    <uses-permission android:name="org.mahay.permission.MANAGE" />
+    <queries>
+        <package android:name="org.mahay.hub" />
+    </queries>
 
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
