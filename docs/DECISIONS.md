@@ -265,12 +265,19 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 
 ## D22 — "Open with" on Android
 
-- **Decision:** each app's intent filters match its documents by MIME type **and by extension**
-  (a `pathPattern` with `application/octet-stream` and `*/*`), for `content` and `file` URIs,
-  because many file managers give no MIME type or a generic one. Verified by a matrix test
-  (`cmd package query-activities` on the emulator) that fails if an app drops out of a list.
-- **Why:** a filter on the MIME type alone resolves on the emulator but not for files a manager
-  reports as `application/octet-stream` (IDML, DXF, RAW photos, …).
+- **Decision:** each app has three intent filters for VIEW and EDIT, all for `content://`
+  documents: one by MIME type, one by **file extension with a generic type** (`*/*`, which covers
+  `application/octet-stream`) and one by extension with **no type**, because many file managers
+  give no MIME type or a generic one for files the system does not know (IDML, DXF, RAW photos,
+  `.tex`...). Extensions come from the system's shared-mime-info and the apps' own `mime.xml`, one
+  path pattern per case and per number of dots in the name. No `file://` filter is declared: the
+  activity refuses `file://` at run time, so an app is never offered a file it would reject.
+- **Verified by a matrix test** (`scripts/android-open-with-test.py`, `cmd package query-activities`
+  on a device) that fails if an app drops out of a list or claims files that are not its own.
+- **Not covered:** a provider that gives neither an extension nor a type; "Share" of several
+  files at once (SEND_MULTIPLE needs run-time support for a list of files).
+- **Why:** a filter on the MIME type alone resolves for common types but not for files a manager
+  reports as `application/octet-stream`.
 
 ## D23 — Phone and tablet layouts follow the window, automatically
 

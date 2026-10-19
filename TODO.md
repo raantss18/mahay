@@ -44,13 +44,15 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 - [x] Vérifié le 2026-10-19 (émulateur Android 16, apps 0.2.1) : docx → Soratra, xlsx → Tabilao,
       pptx → Seho, pdf → Taratasy et Tsilo, png et svg → Sary, Hazavana, Endrika, mp3 → Feo,
       mp4 → Hetsika. Un fichier sans type reconnu (`application/octet-stream`) : aucune app.
-- [ ] Filtres élargis : chaque extension de l'app avec `application/octet-stream` et `*/*`
-      (`pathPattern`), schémas `content` et `file`.
+- [x] Générateur : filtres par extension (type générique et sans type), `content` seulement ;
+      manifestes à régénérer et à tester après le build 0.2.2.
 - [ ] Types sans MIME standard par app : IDML, DXF/DWG, RAW (CR2, NEF, ARW, DNG), PSD, XCF, MIDI…
-- [ ] `scripts/android-open-with-test.sh` : matrice app × type × schéma (`cmd package query-activities`),
-      échoue si une app disparaît d'une liste.
-- [ ] « Partager vers » (SEND, SEND_MULTIPLE) : images → Sary, Hazavana, Endrika ; audio → Feo ;
-      vidéo → Hetsika ; PDF → Taratasy.
+- [x] `scripts/android-open-with-test.py` : matrice app × type × extension (`cmd package query-activities`),
+      échoue si une app disparaît d'une liste ou réclame des fichiers qui ne sont pas les siens ;
+      reste à le lancer sur l'émulateur avec les nouveaux manifestes.
+- [x] « Partager vers » (SEND, un fichier) : déjà déclaré pour chaque app.
+- [ ] SEND_MULTIPLE (plusieurs fichiers : photos → Hazavana, audio → Feo, vidéo → Hetsika) : demande une liste
+      de fichiers côté Java et Rust.
 - [ ] Toujours absent sur un vrai appareil : relever la version d'Android, le gestionnaire de
       fichiers et le type du fichier.
 
