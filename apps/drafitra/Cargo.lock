@@ -997,7 +997,7 @@ checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
 name = "drafitra"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-engine",
  "drafitra-io",
@@ -1020,7 +1020,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-android"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-engine",
  "drafitra-ui-egui",
@@ -1033,7 +1033,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-cli"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-engine",
  "drafitra-io",
@@ -1044,14 +1044,14 @@ dependencies = [
 
 [[package]]
 name = "drafitra-color"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "drafitra-constraints"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-doc",
  "drafitra-geom",
@@ -1061,7 +1061,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-doc"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-color",
  "drafitra-geom",
@@ -1072,14 +1072,14 @@ dependencies = [
 
 [[package]]
 name = "drafitra-dwg"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "acadrust",
 ]
 
 [[package]]
 name = "drafitra-dxf"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "encoding_rs",
  "log",
@@ -1088,7 +1088,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-engine"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-color",
  "drafitra-constraints",
@@ -1108,7 +1108,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-fonts"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-geom",
  "harfrust",
@@ -1118,14 +1118,14 @@ dependencies = [
 
 [[package]]
 name = "drafitra-geom"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "drafitra-io"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-color",
  "drafitra-doc",
@@ -1144,7 +1144,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-mcp"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-engine",
  "drafitra-io",
@@ -1155,7 +1155,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-render"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-color",
  "drafitra-doc",
@@ -1169,7 +1169,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-ui-egui"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-color",
  "drafitra-doc",
@@ -1192,7 +1192,7 @@ dependencies = [
 
 [[package]]
 name = "drafitra-web"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "drafitra-engine",
  "drafitra-io",
@@ -5225,7 +5225,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "serde_json",
 ]

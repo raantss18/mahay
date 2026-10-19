@@ -1454,7 +1454,7 @@ checksum = "b97b65636e5b9ef369943878ac74335ba1c55c1cb6adbf1e2c293c624248d693"
 
 [[package]]
 name = "feo"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "eframe",
  "egui",
@@ -1473,7 +1473,7 @@ dependencies = [
 
 [[package]]
 name = "feo-android"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "eframe",
  "egui",
@@ -1488,7 +1488,7 @@ dependencies = [
 
 [[package]]
 name = "feo-au-host"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-dsp",
  "log",
@@ -1498,7 +1498,7 @@ dependencies = [
 
 [[package]]
 name = "feo-audio-io"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "log",
  "proptest",
@@ -1510,7 +1510,7 @@ dependencies = [
 
 [[package]]
 name = "feo-automation"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-engine",
  "feo-time",
@@ -1520,7 +1520,7 @@ dependencies = [
 
 [[package]]
 name = "feo-clap-host"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "clap-sys",
  "feo-dsp",
@@ -1533,7 +1533,7 @@ dependencies = [
 
 [[package]]
 name = "feo-cli"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-audio-io",
  "feo-automation",
@@ -1544,7 +1544,7 @@ dependencies = [
 
 [[package]]
 name = "feo-dsp"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "log",
  "proptest",
@@ -1555,7 +1555,7 @@ dependencies = [
 
 [[package]]
 name = "feo-engine"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-au-host",
  "feo-audio-io",
@@ -1578,7 +1578,7 @@ dependencies = [
 
 [[package]]
 name = "feo-midi"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "proptest",
  "serde",
@@ -1588,7 +1588,7 @@ dependencies = [
 
 [[package]]
 name = "feo-mix"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-au-host",
  "feo-audio-io",
@@ -1604,7 +1604,7 @@ dependencies = [
 
 [[package]]
 name = "feo-model"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-audio-io",
  "feo-midi",
@@ -1617,7 +1617,7 @@ dependencies = [
 
 [[package]]
 name = "feo-playback"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "cpal",
  "feo-audio-io",
@@ -1632,7 +1632,7 @@ dependencies = [
 
 [[package]]
 name = "feo-time"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "proptest",
  "serde",
@@ -1642,7 +1642,7 @@ dependencies = [
 
 [[package]]
 name = "feo-ui-egui"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "egui",
  "egui_kittest",
@@ -1669,7 +1669,7 @@ dependencies = [
 
 [[package]]
 name = "feo-video"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "image",
  "proptest",
@@ -1680,7 +1680,7 @@ dependencies = [
 
 [[package]]
 name = "feo-vst3-host"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "feo-dsp",
  "libloading",
@@ -1696,7 +1696,7 @@ dependencies = [
 
 [[package]]
 name = "feo-web"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "eframe",
  "egui",
@@ -5683,7 +5683,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "serde_json",
 ]
