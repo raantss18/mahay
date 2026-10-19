@@ -3,6 +3,16 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Typing on Android shows each letter at once**, in every app. When Android opened the
+  keyboard by itself (a document's field focused when it opens), the app ignored what was typed
+  until the next tap, then showed it all at once. The app now follows the keyboard it is given,
+  and each keyboard change wakes it immediately instead of a check every 80 ms (also kinder to
+  the battery). Enter makes a new line or paragraph however the keyboard was opened.
+
 ## [0.2.0] — 2026-10-18 (alpha)
 
 ### Added

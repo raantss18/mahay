@@ -18,6 +18,7 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 
 import com.google.androidgamesdk.GameActivity;
+import com.google.androidgamesdk.gametextinput.State;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +51,7 @@ public class MahayActivity extends GameActivity {
     private static native void nativeOnOpened(int request, String path, String name, String uri);
     private static native void nativeOnExported(String path, String uri);
     private static native void nativeOnInstalled(String path, boolean ok, String message);
+    private static native void nativeOnImeChanged(boolean dismissed);
 
     private static final String INSTALL_ACTION = "org.mahay.shell.INSTALL_STATUS";
     /** APKs waiting to be installed, one confirmation at a time. */
@@ -76,6 +78,14 @@ public class MahayActivity extends GameActivity {
             installNext();
         }
     };
+
+    // The soft keyboard changed its text, or was dismissed. winit drops GameActivity's text
+    // events, so without this the app would only see the text at its next repaint: tell it now.
+    @Override
+    public void stateChanged(State newState, boolean dismissed) {
+        super.stateChanged(newState, dismissed);
+        nativeOnImeChanged(dismissed);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

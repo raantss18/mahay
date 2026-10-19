@@ -26,6 +26,7 @@ verified; everything else says how far it was checked.
 | The eight later apps on Android tablet (0.2.0)    | Tsilo, Endrika, Pejy, Hazavana, Feo, Hetsika, Tselatra, Drafitra: x86_64 emulator, each starts on its home screen, no crash in the log |
 | Mahay HUB 0.2.0 on Android tablet                 | lists the 13 apps, sees all 13 installed, Open on each                                   |
 | Linux packages of all 14 apps (0.2.0)             | `scripts/linux-build.sh`: AppImage and .deb for each                                      |
+| Typing latency on Android (after the fix)        | x86_64 tablet emulator, Soratra and Tabilao: each letter shows in the next frame, the keyboard opened by Android or by a tap; Backspace, Enter, dismiss and reopen |
 | Translation catalogues after the relabel          | `cargo test -p <app>-ui-egui -- i18n` green in all 13 ui crates                           |
 
 ## Built, not yet exercised on a device
@@ -55,7 +56,6 @@ verified; everything else says how far it was checked.
 | Printing                 | no printing on Android                                                                               | Android print framework via the shell                      |
 | Clipboard                | text only on Android (no images or rich text)                                                         | `ClipData` with HTML/URI                                   |
 | Stylus                   | pressure isn't passed to Sary's brushes on Android                                                    | read pressure from the motion events                        |
-| Soft keyboard            | the app repaints every 80 ms while the keyboard is open (winit doesn't wake it for IME text)          | upstream fix in winit, then drop the polling               |
 | Translations             | community labels in other languages were filled from related strings ("GitHub" for Discord)          | review French and Malagasy wording                          |
 | Upstream tests           | translation tests green; some UI tests still assert upstream links, social accounts and app order    | fix per app, then run per crate in CI                       |
 

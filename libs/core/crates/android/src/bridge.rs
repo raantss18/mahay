@@ -14,6 +14,8 @@ pub struct EguiBridge {
     dark_bars: Option<bool>,
     /// When and where (in points) the screen was last touched or clicked.
     last_tap: Option<(std::time::Instant, egui::Pos2)>,
+    /// Whether a text field had keyboard focus at the end of the last frame.
+    field_focused: bool,
 }
 
 impl EguiBridge {
@@ -81,9 +83,11 @@ impl EguiBridge {
             self.ime_seen.clear();
         }
         self.ime_field = if wants { field } else { None };
+        self.field_focused = ime_rect.is_some();
         if wants {
-            // Keyboard text arrives without waking eframe; look for it while the keyboard is up.
-            ctx.request_repaint_after(std::time::Duration::from_millis(80));
+            // Keyboard text wakes the app as it arrives (`nativeOnImeChanged`); this slow tick only
+            // covers a change Android didn't report.
+            ctx.request_repaint_after(std::time::Duration::from_millis(1000));
         }
         if wants != self.keyboard {
             self.keyboard = wants;
@@ -121,6 +125,23 @@ impl EguiBridge {
         });
         if let Some(pos) = tap {
             self.last_tap = Some((std::time::Instant::now(), pos));
+        }
+        // Android may show the keyboard by itself (a focused field when a document opens), so
+        // follow what the keyboard reports rather than only what this bridge asked for: text
+        // typed into a focused field is shown at once, never kept for the next tap.
+        match crate::take_ime_change() {
+            Some(true) => {
+                self.keyboard = false;
+                crate::reset_ime();
+                self.ime_seen.clear();
+            }
+            Some(false) if self.field_focused => self.keyboard = true,
+            Some(false) => {
+                // Typing with no field to receive it: drop it rather than dump it later.
+                crate::reset_ime();
+                self.ime_seen.clear();
+            }
+            None => {}
         }
         if self.keyboard {
             let now = crate::ime_text();

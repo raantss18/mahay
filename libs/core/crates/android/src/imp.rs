@@ -62,6 +62,7 @@ pub fn init(app: &AndroidApp, tag: &'static str) {
     android_logger::init_once(android_logger::Config::default().with_max_level(log::LevelFilter::Info).with_tag(tag));
     std::panic::set_hook(Box::new(|info| log::error!("panic: {info}")));
     let _ = APP.set(app.clone());
+    set_editor_info(app);
     let data = app.internal_data_path().unwrap_or_else(|| PathBuf::from("/data/local/tmp"));
     let cache = data.join("cache");
     let vars = [
@@ -268,19 +269,25 @@ pub fn open_url(url: &str) {
     });
 }
 
+/// The keyboard every Mahay app wants, set at start-up too: Android may open the keyboard by
+/// itself (a field focused when a document opens), and it must behave the same way then.
+/// Multi-line, so Enter arrives as "\n" in the buffer (the bridge turns it into an Enter key),
+/// and never the full-screen editor that hides the app in landscape (IME_FLAG_NO_EXTRACT_UI |
+/// IME_FLAG_NO_FULLSCREEN).
+fn set_editor_info(app: &AndroidApp) {
+    use android_activity::input::{ImeOptions, InputType, TextInputAction};
+    app.set_ime_editor_info(
+        InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_FLAG_MULTI_LINE,
+        TextInputAction::None,
+        ImeOptions::from_bits_retain(0x1000_0000 | 0x0200_0000),
+    );
+}
+
 /// Show or hide the soft keyboard (GameActivity's GameTextInput).
 pub fn set_keyboard(visible: bool) {
     if let Some(app) = APP.get() {
         if visible {
-            use android_activity::input::{ImeOptions, InputType, TextInputAction};
-            // Multi-line, so Enter arrives as "\n" in the buffer (the bridge turns it into an
-            // Enter key), and never the full-screen editor that hides the app in landscape
-            // (IME_FLAG_NO_EXTRACT_UI | IME_FLAG_NO_FULLSCREEN).
-            app.set_ime_editor_info(
-                InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_FLAG_MULTI_LINE,
-                TextInputAction::None,
-                ImeOptions::from_bits_retain(0x1000_0000 | 0x0200_0000),
-            );
+            set_editor_info(app);
             app.show_soft_input(true);
         } else {
             app.hide_soft_input(true);
@@ -435,6 +442,26 @@ pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnOpened(
 
 /// `MahayActivity.nativeOnExported(String path, String uri)`: where a Save As went, or null
 /// `uri` if the user cancelled.
+/// Keyboard changes not yet seen by the app: 1 = text changed, 2 = keyboard dismissed.
+static IME_CHANGE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+
+/// The soft keyboard changed its text (or was dismissed): wake the app so the frame that shows
+/// it runs now, instead of waiting for the next touch or timer.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnImeChanged(_env: JNIEnv, _class: JClass, dismissed: jni::sys::jboolean) {
+    IME_CHANGE.fetch_max(if dismissed != 0 { 2 } else { 1 }, std::sync::atomic::Ordering::AcqRel);
+    wake();
+}
+
+/// What the soft keyboard did since the last call: `None` (nothing), `Some(false)` (its text
+/// changed) or `Some(true)` (it was dismissed).
+pub fn take_ime_change() -> Option<bool> {
+    match IME_CHANGE.swap(0, std::sync::atomic::Ordering::AcqRel) {
+        0 => None,
+        n => Some(n == 2),
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnExported(mut env: JNIEnv, _class: JClass, path: JString, uri: JString) {
     let Some(path) = jstring(&mut env, &path).map(PathBuf::from) else { return };
