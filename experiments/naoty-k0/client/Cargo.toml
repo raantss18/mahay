@@ -1,0 +1,17 @@
+[package]
+name = "naoty-k0-client"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+jupyter-zmq-client = { version = "1", default-features = false, features = ["tokio-runtime", "ring"] }
+jupyter-protocol = "2.0.2"
+nbformat = "3.0.0"
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+jupyter-websocket-client = { version = "2", default-features = false }
+serde_json = "1"
+anyhow = "1"
+uuid = { version = "1", features = ["v4"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
