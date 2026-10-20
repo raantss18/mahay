@@ -65,7 +65,7 @@ to **Android phones and tablets** and **Linux**. See [NOTICE](NOTICE).
 | **Endrika** | interface design and prototyping | ✅ | alpha |
 | **Drafitra** | technical drawing (CAD) | ✅ | alpha |
 | **Feo** | recording, editing and mixing audio | ✅ | alpha |
-| **Hetsika** | video editing | ✅ | alpha |
+| **Hetsika** | video editing, with a Simple and a Pro workspace | ✅ | alpha |
 | **Tselatra** | motion graphics and visual effects | ✅ | alpha |
 
 ### On a phone

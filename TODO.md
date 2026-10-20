@@ -18,7 +18,8 @@ Demandé par le propriétaire après les retours d'utilisateurs (Sary difficile,
 - [ ] Hetsika : obtenir modèle, version d'Android et symptôme ; lire les événements `diagnostics` (crash, native_crash, anr, low_memory) une fois la 0.2.5 diffusée.
 - [ ] **Adaptive layout fluide** (session phone-layouts) : plus aucune taille de fenêtre figée, pas de bandes vides, grille du hub, 7 apps à adapter ; fusion de `feat/adaptive-layout` avant la 0.2.5.
 - [x] **Sary Simple/Pro** (D27) : moteur `sary_engine::simple`, interface `simple_ui`, deux dispositions (bande en bas / rail à gauche), vérifié sur émulateurs téléphone et tablette ; reste : essai sur un vrai téléphone, retouche au doigt, export depuis Simple, vignettes d'aperçu des filtres, « Auto » réel (histogramme).
-- [ ] **Simple/Pro pour Hetsika**, puis Hazavana, Feo, Soratra, Taratasy.
+- [x] **Simple/Pro pour Hetsika** : moteur `hetsika_engine::simple` (8 tests), interface `simple_ui`, vérifié sur émulateurs ; reste : import par le sélecteur de fichiers, Texte, Son, lecture, écran d'export sur téléphone, vrai téléphone.
+- [ ] **Simple/Pro pour Hazavana**, puis Feo, Soratra, Taratasy, Tselatra, Tsilo, Pejy.
 - [ ] **Nettoyage des interfaces** (D29) : audit écran par écran, `docs/UI_AUDIT.md`.
 - [ ] Relire les textes malgaches ajoutés (`docs/A_VALIDER.md`) : « Hevitrao », « Hanampy hanatsara an'i Mahay », libellés du formulaire.
 

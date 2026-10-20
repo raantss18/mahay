@@ -39,6 +39,7 @@ pub mod credits;
 pub mod dock;
 mod dock_shared;
 mod dock_ui;
+pub mod simple_ui;
 pub mod frames;
 pub mod graphics_notice;
 pub mod header;
@@ -1777,6 +1778,15 @@ impl HetsikaApp {
         let t = self.tokens;
         let full = ui.max_rect();
         ui.painter().rect_filled(full, 0.0, t.app_bg);
+        // The Simple workspace (D27) has its own bars, picture and controls; dialogs stay the same.
+        if simple_ui::enabled(self) {
+            simple_ui::show(self, ui, full);
+            self.pending_timeline_drop = None;
+            panels::dialogs::show(self, &ctx);
+            self.watch_jobs(ui.ctx());
+            return;
+        }
+        simple_ui::pro_switch(self, &ctx);
         let header_h = if self.ui.show_header { 38.0 } else { 0.0 };
         let header = egui::Rect::from_min_size(full.min, egui::vec2(full.width(), header_h));
         if self.ui.show_header {

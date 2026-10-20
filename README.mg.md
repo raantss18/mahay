@@ -53,7 +53,7 @@ nampandehanina tamin'ny **finday sy takelaka Android** ary **Linux**. Jereo ny [
 | **Endrika** | famolavolana endrika | ✅ | alpha |
 | **Drafitra** | sary teknika (CAO) | ✅ | alpha |
 | **Feo** | fandraisam-peo sy fampifangaroana | ✅ | alpha |
-| **Hetsika** | fanamboarana horonantsary | ✅ | alpha |
+| **Hetsika** | fanamboarana horonantsary, toerana Tsotra sy Pro | ✅ | alpha |
 | **Tselatra** | sary mihetsika sy effets | ✅ | alpha |
 
 <table align="center">

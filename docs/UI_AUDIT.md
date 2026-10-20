@@ -29,8 +29,9 @@ The cure is the layout work (D23) plus a Simple workspace for the apps people us
 
 - **Sary** (Simple workspace done): six tasks. Pro keeps everything; a small "Simple" button is added at its
   bottom right. To do: a real "Auto" (from the histogram), filter thumbnails, export straight from Simple.
-- **Hetsika**: unusable layout on a phone (above). Simple workspace to do: Media, Trim and split, Text,
-  Music or voice-over, Speed, Export.
+- **Hetsika**: unusable layout on a phone (above). **Simple workspace built (0.2.5):** Add, Edit, Text, Speed,
+  Sound, Export. To do: the monitor still shows Pro's transport (Fit, 1/2, markers, in/out): replace it by a
+  play button and a time bar; thumbnails in the story strip; check the export screen on a phone.
 - **Hazavana**: top bar shows a cloud icon, a "chat" icon (feedback?) and a share icon next to search and
   help. *check* what each opens; remove those that need a service; the Mahay feedback form replaces "chat".
 - **Endrika**: home has "Online" (a server the user must set in Preferences, so it is empty by default),

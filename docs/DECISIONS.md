@@ -465,8 +465,13 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   left, not from the device). The default is Simple on Android and Pro on a computer until the user
   chooses (`UiState.simple_workspace`). Verified on emulators (phone 1080×2340 and tablet 2560×1600):
   sliders, filters, hold to compare, square crop, brush, text with the keyboard up, Pro and back.
-  Not verified: a real phone, retouch strokes, export from Simple, a long session. Next: Hetsika, then the
-  others, each starting from the few things its users do most (D28 will tell).
+  Not verified: a real phone, retouch strokes, export from Simple, a long session. **Hetsika (0.2.5):**
+  `hetsika_engine::simple` (the story: the first video track; cut, trim to the playhead, remove, move, speed,
+  title, 8 tests) and `hetsika_ui_egui::simple_ui` (same shell and layouts as Sary's); checked on the phone and
+  tablet emulators: start screen, a demo clip added twice (the picture renders), the story strip, the Edit panel's
+  message when the playhead is not inside a clip, 200% speed (18 s becomes 9 s), the wide layout. Not checked
+  on a device: the file picker import, cut/trim/move (engine tests only), Text, Sound, playback, the export
+  screen on a phone. Next: the others, each starting from the few things its users do most (D28 will tell).
 - **Alternatives:** simplify the existing interface in place (every change collides with upstream, and it
   would still be one interface for two kinds of user); a separate simple app per app (14 more apps to keep).
 - **Why:** newcomers need to succeed in the first minute, professionals need depth, and a layer on top of

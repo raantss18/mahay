@@ -430,6 +430,13 @@ pub struct KeyframeRef {
 pub struct UiState {
     #[serde(default)]
     pub language: crate::i18n::Language,
+    /// The Simple workspace (D27) is on (`Some(true)`), Pro is (`Some(false)`), or the user has not
+    /// chosen: Simple on a phone or tablet, Pro on a computer.
+    #[serde(default)]
+    pub simple_workspace: Option<bool>,
+    /// What the Simple workspace keeps while the app runs. Not saved.
+    #[serde(skip)]
+    pub simple: crate::simple_ui::State,
     pub tool: Tool,
     pub mode: Mode,
     pub workspace: String,
@@ -956,6 +963,8 @@ impl Default for UiState {
     fn default() -> Self {
         Self {
             language: crate::i18n::Language::default(),
+            simple_workspace: None,
+            simple: Default::default(),
             tool: Tool::Selection,
             mode: Mode::Edit,
             workspace: "Editing".into(),

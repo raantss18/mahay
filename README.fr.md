@@ -66,7 +66,7 @@ sur les **téléphones et tablettes Android** et sur **Linux**. Voir [NOTICE](NO
 | **Endrika** | design d'interfaces et prototypes | ✅ | alpha |
 | **Drafitra** | dessin technique (CAO) | ✅ | alpha |
 | **Feo** | enregistrement, montage et mixage audio | ✅ | alpha |
-| **Hetsika** | montage vidéo | ✅ | alpha |
+| **Hetsika** | montage vidéo, espaces Simple et Pro | ✅ | alpha |
 | **Tselatra** | animation et effets visuels | ✅ | alpha |
 
 ### Sur téléphone

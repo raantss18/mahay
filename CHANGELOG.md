@@ -24,6 +24,15 @@ versions follow [SemVer](https://semver.org/).
   the window: tasks along the bottom on a narrow window, a rail on the left and the controls on the right
   on a wide one, scrolling when the keyboard takes the room. Texts in English, French and Malagasy.
 
+- **Hetsika: Simple workspace** (D27), the default on a phone or tablet (Pro one tap away, and a small
+  **Simple** button back). A video *story* in a few steps: the picture with its transport, the story as a row
+  of clips, and six tasks: **Add** (video or photo, music, or a demo clip), **Edit** (cut here, keep from
+  here, keep until here, remove, earlier, later), **Text** (a title at the playhead), **Speed**, **Sound**
+  (volume, music) and **Export** (opens the export screen). Every action is one engine command, so Pro shows
+  the same timeline and one undo takes a step back. It replaces a phone layout that was unusable (menus drawn
+  over each other, panels cut). Same adaptive shape as Sary's: tasks along the bottom on a narrow window,
+  a rail and a side panel on a wide one. Texts in English, French and Malagasy.
+
 ### Fixed
 
 - **Taratasy: tapping a paragraph did not edit it, and the keyboard never came up.** The Edit text tool,
