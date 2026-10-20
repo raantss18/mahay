@@ -8,6 +8,8 @@ pub struct EguiBridge {
     /// Last insets read, in physical pixels, and when.
     insets: [i32; 4],
     insets_read: Option<std::time::Instant>,
+    /// The size of the window at the last read of the insets.
+    last_size: Option<egui::Vec2>,
     /// The keyboard buffer as last turned into events, and the field it belongs to.
     ime_seen: String,
     ime_field: Option<egui::Id>,
@@ -42,7 +44,12 @@ impl EguiBridge {
     /// leave free. Android 15+ draws apps edge to edge, under those bars.
     pub fn inset_ui(&mut self, ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
         let stale = self.insets_read.is_none_or(|t| t.elapsed() >= std::time::Duration::from_millis(400));
-        if stale {
+        // A new window size (rotation, split screen, a fold, a free-form resize) changes what the bars
+        // cover: read them again at once rather than within 400 ms.
+        let size = ui.max_rect().size();
+        let resized = self.last_size.is_none_or(|s| (s - size).abs().max_elem() > 0.5);
+        self.last_size = Some(size);
+        if stale || resized {
             self.insets = crate::system_insets();
             self.insets_read = Some(std::time::Instant::now());
         }

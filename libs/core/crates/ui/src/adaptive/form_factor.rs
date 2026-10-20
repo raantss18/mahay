@@ -121,3 +121,108 @@ pub fn dialog_window<'a>(ctx: &Context, window: egui::Window<'a>) -> egui::Windo
         None => window.constrain_to(screen).max_size(screen.size()),
     }
 }
+
+/// Window height below which the layout is [`HeightClass::Compact`] (a phone on its side).
+pub const HEIGHT_COMPACT_MAX: f32 = 480.0;
+/// Window height from which the layout is [`HeightClass::Expanded`].
+pub const HEIGHT_EXPANDED_MIN: f32 = 900.0;
+
+/// The height class of a window (Android's window size classes, the other axis).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum HeightClass {
+    /// Under 480: a phone on its side, a short floating window. Chrome gives its room to the content.
+    Compact,
+    /// 480 to 899.
+    Medium,
+    /// 900 and up.
+    Expanded,
+}
+
+impl HeightClass {
+    /// The class of a window `height` points high, with no memory.
+    pub fn from_height(height: f32) -> Self {
+        if height < HEIGHT_COMPACT_MAX {
+            Self::Compact
+        } else if height < HEIGHT_EXPANDED_MIN {
+            Self::Medium
+        } else {
+            Self::Expanded
+        }
+    }
+
+    /// The class after a window `height` points high that was `previous`, with the same
+    /// [`HYSTERESIS`] as [`FormFactor::next`].
+    pub fn next(previous: Self, height: f32) -> Self {
+        let mut class = previous;
+        loop {
+            let moved = match class {
+                Self::Compact if height >= HEIGHT_COMPACT_MAX + HYSTERESIS => Self::Medium,
+                Self::Medium if height >= HEIGHT_EXPANDED_MIN + HYSTERESIS => Self::Expanded,
+                Self::Medium if height < HEIGHT_COMPACT_MAX - HYSTERESIS => Self::Compact,
+                Self::Expanded if height < HEIGHT_EXPANDED_MIN - HYSTERESIS => Self::Medium,
+                other => other,
+            };
+            if moved == class {
+                return class;
+            }
+            class = moved;
+        }
+    }
+}
+
+/// The size of the window the app lives in: both classes and the size itself, recomputed every
+/// frame. Nothing about a layout is fixed at launch: a fold opening, split screen, a free-form
+/// window, rotation and the keyboard all change it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WindowSize {
+    /// Width class (what decides the ribbon, the panels and the dialogs).
+    pub width_class: FormFactor,
+    /// Height class (what decides how much chrome a short window can afford).
+    pub height_class: HeightClass,
+    /// The window's size in points.
+    pub size: egui::Vec2,
+}
+
+impl WindowSize {
+    /// The window's size now, with hysteresis on both classes.
+    pub fn of(ctx: &Context) -> Self {
+        let size = ctx.content_rect().size();
+        let id = Id::new("mahay_height_class");
+        let previous = ctx.data(|d| d.get_temp::<HeightClass>(id)).unwrap_or_else(|| HeightClass::from_height(size.y));
+        let height_class = HeightClass::next(previous, size.y);
+        ctx.data_mut(|d| d.insert_temp(id, height_class));
+        Self { width_class: FormFactor::of(ctx), height_class, size }
+    }
+
+    /// A phone held on its side: wide enough for columns, too short for tall bars.
+    pub fn is_short(&self) -> bool {
+        self.height_class == HeightClass::Compact
+    }
+}
+
+/// How many columns of at least `min_column` points (gaps of `gap`) fit in `width` points, between 1
+/// and `max_columns`: a grid that follows the window smoothly instead of jumping between presets.
+pub fn columns(width: f32, min_column: f32, gap: f32, max_columns: usize) -> usize {
+    if !width.is_finite() || !min_column.is_finite() || min_column <= 0.0 {
+        return 1;
+    }
+    let n = ((width + gap) / (min_column + gap)).floor();
+    (n.max(1.0) as usize).min(max_columns.max(1))
+}
+
+/// How many of the side panels (their widths, most wanted first) can sit beside content that needs at
+/// least `min_content` points in `available` points: the rest become drawers. Panels come and go one
+/// at a time as the window changes, never all at once.
+pub fn panels_beside(available: f32, min_content: f32, panels: &[f32]) -> usize {
+    let mut left = available - min_content;
+    let mut n = 0;
+    for w in panels {
+        if left >= *w {
+            left -= *w;
+            n += 1;
+        } else {
+            break;
+        }
+    }
+    n
+}
