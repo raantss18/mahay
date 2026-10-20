@@ -353,6 +353,21 @@ pub fn set_dark_bars(dark: bool) {
     });
 }
 
+/// The Android version (`Build.VERSION.SDK_INT`), or 0 when it can't be read.
+pub fn sdk_int() -> i32 {
+    with_activity(|env, _| env.get_static_field("android/os/Build$VERSION", "SDK_INT", "I")?.i()).unwrap_or(0)
+}
+
+/// Tell the user, in a dialog, that the app could not start, instead of closing without a word.
+/// Keep `message` short and free of personal data.
+pub fn show_error(message: &str) {
+    with_activity(|env, act| {
+        let text = env.new_string(message)?;
+        env.call_method(act, "showError", "(Ljava/lang/String;)V", &[JValue::Object(&text)])?;
+        Ok(())
+    });
+}
+
 /// The user's language as a BCP 47 tag (`fr-FR`, `mg`, `en-US`).
 pub fn locale() -> String {
     with_activity(|env, act| {

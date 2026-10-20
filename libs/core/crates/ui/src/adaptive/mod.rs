@@ -8,11 +8,14 @@
 mod audit;
 mod command_bar;
 mod form_factor;
+mod touch;
 
 pub use audit::{Finding, FindingKind, audit, audit_excluding, audit_widths, small_targets};
 pub use command_bar::{command_bar, register_overlay, register_scroll_region};
+pub use touch::{FingerPan, Gesture, LONG_PRESS, Mode, PanStep, SLOP, decide, finger_down};
 pub use form_factor::{
-    COMPACT_MAX, EXPANDED_MIN, FormFactor, HYSTERESIS, MIN_TOUCH, dialog_rect, dialog_window, touch_spacing,
+    COMPACT_MAX, EXPANDED_MIN, FormFactor, HEIGHT_COMPACT_MAX, HEIGHT_EXPANDED_MIN, HYSTERESIS, HeightClass, MIN_TOUCH, WindowSize, columns,
+    dialog_rect, dialog_window, panels_beside, touch_spacing,
 };
 
 #[cfg(test)]

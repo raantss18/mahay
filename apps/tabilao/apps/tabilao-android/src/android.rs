@@ -26,7 +26,7 @@ const PICTURE_MIMES: &[&str] = &["image/png", "image/jpeg"];
 fn android_main(app: AndroidApp) {
     mahay_android::init(&app, "Tabilao");
     log::info!("Tabilao {} starting", env!("CARGO_PKG_VERSION"));
-    let options = eframe::NativeOptions { android_app: Some(app), renderer: eframe::Renderer::Wgpu, ..Default::default() };
+    let options = mahay_android::native_options!(app);
     let result = eframe::run_native(
         "Tabilao",
         options,
@@ -43,6 +43,7 @@ fn android_main(app: AndroidApp) {
     );
     if let Err(e) = result {
         log::error!("Tabilao stopped: {e}");
+        mahay_android::show_error(&format!("{} could not start its display. {e}", "Tabilao"));
     }
 }
 

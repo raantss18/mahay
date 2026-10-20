@@ -62,6 +62,20 @@ Android 12, chaque mise à jour est confirmée ; une app ouverte pendant sa mise
 - [x] Bureau inchangé : à ≥ 840 dp la disposition d'origine reste identique (seule exception : le ruban de
       Seho défile au lieu de couper ses groupes).
 
+### P0 — Fenêtre jamais figée (demande du propriétaire, 2026-10-20)
+- [x] Manifestes : ni orientation, ni ratio imposés ; `resizeableActivity` ; `configChanges` complet.
+- [x] Marges système : seule la part qui recouvre le contenu est retirée, relue dès que la taille change ;
+      thème sous l'encoche.
+- [x] Classes de taille sur les deux axes (`WindowSize`), colonnes et panneaux continus
+      (`columns`, `panels_beside`).
+- [x] Plantage au lancement sur Android 10 (surface wgpu) : choix et mémoire du backend, message d'erreur.
+- [x] Mahay HUB : grille de tuiles qui suit la largeur (tablette 2560×1600).
+- [ ] Fenêtres courtes (téléphone en paysage, < 480 dp de haut) : ruban replié par défaut.
+- [ ] Champ texte focalisé amené à l'écran quand le clavier réduit la zone utile (dialogues compris).
+- [ ] Écran partagé, pliable réel, Samsung DeX : à essayer sur appareil.
+- [ ] Cadre adaptatif de Tsilo, Pejy, Hazavana, Feo, Endrika (Sary fait ; sa barre d'outils attend le mode Simple D27).
+- [ ] Écrans de démarrage (Sary sans document, menu « Fichier » de Soratra, accueil de Seho) à adapter.
+
 ### P0 — Tactile : défiler au doigt, sans sélectionner (0.2.3)
 Signalé le 2026-10-19 sur téléphone : dans **Soratra**, glisser un doigt sur le texte **sélectionne**
 au lieu de défiler, et il n'y a pas de barre de défilement.
@@ -73,7 +87,8 @@ au lieu de défiler, et il n'y a pas de barre de défilement.
       D1:D20 au lieu de défiler). Même règle dans toutes les apps à zone de texte ou de dessin : un doigt défile/déplace la vue,
       le stylet et la souris sélectionnent ou dessinent (Tabilao : cellules, Seho : diapo, Sary,
       Tsilo, Pejy, Endrika, Drafitra : doigt = déplacer la vue, deux doigts = zoomer).
-- [ ] Audit tactile des 14 apps, sur l'émulateur téléphone : défilement, sélection, zoom à deux doigts,
+- [~] Audit tactile des 14 apps, sur l'émulateur téléphone (fait le 2026-10-20 pour les 14 apps, voir `docs/STATUS.md` : Sary, Tsilo,
+      Pejy, Hazavana, Feo, Hetsika, Tselatra gardent la disposition bureau, inutilisable à 411 dp ; Endrika et Drafitra à moitié adaptées) : défilement, sélection, zoom à deux doigts,
       appui long = menu contextuel, cibles ≥ 48 dp, survol (hover) sans équivalent tactile, glisser-
       déposer, poignées de redimensionnement trop fines, clavier virtuel qui masque le champ.
 - [ ] Un test par app (egui_kittest, événements `Touch`) : un glissement tactile fait défiler et ne

@@ -29,6 +29,11 @@ mod cleanup;
 #[cfg(all(target_os = "android", feature = "hub"))]
 mod hub;
 
+#[cfg(any(target_os = "android", test))]
+mod graphics;
+#[cfg(target_os = "android")]
+pub use graphics::{Backend, graphics_backend, graphics_ok};
+
 #[cfg(target_os = "android")]
 pub use imp::*;
 
@@ -37,3 +42,27 @@ mod bridge;
 
 #[cfg(all(target_os = "android", feature = "egui"))]
 pub use bridge::EguiBridge;
+
+/// The options of an app's window, with the graphics backend this device can use ([`graphics`]).
+/// `native_options!(app)` or `native_options!(app, persistence_path)` (a field of the same name).
+/// Written as a macro so each app's own eframe types are used; the crate does not depend on eframe.
+#[cfg(target_os = "android")]
+#[macro_export]
+macro_rules! native_options {
+    ($app:expr $(, $field:ident)* $(,)?) => {{
+        let backend = $crate::graphics_backend();
+        let mut setup = eframe::egui_wgpu::WgpuSetupCreateNew::without_display_handle();
+        setup.instance_descriptor.backends = match backend {
+            $crate::Backend::Auto => eframe::wgpu::Backends::VULKAN | eframe::wgpu::Backends::GL,
+            $crate::Backend::Gl => eframe::wgpu::Backends::GL,
+            $crate::Backend::Vulkan => eframe::wgpu::Backends::VULKAN,
+        };
+        eframe::NativeOptions {
+            android_app: Some($app),
+            renderer: eframe::Renderer::Wgpu,
+            $($field,)*
+            wgpu_options: eframe::egui_wgpu::WgpuConfiguration { wgpu_setup: eframe::egui_wgpu::WgpuSetup::CreateNew(setup), ..Default::default() },
+            ..Default::default()
+        }
+    }};
+}

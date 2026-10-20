@@ -83,7 +83,7 @@ pub fn toolbar(app: &mut SaryApp, ui: &mut egui::Ui) {
     let (w1, bx, m) = if t.pro { (40.0, 30.0, 5i8) } else { (50.0, 36.0, 7i8) };
     let sections = visible_sections(&app.session.prefs().toolbar.hidden);
     // Two columns when the header chevron asks for them; a column that doesn't fit scrolls.
-    let double = app.ui.panels.toolbar_double;
+    let double = app.ui.panels.toolbar_double && !mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact();
     let w = if double { w1 + bx + 2.0 } else { w1 };
     crate::direction::start_panel("toolbar")
         .resizable(false)
@@ -570,6 +570,9 @@ fn chip_command(app: &mut SaryApp, id: &str) {
 /// in-app bar shows menus and workspace controls only: no brand mark, no centred title.
 pub fn title_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
+    if mahay_ui::adaptive::FormFactor::of_ui(ui).is_compact() {
+        return title_bar_touch(app, ui, &t);
+    }
     let custom = app.custom_titlebar;
     let system = system_title_bar(app);
     // The caption buttons' room at each end (`titlebar`); a side with buttons has no margin.
@@ -717,6 +720,20 @@ pub fn title_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     }
 }
 
+/// The top bar of a phone (D23): the menus in a row that scrolls, 44 points high. The brand mark, the
+/// document name and the workspace switcher are left out (the name is in the status bar, the
+/// workspaces in Window › Workspace).
+fn title_bar_touch(app: &mut SaryApp, ui: &mut egui::Ui, t: &Tokens) {
+    egui::Panel::top("title_bar")
+        .exact_size(mahay_ui::adaptive::MIN_TOUCH - 4.0)
+        .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(6, 0)))
+        .show(ui, |ui| {
+            mahay_ui::adaptive::command_bar(ui, "sary_menus", |ui| {
+                let _ = crate::menus::menu_bar(app, ui);
+            });
+        });
+}
+
 /// Whether the window shows the system's title bar instead of the app drawing its own: Windows
 /// and Linux with Preferences › Interface › System Title Bar. macOS always has system decorations,
 /// but keeps the in-app brand mark and centred title, so it never counts as system mode here; nor
@@ -797,10 +814,7 @@ mod title_tests {
     }
 
     fn open_named(app: &mut crate::SaryApp, name: &str) {
-        app.session.add_document(
-            sary_doc::Document::new(name, sary_doc::Size::new(4, 4), sary_doc::ColorMode::Rgb, sary_doc::SampleType::U8),
-            None,
-        );
+        app.session.add_document(sary_doc::Document::new(name, sary_doc::Size::new(4, 4), sary_doc::ColorMode::Rgb, sary_doc::SampleType::U8), None);
     }
 
     #[test]
@@ -916,7 +930,7 @@ pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
         .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(10, 0)))
         .show(ui, |ui| {
             ui.style_mut().spacing.scroll = egui::style::ScrollStyle { bar_width: 4.0, ..egui::style::ScrollStyle::floating() };
-            egui::ScrollArea::horizontal().id_salt("tool-options").auto_shrink([false, false]).show(ui, |ui| {
+            let options = egui::ScrollArea::horizontal().id_salt("tool-options").auto_shrink([false, false]).show(ui, |ui| {
             // Font ink can extend beyond its advance width at fractional positions.
             // Include its gutter in the container layout, including right-aligned actions.
             egui::Frame::NONE.inner_margin(egui::Margin { right: 2, ..Default::default() }).show(ui, |ui| {
@@ -1514,6 +1528,7 @@ pub fn options_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
             reveal_focused_control(ui);
             });
             });
+            mahay_ui::adaptive::register_scroll_region(ui.ctx(), options.inner_rect);
         });
 }
 
@@ -1604,6 +1619,9 @@ pub fn status_bar_heights(t: &Tokens) -> (f32, f32) {
 
 pub fn status_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
+    if mahay_ui::adaptive::FormFactor::of_ui(ui).is_touch_layout() {
+        return status_bar_touch(app, ui, &t);
+    }
     egui::Panel::bottom("status_bar")
         .exact_size(status_bar_heights(&t).0)
         .frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(10, 0)))
@@ -1662,6 +1680,39 @@ pub fn status_bar(app: &mut SaryApp, ui: &mut egui::Ui) {
                 });
             });
         });
+}
+
+/// The status bar of a phone or a narrow window (D23): one scrolling row with the zoom, the document
+/// facts, Fit and a button that opens the panels as a drawer.
+fn status_bar_touch(app: &mut SaryApp, ui: &mut egui::Ui, t: &Tokens) {
+    let side = mahay_ui::adaptive::MIN_TOUCH - 4.0;
+    egui::Panel::bottom("status_bar").exact_size(side).frame(egui::Frame::NONE.fill(t.chrome).inner_margin(egui::Margin::symmetric(8, 0))).show(ui, |ui| {
+        mahay_ui::adaptive::command_bar(ui, "sary_status", |ui| {
+            ui.spacing_mut().item_spacing.x = 8.0;
+            let on = crate::dock_drawer::open(ui.ctx());
+            if icons::button(ui, "layers", 36.0, on, tl!("Layers")).clicked() {
+                crate::dock_drawer::toggle(ui.ctx());
+            }
+            if let (Some(st), Some(i)) = (app.session.active(), app.session.active_index()) {
+                let (w, h) = (st.doc.size.width, st.doc.size.height);
+                let mut pct = app.ui.views[i].zoom * 100.0;
+                if widgets::compact_wrapping_value_field(ui, &mut pct, crate::zoom_levels::percent_range(&app.ui.views[i]), "%", vec2(78.0, 28.0)).changed() {
+                    app.ui.views[i].zoom = crate::zoom_levels::clamp(pct / 100.0, app.ui.views[i].doc_size);
+                    app.ui.views[i].fit_pending = false;
+                }
+                if widgets::compact_button(ui, tl!("Fit"), 28.0).clicked() {
+                    app.ui.views[i].fit_pending = true;
+                }
+                label(ui, &format!("{w} × {h} px"));
+            } else {
+                label(ui, tl!("No document"));
+            }
+            if !app.ui.status.is_empty() {
+                let is_err = app.ui.status_error || app.ui.status.starts_with("Couldn");
+                ui.label(RichText::new(&app.ui.status).color(if is_err { t.warning } else { t.text_faint }));
+            }
+        });
+    });
 }
 
 // ----------------------------------------------------------------------------- dock
@@ -4113,15 +4164,7 @@ fn background_drop_refused(doc: &sary_doc::Document, payload: &Value, target: La
 /// Drag a layer row to reorder: drop above, below, or inside an existing group. With ⌥ held on
 /// release the layers stay put and copies land there instead (Photoshop).
 /// Multi-layer moves are atomic (one undo step), using the engine's stable document order.
-fn layer_drag_and_drop(
-    app: &SaryApp,
-    ctx: &egui::Context,
-    ui: &egui::Ui,
-    l: &Layer,
-    rect: Rect,
-    resp: &egui::Response,
-    actions: &mut Vec<(String, Value)>,
-) {
+fn layer_drag_and_drop(app: &SaryApp, ctx: &egui::Context, ui: &egui::Ui, l: &Layer, rect: Rect, resp: &egui::Response, actions: &mut Vec<(String, Value)>) {
     let t = Tokens::get(ctx);
     let key = egui::Id::new("layer-drag");
     // A drag from the mask thumbnail (`starts_mask_drag`) moves the mask, not the layer.
@@ -4504,9 +4547,8 @@ mod color_tests {
             let mut app = SaryApp::new(sary_engine::Session::new(), crate::Services::default());
             app.session.tools.foreground = [1.0, 0.0, 0.0, 1.0];
             app.session.tools.background = [0.0, 0.0, 1.0, 1.0];
-            let mut h = egui_kittest::Harness::builder()
-                .with_size(vec2(80.0, 120.0))
-                .build_ui_state(|ui, app: &mut SaryApp| color_chips(app, ui, two_columns), app);
+            let mut h =
+                egui_kittest::Harness::builder().with_size(vec2(80.0, 120.0)).build_ui_state(|ui, app: &mut SaryApp| color_chips(app, ui, two_columns), app);
             SaryApp::setup_context(&h.ctx, kind);
             h.run_steps(2);
             h.get_by_label("Swap colours (X)").click();
@@ -4558,8 +4600,7 @@ mod color_tests {
                 resize: None,
                 preedit: None,
             });
-            let mut h =
-                egui_kittest::Harness::builder().with_size(vec2(80.0, 120.0)).build_ui_state(|ui, app: &mut SaryApp| color_chips(app, ui, false), app);
+            let mut h = egui_kittest::Harness::builder().with_size(vec2(80.0, 120.0)).build_ui_state(|ui, app: &mut SaryApp| color_chips(app, ui, false), app);
             SaryApp::setup_context(&h.ctx, crate::theme::ThemeKind::Studio);
             h.run_steps(2);
             h.get_by_label("Swap colours (X)").click();
@@ -4973,8 +5014,7 @@ mod snapshot_row_tests {
         app.run("history.newSnapshot", json!({})).unwrap();
         app.run("edit.fill", json!({"color": "#0000ff"})).unwrap();
         // 60 fps steps, so two clicks a frame apart count as a double-click.
-        let mut h =
-            Harness::builder().with_size(vec2(300.0, 400.0)).with_step_dt(1.0 / 60.0).build_ui_state(|ui, app: &mut SaryApp| history(app, ui), app);
+        let mut h = Harness::builder().with_size(vec2(300.0, 400.0)).with_step_dt(1.0 / 60.0).build_ui_state(|ui, app: &mut SaryApp| history(app, ui), app);
         h.run_steps(3);
         let steps = h.state().session.active().unwrap().history.entries().len();
         h.get_by_label("Snapshot 1").click();

@@ -10,7 +10,7 @@ const OPEN_MIMES: &[&str] = &[];
 fn android_main(app: AndroidApp) {
     mahay_android::init(&app, "Drafitra");
     let persistence_path = mahay_android::data_dir().map(|d| d.join("drafitra.ron"));
-    let options = eframe::NativeOptions { android_app: Some(app), renderer: eframe::Renderer::Wgpu, persistence_path, ..Default::default() };
+    let options = mahay_android::native_options!(app, persistence_path);
     let result = eframe::run_native(
         "Drafitra",
         options,
@@ -29,6 +29,7 @@ fn android_main(app: AndroidApp) {
     );
     if let Err(e) = result {
         log::error!("Drafitra stopped: {e}");
+        mahay_android::show_error(&format!("{} could not start its display. {e}", "Drafitra"));
     }
 }
 

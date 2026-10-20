@@ -54,7 +54,7 @@ fn icon_of(id: &str) -> Option<egui::ImageSource<'static>> {
 #[unsafe(no_mangle)]
 fn android_main(app: AndroidApp) {
     mahay_android::init(&app, "Mahay HUB");
-    let options = eframe::NativeOptions { android_app: Some(app), renderer: eframe::Renderer::Wgpu, ..Default::default() };
+    let options = mahay_android::native_options!(app);
     let result = eframe::run_native(
         "Mahay",
         options,
@@ -70,6 +70,7 @@ fn android_main(app: AndroidApp) {
     );
     if let Err(e) = result {
         log::error!("Mahay HUB stopped: {e}");
+        mahay_android::show_error(&format!("{} could not start its display. {e}", "Mahay HUB"));
     }
 }
 
@@ -291,6 +292,9 @@ impl Hub {
     }
 }
 
+/// The narrowest a tile can be: its margins and two buttons of 140 dp.
+const TILE_MIN_W: f32 = 330.0;
+
 fn tile(ui: &mut egui::Ui, hub: &Hub, app: &MahayApp, width: f32, get: &mut Option<&'static str>) {
     let t = text(hub.lang);
     let available = ON_ANDROID.contains(&app.id);
@@ -304,7 +308,9 @@ fn tile(ui: &mut egui::Ui, hub: &Hub, app: &MahayApp, width: f32, get: &mut Opti
         .inner_margin(14.0)
         .stroke(ui.visuals().widgets.noninteractive.bg_stroke);
     frame.show(ui, |ui| {
-        ui.set_width(width - 28.0);
+        // Exactly the width the grid gave this tile (the frame's margins and stroke come on top), so the
+        // tiles of a row never run past the window.
+        ui.set_width((width - 30.0).max(0.0));
         ui.set_min_height(150.0);
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
@@ -325,10 +331,12 @@ fn tile(ui: &mut egui::Ui, hub: &Hub, app: &MahayApp, width: f32, get: &mut Opti
                 ui.label(egui::RichText::new(t.soon).size(14.0).weak());
                 return;
             }
+            // Two buttons share the tile's width: Open and Update, side by side, each at least 44 dp high.
+            let button_w = ((width - 30.0 - ui.spacing().item_spacing.x) / 2.0).max(60.0);
             let big = |label: &str, fill: Option<egui::Color32>| {
                 let text = egui::RichText::new(label).size(16.0);
                 let text = if fill.is_some() { text.color(egui::Color32::WHITE) } else { text };
-                let mut b = egui::Button::new(text).min_size(egui::vec2(140.0, 44.0));
+                let mut b = egui::Button::new(text).min_size(egui::vec2(button_w, 44.0));
                 if let Some(f) = fill {
                     b = b.fill(f);
                 }
@@ -488,10 +496,11 @@ impl eframe::App for Hub {
                         }
                     });
                     ui.add_space(12.0);
-                    // Compact (phone): one column; medium: two; expanded (tablet landscape): three+.
+                    // As many columns as fit, from the window's width alone: one on a phone, two or three
+                    // on a tablet, more on a wide window. A tile needs room for two buttons side by side.
                     let width = ui.available_width();
-                    let columns = ((width / 300.0).floor() as usize).clamp(1, 4);
                     let gap = 12.0;
+                    let columns = (((width + gap) / (TILE_MIN_W + gap)).floor() as usize).clamp(1, 6);
                     let tile_w = (width - gap * (columns as f32 - 1.0)) / columns as f32;
                     for row in apps.chunks(columns) {
                         ui.horizontal_top(|ui| {

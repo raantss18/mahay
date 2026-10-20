@@ -76,9 +76,22 @@ versions follow [SemVer](https://semver.org/).
 
 ### Fixed
 
+- **Android: no more crash at launch on some devices.** Asking wgpu for Vulkan and OpenGL ES together
+  made the OpenGL surface fail on an Android 10 emulator (`BadAlloc`, then a panic) and the app
+  closed at every start. Apps now start on OpenGL ES alone before Android 11, remember which backend
+  drew a frame, try the next one after a start that did not, and show a message instead of closing
+  silently when none works. One fix for all 14 apps (`mahay_android::graphics`).
+- **Android: no empty bands.** The system bars were taken off twice on Android before 15 and in
+  split-screen or free-form windows; the app now counts only what overlaps it, reads it again when the
+  window is resized, and draws under the display cutout. Checked live on the phone emulator at 20:9,
+  21:9, 22:9, 1:1 and tablet sizes.
+- **Mahay HUB (Android): the grid of apps no longer runs past the right edge** on a tablet; the tiles
+  share the window's width and their two buttons share the tile's.
+- **Sary on a phone**: the menus scroll, the status bar is touch sized, and the panels open as a
+  drawer instead of leaving ~100 px for the canvas (the toolbar is unchanged for now).
 - **Soratra on a phone: a finger drag scrolls the page** (with coasting) instead of selecting text;
   a long press first still selects. A solid scroll bar a finger can grab shows on narrow windows.
-  Tabilao, Seho and the other apps still select on a finger drag (see `TODO.md`).
+  **Tabilao**: a finger drag scrolls the sheet (a tap still selects a cell; ranges by finger come later). The other apps are being checked (see `TODO.md`).
 
 ### Changed
 

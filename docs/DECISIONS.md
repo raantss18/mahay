@@ -343,8 +343,20 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   mark what scrolls, `register_overlay` marks an overlay on purpose (a scroll chevron, a ruler's
   handles), and thin strips (≤ 12 points: resize grips, scroll bars) may overlap what they resize. Each test was
   seen failing on the old layout (Soratra, Tabilao, Seho, Taratasy: 70 to 580 findings).
-- **Done so far (0.2.3 branch):** Soratra, Tabilao, Seho, Taratasy. The rest follow in the order of
-  `TODO.md`.
+- **Both axes, never fixed at launch:** `WindowSize::of(ctx)` gives the width class and a height class
+  (compact < 480, medium < 900, with the same 8-point hysteresis), every frame; `columns()` and
+  `panels_beside()` let grids and side panels come and go one step at a time as the window changes
+  (the hub's tiles, Sary's dock) instead of jumping between presets. On Android the shell counts as
+  insets only what really overlaps the content (`MahayActivity.systemInsets`), reads them again the
+  moment the window size changes, and the theme draws under the display cutout; the manifest has no
+  fixed orientation or aspect ratio, `resizeableActivity` is true and `configChanges` covers size,
+  layout, orientation, density, keyboard and UI mode.
+- **Graphics (the same “never assume the device” rule):** `mahay_android::graphics` picks Vulkan+GL,
+  GL only or Vulkan only, remembers whether a start drew a frame, and moves to the next backend after
+  one that did not; Android before 11 starts on GL only (asking for both broke the GL surface on an
+  Android 10 emulator: BadAlloc, then a panic). A failed start shows a dialog instead of closing.
+- **Done so far (0.2.3 branch):** Soratra, Tabilao, Seho, Taratasy, Sary's frame (menus, status bar,
+  panels as a drawer; its toolbar is untouched). The rest follow in the order of `TODO.md`.
 - **Why:** one rule for every app and every device shape, testable without a device.
 - **Alternatives:** a phone/tablet flag or a "mobile layout" setting (wrong in split screen, on
   foldables and on a tablet used upright; a setting nobody finds); scaling the whole UI to fit a

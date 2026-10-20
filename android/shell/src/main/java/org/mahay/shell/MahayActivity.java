@@ -305,14 +305,55 @@ public class MahayActivity extends GameActivity {
         android.view.View view = getWindow().getDecorView();
         android.view.WindowInsets wi = view.getRootWindowInsets();
         if (wi == null) return new int[] {0, 0, 0, 0};
+        int l, t, r, b;
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             android.graphics.Insets bars = wi.getInsets(android.view.WindowInsets.Type.systemBars()
                     | android.view.WindowInsets.Type.displayCutout());
             android.graphics.Insets ime = wi.getInsets(android.view.WindowInsets.Type.ime());
-            return new int[] {bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom)};
+            l = bars.left; t = bars.top; r = bars.right; b = Math.max(bars.bottom, ime.bottom);
+        } else {
+            l = wi.getSystemWindowInsetLeft(); t = wi.getSystemWindowInsetTop();
+            r = wi.getSystemWindowInsetRight(); b = wi.getSystemWindowInsetBottom();
         }
-        return new int[] {wi.getSystemWindowInsetLeft(), wi.getSystemWindowInsetTop(),
-                wi.getSystemWindowInsetRight(), wi.getSystemWindowInsetBottom()};
+        // Only what really overlaps the app's content counts. Before Android 15 the window may
+        // already sit below the bars (and above the keyboard), and a free-form or split-screen
+        // window may not touch them at all: the root insets would then be taken off twice and
+        // leave empty bands. Edge to edge (the content fills the window) keeps them all.
+        android.view.View content = getWindow().findViewById(android.R.id.content);
+        if (content != null && content.getWidth() > 0 && content.getHeight() > 0) {
+            int[] at = new int[2];
+            content.getLocationInWindow(at);
+            int[] decorAt = new int[2];
+            view.getLocationInWindow(decorAt);
+            int left = at[0] - decorAt[0];
+            int top = at[1] - decorAt[1];
+            int right = view.getWidth() - (left + content.getWidth());
+            int bottom = view.getHeight() - (top + content.getHeight());
+            l = Math.max(0, l - left);
+            t = Math.max(0, t - top);
+            r = Math.max(0, r - Math.max(0, right));
+            b = Math.max(0, b - Math.max(0, bottom));
+        }
+        return new int[] {l, t, r, b};
+    }
+
+    /**
+     * Tell the user that the app could not start (the graphics could not be set up), instead of
+     * closing without a word. The next start tries another graphics backend by itself.
+     */
+    public void showError(final String message) {
+        runOnUiThread(() -> {
+            try {
+                new android.app.AlertDialog.Builder(this)
+                        .setTitle(getApplicationInfo().loadLabel(getPackageManager()))
+                        .setMessage(message + "\n\nOpen the app again: it will try another way to draw.")
+                        .setPositiveButton(android.R.string.ok, (d, w) -> finish())
+                        .setCancelable(false)
+                        .show();
+            } catch (Exception e) {
+                Log.w(TAG, "couldn't show the error", e);
+            }
+        });
     }
 
     /** Bar icons that stay readable over the app's theme (Android 11+; older keeps the default). */
