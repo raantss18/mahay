@@ -5844,7 +5844,7 @@ dependencies = [
 
 [[package]]
 name = "sary"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "arboard",
  "async-io",
@@ -5890,7 +5890,7 @@ dependencies = [
 
 [[package]]
 name = "sary-affinity"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "crc32fast",
  "flate2",
@@ -5900,7 +5900,7 @@ dependencies = [
 
 [[package]]
 name = "sary-algo"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "rayon",
  "rustfft",
@@ -5913,7 +5913,7 @@ dependencies = [
 
 [[package]]
 name = "sary-android"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "arboard",
  "eframe",
@@ -5940,7 +5940,7 @@ dependencies = [
 
 [[package]]
 name = "sary-automation"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "base64 0.22.1",
  "cap-std",
@@ -5962,7 +5962,7 @@ dependencies = [
 
 [[package]]
 name = "sary-cli"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "sary-automation",
  "sary-codecs",
@@ -5976,7 +5976,7 @@ dependencies = [
 
 [[package]]
 name = "sary-cms"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "moxcms",
  "rayon",
@@ -5984,7 +5984,7 @@ dependencies = [
 
 [[package]]
 name = "sary-codecs"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "exr",
  "flate2",
@@ -6005,7 +6005,7 @@ dependencies = [
 
 [[package]]
 name = "sary-color"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "sary-cms",
  "serde",
@@ -6013,7 +6013,7 @@ dependencies = [
 
 [[package]]
 name = "sary-compose"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "criterion",
  "proptest",
@@ -6028,7 +6028,7 @@ dependencies = [
 
 [[package]]
 name = "sary-doc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "sary-color",
  "sary-geom",
@@ -6039,7 +6039,7 @@ dependencies = [
 
 [[package]]
 name = "sary-engine"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "blake3",
  "exr",
@@ -6075,7 +6075,7 @@ dependencies = [
 
 [[package]]
 name = "sary-format"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "blake3",
  "crc32fast",
@@ -6096,14 +6096,14 @@ dependencies = [
 
 [[package]]
 name = "sary-geom"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "sary-gpu"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "half",
  "log",
@@ -6120,14 +6120,14 @@ dependencies = [
 
 [[package]]
 name = "sary-heif"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "heic-rs",
 ]
 
 [[package]]
 name = "sary-io"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "blake3",
  "crc32fast",
@@ -6157,18 +6157,18 @@ dependencies = [
 
 [[package]]
 name = "sary-ipp"
-version = "0.2.3"
+version = "0.2.4"
 
 [[package]]
 name = "sary-ops"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "sary-doc",
 ]
 
 [[package]]
 name = "sary-paint"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "sary-color",
  "sary-geom",
@@ -6179,7 +6179,7 @@ dependencies = [
 
 [[package]]
 name = "sary-plugins"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "rayon",
  "sary-color",
@@ -6194,7 +6194,7 @@ dependencies = [
 
 [[package]]
 name = "sary-psd"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "flate2",
  "proptest",
@@ -6205,7 +6205,7 @@ dependencies = [
 
 [[package]]
 name = "sary-raster"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "sary-color",
@@ -6215,7 +6215,7 @@ dependencies = [
 
 [[package]]
 name = "sary-raw"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "flate2",
  "image",
@@ -6230,7 +6230,7 @@ dependencies = [
 
 [[package]]
 name = "sary-tablet"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "block2 0.6.2",
  "objc2 0.6.4",
@@ -6242,7 +6242,7 @@ dependencies = [
 
 [[package]]
 name = "sary-testkit"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "memory-stats",
  "sary-color",
@@ -6253,7 +6253,7 @@ dependencies = [
 
 [[package]]
 name = "sary-text"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "flate2",
  "parley",
@@ -6267,7 +6267,7 @@ dependencies = [
 
 [[package]]
 name = "sary-ui-egui"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "base64 0.22.1",
  "eframe",
@@ -6310,7 +6310,7 @@ dependencies = [
 
 [[package]]
 name = "sary-vector"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "rayon",
  "sary-color",
@@ -6321,7 +6321,7 @@ dependencies = [
 
 [[package]]
 name = "sary-web"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "eframe",
  "egui",
@@ -6343,7 +6343,7 @@ dependencies = [
 
 [[package]]
 name = "sary-web-boot"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "flate2",
  "js-sys",
@@ -8999,7 +8999,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xtask"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde",
  "serde_json",

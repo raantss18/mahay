@@ -2319,7 +2319,7 @@ checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
 
 [[package]]
 name = "hetsika"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "arboard",
  "chrono",
@@ -2353,7 +2353,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-aac"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2363,7 +2363,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-ac3"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
  "thiserror 2.0.21",
@@ -2371,7 +2371,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-android"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "cpal",
  "eframe",
@@ -2387,7 +2387,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-apv"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2397,14 +2397,14 @@ dependencies = [
 
 [[package]]
 name = "hetsika-audio-dsp"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
 ]
 
 [[package]]
 name = "hetsika-automation"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "base64 0.22.1",
  "hetsika-engine",
@@ -2420,7 +2420,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-av1"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2431,21 +2431,21 @@ dependencies = [
 
 [[package]]
 name = "hetsika-avi"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
 ]
 
 [[package]]
 name = "hetsika-bitstream"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
 ]
 
 [[package]]
 name = "hetsika-captions"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "hetsika-project",
@@ -2458,11 +2458,11 @@ dependencies = [
 
 [[package]]
 name = "hetsika-cfb"
-version = "0.2.3"
+version = "0.2.4"
 
 [[package]]
 name = "hetsika-cli"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-automation",
  "hetsika-codecs",
@@ -2484,7 +2484,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-codecs"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-aac",
  "hetsika-ac3",
@@ -2522,7 +2522,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-color"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -2530,7 +2530,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-dng"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-dng",
  "rayon",
@@ -2539,7 +2539,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-dnx"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2549,7 +2549,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-edit"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-geom",
  "hetsika-media",
@@ -2562,7 +2562,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-engine"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-audio-dsp",
  "hetsika-captions",
@@ -2597,7 +2597,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-export"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-aac",
  "hetsika-apv",
@@ -2628,7 +2628,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-flac"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2637,7 +2637,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-format"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-media",
  "hetsika-project",
@@ -2650,7 +2650,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-frame"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "hetsika-time",
@@ -2660,7 +2660,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-geom"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -2668,7 +2668,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-golden"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "hetsika-frame",
@@ -2685,7 +2685,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-gpu"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "hetsika-export",
@@ -2704,7 +2704,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-h264"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2714,7 +2714,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-h264enc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2724,7 +2724,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-hevc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2734,7 +2734,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-interchange"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-cfb",
  "hetsika-color",
@@ -2751,7 +2751,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-isobmff"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2762,7 +2762,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-matroska"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
  "serde_json",
@@ -2770,7 +2770,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-media"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "hetsika-dng",
@@ -2786,7 +2786,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-mpa"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2795,7 +2795,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-mpeg2v"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
  "rayon",
@@ -2804,7 +2804,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-mpegts"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
  "thiserror 2.0.21",
@@ -2812,28 +2812,28 @@ dependencies = [
 
 [[package]]
 name = "hetsika-mxf"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
 ]
 
 [[package]]
 name = "hetsika-ogg"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
 ]
 
 [[package]]
 name = "hetsika-opus"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
 ]
 
 [[package]]
 name = "hetsika-platform"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-codecs",
@@ -2859,7 +2859,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-project"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "hetsika-geom",
@@ -2873,7 +2873,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-prores"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "hetsika-testkit",
@@ -2883,7 +2883,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-render"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-audio-dsp",
  "hetsika-captions",
@@ -2903,7 +2903,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-scopes"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-color",
  "serde",
@@ -2912,7 +2912,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-speech"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "candle-core",
  "candle-nn",
@@ -2929,14 +2929,14 @@ dependencies = [
 
 [[package]]
 name = "hetsika-testkit"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "png",
 ]
 
 [[package]]
 name = "hetsika-text"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "harfrust",
  "hetsika-color",
@@ -2948,7 +2948,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-time"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -2956,7 +2956,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-tts"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "candle-core",
  "candle-nn",
@@ -2970,7 +2970,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-tts-text"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde",
  "thiserror 2.0.21",
@@ -2978,7 +2978,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-ui-egui"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "cpu-time",
  "eframe",
@@ -3018,14 +3018,14 @@ dependencies = [
 
 [[package]]
 name = "hetsika-vp8"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "hetsika-vp9"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-bitstream",
  "rayon",
@@ -3034,7 +3034,7 @@ dependencies = [
 
 [[package]]
 name = "hetsika-web"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "eframe",
  "egui",
@@ -6952,7 +6952,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "hetsika-testkit",
  "serde_json",

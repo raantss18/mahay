@@ -5121,7 +5121,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "cpal",
  "eframe",
@@ -5147,7 +5147,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-android"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "cpal",
  "eframe",
@@ -5164,7 +5164,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-automation"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "image",
  "serde_json",
@@ -5176,14 +5176,14 @@ dependencies = [
 
 [[package]]
 name = "tselatra-av1enc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "filmcraft-av1",
 ]
 
 [[package]]
 name = "tselatra-cli"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "cpu-time",
  "image",
@@ -5199,7 +5199,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-color"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -5207,7 +5207,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-effects"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "log",
  "rayon",
@@ -5224,7 +5224,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-engine"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "exr",
  "image",
@@ -5258,7 +5258,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-export"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "filmcraft-aac",
  "filmcraft-h264enc",
@@ -5288,7 +5288,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-expr"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "boa_engine",
  "serde_json",
@@ -5305,7 +5305,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-geom"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -5313,7 +5313,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-gpu"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "bytemuck",
  "js-sys",
@@ -5335,14 +5335,14 @@ dependencies = [
 
 [[package]]
 name = "tselatra-hevcenc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "filmcraft-hevc",
 ]
 
 [[package]]
 name = "tselatra-host"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "exr",
  "gif",
@@ -5367,7 +5367,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-interchange"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "filmcraft-color",
  "filmcraft-geom",
@@ -5386,7 +5386,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-keyframe"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -5398,7 +5398,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-lottie"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "kurbo",
  "mahay-docpath",
@@ -5416,7 +5416,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-media"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "exr",
  "filmcraft-codecs",
@@ -5445,7 +5445,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-model"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "image",
  "miniz_oxide 0.8.9",
@@ -5457,14 +5457,14 @@ dependencies = [
 
 [[package]]
 name = "tselatra-opusenc"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "filmcraft-opus",
 ]
 
 [[package]]
 name = "tselatra-path"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "kurbo",
  "linesweeper",
@@ -5476,7 +5476,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-pdf"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "image",
  "kurbo",
@@ -5492,7 +5492,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-plugin"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde_json",
  "tselatra-effects",
@@ -5504,7 +5504,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-project"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde",
  "serde_json",
@@ -5517,14 +5517,14 @@ dependencies = [
 
 [[package]]
 name = "tselatra-psd"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "miniz_oxide 0.8.9",
 ]
 
 [[package]]
 name = "tselatra-raster"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "rayon",
  "tselatra-color",
@@ -5533,7 +5533,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-render"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "kurbo",
  "log",
@@ -5555,7 +5555,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-script"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "boa_engine",
  "serde_json",
@@ -5572,7 +5572,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-segment"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "miniz_oxide 0.8.9",
  "ndarray",
@@ -5581,7 +5581,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-svg"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "kurbo",
  "rayon",
@@ -5593,7 +5593,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-text"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "harfrust",
  "kurbo",
@@ -5605,7 +5605,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-time"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "proptest",
  "serde",
@@ -5613,7 +5613,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-track"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "rayon",
  "serde",
@@ -5625,7 +5625,7 @@ dependencies = [
 
 [[package]]
 name = "tselatra-ui-egui"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "eframe",
  "egui",
@@ -5658,11 +5658,11 @@ dependencies = [
 
 [[package]]
 name = "tselatra-vp9enc"
-version = "0.2.3"
+version = "0.2.4"
 
 [[package]]
 name = "tselatra-web"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "eframe",
  "egui",
@@ -6945,7 +6945,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde_json",
 ]
