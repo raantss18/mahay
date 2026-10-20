@@ -13,3 +13,6 @@ android/app/src/*/jniLibs/
 
 # Secrets: signing keys and passwords stay on this machine, never in git.
 release-keys/
+
+# Tsilo's build script lives in a folder named build/
+!apps/tsilo/crates/text/build/
