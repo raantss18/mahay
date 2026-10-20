@@ -59,7 +59,7 @@ sur les **téléphones et tablettes Android** et sur **Linux**. Voir [NOTICE](NO
 | **Tabilao** | tableur (XLSX, ODS, CSV) | ✅ | alpha |
 | **Seho** | présentations (PPTX) | ✅ | alpha |
 | **Taratasy** | PDF : lire, annoter, remplir, signer, organiser | ✅ | alpha |
-| **Sary** | retouche d'images (calques, PSD, RAW) | ✅ | alpha |
+| **Sary** | retouche d'images (calques, PSD, RAW), espaces Simple et Pro | ✅ | alpha |
 | **Hazavana** | photothèque et développement RAW | ✅ | alpha |
 | **Tsilo** | illustration vectorielle | ✅ | alpha |
 | **Pejy** | mise en page et publication | ✅ | alpha |

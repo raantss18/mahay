@@ -448,6 +448,13 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   and text, Retouch, Export, "Pro" button. Then Hetsika (storyboard timeline: trim, split, reorder, text,
   music or voice-over, speed, export presets), then Hazavana, Feo, Soratra, Taratasy and the rest, each
   starting from the five to eight things its users do most (measured through D28 once it exists).
+- **Built (0.2.5, Sary):** `sary_engine::simple` (the four sliders as named adjustment layers, tests) and
+  `sary_ui_egui::simple_ui` (the shell: a top bar, six tasks, two layouts chosen every frame from the room
+  left, not from the device). The default is Simple on Android and Pro on a computer until the user
+  chooses (`UiState.simple_workspace`). Verified on emulators (phone 1080×2340 and tablet 2560×1600):
+  sliders, filters, hold to compare, square crop, brush, text with the keyboard up, Pro and back.
+  Not verified: a real phone, retouch strokes, export from Simple, a long session. Next: Hetsika, then the
+  others, each starting from the few things its users do most (D28 will tell).
 - **Alternatives:** simplify the existing interface in place (every change collides with upstream, and it
   would still be one interface for two kinds of user); a separate simple app per app (14 more apps to keep).
 - **Why:** newcomers need to succeed in the first minute, professionals need depth, and a layer on top of

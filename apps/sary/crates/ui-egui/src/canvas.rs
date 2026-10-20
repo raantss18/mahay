@@ -2138,7 +2138,8 @@ fn documents(app: &mut SaryApp, ui: &mut egui::Ui) {
         open_on_double_click(app, ui, area);
         return;
     }
-    if !app.ui.view.hides_tabs() || opening {
+    // The Simple workspace (D27) has no tab strip: it works on the picture in front.
+    if (!app.ui.view.hides_tabs() && !crate::simple_ui::enabled(app)) || opening {
         // Flat Spectrum tabs sit directly against the canvas. The parent's default vertical
         // item spacing would otherwise leave a visible gap below the tab strip (#2188).
         let spacing = ui.spacing().item_spacing.y;
@@ -4193,6 +4194,7 @@ pub fn canvas_view(app: &mut SaryApp, ui: &mut egui::Ui, idx: usize, rect: Rect,
     let t0 = crate::gpu_canvas::now_ms();
     let before = view.center;
     let over_bars = app.ui.view.shows_scrollbars()
+        && !crate::simple_ui::enabled(app)
         && crate::scrollbars::show(ui, rect, &mut view, flip, aspect, app.session.prefs().tools.overscroll, egui::Id::new(("pc-canvas", idx)));
     ctx.data_mut(|d| d.insert_temp(bars_id, over_bars));
     if view.center != before {

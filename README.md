@@ -58,7 +58,7 @@ to **Android phones and tablets** and **Linux**. See [NOTICE](NOTICE).
 | **Tabilao** | spreadsheet (XLSX, ODS, CSV) | ✅ | alpha |
 | **Seho** | presentations (PPTX) | ✅ | alpha |
 | **Taratasy** | PDF: read, annotate, fill, sign, organise | ✅ | alpha |
-| **Sary** | image editor (layers, PSD, raw) | ✅ | alpha |
+| **Sary** | image editor (layers, PSD, raw), with a Simple and a Pro workspace | ✅ | alpha |
 | **Hazavana** | photo library and raw development | ✅ | alpha |
 | **Tsilo** | vector illustration | ✅ | alpha |
 | **Pejy** | page layout and publishing | ✅ | alpha |

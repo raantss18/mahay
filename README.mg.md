@@ -46,7 +46,7 @@ nampandehanina tamin'ny **finday sy takelaka Android** ary **Linux**. Jereo ny [
 | **Tabilao** | tabilao kajy (XLSX, ODS, CSV) | ✅ | alpha |
 | **Seho** | fampisehoana (PPTX) | ✅ | alpha |
 | **Taratasy** | PDF: vakiana, asiana fanamarihana, fenoina, soniavina | ✅ | alpha |
-| **Sary** | fanamboarana sary (sosona, PSD, RAW) | ✅ | alpha |
+| **Sary** | fanamboarana sary (sosona, PSD, RAW), toerana Tsotra sy Pro | ✅ | alpha |
 | **Hazavana** | tahirin-tsary sy RAW | ✅ | alpha |
 | **Tsilo** | sary vektoraly | ✅ | alpha |
 | **Pejy** | fandaminana pejy | ✅ | alpha |

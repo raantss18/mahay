@@ -189,6 +189,7 @@ pub mod shape_stroke_ui;
 pub mod shortcut_dispatch;
 pub mod shortcuts;
 mod single_line_drag;
+pub mod simple_ui;
 mod sizing;
 pub mod slice_ui;
 pub mod smart_ui;
@@ -2035,20 +2036,28 @@ impl eframe::App for SaryApp {
         // system title bar this is where the document name lives, as the in-app title is hidden.
         panels::sync_window_title(self, &ctx);
         let chrome = !self.ui.view.hides_chrome();
-        if chrome && self.ui.panels.menu_bar {
+        // The Simple workspace (D27) replaces Pro's bars; the canvas and every dialog stay the same.
+        let simple = chrome && simple_ui::enabled(self);
+        if simple {
+            simple_ui::chrome(self, ui);
+        }
+        if chrome && !simple && self.ui.panels.menu_bar {
             panels::title_bar(self, ui);
         }
-        if chrome && self.ui.panels.options_bar {
+        if chrome && !simple && self.ui.panels.options_bar {
             panels::options_bar(self, ui);
         }
-        if chrome && self.ui.panels.status_bar {
+        if chrome && !simple && self.ui.panels.status_bar {
             panels::status_bar(self, ui);
         }
-        if chrome && self.ui.panels.toolbar {
+        if chrome && !simple && self.ui.panels.toolbar {
             panels::toolbar(self, ui);
         }
-        if chrome && self.ui.panels.dock {
+        if chrome && !simple && self.ui.panels.dock {
             panels::right_dock(self, ui);
+        }
+        if chrome && !simple {
+            simple_ui::pro_switch(self, &ctx);
         }
         let t = theme::Tokens::get(&ctx);
         let backdrop = if chrome { prefs_ui::pasteboard_color(self).unwrap_or(t.canvas) } else { egui::Color32::BLACK };

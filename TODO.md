@@ -17,7 +17,8 @@ Demandé par le propriétaire après les retours d'utilisateurs (Sary difficile,
 - [ ] **Hetsika / fenêtre sur Redmi Note 14 (HyperOS 3, Android 16, Mali)** : Hetsika ne s'ouvre pas ; les autres apps ne s'affichent pas tout de suite en plein écran et donnent un écran noir en quittant. Piste : cycle de vie et taille de la surface wgpu, backend Vulkan sur Mali, échec du device (traité par la session phone-layouts avec le plantage d'un émulateur Android 10). À confirmer sur un téléphone réel.
 - [ ] Hetsika : obtenir modèle, version d'Android et symptôme ; lire les événements `diagnostics` (crash, native_crash, anr, low_memory) une fois la 0.2.5 diffusée.
 - [ ] **Adaptive layout fluide** (session phone-layouts) : plus aucune taille de fenêtre figée, pas de bandes vides, grille du hub, 7 apps à adapter ; fusion de `feat/adaptive-layout` avant la 0.2.5.
-- [ ] **Sary Simple/Pro** (D27), puis Hetsika, Hazavana, Feo, Soratra, Taratasy.
+- [x] **Sary Simple/Pro** (D27) : moteur `sary_engine::simple`, interface `simple_ui`, deux dispositions (bande en bas / rail à gauche), vérifié sur émulateurs téléphone et tablette ; reste : essai sur un vrai téléphone, retouche au doigt, export depuis Simple, vignettes d'aperçu des filtres, « Auto » réel (histogramme).
+- [ ] **Simple/Pro pour Hetsika**, puis Hazavana, Feo, Soratra, Taratasy.
 - [ ] **Nettoyage des interfaces** (D29) : audit écran par écran, `docs/UI_AUDIT.md`.
 - [ ] Relire les textes malgaches ajoutés (`docs/A_VALIDER.md`) : « Hevitrao », « Hanampy hanatsara an'i Mahay », libellés du formulaire.
 

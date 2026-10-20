@@ -1,6 +1,6 @@
 //! The Simple workspace's non-destructive "Adjust" model (decision D27).
 //!
-//! Four sliders (Light, Contrast, Colour, Warmth, each -100..=100) drive four named adjustment
+//! Four sliders (Light, Contrast, Color, Warmth, each -100..=100) drive four named adjustment
 //! layers on top of the picture. Nothing is destroyed: the layers show in the Layers panel (so Pro
 //! sees what Simple did), survive saving to `.sary` and PSD, and a slider back at 0 removes its
 //! layer. A drag is one history step (`coalesce`), and "hold to compare" hides the layers without
@@ -11,7 +11,7 @@ use sary_doc::{Adjustment, Document, Layer, LayerContent};
 use crate::{Result, Session};
 
 /// The layer names, in stacking order from the bottom.
-pub const LAYER_NAMES: [&str; 4] = ["Simple: Light", "Simple: Contrast", "Simple: Colour", "Simple: Warmth"];
+pub const LAYER_NAMES: [&str; 4] = ["Simple: Light", "Simple: Contrast", "Simple: Color", "Simple: Warmth"];
 
 /// The slider range's end: sliders run from `-RANGE` to `RANGE`.
 pub const RANGE: f32 = 100.0;

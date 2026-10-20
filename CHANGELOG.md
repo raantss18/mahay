@@ -15,6 +15,15 @@ versions follow [SemVer](https://semver.org/).
   open on some phones" becomes a model, a version and a reason. Never documents, file names or text.
 - `docs/FEEDBACK_SETUP.md` (the SQL to run once in Supabase), privacy policy updated (en, fr).
 
+- **Sary: Simple workspace** (D27), the default on a phone or tablet, with a **Pro** button for the full
+  workspace (and a small **Simple** button back). Six labelled tasks: **Adjust** (Light, Contrast, Color,
+  Warmth sliders, Enhance, Reset), **Filters** (eight looks), **Crop** (shapes around the center, rotate,
+  flip), **Draw** (brush, eraser, size, ten colors), **Text** (tap, type, size, color) and **Retouch** (spot
+  heal, remove, red eye). Adjust and Filters are non-destructive: they drive four named adjustment layers
+  ("Simple: Light"...), one undo step per drag, and holding the eye shows the original. The layout follows
+  the window: tasks along the bottom on a narrow window, a rail on the left and the controls on the right
+  on a wide one, scrolling when the keyboard takes the room. Texts in English, French and Malagasy.
+
 ### Fixed
 
 - **Links in About did nothing on Android** (GitHub, releases, author, discussions, privacy): the Android bridge

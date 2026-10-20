@@ -1062,6 +1062,13 @@ pub struct ColorPanelState {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct UiState {
     pub tool: Tool,
+    /// The Simple workspace (D27) is on (`Some(true)`), Pro is (`Some(false)`), or the user has
+    /// not chosen: Simple on a phone or tablet, Pro on a computer.
+    #[serde(default)]
+    pub simple_workspace: Option<bool>,
+    /// What the Simple workspace keeps while the app runs (`simple_ui`). Not saved.
+    #[serde(skip)]
+    pub simple: crate::simple_ui::State,
     /// The last tool used in each shortcut group (the tools sharing a key, [`Tool::key`]), at most
     /// one per group: the group's key brings it back, as in Photoshop (#2608).
     #[serde(default)]
@@ -1309,6 +1316,8 @@ impl Default for UiState {
     fn default() -> Self {
         Self {
             tool: Tool::Brush,
+            simple_workspace: None,
+            simple: Default::default(),
             group_tools: Vec::new(),
             spring: None,
             recent_files: Vec::new(),
