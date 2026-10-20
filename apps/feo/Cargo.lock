@@ -2543,6 +2543,7 @@ name = "mahay-about"
 version = "0.1.0"
 dependencies = [
  "egui",
+ "mahay-feedback",
  "mahay-update",
 ]
 
@@ -2556,12 +2557,23 @@ dependencies = [
  "jni 0.21.1",
  "log",
  "mahay-about",
+ "mahay-feedback",
  "mahay-update",
+ "serde_json",
 ]
 
 [[package]]
 name = "mahay-docpath"
 version = "0.1.0"
+
+[[package]]
+name = "mahay-feedback"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "serde_json",
+ "ureq",
+]
 
 [[package]]
 name = "mahay-ui"
