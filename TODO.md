@@ -14,6 +14,7 @@ Demandé par le propriétaire après les retours d'utilisateurs (Sary difficile,
 - [x] Retours (petit message) et diagnostics anonymes facultatifs dans « À propos » ; crate `mahay-feedback` ; testé jusqu'au serveur (404 tant que les tables n'existent pas).
 - [ ] **Propriétaire :** exécuter le SQL de `docs/FEEDBACK_SETUP.md` dans Supabase ; `gh secret set` des deux valeurs `MAHAY_SUPABASE_*` pour la CI.
 - [ ] Vérifier un retour réel dans Supabase (Table Editor) et la lecture refusée avec la clé publique.
+- [ ] **Hetsika / fenêtre sur Redmi Note 14 (HyperOS 3, Android 16, Mali)** : Hetsika ne s'ouvre pas ; les autres apps ne s'affichent pas tout de suite en plein écran et donnent un écran noir en quittant. Piste : cycle de vie et taille de la surface wgpu, backend Vulkan sur Mali, échec du device (traité par la session phone-layouts avec le plantage d'un émulateur Android 10). À confirmer sur un téléphone réel.
 - [ ] Hetsika : obtenir modèle, version d'Android et symptôme ; lire les événements `diagnostics` (crash, native_crash, anr, low_memory) une fois la 0.2.5 diffusée.
 - [ ] **Adaptive layout fluide** (session phone-layouts) : plus aucune taille de fenêtre figée, pas de bandes vides, grille du hub, 7 apps à adapter ; fusion de `feat/adaptive-layout` avant la 0.2.5.
 - [ ] **Sary Simple/Pro** (D27), puis Hetsika, Hazavana, Feo, Soratra, Taratasy.
