@@ -107,6 +107,7 @@ pub mod select_extra_cmds;
 pub mod selection_cmds;
 pub mod shell_commands;
 pub mod shortcut_sets;
+pub mod simple;
 pub mod slice_cmds;
 pub mod smart_cmds;
 pub mod smartselect_cmds;
