@@ -149,6 +149,8 @@ pub struct GridState {
     pub hscroll: Option<Rect>,
     /// Ctrl+wheel zoom in progress (see [`WheelZoom`]).
     pub wheel_zoom: Option<WheelZoom>,
+    /// A finger dragging the sheet along (D23): a finger pans, the mouse and a stylus select.
+    pub finger: mahay_ui::adaptive::FingerPan,
 }
 
 /// Ctrl+wheel zoom for one (doc uid, sheet). egui eases a notch in over several frames and
@@ -567,7 +569,10 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
     } else {
         Rect::from_min_max(available.min, pos2(available.right() - bar, available.bottom()))
     };
-    let resp = ui.allocate_rect(rect, Sense::click_and_drag());
+    // A finger drag pans the sheet instead of selecting cells (D23): for a finger the grid senses
+    // taps only, and the pan below moves the view. The mouse and a stylus drag as before.
+    let finger = ui.input(mahay_ui::adaptive::finger_down);
+    let resp = ui.allocate_rect(rect, if finger { Sense::click() } else { Sense::click_and_drag() });
     app.grid.rect = Some(rect);
     let Some(d) = app.session.active() else { return };
     let wb: Arc<Workbook> = d.wb.clone();
@@ -639,6 +644,21 @@ pub fn show(app: &mut SheetApp, ui: &mut egui::Ui) {
                 d = vec2(d.y, 0.0);
             }
             view.scroll -= d / z;
+        }
+    }
+    // A finger dragging over the cells carries the sheet along, and coasts after a flick.
+    {
+        let step = app.grid.finger.update(&ui.input(|i| i.clone()), grid_rect, app.editor.is_none());
+        if step.delta != egui::Vec2::ZERO {
+            let z = if paper { make_geo(app, view.scroll).z } else { sh.zoom as f32 / 100.0 * DISPLAY_SCALE };
+            let mut d = step.delta;
+            if sh.right_to_left {
+                d.x = -d.x;
+            }
+            view.scroll -= d / z;
+        }
+        if step.panning || step.coasting {
+            ui.ctx().request_repaint();
         }
     }
     // The zoom glides to its step like egui eases a wheel notch (90% of the way in 0.1 s), or goes

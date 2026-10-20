@@ -109,3 +109,50 @@ fn a_thin_resize_grip_over_an_edge_is_not_an_overlap() {
     });
     assert!(audit(&ctx).is_empty(), "{:?}", audit(&ctx));
 }
+
+#[test]
+fn a_quick_move_pans_and_a_long_rest_selects() {
+    let g = |mode| Gesture { start: pos2(100.0, 100.0), started_at: 10.0, mode };
+    assert_eq!(decide(&g(Mode::Undecided), pos2(103.0, 104.0), 10.1), Mode::Undecided);
+    assert_eq!(decide(&g(Mode::Undecided), pos2(100.0, 130.0), 10.1), Mode::Panning);
+    assert_eq!(decide(&g(Mode::Undecided), pos2(100.0, 130.0), 10.6), Mode::Selecting);
+    assert_eq!(decide(&g(Mode::Undecided), pos2(101.0, 100.0), 10.6), Mode::Selecting);
+    assert_eq!(decide(&g(Mode::Panning), pos2(100.0, 100.0), 12.0), Mode::Panning);
+    assert_eq!(decide(&g(Mode::Ignored), pos2(300.0, 100.0), 10.1), Mode::Ignored);
+}
+
+/// A finger drag over the area pans it, with the coast after a lift.
+#[test]
+fn a_finger_pan_follows_the_finger_and_coasts() {
+    use egui::{Event, PointerButton, TouchDeviceId, TouchId, TouchPhase};
+    let ctx = Context::default();
+    let mut pan = FingerPan::default();
+    let mut total = egui::Vec2::ZERO;
+    let mut coasted = egui::Vec2::ZERO;
+    let area = Rect::from_min_size(pos2(0.0, 0.0), vec2(360.0, 600.0));
+    let mut time = 0.0;
+    let mut run = |events: Vec<Event>, pan: &mut FingerPan| -> PanStep {
+        time += 1.0 / 60.0;
+        let input = RawInput { screen_rect: Some(area), time: Some(time), events, ..Default::default() };
+        let mut step = PanStep::default();
+        let mut out = ctx.run_ui(input, |ui| step = pan.update(&ui.input(|i| i.clone()), area, true));
+        out.textures_delta.clear();
+        step
+    };
+    let touch = |phase, pos| Event::Touch { device_id: TouchDeviceId(0), id: TouchId(0), phase, pos, force: None };
+    let start = pos2(200.0, 400.0);
+    run(vec![touch(TouchPhase::Start, start), Event::PointerMoved(start), Event::PointerButton { pos: start, button: PointerButton::Primary, pressed: true, modifiers: Default::default() }], &mut pan);
+    let mut at = start;
+    for _ in 0..8 {
+        at.y -= 20.0;
+        let step = run(vec![touch(TouchPhase::Move, at), Event::PointerMoved(at)], &mut pan);
+        total += step.delta;
+    }
+    assert!(total.y < -100.0, "the content followed the finger up: {total:?}");
+    let lift = run(vec![touch(TouchPhase::End, at), Event::PointerButton { pos: at, button: PointerButton::Primary, pressed: false, modifiers: Default::default() }], &mut pan);
+    coasted += lift.delta;
+    for _ in 0..30 {
+        coasted += run(vec![], &mut pan).delta;
+    }
+    assert!(coasted.y < -20.0, "a fast flick coasts on: {coasted:?}");
+}
