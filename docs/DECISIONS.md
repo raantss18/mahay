@@ -434,3 +434,54 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
   principle), a Pyodide/WebAssembly Python (slow, large), remote kernels only (no offline use; kept
   as the fallback, not the only path).
 
+## D27 — Simple by default, Pro on demand
+
+- **Decision:** after users called Sary hard to use (and said the same of Hetsika and the others), every
+  app gets two workspaces: **Simple** and **Pro**, with a visible switch. Simple is the default for a
+  newcomer and on phones; Pro is today's full interface. The choice is remembered per app.
+  - **Simple** is task-first, in the way of a photo or video app of the phone: open a thing, a few big
+    actions (labelled, not just icons), one tool at a time, results you can see, undo always at hand,
+    "hold to compare with the original", sensible presets, first-run hints, nothing the user did not ask for.
+  - **Pro** keeps the upstream workspace (so merging upstream work stays possible, D24) cleaned of what is
+    unnecessary (D29).
+- **Pilot: Sary** (photo editor): Adjust (light, colour, detail, one-tap Auto), Filters, Crop and rotate, Draw
+  and text, Retouch, Export, "Pro" button. Then Hetsika (storyboard timeline: trim, split, reorder, text,
+  music or voice-over, speed, export presets), then Hazavana, Feo, Soratra, Taratasy and the rest, each
+  starting from the five to eight things its users do most (measured through D28 once it exists).
+- **Alternatives:** simplify the existing interface in place (every change collides with upstream, and it
+  would still be one interface for two kinds of user); a separate simple app per app (14 more apps to keep).
+- **Why:** newcomers need to succeed in the first minute, professionals need depth, and a layer on top of
+  the existing UI gives both without forking upstream's work.
+
+## D28 — Feedback and anonymous diagnostics through Supabase (opt-in)
+
+- **Decision:** every app gets, in its About page, **"Send feedback"** (a short message, a kind: bug, idea,
+  question, praise, an optional contact, and a visible "include technical information" choice) and an optional
+  **"Help improve Mahay"** switch for anonymous diagnostics. Both go to the owner's Supabase project
+  (`feedback` and `diagnostics` tables, insert-only for the apps, readable only by the owner,
+  `docs/FEEDBACK_SETUP.md`). **Nothing is sent without the user's choice**, the screen shows exactly what
+  would be sent, and `docs/PRIVACY.md` says so.
+- **What is sent (diagnostics):** a random per-device id (not tied to any account), app, version, the
+  event (opened once a day, crashed, native crash, app not responding, killed for memory, update or install
+  failed with its error kind) and device facts (Android version, ABI, manufacturer and model, screen class,
+  language). **Never** documents, file names, text, contacts or location.
+- **Crashes:** on Android 11+ the app reads its own last exit reason (`ApplicationExitInfo`: crash, native
+  crash, ANR, low memory) at the next start, and a Rust panic hook keeps the last panic in the app's
+  folder; with the user's consent they are sent. This is how "Hetsika does not open on some phones" becomes
+  a model, a Android version and a reason instead of a guess.
+- **Alternatives:** third-party analytics or crash services (they would see the users' devices; against
+  D1); no diagnostics (the owner learns of a crash only when someone writes).
+- **Why:** the owner wants usage statistics and feedback, users keep control, and the data stays in the
+  project the owner already runs.
+
+## D29 — Clean the interfaces: remove what is not necessary, add what is
+
+- **Decision:** each app is audited screen by screen (phone and tablet, light and dark) and cleaned.
+  **Remove:** anything that needs ArtCraft's services or an account that does not exist (sign in, share links,
+  collaboration, cloud templates, AI calls to upstream), community or social buttons that do not lead to
+  Mahay, anything that does nothing offline, duplicated or placeholder controls. **Replace with what is
+  necessary:** About (links that work), Send feedback, Help, update status, Open with, Mahay HUB shortcuts.
+  **Hide, do not delete,** rare professional features under "More" or in the Pro workspace.
+- **Why:** a button that does nothing is worse than no button, and every screen should be about the user's
+  task. Each removal is listed in `docs/UI_AUDIT.md` with the reason, so upstream merges (D24) can follow.
+
