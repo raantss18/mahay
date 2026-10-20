@@ -82,6 +82,17 @@ au lieu de défiler, et il n'y a pas de barre de défilement.
 - [ ] Toujours absent sur un vrai appareil : relever la version d'Android, le gestionnaire de
       fichiers et le type du fichier.
 
+### P0 — Mises à jour : sauts de version et échecs lisibles
+- [x] Vérifications automatiques des sauts de version (2026-10-20) : `scripts/check-upgrade-path.sh`
+      (anciennes APK puis nouvelles par-dessus, deux ordres, Android 10) et `scripts/check-updater-replay.sh`
+      (l'updater de chaque ancien tag contre la release en ligne, avec et sans l'API GitHub). 0.2.0, 0.2.1
+      et 0.2.2 vers 0.2.3 : tout passe. À lancer à chaque release ([guide](docs/RELEASING.md)).
+- [ ] Un utilisateur en 0.2.1 n'arrive pas à passer en 0.2.3 sur son téléphone : cause à trouver
+      (message exact après « Échec de la mise à jour », modèle et version d'Android).
+- [ ] Échec d'une mise à jour : montrer la raison en clair (réseau, signature, espace, installation refusée)
+      avec « Copier les détails » et un bouton « Télécharger à la main » qui ouvre la page de la release.
+- [ ] Android 14+ : vérifier le comportement si une autre boutique est l'installateur d'origine.
+
 ### P1 — Suivre ArtCraft sans rien casser (D24)
 - [x] `scripts/upstream-watch.py` + workflow hebdomadaire `upstream-watch.yml` : compare l'amont aux
       révisions importées, trie (sécurité, plantage, dépendances…), signale licence et nouveaux

@@ -35,6 +35,27 @@ secret file is tracked by git, when `VERSION` or the CHANGELOG do not say this v
 release already exists, or when `finalize-release.sh --require-all` or the checksums fail. Then it
 pushes, tags, creates the release as **latest** and checks that `releases/latest` points to it.
 
+## Updates that skip versions
+
+A user may jump from any old version to the newest one, so every release is checked against the old
+ones, before and after publishing:
+
+```bash
+scripts/stage-release.sh 0.3.0
+scripts/check-upgrade-path.sh --serial emulator-5558   # BEFORE: old APKs, then the staged ones over them
+scripts/publish-release.sh 0.3.0
+scripts/check-updater-replay.sh                        # AFTER: the old updaters against the live release
+```
+
+- `check-upgrade-path.sh` installs the APKs of the last three releases on a **scratch** emulator
+  (it uninstalls the apps there, which also resets the hub's "install unknown apps" setting), then
+  installs the staged APKs over them with `adb install -r`, in two orders (hub last, hub first). It
+  catches a changed signing key, a lower `versionCode` or a manifest the installer refuses.
+- `check-updater-replay.sh` builds the `mahay-update` crate of each old tag and runs it as an installed
+  app of that version would: find the latest release (GitHub's API, then the redirect fallback used
+  when the API is rate-limited), verify the signed checksums, download an APK. It catches a change in
+  file names, the signature or the release layout that an old updater cannot follow.
+
 Publish as **latest**, never as a pre-release: `releases/latest` (what the apps ask) skips
 pre-releases.
 
