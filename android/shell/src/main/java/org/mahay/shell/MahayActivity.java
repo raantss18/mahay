@@ -283,6 +283,25 @@ public class MahayActivity extends GameActivity {
         return new int[] {l, t, r, b};
     }
 
+    /**
+     * Tell the user that the app could not start (the graphics could not be set up), instead of
+     * closing without a word. The next start tries another graphics backend by itself.
+     */
+    public void showError(final String message) {
+        runOnUiThread(() -> {
+            try {
+                new android.app.AlertDialog.Builder(this)
+                        .setTitle(getApplicationInfo().loadLabel(getPackageManager()))
+                        .setMessage(message + "\n\nOpen the app again: it will try another way to draw.")
+                        .setPositiveButton(android.R.string.ok, (d, w) -> finish())
+                        .setCancelable(false)
+                        .show();
+            } catch (Exception e) {
+                Log.w(TAG, "couldn't show the error", e);
+            }
+        });
+    }
+
     /** Bar icons that stay readable over the app's theme (Android 11+; older keeps the default). */
     public void setDarkBars(final boolean dark) {
         if (android.os.Build.VERSION.SDK_INT < 30) return;

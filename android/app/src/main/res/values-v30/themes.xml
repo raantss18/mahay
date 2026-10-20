@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Draw under the display cutout (notch, punch hole) so no bar is left empty; the app keeps its
+         content out of the cutout through the insets it reads (MahayActivity.systemInsets). -->
+    <style name="Mahay" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/mahay_background</item>
+        <item name="android:statusBarColor">@color/mahay_background</item>
+        <item name="android:navigationBarColor">@color/mahay_background</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+    </style>
+</resources>

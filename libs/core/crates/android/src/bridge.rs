@@ -10,6 +10,8 @@ pub struct EguiBridge {
     insets_read: Option<std::time::Instant>,
     /// The size of the window at the last read of the insets.
     last_size: Option<egui::Vec2>,
+    /// A frame has been drawn (the graphics backend is known to work).
+    drew: bool,
     /// The keyboard buffer as last turned into events, and the field it belongs to.
     ime_seen: String,
     ime_field: Option<egui::Id>,
@@ -69,6 +71,11 @@ impl EguiBridge {
     /// Show the soft keyboard while a text field has focus, and copy what the app copied to the
     /// Android clipboard (egui-winit has no clipboard on Android).
     pub fn after_ui(&mut self, ctx: &egui::Context) {
+        // A frame was drawn: the graphics backend works, remember it.
+        if !self.drew {
+            self.drew = true;
+            crate::graphics_ok();
+        }
         mahay_about::banner(ctx);
         let dark = ctx.global_style().visuals.dark_mode;
         if self.dark_bars != Some(dark) {

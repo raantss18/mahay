@@ -10,7 +10,7 @@ fn android_main(app: AndroidApp) {
     mahay_android::init(&app, "Sary");
     log::info!("Sary {} starting", env!("CARGO_PKG_VERSION"));
     let persistence_path = mahay_android::data_dir().map(|d| d.join("sary.ron"));
-    let options = eframe::NativeOptions { android_app: Some(app), renderer: eframe::Renderer::Wgpu, persistence_path, ..Default::default() };
+    let options = mahay_android::native_options!(app, persistence_path);
     let presets = services::presets_dir().map(sary_engine::preset_store::open_dir_async);
     let result = eframe::run_native(
         "Sary",
@@ -31,6 +31,7 @@ fn android_main(app: AndroidApp) {
     );
     if let Err(e) = result {
         log::error!("Sary stopped: {e}");
+        mahay_android::show_error(&format!("{} could not start its display. {e}", "Sary"));
     }
 }
 

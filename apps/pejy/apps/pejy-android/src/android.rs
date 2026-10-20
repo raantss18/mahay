@@ -6,7 +6,7 @@ use pejy_ui_egui::{DesignApp, Services};
 #[unsafe(no_mangle)]
 fn android_main(app: AndroidApp) {
     mahay_android::init(&app, "Pejy");
-    let options = eframe::NativeOptions { android_app: Some(app), renderer: eframe::Renderer::Wgpu, ..Default::default() };
+    let options = mahay_android::native_options!(app);
     let result = eframe::run_native(
         "Pejy",
         options,
@@ -21,6 +21,7 @@ fn android_main(app: AndroidApp) {
     );
     if let Err(e) = result {
         log::error!("Pejy stopped: {e}");
+        mahay_android::show_error(&format!("{} could not start its display. {e}", "Pejy"));
     }
 }
 
