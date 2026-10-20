@@ -152,7 +152,7 @@ pub struct SignView {
 
 /// Drag a signature rectangle on one page (Digitally sign, Certify (visible signature)).
 pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, xf: &PageXform, page: usize, info: &taratasy_render::DocInfo, view: &mut DocView) {
-    let pointer = ui.input(|i| i.pointer.hover_pos());
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     let origin = ui.input(|i| i.pointer.press_origin());
     if pointer.is_some_and(|p| xf.rect.contains(p)) {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);

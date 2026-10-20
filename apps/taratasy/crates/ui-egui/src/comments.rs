@@ -726,7 +726,7 @@ pub(crate) fn resized(r: Rect, (hx, hy): (i8, i8), d: egui::Vec2, aspect_ratio: 
 /// Comment input on one page, before text selection runs. Returns `true` when the pointer
 /// gesture belongs to commenting (text selection must ignore it).
 pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, cx: &PageCx<'_>, view: &mut DocView) -> bool {
-    let pointer = ui.input(|i| i.pointer.hover_pos());
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     let origin = ui.input(|i| i.pointer.press_origin());
     let page_rect = cx.xf.rect;
     let pressed_here = origin.is_some_and(|o| page_rect.contains(o));
@@ -1190,7 +1190,7 @@ pub(crate) fn page_after_text(resp: &egui::Response, cx: &PageCx<'_>, view: &mut
 /// Paint comment selection, hover and gesture previews on a page.
 pub(crate) fn paint_page(ui: &egui::Ui, painter: &egui::Painter, cx: &PageCx<'_>, view: &DocView) {
     let cv = &view.comments;
-    let pointer = ui.input(|i| i.pointer.hover_pos());
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     // A redaction mark shows its fill while the pointer is over it, as Acrobat's does, so the
     // marked area reads before anything is applied.
     if cv.gesture.is_none()

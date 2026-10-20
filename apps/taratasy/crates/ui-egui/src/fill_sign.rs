@@ -627,7 +627,7 @@ pub(crate) fn page_input(
     author: &str,
     date_text: &Result<String, String>,
 ) -> Option<FillAction> {
-    let pointer = ui.input(|i| i.pointer.hover_pos())?;
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()))?;
     if !resp.contains_pointer() || !xf.rect.contains(pointer) {
         return None;
     }

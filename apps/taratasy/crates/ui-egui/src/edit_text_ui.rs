@@ -399,7 +399,7 @@ fn crop_input(
 ) -> bool {
     let painter = ui.painter();
     let Some(mode) = view.image_selection.as_mut().and_then(|s| s.crop.as_mut()) else { return false };
-    let hover_pos = ui.input(|inp| inp.pointer.hover_pos());
+    let hover_pos = ui.input(|inp| inp.pointer.hover_pos().or(inp.pointer.interact_pos()));
     let keep_screen = |keep: [f64; 4]| xf.user_rect(info, page, keep.map(|v| v as f32)).intersect(b);
     // A drag in progress moves a grip; the box stays inside the picture and at least 6 px.
     if allow_interaction
@@ -543,7 +543,7 @@ pub(crate) fn image_owns_pointer(ui: &egui::Ui, xf: &PageXform, page: usize, inf
     let Some(image) = view.edit_images.get(&page).and_then(|(_, images)| images.get(selection.index)) else { return false };
     let Some(rect) = image.visible_rect else { return false };
     let b = xf.user_rect(info, page, rect.map(|v| v as f32));
-    let p = ui.input(|i| if i.pointer.primary_down() { i.pointer.press_origin() } else { i.pointer.hover_pos() });
+    let p = ui.input(|i| if i.pointer.primary_down() { i.pointer.press_origin() } else { i.pointer.hover_pos().or(i.pointer.interact_pos()) });
     p.is_some_and(|p| [b.left_top(), b.right_top(), b.left_bottom(), b.right_bottom()].iter().any(|c| c.distance(p) < 8.0))
 }
 
@@ -642,7 +642,7 @@ pub(crate) fn image_input(
 ) -> bool {
     let boxes: Vec<Rect> = images.iter().map(|im| im.visible_rect.map_or(Rect::NOTHING, |r| xf.user_rect(info, page, r.map(|v| v as f32)))).collect();
     let painter = ui.painter();
-    let hover_pos = ui.input(|i| i.pointer.hover_pos());
+    let hover_pos = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     let image_contains = |index: usize, point: Pos2| {
         let (x, y) = xf.screen_to_view(point);
         let Some(p) = info.pages.get(page) else { return false };
@@ -1071,7 +1071,7 @@ pub(crate) fn page_input(
         view.block_drag = Some(BlockDrag { page, block, generation: doc.edit_generation(), start: o, grip });
         return true;
     }
-    let Some(p) = ui.input(|i| i.pointer.hover_pos()).filter(|p| xf.rect.contains(*p)) else { return false };
+    let Some(p) = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos())).filter(|p| xf.rect.contains(*p)) else { return false };
     let Some((hit, grip)) = grab_at(&boxes, p, upright) else { return false };
     if active != Some(hit) {
         painter.rect_stroke(boxes[hit], CornerRadius::same(2), Stroke::new(1.5, ACCENT), egui::StrokeKind::Outside);
@@ -1357,7 +1357,7 @@ pub(crate) fn overlay(ctx: &egui::Context, view: &mut DocView, info: &DocInfo) -
             ui.painter().rect_stroke(live.expand(2.0), CornerRadius::ZERO, Stroke::new(1.5, ACCENT), egui::StrokeKind::Outside);
             // On the frame, a press takes hold of the box (a click selects it, a drag moves it):
             // the pointer says so there, and reads as text inside.
-            if let Some(p) = ui.input(|i| i.pointer.hover_pos())
+            if let Some(p) = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()))
                 && live.expand(2.0 + FRAME_REACH).contains(p)
                 && !live.expand(2.0).contains(p)
             {

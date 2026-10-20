@@ -505,7 +505,7 @@ pub fn arrange(form: &[FormField], anchor: &(String, usize), others: &[(String, 
 /// rectangle being drawn or dragged.
 pub(crate) fn paint_page(ui: &egui::Ui, painter: &egui::Painter, xf: &PageXform, page: usize, info: &DocInfo, form: &[FormField], view: &DocView) {
     let prep = &view.prepare;
-    let pointer = ui.input(|i| i.pointer.hover_pos());
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     let grab = prep.grab.filter(|(gp, ..)| *gp == page);
     let zoom = (xf.rect.width() / xf.pw.max(1.0)).clamp(0.5, 3.0);
     for f in form {

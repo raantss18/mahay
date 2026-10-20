@@ -118,7 +118,7 @@ pub(crate) fn page_input(
     allowed: bool,
     view: &mut DocView,
 ) -> FieldPointer {
-    let pointer = ui.input(|i| i.pointer.hover_pos());
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     let Some(p) = pointer.filter(|p| xf.rect.contains(*p)) else { return FieldPointer::Away };
     let hit = form.iter().find_map(|f| {
         f.widgets
@@ -338,7 +338,7 @@ fn calendar(ctx: &egui::Context, view: &mut DocView, field: egui::Rect, fmt: &st
 
 /// Paint focus and hover frames on a page.
 pub(crate) fn paint_page(ui: &egui::Ui, painter: &egui::Painter, xf: &PageXform, page: usize, info: &DocInfo, form: &[FormField], view: &DocView) {
-    let pointer = ui.input(|i| i.pointer.hover_pos());
+    let pointer = ui.input(|i| i.pointer.hover_pos().or(i.pointer.interact_pos()));
     for f in form {
         for (wi, w) in f.widgets.iter().enumerate().filter(|(_, w)| w.page == Some(page) && !w.hidden) {
             let r = widget_rect(xf, info, page, w.rect);

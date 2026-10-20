@@ -26,6 +26,11 @@ versions follow [SemVer](https://semver.org/).
 
 ### Fixed
 
+- **Taratasy: tapping a paragraph did not edit it, and the keyboard never came up.** The Edit text tool,
+  the form fields, comments, Fill & Sign and the signature flow read the pointer's position only while the
+  pointer hovers, and a finger lifts at the end of a tap, so the tap found nothing under it. They now fall
+  back to the position of the tap (as the link, redact and content tools already did). Checked on the
+  tablet emulator: a tap opens the paragraph with its caret, the keyboard shows and typing changes the text.
 - **Links in About did nothing on Android** (GitHub, releases, author, discussions, privacy): the Android bridge
   dropped egui's "open link" command. The activity opens them (http, https and mailto only).
 - Discussions are enabled on the repository (the Discussions links answered 404).
