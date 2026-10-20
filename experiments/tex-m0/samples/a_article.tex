@@ -1,0 +1,21 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools,graphicx}
+\usepackage[colorlinks=true]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\title{Sample article}\author{Spike}\date{}
+\begin{document}
+\maketitle
+\section{Mathematics}\label{sec:m}
+\begin{theorem}\label{thm:main}
+For all $n\in\mathbb{N}$, $\sum_{k=1}^n k = \frac{n(n+1)}{2}$.
+\end{theorem}
+\begin{proof}By induction on $n$. \end{proof}
+\begin{align}
+  e^{i\pi}+1 &= 0 \label{eq:euler}\\
+  \int_{-\infty}^{\infty} e^{-x^2}\,dx &= \sqrt{\pi}
+\end{align}
+\[ \mathbf{A}=\begin{pmatrix} a & b\\ c & d\end{pmatrix},\quad \det\mathbf{A}=ad-bc,  \]
+\begin{lemma}\label{lem:x} $\coloneqq$ and \eqref{eq:euler} work with \texttt{mathtools}; see Theorem~\ref{thm:main} on page~\pageref{thm:main} and \url{https://example.org}. \end{lemma}
+\begin{figure}[h]\centering\includegraphics[width=4cm]{fig.png}\caption{A raster figure.}\end{figure}
+\end{document}

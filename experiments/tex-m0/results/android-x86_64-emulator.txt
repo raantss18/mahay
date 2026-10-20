@@ -1,0 +1,26 @@
+a_article cold RESULT ok=1 ms=4804 hwm_kb=221604 pdf_bytes=40541 synctex_bytes=3431
+a_article warm RESULT ok=1 ms=1149 hwm_kb=165112 pdf_bytes=40541 synctex_bytes=3431
+b_tikz cold RESULT ok=1 ms=4274 hwm_kb=221232 pdf_bytes=7657 synctex_bytes=2099
+b_tikz warm RESULT ok=1 ms=1775 hwm_kb=168304 pdf_bytes=7657 synctex_bytes=2099
+c_natbib cold RESULT ok=1 ms=3482 hwm_kb=221432 pdf_bytes=13328 synctex_bytes=1135
+c_natbib warm RESULT ok=1 ms=785 hwm_kb=162840 pdf_bytes=13328 synctex_bytes=1135
+d_beamer cold RESULT ok=1 ms=5414 hwm_kb=221420 pdf_bytes=24552 synctex_bytes=6240
+d_beamer warm RESULT ok=1 ms=2506 hwm_kb=168284 pdf_bytes=24552 synctex_bytes=6240
+e_fontspec cold RESULT ok=1 ms=3851 hwm_kb=221388 pdf_bytes=10789 synctex_bytes=559
+e_fontspec warm RESULT ok=1 ms=1084 hwm_kb=167316 pdf_bytes=10789 synctex_bytes=559
+f_biblatex cold RESULT ok=0 ms=3678 hwm_kb=221528 pdf_bytes=0 synctex_bytes=0 error=No such file or directory (os error 2)
+f_biblatex warm RESULT ok=0 ms=894 hwm_kb=167276 pdf_bytes=0 synctex_bytes=0 error=No such file or directory (os error 2)
+g_math cold RESULT ok=1 ms=4319 hwm_kb=221576 pdf_bytes=18213 synctex_bytes=3253
+g_math warm RESULT ok=1 ms=1771 hwm_kb=167588 pdf_bytes=18213 synctex_bytes=3253
+h_figs cold RESULT ok=1 ms=3371 hwm_kb=221328 pdf_bytes=13350 synctex_bytes=1257
+h_figs warm RESULT ok=1 ms=736 hwm_kb=162288 pdf_bytes=13350 synctex_bytes=1257
+i_standalone cold RESULT ok=1 ms=3763 hwm_kb=221572 pdf_bytes=813 synctex_bytes=1194
+i_standalone warm RESULT ok=1 ms=962 hwm_kb=163964 pdf_bytes=813 synctex_bytes=1194
+j_babel cold RESULT ok=1 ms=3576 hwm_kb=221444 pdf_bytes=4299 synctex_bytes=622
+j_babel warm RESULT ok=1 ms=832 hwm_kb=162076 pdf_bytes=4299 synctex_bytes=622
+k_algx cold RESULT ok=1 ms=3600 hwm_kb=221552 pdf_bytes=9066 synctex_bytes=905
+k_algx warm RESULT ok=1 ms=803 hwm_kb=161968 pdf_bytes=9066 synctex_bytes=905
+l_unimath cold RESULT ok=1 ms=5132 hwm_kb=221468 pdf_bytes=6754 synctex_bytes=976
+l_unimath warm RESULT ok=1 ms=2226 hwm_kb=178300 pdf_bytes=6754 synctex_bytes=976
+m_fonts cold RESULT ok=1 ms=3846 hwm_kb=221484 pdf_bytes=8171 synctex_bytes=527
+m_fonts warm RESULT ok=1 ms=1117 hwm_kb=167660 pdf_bytes=8171 synctex_bytes=527

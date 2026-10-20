@@ -99,9 +99,13 @@ au lieu de défiler, et il n'y a pas de barre de défilement.
 Décidé le 2026-10-19 : tout dans la **0.3.0** avec la synchronisation ; paquets de 50 à 100 Mo
 acceptés ; première TeXnika = vrai moteur + formules instantanées (blocs façon LyX ensuite) ;
 Naoty : Python d'abord. Le moteur reste à confirmer par les sondages.
-- [ ] **M0 — sondage** : Tectonic compile pour Linux **et Android** (arm64, x86_64) un article avec
-      `amsmath`, `tikz` et BibTeX **hors ligne**, depuis un mini-bundle choisi ; mesurer taille et
-      temps. Décide le moteur (D25).
+- [x] **M0 — sondage** (fait le 2026-10-20, [résultats](docs/NEW_APPS.md), `experiments/tex-m0/`) : Tectonic
+      compile hors ligne depuis un bundle dossier : **Linux oui** ; **Android oui avec conditions**
+      (x86_64 testé sur l'émulateur, arm64 compilé seulement). Moteur 9,1 à 9,4 Mo, tranche de bundle
+      5 Mo compressée, recompilation d'un article 0,4 à 1,8 s, 160 à 230 Mo de RAM. D25 : accepté avec
+      conditions. Restent : ICU sur Android (minSdk 26 contre API 31 du NDK), mesure sur une vraie
+      tablette arm64, backend biblatex (pas de biber), licences GPL de `pgfplots` et de quelques motifs de
+      césure.
 - [ ] M1 : éditeur + PDF côte à côte sur Linux (coloration, compilation après une pause, erreurs, SyncTeX).
 - [ ] M2 : niveau TeXstudio (complétion, plan, projets, bibliographie, palette de symboles, snippets, orthographe).
 - [ ] M3 : Android (clavier tactile, rangée de touches `\ { } $ ^ _`, vue compacte, paquets téléchargés).
