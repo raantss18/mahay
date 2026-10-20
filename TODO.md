@@ -55,8 +55,8 @@ au lieu de défiler, et il n'y a pas de barre de défilement.
       D1:D20 au lieu de défiler). Même règle dans toutes les apps à zone de texte ou de dessin : un doigt défile/déplace la vue,
       le stylet et la souris sélectionnent ou dessinent (Tabilao : cellules, Seho : diapo, Sary,
       Tsilo, Pejy, Endrika, Drafitra : doigt = déplacer la vue, deux doigts = zoomer).
-- [~] Audit tactile des 14 apps, sur l'émulateur téléphone (fait le 2026-10-20 pour 11 apps, voir `docs/STATUS.md` : Sary, Tsilo,
-      Pejy, Hazavana, Feo gardent la disposition bureau, inutilisable à 411 dp ; Hetsika, Tselatra, Drafitra non regardées) : défilement, sélection, zoom à deux doigts,
+- [~] Audit tactile des 14 apps, sur l'émulateur téléphone (fait le 2026-10-20 pour les 14 apps, voir `docs/STATUS.md` : Sary, Tsilo,
+      Pejy, Hazavana, Feo, Hetsika, Tselatra gardent la disposition bureau, inutilisable à 411 dp ; Endrika et Drafitra à moitié adaptées) : défilement, sélection, zoom à deux doigts,
       appui long = menu contextuel, cibles ≥ 48 dp, survol (hover) sans équivalent tactile, glisser-
       déposer, poignées de redimensionnement trop fines, clavier virtuel qui masque le champ.
 - [ ] Un test par app (egui_kittest, événements `Touch`) : un glissement tactile fait défiler et ne
