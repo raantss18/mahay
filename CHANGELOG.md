@@ -21,7 +21,7 @@ versions follow [SemVer](https://semver.org/).
 
 - **Soratra on a phone: a finger drag scrolls the page** (with coasting) instead of selecting text;
   a long press first still selects. A solid scroll bar a finger can grab shows on narrow windows.
-  Tabilao, Seho and the other apps still select on a finger drag (see `TODO.md`).
+  **Tabilao**: a finger drag scrolls the sheet (a tap still selects a cell; ranges by finger come later). The other apps are being checked (see `TODO.md`).
 
 ### Changed
 
