@@ -96,7 +96,7 @@ au lieu de défiler, et il n'y a pas de barre de défilement.
 
 ## Nouvelles apps — TeXnika (éditeur LaTeX) et Naoty (notebook) ([dossier](docs/NEW_APPS.md), D25, D26)
 
-Décidé le 2026-10-19 : tout dans la **0.3.0** avec la synchronisation ; paquets de 50 à 100 Mo
+Décidé le 2026-10-19, confirmé le 2026-10-20 (TeXnika : Android 12 ou plus ; paquets en GPL acceptés à part) : tout dans la **0.3.0** avec la synchronisation ; paquets de 50 à 100 Mo
 acceptés ; première TeXnika = vrai moteur + formules instantanées (blocs façon LyX ensuite) ;
 Naoty : Python d'abord. Le moteur reste à confirmer par les sondages.
 - [x] **M0 — sondage** (fait le 2026-10-20, [résultats](docs/NEW_APPS.md), `experiments/tex-m0/`) : Tectonic

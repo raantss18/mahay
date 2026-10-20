@@ -394,6 +394,13 @@ Each entry: the decision, the alternatives considered, and why. Newest last.
 - **Fallback if a condition cannot be met:** Android after Linux (TeXnika as a Linux app and a
   remote-compile mode on Android through a Linux server) before any WebAssembly engine; the spike found
   no blocker that needs it.
+- **Owner's answers (2026-10-20):** (1) TeXnika requires **Android 12 or later** on Android (its
+  Gradle flavour gets `minSdk 31`; the other apps keep 26); Mahay HUB and the other apps are unchanged.
+  (2) **GPL components are accepted as separate packs** with their licence text: `pgfplots`
+  (GPL-3.0-or-later) and the GPL hyphenation patterns stay out of the Core pack, are listed on the About
+  page and in the pack's licence manifest, and the app and the other packs remain MIT OR Apache-2.0.
+  (3) The two spike branches are merged into `main` as the record of the measurements
+  (`experiments/` is not part of the suite and is never built by the release scripts).
 
 ## D26 — The notebook is a native Jupyter client (go, with conditions)
 
