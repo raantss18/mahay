@@ -17,3 +17,4 @@ egui = { workspace = true }
 # Web builds have no updater (the browser always loads the latest page).
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 mahay-update = { workspace = true }
+mahay-feedback = { workspace = true }

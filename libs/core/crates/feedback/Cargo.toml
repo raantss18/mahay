@@ -1,0 +1,17 @@
+[package]
+name = "mahay-feedback"
+description = "Feedback messages and opt-in anonymous diagnostics for the Mahay apps, sent to the owner's Supabase project (decision D28)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+build = "build.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+ureq = { version = "3.4", default-features = false, features = ["rustls"] }
+serde_json = { workspace = true }
+log = "0.4"

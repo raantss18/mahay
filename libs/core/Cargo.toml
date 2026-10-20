@@ -30,6 +30,7 @@ mahay-ui = { path = "crates/ui" }
 mahay-update = { path = "crates/update" }
 mahay-sync = { path = "crates/sync" }
 mahay-about = { path = "crates/about" }
+mahay-feedback = { path = "crates/feedback" }
 egui = { version = "0.36", default-features = false }
 rayon = "1"
 serde = { version = "1", features = ["derive"] }

@@ -7,6 +7,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 apps=("$@")
+# The public Supabase values for feedback and sync (release-keys/accounts.env, never pushed); CI
+# passes them as environment variables. Without them the apps build with feedback switched off.
+if [ -z "${MAHAY_SUPABASE_URL:-}" ] && [ -f release-keys/accounts.env ]; then
+  set -a; . release-keys/accounts.env; set +a
+fi
 [ ${#apps[@]} -gt 0 ] || apps=(hub sary taratasy soratra tabilao seho tsilo endrika pejy hazavana feo hetsika tselatra drafitra)
 export APPIMAGELAUNCHER_DISABLE=1 GITHUB_REPOSITORY=raantss18/mahay
 for app in "${apps[@]}"; do

@@ -362,6 +362,29 @@ pub fn locale() -> String {
     .unwrap_or_else(|| "en".into())
 }
 
+/// Device facts for feedback and diagnostics: Android version, manufacturer, model, ABI, screen
+/// size in dp, memory, language. Nothing that identifies the person or the phone.
+pub fn device_info() -> serde_json::Value {
+    let text = with_activity(|env, act| {
+        let obj = env.call_method(act, "deviceInfo", "()Ljava/lang/String;", &[])?.l()?;
+        Ok(String::from(env.get_string(&JString::from(obj))?))
+    })
+    .unwrap_or_default();
+    let map: serde_json::Map<String, serde_json::Value> =
+        text.lines().filter_map(|l| l.split_once('=')).map(|(k, v)| (k.to_string(), serde_json::Value::String(v.to_string()))).collect();
+    serde_json::Value::Object(map)
+}
+
+/// How the previous run ended when it ended badly (Android 11+), once: the diagnostics event and
+/// the system's description of it.
+pub fn last_exit() -> Option<(String, String)> {
+    let text = with_activity(|env, act| {
+        let obj = env.call_method(act, "lastExit", "()Ljava/lang/String;", &[])?.l()?;
+        Ok(String::from(env.get_string(&JString::from(obj))?))
+    })?;
+    text.split_once('\t').map(|(e, d)| (e.to_string(), d.to_string()))
+}
+
 /// Hand a verified APK to Android's installer (the user confirms). `Err` explains why not:
 /// the user must first allow installs from this app (the settings page has been opened), or
 /// the file isn't one this app downloaded.

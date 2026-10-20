@@ -9,6 +9,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
+# The public Supabase values for feedback and sync (release-keys/accounts.env, never pushed); CI
+# passes them as environment variables. Without them the apps build with feedback switched off.
+if [ -z "${MAHAY_SUPABASE_URL:-}" ] && [ -f release-keys/accounts.env ]; then
+  set -a; . release-keys/accounts.env; set +a
+fi
 NDK_VERSION=$(sed -n 's/.*ndkVersion "\(.*\)"/\1/p' android/app/build.gradle)
 # The first SDK that has the NDK we need (a stale ANDROID_HOME is common).
 for sdk in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "$HOME/Android/Sdk"; do

@@ -28,6 +28,11 @@ impl EguiBridge {
         let lang = mahay_about::Lang::from_tag(&crate::locale());
         let dir = crate::data_dir().unwrap_or_else(|| std::path::PathBuf::from("/data/local/tmp"));
         let repaint = ctx.clone();
+        mahay_feedback::init(app.id, dir.clone());
+        mahay_feedback::set_device(crate::device_info());
+        if let Some((event, detail)) = crate::last_exit() {
+            mahay_feedback::report(&event, Some(&detail));
+        }
         let mut checker = mahay_update::Checker::new(app.id, dir, true, move || repaint.request_repaint());
         // Decision D21: while Mahay HUB is installed and signed like this app, it downloads and
         // installs this app's updates (Android asks for no confirmation when the installer of
@@ -124,6 +129,20 @@ impl EguiBridge {
         });
         if let Some(text) = copied.last() {
             crate::set_clipboard_text(text);
+        }
+        // Links (`ui.hyperlink`, `ctx.open_url`): egui-winit has no browser on Android, so the
+        // activity opens them (it only accepts http, https and mailto).
+        let links: Vec<String> = ctx.output(|o| {
+            o.commands
+                .iter()
+                .filter_map(|c| match c {
+                    egui::OutputCommand::OpenUrl(open) => Some(open.url.clone()),
+                    _ => None,
+                })
+                .collect()
+        });
+        for url in links {
+            crate::open_url(&url);
         }
     }
 

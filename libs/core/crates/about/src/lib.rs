@@ -105,6 +105,7 @@ pub fn register_desktop(app: AppInfo, ctx: &egui::Context) {
     let dir = base.join("mahay").join(app.id);
     let ctx = ctx.clone();
     let can_install = mahay_update::running_appimage().is_some();
+    mahay_feedback::init(app.id, dir.clone());
     let checker = Checker::new(app.id, dir, can_install, move || ctx.request_repaint());
     register(app, Lang::from_env(), checker, Box::new(mahay_update::install_appimage));
 }
@@ -151,6 +152,7 @@ pub fn banner(_ctx: &egui::Context) {}
 pub const SOURCE_URL: &str = "https://github.com/raantss18/mahay";
 pub const LATEST_URL: &str = "https://github.com/raantss18/mahay/releases/latest";
 pub const LICENSES_URL: &str = "https://github.com/raantss18/mahay/blob/main/THIRD_PARTY_LICENSES.md";
+pub const PRIVACY_URL: &str = "https://github.com/raantss18/mahay/blob/main/docs/PRIVACY.md";
 pub const DISCUSSIONS_URL: &str = "https://github.com/raantss18/mahay/discussions";
 
 /// The author, as in Tontolo's About page.
@@ -232,6 +234,9 @@ fn about_body(ui: &mut Ui, app: AppInfo, lang: Lang, updates: impl FnOnce(&mut U
             ui.hyperlink_to(label, url);
         }
         ui.hyperlink_to(t(lang, "discussions"), DISCUSSIONS_URL);
+        ui.hyperlink_to(t(lang, "privacy"), PRIVACY_URL);
+        ui.separator();
+        feedback_section(ui, lang);
         ui.separator();
 
         ui.label(RichText::new(t(lang, "built_with")).strong());
@@ -244,6 +249,111 @@ fn about_body(ui: &mut Ui, app: AppInfo, lang: Lang, updates: impl FnOnce(&mut U
         ui.label(t(lang, "license"));
         ui.hyperlink_to(t(lang, "third_party"), LICENSES_URL);
     });
+}
+
+/// What the user is typing in the feedback form.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone)]
+struct FeedbackForm {
+    kind: &'static str,
+    message: String,
+    contact: String,
+    device: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Default for FeedbackForm {
+    fn default() -> Self {
+        Self { kind: "idea", message: String::new(), contact: String::new(), device: true }
+    }
+}
+
+/// The soft keyboard shrinks the window after the tap that focused a field, so the field can end
+/// up below the visible area: scroll it into view while it has focus and is out of sight.
+fn keep_in_view(ui: &Ui, field: &egui::Response) {
+    let clip = ui.clip_rect();
+    if field.has_focus() && (field.rect.min.y > clip.max.y - 24.0 || field.rect.max.y < clip.min.y) {
+        field.scroll_to_me(Some(egui::Align::TOP));
+    }
+}
+
+/// "Feedback" (a short message to the author) and the optional anonymous diagnostics switch.
+#[cfg(target_arch = "wasm32")]
+fn feedback_section(_ui: &mut Ui, _lang: Lang) {}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn feedback_section(ui: &mut Ui, lang: Lang) {
+    ui.label(RichText::new(t(lang, "fb_title")).strong());
+    if !mahay_feedback::configured() {
+        ui.label(RichText::new(t(lang, "fb_unavailable")).weak());
+        ui.hyperlink_to("github.com/raantss18/mahay/issues", "https://github.com/raantss18/mahay/issues");
+        return;
+    }
+    let id = egui::Id::new("mahay-feedback-form");
+    let mut form: FeedbackForm = ui.data_mut(|d| d.get_temp(id)).unwrap_or_default();
+    match mahay_feedback::status() {
+        mahay_feedback::Status::Sent => {
+            ui.label(format!("✓ {}", t(lang, "fb_sent")));
+            if ui.button(t(lang, "fb_another")).clicked() {
+                mahay_feedback::reset_status();
+                form = FeedbackForm::default();
+            }
+        }
+        status => {
+            ui.label(RichText::new(t(lang, "fb_intro")).weak());
+            ui.horizontal_wrapped(|ui| {
+                for (kind, key) in [("idea", "fb_idea"), ("bug", "fb_bug"), ("question", "fb_question"), ("praise", "fb_praise")] {
+                    ui.selectable_value(&mut form.kind, kind, t(lang, key));
+                }
+            });
+            ui.label(t(lang, "fb_message"));
+            // The soft keyboard covers the lower part of the window: bring a field that gets focus into view.
+            let field = ui.add(egui::TextEdit::multiline(&mut form.message).desired_rows(4).desired_width(f32::INFINITY));
+            keep_in_view(ui, &field);
+            if form.message.chars().count() > mahay_feedback::MAX_MESSAGE {
+                form.message = form.message.chars().take(mahay_feedback::MAX_MESSAGE).collect();
+            }
+            ui.label(t(lang, "fb_contact"));
+            let field = ui.add(egui::TextEdit::singleline(&mut form.contact).desired_width(f32::INFINITY));
+            keep_in_view(ui, &field);
+            ui.checkbox(&mut form.device, t(lang, "fb_device"));
+            if form.device {
+                egui::CollapsingHeader::new(t(lang, "fb_what")).id_salt("mahay-feedback-device").show(ui, |ui| {
+                    ui.label(RichText::new(mahay_feedback::device_preview()).weak().monospace());
+                });
+            }
+            let sending = status == mahay_feedback::Status::Sending;
+            if let mahay_feedback::Status::Failed(e) = &status {
+                ui.colored_label(Color32::from_rgb(0xD7, 0x26, 0x3D), format!("{} {e}", t(lang, "fb_failed")));
+            }
+            ui.horizontal(|ui| {
+                let can = !sending && !form.message.trim().is_empty();
+                if ui.add_enabled(can, egui::Button::new(t(lang, "fb_send"))).clicked() {
+                    let ctx = ui.ctx().clone();
+                    mahay_feedback::send_feedback(
+                        mahay_feedback::Feedback {
+                            kind: form.kind.to_string(),
+                            message: form.message.clone(),
+                            contact: form.contact.clone(),
+                            include_device: form.device,
+                        },
+                        move || ctx.request_repaint(),
+                    );
+                }
+                if sending {
+                    ui.spinner();
+                    ui.label(t(lang, "fb_sending"));
+                }
+            });
+        }
+    }
+    ui.data_mut(|d| d.insert_temp(id, form));
+    ui.add_space(6.0);
+    let mut on = mahay_feedback::diagnostics_enabled();
+    if ui.checkbox(&mut on, t(lang, "diag")).changed() {
+        mahay_feedback::set_diagnostics(on);
+    }
+    ui.label(RichText::new(t(lang, "diag_help")).weak());
 }
 
 #[cfg(not(target_arch = "wasm32"))]

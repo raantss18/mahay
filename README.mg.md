@@ -79,7 +79,7 @@ ny rindranasa tsirairay.
 | **Mpikajy** | ARM 64 bit (`arm64-v8a`); `x86_64` ho an'ny emulateur sy Chromebook | x86_64 |
 | **Sary** | GPU misy OpenGL ES (Vulkan raha misy) | Mpamily GPU misy Vulkan na OpenGL |
 | **Toerana** | 5 Mo eo ho eo ho an'i Mahay HUB, hatramin'ny 25 Mo eo ho eo isaky ny rindranasa | mitovy |
-| **Aterineto** | Tsy ilaina afa-tsy amin'ny fakana an'i Mahay HUB sy ny fanavaozana | mitovy |
+| **Aterineto** | Tsy ilaina afa-tsy amin'ny fakana an'i Mahay HUB sy ny fanavaozana (ary ny fandefasana hevitra raha tianao) | mitovy |
 | **Hafa** | Avelao hametraka rindranasa tsy fantatra i Mahay HUB | Mila FUSE 2 (`libfuse2`) ny AppImage |
 
 Jereo ny [docs/STATUS.md](docs/STATUS.md) hahalalana izay voazaha-toetra tokoa.
@@ -105,6 +105,16 @@ ekena ny fanavaozana rehetra; ny rindranasa misokatra dia avela hatrany aorian'n
 ao ambadika. Ny Wi-Fi ihany no ampiasaina ao ambadika, raha tsy mampiasa ny **Amin'ny data finday
 koa** ao amin'ny fanamboarana. Mandeha sy mavao ho azy koa ny rindranasa tsirairay raha tsy
 misy ny hub.
+
+## Ny hevitrao
+
+Ao amin'ny pejin'ny **Momba** (About) ny rindranasa rehetra no misy ny **Hevitrao**: fidio ny karazany
+(olana, hevitra, fanontaniana, fisaorana), soraty ny hafatra fohy, ary jereo marina ny fanazavana ny
+fitaovana miaraka aminy alohan'ny hanindrona ny Alefaso. Mankany amin'ny mpanoratra mivantana izany.
+Ny **Hanampy hanatsara an'i Mahay** (tsy mandeha raha tsy ampandehanina) dia mandefa hetsika tsy
+fantatra anarana, ohatra hoe "nikatona tampoka ny rindranasa", miaraka amin'ny modelin'ny finday sy ny
+dikan'ny Android, mba hitadiavana ny olana mitranga amin'ny finday sasany ihany. Tsy mandefa ny
+taratasinao na rakitrao mihitsy. Fanazavana: [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## Fahazoan-dalana
 

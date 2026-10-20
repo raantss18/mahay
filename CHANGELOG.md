@@ -3,6 +3,26 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Feedback** in every app's About page: a short message (problem, idea, question, thanks), an optional
+  contact and the device facts shown before sending, delivered to the author's Supabase project (D28).
+- **Help improve Mahay** (off by default): anonymous events (opened once a day, crash, native crash, app
+  not responding, killed for memory, update failed) with the phone model and Android version. On Android 11+
+  an app reads why its previous run ended; a panic is kept for the next start. This is how "Hetsika does not
+  open on some phones" becomes a model, a version and a reason. Never documents, file names or text.
+- `docs/FEEDBACK_SETUP.md` (the SQL to run once in Supabase), privacy policy updated (en, fr).
+
+### Fixed
+
+- **Links in About did nothing on Android** (GitHub, releases, author, discussions, privacy): the Android bridge
+  dropped egui's "open link" command. The activity opens them (http, https and mailto only).
+- Discussions are enabled on the repository (the Discussions links answered 404).
+- `apps/tsilo/crates/text/build/web_fonts.rs` was ignored by git (`build/`), so a clean checkout could not
+  build Tsilo.
+
 ## [0.2.4] — 2026-10-20 (alpha)
 
 ### Fixed

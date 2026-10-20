@@ -26,7 +26,7 @@
 
 **Mahay** (Malagasy: *skilled, able*) is a suite of **14 apps** to write, calculate, present, draw,
 edit photos, audio and video, lay out pages and design interfaces. Every app is **native Rust**:
-no Electron, no WebView, no account, no telemetry. Your files stay on your device, everything works
+no Electron, no WebView, no account, no tracking. Your files stay on your device, everything works
 offline, and each app is small enough to install on its own.
 
 Mahay is a fork of the [ArtCraft](https://github.com/storytold) crafting apps, renamed and ported
@@ -40,9 +40,9 @@ to **Android phones and tablets** and **Linux**. See [NOTICE](NOTICE).
 
 |   |   |
 |---|---|
-| 🔒 **Private by design** | No account, no telemetry, no cloud required. Documents open from, and save back to, wherever you keep them. |
+| 🔒 **Private by design** | No account, no tracking, no cloud required. Feedback and anonymous diagnostics exist, but only if you choose them. Documents open from, and save back to, wherever you keep them. |
 | ⚡ **Native and light** | One APK per app, from about 5 MB (Mahay HUB) to about 25 MB. No browser engine inside. |
-| 📴 **Offline first** | Everything works without a connection. The network is used only to check for updates. |
+| 📴 **Offline first** | Everything works without a connection. The network is used only to check for updates (and to send feedback if you ask). |
 | 🔄 **Always up to date** | Signed updates (Ed25519 + SHA-256), checked daily, installed with one tap. |
 | 📱 **Made for touch** | The layout follows the window width, with no setting: phone, tablet, split screen, desktop. |
 | 🧰 **Opens your files** | DOCX, XLSX, PPTX, PDF, PSD, SVG, DXF and more, from Files, Drive or an e-mail. |
@@ -136,6 +136,15 @@ updated restarts, so the background update leaves open apps for later. Backgroun
 Wi-Fi only, unless you switch on **Also on mobile data** in the hub's settings. Every app also
 works and updates alone, without the hub.
 
+
+## Your feedback
+
+Every app has **Feedback** in its **About** page: pick problem, idea, question or thanks, write a
+short message, and see exactly which device facts go with it before you press Send. It reaches the
+author directly. **Help improve Mahay** (off by default) sends anonymous events, such as "the app
+crashed", with the phone model and Android version, so crashes that happen only on some phones can be
+found. Never your documents or files. Details: [docs/PRIVACY.md](docs/PRIVACY.md). Questions and ideas
+can also go to the [discussions](https://github.com/raantss18/mahay/discussions).
 
 ## Build from source
 

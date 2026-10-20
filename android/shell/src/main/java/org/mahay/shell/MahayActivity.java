@@ -5,6 +5,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -503,6 +504,62 @@ public class MahayActivity extends GameActivity {
             return info.versionName;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /** Device facts for feedback and diagnostics (D28): one "key=value" per line. No identifiers. */
+    public String deviceInfo() {
+        android.util.DisplayMetrics m = getResources().getDisplayMetrics();
+        int w = Math.round(m.widthPixels / m.density), h = Math.round(m.heightPixels / m.density);
+        String abi = android.os.Build.SUPPORTED_ABIS.length > 0 ? android.os.Build.SUPPORTED_ABIS[0] : "";
+        ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+        if (am != null) am.getMemoryInfo(mi);
+        return "android=" + android.os.Build.VERSION.RELEASE + " (API " + android.os.Build.VERSION.SDK_INT + ")\n"
+            + "manufacturer=" + android.os.Build.MANUFACTURER + "\n"
+            + "model=" + android.os.Build.MODEL + "\n"
+            + "abi=" + abi + "\n"
+            + "screen_dp=" + w + "x" + h + "\n"
+            + "ram_mb=" + (mi.totalMem / (1024 * 1024)) + "\n"
+            + "low_ram=" + (am != null && am.isLowRamDevice()) + "\n"
+            + "language=" + java.util.Locale.getDefault().toLanguageTag();
+    }
+
+    /**
+     * How this app's previous run ended, when it ended badly (Android 11+), once: "event\tdetail"
+     * with event one of crash, native_crash, anr, low_memory, killed; "" otherwise.
+     */
+    public String lastExit() {
+        if (android.os.Build.VERSION.SDK_INT < 30) return "";
+        try {
+            ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            java.util.List<android.app.ApplicationExitInfo> list = am.getHistoricalProcessExitReasons(getPackageName(), 0, 5);
+            android.content.SharedPreferences prefs = getSharedPreferences("mahay_exit", MODE_PRIVATE);
+            long seen = prefs.getLong("seen", 0);
+            long newest = seen;
+            String out = "";
+            for (android.app.ApplicationExitInfo e : list) {
+                if (e.getTimestamp() <= seen) continue;
+                newest = Math.max(newest, e.getTimestamp());
+                String ev;
+                switch (e.getReason()) {
+                    case android.app.ApplicationExitInfo.REASON_CRASH: ev = "crash"; break;
+                    case android.app.ApplicationExitInfo.REASON_CRASH_NATIVE: ev = "native_crash"; break;
+                    case android.app.ApplicationExitInfo.REASON_ANR: ev = "anr"; break;
+                    case android.app.ApplicationExitInfo.REASON_LOW_MEMORY: ev = "low_memory"; break;
+                    case android.app.ApplicationExitInfo.REASON_INITIALIZATION_FAILURE: ev = "crash"; break;
+                    case android.app.ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE: ev = "killed"; break;
+                    default: continue;
+                }
+                if (out.isEmpty()) {
+                    out = ev + "\t" + e.getReason() + " status=" + e.getStatus() + " importance=" + e.getImportance()
+                        + " rss_mb=" + (e.getRss() / 1024) + " " + (e.getDescription() == null ? "" : e.getDescription());
+                }
+            }
+            prefs.edit().putLong("seen", newest).apply();
+            return out;
+        } catch (Exception e) {
+            return "";
         }
     }
 

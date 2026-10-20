@@ -27,7 +27,7 @@
 **Mahay** (en malgache : *compétent, qui sait faire*) est une suite de **14 apps** pour écrire,
 calculer, présenter, dessiner, retoucher photos, audio et vidéo, mettre en page et concevoir des
 interfaces. Chaque app est en **Rust natif** : pas d'Electron, pas de WebView, pas de compte, pas
-de télémétrie. Vos fichiers restent sur votre appareil, tout marche hors ligne, et chaque app est
+de pistage. Vos fichiers restent sur votre appareil, tout marche hors ligne, et chaque app est
 assez légère pour s'installer seule.
 
 Mahay est un fork des applications [ArtCraft](https://github.com/storytold), renommées et portées
@@ -41,9 +41,9 @@ sur les **téléphones et tablettes Android** et sur **Linux**. Voir [NOTICE](NO
 
 |   |   |
 |---|---|
-| 🔒 **Privé par conception** | Pas de compte, pas de télémétrie, pas de cloud obligatoire. Les documents s'ouvrent depuis, et s'enregistrent vers, l'endroit où vous les rangez. |
+| 🔒 **Privé par conception** | Pas de compte, pas de pistage, pas de cloud obligatoire. Avis et diagnostics anonymes existent, mais seulement si vous les choisissez. Les documents s'ouvrent depuis, et s'enregistrent vers, l'endroit où vous les rangez. |
 | ⚡ **Natif et léger** | Un APK par app, d'environ 5 Mo (Mahay HUB) à environ 25 Mo. Aucun moteur de navigateur embarqué. |
-| 📴 **Hors ligne d'abord** | Tout marche sans connexion. Le réseau ne sert qu'à chercher les mises à jour. |
+| 📴 **Hors ligne d'abord** | Tout marche sans connexion. Le réseau ne sert qu'à chercher les mises à jour (et à envoyer un avis si vous le demandez). |
 | 🔄 **Toujours à jour** | Mises à jour signées (Ed25519 + SHA-256), vérifiées chaque jour, installées d'un appui. |
 | 📱 **Pensé pour le tactile** | La disposition suit la largeur de la fenêtre, sans réglage : téléphone, tablette, écran partagé, bureau. |
 | 🧰 **Ouvre vos fichiers** | DOCX, XLSX, PPTX, PDF, PSD, SVG, DXF et plus, depuis Fichiers, Drive ou un e-mail. |
@@ -141,6 +141,16 @@ en arrière-plan laisse les apps ouvertes pour plus tard. En arrière-plan, seul
 utilisé, sauf si vous activez **Aussi en données mobiles** dans les réglages du hub. Chaque app
 fonctionne et se met aussi à jour seule, sans le hub.
 
+
+## Votre avis
+
+Chaque app a **Votre avis** dans sa page **À propos** : choisissez problème, idée, question ou merci,
+écrivez un court message, et voyez exactement quelles informations d'appareil l'accompagnent avant
+d'appuyer sur Envoyer. Il arrive directement chez l'auteur. **Aider à améliorer Mahay** (désactivé par
+défaut) envoie des événements anonymes, comme « l'app a planté », avec le modèle du téléphone et la
+version d'Android, pour retrouver les plantages qui n'arrivent que sur certains téléphones. Jamais vos
+documents ni vos fichiers. Détails : [docs/PRIVACY.md](docs/PRIVACY.md). Questions et idées peuvent aussi aller dans les
+[discussions](https://github.com/raantss18/mahay/discussions).
 
 ## Compiler
 

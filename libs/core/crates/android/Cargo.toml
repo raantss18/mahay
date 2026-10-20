@@ -13,7 +13,7 @@ repository.workspace = true
 
 [features]
 # `EguiBridge`: soft keyboard and clipboard for an eframe app.
-egui = ["dep:egui", "dep:mahay-about", "dep:mahay-update"]
+egui = ["dep:egui", "dep:mahay-about", "dep:mahay-update", "dep:mahay-feedback"]
 # Mahay HUB: the JNI entry points of its background update job.
 hub = ["dep:mahay-update"]
 
@@ -21,10 +21,12 @@ hub = ["dep:mahay-update"]
 egui = { workspace = true, optional = true }
 mahay-about = { workspace = true, optional = true }
 mahay-update = { workspace = true, optional = true }
+mahay-feedback = { workspace = true, optional = true }
 android-activity = { version = "0.6", features = ["game-activity"] }
 android_logger = { version = "0.15", default-features = false }
 jni = "0.21"
 log = "0.4"
+serde_json = { workspace = true }
 
 [dev-dependencies]
 # The `cleanup` module's tests run on the host.
