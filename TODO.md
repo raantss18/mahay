@@ -89,6 +89,12 @@ au lieu de défiler, et il n'y a pas de barre de défilement.
       et 0.2.2 vers 0.2.3 : tout passe. À lancer à chaque release ([guide](docs/RELEASING.md)).
 - [ ] Un utilisateur en 0.2.1 n'arrive pas à passer en 0.2.3 sur son téléphone : cause à trouver
       (message exact après « Échec de la mise à jour », modèle et version d'Android).
+- [x] « Tout installer » s'arrêtait après la première app (signalé sur un vrai téléphone, reproduit sur
+      l'émulateur : 1 fenêtre sur 4) : réveil du hub au retour au premier plan, rafraîchissement tant qu'une
+      installation est en cours, fenêtre ouverte seulement au premier plan, bouton « Pas de fenêtre ? Touchez
+      ici ». Corrigé le 2026-10-20 (4 sur 4) ; à confirmer sur le téléphone (0.2.4).
+- [ ] Test automatique de « Tout installer » sur l'émulateur (`scripts/` : désinstaller 4 apps, valider les
+      fenêtres, vérifier 4 sur 4) à ajouter aux vérifications de release.
 - [ ] Échec d'une mise à jour : montrer la raison en clair (réseau, signature, espace, installation refusée)
       avec « Copier les détails » et un bouton « Télécharger à la main » qui ouvre la page de la release.
 - [ ] Android 14+ : vérifier le comportement si une autre boutique est l'installateur d'origine.

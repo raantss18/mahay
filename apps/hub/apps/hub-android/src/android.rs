@@ -341,6 +341,11 @@ fn tile(ui: &mut egui::Ui, hub: &Hub, app: &MahayApp, width: f32, get: &mut Opti
                 }
                 Some(Job::Installing) => {
                     ui.label(t.installing);
+                    // Android's own window should appear on its own; if it doesn't (some systems
+                    // keep it from opening), this opens it again.
+                    if ui.add(egui::Button::new(egui::RichText::new(t.install_retry).size(13.0)).min_size(egui::vec2(0.0, 40.0))).clicked() {
+                        mahay_android::retry_install();
+                    }
                 }
                 failed => {
                     if let Some(Job::Failed(e)) = &failed {
@@ -374,6 +379,11 @@ impl eframe::App for Hub {
         self.take_install_notices();
         self.auto_tick();
         self.pump_queue();
+        // While "Install all" or a download or install is under way, keep ticking: the queue only
+        // advances in frames, and none would come by themselves while Android's window is in front.
+        if !self.queue.is_empty() || lock(&self.jobs).values().any(|j| matches!(j, Job::Downloading(_) | Job::Installing)) {
+            self.ctx.request_repaint_after(Duration::from_millis(700));
+        }
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {

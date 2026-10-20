@@ -378,6 +378,12 @@ pub fn install_apk(path: &Path) -> Result<(), String> {
     }
 }
 
+/// Go on with an install that seems stuck (the "Confirm the installation" card): shows Android's
+/// confirmation dialog again, or restarts the install. `false` when nothing is waiting.
+pub fn retry_install() -> bool {
+    with_activity(|env, act| env.call_method(act, "retryInstall", "()Z", &[])?.z()).unwrap_or(false)
+}
+
 /// Ask Mahay HUB to update this app (decision D21). `Ok` when the request was sent; `Err` says
 /// why the hub can't take it, and the app then updates itself.
 pub fn hand_off_to_hub() -> Result<(), String> {
@@ -583,6 +589,14 @@ pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnOpened(
 
 /// `MahayActivity.nativeOnExported(String path, String uri)`: where a Save As went, or null
 /// `uri` if the user cancelled.
+/// The activity is back in front (for example after Android's installer dialog): wake the app so
+/// the next frame runs, because nothing draws one by itself and the app's queues only move on in
+/// frames.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_org_mahay_shell_MahayActivity_nativeOnResumed(_env: JNIEnv, _class: JClass) {
+    wake();
+}
+
 /// Keyboard changes not yet seen by the app: 1 = text changed, 2 = keyboard dismissed.
 static IME_CHANGE: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
 

@@ -55,6 +55,7 @@ public class MahayActivity extends GameActivity {
     private static native void nativeOnExported(String path, String uri);
     private static native void nativeOnInstalled(String path, boolean ok, String message);
     private static native void nativeOnImeChanged(boolean dismissed);
+    private static native void nativeOnResumed();
     private static native void nativeOnToolType(int pointerId, int toolType);
 
     private static final String INSTALL_ACTION = "org.mahay.shell.INSTALL_STATUS";
@@ -62,26 +63,76 @@ public class MahayActivity extends GameActivity {
     private final ArrayDeque<String> installQueue = new ArrayDeque<>();
     private String installing;
 
+    /** Whether this activity is in the foreground: Android only lets a foreground app open the installer's dialog. */
+    private boolean resumed;
+    /** The installer's confirmation dialog, waiting for this activity to be in the foreground. */
+    private Intent pendingConfirm;
+
     private final BroadcastReceiver installReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
             if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
-                // Android asks the user to confirm: show its dialog.
+                // Android asks the user to confirm: show its dialog, now or as soon as the hub is in
+                // front. Opening it from the background is silently refused (Android 10+, and
+                // stricter on some makers' systems): that left "Install all" stuck after the first app.
                 Intent confirm = intent.getParcelableExtra(Intent.EXTRA_INTENT);
                 if (confirm != null) {
                     confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(confirm);
+                    pendingConfirm = confirm;
+                    showPendingConfirm();
                 }
                 return;
             }
+            pendingConfirm = null;
             String path = installing;
             installing = null;
             String msg = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
             if (path != null) nativeOnInstalled(path, status == PackageInstaller.STATUS_SUCCESS, msg == null ? "" : msg);
-            installNext();
+            // The next install is committed only while the hub is in front (its dialog needs that);
+            // otherwise onResume continues the queue.
+            if (resumed) installNext();
         }
     };
+
+    /** Open the installer's confirmation dialog if the hub is in front; otherwise onResume does. */
+    private void showPendingConfirm() {
+        Intent confirm = pendingConfirm;
+        if (confirm == null || !resumed) return;
+        pendingConfirm = null;
+        try {
+            startActivity(confirm);
+        } catch (Exception e) {
+            Log.w(TAG, "the installer's dialog could not be opened", e);
+            pendingConfirm = confirm;
+        }
+    }
+
+    /**
+     * The user asked to go on (a tap on the card that says "Confirm the installation"): show the
+     * dialog again, or start the install again when Android no longer has a session for it.
+     * Returns whether there was something to continue.
+     */
+    public boolean retryInstall() {
+        runOnUiThread(() -> {
+            if (pendingConfirm != null) {
+                showPendingConfirm();
+            } else if (installing != null) {
+                try {
+                    if (getPackageManager().getPackageInstaller().getMySessions().isEmpty()) {
+                        installQueue.addFirst(installing);
+                        installing = null;
+                        installNext();
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "could not check the install sessions", e);
+                }
+            } else {
+                installNext();
+            }
+        });
+        return installing != null || pendingConfirm != null || !installQueue.isEmpty();
+    }
 
     // The soft keyboard changed its text, or was dismissed. winit drops GameActivity's text
     // events, so without this the app would only see the text at its next repaint: tell it now.
@@ -396,11 +447,18 @@ public class MahayActivity extends GameActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        resumed = true;
+        // The app's frames stop while another window (Android's installer) is in front, and nothing
+        // draws one again by itself: wake the app so its queues move on.
+        nativeOnResumed();
         tellHub(true);
+        showPendingConfirm();
+        if (pendingConfirm == null && installing == null) installNext();
     }
 
     @Override
     protected void onPause() {
+        resumed = false;
         tellHub(false);
         super.onPause();
     }

@@ -65,3 +65,9 @@ Proposé par l'assistant (README.mg.md), à relire par un locuteur natif :
 | Avelao hametraka rindranasa tsy fantatra i Mahay HUB             | Autoriser Mahay HUB à installer des apps inconnues     |
 | Mila FUSE 2 (`libfuse2`) ny AppImage                             | L'AppImage demande FUSE 2                              |
 | Maivana ny rindranasa tsirairay ka azo apetraka tsirairay        | Chaque app est assez légère pour s'installer seule     |
+
+## « Install all » bloqué : bouton de reprise (2026-10-20)
+
+| Terme ou phrase                                   | Sens voulu                                         |
+|---------------------------------------------------|----------------------------------------------------|
+| Tsy misy varavarankely? Tsindrio eto mba hanohizana | Pas de fenêtre ? Touchez ici pour continuer       |

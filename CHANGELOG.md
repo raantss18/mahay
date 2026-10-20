@@ -3,6 +3,19 @@
 All notable changes to Mahay. Format: [Keep a Changelog](https://keepachangelog.com/);
 versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Mahay HUB: "Install all" no longer stops after the first app.** The queue only moves on when the
+  hub draws a frame, and nothing woke the hub after Android's install window closed, so the second app
+  never started (on some phones it started and Android's window was then refused from the background,
+  so the card stayed on "Confirm the installation" with no window). The hub is now woken as soon as it
+  is back in front, keeps ticking while an install is under way, opens each confirmation window only
+  from the foreground, and the card has a **"No window? Tap here to continue"** button. Found from a
+  report on a real phone and reproduced on the emulator (1 of 4 confirmation windows before, 4 of 4
+  after).
+
 ## [0.2.3] — 2026-10-20 (alpha)
 
 ### Added
