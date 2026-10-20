@@ -80,6 +80,7 @@ pub mod disk_change_prompt;
 pub mod distort_ui;
 pub mod doc_props_ui;
 pub mod dock;
+pub mod dock_drawer;
 pub mod duplicate_layer_ui;
 pub mod edit_history;
 pub mod egui_fonts;
@@ -2047,13 +2048,23 @@ impl eframe::App for SaryApp {
         if chrome && self.ui.panels.toolbar {
             panels::toolbar(self, ui);
         }
-        if chrome && self.ui.panels.dock {
+        // Panels beside the canvas while a usable canvas still fits; below that a drawer over the whole
+        // window, opened from the status bar (D23).
+        let width = ctx.content_rect().width();
+        let docked = dock_drawer::docked(width);
+        let drawer = chrome && self.ui.panels.dock && !docked && dock_drawer::open(&ctx);
+        if chrome && self.ui.panels.dock && (docked || drawer) {
+            if drawer {
+                panels::request_dock_width(&ctx, dock_drawer::drawer_width(width));
+            }
             panels::right_dock(self, ui);
         }
         let t = theme::Tokens::get(&ctx);
         let backdrop = if chrome { prefs_ui::pasteboard_color(self).unwrap_or(t.canvas) } else { egui::Color32::BLACK };
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(backdrop)).show(ui, |ui| {
-            canvas::document_area(self, ui);
+            if !drawer {
+                canvas::document_area(self, ui);
+            }
         });
         panels::properties_window(self, &ctx);
         brush_panel::window(self, &ctx);
