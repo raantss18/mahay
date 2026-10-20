@@ -71,3 +71,11 @@ Proposé par l'assistant (README.mg.md), à relire par un locuteur natif :
 | Terme ou phrase                                   | Sens voulu                                         |
 |---------------------------------------------------|----------------------------------------------------|
 | Tsy misy varavarankely? Tsindrio eto mba hanohizana | Pas de fenêtre ? Touchez ici pour continuer       |
+
+## Retours et diagnostics (0.2.5)
+
+À relire par un locuteur natif : « Hevitrao » (Feedback), « Olana / Hevitra / Fanontaniana / Misaotra »
+(types de message), « Hanampy hanatsara an'i Mahay (tsy fantatra anarana, tsy voatery) » et son texte
+d'aide, les messages d'envoi, et la section « Ny hevitrao » du README malgache (où « Momba » est utilisé pour
+« À propos » ; vérifier le mot réellement affiché dans les apps).
+

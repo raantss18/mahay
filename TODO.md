@@ -5,6 +5,21 @@ Légende : `[x]` fait · `[ ]` à faire. Les grandes phases du cahier des charge
 
 ---
 
+## 0.2.5 — Retours, plantages, liens, Simple/Pro, interfaces nettoyées (D27–D29)
+
+Demandé par le propriétaire après les retours d'utilisateurs (Sary difficile, Hetsika ne s'ouvre pas chez certains, liens « À propos » morts).
+
+- [x] Liens de « À propos » : le pont Android ouvre `OpenUrl` (http, https, mailto) ; testé sur l'émulateur (Chrome s'ouvre).
+- [x] Discussions activées sur le dépôt.
+- [x] Retours (petit message) et diagnostics anonymes facultatifs dans « À propos » ; crate `mahay-feedback` ; testé jusqu'au serveur (404 tant que les tables n'existent pas).
+- [ ] **Propriétaire :** exécuter le SQL de `docs/FEEDBACK_SETUP.md` dans Supabase ; `gh secret set` des deux valeurs `MAHAY_SUPABASE_*` pour la CI.
+- [ ] Vérifier un retour réel dans Supabase (Table Editor) et la lecture refusée avec la clé publique.
+- [ ] Hetsika : obtenir modèle, version d'Android et symptôme ; lire les événements `diagnostics` (crash, native_crash, anr, low_memory) une fois la 0.2.5 diffusée.
+- [ ] **Adaptive layout fluide** (session phone-layouts) : plus aucune taille de fenêtre figée, pas de bandes vides, grille du hub, 7 apps à adapter ; fusion de `feat/adaptive-layout` avant la 0.2.5.
+- [ ] **Sary Simple/Pro** (D27), puis Hetsika, Hazavana, Feo, Soratra, Taratasy.
+- [ ] **Nettoyage des interfaces** (D29) : audit écran par écran, `docs/UI_AUDIT.md`.
+- [ ] Relire les textes malgaches ajoutés (`docs/A_VALIDER.md`) : « Hevitrao », « Hanampy hanatsara an'i Mahay », libellés du formulaire.
+
 ## Priorités — confort Android (0.2.3 → 0.3.0)
 
 **P0** = ce que l'utilisateur subit tous les jours · **P1** = ensuite · **P2** = plus tard.
