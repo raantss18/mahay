@@ -2946,7 +2946,7 @@ pub fn document_area(app: &mut TaratasyApp, index: usize, ui: &mut egui::Ui) {
             // every viewing mode); then comments; then text selection.
             if let QuickTool::Stamp(kind) = tool
                 && allowed
-                && let Some(p) = ui.input(|inp| inp.pointer.hover_pos()).filter(|p| xf.rect.contains(*p))
+                && let Some(p) = ui.input(|inp| inp.pointer.hover_pos().or(inp.pointer.interact_pos())).filter(|p| xf.rect.contains(*p))
             {
                 ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
                 if resp.clicked() {
@@ -2970,7 +2970,7 @@ pub fn document_area(app: &mut TaratasyApp, index: usize, ui: &mut egui::Ui) {
             }
             if let Some(cs) = custom_stamp.as_ref()
                 && allowed
-                && let Some(p) = ui.input(|inp| inp.pointer.hover_pos()).filter(|p| xf.rect.contains(*p))
+                && let Some(p) = ui.input(|inp| inp.pointer.hover_pos().or(inp.pointer.interact_pos())).filter(|p| xf.rect.contains(*p))
             {
                 ui.ctx().set_cursor_icon(egui::CursorIcon::Crosshair);
                 if resp.clicked() {
